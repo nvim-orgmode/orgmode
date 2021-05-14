@@ -1,7 +1,7 @@
 local Headline = require('orgmode.parser.headline')
 
 describe('Headline parser', function()
-  it('should parse and tokenize headline content', function()
+  it('should parse todo keyword and tags', function()
     local headline = Headline:new({
       line = '* TODO This is some content :WORK:PROJECT:',
       line_nr = 1,
