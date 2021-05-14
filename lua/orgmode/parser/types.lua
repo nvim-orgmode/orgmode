@@ -1,0 +1,4 @@
+return {
+  HEADLINE = 'HEADLINE',
+  CONTENT = 'CONTENT'
+}

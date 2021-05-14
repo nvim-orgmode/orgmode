@@ -1,33 +1,28 @@
 local Headline = {}
+local Types = require('orgmode.parser.types')
 
 function Headline:new(data)
   data = data or {}
-  data.level = data.line and #data.line:match('^%*+') or 0
-  data.parent = data.parent
-  data.line = data.line
-  data.content = {}
-  data.headlines = {}
-  setmetatable(data, self)
+  local headline = { type = Types.HEADLINE }
+  headline.level = data.line and #data.line:match('^%*+') or 0
+  headline.parent = data.parent.line_nr
+  headline.line = data.line
+  headline.line_nr = data.line_nr
+  headline.content = {}
+  headline.headlines = {}
+  setmetatable(headline, self)
   self.__index = self
-  return data
+  return headline
 end
 
 function Headline:add_headline(headline)
-  table.insert(self.headlines, headline)
+  table.insert(self.headlines, headline.line_nr)
   return headline
 end
 
 function Headline:add_content(content)
-  table.insert(self.content, content)
+  table.insert(self.content, content.line_nr)
   return content
-end
-
-function Headline:get_parents_until(level)
-  local parent = self.parent
-  while parent.level > (level - 1) do
-    parent = parent.parent
-  end
-  return parent
 end
 
 return Headline
