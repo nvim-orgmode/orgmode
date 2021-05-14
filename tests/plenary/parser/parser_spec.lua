@@ -1,6 +1,27 @@
 local parser = require('orgmode.parser')
 
 describe('Parser', function()
+  it('should parse filetags headline', function()
+    local lines = {
+      '#+FILETAGS: Tag1, Tag2',
+      '* TODO Something with a lot of tags :WORK:'
+    }
+
+    local parsed = parser.parse(lines)
+    assert.are.same(parsed.tags, {'Tag1', 'Tag2'})
+    assert.are.same(parsed.items[2], {
+      content = {},
+      headlines = {},
+      level = 1,
+      line = "* TODO Something with a lot of tags :WORK:",
+      line_nr = 2,
+      parent = 0,
+      type = "HEADLINE",
+      todo_keyword = 'TODO',
+      tags = {'Tag1', 'Tag2', 'WORK'},
+    })
+  end)
+
   it('should parse lines', function()
     local lines = {
       'Top level content',
