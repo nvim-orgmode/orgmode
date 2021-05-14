@@ -1,4 +1,5 @@
 return {
   HEADLINE = 'HEADLINE',
-  CONTENT = 'CONTENT'
+  CONTENT = 'CONTENT',
+  KEYWORD = 'KEYWORD',
 }
