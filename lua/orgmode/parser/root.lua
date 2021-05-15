@@ -68,9 +68,6 @@ function Root:set_headline_end(headline, lnum, level)
   end
 end
 
--- TODO: Figure out a way to properly update child tags
--- if FILETAGS appear after the headlines, or consider not copying
--- parent tags to child tags
 function Root:process_root_content(content)
   if content:is_keyword() and content.keyword.name == 'FILETAGS' then
     for _, tag in ipairs(vim.split(content.keyword.value, '%s*,%s*')) do
