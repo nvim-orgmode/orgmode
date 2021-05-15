@@ -8,8 +8,11 @@ function Root:new(lines)
     content = {},
     items = {},
     level = 0,
-    line_nr = 0,
-    parent = 0,
+    range = {
+      from = { line = 1, col = 1 },
+      to = { line = #lines, col = 1 },
+    },
+    id = 0,
     tags = {}
   }
   setmetatable(data, self)
@@ -19,7 +22,7 @@ end
 
 function Root:add_headline(headline_data)
   local headline = Headline:new(headline_data)
-  self.items[headline.line_nr] = headline
+  self.items[headline.id] = headline
   local plevel = headline_data.parent.level
   if plevel > 0 and plevel < headline.level then
     headline_data.parent:add_headline(headline)
@@ -29,7 +32,7 @@ end
 
 function Root:add_content(content_data)
   local content = Content:new(content_data)
-  self.items[content.line_nr] = content
+  self.items[content.id] = content
   if content:is_keyword() then
     self:add_root_content(content)
   elseif content_data.parent.level > 0 then
@@ -38,17 +41,10 @@ function Root:add_content(content_data)
   return content
 end
 
-function Root:get_parents_until(headline, level)
-  if headline.parent == 0 then
-    return self
-  end
-  local parent = self.items[headline.parent]
+function Root:get_parent_for_level(headline, level)
+  local parent = self:get_parent(headline)
   while parent.level > (level - 1) do
-    if parent.parent == 0 then
-      parent = self
-      break
-    end
-    parent = self.items[parent.parent]
+    parent = self:get_parent(parent)
   end
   return parent
 end
@@ -56,6 +52,20 @@ end
 function Root:add_root_content(content)
   table.insert(self.content, content)
   self:process_root_content(content)
+end
+
+function Root:get_parent(item)
+  if not item.parent or item.parent == 0 then
+    return self
+  end
+  return self.items[item.parent]
+end
+
+function Root:set_headline_end(headline, lnum, level)
+  while headline.level >= level do
+    headline:set_range_end(lnum - 1)
+    headline = self:get_parent(headline)
+  end
 end
 
 -- TODO: Figure out a way to properly update child tags

@@ -14,7 +14,11 @@ describe('Parser', function()
       headlines = {},
       level = 1,
       line = "* TODO Something with a lot of tags :WORK:",
-      line_nr = 2,
+      id = 2,
+      range = {
+        from = { line = 2, col = 1 },
+        to = { line = 2, col = 1 },
+      },
       parent = 0,
       type = "HEADLINE",
       title = 'Something with a lot of tags',
@@ -44,7 +48,11 @@ describe('Parser', function()
     assert.are.same({
       level = 0,
       line = "Top level content",
-      line_nr = 1,
+      range = {
+        from = { line = 1, col = 1 },
+        to = { line = 1, col = 1 },
+      },
+      id = 1,
       parent = 0,
       type = "CONTENT",
     }, parsed.items[1])
@@ -53,7 +61,11 @@ describe('Parser', function()
       headlines = { 3 },
       level = 1,
       line = "* TODO Test orgmode",
-      line_nr = 2,
+      range = {
+        from = { line = 2, col = 1 },
+        to = { line = 6, col = 1 },
+      },
+      id = 2,
       parent = 0,
       priority = '',
       title = 'Test orgmode',
@@ -66,7 +78,11 @@ describe('Parser', function()
       headlines = { 5 },
       level = 2,
       line = "** TODO [#A] Test orgmode level 2 :PRIVATE:",
-      line_nr = 3,
+      range = {
+        from = { line = 3, col = 1 },
+        to = { line = 6, col = 1 },
+      },
+      id = 3,
       parent = 2,
       priority = 'A',
       title = 'Test orgmode level 2',
@@ -77,7 +93,11 @@ describe('Parser', function()
     assert.are.same({
       level = 2,
       line = "Some content for level 2",
-      line_nr = 4,
+      id = 4,
+      range = {
+        from = { line = 4, col = 1 },
+        to = { line = 4, col = 1 },
+      },
       parent = 3,
       type = "CONTENT",
     }, parsed.items[4])
@@ -86,7 +106,11 @@ describe('Parser', function()
       headlines = {},
       level = 3,
       line = "*** NEXT [#1] Level 3",
-      line_nr = 5,
+      id = 5,
+      range = {
+        from = { line = 5, col = 1 },
+        to = { line = 6, col = 1 },
+      },
       parent = 3,
       priority = '1',
       title = 'Level 3',
@@ -97,7 +121,11 @@ describe('Parser', function()
     assert.are.same({
       level = 3,
       line = "Content Level 3",
-      line_nr = 6,
+      id = 6,
+      range = {
+        from = { line = 6, col = 1 },
+        to = { line = 6, col = 1 },
+      },
       parent = 5,
       type = "CONTENT",
     }, parsed.items[6])
@@ -106,8 +134,12 @@ describe('Parser', function()
       headlines = {},
       level = 1,
       line = "* DONE top level todo :WORK:",
-      line_nr = 7,
+      id = 7,
       priority = '',
+      range = {
+        from = { line = 7, col = 1 },
+        to = { line = 8, col = 1 },
+      },
       title = 'top level todo',
       parent = 0,
       type = "HEADLINE",
@@ -117,7 +149,11 @@ describe('Parser', function()
     assert.are.same({
       level = 1,
       line = "content for top level todo",
-      line_nr = 8,
+      id = 8,
+      range = {
+        from = { line = 8, col = 1 },
+        to = { line = 8, col = 1 },
+      },
       parent = 7,
       type = "CONTENT",
     }, parsed.items[8])
@@ -126,7 +162,11 @@ describe('Parser', function()
       headlines = { 11 },
       level = 1,
       line = "* TODO top level todo with multiple tags :OFFICE:PROJECT:",
-      line_nr = 9,
+      id = 9,
+      range = {
+        from = { line = 9, col = 1 },
+        to = { line = 11, col = 1 },
+      },
       parent = 0,
       priority = '',
       title = 'top level todo with multiple tags',
@@ -137,7 +177,11 @@ describe('Parser', function()
     assert.are.same({
       level = 1,
       line = "multiple tags content, tags not read from content :FROMCONTENT:",
-      line_nr = 10,
+      id = 10,
+      range = {
+        from = { line = 10, col = 1 },
+        to = { line = 10, col = 1 },
+      },
       parent = 9,
       type = "CONTENT",
     }, parsed.items[10])
@@ -146,7 +190,11 @@ describe('Parser', function()
       headlines = {},
       level = 2,
       line = "** NEXT Working on this now :OFFICE:NESTED:",
-      line_nr = 11,
+      id = 11,
+      range = {
+        from = { line = 11, col = 1 },
+        to = { line = 11, col = 1 },
+      },
       parent = 9,
       type = "HEADLINE",
       priority = '',
@@ -159,7 +207,11 @@ describe('Parser', function()
       headlines = {},
       level = 1,
       line = "* NOKEYWORD Headline with wrong todo keyword and wrong tag format :WORK : OFFICE:",
-      line_nr = 12,
+      id = 12,
+      range = {
+        from = { line = 12, col = 1 },
+        to = { line = 12, col = 1 },
+      },
       parent = 0,
       priority = '',
       title = 'NOKEYWORD Headline with wrong todo keyword and wrong tag format :WORK : OFFICE:',
@@ -167,8 +219,12 @@ describe('Parser', function()
       todo_keyword = '',
       tags = {},
     }, parsed.items[12])
-    assert.are.same(parsed.level, 0)
-    assert.are.same(parsed.line_nr, 0)
-    assert.are.same(parsed.lines, lines)
+    assert.are.same(0, parsed.level)
+    assert.are.same(0, parsed.id)
+    assert.are.same(lines, parsed.lines)
+    assert.are.same({
+      from = { line = 1, col = 1 },
+      to = { line = 12, col = 1 }
+    }, parsed.range)
   end)
 end)

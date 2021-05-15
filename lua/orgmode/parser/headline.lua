@@ -5,10 +5,14 @@ local todo_keywords = {'TODO', 'NEXT', 'DONE'}
 function Headline:new(data)
   data = data or {}
   local headline = { type = Types.HEADLINE }
+  headline.id = data.lnum
   headline.level = data.line and #data.line:match('^%*+') or 0
-  headline.parent = data.parent.line_nr
+  headline.parent = data.parent.id
   headline.line = data.line
-  headline.line_nr = data.line_nr
+  headline.range = {
+    from = { line = data.lnum, col = 1 },
+    to = { line = data.lnum, col = 1 }
+  }
   headline.content = {}
   headline.headlines = {}
   headline.todo_keyword = ''
@@ -26,13 +30,17 @@ function Headline:new(data)
 end
 
 function Headline:add_headline(headline)
-  table.insert(self.headlines, headline.line_nr)
+  table.insert(self.headlines, headline.id)
   return headline
 end
 
 function Headline:add_content(content)
-  table.insert(self.content, content.line_nr)
+  table.insert(self.content, content.id)
   return content
+end
+
+function Headline:set_range_end(lnum)
+  self.range.to.line = lnum
 end
 
 function Headline:parse_line()
