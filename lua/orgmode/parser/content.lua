@@ -4,10 +4,14 @@ local Types = require('orgmode.parser.types')
 function Content:new(data)
   data = data or {}
   local content = { type = Types.CONTENT }
-  content.parent = data.parent.line_nr
+  content.parent = data.parent.id
   content.level = data.parent.level
   content.line = data.line
-  content.line_nr = data.line_nr
+  content.range = {
+      from = { line = data.lnum, col = 1 },
+      to = { line = data.lnum, col = 1 },
+  }
+  content.id = data.lnum
   setmetatable(content, self)
   self.__index = self
   content:parse()
