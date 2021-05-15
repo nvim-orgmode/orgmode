@@ -4,7 +4,7 @@ local date_pattern = '^(%d%d%d%d)-(%d%d)-(%d%d)%s+%a%a%a$'
 local date_time_pattern = '^(%d%d%d%d)-(%d%d)-(%d%d)%s+%a%a%a%s+(%d?%d:%d%d)$'
 local adjustment_pattern = '(%s+[%.%+%-][%+%-%s%dhdwmy]+)$'
 
--- TODO: Support diary format
+-- TODO: Support diary format and format without short date name
 function Date:new(data)
   data = data or {}
   local opts = {}

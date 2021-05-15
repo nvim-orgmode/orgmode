@@ -1,4 +1,5 @@
 local parser = require('orgmode.parser')
+local Date = require('orgmode.objects.date')
 
 describe('Parser', function()
   it('should parse filetags headline', function()
@@ -11,6 +12,7 @@ describe('Parser', function()
     assert.are.same(parsed.tags, {'Tag1', 'Tag2'})
     assert.are.same(parsed.items[2], {
       content = {},
+      dates = {},
       headlines = {},
       level = 1,
       line = "* TODO Something with a lot of tags :WORK:",
@@ -58,6 +60,7 @@ describe('Parser', function()
     }, parsed.items[1])
     assert.are.same({
       content = {},
+      dates = {},
       headlines = { 3 },
       level = 1,
       line = "* TODO Test orgmode",
@@ -75,6 +78,7 @@ describe('Parser', function()
     }, parsed.items[2])
     assert.are.same({
       content = { 4 },
+      dates = {},
       headlines = { 5 },
       level = 2,
       line = "** TODO [#A] Test orgmode level 2 :PRIVATE:",
@@ -103,6 +107,7 @@ describe('Parser', function()
     }, parsed.items[4])
     assert.are.same({
       content = { 6 },
+      dates = {},
       headlines = {},
       level = 3,
       line = "*** NEXT [#1] Level 3",
@@ -131,6 +136,7 @@ describe('Parser', function()
     }, parsed.items[6])
     assert.are.same({
       content = { 8 },
+      dates = {},
       headlines = {},
       level = 1,
       line = "* DONE top level todo :WORK:",
@@ -159,6 +165,7 @@ describe('Parser', function()
     }, parsed.items[8])
     assert.are.same({
       content = { 10 },
+      dates = {},
       headlines = { 11 },
       level = 1,
       line = "* TODO top level todo with multiple tags :OFFICE:PROJECT:",
@@ -187,6 +194,7 @@ describe('Parser', function()
     }, parsed.items[10])
     assert.are.same({
       content = {},
+      dates = {},
       headlines = {},
       level = 2,
       line = "** NEXT Working on this now :OFFICE:NESTED:",
@@ -204,6 +212,7 @@ describe('Parser', function()
     }, parsed.items[11])
     assert.are.same({
       content = {},
+      dates = {},
       headlines = {},
       level = 1,
       line = "* NOKEYWORD Headline with wrong todo keyword and wrong tag format :WORK : OFFICE:",
@@ -226,5 +235,77 @@ describe('Parser', function()
       from = { line = 1, col = 1 },
       to = { line = 12, col = 1 }
     }, parsed.range)
+  end)
+
+  it('should parse headline and its planning dates', function()
+    local lines = {
+      '* TODO Test orgmode <2021-05-15 Sat> :WORK:',
+      'DEADLINE: <2021-05-20 Thu> SCHEDULED: <2021-05-18 Tue> CLOSED: <2021-05-21 Fri>',
+      '* TODO get deadline only if first line after headline',
+      'Some content',
+      'DEADLINE: <2021-05-22 Sat>'
+    }
+
+    local parsed = parser.parse(lines)
+    assert.are.same({
+      content = { 2 },
+      dates = {
+        { type = 'NONE', date = Date:from_string('2021-05-15 Sat') },
+        { type = 'DEADLINE', date = Date:from_string('2021-05-20 Thu') },
+        { type = 'SCHEDULED', date = Date:from_string('2021-05-18 Tue') },
+        { type = 'CLOSED', date = Date:from_string('2021-05-21 Fri') },
+      },
+      headlines = {},
+      level = 1,
+      line = "* TODO Test orgmode <2021-05-15 Sat> :WORK:",
+      id = 1,
+      range = {
+        from = { line = 1, col = 1 },
+        to = { line = 2, col = 1 },
+      },
+      parent = 0,
+      priority = '',
+      title = 'Test orgmode <2021-05-15 Sat>',
+      type = "HEADLINE",
+      todo_keyword = 'TODO',
+      tags = {'WORK'},
+    }, parsed.items[1])
+    assert.are.same({
+      level = 1,
+      line = "DEADLINE: <2021-05-20 Thu> SCHEDULED: <2021-05-18 Tue> CLOSED: <2021-05-21 Fri>",
+      id = 2,
+      range = {
+        from = { line = 2, col = 1 },
+        to = { line = 2, col = 1 },
+      },
+      parent = 1,
+      type = "PLANNING",
+      dates = {
+        { type = 'DEADLINE', date = Date:from_string('2021-05-20 Thu') },
+        { type = 'SCHEDULED', date = Date:from_string('2021-05-18 Tue') },
+        { type = 'CLOSED', date = Date:from_string('2021-05-21 Fri') },
+      },
+    }, parsed.items[2])
+    assert.are.same({
+      content = { 4, 5 },
+      dates = {
+        { type = 'NONE', date = Date:from_string('2021-05-22 Sat') },
+      },
+      headlines = {},
+      level = 1,
+      line = "* TODO get deadline only if first line after headline",
+      id = 3,
+      range = {
+        from = { line = 3, col = 1 },
+        to = { line = 3, col = 1 }, -- TODO: Fix
+      },
+      parent = 0,
+      priority = '',
+      title = 'get deadline only if first line after headline',
+      type = "HEADLINE",
+      todo_keyword = 'TODO',
+      tags = {},
+    }, parsed.items[3])
+    -- print(vim.inspect(parsed))
   end)
 end)
