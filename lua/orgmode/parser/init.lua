@@ -4,7 +4,7 @@ local function parse(lines)
   local root = Root:new(lines)
   local parent = root
   for line_nr, line in ipairs(lines) do
-    local is_headline = line:match('^%*+%s')
+    local is_headline = line:match('^%*+%s+')
     if is_headline then
       local level = #line:match('^%*+')
       if level <= parent.level then

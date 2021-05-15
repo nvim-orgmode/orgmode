@@ -64,7 +64,7 @@ end
 function Root:process_root_content(content)
   if content:is_keyword() and content.keyword.name == 'FILETAGS' then
     for _, tag in ipairs(vim.split(content.keyword.value, '%s*,%s*')) do
-      if tag:find('^[%w_@]+$') and not vim.tbl_contains(self.tags, tag) then
+      if tag:find('^[%w_%%@#]+$') and not vim.tbl_contains(self.tags, tag) then
         table.insert(self.tags, tag)
       end
     end
