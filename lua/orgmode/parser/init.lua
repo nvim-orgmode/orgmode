@@ -16,7 +16,7 @@ local function parse(lines)
       root:add_content({ line = line, lnum = lnum, parent = parent })
     end
   end
-  return root
+  return root:finish_parsing()
 end
 
 return {

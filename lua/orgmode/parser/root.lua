@@ -78,4 +78,9 @@ function Root:process_root_content(content)
   end
 end
 
+-- TODO: Set last headline end range properly
+function Root:finish_parsing()
+  return self
+end
+
 return Root
