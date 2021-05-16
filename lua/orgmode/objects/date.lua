@@ -1,6 +1,6 @@
 local Date = {}
 local spans = { d = 'day', m = 'month', y = 'year', h = 'hour', w = 'week' }
-local config = require('orgmode').config
+local config = require('orgmode.config')
 
 local function set_date_opts(source, target)
   target = target or {}

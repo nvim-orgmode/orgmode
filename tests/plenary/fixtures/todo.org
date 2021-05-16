@@ -1,0 +1,11 @@
+* TODO Test orgmode
+** TODO [#A] Test orgmode level 2 :PRIVATE:
+Some content for level 2
+*** NEXT [#1] Level 3
+Content Level 3
+* DONE top level todo :WORK:
+content for top level todo
+* TODO top level todo with multiple tags :OFFICE:PROJECT:
+multiple tags content, tags not read from content :FROMCONTENT:
+** NEXT Working on this now :OFFICE:NESTED:
+* NOKEYWORD Headline with wrong todo keyword and wrong tag format :WORK : OFFICE:

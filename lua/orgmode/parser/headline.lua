@@ -1,7 +1,7 @@
 local Headline = {}
 local Types = require('orgmode.parser.types')
 local DateParser = require('orgmode.parser.date')
-local todo_keywords = {'TODO', 'NEXT', 'DONE'}
+local config = require('orgmode.config')
 
 function Headline:new(data)
   data = data or {}
@@ -70,7 +70,7 @@ function Headline:_parse_line()
 end
 
 function Headline:_parse_todo_keyword(line)
-  for _, word in ipairs(todo_keywords) do
+  for _, word in ipairs(config.org_todo_keywords) do
     if vim.startswith(line, word) then
       self.todo_keyword = word
       break
