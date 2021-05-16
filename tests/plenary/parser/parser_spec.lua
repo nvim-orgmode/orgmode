@@ -297,7 +297,7 @@ describe('Parser', function()
       id = 3,
       range = {
         from = { line = 3, col = 1 },
-        to = { line = 3, col = 1 }, -- TODO: Fix
+        to = { line = 4, col = 1 },
       },
       parent = 0,
       priority = '',

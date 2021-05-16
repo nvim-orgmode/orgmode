@@ -14,6 +14,9 @@ local function parse(lines)
       parent = root:add_headline({ line = line, lnum = lnum, parent = parent })
     else
       root:add_content({ line = line, lnum = lnum, parent = parent })
+      if lnum == #lines and parent.level > 0 then
+        root:set_headline_end(parent, lnum, 1)
+      end
     end
   end
   return root:finish_parsing()
