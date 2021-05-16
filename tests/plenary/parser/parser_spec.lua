@@ -1,3 +1,4 @@
+local Types = require('orgmode.parser.types')
 local parser = require('orgmode.parser')
 local Date = require('orgmode.objects.date')
 
@@ -250,10 +251,46 @@ describe('Parser', function()
     assert.are.same({
       content = { 2 },
       dates = {
-        { type = 'NONE', date = Date:from_string('2021-05-15 Sat') },
-        { type = 'DEADLINE', date = Date:from_string('2021-05-20 Thu') },
-        { type = 'SCHEDULED', date = Date:from_string('2021-05-18 Tue') },
-        { type = 'CLOSED', date = Date:from_string('2021-05-21 Fri') },
+        {
+          type = 'NONE',
+          date = Date.from_string('2021-05-15 Sat'),
+          active = true,
+          valid = true,
+          range = {
+            from = { line = 1, col = 21 },
+            to = { line = 1, col = 36 },
+          },
+        },
+        {
+          type = 'DEADLINE',
+          date = Date.from_string('2021-05-20 Thu'),
+          active = true,
+          valid = true,
+          range = {
+            from = { line = 2, col = 11 },
+            to = { line = 2, col = 26 },
+          },
+        },
+        {
+          type = 'SCHEDULED',
+          date = Date.from_string('2021-05-18 Tue'),
+          active = true,
+          valid = true,
+          range = {
+            from = { line = 2, col = 39 },
+            to = { line = 2, col = 54 },
+          },
+        },
+        {
+          type = 'CLOSED',
+          date = Date.from_string('2021-05-21 Fri'),
+          active = true,
+          valid = true,
+          range = {
+            from = { line = 2, col = 64 },
+            to = { line = 2, col = 79 },
+          },
+        },
       },
       headlines = {},
       level = 1,
@@ -281,15 +318,51 @@ describe('Parser', function()
       parent = 1,
       type = "PLANNING",
       dates = {
-        { type = 'DEADLINE', date = Date:from_string('2021-05-20 Thu') },
-        { type = 'SCHEDULED', date = Date:from_string('2021-05-18 Tue') },
-        { type = 'CLOSED', date = Date:from_string('2021-05-21 Fri') },
+        {
+          type = 'DEADLINE',
+          date = Date.from_string('2021-05-20 Thu'),
+          active = true,
+          valid = true,
+          range = {
+            from = { line = 2, col = 11 },
+            to = { line = 2, col = 26 },
+          },
+        },
+        {
+          type = 'SCHEDULED',
+          date = Date.from_string('2021-05-18 Tue'),
+          active = true,
+          valid = true,
+          range = {
+            from = { line = 2, col = 39 },
+            to = { line = 2, col = 54 },
+          },
+        },
+        {
+          type = 'CLOSED',
+          date = Date.from_string('2021-05-21 Fri'),
+          active = true,
+          valid = true,
+          range = {
+            from = { line = 2, col = 64 },
+            to = { line = 2, col = 79 },
+          },
+        },
       },
     }, parsed.items[2])
     assert.are.same({
       content = { 4, 5 },
       dates = {
-        { type = 'NONE', date = Date:from_string('2021-05-22 Sat') },
+        {
+          type = 'NONE',
+          date = Date.from_string('2021-05-22 Sat'),
+          active = true,
+          valid = true,
+          range = {
+            from = { line = 5, col = 11 },
+            to = { line = 5, col = 26 },
+          },
+        },
       },
       headlines = {},
       level = 1,
@@ -306,6 +379,39 @@ describe('Parser', function()
       todo_keyword = 'TODO',
       tags = {},
     }, parsed.items[3])
-    -- print(vim.inspect(parsed))
+    assert.are.same({
+      level = 1,
+      line = "Some content",
+      range = {
+        from = { line = 4, col = 1 },
+        to = { line = 4, col = 1 },
+      },
+      id = 4,
+      parent = 3,
+      type = "CONTENT",
+    }, parsed.items[4])
+    assert.are.same({
+      level = 1,
+      line = "DEADLINE: <2021-05-22 Sat>",
+      dates = {
+        {
+          type = 'NONE', -- TODO: Check if it's bad idea to override content date type from PLANNING to NONE in headline parser
+          date = Date.from_string('2021-05-22 Sat'),
+          active = true,
+          valid = true,
+          range = {
+            from = { line = 5, col = 11 },
+            to = { line = 5, col = 26 },
+          },
+        },
+      },
+      range = {
+        from = { line = 5, col = 1 },
+        to = { line = 5, col = 1 },
+      },
+      id = 5,
+      parent = 3,
+      type = Types.PLANNING,
+    }, parsed.items[5])
   end)
 end)

@@ -1,6 +1,6 @@
 local Content = {}
 local Types = require('orgmode.parser.types')
-local Date = require('orgmode.objects.date')
+local DateParser = require('orgmode.parser.date')
 local plannings = {'DEADLINE', 'SCHEDULED', 'CLOSED'}
 
 function Content:new(data)
@@ -35,7 +35,10 @@ function Content:parse()
   local planning = self:_parse_planning()
   if planning then return self end
 
-  self:_parse_dates()
+  local dates = DateParser.parse_all_from_line(self.line, self.range.from.line)
+  for _, date in ipairs(dates) do
+    table.insert(self.dates, date)
+  end
 end
 
 function Content:_parse_keyword()
@@ -52,7 +55,7 @@ end
 function Content:_parse_planning()
   local is_planning = false
   for _, planning in ipairs(plannings) do
-    if self.line:match('^%s*'..planning..':%s*<[^>]*>') then
+    if self.line:match('^%s*'..planning..':%s*'..DateParser.pattern) then
       is_planning = true
       break
     end
@@ -60,25 +63,19 @@ function Content:_parse_planning()
   if not is_planning then return false end
   self.type = Types.PLANNING
   self.dates = self.dates or {}
+  local dates = {}
   for _, planning in ipairs(plannings) do
-    for plan, datetime in self.line:gmatch('('..planning..')'..':%s*<([^>]*)>') do
-      local date = Date:from_string(vim.trim(datetime))
+    for plan, open, datetime, close in self.line:gmatch('('..planning..'):%s*'..DateParser.pattern) do
+      local date = DateParser.from_match(self.line, self.range.from.line, open, datetime, close, dates[#dates], plan)
       if date.valid then
-        table.insert(self.dates, { type = plan, date = date })
+        table.insert(dates, date)
       end
     end
   end
-  return true
-end
-
-function Content:_parse_dates()
-  for datetime in self.line:gmatch('<([^>]*)>') do
-    local date = Date:from_string(vim.trim(datetime))
-    if date.valid then
-      self.dates = self.dates or {}
-      table.insert(self.dates, date)
-    end
+  for _, date in ipairs(dates) do
+    table.insert(self.dates, date)
   end
+  return true
 end
 
 return Content

@@ -25,7 +25,46 @@ function Date:new(data)
   return opts
 end
 
-function Date:from_string(date, adjustment)
+local function parse_datetime(value, adjustment)
+  local date = value:gsub(adjustment_pattern, '')
+  local Y,M,D,T = date:match(date_time_pattern)
+  local time = vim.split(T, ':')
+  local opts = {
+    year = tonumber(Y),
+    month = tonumber(M),
+    day = tonumber(D),
+    hour = tonumber(time[1]),
+    min = tonumber(time[2]),
+  }
+  local date_part = date:gsub('%s+'..T..'$', '')
+  local valid = os.date('%Y-%m-%d %a', os.time(opts)) == date_part and true or false
+  opts.adjustment = adjustment
+  if valid then
+    local hour_valid = opts.hour >= 0 and opts.hour <= 23 and true or false
+    local minute_valid = opts.hour >= 0 and opts.hour <= 59 and true or false
+    valid = hour_valid and minute_valid
+  end
+  opts.valid = valid
+  opts.original_value = value
+  return Date:new(opts)
+end
+
+local function parse_date(value, adjustment)
+  local date = value:gsub(adjustment_pattern, '')
+  local Y,M,D = value:match(date_pattern)
+  local opts = {
+    year = tonumber(Y),
+    month = tonumber(M),
+    day = tonumber(D),
+  }
+  opts.adjustment = adjustment
+  opts.valid = os.date('%Y-%m-%d %a', os.time(opts)) == date and true or false
+  opts.original_value = value
+  opts.date_only = true
+  return Date:new(opts)
+end
+
+local function from_string(date, adjustment)
   local adjustment_match = date:match(adjustment_pattern)
   local date_part = date
   if not adjustment and adjustment_match then
@@ -33,10 +72,10 @@ function Date:from_string(date, adjustment)
     date_part = date_part:gsub(adjustment_pattern, '')
   end
   if date_part:match(date_time_pattern) then
-    return Date:_parse_datetime(date, adjustment)
+    return parse_datetime(date, adjustment)
   end
   if date_part:match(date_pattern) then
-    return Date:_parse_date(date, adjustment)
+    return parse_date(date, adjustment)
   end
   return Date:new()
 end
@@ -95,43 +134,6 @@ function Date:adjust(value)
   return Date:new(opts)
 end
 
-function Date:_parse_datetime(value, adjustment)
-  local date = value:gsub(adjustment_pattern, '')
-  local Y,M,D,T = date:match(date_time_pattern)
-  local time = vim.split(T, ':')
-  local opts = {
-    year = tonumber(Y),
-    month = tonumber(M),
-    day = tonumber(D),
-    hour = tonumber(time[1]),
-    min = tonumber(time[2]),
-  }
-  local date_part = date:gsub('%s+'..T..'$', '')
-  local valid = os.date('%Y-%m-%d %a', os.time(opts)) == date_part and true or false
-  opts.adjustment = adjustment
-  if valid then
-    local hour_valid = opts.hour >= 0 and opts.hour <= 23 and true or false
-    local minute_valid = opts.hour >= 0 and opts.hour <= 59 and true or false
-    valid = hour_valid and minute_valid
-  end
-  opts.valid = valid
-  opts.original_value = value
-  return Date:new(opts)
-end
-
-function Date:_parse_date(value, adjustment)
-  local date = value:gsub(adjustment_pattern, '')
-  local Y,M,D = value:match(date_pattern)
-  local opts = {
-    year = tonumber(Y),
-    month = tonumber(M),
-    day = tonumber(D),
-  }
-  opts.adjustment = adjustment
-  opts.valid = os.date('%Y-%m-%d %a', os.time(opts)) == date and true or false
-  opts.original_value = value
-  opts.date_only = true
-  return Date:new(opts)
-end
-
-return Date
+return {
+  from_string = from_string
+}
