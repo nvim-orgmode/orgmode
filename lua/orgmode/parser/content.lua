@@ -67,9 +67,7 @@ function Content:_parse_planning()
   for _, planning in ipairs(plannings) do
     for plan, open, datetime, close in self.line:gmatch('('..planning..'):%s*'..DateParser.pattern) do
       local date = DateParser.from_match(self.line, self.range.from.line, open, datetime, close, dates[#dates], plan)
-      if date.valid then
-        table.insert(dates, date)
-      end
+      table.insert(dates, date)
     end
   end
   for _, date in ipairs(dates) do

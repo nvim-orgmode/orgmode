@@ -241,7 +241,7 @@ describe('Parser', function()
   it('should parse headline and its planning dates', function()
     local lines = {
       '* TODO Test orgmode <2021-05-15 Sat> :WORK:',
-      'DEADLINE: <2021-05-20 Thu> SCHEDULED: <2021-05-18 Tue> CLOSED: <2021-05-21 Fri>',
+      'DEADLINE: <2021-05-20 Thu> SCHEDULED: <2021-05-18> CLOSED: <2021-05-21 Fri>',
       '* TODO get deadline only if first line after headline',
       'Some content',
       'DEADLINE: <2021-05-22 Sat>'
@@ -255,7 +255,6 @@ describe('Parser', function()
           type = 'NONE',
           date = Date.from_string('2021-05-15 Sat'),
           active = true,
-          valid = true,
           range = {
             from = { line = 1, col = 21 },
             to = { line = 1, col = 36 },
@@ -265,7 +264,6 @@ describe('Parser', function()
           type = 'DEADLINE',
           date = Date.from_string('2021-05-20 Thu'),
           active = true,
-          valid = true,
           range = {
             from = { line = 2, col = 11 },
             to = { line = 2, col = 26 },
@@ -273,22 +271,20 @@ describe('Parser', function()
         },
         {
           type = 'SCHEDULED',
-          date = Date.from_string('2021-05-18 Tue'),
+          date = Date.from_string('2021-05-18'),
           active = true,
-          valid = true,
           range = {
             from = { line = 2, col = 39 },
-            to = { line = 2, col = 54 },
+            to = { line = 2, col = 50 },
           },
         },
         {
           type = 'CLOSED',
           date = Date.from_string('2021-05-21 Fri'),
           active = true,
-          valid = true,
           range = {
-            from = { line = 2, col = 64 },
-            to = { line = 2, col = 79 },
+            from = { line = 2, col = 60 },
+            to = { line = 2, col = 75 },
           },
         },
       },
@@ -309,7 +305,7 @@ describe('Parser', function()
     }, parsed.items[1])
     assert.are.same({
       level = 1,
-      line = "DEADLINE: <2021-05-20 Thu> SCHEDULED: <2021-05-18 Tue> CLOSED: <2021-05-21 Fri>",
+      line = "DEADLINE: <2021-05-20 Thu> SCHEDULED: <2021-05-18> CLOSED: <2021-05-21 Fri>",
       id = 2,
       range = {
         from = { line = 2, col = 1 },
@@ -322,7 +318,6 @@ describe('Parser', function()
           type = 'DEADLINE',
           date = Date.from_string('2021-05-20 Thu'),
           active = true,
-          valid = true,
           range = {
             from = { line = 2, col = 11 },
             to = { line = 2, col = 26 },
@@ -330,22 +325,20 @@ describe('Parser', function()
         },
         {
           type = 'SCHEDULED',
-          date = Date.from_string('2021-05-18 Tue'),
+          date = Date.from_string('2021-05-18'),
           active = true,
-          valid = true,
           range = {
             from = { line = 2, col = 39 },
-            to = { line = 2, col = 54 },
+            to = { line = 2, col = 50 },
           },
         },
         {
           type = 'CLOSED',
           date = Date.from_string('2021-05-21 Fri'),
           active = true,
-          valid = true,
           range = {
-            from = { line = 2, col = 64 },
-            to = { line = 2, col = 79 },
+            from = { line = 2, col = 60 },
+            to = { line = 2, col = 75 },
           },
         },
       },
@@ -357,7 +350,6 @@ describe('Parser', function()
           type = 'NONE',
           date = Date.from_string('2021-05-22 Sat'),
           active = true,
-          valid = true,
           range = {
             from = { line = 5, col = 11 },
             to = { line = 5, col = 26 },
@@ -398,7 +390,6 @@ describe('Parser', function()
           type = 'NONE', -- TODO: Check if it's bad idea to override content date type from PLANNING to NONE in headline parser
           date = Date.from_string('2021-05-22 Sat'),
           active = true,
-          valid = true,
           range = {
             from = { line = 5, col = 11 },
             to = { line = 5, col = 26 },
