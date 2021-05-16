@@ -2,12 +2,13 @@ local Headline = require('orgmode.parser.headline')
 local Content = require('orgmode.parser.content')
 local Root = {}
 
-function Root:new(lines)
+function Root:new(lines, filename)
   local data = {
     lines = lines,
     content = {},
     items = {},
     level = 0,
+    category = filename or '',
     range = {
       from = { line = 1, col = 1 },
       to = { line = #lines, col = 1 },
