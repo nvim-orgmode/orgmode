@@ -1,6 +1,6 @@
 local Headline = {}
 local Types = require('orgmode.parser.types')
-local Date = require('orgmode.objects.date')
+local DateParser = require('orgmode.parser.date')
 local todo_keywords = {'TODO', 'NEXT', 'DONE'}
 
 function Headline:new(data)
@@ -43,7 +43,8 @@ function Headline:add_content(content)
     end
   elseif content.dates then
     for _, date in ipairs(content.dates) do
-      table.insert(self.dates, { date = date.date, type = 'NONE' })
+      date.type = 'NONE'
+      table.insert(self.dates, date)
     end
   end
   table.insert(self.content, content.id)
@@ -62,7 +63,10 @@ function Headline:_parse_line()
   self.priority = line:match(self.todo_keyword..'%s+%[#([A-Z0-9])%]') or ''
   self:_parse_tags(line)
   self:_parse_title(line)
-  self:_parse_dates(line)
+  local dates = DateParser.parse_all_from_line(self.line, self.range.from.line)
+  for _, date in ipairs(dates) do
+    table.insert(self.dates, date)
+  end
 end
 
 function Headline:_parse_todo_keyword(line)
@@ -92,16 +96,6 @@ function Headline:_parse_title(line)
     title = title:gsub(exclude_pattern, '')
   end
   self.title = vim.trim(title)
-end
-
-function Headline:_parse_dates(line)
-  for datetime in line:gmatch('<([^>]*)>') do
-    local date = Date:from_string(vim.trim(datetime))
-    if date.valid then
-      self.dates = self.dates or {}
-      table.insert(self.dates, { type = 'NONE', date = date })
-    end
-  end
 end
 
 return Headline

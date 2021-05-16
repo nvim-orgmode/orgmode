@@ -34,9 +34,36 @@ describe('Content parser', function()
     })
     assert.are.same(Types.PLANNING, content.type)
     assert.are.same({
-      { type = 'DEADLINE', date = Date:from_string('2021-05-15 Sat') },
-      { type = 'SCHEDULED', date = Date:from_string('2021-05-12 Wed 13:30 +1w') },
-      { type = 'CLOSED', date = Date:from_string('2021-05-16 Sun 15:45') }
+      {
+        type = 'DEADLINE',
+        date = Date.from_string('2021-05-15 Sat'),
+        active = true,
+        range = {
+          from = { line = 1, col = 11 },
+          to = { line = 1, col = 26 }
+        },
+        valid = true,
+      },
+      {
+        type = 'SCHEDULED',
+        date = Date.from_string('2021-05-12 Wed 13:30 +1w'),
+        active = true,
+        range = {
+          from = { line = 1, col = 39 },
+          to = { line = 1, col = 64 }
+        },
+        valid = true,
+      },
+      {
+        type = 'CLOSED',
+        date = Date.from_string('2021-05-16 Sun 15:45'),
+        active = true,
+        range = {
+          from = { line = 1, col = 74 },
+          to = { line = 1, col = 95 }
+        },
+        valid = true,
+      }
     }, content.dates)
   end)
 end)

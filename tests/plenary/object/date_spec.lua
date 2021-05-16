@@ -2,7 +2,7 @@ local Date = require('orgmode.objects.date')
 describe('Date object', function()
   it('should parse date', function()
     local date = '2021-05-15 Sat'
-    local result = Date:from_string(date)
+    local result = Date.from_string(date)
     assert.are.same(date, result.original_value)
     assert.are.same(true, result.valid)
     assert.are.same(2021, result.year)
@@ -18,7 +18,7 @@ describe('Date object', function()
 
   it('should parse date time', function()
     local date = '2021-06-30 Wed 09:00'
-    local result = Date:from_string(date)
+    local result = Date.from_string(date)
     assert.are.same(date, result.original_value)
     assert.are.same(true, result.valid)
     assert.are.same(2021, result.year)
@@ -34,7 +34,7 @@ describe('Date object', function()
 
   it('should parse date time with warning adjustment', function()
     local date = '2021-06-30 Wed 09:00 -1d'
-    local result = Date:from_string(date)
+    local result = Date.from_string(date)
     assert.are.same(date, result.original_value)
     assert.are.same(true, result.valid)
     assert.are.same(2021, result.year)
@@ -50,7 +50,7 @@ describe('Date object', function()
 
   it('should parse date time with repeat adjustment', function()
     local date = '2021-06-30 Wed 09:00 +1m'
-    local result = Date:from_string(date)
+    local result = Date.from_string(date)
     assert.are.same(date, result.original_value)
     assert.are.same(true, result.valid)
     assert.are.same(2021, result.year)
@@ -66,7 +66,7 @@ describe('Date object', function()
 
   it('should parse date time with both repeat and warning adjustment', function()
     local date = '2021-06-30 Wed 09:00 +1m -1d'
-    local result = Date:from_string(date)
+    local result = Date.from_string(date)
     assert.are.same(date, result.original_value)
     assert.are.same(true, result.valid)
     assert.are.same(2021, result.year)
@@ -82,7 +82,7 @@ describe('Date object', function()
 
   it('should parse date time with both catch-up adjustment', function()
     local date = '2021-06-30 Wed 09:00 ++5d'
-    local result = Date:from_string(date)
+    local result = Date.from_string(date)
     assert.are.same(date, result.original_value)
     assert.are.same(true, result.valid)
     assert.are.same(2021, result.year)
@@ -98,7 +98,7 @@ describe('Date object', function()
 
   it('should parse date time with both restart adjustment', function()
     local date = '2021-06-30 Wed 09:00 .+1m'
-    local result = Date:from_string(date)
+    local result = Date.from_string(date)
     assert.are.same(date, result.original_value)
     assert.are.same(true, result.valid)
     assert.are.same(2021, result.year)
@@ -114,7 +114,7 @@ describe('Date object', function()
 
   it('should adjust date', function()
     local date = '2021-06-30 Wed 09:00 +1m'
-    local result = Date:from_string(date)
+    local result = Date.from_string(date)
     assert.are.same(date, result.original_value)
     assert.are.same(true, result.valid)
     assert.are.same(2021, result.year)

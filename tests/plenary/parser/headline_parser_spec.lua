@@ -25,22 +25,39 @@ describe('Headline parser', function()
 
   it('should parse dates', function()
     local headline = Headline:new({
-      line = '* TODO [#B] This is some content with date <2021-05-20 Thu> and datetime <2021-06-20 Sun 14:30> :WORK:PROJECT:',
+      line = '* TODO [#B] This is some content with date <2021-05-20 Thu> and datetime [2021-06-20 Sun 14:30] :WORK:PROJECT:',
       lnum = 1,
       parent = { id = 0 },
     })
     assert.are.same(0, headline.parent)
     assert.are.same(1, headline.level)
     assert.are.same(1, headline.id)
-    assert.are.same('* TODO [#B] This is some content with date <2021-05-20 Thu> and datetime <2021-06-20 Sun 14:30> :WORK:PROJECT:', headline.line)
+    assert.are.same('* TODO [#B] This is some content with date <2021-05-20 Thu> and datetime [2021-06-20 Sun 14:30] :WORK:PROJECT:', headline.line)
     assert.are.same('TODO', headline.todo_keyword)
     assert.are.same({'WORK', 'PROJECT'}, headline.tags)
     assert.are.same('B', headline.priority)
     assert.are.same({
-      { type = 'NONE', date = Date:from_string('2021-05-20 Thu') },
-      { type = 'NONE', date = Date:from_string('2021-06-20 Sun 14:30') },
+      {
+        type = 'NONE',
+        date = Date.from_string('2021-05-20 Thu'),
+        valid = true,
+        active = true,
+        range = {
+          from = { line = 1, col = 44 },
+          to = { line = 1, col = 59 },
+        },
+      },
+      {
+        type = 'NONE',
+        date = Date.from_string('2021-06-20 Sun 14:30'),
+        valid = true,
+        active = false,
+        range = {
+          from = { line = 1, col = 74 },
+          to = { line = 1, col = 95 },
+        },
+      },
     }, headline.dates)
-    assert.are.same('This is some content with date <2021-05-20 Thu> and datetime <2021-06-20 Sun 14:30>', headline.title)
     assert.are.same({
       from = { line = 1, col = 1},
       to = { line = 1, col = 1},
