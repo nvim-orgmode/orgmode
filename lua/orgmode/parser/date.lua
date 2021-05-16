@@ -14,6 +14,18 @@ function Date:new(opts)
   return data
 end
 
+function Date:is_deadline(date)
+  return self.active and self.type == 'DEADLINE' and self.date:is_same(date, 'day')
+end
+
+function Date:is_scheduled(date)
+  return self.active and self.type == 'SCHEDULED' and self.date:is_same(date, 'day')
+end
+
+function Date:is_valid_for_agenda(date)
+  return self.active and vim.tbl_contains({'DEADLINE', 'SCHEDULED', 'NONE'}, self.type) and self.date:is_same(date, 'day')
+end
+
 local function from_match(line, lnum, open, datetime, close, last_match, type)
   local date = DateObj.from_string(vim.trim(datetime))
   local search_from = last_match and last_match.range.to.col or 0

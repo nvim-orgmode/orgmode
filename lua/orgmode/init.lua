@@ -1,16 +1,18 @@
 vim.g.orgmode_logs = {}
 local Config = require('orgmode.config')
+local Agenda = require('orgmode.agenda')
 local utils = require('orgmode.utils')
 local parser = require('orgmode.parser')
 local instance = nil
 local Org = {}
 
 function Org:new()
-  local data = { agendas = {}, files = {} }
+  local data = { files = {} }
   setmetatable(data, self)
   self.__index = self
   data:setup_autocmds()
   data:load()
+  data.agenda = Agenda:new({ files = data.files })
   return data
 end
 
@@ -19,31 +21,32 @@ function Org:load(file)
     local filename = vim.fn.fnamemodify(file, ':t:r')
     return utils.readfile(file, function(err, result)
       if err then return end
-      self.agendas[file] = parser.parse(result, filename)
+      self.files[file] = parser.parse(result, filename)
     end)
   end
 
-  self.files = Config:get_agenda_files()
-  for _, item in ipairs(self.files) do
+  local files = Config:get_all_files()
+  for _, item in ipairs(files) do
     local filename = vim.fn.fnamemodify(item, ':t:r')
     utils.readfile(item, function(err, result)
       if err then return end
-      self.agendas[item] = parser.parse(result, filename)
+      self.files[item] = parser.parse(result, filename)
     end)
   end
   return self
 end
 
-function Org:reload()
-  self.files = {}
-  self.agendas = {}
-  return self:load()
+function Org:reload(file)
+  if not file then
+    self.files = {}
+  end
+  return self:load(file)
 end
 
 function Org:setup_autocmds()
   vim.cmd[[augroup orgmode_nvim]]
   vim.cmd[[autocmd!]]
-  vim.cmd[[autocmd BufWritePost *.org call add(g:orgmode_logs, 'TU SAM')]]
+  vim.cmd[[autocmd BufWritePost *.org lua require('orgmode').reload(expand('<afile>:p')))]]
   vim.cmd[[augroup END]]
 end
 
@@ -53,15 +56,19 @@ local function setup(opts)
   return instance
 end
 
-local function reload(opts)
-  if not instance then
-    Config = Config:extend(opts)
-    instance = Org:new()
+local function reload(file)
+  if not instance then return end
+  return instance:reload(file)
+end
+
+local function action(cmd)
+  if instance and cmd == 'agenda_open' then
+    instance.agenda:open()
   end
-  return instance:reload()
 end
 
 return {
   setup = setup,
   reload = reload,
+  action = action,
 }

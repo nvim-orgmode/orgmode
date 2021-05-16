@@ -13,6 +13,7 @@ function Content:new(data)
       from = { line = data.lnum, col = 1 },
       to = { line = data.lnum, col = 1 },
   }
+  content.dates = {}
   content.id = data.lnum
   setmetatable(content, self)
   self.__index = self
@@ -62,7 +63,6 @@ function Content:_parse_planning()
   end
   if not is_planning then return false end
   self.type = Types.PLANNING
-  self.dates = self.dates or {}
   local dates = {}
   for _, planning in ipairs(plannings) do
     for plan, open, datetime, close in self.line:gmatch('('..planning..'):%s*'..DateParser.pattern) do

@@ -21,7 +21,7 @@ function Config:extend(opts)
   return instance
 end
 
-function Config:get_agenda_files()
+function Config:get_all_files()
   if not self.org_agenda_files or self.org_agenda_files == '' then
     return {}
   end
