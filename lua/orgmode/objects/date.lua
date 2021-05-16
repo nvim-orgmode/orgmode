@@ -1,7 +1,6 @@
 local Date = {}
 local spans = { d = 'day', m = 'month', y = 'year', h = 'hour', w = 'week' }
-local start_of_week_num = 2 -- Monday
-local end_of_week_num = 1 -- Sunday
+local config = require('orgmode').config
 
 local function set_date_opts(source, target)
   target = target or {}
@@ -162,7 +161,7 @@ function Date:start_of(span)
   if span == 'week' then
     local this = self
     local date = os.date('*t', self.timestamp)
-    while date.wday ~= start_of_week_num do
+    while date.wday ~= config:get_week_start_day_number() do
       this = this:adjust('-1d')
       date = os.date('*t', this.timestamp)
     end
@@ -189,7 +188,7 @@ function Date:end_of(span)
   if span == 'week' then
     local this = self
     local date = os.date('*t', self.timestamp)
-    while date.wday ~= end_of_week_num do
+    while date.wday ~= config:get_week_end_day_number() do
       this = this:adjust('+1d')
       date = os.date('*t', this.timestamp)
     end
