@@ -14,7 +14,6 @@ describe('Date parser', function()
           from = { line = 1, col = 34 },
           to = { line = 1, col = 49 }
         },
-        valid = true,
     }, dates[1])
   end)
 
@@ -30,7 +29,6 @@ describe('Date parser', function()
           from = { line = 1, col = 34 },
           to = { line = 1, col = 49 }
         },
-        valid = true,
     }, dates[1])
     assert.are.same({
         type = 'NONE',
@@ -40,7 +38,6 @@ describe('Date parser', function()
           from = { line = 1, col = 81 },
           to = { line = 1, col = 102 }
         },
-        valid = true,
     }, dates[2])
   end)
 
@@ -56,7 +53,6 @@ describe('Date parser', function()
           from = { line = 1, col = 34 },
           to = { line = 1, col = 49 }
         },
-        valid = true,
     }, dates[1])
     assert.are.same({
         type = 'NONE',
@@ -66,7 +62,6 @@ describe('Date parser', function()
           from = { line = 1, col = 79 },
           to = { line = 1, col = 94 }
         },
-        valid = true,
     }, dates[2])
   end)
 end)

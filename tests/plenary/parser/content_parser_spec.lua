@@ -42,7 +42,6 @@ describe('Content parser', function()
           from = { line = 1, col = 11 },
           to = { line = 1, col = 26 }
         },
-        valid = true,
       },
       {
         type = 'SCHEDULED',
@@ -52,7 +51,6 @@ describe('Content parser', function()
           from = { line = 1, col = 39 },
           to = { line = 1, col = 64 }
         },
-        valid = true,
       },
       {
         type = 'CLOSED',
@@ -62,7 +60,6 @@ describe('Content parser', function()
           from = { line = 1, col = 74 },
           to = { line = 1, col = 95 }
         },
-        valid = true,
       }
     }, content.dates)
   end)

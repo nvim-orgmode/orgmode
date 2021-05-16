@@ -1,9 +1,5 @@
 local Date = {}
 
-local date_pattern = '^(%d%d%d%d)-(%d%d)-(%d%d)%s+%a%a%a$'
-local date_time_pattern = '^(%d%d%d%d)-(%d%d)-(%d%d)%s+%a%a%a%s+(%d?%d:%d%d)$'
-local adjustment_pattern = '(%s+[%.%+%-][%+%-%s%dhdwmy]+)$'
-
 -- TODO: Support diary format and format without short date name
 function Date:new(data)
   data = data or {}
@@ -16,82 +12,93 @@ function Date:new(data)
   opts.min = data.min or 0
   if opts.year and opts.month and opts.day then
     opts.timestamp = os.time(opts)
+  else
+    opts.timestamp = os.time()
+    local date = os.date('*t', opts.timestamp)
+    opts.year = date.year
+    opts.month = date.month
+    opts.day = date.day
+    opts.hour = date.hour
+    opts.minute = date.minute
   end
-  opts.valid = data.valid or false
-  opts.adjustment = data.adjustment
+  opts.dayname = data.dayname
+  opts.adjustments = data.adjustments or {}
   opts.original_value = data.original_value
   setmetatable(opts, self)
   self.__index = self
   return opts
 end
 
-local function parse_datetime(value, adjustment)
-  local date = value:gsub(adjustment_pattern, '')
-  local Y,M,D,T = date:match(date_time_pattern)
-  local time = vim.split(T, ':')
+local function parse_datetime(datestr, date, dayname, time, adjustments)
+  local date_parts = vim.split(date, '-')
+  local time_parts = vim.split(time, ':')
   local opts = {
-    year = tonumber(Y),
-    month = tonumber(M),
-    day = tonumber(D),
-    hour = tonumber(time[1]),
-    min = tonumber(time[2]),
+    year = tonumber(date_parts[1]),
+    month = tonumber(date_parts[2]),
+    day = tonumber(date_parts[3]),
+    hour = tonumber(time_parts[1]),
+    min = tonumber(time_parts[2]),
   }
-  local date_part = date:gsub('%s+'..T..'$', '')
-  local valid = os.date('%Y-%m-%d %a', os.time(opts)) == date_part and true or false
-  opts.adjustment = adjustment
-  if valid then
-    local hour_valid = opts.hour >= 0 and opts.hour <= 23 and true or false
-    local minute_valid = opts.hour >= 0 and opts.hour <= 59 and true or false
-    valid = hour_valid and minute_valid
-  end
-  opts.valid = valid
-  opts.original_value = value
+  opts.dayname = dayname
+  opts.adjustments = adjustments
+  opts.original_value = datestr
   return Date:new(opts)
 end
 
-local function parse_date(value, adjustment)
-  local date = value:gsub(adjustment_pattern, '')
-  local Y,M,D = value:match(date_pattern)
+local function parse_date(datestr, date, dayname, adjustments)
+  local date_parts = vim.split(date, '-')
   local opts = {
-    year = tonumber(Y),
-    month = tonumber(M),
-    day = tonumber(D),
+    year = tonumber(date_parts[1]),
+    month = tonumber(date_parts[2]),
+    day = tonumber(date_parts[3]),
   }
-  opts.adjustment = adjustment
-  opts.valid = os.date('%Y-%m-%d %a', os.time(opts)) == date and true or false
-  opts.original_value = value
-  opts.date_only = true
+  opts.adjustments = adjustments
+  opts.dayname = dayname
+  opts.original_value = datestr
   return Date:new(opts)
 end
 
-local function from_string(date, adjustment)
-  local adjustment_match = date:match(adjustment_pattern)
-  local date_part = date
-  if not adjustment and adjustment_match then
-    adjustment = vim.trim(adjustment_match)
-    date_part = date_part:gsub(adjustment_pattern, '')
+local function from_string(datestr)
+  if not datestr:match('^%d%d%d%d%-%d%d%-%d%d$') and not datestr:match('^%d%d%d%d%-%d%d%-%d%d%s+') then
+    return Date:new()
   end
-  if date_part:match(date_time_pattern) then
-    return parse_datetime(date, adjustment)
+  local parts = vim.split(datestr, '%s+')
+  local date = table.remove(parts, 1)
+  local dayname = nil
+  local time = nil
+  local adjustments = {}
+  for _, part in ipairs(parts) do
+    if part:match('%a%a%a') then
+      dayname = part
+    elseif part:match('%d?%d:%d%d') then
+      time = part
+    elseif part:match('[%.%+%-]+%d+[hdwmy]?') then
+      table.insert(adjustments, part)
+    end
   end
-  if date_part:match(date_pattern) then
-    return parse_date(date, adjustment)
+
+  if time then
+    return parse_datetime(datestr, date, dayname, time, adjustments)
   end
-  return Date:new()
+
+  return parse_date(datestr, date, dayname, adjustments)
 end
 
 function Date:to_string()
-  if not self.valid then return '' end
   local date = ''
-
-  if self.date_only then
-    date = os.date('%Y-%m-%d %a', self.timestamp)
-  else
-    date = os.date('%Y-%m-%d %a %H:%M', self.timestamp)
+  local format = '%Y-%m-%d'
+  if self.dayname then
+    format = format..' %a'
   end
 
-  if self.adjustment then
-    date = date..' '..self.adjustment
+  if self.date_only then
+    date = os.date(format, self.timestamp)
+  else
+    date = os.date(format..' %H:%M', self.timestamp)
+  end
+
+  if #self.adjustments > 0 then
+    date = date..' '..table.concat(self.adjustments, ' ')
   end
 
   return date
@@ -128,9 +135,9 @@ function Date:adjust(value)
   for k,_ in pairs(opts) do
     opts[k] = new_date[k]
   end
-  opts.valid = true
-  opts.adjustment = self.adjustment
+  opts.adjustments = self.adjustments
   opts.date_only = self.date_only
+  opts.dayname = self.dayname
   return Date:new(opts)
 end
 

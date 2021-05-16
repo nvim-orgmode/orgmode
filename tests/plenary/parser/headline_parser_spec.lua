@@ -40,7 +40,6 @@ describe('Headline parser', function()
       {
         type = 'NONE',
         date = Date.from_string('2021-05-20 Thu'),
-        valid = true,
         active = true,
         range = {
           from = { line = 1, col = 44 },
@@ -50,7 +49,6 @@ describe('Headline parser', function()
       {
         type = 'NONE',
         date = Date.from_string('2021-06-20 Sun 14:30'),
-        valid = true,
         active = false,
         range = {
           from = { line = 1, col = 74 },
