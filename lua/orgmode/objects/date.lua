@@ -29,7 +29,6 @@ function Date:new(data)
   opts.date_only = date_only
   opts.dayname = data.dayname
   opts.adjustments = data.adjustments or {}
-  opts.original_value = data.original_value
   setmetatable(opts, self)
   self.__index = self
   return opts
@@ -41,7 +40,6 @@ function Date:from_time_table(time)
   opts.date_only = self.date_only
   opts.dayname = self.dayname
   opts.adjustments = self.adjustments
-  opts.original_value = self.original_value
   return Date:new(opts)
 end
 
@@ -54,7 +52,7 @@ function Date:set(opts)
   return self:from_time_table(date)
 end
 
-local function parse_datetime(datestr, date, dayname, time, adjustments)
+local function parse_datetime(date, dayname, time, adjustments)
   local date_parts = vim.split(date, '-')
   local time_parts = vim.split(time, ':')
   local opts = {
@@ -66,11 +64,10 @@ local function parse_datetime(datestr, date, dayname, time, adjustments)
   }
   opts.dayname = dayname
   opts.adjustments = adjustments
-  opts.original_value = datestr
   return Date:new(opts)
 end
 
-local function parse_date(datestr, date, dayname, adjustments)
+local function parse_date(date, dayname, adjustments)
   local date_parts = vim.split(date, '-')
   local opts = {
     year = tonumber(date_parts[1]),
@@ -79,7 +76,6 @@ local function parse_date(datestr, date, dayname, adjustments)
   }
   opts.adjustments = adjustments
   opts.dayname = dayname
-  opts.original_value = datestr
   return Date:new(opts)
 end
 
@@ -103,10 +99,10 @@ local function from_string(datestr)
   end
 
   if time then
-    return parse_datetime(datestr, date, dayname, time, adjustments)
+    return parse_datetime(date, dayname, time, adjustments)
   end
 
-  return parse_date(datestr, date, dayname, adjustments)
+  return parse_date(date, dayname, adjustments)
 end
 
 local function now()
@@ -253,6 +249,40 @@ end
 
 function Date:is_same_or_after(date)
   return self.timestamp >= date.timestamp
+end
+
+function Date:is_today()
+  return self:is_between(Date:new():start_of('day'), Date:new():end_of('day'))
+end
+
+function Date:get_range_until(date)
+  local this = self
+  local dates = {}
+  while this.timestamp < date.timestamp do
+    table.insert(dates, this)
+    this = this:add({ day = 1 })
+  end
+  return dates
+end
+
+function Date:format(format)
+  return os.date(format, self.timestamp)
+end
+
+function Date:humanize(from)
+  from = from or now()
+  local diff = self.timestamp - from.timestamp
+  local is_past = diff < 0
+  diff = math.abs(diff)
+  local day = 86400
+  if diff < day then
+    return 'Today'
+  end
+  local count = math.floor(diff / day)
+  if is_past then
+    return count..' d. ago'
+  end
+  return 'In '..count..' d.'
 end
 
 return {
