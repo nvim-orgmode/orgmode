@@ -1,32 +1,57 @@
 local Date = {}
+local spans = { d = 'day', m = 'month', y = 'year', h = 'hour', w = 'week' }
+local start_of_week_num = 2 -- Monday
+local end_of_week_num = 1 -- Sunday
+
+local function set_date_opts(source, target)
+  target = target or {}
+  for _, field in ipairs({'year', 'month', 'day'}) do
+    target[field] = source[field]
+  end
+  for _, field in ipairs({'hour', 'min'}) do
+    target[field] = source[field] or 0
+  end
+  return target
+end
 
 -- TODO: Support diary format and format without short date name
 function Date:new(data)
   data = data or {}
-  local opts = {}
-  opts.year = data.year
-  opts.month = data.month
-  opts.day = data.day
-  opts.date_only = data.date_only or (not data.hour and not data.min)
-  opts.hour = data.hour or 0
-  opts.min = data.min or 0
+  local date_only = data.date_only or (not data.hour and not data.min)
+  local opts = set_date_opts(data)
   if opts.year and opts.month and opts.day then
     opts.timestamp = os.time(opts)
   else
     opts.timestamp = os.time()
     local date = os.date('*t', opts.timestamp)
-    opts.year = date.year
-    opts.month = date.month
-    opts.day = date.day
-    opts.hour = date.hour
-    opts.minute = date.minute
+    opts = set_date_opts(date, opts)
   end
+  opts.date_only = date_only
   opts.dayname = data.dayname
   opts.adjustments = data.adjustments or {}
   opts.original_value = data.original_value
   setmetatable(opts, self)
   self.__index = self
   return opts
+end
+
+function Date:from_time_table(time)
+  local timestamp = os.time(set_date_opts(time))
+  local opts = set_date_opts(os.date('*t', timestamp))
+  opts.date_only = self.date_only
+  opts.dayname = self.dayname
+  opts.adjustments = self.adjustments
+  opts.original_value = self.original_value
+  return Date:new(opts)
+end
+
+function Date:set(opts)
+  opts = opts or {}
+  local date = os.date('*t', self.timestamp)
+  for opt, val in pairs(opts) do
+    date[opt] = val
+  end
+  return self:from_time_table(date)
 end
 
 local function parse_datetime(datestr, date, dayname, time, adjustments)
@@ -84,6 +109,10 @@ local function from_string(datestr)
   return parse_date(datestr, date, dayname, adjustments)
 end
 
+local function now()
+  return Date:new()
+end
+
 function Date:to_string()
   local date = ''
   local format = '%Y-%m-%d'
@@ -112,35 +141,121 @@ function Date:adjust(value)
   if not span or span == '' then
     span = 'd'
   end
-  if span == 'w' then
-    span = 'd'
-    amount = tonumber(amount) * 7
+  span = spans[span]
+  local adjustment = { [span] = tonumber(amount) }
+  if operation == '+' then
+    return self:add(adjustment)
   end
-  local spans = { d = 'day', m = 'month', y = 'year', h = 'hour', w = 'week' }
+  return self:subtract(adjustment)
+end
+
+function Date:start_of(span)
+  if #span == 1 then
+    span = spans[span]
+  end
   local opts = {
-    year = self.year,
-    month = self.month,
-    day = self.day,
-    hour = self.hour,
-    min = self.min,
+    day =  { hour = 0, min = 0 },
+    month = { day = 1, hour = 0, min = 0 },
+    year = { month = 1, day = 1, hour = 0, min = 0 },
+    hour = { min = 0 }
   }
-  if spans[span] then
-    if operation == '+' then
-      opts[spans[span]] = opts[spans[span]] + tonumber(amount)
-    elseif operation == '-' then
-      opts[spans[span]] = opts[spans[span]] - tonumber(amount)
+  if opts[span] then
+    return self:set(opts[span])
+  end
+
+  if span == 'week' then
+    local this = self
+    local date = os.date('*t', self.timestamp)
+    while date.wday ~= start_of_week_num do
+      this = this:adjust('-1d')
+      date = os.date('*t', this.timestamp)
     end
+    return this:set(opts.day)
   end
-  local new_date = os.date('*t', os.time(opts))
-  for k,_ in pairs(opts) do
-    opts[k] = new_date[k]
+
+  return self
+end
+
+function Date:end_of(span)
+  if #span == 1 then
+    span = spans[span]
   end
-  opts.adjustments = self.adjustments
-  opts.date_only = self.date_only
-  opts.dayname = self.dayname
-  return Date:new(opts)
+  local opts = {
+    day = { hour = 23, min = 59 },
+    year = { month = 12, day = 31, hour = 23, min = 59 },
+    hour = { min = 59 }
+  }
+
+  if opts[span] then
+    return self:set(opts[span])
+  end
+
+  if span == 'week' then
+    local this = self
+    local date = os.date('*t', self.timestamp)
+    while date.wday ~= end_of_week_num do
+      this = this:adjust('+1d')
+      date = os.date('*t', this.timestamp)
+    end
+    return this:set(opts.day)
+  end
+
+  if span == 'month'then
+    return self:add({ month = 1 }):start_of('month'):adjust('-1d'):end_of('day')
+  end
+
+  return self
+end
+
+function Date:add(opts)
+  opts = opts or {}
+  local date = os.date('*t', self.timestamp)
+  for opt, val in pairs(opts) do
+    if opt == 'week' then
+      opt = 'day'
+      val = val * 7
+    end
+    date[opt] = date[opt] + val
+  end
+  return self:from_time_table(date)
+end
+
+function Date:subtract(opts)
+  opts = opts or {}
+  for opt, val in pairs(opts) do
+    opts[opt] = -val
+  end
+  return self:add(opts)
+end
+
+function Date:is_same(date, span)
+  if not span then
+    return self.timestamp == date.timestamp
+  end
+  return self:start_of(span).timestamp == date:start_of(span).timestamp
+end
+
+function Date:is_between(from, to)
+  return self.timestamp >= from.timestamp and self.timestamp <= to.timestamp
+end
+
+function Date:is_before(date)
+  return self.timestamp < date.timestamp
+end
+
+function Date:is_same_or_before(date)
+  return self.timestamp <= date.timestamp
+end
+
+function Date:is_after(date)
+  return self.timestamp > date.timestamp
+end
+
+function Date:is_same_or_after(date)
+  return self.timestamp >= date.timestamp
 end
 
 return {
-  from_string = from_string
+  from_string = from_string,
+  now = now,
 }
