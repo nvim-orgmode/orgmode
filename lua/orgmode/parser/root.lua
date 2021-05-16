@@ -1,5 +1,6 @@
 local Headline = require('orgmode.parser.headline')
 local Content = require('orgmode.parser.content')
+local Types = require('orgmode.parser.types')
 local Root = {}
 
 function Root:new(lines, filename)
@@ -79,7 +80,25 @@ function Root:process_root_content(content)
   end
 end
 
--- TODO: Set last headline end range properly
+function Root:find_headlines_for_date(date)
+  local headlines = {}
+  for _, item in ipairs(self.items) do
+    if item.type == Types.HEADLINE then
+      if item:get_priority_date(date) then
+        table.insert(headlines, item)
+      end
+    end
+  end
+  return headlines
+end
+
+function Root:get_category(headline)
+  if headline.category then
+    return headline.category
+  end
+  return self.category
+end
+
 function Root:finish_parsing()
   return self
 end

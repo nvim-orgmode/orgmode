@@ -36,6 +36,26 @@ function Headline:add_headline(headline)
   return headline
 end
 
+function Headline:get_priority_date(date)
+  local dates = {}
+  for _, d in ipairs(self.dates) do
+    if d:is_valid_for_agenda(date) then
+      dates[d.type] = d
+      if d:is_deadline(date) then
+        break
+      end
+    end
+  end
+  if dates.DEADLINE then
+    return dates.DEADLINE
+  end
+  if dates.SCHEDULED then
+    return dates.SCHEDULED
+  end
+
+  return dates.NONE
+end
+
 function Headline:add_content(content)
   if content:is_planning() and vim.tbl_isempty(self.content) then
     for _, plan in ipairs(content.dates) do

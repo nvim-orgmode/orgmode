@@ -57,6 +57,7 @@ describe('Parser', function()
       },
       id = 1,
       parent = 0,
+      dates = {},
       type = "CONTENT",
     }, parsed.items[1])
     assert.are.same({
@@ -103,6 +104,7 @@ describe('Parser', function()
         from = { line = 4, col = 1 },
         to = { line = 4, col = 1 },
       },
+      dates = {},
       parent = 3,
       type = "CONTENT",
     }, parsed.items[4])
@@ -132,6 +134,7 @@ describe('Parser', function()
         from = { line = 6, col = 1 },
         to = { line = 6, col = 1 },
       },
+      dates = {},
       parent = 5,
       type = "CONTENT",
     }, parsed.items[6])
@@ -162,6 +165,7 @@ describe('Parser', function()
         to = { line = 8, col = 1 },
       },
       parent = 7,
+      dates = {},
       type = "CONTENT",
     }, parsed.items[8])
     assert.are.same({
@@ -190,6 +194,7 @@ describe('Parser', function()
         from = { line = 10, col = 1 },
         to = { line = 10, col = 1 },
       },
+      dates = {},
       parent = 9,
       type = "CONTENT",
     }, parsed.items[10])
@@ -379,6 +384,7 @@ describe('Parser', function()
         to = { line = 4, col = 1 },
       },
       id = 4,
+      dates = {},
       parent = 3,
       type = "CONTENT",
     }, parsed.items[4])
