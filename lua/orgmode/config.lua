@@ -5,7 +5,9 @@ local defaults = {
   week_start_day = 'Monday',
   org_agenda_files = '',
   org_default_notes_file = '',
-  org_todo_keywords = {'TODO', 'NEXT', 'DONE'}
+  org_todo_keywords = {'TODO', 'NEXT', 'DONE'},
+  org_agenda_skip_scheduled_if_done = false, -- hide DONE items if this is true
+  org_deadline_warning_days = 14,
 }
 
 function Config:new(opts)

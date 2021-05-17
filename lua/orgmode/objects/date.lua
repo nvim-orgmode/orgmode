@@ -146,19 +146,27 @@ function Date:to_string()
 end
 
 function Date:adjust(value)
+  local adjustment = self:_parse_adjustment(value)
+  local modifier = { [adjustment.span] = adjustment.amount }
+  if adjustment.is_negative then
+    return self:subtract(modifier)
+  end
+  return self:add(modifier)
+end
+
+function Date:_parse_adjustment(value)
   local operation, amount, span = value:match('^([%+%-])(%d+)([hdwmy]?)')
   if not operation or not amount then
-    return self
+    return { span = 'day', amount = 0 }
   end
   if not span or span == '' then
     span = 'd'
   end
-  span = spans[span]
-  local adjustment = { [span] = tonumber(amount) }
-  if operation == '+' then
-    return self:add(adjustment)
-  end
-  return self:subtract(adjustment)
+  return {
+    span = spans[span],
+    amount = tonumber(amount),
+    is_negative = operation == '-'
+  }
 end
 
 function Date:start_of(span)
@@ -247,28 +255,46 @@ function Date:is_same(date, span)
   return self:start_of(span).timestamp == date:start_of(span).timestamp
 end
 
-function Date:is_between(from, to)
-  return self.timestamp >= from.timestamp and self.timestamp <= to.timestamp
+function Date:is_between(from, to, span)
+  local f = from
+  local t = to
+  if span then
+    f = from:start_of(span)
+    t = to:end_of(span)
+  end
+  return self.timestamp >= f.timestamp and self.timestamp <= t.timestamp
 end
 
-function Date:is_before(date)
-  return self.timestamp < date.timestamp
+function Date:is_before(date, span)
+  return not self:is_same_or_after(date, span)
 end
 
-function Date:is_same_or_before(date)
-  return self.timestamp <= date.timestamp
+function Date:is_same_or_before(date, span)
+  local d = date
+  local s = self
+  if span then
+    d = date:start_of(span)
+    s = self:start_of(span)
+  end
+  return s.timestamp <= d.timestamp
 end
 
-function Date:is_after(date)
-  return self.timestamp > date.timestamp
+function Date:is_after(date, span)
+  return not self:is_same_or_before(date, span)
 end
 
-function Date:is_same_or_after(date)
-  return self.timestamp >= date.timestamp
+function Date:is_same_or_after(date, span)
+  local d = date
+  local s = self
+  if span then
+    d = date:start_of(span)
+    s = self:start_of(span)
+  end
+  return s.timestamp >= d.timestamp
 end
 
 function Date:is_today()
-  return self:is_between(Date:new():start_of('day'), Date:new():end_of('day'))
+  return self:is_between(Date:new(), Date:new(), 'day')
 end
 
 function Date:get_range_until(date)
@@ -301,18 +327,47 @@ function Date:humanize(from)
   return 'In '..count..' d.'
 end
 
-function Date:is_deadline(date)
-  return self.active and self.type == 'DEADLINE' and self.date:is_same(date, 'day')
+function Date:is_deadline()
+  return self.active and self.type == 'DEADLINE'
 end
 
-function Date:is_scheduled(date)
-  return self.active and self.type == 'SCHEDULED' and self.date:is_same(date, 'day')
+function Date:is_scheduled()
+  return self.active and self.type == 'SCHEDULED'
 end
 
-function Date:is_valid_for_agenda(date)
-  return self.active and vim.tbl_contains({'DEADLINE', 'SCHEDULED', 'NONE'}, self.type) and self.date:is_same(date, 'day')
+function Date:is_closed()
+  return self.active and self.type == 'CLOSED'
 end
 
+function Date:get_warning_adjustment()
+  if #self.adjustments == 0 then return nil end
+  local adj = self.adjustments[#self.adjustments]
+  if not adj:match('^%-%d+') then return nil end
+  return adj
+end
+
+function Date:get_warning_date()
+  if not self:is_deadline() and not self:is_scheduled() then
+    return self
+  end
+
+  local adjustment = self:get_warning_adjustment()
+
+  if self:is_deadline() then
+    local warning_days = config.org_deadline_warning_days
+    if adjustment then
+      local adj = self:_parse_adjustment(adjustment)
+      if adj.amount > warning_days then
+        warning_days = adjustment.amount
+      end
+    end
+    return self:subtract({ day = warning_days })
+  end
+
+  if not adjustment then return self end
+  local adj = self:_parse_adjustment(adjustment)
+  return self:add({ day = adj.amount })
+end
 
 local function from_match(line, lnum, open, datetime, close, last_match, type)
   local search_from = last_match and last_match.range.to.col or 0

@@ -80,22 +80,14 @@ function Root:process_root_content(content)
   end
 end
 
-function Root:find_headlines_for_date(date)
-  local headlines = {}
-  for _, item in ipairs(self.items) do
-    if item.type == Types.HEADLINE then
-      if item:get_priority_date(date) then
-        table.insert(headlines, item)
-      end
-    end
-  end
-  return headlines
-end
-
 function Root:get_headlines()
   return vim.tbl_filter(function(item)
     return item.type == Types.HEADLINE
   end,self.items)
+end
+
+function Root:get_items()
+  return self.items
 end
 
 function Root:get_category(headline)
