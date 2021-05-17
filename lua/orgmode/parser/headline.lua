@@ -36,24 +36,8 @@ function Headline:add_headline(headline)
   return headline
 end
 
-function Headline:get_priority_date(date)
-  local dates = {}
-  for _, d in ipairs(self.dates) do
-    if d:is_valid_for_agenda(date) then
-      dates[d.type] = d
-      if d:is_deadline(date) then
-        break
-      end
-    end
-  end
-  if dates.DEADLINE then
-    return dates.DEADLINE
-  end
-  if dates.SCHEDULED then
-    return dates.SCHEDULED
-  end
-
-  return dates.NONE
+function Headline:is_done()
+  return self.todo_keyword == 'DONE' and config.org_agenda_skip_scheduled_if_done
 end
 
 function Headline:add_content(content)
