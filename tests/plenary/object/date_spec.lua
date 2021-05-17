@@ -378,4 +378,137 @@ describe('Date object', function()
     date = date:add({ week = 2 })
     assert.are.same('8 d. ago', date:humanize(now))
   end)
+
+  it('should parse single date from line', function()
+    local line = 'This is some line and has a date <2021-05-15 Sat> that is active'
+    local dates = Date.parse_all_from_line(line, 1)
+    assert.are.same(1, #dates)
+    assert.are.same({
+      active = true,
+      adjustments = {},
+      date_only = true,
+      day = 15,
+      dayname = "Sat",
+      hour = 0,
+      min = 0,
+      month = 5,
+      range = {
+        from = {
+          col = 34,
+          line = 1
+        },
+        to = {
+          col = 49,
+          line = 1
+        }
+      },
+      timestamp = 1621029600,
+      type = "NONE",
+      year = 2021,
+    }, dates[1])
+  end)
+
+  it('should parse multiple dates from line', function()
+    local line = 'This is some line and has a date <2021-05-15 Sat> that is active and has a date [2021-06-15 Tue 09:25] that is inactive'
+    local dates = Date.parse_all_from_line(line, 1)
+    assert.are.same(2, #dates)
+    assert.are.same({
+      active = true,
+      adjustments = {},
+      date_only = true,
+      day = 15,
+      dayname = "Sat",
+      hour = 0,
+      min = 0,
+      month = 5,
+      range = {
+        from = {
+          col = 34,
+          line = 1
+        },
+        to = {
+          col = 49,
+          line = 1
+        }
+      },
+      timestamp = 1621029600,
+      type = "NONE",
+      year = 2021,
+    }, dates[1])
+    assert.are.same({
+      active = false,
+      adjustments = {},
+      date_only = false,
+      day = 15,
+      dayname = "Tue",
+      hour = 9,
+      min = 25,
+      month = 6,
+      range = {
+        from = {
+          col = 81,
+          line = 1
+        },
+        to = {
+          col = 102,
+          line = 1
+        }
+      },
+      timestamp = 1623741900,
+      type = "NONE",
+      year = 2021,
+    }, dates[2])
+  end)
+
+  it('should parse multiple dates from line and setup proper range with same dates', function()
+    local line = 'This is some line and has a date <2021-05-15 Sat> and again has the same date <2021-05-15 Sat> for no reason'
+    local dates = Date.parse_all_from_line(line, 1)
+    assert.are.same(2, #dates)
+    assert.are.same({
+      active = true,
+      adjustments = {},
+      date_only = true,
+      day = 15,
+      dayname = "Sat",
+      hour = 0,
+      min = 0,
+      month = 5,
+      range = {
+        from = {
+          col = 34,
+          line = 1
+        },
+        to = {
+          col = 49,
+          line = 1
+        }
+      },
+      timestamp = 1621029600,
+      type = "NONE",
+      year = 2021,
+    }, dates[1])
+    assert.are.same({
+      active = true,
+      adjustments = {},
+      date_only = true,
+      day = 15,
+      dayname = "Sat",
+      hour = 0,
+      min = 0,
+      month = 5,
+      range = {
+        from = {
+          col = 79,
+          line = 1
+        },
+        to = {
+          col = 94,
+          line = 1
+        }
+      },
+      timestamp = 1621029600,
+      type = "NONE",
+      year = 2021,
+    }, dates[2])
+  end)
 end)

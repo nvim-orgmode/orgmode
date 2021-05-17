@@ -92,6 +92,12 @@ function Root:find_headlines_for_date(date)
   return headlines
 end
 
+function Root:get_headlines()
+  return vim.tbl_filter(function(item)
+    return item.type == Types.HEADLINE
+  end,self.items)
+end
+
 function Root:get_category(headline)
   if headline.category then
     return headline.category

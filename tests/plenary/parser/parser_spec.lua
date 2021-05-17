@@ -256,42 +256,37 @@ describe('Parser', function()
     assert.are.same({
       content = { 2 },
       dates = {
-        {
-          type = 'NONE',
-          date = Date.from_string('2021-05-15 Sat'),
+        Date.from_string('2021-05-15 Sat', {
           active = true,
           range = {
             from = { line = 1, col = 21 },
             to = { line = 1, col = 36 },
           },
-        },
-        {
+        }),
+        Date.from_string('2021-05-20 Thu', {
           type = 'DEADLINE',
-          date = Date.from_string('2021-05-20 Thu'),
           active = true,
           range = {
             from = { line = 2, col = 11 },
             to = { line = 2, col = 26 },
           },
-        },
-        {
+        }),
+        Date.from_string('2021-05-18', {
           type = 'SCHEDULED',
-          date = Date.from_string('2021-05-18'),
           active = true,
           range = {
             from = { line = 2, col = 39 },
             to = { line = 2, col = 50 },
           },
-        },
-        {
+        }),
+        Date.from_string('2021-05-21 Fri', {
           type = 'CLOSED',
-          date = Date.from_string('2021-05-21 Fri'),
           active = true,
           range = {
             from = { line = 2, col = 60 },
             to = { line = 2, col = 75 },
           },
-        },
+        }),
       },
       headlines = {},
       level = 1,
@@ -319,47 +314,43 @@ describe('Parser', function()
       parent = 1,
       type = "PLANNING",
       dates = {
-        {
+        Date.from_string('2021-05-20 Thu', {
           type = 'DEADLINE',
-          date = Date.from_string('2021-05-20 Thu'),
           active = true,
           range = {
             from = { line = 2, col = 11 },
             to = { line = 2, col = 26 },
           },
-        },
-        {
+        }),
+        Date.from_string('2021-05-18', {
           type = 'SCHEDULED',
-          date = Date.from_string('2021-05-18'),
           active = true,
           range = {
             from = { line = 2, col = 39 },
             to = { line = 2, col = 50 },
           },
-        },
-        {
+        }),
+        Date.from_string('2021-05-21 Fri', {
           type = 'CLOSED',
-          date = Date.from_string('2021-05-21 Fri'),
           active = true,
           range = {
             from = { line = 2, col = 60 },
             to = { line = 2, col = 75 },
           },
-        },
+        }),
       },
     }, parsed.items[2])
     assert.are.same({
       content = { 4, 5 },
       dates = {
-        {
-          type = 'NONE',
-          date = Date.from_string('2021-05-22 Sat'),
+        Date.from_string('2021-05-22 Sat', {
           active = true,
+          type = 'NONE',
           range = {
             from = { line = 5, col = 11 },
             to = { line = 5, col = 26 },
           },
-        },
+        }),
       },
       headlines = {},
       level = 1,
@@ -392,15 +383,14 @@ describe('Parser', function()
       level = 1,
       line = "DEADLINE: <2021-05-22 Sat>",
       dates = {
-        {
-          type = 'NONE', -- TODO: Check if it's bad idea to override content date type from PLANNING to NONE in headline parser
-          date = Date.from_string('2021-05-22 Sat'),
+        Date.from_string('2021-05-22 Sat', {
+          type = 'DEADLINE',
           active = true,
           range = {
             from = { line = 5, col = 11 },
             to = { line = 5, col = 26 },
           },
-        },
+        }),
       },
       range = {
         from = { line = 5, col = 1 },
