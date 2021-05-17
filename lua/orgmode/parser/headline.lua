@@ -1,6 +1,6 @@
 local Headline = {}
 local Types = require('orgmode.parser.types')
-local DateParser = require('orgmode.parser.date')
+local Date = require('orgmode.objects.date')
 local config = require('orgmode.config')
 
 function Headline:new(data)
@@ -63,8 +63,7 @@ function Headline:add_content(content)
     end
   elseif content.dates then
     for _, date in ipairs(content.dates) do
-      date.type = 'NONE'
-      table.insert(self.dates, date)
+      table.insert(self.dates, date:clone({ type = 'NONE' }))
     end
   end
   table.insert(self.content, content.id)
@@ -83,7 +82,7 @@ function Headline:_parse_line()
   self.priority = line:match(self.todo_keyword..'%s+%[#([A-Z0-9])%]') or ''
   self:_parse_tags(line)
   self:_parse_title(line)
-  local dates = DateParser.parse_all_from_line(self.line, self.range.from.line)
+  local dates = Date.parse_all_from_line(self.line, self.range.from.line)
   for _, date in ipairs(dates) do
     table.insert(self.dates, date)
   end

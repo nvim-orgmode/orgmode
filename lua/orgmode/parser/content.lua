@@ -1,6 +1,6 @@
 local Content = {}
 local Types = require('orgmode.parser.types')
-local DateParser = require('orgmode.parser.date')
+local Date = require('orgmode.objects.date')
 local plannings = {'DEADLINE', 'SCHEDULED', 'CLOSED'}
 
 function Content:new(data)
@@ -36,7 +36,7 @@ function Content:parse()
   local planning = self:_parse_planning()
   if planning then return self end
 
-  local dates = DateParser.parse_all_from_line(self.line, self.range.from.line)
+  local dates = Date.parse_all_from_line(self.line, self.range.from.line)
   for _, date in ipairs(dates) do
     table.insert(self.dates, date)
   end
@@ -56,7 +56,7 @@ end
 function Content:_parse_planning()
   local is_planning = false
   for _, planning in ipairs(plannings) do
-    if self.line:match('^%s*'..planning..':%s*'..DateParser.pattern) then
+    if self.line:match('^%s*'..planning..':%s*'..Date.pattern) then
       is_planning = true
       break
     end
@@ -65,8 +65,8 @@ function Content:_parse_planning()
   self.type = Types.PLANNING
   local dates = {}
   for _, planning in ipairs(plannings) do
-    for plan, open, datetime, close in self.line:gmatch('('..planning..'):%s*'..DateParser.pattern) do
-      local date = DateParser.from_match(self.line, self.range.from.line, open, datetime, close, dates[#dates], plan)
+    for plan, open, datetime, close in self.line:gmatch('('..planning..'):%s*'..Date.pattern) do
+      local date = Date.from_match(self.line, self.range.from.line, open, datetime, close, dates[#dates], plan)
       table.insert(dates, date)
     end
   end

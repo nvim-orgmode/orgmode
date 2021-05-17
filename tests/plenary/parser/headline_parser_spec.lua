@@ -37,24 +37,22 @@ describe('Headline parser', function()
     assert.are.same({'WORK', 'PROJECT'}, headline.tags)
     assert.are.same('B', headline.priority)
     assert.are.same({
-      {
+      Date.from_string('2021-05-20 Thu', {
         type = 'NONE',
-        date = Date.from_string('2021-05-20 Thu'),
         active = true,
         range = {
           from = { line = 1, col = 44 },
           to = { line = 1, col = 59 },
         },
-      },
-      {
+      }),
+      Date.from_string('2021-06-20 Sun 14:30', {
         type = 'NONE',
-        date = Date.from_string('2021-06-20 Sun 14:30'),
         active = false,
         range = {
           from = { line = 1, col = 74 },
           to = { line = 1, col = 95 },
         },
-      },
+      }),
     }, headline.dates)
     assert.are.same({
       from = { line = 1, col = 1},

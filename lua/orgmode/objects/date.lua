@@ -1,6 +1,7 @@
 local Date = {}
 local spans = { d = 'day', m = 'month', y = 'year', h = 'hour', w = 'week' }
 local config = require('orgmode.config')
+local pattern = '([<%[])(%d%d%d%d%-%d?%d%-%d%d[^>%]]*)([>%]])'
 
 local function set_date_opts(source, target)
   target = target or {}
@@ -18,6 +19,9 @@ function Date:new(data)
   data = data or {}
   local date_only = data.date_only or (not data.hour and not data.min)
   local opts = set_date_opts(data)
+  opts.type = data.type or 'NONE'
+  opts.active = data.active or false
+  opts.range = data.range
   if opts.year and opts.month and opts.day then
     opts.timestamp = os.time(opts)
   else
@@ -39,6 +43,9 @@ function Date:from_time_table(time)
   opts.date_only = self.date_only
   opts.dayname = self.dayname
   opts.adjustments = self.adjustments
+  opts.type = self.type
+  opts.active = self.active
+  opts.range = self.range
   return Date:new(opts)
 end
 
@@ -51,7 +58,15 @@ function Date:set(opts)
   return self:from_time_table(date)
 end
 
-local function parse_datetime(date, dayname, time, adjustments)
+function Date:clone(opts)
+  local date = Date:new(self)
+  for opt, val in pairs(opts or {}) do
+    date[opt] = val
+  end
+  return date
+end
+
+local function parse_datetime(date, dayname, time, adjustments, data)
   local date_parts = vim.split(date, '-')
   local time_parts = vim.split(time, ':')
   local opts = {
@@ -63,10 +78,11 @@ local function parse_datetime(date, dayname, time, adjustments)
   }
   opts.dayname = dayname
   opts.adjustments = adjustments
+  opts = vim.tbl_extend('force', opts, data or {})
   return Date:new(opts)
 end
 
-local function parse_date(date, dayname, adjustments)
+local function parse_date(date, dayname, adjustments, data)
   local date_parts = vim.split(date, '-')
   local opts = {
     year = tonumber(date_parts[1]),
@@ -75,12 +91,13 @@ local function parse_date(date, dayname, adjustments)
   }
   opts.adjustments = adjustments
   opts.dayname = dayname
+  opts = vim.tbl_extend('force', opts, data or {})
   return Date:new(opts)
 end
 
-local function from_string(datestr)
+local function from_string(datestr, opts)
   if not datestr:match('^%d%d%d%d%-%d%d%-%d%d$') and not datestr:match('^%d%d%d%d%-%d%d%-%d%d%s+') then
-    return Date:new()
+    return Date:new(opts)
   end
   local parts = vim.split(datestr, '%s+')
   local date = table.remove(parts, 1)
@@ -98,10 +115,10 @@ local function from_string(datestr)
   end
 
   if time then
-    return parse_datetime(date, dayname, time, adjustments)
+    return parse_datetime(date, dayname, time, adjustments, opts)
   end
 
-  return parse_date(date, dayname, adjustments)
+  return parse_date(date, dayname, adjustments, opts)
 end
 
 local function now()
@@ -284,7 +301,44 @@ function Date:humanize(from)
   return 'In '..count..' d.'
 end
 
+function Date:is_deadline(date)
+  return self.active and self.type == 'DEADLINE' and self.date:is_same(date, 'day')
+end
+
+function Date:is_scheduled(date)
+  return self.active and self.type == 'SCHEDULED' and self.date:is_same(date, 'day')
+end
+
+function Date:is_valid_for_agenda(date)
+  return self.active and vim.tbl_contains({'DEADLINE', 'SCHEDULED', 'NONE'}, self.type) and self.date:is_same(date, 'day')
+end
+
+
+local function from_match(line, lnum, open, datetime, close, last_match, type)
+  local search_from = last_match and last_match.range.to.col or 0
+  local from, to = line:find(vim.pesc(open..datetime..close), search_from)
+  return from_string(vim.trim(datetime), {
+    type = type,
+    active = open == '<',
+    range = {
+      from = { line = lnum, col = from },
+      to = { line = lnum, col = to }
+    }
+  })
+end
+
+local function parse_all_from_line(line, lnum)
+  local dates = {}
+  for open, datetime, close in line:gmatch(pattern) do
+    table.insert(dates, from_match(line, lnum, open, datetime, close, dates[#dates]))
+  end
+  return dates
+end
+
 return {
   from_string = from_string,
   now = now,
+  parse_all_from_line = parse_all_from_line,
+  from_match = from_match,
+  pattern = pattern
 }

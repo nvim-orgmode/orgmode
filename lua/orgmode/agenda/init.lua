@@ -17,11 +17,15 @@ function Agenda:open()
   local content = { 'Span: week' }
   for _, date in ipairs(dates) do
     local d = date:format('%A %d %B %Y')
-    if date:is_today() then
+    local is_today = date:is_today()
+    if is_today then
       d = d..' [Today]'
     end
     table.insert(content, d)
     for _, orgfile in pairs(self.files) do
+      if is_today then
+      else
+      end
       local headlines = orgfile:find_headlines_for_date(date)
       for _, headline in ipairs(headlines) do
         local priority_date = headline:get_priority_date(date)
