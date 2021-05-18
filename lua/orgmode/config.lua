@@ -8,6 +8,11 @@ local defaults = {
   org_todo_keywords = {'TODO', 'NEXT', 'DONE'},
   org_agenda_skip_scheduled_if_done = false, -- hide DONE items if this is true
   org_deadline_warning_days = 14,
+  -- https://emacs.stackexchange.com/a/12518
+  -- TODO: Respect agenda settings
+  org_agenda_span = 'week',
+  org_agenda_start_on_weekday = 1,
+  org_agenda_start_day = 0,
 }
 
 function Config:new(opts)
