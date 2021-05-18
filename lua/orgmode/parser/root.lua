@@ -1,6 +1,5 @@
 local Headline = require('orgmode.parser.headline')
 local Content = require('orgmode.parser.content')
-local Types = require('orgmode.parser.types')
 local Root = {}
 
 function Root:new(lines, filename)
@@ -23,6 +22,7 @@ function Root:new(lines, filename)
 end
 
 function Root:add_headline(headline_data)
+  headline_data.category = self.category
   local headline = Headline:new(headline_data)
   self.items[headline.id] = headline
   local plevel = headline_data.parent.level
@@ -80,25 +80,8 @@ function Root:process_root_content(content)
   end
 end
 
-function Root:get_headlines()
-  return vim.tbl_filter(function(item)
-    return item.type == Types.HEADLINE
-  end,self.items)
-end
-
 function Root:get_items()
   return self.items
-end
-
-function Root:get_category(headline)
-  if headline.category then
-    return headline.category
-  end
-  return self.category
-end
-
-function Root:finish_parsing()
-  return self
 end
 
 return Root

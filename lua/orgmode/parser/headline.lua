@@ -19,6 +19,7 @@ function Headline:new(data)
   headline.todo_keyword = ''
   headline.priority = ''
   headline.title = ''
+  headline.category = data.category or ''
   headline.dates = {}
   -- TODO: Add configuration for
   -- - org-use-tag-inheritance
@@ -37,7 +38,13 @@ function Headline:add_headline(headline)
 end
 
 function Headline:is_done()
-  return self.todo_keyword == 'DONE' and config.org_agenda_skip_scheduled_if_done
+  return self.todo_keyword:upper() == 'DONE' and config.org_agenda_skip_scheduled_if_done
+end
+
+-- TODO: Check if this can be configured to be ignored
+function Headline:is_archived()
+  return #vim.tbl_filter(function(tag) return tag:upper() == 'ARCHIVE' end, self.tags) > 0
+    or self.category:upper() == 'ARCHIVE'
 end
 
 function Headline:add_content(content)

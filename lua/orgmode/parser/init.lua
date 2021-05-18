@@ -19,7 +19,7 @@ local function parse(lines, file)
       end
     end
   end
-  return root:finish_parsing()
+  return root
 end
 
 return {
