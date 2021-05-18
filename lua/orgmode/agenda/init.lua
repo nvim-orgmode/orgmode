@@ -51,13 +51,12 @@ function Agenda:render()
     span = string.format('%d days', span)
   end
   local content = {{ value = utils.capitalize(span)..'-agenda:' }}
-  for _, date in ipairs(dates) do
+  for i, date in ipairs(dates) do
     local date_string = date:format(self.day_format)
     local is_today = date:is_today()
-    if is_today then
-      date_string = date_string..' [Today]'
-    end
-    table.insert(content, { value = date_string })
+    local is_weekend = date:is_weekend()
+
+    table.insert(content, { value = date_string, highlight = (is_today or is_weekend) and 'OrgBold' or nil })
     for filename, orgfile in pairs(self.files) do
       local headlines = {}
       if is_today then
@@ -75,13 +74,16 @@ function Agenda:render()
         for _, d in ipairs(sorted_dates) do
           local date_label = d:humanize(date)
           local is_same_day = d:is_same(date, 'day')
+          local highlight = nil
           if d:is_deadline() and is_same_day then
             date_label = 'Deadline'
+            highlight = 'OrgAgendaDeadline'
             if not d.date_only and is_today then
               date_label = d:format('%H:%M')..'...Deadline'
             end
           elseif d:is_scheduled() and is_same_day then
             date_label = 'Scheduled'
+            highlight = 'OrgAgendaSchedule'
           elseif date_label == 'Today' and is_same_day then
             date_label = ''
           end
@@ -98,6 +100,7 @@ function Agenda:render()
             id = item.headline.id,
             file = filename,
             line = item.headline.range.from.line,
+            highlight = highlight
           })
         end
       end
@@ -117,6 +120,11 @@ function Agenda:render()
   vim.api.nvim_buf_set_lines(0, 0, -1, true, vim.tbl_map(function(item) return item.value end, content))
   vim.bo.modifiable = false
   vim.bo.modified = false
+  for i, item in ipairs(content) do
+    if item.highlight then
+      utils.highlight(item.highlight, i)
+    end
+  end
 end
 
 function Agenda:open()

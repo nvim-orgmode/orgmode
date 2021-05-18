@@ -39,4 +39,9 @@ function utils.convert_to_isoweekday(weekday)
   return weekday - 1
 end
 
+-- TODO: Figure out how to not override TODO highlights with this
+function utils.highlight(group, line)
+  return vim.api.nvim_buf_add_highlight(0, 0, group, line - 1 , 0, -1)
+end
+
 return utils
