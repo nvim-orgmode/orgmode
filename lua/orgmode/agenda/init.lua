@@ -30,23 +30,27 @@ end
 function Agenda:new(opts)
   opts = opts or {}
   local data = {
-    files = opts.files or {}
+    files = opts.files or {},
+    span = 'week',
+    day_format = '%A %d %B %Y',
+    from = Date.now(),
+    to = Date.now():add({ day = 7 }),
   }
   setmetatable(data, self)
   self.__index = self
   return data
 end
 
-function Agenda:open()
-  local dates = Date.now():end_of('day'):get_range_until(Date.now():add({ day = 7 }))
-  local content = { 'Span: week' }
+function Agenda:render()
+  local dates = self.from:get_range_until(self.to)
+  local content = {{ value = 'Span: '..self.span }, { value = '' }}
   for _, date in ipairs(dates) do
-    local date_string = date:format('%A %d %B %Y')
+    local date_string = date:format(self.day_format)
     local is_today = date:is_today()
     if is_today then
       date_string = date_string..' [Today]'
     end
-    table.insert(content, date_string)
+    table.insert(content, { value = date_string })
     for _, orgfile in pairs(self.files) do
       local headlines = {}
       if is_today then
@@ -66,34 +70,82 @@ function Agenda:open()
 
         for _, d in ipairs(sorted_dates) do
           local date_label = d:humanize(date)
-          -- TODO: Improve dates
-          if d:is_deadline() then
+          local is_same_day = d:is_same(date, 'day')
+          if d:is_deadline() and is_same_day then
             date_label = 'Deadline'
-          elseif d:is_scheduled() then
+          elseif d:is_scheduled() and is_same_day then
             date_label = 'Scheduled'
-          elseif date_label == 'Today' then
+          elseif date_label == 'Today' and is_same_day then
             date_label = ''
           end
           local line = string.format(
-            '  %s: %s: %s %s %s',
-            orgfile:get_category(item.headline),
-            date_label,
-            item.headline.todo_keyword,
-            item.headline.title,
-            tags
+          '  %s: %s: %s %s %s',
+          orgfile:get_category(item.headline),
+          date_label,
+          item.headline.todo_keyword,
+          item.headline.title,
+          tags
           )
-          table.insert(content, line)
+          table.insert(content, { value = line, id = item.headline.id })
         end
       end
     end
   end
 
-  vim.cmd('pedit '..vim.fn.tempname())
-  vim.cmd[[wincmd p]]
+  local opened = self:is_opened()
+  if not opened then
+    vim.cmd[[12split orgagenda]]
+    vim.cmd[[setf orgagenda]]
+    vim.cmd[[setlocal buftype=nofile bufhidden=wipe nobuflisted nolist noswapfile nowrap nospell]]
+  else
+    vim.cmd(vim.fn.win_id2win(opened)..'wincmd w')
+  end
   vim.bo.modifiable = true
-  vim.api.nvim_buf_set_lines(0, 0, -1, true, content)
-  vim.bo.modified = false
+  vim.api.nvim_buf_set_lines(0, 0, -1, true, vim.tbl_map(function(item) return item.value end, content))
   vim.bo.modifiable = false
+  vim.bo.modified = false
+end
+
+function Agenda:open()
+  self:render()
+  vim.fn.search(self.from:format(self.day_format))
+end
+
+function Agenda:reset()
+  self.from = Date.now()
+  self.to = self.from:add({ [self.span] = 1 })
+  self:render()
+  vim.fn.search(self.from:format(self.day_format))
+end
+
+function Agenda:is_opened()
+  for _, win in ipairs(vim.api.nvim_list_wins()) do
+    if vim.api.nvim_buf_get_option(vim.api.nvim_win_get_buf(win),'filetype') == 'orgagenda' then
+      return win
+    end
+  end
+  return false
+end
+
+function Agenda:advance_span(direction)
+  local action = { [self.span] = direction }
+  self.from = self.from:add(action)
+  self.to = self.to:add(action)
+  return self:render()
+end
+
+function Agenda:change_span(span)
+  if span == self.span then return end
+  if span == 'year' then
+    local c = vim.fn.confirm('Are you sure you want to print agenda for the whole year?', '&Yes\n&No')
+    if c ~= 1 then return end
+  end
+  local now = Date:now()
+  self.span = span
+  self.from = now:start_of(self.span)
+  self.to = now:end_of(self.span)
+  self:render()
+  vim.fn.search(now:format(self.day_format))
 end
 
 function Agenda:get_headlines_for_today(orgfile, today)

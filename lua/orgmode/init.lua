@@ -61,9 +61,14 @@ local function reload(file)
   return instance:reload(file)
 end
 
-local function action(cmd)
-  if instance and cmd == 'agenda_open' then
-    instance.agenda:open()
+local function action(cmd, opts)
+  local parts = vim.split(cmd, '.', true)
+  print(vim.inspect(parts))
+  if not instance or #parts < 2 then return end
+  if instance[parts[1]] and instance[parts[1]][parts[2]] then
+    local item = instance[parts[1]]
+    local method = item[parts[2]]
+    method(item, opts)
   end
 end
 
