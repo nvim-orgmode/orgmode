@@ -361,6 +361,11 @@ function Date:is_closed()
   return self.active and self.type == 'CLOSED'
 end
 
+function Date:is_weekend()
+  local isoweekday = self:get_isoweekday()
+  return isoweekday >= 6
+end
+
 function Date:get_warning_adjustment()
   if #self.adjustments == 0 then return nil end
   local adj = self.adjustments[#self.adjustments]
