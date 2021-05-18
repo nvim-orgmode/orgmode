@@ -2,6 +2,7 @@ local Date = require('orgmode.objects.date')
 local Types = require('orgmode.parser.types')
 local Agenda = {}
 
+-- TODO: Move to utils and add test
 local function sort_dates(dates)
   table.sort(dates, function(a, b)
     if a:is_deadline() then
@@ -35,6 +36,7 @@ function Agenda:new(opts)
     day_format = '%A %d %B %Y',
     from = Date.now(),
     to = Date.now():add({ day = 7 }),
+    content = {}
   }
   setmetatable(data, self)
   self.__index = self
@@ -43,7 +45,7 @@ end
 
 function Agenda:render()
   local dates = self.from:get_range_until(self.to)
-  local content = {{ value = 'Span: '..self.span }, { value = '' }}
+  local content = {{ value = 'Span: '..self.span }}
   for _, date in ipairs(dates) do
     local date_string = date:format(self.day_format)
     local is_today = date:is_today()
@@ -51,7 +53,7 @@ function Agenda:render()
       date_string = date_string..' [Today]'
     end
     table.insert(content, { value = date_string })
-    for _, orgfile in pairs(self.files) do
+    for filename, orgfile in pairs(self.files) do
       local headlines = {}
       if is_today then
         headlines = self:get_headlines_for_today(orgfile, date)
@@ -86,15 +88,21 @@ function Agenda:render()
           item.headline.title,
           tags
           )
-          table.insert(content, { value = line, id = item.headline.id })
+          table.insert(content, {
+            value = line,
+            id = item.headline.id,
+            file = filename,
+            line = item.headline.range.from.line,
+          })
         end
       end
     end
   end
 
+  self.content = content
   local opened = self:is_opened()
   if not opened then
-    vim.cmd[[12split orgagenda]]
+    vim.cmd[[16split orgagenda]]
     vim.cmd[[setf orgagenda]]
     vim.cmd[[setlocal buftype=nofile bufhidden=wipe nobuflisted nolist noswapfile nowrap nospell]]
   else
@@ -146,6 +154,13 @@ function Agenda:change_span(span)
   self.to = now:end_of(self.span)
   self:render()
   vim.fn.search(now:format(self.day_format))
+end
+
+function Agenda:select_item()
+  local item = self.content[vim.fn.line('.')]
+  if not item or not item.id then return end
+  vim.cmd('edit '..item.file)
+  vim.fn.cursor(item.line, 0)
 end
 
 function Agenda:get_headlines_for_today(orgfile, today)
