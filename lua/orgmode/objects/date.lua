@@ -1,6 +1,7 @@
 local Date = {}
 local spans = { d = 'day', m = 'month', y = 'year', h = 'hour', w = 'week' }
 local config = require('orgmode.config')
+local utils = require('orgmode.utils')
 local pattern = '([<%[])(%d%d%d%d%-%d?%d%-%d%d[^>%]]*)([>%]])'
 
 local function set_date_opts(source, target)
@@ -225,6 +226,27 @@ function Date:end_of(span)
   end
 
   return self
+end
+
+function Date:get_isoweekday()
+  local date = os.date('*t', self.timestamp)
+  return utils.convert_to_isoweekday(date.wday)
+end
+
+function Date:get_weekday()
+  local date = os.date('*t', self.timestamp)
+  return date.wday
+end
+
+function Date:set_isoweekday(isoweekday, future)
+  local current_isoweekday = self:get_isoweekday()
+  if isoweekday <= current_isoweekday then
+    return self:subtract({ day = current_isoweekday - isoweekday })
+  end
+  if future then
+    return self:add({ day = isoweekday - current_isoweekday })
+  end
+  return self:subtract({ week = 1 }):add({ day = isoweekday - current_isoweekday })
 end
 
 function Date:add(opts)

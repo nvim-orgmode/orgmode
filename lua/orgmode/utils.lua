@@ -25,4 +25,18 @@ function utils.echo_warning(msg)
   vim.cmd[[echohl None]]
 end
 
+function utils.capitalize(word)
+  return (word:gsub('^%l', string.upper))
+end
+
+function utils.convert_from_isoweekday(isoweekday)
+  if isoweekday == 7 then return 1 end
+  return isoweekday + 1
+end
+
+function utils.convert_to_isoweekday(weekday)
+  if weekday == 1 then return 7 end
+  return weekday - 1
+end
+
 return utils

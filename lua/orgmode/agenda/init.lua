@@ -1,5 +1,7 @@
 local Date = require('orgmode.objects.date')
 local Types = require('orgmode.parser.types')
+local utils = require('orgmode.utils')
+local config = require('orgmode.config')
 local Agenda = {}
 
 -- TODO: Move to utils and add test
@@ -32,20 +34,23 @@ function Agenda:new(opts)
   opts = opts or {}
   local data = {
     files = opts.files or {},
-    span = 'week',
+    span = config:get_agenda_span(),
     day_format = '%A %d %B %Y',
-    from = Date.now(),
-    to = Date.now():add({ day = 7 }),
     content = {}
   }
   setmetatable(data, self)
   self.__index = self
+  data:_set_date_range()
   return data
 end
 
 function Agenda:render()
   local dates = self.from:get_range_until(self.to)
-  local content = {{ value = 'Span: '..self.span }}
+  local span = self.span
+  if type(span) == 'number' then
+    span = string.format('%d days', span)
+  end
+  local content = {{ value = utils.capitalize(span)..'-agenda:' }}
   for _, date in ipairs(dates) do
     local date_string = date:format(self.day_format)
     local is_today = date:is_today()
@@ -116,14 +121,13 @@ end
 
 function Agenda:open()
   self:render()
-  vim.fn.search(self.from:format(self.day_format))
+  vim.fn.search(Date.now():format(self.day_format))
 end
 
 function Agenda:reset()
-  self.from = Date.now()
-  self.to = self.from:add({ [self.span] = 1 })
+  self:_set_date_range()
   self:render()
-  vim.fn.search(self.from:format(self.day_format))
+  vim.fn.search(Date.now():format(self.day_format))
 end
 
 function Agenda:is_opened()
@@ -137,6 +141,9 @@ end
 
 function Agenda:advance_span(direction)
   local action = { [self.span] = direction }
+  if type(self.span) == 'number' then
+    action = { day = self.span * direction }
+  end
   self.from = self.from:add(action)
   self.to = self.to:add(action)
   return self:render()
@@ -148,12 +155,10 @@ function Agenda:change_span(span)
     local c = vim.fn.confirm('Are you sure you want to print agenda for the whole year?', '&Yes\n&No')
     if c ~= 1 then return end
   end
-  local now = Date:now()
   self.span = span
-  self.from = now:start_of(self.span)
-  self.to = now:end_of(self.span)
+  self:_set_date_range()
   self:render()
-  vim.fn.search(now:format(self.day_format))
+  vim.fn.search(Date.now():format(self.day_format))
 end
 
 function Agenda:select_item()
@@ -204,5 +209,29 @@ function Agenda:get_headlines_for_date(orgfile, date)
   return headlines
 end
 
+function Agenda:_set_date_range()
+  local span = self.span
+  local from = Date.now():start_of('day')
+  local is_week = span == 'week' or span == '7'
+  if is_week and config.org_agenda_start_on_weekday then
+    from = from:set_isoweekday(config.org_agenda_start_on_weekday)
+  end
+  local to = nil
+  local modifier = { [span] = 1 }
+  if type(span) == 'number' then
+    modifier = { day = span }
+  end
+
+  to = from:add(modifier)
+
+  if config.org_agenda_start_day and type(config.org_agenda_start_day) == 'string' then
+    from = from:adjust(config.org_agenda_start_day)
+    to = to:adjust(config.org_agenda_start_day)
+  end
+
+  self.span = span
+  self.from = from
+  self.to = to
+end
 
 return Agenda
