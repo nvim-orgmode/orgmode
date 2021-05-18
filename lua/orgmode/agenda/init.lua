@@ -61,9 +61,6 @@ function Agenda:render()
       for _, item in ipairs(headlines) do
         local sorted_dates = sort_dates(item.dates)
         local tags = ''
-        if not item.headline.tags then
-          print(vim.inspect(item))
-        end
         if #item.headline.tags > 0 then
           tags = ':'..table.concat(item.headline.tags, ':')..':'
         end
@@ -73,6 +70,9 @@ function Agenda:render()
           local is_same_day = d:is_same(date, 'day')
           if d:is_deadline() and is_same_day then
             date_label = 'Deadline'
+            if not d.date_only and is_today then
+              date_label = d:format('%H:%M')..'...Deadline'
+            end
           elseif d:is_scheduled() and is_same_day then
             date_label = 'Scheduled'
           elseif date_label == 'Today' and is_same_day then
@@ -80,7 +80,7 @@ function Agenda:render()
           end
           local line = string.format(
           '  %s: %s: %s %s %s',
-          orgfile:get_category(item.headline),
+          item.headline.category,
           date_label,
           item.headline.todo_keyword,
           item.headline.title,
@@ -152,7 +152,7 @@ function Agenda:get_headlines_for_today(orgfile, today)
   local headlines = {}
   for _, item in pairs(orgfile:get_items()) do
     local dates = {}
-    if item.type == Types.HEADLINE and not item:is_done() then
+    if item.type == Types.HEADLINE and not item:is_done() and not item:is_archived() then
       for _, date in ipairs(item.dates) do
         local warning_date = date:get_warning_date()
         if date:is_deadline() and warning_date:is_same_or_before(today) then
@@ -174,10 +174,10 @@ function Agenda:get_headlines_for_date(orgfile, date)
   local headlines = {}
   for _, item in pairs(orgfile:get_items()) do
     local dates = {}
-    if item.type == Types.HEADLINE and not item:is_done() then
+    if item.type == Types.HEADLINE and not item:is_done() and not item:is_archived() then
       for _, d in ipairs(item.dates) do
         if d:is_same(date, 'day') then
-          table.insert(dates, date)
+          table.insert(dates, d)
         end
       end
     end

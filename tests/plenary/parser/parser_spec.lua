@@ -9,7 +9,7 @@ describe('Parser', function()
       '* TODO Something with a lot of tags :WORK:'
     }
 
-    local parsed = parser.parse(lines)
+    local parsed = parser.parse(lines, 'todos')
     assert.are.same(parsed.tags, {'Tag1', 'Tag2'})
     assert.are.same(parsed.items[2], {
       content = {},
@@ -28,6 +28,7 @@ describe('Parser', function()
       priority = '',
       todo_keyword = 'TODO',
       tags = {'WORK'},
+      category = 'todos',
     })
   end)
 
@@ -47,7 +48,7 @@ describe('Parser', function()
       '* NOKEYWORD Headline with wrong todo keyword and wrong tag format :WORK : OFFICE:',
     }
 
-    local parsed = parser.parse(lines)
+    local parsed = parser.parse(lines, 'todos')
     assert.are.same({
       level = 0,
       line = "Top level content",
@@ -75,6 +76,7 @@ describe('Parser', function()
       priority = '',
       title = 'Test orgmode',
       type = "HEADLINE",
+      category = 'todos',
       todo_keyword = 'TODO',
       tags = {},
     }, parsed.items[2])
@@ -93,6 +95,7 @@ describe('Parser', function()
       priority = 'A',
       title = 'Test orgmode level 2',
       type = "HEADLINE",
+      category = 'todos',
       todo_keyword = 'TODO',
       tags = {'PRIVATE'},
     }, parsed.items[3])
@@ -123,6 +126,7 @@ describe('Parser', function()
       priority = '1',
       title = 'Level 3',
       type = "HEADLINE",
+      category = 'todos',
       todo_keyword = 'NEXT',
       tags = {},
     }, parsed.items[5])
@@ -153,6 +157,7 @@ describe('Parser', function()
       title = 'top level todo',
       parent = 0,
       type = "HEADLINE",
+      category = 'todos',
       todo_keyword = 'DONE',
       tags = {'WORK'},
     }, parsed.items[7])
@@ -183,6 +188,7 @@ describe('Parser', function()
       priority = '',
       title = 'top level todo with multiple tags',
       type = "HEADLINE",
+      category = 'todos',
       todo_keyword = 'TODO',
       tags = {'OFFICE', 'PROJECT'},
     }, parsed.items[9])
@@ -211,6 +217,7 @@ describe('Parser', function()
       },
       parent = 9,
       type = "HEADLINE",
+      category = 'todos',
       priority = '',
       title = 'Working on this now',
       todo_keyword = 'NEXT',
@@ -231,6 +238,7 @@ describe('Parser', function()
       priority = '',
       title = 'NOKEYWORD Headline with wrong todo keyword and wrong tag format :WORK : OFFICE:',
       type = "HEADLINE",
+      category = 'todos',
       todo_keyword = '',
       tags = {},
     }, parsed.items[12])
@@ -252,7 +260,7 @@ describe('Parser', function()
       'DEADLINE: <2021-05-22 Sat>'
     }
 
-    local parsed = parser.parse(lines)
+    local parsed = parser.parse(lines, 'work')
     assert.are.same({
       content = { 2 },
       dates = {
@@ -300,6 +308,7 @@ describe('Parser', function()
       priority = '',
       title = 'Test orgmode <2021-05-15 Sat>',
       type = "HEADLINE",
+      category = 'work',
       todo_keyword = 'TODO',
       tags = {'WORK'},
     }, parsed.items[1])
@@ -364,6 +373,7 @@ describe('Parser', function()
       priority = '',
       title = 'get deadline only if first line after headline',
       type = "HEADLINE",
+      category = 'work',
       todo_keyword = 'TODO',
       tags = {},
     }, parsed.items[3])

@@ -31,6 +31,7 @@ function Org:load(file)
     utils.readfile(item, function(err, result)
       if err then return end
       self.files[item] = parser.parse(result, filename)
+      self.agenda.files[item] = self.files[item]
     end)
   end
   return self
@@ -63,7 +64,6 @@ end
 
 local function action(cmd, opts)
   local parts = vim.split(cmd, '.', true)
-  print(vim.inspect(parts))
   if not instance or #parts < 2 then return end
   if instance[parts[1]] and instance[parts[1]][parts[2]] then
     local item = instance[parts[1]]
