@@ -91,7 +91,7 @@ function Agenda:render()
           '  %s: %s: %s %s %s',
           item.headline.category,
           date_label,
-          item.headline.todo_keyword,
+          item.headline.todo_keyword.value,
           item.headline.title,
           tags
           )
