@@ -39,9 +39,22 @@ function utils.convert_to_isoweekday(weekday)
   return weekday - 1
 end
 
+---@param tbl table
+---@param callback function
+---@param acc any
+---@returns table
+function utils.reduce(tbl, callback, acc)
+  for i, v in pairs(tbl) do
+    acc = callback(acc, v, i)
+  end
+  return acc
+end
+
 -- TODO: Figure out how to not override TODO highlights with this
-function utils.highlight(group, line)
-  return vim.api.nvim_buf_add_highlight(0, 0, group, line - 1 , 0, -1)
+function utils.highlight(highlights)
+  for _, hl in ipairs(highlights) do
+    vim.api.nvim_buf_add_highlight(0, 0, hl.hlgroup, hl.line, hl.from, hl.to)
+  end
 end
 
 return utils
