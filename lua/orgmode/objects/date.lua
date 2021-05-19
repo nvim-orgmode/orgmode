@@ -16,6 +16,7 @@ local function set_date_opts(source, target)
 end
 
 -- TODO: Support diary format and format without short date name
+---@class Date
 function Date:new(data)
   data = data or {}
   local date_only = data.date_only or (not data.hour and not data.min)
@@ -331,6 +332,12 @@ end
 
 function Date:format(format)
   return os.date(format, self.timestamp)
+end
+
+function Date:diff(from)
+  local diff = self.timestamp - from.timestamp
+  local day = 86400
+  return math.floor(diff / day)
 end
 
 function Date:humanize(from)

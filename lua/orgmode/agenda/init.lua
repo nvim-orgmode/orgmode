@@ -3,8 +3,14 @@ local Types = require('orgmode.parser.types')
 local utils = require('orgmode.utils')
 local config = require('orgmode.config')
 local Agenda = {}
+local keyword_hl_map = {
+  TODO = 'OrgTodo',
+  NEXT = 'OrgNext',
+  DONE = 'OrgDone',
+}
 
--- TODO: Move to utils and add test
+---TODO: Move to utils and add test
+---@param dates Date[]
 local function sort_dates(dates)
   table.sort(dates, function(a, b)
     if a:is_deadline() then
@@ -30,6 +36,7 @@ local function sort_dates(dates)
   return dates
 end
 
+---@class Agenda
 function Agenda:new(opts)
   opts = opts or {}
   local data = {
@@ -51,12 +58,17 @@ function Agenda:render()
     span = string.format('%d days', span)
   end
   local content = {{ value = utils.capitalize(span)..'-agenda:' }}
-  for i, date in ipairs(dates) do
+  for _, date in ipairs(dates) do
     local date_string = date:format(self.day_format)
     local is_today = date:is_today()
     local is_weekend = date:is_weekend()
+    local day_highlights = {}
 
-    table.insert(content, { value = date_string, highlight = (is_today or is_weekend) and 'OrgBold' or nil })
+    if is_today or is_weekend then
+      table.insert(day_highlights, { hlgroup = 'OrgBold', line = #content, from = 0, to = -1 })
+    end
+
+    table.insert(content, { value = date_string, highlights = day_highlights })
     for filename, orgfile in pairs(self.files) do
       local headlines = {}
       if is_today then
@@ -64,43 +76,80 @@ function Agenda:render()
       else
         headlines = self:get_headlines_for_date(orgfile, date)
       end
+      local longest_category = utils.reduce(headlines, function(acc, item)
+        return math.max(acc, #item.headline.category)
+      end, 0)
       for _, item in ipairs(headlines) do
         local sorted_dates = sort_dates(item.dates)
         local tags = ''
         if #item.headline.tags > 0 then
           tags = ':'..table.concat(item.headline.tags, ':')..':'
         end
+        local category = string.format('  %-'..(longest_category - #item.headline.category)..'s:', item.headline.category)
 
         for _, d in ipairs(sorted_dates) do
           local date_label = d:humanize(date)
           local is_same_day = d:is_same(date, 'day')
-          local highlight = nil
-          if d:is_deadline() and is_same_day then
-            date_label = 'Deadline'
-            highlight = 'OrgAgendaDeadline'
-            if not d.date_only and is_today then
-              date_label = d:format('%H:%M')..'...Deadline'
+          local highlights = {}
+          local hlgroup = nil
+          if d:is_deadline() then
+            hlgroup = 'OrgAgendaDeadline'
+            if is_same_day then
+              date_label = 'Deadline'
+              if not d.date_only and is_today then
+                date_label = d:format('%H:%M')..'...... Deadline'
+              end
             end
           elseif d:is_scheduled() and is_same_day then
             date_label = 'Scheduled'
-            highlight = 'OrgAgendaSchedule'
+            if not d.date_only and is_today then
+              date_label = d:format('%H:%M')..'...... Scheduled'
+            end
+            local n = Date.now()
+            if date:is_before(n, 'day') then
+              if is_today then
+                local diff = n:diff(date)
+                date_label = 'Sched. '..diff..'x'
+              end
+              hlgroup = 'OrgAgendaSchedulePast'
+            elseif date:is_after(n, 'day') then
+              hlgroup = 'OrgAgendaScheduleFuture'
+            end
           elseif date_label == 'Today' and is_same_day then
             date_label = ''
           end
           local line = string.format(
-          '  %s: %s: %s %s %s',
-          item.headline.category,
-          date_label,
-          item.headline.todo_keyword.value,
-          item.headline.title,
-          tags
+            '%s %s: %s %s %s',
+            category,
+            date_label,
+            item.headline.todo_keyword.value,
+            item.headline.title,
+            tags
           )
+          if hlgroup then
+            highlights = {{
+              line = #content,
+              hlgroup = hlgroup,
+              from = 0,
+              to = -1
+            }}
+          end
+          if item.headline.todo_keyword.range then
+            local col_start = #string.format('%s %s: ', category, date_label)
+            local col_end = col_start + #item.headline.todo_keyword.value
+            table.insert(highlights, {
+              line = #content,
+              hlgroup = keyword_hl_map[item.headline.todo_keyword.value],
+              from = col_start,
+              to = col_end
+            })
+          end
           table.insert(content, {
             value = line,
             id = item.headline.id,
             file = filename,
             line = item.headline.range.from.line,
-            highlight = highlight
+            highlights = highlights
           })
         end
       end
@@ -120,9 +169,9 @@ function Agenda:render()
   vim.api.nvim_buf_set_lines(0, 0, -1, true, vim.tbl_map(function(item) return item.value end, content))
   vim.bo.modifiable = false
   vim.bo.modified = false
-  for i, item in ipairs(content) do
-    if item.highlight then
-      utils.highlight(item.highlight, i)
+  for _, item in ipairs(content) do
+    if item.highlights and #item.highlights > 0 then
+      utils.highlight(item.highlights)
     end
   end
 end
