@@ -16,7 +16,7 @@ function Headline:new(data)
   }
   headline.content = {}
   headline.headlines = {}
-  headline.todo_keyword = ''
+  headline.todo_keyword = { value = '' }
   headline.priority = ''
   headline.title = ''
   headline.category = data.category or ''
@@ -38,7 +38,7 @@ function Headline:add_headline(headline)
 end
 
 function Headline:is_done()
-  return self.todo_keyword:upper() == 'DONE' and config.org_agenda_skip_scheduled_if_done
+  return self.todo_keyword.value:upper() == 'DONE' and config.org_agenda_skip_scheduled_if_done
 end
 
 -- TODO: Check if this can be configured to be ignored
@@ -69,8 +69,8 @@ function Headline:_parse_line()
   local line = self.line
   line = line:gsub('^%*+%s+', '')
 
-  self:_parse_todo_keyword(line)
-  self.priority = line:match(self.todo_keyword..'%s+%[#([A-Z0-9])%]') or ''
+  self:_parse_todo_keyword()
+  self.priority = line:match(self.todo_keyword.value..'%s+%[#([A-Z0-9])%]') or ''
   self:_parse_tags(line)
   self:_parse_title(line)
   local dates = Date.parse_all_from_line(self.line, self.range.from.line)
@@ -79,10 +79,23 @@ function Headline:_parse_line()
   end
 end
 
-function Headline:_parse_todo_keyword(line)
+function Headline:_parse_todo_keyword()
   for _, word in ipairs(config.org_todo_keywords) do
-    if vim.startswith(line, word) then
-      self.todo_keyword = word
+    local star = self.line:match('^%*+%s+')
+    local keyword = self.line:match('^%*+%s+'..word..'%s+')
+    -- If keyword doesn't have a space after it, check if whole line
+    -- is just a keyword. For example: "* NEXT"
+    if not keyword then
+      keyword = self.line == star..word
+    end
+    if keyword then
+      self.todo_keyword = {
+        value = word,
+        range = {
+          from = { line = self.range.from.line, col = #star + 1 },
+          to = { line = self.range.from.line, col = #star + #word },
+        }
+      }
       break
     end
   end
@@ -102,7 +115,7 @@ end
 -- NOTE: Exclude dates from title if it appears in agenda on that day
 function Headline:_parse_title(line)
   local title = line
-  for _, exclude_pattern in ipairs({ self.todo_keyword, '%[#[A-Z0-9]%]', vim.pesc(':'..table.concat(self.tags, ':')..':')..'$' }) do
+  for _, exclude_pattern in ipairs({ self.todo_keyword.value, '%[#[A-Z0-9]%]', vim.pesc(':'..table.concat(self.tags, ':')..':')..'$' }) do
     title = title:gsub(exclude_pattern, '')
   end
   self.title = vim.trim(title)
