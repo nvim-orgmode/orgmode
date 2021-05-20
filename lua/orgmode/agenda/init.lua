@@ -59,7 +59,11 @@ function Agenda:render()
   if type(span) == 'number' then
     span = string.format('%d days', span)
   end
-  local content = {{ value = utils.capitalize(span)..'-agenda:' }}
+  local span_number = ''
+  if span == 'week' then
+    span_number = string.format(' (W%d)', self.from:get_week_number())
+  end
+  local content = {{ value = utils.capitalize(span)..'-agenda'..span_number..':' }}
   for _, date in ipairs(dates) do
     local date_string = date:format(self.day_format)
     local is_today = date:is_today()

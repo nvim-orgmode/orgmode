@@ -2,7 +2,7 @@ local colors = require('orgmode.colors')
 
 describe('Colors', function()
   it('should lighten the color', function()
-    local color = colors.new('#ffffff')
+    local color = colors.from_hex('#ffffff')
     assert.are.same('#ffffff', color:to_rgb())
     color = color:lighten_by(0.5)
     assert.are.same('#808080', color:to_rgb())
