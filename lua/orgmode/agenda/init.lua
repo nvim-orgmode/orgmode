@@ -11,6 +11,7 @@ local keyword_hl_map = {
 
 ---TODO: Move to utils and add test
 ---@param dates Date[]
+---@return Date[]
 local function sort_dates(dates)
   table.sort(dates, function(a, b)
     if a:is_deadline() then
@@ -37,6 +38,7 @@ local function sort_dates(dates)
 end
 
 ---@class Agenda
+---@param opts table
 function Agenda:new(opts)
   opts = opts or {}
   local data = {

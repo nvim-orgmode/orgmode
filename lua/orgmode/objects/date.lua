@@ -4,6 +4,9 @@ local config = require('orgmode.config')
 local utils = require('orgmode.utils')
 local pattern = '([<%[])(%d%d%d%d%-%d?%d%-%d%d[^>%]]*)([>%]])'
 
+---@param source table
+---@param target table
+---@return table
 local function set_date_opts(source, target)
   target = target or {}
   for _, field in ipairs({'year', 'month', 'day'}) do
@@ -17,6 +20,7 @@ end
 
 -- TODO: Support diary format and format without short date name
 ---@class Date
+---@param data table
 function Date:new(data)
   data = data or {}
   local date_only = data.date_only or (not data.hour and not data.min)
@@ -39,6 +43,8 @@ function Date:new(data)
   return opts
 end
 
+---@param time table
+---@return Date
 function Date:from_time_table(time)
   local timestamp = os.time(set_date_opts(time))
   local opts = set_date_opts(os.date('*t', timestamp))
@@ -51,6 +57,8 @@ function Date:from_time_table(time)
   return Date:new(opts)
 end
 
+---@param opts table
+---@return Date
 function Date:set(opts)
   opts = opts or {}
   local date = os.date('*t', self.timestamp)
@@ -60,6 +68,8 @@ function Date:set(opts)
   return self:from_time_table(date)
 end
 
+---@param opts table
+---@return Date
 function Date:clone(opts)
   local date = Date:new(self)
   for opt, val in pairs(opts or {}) do
@@ -68,6 +78,12 @@ function Date:clone(opts)
   return date
 end
 
+---@param date string
+---@param dayname string
+---@param time string
+---@param adjustments string
+---@param data table
+---@return Date
 local function parse_datetime(date, dayname, time, adjustments, data)
   local date_parts = vim.split(date, '-')
   local time_parts = vim.split(time, ':')
@@ -84,6 +100,11 @@ local function parse_datetime(date, dayname, time, adjustments, data)
   return Date:new(opts)
 end
 
+---@param date string
+---@param dayname string
+---@param adjustments string
+---@param data table
+---@return Date
 local function parse_date(date, dayname, adjustments, data)
   local date_parts = vim.split(date, '-')
   local opts = {
@@ -97,6 +118,9 @@ local function parse_date(date, dayname, adjustments, data)
   return Date:new(opts)
 end
 
+---@param datestr string
+---@param opts table
+---@return Date
 local function from_string(datestr, opts)
   if not datestr:match('^%d%d%d%d%-%d%d%-%d%d$') and not datestr:match('^%d%d%d%d%-%d%d%-%d%d%s+') then
     return Date:new(opts)
@@ -123,10 +147,12 @@ local function from_string(datestr, opts)
   return parse_date(date, dayname, adjustments, opts)
 end
 
+---@return Date
 local function now()
   return Date:new()
 end
 
+---@return string
 function Date:to_string()
   local date = ''
   local format = '%Y-%m-%d'
@@ -147,6 +173,8 @@ function Date:to_string()
   return date
 end
 
+---@param value string
+---@return string
 function Date:adjust(value)
   local adjustment = self:_parse_adjustment(value)
   local modifier = { [adjustment.span] = adjustment.amount }
@@ -156,6 +184,8 @@ function Date:adjust(value)
   return self:add(modifier)
 end
 
+---@param value string
+---@return table
 function Date:_parse_adjustment(value)
   local operation, amount, span = value:match('^([%+%-])(%d+)([hdwmy]?)')
   if not operation or not amount then
@@ -171,6 +201,8 @@ function Date:_parse_adjustment(value)
   }
 end
 
+---@param span string
+---@return Date
 function Date:start_of(span)
   if #span == 1 then
     span = spans[span]
@@ -198,6 +230,8 @@ function Date:start_of(span)
   return self
 end
 
+---@param span string
+---@return Date
 function Date:end_of(span)
   if #span == 1 then
     span = spans[span]
@@ -229,16 +263,21 @@ function Date:end_of(span)
   return self
 end
 
+---@return number
 function Date:get_isoweekday()
   local date = os.date('*t', self.timestamp)
   return utils.convert_to_isoweekday(date.wday)
 end
 
+---@return number
 function Date:get_weekday()
   local date = os.date('*t', self.timestamp)
   return date.wday
 end
 
+---@param isoweekday number
+---@param future? boolean
+---@return Date
 function Date:set_isoweekday(isoweekday, future)
   local current_isoweekday = self:get_isoweekday()
   if isoweekday <= current_isoweekday then
@@ -250,6 +289,8 @@ function Date:set_isoweekday(isoweekday, future)
   return self:subtract({ week = 1 }):add({ day = isoweekday - current_isoweekday })
 end
 
+---@param opts table
+---@return string
 function Date:add(opts)
   opts = opts or {}
   local date = os.date('*t', self.timestamp)
@@ -263,6 +304,8 @@ function Date:add(opts)
   return self:from_time_table(date)
 end
 
+---@param opts table
+---@return string
 function Date:subtract(opts)
   opts = opts or {}
   for opt, val in pairs(opts) do
@@ -271,6 +314,9 @@ function Date:subtract(opts)
   return self:add(opts)
 end
 
+---@param date Date
+---@param span string
+---@return boolean
 function Date:is_same(date, span)
   if not span then
     return self.timestamp == date.timestamp
@@ -278,6 +324,10 @@ function Date:is_same(date, span)
   return self:start_of(span).timestamp == date:start_of(span).timestamp
 end
 
+---@param from Date
+---@param to Date
+---@param span string
+---@return boolean
 function Date:is_between(from, to, span)
   local f = from
   local t = to
@@ -288,10 +338,16 @@ function Date:is_between(from, to, span)
   return self.timestamp >= f.timestamp and self.timestamp <= t.timestamp
 end
 
+---@param date Date
+---@param span string
+---@return boolean
 function Date:is_before(date, span)
   return not self:is_same_or_after(date, span)
 end
 
+---@param date Date
+---@param span string
+---@return boolean
 function Date:is_same_or_before(date, span)
   local d = date
   local s = self
@@ -302,10 +358,16 @@ function Date:is_same_or_before(date, span)
   return s.timestamp <= d.timestamp
 end
 
+---@param date Date
+---@param span string
+---@return boolean
 function Date:is_after(date, span)
   return not self:is_same_or_before(date, span)
 end
 
+---@param date Date
+---@param span string
+---@return boolean
 function Date:is_same_or_after(date, span)
   local d = date
   local s = self
@@ -316,10 +378,13 @@ function Date:is_same_or_after(date, span)
   return s.timestamp >= d.timestamp
 end
 
+---@return boolean
 function Date:is_today()
   return self:is_between(Date:new(), Date:new(), 'day')
 end
 
+---@param date Date
+---@return Date[]
 function Date:get_range_until(date)
   local this = self
   local dates = {}
@@ -330,16 +395,22 @@ function Date:get_range_until(date)
   return dates
 end
 
+---@param format string
+---@return string
 function Date:format(format)
   return os.date(format, self.timestamp)
 end
 
+---@param from Date
+---@return number
 function Date:diff(from)
   local diff = self.timestamp - from.timestamp
   local day = 86400
   return math.floor(diff / day)
 end
 
+---@param from Date
+---@return string
 function Date:humanize(from)
   from = from or now()
   local diff = self.timestamp - from.timestamp
@@ -356,23 +427,28 @@ function Date:humanize(from)
   return 'In '..count..' d.'
 end
 
+---@return boolean
 function Date:is_deadline()
   return self.active and self.type == 'DEADLINE'
 end
 
+---@return boolean
 function Date:is_scheduled()
   return self.active and self.type == 'SCHEDULED'
 end
 
+---@return boolean
 function Date:is_closed()
   return self.active and self.type == 'CLOSED'
 end
 
+---@return boolean
 function Date:is_weekend()
   local isoweekday = self:get_isoweekday()
   return isoweekday >= 6
 end
 
+---@return string
 function Date:get_warning_adjustment()
   if #self.adjustments == 0 then return nil end
   local adj = self.adjustments[#self.adjustments]
@@ -380,6 +456,7 @@ function Date:get_warning_adjustment()
   return adj
 end
 
+---@return Date
 function Date:get_warning_date()
   if not self:is_deadline() and not self:is_scheduled() then
     return self
@@ -403,6 +480,14 @@ function Date:get_warning_date()
   return self:add({ day = adj.amount })
 end
 
+---@param line string
+---@param lnum number
+---@param open string
+---@param datetime string
+---@param close string
+---@param last_match? Date
+---@param type? string
+---@return Date
 local function from_match(line, lnum, open, datetime, close, last_match, type)
   local search_from = last_match and last_match.range.to.col or 0
   local from, to = line:find(vim.pesc(open..datetime..close), search_from)
@@ -416,6 +501,9 @@ local function from_match(line, lnum, open, datetime, close, last_match, type)
   })
 end
 
+---@param line string
+---@param lnum number
+---@return Date[]
 local function parse_all_from_line(line, lnum)
   local dates = {}
   for open, datetime, close in line:gmatch(pattern) do

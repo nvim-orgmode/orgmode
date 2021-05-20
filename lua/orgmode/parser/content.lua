@@ -3,6 +3,8 @@ local Types = require('orgmode.parser.types')
 local Date = require('orgmode.objects.date')
 local plannings = {'DEADLINE', 'SCHEDULED', 'CLOSED'}
 
+---@class Content
+---@param data table
 function Content:new(data)
   data = data or {}
   local content = { type = Types.CONTENT }
@@ -21,10 +23,12 @@ function Content:new(data)
   return content
 end
 
+---@return boolean
 function Content:is_keyword()
   return self.type == Types.KEYWORD
 end
 
+---@return boolean
 function Content:is_planning()
   return self.type == Types.PLANNING
 end
@@ -42,6 +46,7 @@ function Content:parse()
   end
 end
 
+---@return boolean
 function Content:_parse_keyword()
   local keyword = self.line:match('^%s*#%+%S+:')
   if not keyword then return false end
@@ -53,6 +58,7 @@ function Content:_parse_keyword()
   return true
 end
 
+---@return boolean
 function Content:_parse_planning()
   local is_planning = false
   for _, planning in ipairs(plannings) do
