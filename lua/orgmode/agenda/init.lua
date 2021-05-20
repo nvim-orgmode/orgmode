@@ -2,12 +2,9 @@ local Date = require('orgmode.objects.date')
 local Types = require('orgmode.parser.types')
 local utils = require('orgmode.utils')
 local config = require('orgmode.config')
+local colors = require('orgmode.colors')
 local Agenda = {}
-local keyword_hl_map = {
-  TODO = 'OrgTodo',
-  NEXT = 'OrgNext',
-  DONE = 'OrgDone',
-}
+local keyword_hl_map = colors.get_agenda_hl_map()
 
 ---TODO: Move to utils and add test
 ---@param dates Date[]
@@ -82,16 +79,8 @@ function Agenda:render()
       else
         headlines = self:get_headlines_for_date(orgfile, date)
       end
-      local longest_category = utils.reduce(headlines, function(acc, item)
-        return math.max(acc, #item.headline.category)
-      end, 0)
       for _, item in ipairs(headlines) do
         local sorted_dates = sort_dates(item.dates)
-        local tags = ''
-        if #item.headline.tags > 0 then
-          tags = ':'..table.concat(item.headline.tags, ':')..':'
-        end
-        local category = string.format('  %-'..longest_category..'s:', item.headline.category)
 
         for _, d in ipairs(sorted_dates) do
           local date_label = d:humanize(date)
@@ -99,59 +88,42 @@ function Agenda:render()
           local highlights = {}
           local hlgroup = nil
           if d:is_deadline() then
-            hlgroup = 'OrgAgendaDeadline'
+            hlgroup = keyword_hl_map.deadline
             if is_same_day then
               date_label = 'Deadline'
-              if not d.date_only and is_today then
+              if not is_today and item.headline:is_done() then
+                hlgroup = keyword_hl_map.scheduled
+              end
+              if not d.date_only then
                 date_label = d:format('%H:%M')..'...... Deadline'
               end
             end
-          elseif d:is_scheduled() and is_same_day then
+          elseif d:is_scheduled() then
             date_label = 'Scheduled'
-            if not d.date_only and is_today then
+            if not d.date_only then
               date_label = d:format('%H:%M')..'...... Scheduled'
             end
-            local n = Date.now()
-            if date:is_before(n, 'day') then
+            if d:is_past('day') then
               if is_today then
-                local diff = n:diff(date)
+                local diff = Date.now():diff(d)
                 date_label = 'Sched. '..diff..'x'
               end
-              hlgroup = 'OrgAgendaSchedulePast'
-            elseif date:is_after(n, 'day') then
-              hlgroup = 'OrgAgendaScheduleFuture'
+              hlgroup = keyword_hl_map.scheduledPast
+            elseif date:is_today_or_future('day') then
+              hlgroup = keyword_hl_map.scheduled
             end
           elseif date_label == 'Today' and is_same_day then
             date_label = ''
+            if not d.date_only then
+              date_label = d:format('%H:%M')..'...... '
+            end
           end
-          local line = string.format(
-            '%s %s: %s %s %s',
-            category,
-            date_label,
-            item.headline.todo_keyword.value,
-            item.headline.title,
-            tags
-          )
           if hlgroup then
-            highlights = {{
-              line = #content,
-              hlgroup = hlgroup,
-              from = 0,
-              to = -1
-            }}
-          end
-          if item.headline.todo_keyword.range then
-            local col_start = #string.format('%s %s: ', category, date_label)
-            local col_end = col_start + #item.headline.todo_keyword.value
-            table.insert(highlights, {
-              line = #content,
-              hlgroup = keyword_hl_map[item.headline.todo_keyword.value],
-              from = col_start,
-              to = col_end
-            })
+            highlights = {{ line = #content, hlgroup = hlgroup, from = 0, to = -1 }}
           end
           table.insert(content, {
-            value = line,
+            value = item.headline,
+            date_label = date_label,
             id = item.headline.id,
             file = filename,
             line = item.headline.range.from.line,
@@ -172,7 +144,40 @@ function Agenda:render()
     vim.cmd(vim.fn.win_id2win(opened)..'wincmd w')
   end
   vim.bo.modifiable = true
-  vim.api.nvim_buf_set_lines(0, 0, -1, true, vim.tbl_map(function(item) return item.value end, content))
+  local longest_category = utils.reduce(self.content, function(acc, item)
+    if item.id then
+      return math.max(acc, item.value.category:len())
+    end
+    return acc
+  end, 0)
+  local lines = {}
+  for lnum, item in ipairs(content) do
+    local val = item.value
+    local line = val
+    if item.id then
+      local category = string.format('  %-'..(longest_category + 1)..'s', val.category..':')
+      line = string.format(
+        '%s %s: %s %s', category, item.date_label, val.todo_keyword.value, val.title
+      )
+      if #val.tags > 0 then
+        line = string.format('%-99s %s', line, val:tags_to_string())
+        -- line = line..vim.fn['repeat'](' ', 120 - line:len())..val:tags_to_string()
+      end
+
+      if val.todo_keyword.range then
+        local col_start = #string.format('%s %s: ', category, item.date_label)
+        local col_end = col_start + #val.todo_keyword.value
+        table.insert(item.highlights, {
+          line = lnum - 1,
+          hlgroup = keyword_hl_map[val.todo_keyword.value],
+          from = col_start,
+          to = col_end
+        })
+      end
+    end
+    table.insert(lines, line)
+  end
+  vim.api.nvim_buf_set_lines(0, 0, -1, true, lines)
   vim.bo.modifiable = false
   vim.bo.modified = false
   for _, item in ipairs(content) do
@@ -236,12 +241,14 @@ function Agenda:get_headlines_for_today(orgfile, today)
   for _, item in pairs(orgfile:get_items()) do
     local dates = {}
     if item.type == Types.HEADLINE and not item:is_done() and not item:is_archived() then
-      for _, date in ipairs(item.dates) do
+      for _, date in ipairs(item:get_active_dates()) do
         local warning_date = date:get_warning_date()
         if date:is_deadline() and warning_date:is_same_or_before(today) then
-          table.insert(dates, date)
-        elseif warning_date:is_same(today, 'day') then
-          table.insert(dates, date)
+            table.insert(dates, date)
+        elseif date:is_scheduled() and warning_date:is_same(today) then
+          table.insert(dates, warning_date)
+        elseif date:is_same(today, 'day') then
+          table.insert(dates, warning_date)
         end
       end
     end
@@ -255,12 +262,19 @@ end
 
 function Agenda:get_headlines_for_date(orgfile, date)
   local headlines = {}
+  local is_future = date:is_future()
   for _, item in pairs(orgfile:get_items()) do
     local dates = {}
-    if item.type == Types.HEADLINE and not item:is_done() and not item:is_archived() then
-      for _, d in ipairs(item.dates) do
-        if d:is_same(date, 'day') then
-          table.insert(dates, d)
+    if item.type == Types.HEADLINE and not item:is_archived() then
+      for _, d in ipairs(item:get_active_dates()) do
+        local dt = d
+        if d:is_scheduled() then
+          dt = dt:get_warning_date()
+        end
+        if dt:is_same(date, 'day') then
+          if is_future or not item:is_done() or not config.org_agenda_skip_scheduled_if_done then
+            table.insert(dates, dt)
+          end
         end
       end
     end

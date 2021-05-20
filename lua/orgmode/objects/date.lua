@@ -409,6 +409,30 @@ function Date:diff(from)
   return math.floor(diff / day)
 end
 
+---@param span string
+---@return boolean
+function Date:is_past(span)
+  return self:is_before(now(), span)
+end
+
+---@param span string
+---@return string
+function Date:is_today_or_past(span)
+  return self:is_same_or_before(now(), span)
+end
+
+---@param span string
+---@return boolean
+function Date:is_future(span)
+  return self:is_after(now(), span)
+end
+
+---@param span string
+---@return boolean
+function Date:is_today_or_future(span)
+  return self:is_same_or_after(now(), span)
+end
+
 ---@param from Date
 ---@return string
 function Date:humanize(from)

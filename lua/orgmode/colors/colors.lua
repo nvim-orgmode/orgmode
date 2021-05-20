@@ -133,23 +133,13 @@ function Color:to_rgb()
 end
 
 -----------------------------------------------------------------------------
--- Creates a new color with lightness set to a new value.
---
--- @param lightness      the new lightness value (0.0 - 1.0)
--- @return               a new instance of Color
------------------------------------------------------------------------------
-function Color:lighten_to(lightness)
-   return new(self.H, self.S, lightness)
-end
-
------------------------------------------------------------------------------
 -- Creates a new color with lightness set to a old lightness times r.
 --
 -- @param r              the multiplier for the new lightness
 -- @return               a new instance of Color
 -----------------------------------------------------------------------------
 function Color:lighten_by(r)
-   return new(self.H, self.S, self.L*r)
+   return new(self.H, self.S, self.L*(r + 1))
 end
 
 -----------------------------------------------------------------------------
@@ -159,7 +149,7 @@ end
 -- @return               a new instance of Color
 -----------------------------------------------------------------------------
 function Color:darken_by(r)
-   return new(self.H, self.S, self.L*-r)
+   return new(self.H, self.S, self.L*r)
 end
 
 Color_mt.__tostring = Color.to_rgb
