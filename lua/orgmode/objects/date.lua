@@ -480,6 +480,17 @@ function Date:get_warning_date()
   return self:add({ day = adj.amount })
 end
 
+---@return number
+function Date:get_week_number()
+  local start_of_year = self:start_of('year')
+  local week = 1
+  while start_of_year.timestamp < self.timestamp do
+    start_of_year = start_of_year:add({ week = 1 })
+    week = week + 1
+  end
+  return week
+end
+
 ---@param line string
 ---@param lnum number
 ---@param open string
