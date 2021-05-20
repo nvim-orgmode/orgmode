@@ -91,7 +91,7 @@ function Agenda:render()
         if #item.headline.tags > 0 then
           tags = ':'..table.concat(item.headline.tags, ':')..':'
         end
-        local category = string.format('  %-'..(longest_category - #item.headline.category)..'s:', item.headline.category)
+        local category = string.format('  %-'..longest_category..'s:', item.headline.category)
 
         for _, d in ipairs(sorted_dates) do
           local date_label = d:humanize(date)
