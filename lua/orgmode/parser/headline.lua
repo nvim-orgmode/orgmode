@@ -43,7 +43,7 @@ end
 
 ---@return boolean
 function Headline:is_done()
-  return self.todo_keyword.value:upper() == 'DONE' and config.org_agenda_skip_scheduled_if_done
+  return self.todo_keyword.value:upper() == 'DONE'
 end
 
 -- TODO: Check if this can be configured to be ignored
@@ -72,6 +72,21 @@ end
 ---@param lnum number
 function Headline:set_range_end(lnum)
   self.range.to.line = lnum
+end
+
+---@return string
+function Headline:tags_to_string()
+  local tags = ''
+  if #self.tags > 0 then
+    tags = ':'..table.concat(self.tags, ':')..':'
+  end
+  return tags
+end
+
+function Headline:get_active_dates()
+  return vim.tbl_filter(function(date)
+    return date.active
+  end, self.dates)
 end
 
 function Headline:_parse_line()
