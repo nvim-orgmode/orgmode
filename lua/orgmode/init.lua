@@ -6,6 +6,7 @@ local parser = require('orgmode.parser')
 local instance = nil
 local Org = {}
 
+---@class Org
 function Org:new()
   local data = { files = {} }
   setmetatable(data, self)
@@ -16,6 +17,8 @@ function Org:new()
   return data
 end
 
+---@param file? string
+---@return string
 function Org:load(file)
   if file then
     local filename = vim.fn.fnamemodify(file, ':t:r')
@@ -37,6 +40,8 @@ function Org:load(file)
   return self
 end
 
+---@param file? string
+---@return string
 function Org:reload(file)
   if not file then
     self.files = {}
@@ -51,17 +56,23 @@ function Org:setup_autocmds()
   vim.cmd[[augroup END]]
 end
 
+---@param opts? table
+---@return Org
 local function setup(opts)
   Config = Config:extend(opts)
   instance = Org:new()
   return instance
 end
 
+---@param file? string
+---@return Org
 local function reload(file)
   if not instance then return end
   return instance:reload(file)
 end
 
+---@param cmd string
+---@param opts table
 local function action(cmd, opts)
   local parts = vim.split(cmd, '.', true)
   if not instance or #parts < 2 then return end

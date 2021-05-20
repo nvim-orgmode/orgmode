@@ -1,5 +1,8 @@
 local Root = require('orgmode.parser.root')
 
+---@param lines string[]
+---@param file string
+---@return Root
 local function parse(lines, file)
   local root = Root:new(lines, file)
   local parent = root

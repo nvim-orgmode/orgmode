@@ -3,6 +3,8 @@ local Types = require('orgmode.parser.types')
 local Date = require('orgmode.objects.date')
 local config = require('orgmode.config')
 
+---@class Headline
+---@param data table
 function Headline:new(data)
   data = data or {}
   local headline = { type = Types.HEADLINE }
@@ -32,21 +34,27 @@ function Headline:new(data)
   return headline
 end
 
+---@param headline Headline
+---@return Headline
 function Headline:add_headline(headline)
   table.insert(self.headlines, headline.id)
   return headline
 end
 
+---@return boolean
 function Headline:is_done()
   return self.todo_keyword.value:upper() == 'DONE' and config.org_agenda_skip_scheduled_if_done
 end
 
 -- TODO: Check if this can be configured to be ignored
+---@return boolean
 function Headline:is_archived()
   return #vim.tbl_filter(function(tag) return tag:upper() == 'ARCHIVE' end, self.tags) > 0
     or self.category:upper() == 'ARCHIVE'
 end
 
+---@param content Content
+---@return Content
 function Headline:add_content(content)
   if content:is_planning() and vim.tbl_isempty(self.content) then
     for _, plan in ipairs(content.dates) do
@@ -61,6 +69,7 @@ function Headline:add_content(content)
   return content
 end
 
+---@param lnum number
 function Headline:set_range_end(lnum)
   self.range.to.line = lnum
 end

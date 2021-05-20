@@ -1,6 +1,8 @@
 local uv = vim.loop
 local utils = {}
 
+---@param file string
+---@param callback function
 function utils.readfile(file, callback)
   uv.fs_open(file, 'r', 438, function(err1, fd)
     if err1 then return callback(err1) end
@@ -19,21 +21,28 @@ function utils.readfile(file, callback)
   end)
 end
 
+---@param msg string
 function utils.echo_warning(msg)
   vim.cmd[[echohl WarningMsg]]
   vim.cmd('echom '..msg)
   vim.cmd[[echohl None]]
 end
 
+---@param word string
+---@return string
 function utils.capitalize(word)
   return (word:gsub('^%l', string.upper))
 end
 
+---@param isoweekday number
+---@return number
 function utils.convert_from_isoweekday(isoweekday)
   if isoweekday == 7 then return 1 end
   return isoweekday + 1
 end
 
+---@param weekday number
+---@return number
 function utils.convert_to_isoweekday(weekday)
   if weekday == 1 then return 7 end
   return weekday - 1
@@ -42,7 +51,7 @@ end
 ---@param tbl table
 ---@param callback function
 ---@param acc any
----@returns table
+---@return table
 function utils.reduce(tbl, callback, acc)
   for i, v in pairs(tbl) do
     acc = callback(acc, v, i)
@@ -50,7 +59,8 @@ function utils.reduce(tbl, callback, acc)
   return acc
 end
 
--- TODO: Figure out how to not override TODO highlights with this
+---@param highlights table[]
+---@return string
 function utils.highlight(highlights)
   for _, hl in ipairs(highlights) do
     vim.api.nvim_buf_add_highlight(0, 0, hl.hlgroup, hl.line, hl.from, hl.to)
