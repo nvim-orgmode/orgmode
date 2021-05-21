@@ -67,4 +67,34 @@ function utils.highlight(highlights)
   end
 end
 
+-- Temporary test
+function utils.capture_menu()
+  return utils.menu('Select template:', {
+    { label = 'Da', key = 'd' },
+    { label = 'Ne', key = 'n' },
+    { label = '', key = '', separator = true },
+    { label = 'Abort', key = 'q', action = false },
+  })
+end
+
+function utils.menu(title, items)
+  local content = { title, vim.fn['repeat']('=', title:len()) }
+  local valid_keys = {}
+  for _, item in ipairs(items) do
+    if item.separator then
+      table.insert(content, vim.fn['repeat']('-', 80))
+    else
+      valid_keys[item.key] = item
+      table.insert(content, string.format('%s) %s', item.key, item.label))
+    end
+  end
+  table.insert(content ,'key: \n')
+  vim.api.nvim_out_write(table.concat(content, '\n'))
+  local char = vim.fn.nr2char(vim.fn.getchar())
+  vim.cmd[[redraw!]]
+  local entry = valid_keys[char]
+  if not entry or not entry.action then return end
+  return entry.action()
+end
+
 return utils
