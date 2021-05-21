@@ -65,4 +65,12 @@ M.get_todo_keywords_colors = function()
    }
 end
 
+---@param highlights table[]
+---@return string
+M.highlight = function(highlights)
+  for _, hl in ipairs(highlights) do
+    vim.api.nvim_buf_add_highlight(0, 0, hl.hlgroup, hl.line, hl.from, hl.to)
+  end
+end
+
 return M

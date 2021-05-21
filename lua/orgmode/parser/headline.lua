@@ -22,6 +22,7 @@ function Headline:new(data)
   headline.priority = ''
   headline.title = ''
   headline.category = data.category or ''
+  headline.file = data.file or ''
   headline.dates = {}
   -- TODO: Add configuration for
   -- - org-use-tag-inheritance
@@ -51,6 +52,30 @@ end
 function Headline:is_archived()
   return #vim.tbl_filter(function(tag) return tag:upper() == 'ARCHIVE' end, self.tags) > 0
     or self.category:upper() == 'ARCHIVE'
+end
+
+---@return boolean
+function Headline:has_deadline()
+  for _, date in ipairs(self.dates) do
+    if date:is_deadline() then return true end
+  end
+  return false
+end
+
+---@return boolean
+function Headline:has_scheduled()
+  for _, date in ipairs(self.dates) do
+    if date:is_scheduled() then return true end
+  end
+  return false
+end
+
+---@return boolean
+function Headline:has_closed()
+  for _, date in ipairs(self.dates) do
+    if date:is_closed() then return true end
+  end
+  return false
 end
 
 ---@param content Content
@@ -83,10 +108,19 @@ function Headline:tags_to_string()
   return tags
 end
 
-function Headline:get_active_dates()
-  return vim.tbl_filter(function(date)
+function Headline:get_valid_dates()
+  local actives = vim.tbl_filter(function(date)
     return date.active
   end, self.dates)
+  local has_deadline_or_schedule = vim.tbl_filter(function(date)
+    return date:is_scheduled() or date:is_deadline()
+  end, actives)
+  if not has_deadline_or_schedule then
+    return actives
+  end
+  return vim.tbl_filter(function(date)
+    return not date:is_closed()
+  end, actives)
 end
 
 function Headline:_parse_line()

@@ -1,17 +1,21 @@
 local Headline = require('orgmode.parser.headline')
 local Content = require('orgmode.parser.content')
+local Types = require('orgmode.parser.types')
+local config = require('orgmode.config')
 local Root = {}
 
 ---@class Root
 ---@param lines string[]
----@param filename string
-function Root:new(lines, filename)
+---@param category string
+---@param file string
+function Root:new(lines, category, file)
   local data = {
     lines = lines,
     content = {},
     items = {},
     level = 0,
-    category = filename or '',
+    category = category or '',
+    file = file or '',
     range = {
       from = { line = 1, col = 1 },
       to = { line = #lines, col = 1 },
@@ -28,6 +32,7 @@ end
 ---@return Headline
 function Root:add_headline(headline_data)
   headline_data.category = self.category
+  headline_data.file = self.file
   local headline = Headline:new(headline_data)
   self.items[headline.id] = headline
   local plevel = headline_data.parent.level
@@ -101,6 +106,21 @@ end
 ---@return Headline|Content[]
 function Root:get_items()
   return self.items
+end
+
+---@return Headline[]
+function Root:get_opened_headlines()
+  return vim.tbl_filter(function(item)
+   return item.type == Types.HEADLINE and not item:is_archived()
+      and (not item:is_done() or not config.org_agenda_skip_scheduled_if_done)
+  end, self.items)
+end
+
+---@return Headline[]
+function Root:get_headlines_for_today()
+  return vim.tbl_filter(function(item)
+   return item.type == Types.HEADLINE and not item:is_archived() and not item:is_done()
+  end, self.items)
 end
 
 return Root

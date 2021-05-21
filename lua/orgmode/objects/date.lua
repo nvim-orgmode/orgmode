@@ -173,6 +173,11 @@ function Date:to_string()
   return date
 end
 
+function Date:format_time()
+  if self.date_only then return '' end
+  return self:format('%H:%M')
+end
+
 ---@param value string
 ---@return string
 function Date:adjust(value)
@@ -456,6 +461,10 @@ function Date:is_deadline()
   return self.active and self.type == 'DEADLINE'
 end
 
+function Date:is_none()
+  return self.active and self.type == 'NONE'
+end
+
 ---@return boolean
 function Date:is_scheduled()
   return self.active and self.type == 'SCHEDULED'
@@ -478,6 +487,46 @@ function Date:get_warning_adjustment()
   local adj = self.adjustments[#self.adjustments]
   if not adj:match('^%-%d+') then return nil end
   return adj
+end
+
+function Date:is_valid_for_today(today)
+  if not self.active then
+    return false
+  end
+  local is_same_day = self:is_same(today, 'day')
+  local warning_date = self:get_warning_date()
+
+  if self:is_none() or self:is_closed() then
+    return is_same_day
+  end
+
+  if self:is_deadline() then
+    if is_same_day then
+      return true
+    end
+    local is_future = self:is_after(today, 'day')
+    if is_future then
+      return today:is_between(warning_date, self, 'day')
+    end
+    return true
+  end
+
+  if not self:get_warning_adjustment() then
+    return is_same_day or self:is_before(today, 'day')
+  end
+
+  return warning_date:is_same_or_before(today, 'day')
+end
+
+function Date:is_valid_for_date(date)
+  if not self.active then
+    return false
+  end
+  if not self:get_warning_adjustment() or not self:is_scheduled() then
+    return self:is_same(date, 'day')
+  end
+
+  return false
 end
 
 ---@return Date
