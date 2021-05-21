@@ -1,4 +1,3 @@
-vim.g.orgmode_logs = {}
 local Config = require('orgmode.config')
 local Agenda = require('orgmode.agenda')
 local utils = require('orgmode.utils')
@@ -30,10 +29,10 @@ function Org:load(file)
 
   local files = Config:get_all_files()
   for _, item in ipairs(files) do
-    local filename = vim.fn.fnamemodify(item, ':t:r')
+    local category = vim.fn.fnamemodify(item, ':t:r')
     utils.readfile(item, function(err, result)
       if err then return end
-      self.files[item] = parser.parse(result, filename)
+      self.files[item] = parser.parse(result, category, item)
       self.agenda.files[item] = self.files[item]
     end)
   end

@@ -21,6 +21,51 @@ function utils.readfile(file, callback)
   end)
 end
 
+local function sort_deadline(a, b)
+  local both_has_time = not a.date_only and not b.date_only
+  local both_missing_time = a.date_only and b.date_only
+  if both_has_time or both_missing_time then
+    return a:is_before(b)
+  end
+  if a.date_only and not b.date_only then
+    return false
+  end
+  if not a.date_only and b.date_only then
+    return true
+  end
+end
+
+---TODO: Move to utils and add test
+---TODO: Introduce priority
+---@param dates table[]
+---@return table[]
+function utils.sort_dates(dates)
+  table.sort(dates, function(first, second)
+    local a = first.date
+    local b = second.date
+    if a:is_deadline() then
+      if not b:is_deadline() then return true end
+      return sort_deadline(a, b)
+    end
+    if b:is_deadline() then
+      if not a:is_deadline() then return false end
+      return sort_deadline(a, b)
+    end
+
+    if a:is_scheduled() then
+      if not b:is_scheduled() then return true end
+      return a:is_before(b)
+    end
+    if b:is_scheduled() then
+      if not a:is_scheduled() then return false end
+      return a:is_before(b)
+    end
+
+    return a:is_before(b)
+  end)
+  return dates
+end
+
 ---@param msg string
 function utils.echo_warning(msg)
   vim.cmd[[echohl WarningMsg]]
@@ -59,12 +104,15 @@ function utils.reduce(tbl, callback, acc)
   return acc
 end
 
----@param highlights table[]
----@return string
-function utils.highlight(highlights)
-  for _, hl in ipairs(highlights) do
-    vim.api.nvim_buf_add_highlight(0, 0, hl.hlgroup, hl.line, hl.from, hl.to)
+--- Concat one table at the end of another table
+---@param first table
+---@param second table
+---@return table
+function utils.concat(first, second)
+  for _, v in ipairs(second) do
+    table.insert(first, v)
   end
+  return first
 end
 
 -- Temporary test
@@ -77,7 +125,7 @@ function utils.capture_menu()
   })
 end
 
-function utils.menu(title, items)
+function utils.menu(title, items, prompt)
   local content = { title, vim.fn['repeat']('=', title:len()) }
   local valid_keys = {}
   for _, item in ipairs(items) do
@@ -88,7 +136,8 @@ function utils.menu(title, items)
       table.insert(content, string.format('%s) %s', item.key, item.label))
     end
   end
-  table.insert(content ,'key: \n')
+  prompt = prompt or 'key'
+  table.insert(content, prompt..': \n')
   vim.api.nvim_out_write(table.concat(content, '\n'))
   local char = vim.fn.nr2char(vim.fn.getchar())
   vim.cmd[[redraw!]]

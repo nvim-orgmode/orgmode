@@ -35,6 +35,7 @@ describe('Parser', function()
       },
       tags = {'WORK'},
       category = 'todos',
+      file = '',
     })
   end)
 
@@ -83,6 +84,7 @@ describe('Parser', function()
       title = 'Test orgmode',
       type = "HEADLINE",
       category = 'todos',
+      file = '',
       todo_keyword = {
         value = 'TODO',
         range = {
@@ -108,6 +110,7 @@ describe('Parser', function()
       title = 'Test orgmode level 2',
       type = "HEADLINE",
       category = 'todos',
+      file = '',
       todo_keyword = {
         value = 'TODO',
         range = {
@@ -145,6 +148,7 @@ describe('Parser', function()
       title = 'Level 3',
       type = "HEADLINE",
       category = 'todos',
+      file = '',
       todo_keyword = {
         value = 'NEXT',
         range = {
@@ -182,6 +186,7 @@ describe('Parser', function()
       parent = 0,
       type = "HEADLINE",
       category = 'todos',
+      file = '',
       todo_keyword = {
         value = 'DONE',
         range = {
@@ -219,6 +224,7 @@ describe('Parser', function()
       title = 'top level todo with multiple tags',
       type = "HEADLINE",
       category = 'todos',
+      file = '',
       todo_keyword = {
         value = 'TODO',
         range = {
@@ -254,6 +260,7 @@ describe('Parser', function()
       parent = 9,
       type = "HEADLINE",
       category = 'todos',
+      file = '',
       priority = '',
       title = 'Working on this now',
       todo_keyword = {
@@ -281,6 +288,7 @@ describe('Parser', function()
       title = 'NOKEYWORD Headline with wrong todo keyword and wrong tag format :WORK : OFFICE:',
       type = "HEADLINE",
       category = 'todos',
+      file = '',
       todo_keyword = { value = '' },
       tags = {},
     }, parsed.items[12])
@@ -351,6 +359,7 @@ describe('Parser', function()
       title = 'Test orgmode <2021-05-15 Sat>',
       type = "HEADLINE",
       category = 'work',
+      file = '',
       todo_keyword = {
         value = 'TODO',
         range = {
@@ -422,6 +431,7 @@ describe('Parser', function()
       title = 'get deadline only if first line after headline',
       type = "HEADLINE",
       category = 'work',
+      file = '',
       todo_keyword = {
         value = 'TODO',
         range = {
