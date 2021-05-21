@@ -6,18 +6,33 @@ local colors = require('orgmode.colors')
 local Agenda = {}
 local keyword_hl_map = colors.get_agenda_hl_map()
 
+local function sort_deadline(a, b)
+  local both_has_time = not a.date_only and not b.date_only
+  local both_missing_time = a.date_only and b.date_only
+  if both_has_time or both_missing_time then
+    return a:is_before(b)
+  end
+  if a.date_only and not b.date_only then
+    return false
+  end
+  if not a.date_only and b.date_only then
+    return true
+  end
+end
+
 ---TODO: Move to utils and add test
+---TODO: Introduce priority
 ---@param dates Date[]
 ---@return Date[]
 local function sort_dates(dates)
   table.sort(dates, function(a, b)
     if a:is_deadline() then
       if not b:is_deadline() then return true end
-      return a:is_before(b)
+      return sort_deadline(a, b)
     end
     if b:is_deadline() then
       if not a:is_deadline() then return false end
-      return a:is_before(b)
+      return sort_deadline(a, b)
     end
 
     if a:is_scheduled() then
@@ -80,6 +95,7 @@ function Agenda:render()
         headlines = self:get_headlines_for_date(orgfile, date)
       end
       for _, item in ipairs(headlines) do
+        -- TODO: Sort headlines through dates outside of loop through dates instead of headlines
         local sorted_dates = sort_dates(item.dates)
 
         for _, d in ipairs(sorted_dates) do
@@ -90,23 +106,25 @@ function Agenda:render()
           if d:is_deadline() then
             hlgroup = keyword_hl_map.deadline
             if is_same_day then
-              date_label = 'Deadline'
+              date_label = 'Deadline: '
               if not is_today and item.headline:is_done() then
                 hlgroup = keyword_hl_map.scheduled
               end
               if not d.date_only then
-                date_label = d:format('%H:%M')..'...... Deadline'
+                date_label = d:format('%H:%M')..'...... '..date_label
               end
+            else
+              date_label = date_label..': '
             end
           elseif d:is_scheduled() then
-            date_label = 'Scheduled'
+            date_label = 'Scheduled: '
             if not d.date_only then
-              date_label = d:format('%H:%M')..'...... Scheduled'
+              date_label = d:format('%H:%M')..'...... '..date_label
             end
             if d:is_past('day') then
               if is_today then
                 local diff = Date.now():diff(d)
-                date_label = 'Sched. '..diff..'x'
+                date_label = 'Sched. '..diff..'x: '
               end
               hlgroup = keyword_hl_map.scheduledPast
             elseif date:is_today_or_future('day') then
@@ -156,16 +174,16 @@ function Agenda:render()
     local line = val
     if item.id then
       local category = string.format('  %-'..(longest_category + 1)..'s', val.category..':')
+      local date = string.format('%-9s', item.date_label)
       line = string.format(
-        '%s %s: %s %s', category, item.date_label, val.todo_keyword.value, val.title
+        '%s %s %s %s', category, date, val.todo_keyword.value, val.title
       )
       if #val.tags > 0 then
         line = string.format('%-99s %s', line, val:tags_to_string())
-        -- line = line..vim.fn['repeat'](' ', 120 - line:len())..val:tags_to_string()
       end
 
       if val.todo_keyword.range then
-        local col_start = #string.format('%s %s: ', category, item.date_label)
+        local col_start = #string.format('%s %s ', category, date)
         local col_end = col_start + #val.todo_keyword.value
         table.insert(item.highlights, {
           line = lnum - 1,
