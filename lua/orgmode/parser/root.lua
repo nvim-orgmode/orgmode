@@ -3,7 +3,6 @@ local Content = require('orgmode.parser.content')
 local Types = require('orgmode.parser.types')
 local Range = require('orgmode.parser.range')
 local config = require('orgmode.config')
-local Root = {}
 
 ---@class Root
 ---@field lines string[]
@@ -15,6 +14,7 @@ local Root = {}
 ---@field range Range
 ---@field id number
 ---@field tags string[]
+local Root = {}
 
 ---@param lines string[]
 ---@param category string
@@ -123,7 +123,6 @@ end
 function Root:get_opened_headlines()
   return vim.tbl_filter(function(item)
    return item.type == Types.HEADLINE and not item:is_archived()
-      and (not item:is_done() or not config.org_agenda_skip_scheduled_if_done)
   end, self.items)
 end
 
