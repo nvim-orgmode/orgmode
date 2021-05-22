@@ -2,6 +2,7 @@ local Date = {}
 local spans = { d = 'day', m = 'month', y = 'year', h = 'hour', w = 'week' }
 local config = require('orgmode.config')
 local utils = require('orgmode.utils')
+local Range = require('orgmode.parser.range')
 local pattern = '([<%[])(%d%d%d%d%-%d?%d%-%d%d[^>%]]*)([>%]])'
 
 ---@param source table
@@ -573,15 +574,12 @@ end
 ---@param type? string
 ---@return Date
 local function from_match(line, lnum, open, datetime, close, last_match, type)
-  local search_from = last_match and last_match.range.to.col or 0
+  local search_from = last_match and last_match.range.end_col or 0
   local from, to = line:find(vim.pesc(open..datetime..close), search_from)
   return from_string(vim.trim(datetime), {
     type = type,
     active = open == '<',
-    range = {
-      from = { line = lnum, col = from },
-      to = { line = lnum, col = to }
-    }
+    range = Range:new({ start_line = lnum, end_line = lnum, start_col = from, end_col = to }),
   })
 end
 

@@ -1,4 +1,5 @@
 local Date = require('orgmode.objects.date')
+local Range = require('orgmode.parser.range')
 describe('Date object', function()
   it('shoud parse date', function()
     local date = '2021-06-10'
@@ -392,16 +393,12 @@ describe('Date object', function()
       hour = 0,
       min = 0,
       month = 5,
-      range = {
-        from = {
-          col = 34,
-          line = 1
-        },
-        to = {
-          col = 49,
-          line = 1
-        }
-      },
+      range = Range:new({
+        start_line = 1,
+        end_line = 1,
+        start_col = 34,
+        end_col = 49
+      }),
       timestamp = 1621029600,
       type = "NONE",
       year = 2021,
@@ -421,16 +418,12 @@ describe('Date object', function()
       hour = 0,
       min = 0,
       month = 5,
-      range = {
-        from = {
-          col = 34,
-          line = 1
-        },
-        to = {
-          col = 49,
-          line = 1
-        }
-      },
+      range = Range:new({
+        start_line = 1,
+        end_line = 1,
+        start_col = 34,
+        end_col = 49
+      }),
       timestamp = 1621029600,
       type = "NONE",
       year = 2021,
@@ -444,16 +437,12 @@ describe('Date object', function()
       hour = 9,
       min = 25,
       month = 6,
-      range = {
-        from = {
-          col = 81,
-          line = 1
-        },
-        to = {
-          col = 102,
-          line = 1
-        }
-      },
+      range = Range:new({
+        start_line = 1,
+        end_line = 1,
+        start_col = 81,
+        end_col = 102
+      }),
       timestamp = 1623741900,
       type = "NONE",
       year = 2021,
@@ -473,16 +462,12 @@ describe('Date object', function()
       hour = 0,
       min = 0,
       month = 5,
-      range = {
-        from = {
-          col = 34,
-          line = 1
-        },
-        to = {
-          col = 49,
-          line = 1
-        }
-      },
+      range = Range:new({
+        start_line = 1,
+        end_line = 1,
+        start_col = 34,
+        end_col = 49
+      }),
       timestamp = 1621029600,
       type = "NONE",
       year = 2021,
@@ -496,16 +481,12 @@ describe('Date object', function()
       hour = 0,
       min = 0,
       month = 5,
-      range = {
-        from = {
-          col = 79,
-          line = 1
-        },
-        to = {
-          col = 94,
-          line = 1
-        }
-      },
+      range = Range:new({
+        start_line = 1,
+        end_line = 1,
+        start_col = 79,
+        end_col = 94
+      }),
       timestamp = 1621029600,
       type = "NONE",
       year = 2021,

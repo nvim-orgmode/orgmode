@@ -179,7 +179,7 @@ function Agenda:select_item()
   local item = self.content[vim.fn.line('.')]
   if not item or not item.id then return end
   vim.cmd('edit '..item.value.file)
-  vim.fn.cursor(item.value.range.from.line, 0)
+  vim.fn.cursor(item.value.range.start_line, 0)
 end
 
 -- Items for today:

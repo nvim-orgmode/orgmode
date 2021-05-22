@@ -1,6 +1,7 @@
 local Content = require('orgmode.parser.content')
 local Types = require('orgmode.parser.types')
 local Date = require('orgmode.objects.date')
+local Range = require('orgmode.parser.range')
 
 describe('Content parser', function()
   it('should parse plain text', function()
@@ -38,26 +39,32 @@ describe('Content parser', function()
       Date.from_string('2021-05-15 Sat', {
         type = 'DEADLINE',
         active = true,
-        range = {
-          from = { line = 1, col = 11 },
-          to = { line = 1, col = 26 }
-        },
+        range = Range:new({
+          start_line = 1,
+          end_line = 1,
+          start_col = 11,
+          end_col = 26,
+        })
       }),
       Date.from_string('2021-05-12 Wed 13:30 +1w', {
         type = 'SCHEDULED',
         active = true,
-        range = {
-          from = { line = 1, col = 39 },
-          to = { line = 1, col = 64 }
-        },
+        range = Range:new({
+          start_line = 1,
+          end_line = 1,
+          start_col = 39,
+          end_col = 64,
+        })
       }),
       Date.from_string('2021-05-16 Sun 15:45', {
         type = 'CLOSED',
         active = true,
-        range = {
-          from = { line = 1, col = 74 },
-          to = { line = 1, col = 95 }
-        },
+        range = Range:new({
+          start_line = 1,
+          end_line = 1,
+          start_col = 74,
+          end_col = 95,
+        })
       })
     }, content.dates)
   end)
