@@ -35,7 +35,6 @@ local function sort_deadline(a, b)
   end
 end
 
----TODO: Move to utils and add test
 ---TODO: Introduce priority
 ---@param dates table[]
 ---@return table[]

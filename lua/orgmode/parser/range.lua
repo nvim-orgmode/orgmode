@@ -1,11 +1,9 @@
-local Range = {}
-
-
 ---@class Range
 ---@field start_line number
 ---@field start_col number
 ---@field end_line number
 ---@field end_col number
+local Range = {}
 
 ---@param data table
 function Range:new(data)
@@ -17,11 +15,6 @@ function Range:new(data)
   setmetatable(opts, self)
   self.__index = self
   return opts
-end
-
----@param lnum number
-function Range:set_end_line(lnum)
-  self.end_line = lnum
 end
 
 ---@param lnum number

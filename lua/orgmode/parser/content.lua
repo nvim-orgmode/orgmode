@@ -1,4 +1,3 @@
-local Content = {}
 local Types = require('orgmode.parser.types')
 local Range = require('orgmode.parser.range')
 local Date = require('orgmode.objects.date')
@@ -10,8 +9,9 @@ local plannings = {'DEADLINE', 'SCHEDULED', 'CLOSED'}
 ---@field line string
 ---@field dates Date[]
 ---@field id string
+local Content = {}
 
----@param data Headline
+---@param data table
 function Content:new(data)
   data = data or {}
   local content = { type = Types.CONTENT }

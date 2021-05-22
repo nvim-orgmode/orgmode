@@ -1,4 +1,3 @@
-local Headline = {}
 local Types = require('orgmode.parser.types')
 local Date = require('orgmode.objects.date')
 local Range = require('orgmode.parser.range')
@@ -19,6 +18,7 @@ local config = require('orgmode.config')
 ---@field file string
 ---@field dates Date[]
 ---@field tags string[]
+local Headline = {}
 
 ---@param data table
 function Headline:new(data)
@@ -109,7 +109,7 @@ end
 
 ---@param lnum number
 function Headline:set_range_end(lnum)
-  self.range:set_end_line(lnum)
+  self.range.end_line = lnum
 end
 
 ---@return string
@@ -122,18 +122,9 @@ function Headline:tags_to_string()
 end
 
 function Headline:get_valid_dates()
-  local actives = vim.tbl_filter(function(date)
-    return date.active
-  end, self.dates)
-  local has_deadline_or_schedule = vim.tbl_filter(function(date)
-    return date:is_scheduled() or date:is_deadline()
-  end, actives)
-  if not has_deadline_or_schedule then
-    return actives
-  end
   return vim.tbl_filter(function(date)
-    return not date:is_closed()
-  end, actives)
+    return date.active and not date:is_closed()
+  end, self.dates)
 end
 
 function Headline:_parse_line()

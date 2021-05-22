@@ -1,9 +1,23 @@
-local Date = {}
 local spans = { d = 'day', m = 'month', y = 'year', h = 'hour', w = 'week' }
 local config = require('orgmode.config')
 local utils = require('orgmode.utils')
 local Range = require('orgmode.parser.range')
 local pattern = '([<%[])(%d%d%d%d%-%d?%d%-%d%d[^>%]]*)([>%]])'
+
+---@class Date
+---@field type string
+---@field active boolean
+---@field date_only boolean
+---@field range Range
+---@field day number
+---@field month number
+---@field year number
+---@field hour number
+---@field min number
+---@field timestamp number
+---@field dayname string
+---@field adjustments string[]
+local Date = {}
 
 ---@param source table
 ---@param target table
@@ -20,7 +34,6 @@ local function set_date_opts(source, target)
 end
 
 -- TODO: Support diary format and format without short date name
----@class Date
 ---@param data table
 function Date:new(data)
   data = data or {}
@@ -149,8 +162,14 @@ local function from_string(datestr, opts)
 end
 
 ---@return Date
-local function now()
+local function today()
   return Date:new()
+end
+
+---@return Date
+local function now()
+  local opts = os.date('*t', os.time())
+  return Date:new(opts)
 end
 
 ---@return string
@@ -180,7 +199,7 @@ function Date:format_time()
 end
 
 ---@param value string
----@return string
+---@return Date
 function Date:adjust(value)
   local adjustment = self:_parse_adjustment(value)
   local modifier = { [adjustment.span] = adjustment.amount }
@@ -296,7 +315,7 @@ function Date:set_isoweekday(isoweekday, future)
 end
 
 ---@param opts table
----@return string
+---@return Date
 function Date:add(opts)
   opts = opts or {}
   local date = os.date('*t', self.timestamp)
@@ -311,7 +330,7 @@ function Date:add(opts)
 end
 
 ---@param opts table
----@return string
+---@return Date
 function Date:subtract(opts)
   opts = opts or {}
   for opt, val in pairs(opts) do
@@ -410,7 +429,7 @@ end
 ---@param from Date
 ---@return number
 function Date:diff(from)
-  local diff = self.timestamp - from.timestamp
+  local diff = self:start_of('day').timestamp - from:start_of('day').timestamp
   local day = 86400
   return math.floor(diff / day)
 end
@@ -422,7 +441,7 @@ function Date:is_past(span)
 end
 
 ---@param span string
----@return string
+---@return boolean
 function Date:is_today_or_past(span)
   return self:is_same_or_before(now(), span)
 end
@@ -443,18 +462,14 @@ end
 ---@return string
 function Date:humanize(from)
   from = from or now()
-  local diff = self.timestamp - from.timestamp
-  local is_past = diff < 0
-  diff = math.abs(diff)
-  local day = 86400
-  if diff < day then
+  local diff = self:diff(from)
+  if diff == 0 then
     return 'Today'
   end
-  local count = math.floor(diff / day)
-  if is_past then
-    return count..' d. ago'
+  if diff < 0 then
+    return math.abs(diff)..' d. ago'
   end
-  return 'In '..count..' d.'
+  return 'In '..diff..' d.'
 end
 
 ---@return boolean
@@ -483,7 +498,7 @@ function Date:is_weekend()
 end
 
 ---@return string
-function Date:get_warning_adjustment()
+function Date:get_negative_adjustment()
   if #self.adjustments == 0 then return nil end
   local adj = self.adjustments[#self.adjustments]
   if not adj:match('^%-%d+') then return nil end
@@ -495,7 +510,7 @@ function Date:is_valid_for_today(today)
     return false
   end
   local is_same_day = self:is_same(today, 'day')
-  local warning_date = self:get_warning_date()
+  local warning_date = self:get_adjusted_date()
 
   if self:is_none() or self:is_closed() then
     return is_same_day
@@ -512,7 +527,7 @@ function Date:is_valid_for_today(today)
     return true
   end
 
-  if not self:get_warning_adjustment() then
+  if not self:get_negative_adjustment() then
     return is_same_day or self:is_before(today, 'day')
   end
 
@@ -523,7 +538,7 @@ function Date:is_valid_for_date(date)
   if not self.active then
     return false
   end
-  if not self:get_warning_adjustment() or not self:is_scheduled() then
+  if not self:get_negative_adjustment() or not self:is_scheduled() then
     return self:is_same(date, 'day')
   end
 
@@ -531,20 +546,18 @@ function Date:is_valid_for_date(date)
 end
 
 ---@return Date
-function Date:get_warning_date()
+function Date:get_adjusted_date()
   if not self:is_deadline() and not self:is_scheduled() then
     return self
   end
 
-  local adjustment = self:get_warning_adjustment()
+  local adjustment = self:get_negative_adjustment()
 
   if self:is_deadline() then
     local warning_days = config.org_deadline_warning_days
     if adjustment then
       local adj = self:_parse_adjustment(adjustment)
-      if adj.amount > warning_days then
-        warning_days = adjustment.amount
-      end
+      warning_days = adj.amount
     end
     return self:subtract({ day = warning_days })
   end
@@ -597,6 +610,7 @@ end
 return {
   from_string = from_string,
   now = now,
+  today = today,
   parse_all_from_line = parse_all_from_line,
   from_match = from_match,
   pattern = pattern
