@@ -1,10 +1,21 @@
 local Headline = require('orgmode.parser.headline')
 local Content = require('orgmode.parser.content')
 local Types = require('orgmode.parser.types')
+local Range = require('orgmode.parser.range')
 local config = require('orgmode.config')
 local Root = {}
 
 ---@class Root
+---@field lines string[]
+---@field content Content[]
+---@field items Headline[]|Content[]
+---@field level number
+---@field category string
+---@field file string
+---@field range Range
+---@field id number
+---@field tags string[]
+
 ---@param lines string[]
 ---@param category string
 ---@param file string
@@ -16,10 +27,10 @@ function Root:new(lines, category, file)
     level = 0,
     category = category or '',
     file = file or '',
-    range = {
-      from = { line = 1, col = 1 },
-      to = { line = #lines, col = 1 },
-    },
+    range = Range:new({
+      start_line = 1,
+      end_line = #lines,
+    }),
     id = 0,
     tags = {}
   }
@@ -103,7 +114,7 @@ function Root:process_root_content(content)
   end
 end
 
----@return Headline|Content[]
+---@return Headline[]|Content[]
 function Root:get_items()
   return self.items
 end

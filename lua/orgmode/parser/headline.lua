@@ -1,9 +1,25 @@
 local Headline = {}
 local Types = require('orgmode.parser.types')
 local Date = require('orgmode.objects.date')
+local Range = require('orgmode.parser.range')
 local config = require('orgmode.config')
 
 ---@class Headline
+---@field id number
+---@field level number
+---@field parent number
+---@field line string
+---@field range Range
+---@field content Content[]
+---@field headlines Headline[]
+---@field todo_keyword table<string, string>
+---@field priority string
+---@field title string
+---@field category string
+---@field file string
+---@field dates Date[]
+---@field tags string[]
+
 ---@param data table
 function Headline:new(data)
   data = data or {}
@@ -12,10 +28,7 @@ function Headline:new(data)
   headline.level = data.line and #data.line:match('^%*+') or 0
   headline.parent = data.parent.id
   headline.line = data.line
-  headline.range = {
-    from = { line = data.lnum, col = 1 },
-    to = { line = data.lnum, col = 1 }
-  }
+  headline.range = Range.from_line(data.lnum)
   headline.content = {}
   headline.headlines = {}
   headline.todo_keyword = { value = '' }
@@ -96,7 +109,7 @@ end
 
 ---@param lnum number
 function Headline:set_range_end(lnum)
-  self.range.to.line = lnum
+  self.range:set_end_line(lnum)
 end
 
 ---@return string
@@ -131,7 +144,7 @@ function Headline:_parse_line()
   self.priority = line:match(self.todo_keyword.value..'%s+%[#([A-Z0-9])%]') or ''
   self:_parse_tags(line)
   self:_parse_title(line)
-  local dates = Date.parse_all_from_line(self.line, self.range.from.line)
+  local dates = Date.parse_all_from_line(self.line, self.range.start_line)
   for _, date in ipairs(dates) do
     table.insert(self.dates, date)
   end
@@ -149,10 +162,12 @@ function Headline:_parse_todo_keyword()
     if keyword then
       self.todo_keyword = {
         value = word,
-        range = {
-          from = { line = self.range.from.line, col = #star + 1 },
-          to = { line = self.range.from.line, col = #star + #word },
-        }
+        range = Range:new({
+          start_line = self.range.start_line,
+          end_line = self.range.start_line,
+          start_col = #star + 1,
+          end_col = #star + #word,
+        })
       }
       break
     end

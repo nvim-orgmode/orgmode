@@ -1,20 +1,24 @@
 local Content = {}
 local Types = require('orgmode.parser.types')
+local Range = require('orgmode.parser.range')
 local Date = require('orgmode.objects.date')
 local plannings = {'DEADLINE', 'SCHEDULED', 'CLOSED'}
 
 ---@class Content
----@param data table
+---@field parent string
+---@field range Range
+---@field line string
+---@field dates Date[]
+---@field id string
+
+---@param data Headline
 function Content:new(data)
   data = data or {}
   local content = { type = Types.CONTENT }
   content.parent = data.parent.id
   content.level = data.parent.level
   content.line = data.line
-  content.range = {
-      from = { line = data.lnum, col = 1 },
-      to = { line = data.lnum, col = 1 },
-  }
+  content.range = Range.from_line(data.lnum)
   content.dates = {}
   content.id = data.lnum
   setmetatable(content, self)
@@ -40,7 +44,7 @@ function Content:parse()
   local planning = self:_parse_planning()
   if planning then return self end
 
-  local dates = Date.parse_all_from_line(self.line, self.range.from.line)
+  local dates = Date.parse_all_from_line(self.line, self.range.start_line)
   for _, date in ipairs(dates) do
     table.insert(self.dates, date)
   end
@@ -72,7 +76,7 @@ function Content:_parse_planning()
   local dates = {}
   for _, planning in ipairs(plannings) do
     for plan, open, datetime, close in self.line:gmatch('('..planning..'):%s*'..Date.pattern) do
-      local date = Date.from_match(self.line, self.range.from.line, open, datetime, close, dates[#dates], plan)
+      local date = Date.from_match(self.line, self.range.start_line, open, datetime, close, dates[#dates], plan)
       table.insert(dates, date)
     end
   end

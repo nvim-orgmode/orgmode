@@ -1,4 +1,5 @@
 local Headline = require('orgmode.parser.headline')
+local Range = require('orgmode.parser.range')
 local Date = require('orgmode.objects.date')
 
 describe('Headline parser', function()
@@ -17,10 +18,7 @@ describe('Headline parser', function()
     assert.are.same('A', headline.priority)
     assert.are.same({}, headline.dates)
     assert.are.same('This is some content', headline.title)
-    assert.are.same({
-      from = { line = 1, col = 1},
-      to = { line = 1, col = 1},
-    }, headline.range)
+    assert.are.same(Range.from_line(1), headline.range)
   end)
 
   it('should parse dates', function()
@@ -40,23 +38,24 @@ describe('Headline parser', function()
       Date.from_string('2021-05-20 Thu', {
         type = 'NONE',
         active = true,
-        range = {
-          from = { line = 1, col = 44 },
-          to = { line = 1, col = 59 },
-        },
+        range = Range:new({
+          start_line = 1,
+          end_line = 1,
+          start_col = 44,
+          end_col = 59,
+        })
       }),
       Date.from_string('2021-06-20 Sun 14:30', {
         type = 'NONE',
         active = false,
-        range = {
-          from = { line = 1, col = 74 },
-          to = { line = 1, col = 95 },
-        },
+        range = Range:new({
+          start_line = 1,
+          end_line = 1,
+          start_col = 74,
+          end_col = 95,
+        })
       }),
     }, headline.dates)
-    assert.are.same({
-      from = { line = 1, col = 1},
-      to = { line = 1, col = 1},
-    }, headline.range)
+    assert.are.same(Range.from_line(1), headline.range)
   end)
 end)
