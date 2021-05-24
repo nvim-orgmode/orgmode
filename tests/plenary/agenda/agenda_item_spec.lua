@@ -90,7 +90,7 @@ describe('Agenda item', function()
           todo_keyword = 'TODO',
         }
       }, agenda_item.highlights)
-      assert.are.same('7 d. ago', agenda_item.label)
+      assert.are.same('7 d. ago:', agenda_item.label)
 
       -- ignores past that are done
       headline = generate(string.format('DEADLINE: <%s>', today:subtract({ day = 7 }):to_string()), 'DONE')
@@ -116,7 +116,7 @@ describe('Agenda item', function()
           todo_keyword = 'TODO',
         }
       }, agenda_item.highlights)
-      assert.are.same('In 9 d.', agenda_item.label)
+      assert.are.same('In 9 d.:', agenda_item.label)
 
       -- future without warning within the default warning days and less than 6 days (highlights as warning)
       headline = generate(string.format('DEADLINE: <%s>', today:add({ day = 6 }):to_string()))
@@ -129,7 +129,7 @@ describe('Agenda item', function()
           todo_keyword = 'TODO',
         }
       }, agenda_item.highlights)
-      assert.are.same('In 6 d.', agenda_item.label)
+      assert.are.same('In 6 d.:', agenda_item.label)
 
       -- future with warning within the defined warning period
       headline = generate(string.format('DEADLINE: <%s -10d>', today:add({ day = 9 }):to_string()))
@@ -141,7 +141,7 @@ describe('Agenda item', function()
           todo_keyword = 'TODO',
         }
       }, agenda_item.highlights)
-      assert.are.same('In 9 d.', agenda_item.label)
+      assert.are.same('In 9 d.:', agenda_item.label)
 
       -- future with warning within the defined warning period and less than 6 days (highlights as warning)
       headline = generate(string.format('DEADLINE: <%s -10d>', today:add({ day = 6 }):to_string()))
@@ -154,7 +154,7 @@ describe('Agenda item', function()
           todo_keyword = 'TODO',
         }
       }, agenda_item.highlights)
-      assert.are.same('In 6 d.', agenda_item.label)
+      assert.are.same('In 6 d.:', agenda_item.label)
 
       -- future with warning outside of defined warning period is not shown
       headline = generate(string.format('DEADLINE: <%s -7d>', today:add({ day = 8 }):to_string()))
@@ -190,7 +190,7 @@ describe('Agenda item', function()
           todo_keyword = 'TODO',
         }
       }, agenda_item.highlights)
-      assert.are.same('Sched. 7x', agenda_item.label)
+      assert.are.same('Sched. 7x:', agenda_item.label)
 
       -- Past done ignored
       headline = generate(string.format('SCHEDULED: <%s>', today:subtract({ day = 7 }):to_string()), 'DONE')
@@ -217,7 +217,7 @@ describe('Agenda item', function()
           todo_keyword = 'TODO',
         }
       }, agenda_item.highlights)
-      assert.are.same('Sched. 2x', agenda_item.label)
+      assert.are.same('Sched. 2x:', agenda_item.label)
 
       -- Undone adjusted for today or past shown
       headline = generate(string.format('SCHEDULED: <%s -2d>', today:subtract({ day = 4 }):to_string()))
@@ -230,7 +230,7 @@ describe('Agenda item', function()
           todo_keyword = 'TODO',
         }
       }, agenda_item.highlights)
-      assert.are.same('Sched. 4x', agenda_item.label)
+      assert.are.same('Sched. 4x:', agenda_item.label)
 
       -- Done adjusted for today ignored
       headline = generate(string.format('SCHEDULED: <%s -2d>', today:subtract({ day = 2 }):to_string()), 'DONE')

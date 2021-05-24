@@ -1,5 +1,4 @@
 return {
-  week_start_day = 1,
   org_agenda_files = '',
   org_default_notes_file = '',
   org_todo_keywords = {'TODO', 'NEXT', 'DONE'},
@@ -11,4 +10,25 @@ return {
   org_agenda_span = 'week', -- day/week/month/year/number of days
   org_agenda_start_on_weekday = 1,
   org_agenda_start_day = nil, -- start from today + this modifier
+  mappings = {
+    disable_all = false,
+    global = {
+      org_agenda = '<Leader>oa',
+      org_capture = '<Leader>oc',
+    },
+    agenda = {
+      org_agenda_later = 'f',
+      org_agenda_earlier = 'b',
+      org_agenda_goto_today = '.',
+      org_agenda_day_view = 'vd',
+      org_agenda_week_view = 'vw',
+      org_agenda_month_view = 'vm',
+      org_agenda_year_view = 'vy',
+      org_agenda_quit = 'q',
+      org_agenda_switch_to = '<CR>',
+      -- org_agenda_goto_date = 'j', -- TODO
+      -- org_agenda_goto = {'<TAB>', '<LeftMouse>'}, -- TODO
+      -- org_agenda_follow_mode = 'F', -- TODO
+    }
+  }
 }

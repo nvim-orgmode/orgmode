@@ -145,4 +145,20 @@ function utils.menu(title, items, prompt)
   return entry.action()
 end
 
+function utils.keymap(mode, lhs, rhs, opts)
+  return vim.api.nvim_set_keymap(mode, lhs, rhs, vim.tbl_extend('keep', opts or {}, {
+        nowait = true,
+        silent = true,
+        noremap = true,
+    }))
+end
+
+function utils.buf_keymap(buf, mode, lhs, rhs, opts)
+  return vim.api.nvim_buf_set_keymap(buf, mode, lhs, rhs, vim.tbl_extend('keep', opts or {}, {
+        nowait = true,
+        silent = true,
+        noremap = true,
+    }))
+end
+
 return utils

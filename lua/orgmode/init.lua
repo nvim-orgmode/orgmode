@@ -1,4 +1,5 @@
 local Config = require('orgmode.config')
+local mappings = require('orgmode.config.mappings')
 local Agenda = require('orgmode.agenda')
 local utils = require('orgmode.utils')
 local parser = require('orgmode.parser')
@@ -60,6 +61,7 @@ end
 local function setup(opts)
   Config = Config:extend(opts)
   instance = Org:new()
+  Config:setup_mappings()
   return instance
 end
 
@@ -70,7 +72,6 @@ local function reload(file)
   return instance:reload(file)
 end
 
----@param cmd string
 ---@param opts table
 local function action(cmd, opts)
   local parts = vim.split(cmd, '.', true)
