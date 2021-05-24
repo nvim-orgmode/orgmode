@@ -2,7 +2,6 @@ local Headline = require('orgmode.parser.headline')
 local Content = require('orgmode.parser.content')
 local Types = require('orgmode.parser.types')
 local Range = require('orgmode.parser.range')
-local config = require('orgmode.config')
 
 ---@class Root
 ---@field lines string[]

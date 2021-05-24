@@ -1,6 +1,6 @@
 local Config = require('orgmode.config')
-local mappings = require('orgmode.config.mappings')
 local Agenda = require('orgmode.agenda')
+local Capture = require('orgmode.capture')
 local utils = require('orgmode.utils')
 local parser = require('orgmode.parser')
 local instance = nil
@@ -14,6 +14,7 @@ function Org:new()
   data:setup_autocmds()
   data:load()
   data.agenda = Agenda:new({ files = data.files })
+  data.capture = Capture:new()
   return data
 end
 

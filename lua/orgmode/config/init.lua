@@ -7,18 +7,27 @@ local mappings = require('orgmode.config.mappings')
 ---@class Config
 ---@param opts? table
 function Config:new(opts)
-  opts = opts or {}
-  local data = vim.tbl_deep_extend('force', defaults, opts)
+  local data = {
+    opts = vim.tbl_deep_extend('force', defaults, opts or {})
+  }
   setmetatable(data, self)
-  self.__index = self
   return data
+end
+
+function Config:__index(key)
+  if self.opts[key] then return self.opts[key] end
+  return rawget(getmetatable(self), key)
+end
+
+function Config:get(opt, default)
+  return self.opts[opt] or default
 end
 
 ---@param opts table
 ---@return Config
 function Config:extend(opts)
-  instance = self:new(vim.tbl_extend('force', self, opts or {}))
-  return instance
+  self.opts = vim.tbl_deep_extend('force', self.opts, opts or {})
+  return self
 end
 
 ---@return string[]
@@ -41,7 +50,7 @@ end
 
 ---@return string|number
 function Config:get_agenda_span()
-  local span = self.org_agenda_span
+  local span = self.opts.org_agenda_span
   local valid_spans = {'day', 'month', 'week', 'year'}
   if type(span) == 'string' and not vim.tbl_contains(valid_spans, span) then
     utils.echo_warning(string.format(
@@ -63,15 +72,15 @@ function Config:get_agenda_span()
 end
 
 function Config:setup_mappings(category)
-  if self.mappings.disable_all then return end
+  if self.opts.mappings.disable_all then return end
   if not category then
-    utils.keymap('n', self.mappings.global.org_agenda, '<cmd>lua require("orgmode").action("agenda.prompt")<CR>')
-    utils.keymap('n', self.mappings.global.org_capture, '<cmd>lua require("orgmode.utils").capture_menu()<CR>')
+    utils.keymap('n', self.opts.mappings.global.org_agenda, '<cmd>lua require("orgmode").action("agenda.prompt")<CR>')
+    utils.keymap('n', self.opts.mappings.global.org_capture, '<cmd>lua require("orgmode").action("capture.prompt")<CR>')
     return
   end
-  if not self.mappings[category] then return end
+  if not self.opts.mappings[category] then return end
 
-  for name, key in pairs(self.mappings[category]) do
+  for name, key in pairs(self.opts.mappings[category]) do
     if mappings[category] and mappings[category][name] then
       local map = vim.tbl_map(function(i) return string.format('"%s"', i) end, mappings[category][name])
       utils.buf_keymap(0, 'n', key, string.format('<cmd>lua require("orgmode").action(%s)<CR>', table.concat(map, ', ')))
