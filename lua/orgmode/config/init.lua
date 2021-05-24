@@ -2,12 +2,13 @@ local instance = {}
 local Config = {}
 local utils = require('orgmode.utils')
 local defaults = require('orgmode.config.defaults')
+local mappings = require('orgmode.config.mappings')
 
 ---@class Config
 ---@param opts? table
 function Config:new(opts)
   opts = opts or {}
-  local data = vim.tbl_extend('force', defaults, opts)
+  local data = vim.tbl_deep_extend('force', defaults, opts)
   setmetatable(data, self)
   self.__index = self
   return data
@@ -59,6 +60,23 @@ function Config:get_agenda_span()
     span = 'week'
   end
   return span
+end
+
+function Config:setup_mappings(category)
+  if self.mappings.disable_all then return end
+  if not category then
+    utils.keymap('n', self.mappings.global.org_agenda, '<cmd>lua require("orgmode").action("agenda.open")<CR>')
+    utils.keymap('n', self.mappings.global.org_capture, '<cmd>lua require("orgmode.utils").capture_menu()<CR>')
+    return
+  end
+  if not self.mappings[category] then return end
+
+  for name, key in pairs(self.mappings[category]) do
+    if mappings[category] and mappings[category][name] then
+      local map = vim.tbl_map(function(i) return string.format('"%s"', i) end, mappings[category][name])
+      utils.buf_keymap(0, 'n', key, string.format('<cmd>lua require("orgmode").action(%s)<CR>', table.concat(map, ', ')))
+    end
+  end
 end
 
 instance = Config:new()

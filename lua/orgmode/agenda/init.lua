@@ -161,6 +161,7 @@ function Agenda:open()
 
   self.items = agenda_days
   self:render()
+  config:setup_mappings('agenda')
   vim.fn.search(Date.now():format(self.day_format))
 end
 
@@ -245,6 +246,10 @@ function Agenda:_set_date_range()
   self.span = span
   self.from = from
   self.to = to
+end
+
+function Agenda:quit()
+  vim.cmd[[bw!]]
 end
 
 return Agenda
