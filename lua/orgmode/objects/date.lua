@@ -48,9 +48,10 @@ function Date:new(data)
     opts.timestamp = os.time()
     local date = os.date('*t', opts.timestamp)
     opts = set_date_opts(date, opts)
+    opts.dayname = os.date('%a', opts.timestamp)
   end
   opts.date_only = date_only
-  opts.dayname = data.dayname
+  opts.dayname = opts.dayname or data.dayname
   opts.adjustments = data.adjustments or {}
   setmetatable(opts, self)
   self.__index = self

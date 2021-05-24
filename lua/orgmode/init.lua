@@ -1,3 +1,4 @@
+_G.org = _G.org or {}
 local Config = require('orgmode.config')
 local Agenda = require('orgmode.agenda')
 local Capture = require('orgmode.capture')
@@ -13,8 +14,8 @@ function Org:new()
   self.__index = self
   data:setup_autocmds()
   data:load()
-  data.agenda = Agenda:new({ files = data.files })
-  data.capture = Capture:new()
+  data.agenda = Agenda:new({ files = data.files, org = data })
+  data.capture = Capture:new({ agenda = data.agenda })
   return data
 end
 
@@ -80,7 +81,7 @@ local function action(cmd, opts)
   if instance[parts[1]] and instance[parts[1]][parts[2]] then
     local item = instance[parts[1]]
     local method = item[parts[2]]
-    method(item, opts)
+    return method(item, opts)
   end
 end
 

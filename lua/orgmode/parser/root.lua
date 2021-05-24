@@ -132,4 +132,11 @@ function Root:get_headlines_for_today()
   end, self.items)
 end
 
+function Root:find_headline_by_title(title)
+  local headlines = vim.tbl_filter(function(item)
+   return item.type == Types.HEADLINE and item.title:match('^'..vim.pesc(title))
+  end, self.items)
+  return headlines[1]
+end
+
 return Root

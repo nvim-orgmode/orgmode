@@ -7,6 +7,7 @@ local AgendaItem = require('orgmode.agenda.agenda_item')
 
 ---@class Agenda
 ---@field files Root[]
+---@field org Org
 ---@field span string|number
 ---@field day_format string
 ---@field items table[]
@@ -17,6 +18,7 @@ local Agenda = {}
 function Agenda:new(opts)
   opts = opts or {}
   local data = {
+    org = opts.org,
     files = opts.files or {},
     span = config:get_agenda_span(),
     day_format = '%A %d %B %Y',
@@ -122,6 +124,7 @@ function Agenda:render()
     vim.cmd[[16split orgagenda]]
     vim.cmd[[setf orgagenda]]
     vim.cmd[[setlocal buftype=nofile bufhidden=wipe nobuflisted nolist noswapfile nowrap nospell]]
+    config:setup_mappings('agenda')
   else
     vim.cmd(vim.fn.win_id2win(opened)..'wincmd w')
   end
@@ -136,11 +139,12 @@ function Agenda:render()
 end
 
 function Agenda:prompt()
-  return utils.menu('Select action:', {
-    { label = 'Agenda', key = 'a', action = function() return self:open() end },
-    { label = '', key = '', separator = true },
-    { label = 'Quit', key = 'q' }
-  })
+  return utils.menu('Press key for an agenda command:', {
+    { label = '', separator = '-', length = 34 },
+    { label = 'Agenda for current week or day', key = 'a', action = function() return self:open() end },
+    { label = 'Quit', key = 'q' },
+    { label = '', separator = ' ', length = 1 },
+  }, 'Press key for an agenda command:')
 end
 
 function Agenda:open()
@@ -169,7 +173,6 @@ function Agenda:open()
 
   self.items = agenda_days
   self:render()
-  config:setup_mappings('agenda')
   vim.fn.search(Date.now():format(self.day_format))
 end
 
@@ -211,7 +214,7 @@ end
 function Agenda:select_item()
   local item = self.content[vim.fn.line('.')]
   if not item or not item.jumpable then return end
-  vim.cmd('edit '..item.file)
+  vim.cmd('edit '..vim.fn.fnameescape(item.file))
   vim.fn.cursor(item.file_position, 0)
 end
 

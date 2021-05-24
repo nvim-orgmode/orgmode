@@ -10,6 +10,8 @@ return {
   org_agenda_span = 'week', -- day/week/month/year/number of days
   org_agenda_start_on_weekday = 1,
   org_agenda_start_day = nil, -- start from today + this modifier
+  org_agenda_templates = {},
+  org_refile_targets = {},
   mappings = {
     disable_all = false,
     global = {
@@ -29,6 +31,14 @@ return {
       -- org_agenda_goto_date = 'j', -- TODO
       -- org_agenda_goto = {'<TAB>', '<LeftMouse>'}, -- TODO
       -- org_agenda_follow_mode = 'F', -- TODO
+    },
+    capture = {
+      org_capture_finalize = '<C-c>',
+      org_capture_refile = '<Leader>or',
+      org_capture_kill = '<Leader>k'
+    },
+    org = {
+      org_capture_refile = '<Leader>or',
     }
   }
 }
