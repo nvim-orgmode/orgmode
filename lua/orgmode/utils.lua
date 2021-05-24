@@ -21,6 +21,14 @@ function utils.readfile(file, callback)
   end)
 end
 
+function utils.writefile(file, content, flag, mode)
+  flag = flag or 'w'
+  mode = mode or 438
+  local fd = assert(uv.fs_open(file, flag, mode))
+  assert(uv.fs_write(fd, content, -1))
+  assert(uv.fs_close(fd))
+end
+
 local function sort_deadline(a, b)
   local both_has_time = not a.date_only and not b.date_only
   local both_missing_time = a.date_only and b.date_only
