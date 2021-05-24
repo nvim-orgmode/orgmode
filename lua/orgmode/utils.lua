@@ -21,11 +21,11 @@ function utils.readfile(file, callback)
   end)
 end
 
-function utils.writefile(file, content, flag, mode)
+function utils.writefile(file, content, flag, line)
   flag = flag or 'w'
-  mode = mode or 438
+  local mode = 438
   local fd = assert(uv.fs_open(file, flag, mode))
-  assert(uv.fs_write(fd, content, -1))
+  assert(uv.fs_write(fd, content, line or -1))
   assert(uv.fs_close(fd))
 end
 
@@ -76,8 +76,13 @@ end
 ---@param msg string
 function utils.echo_warning(msg)
   vim.cmd[[echohl WarningMsg]]
-  vim.cmd('echom '..msg)
+  vim.cmd(string.format('echom "%s"', msg))
   vim.cmd[[echohl None]]
+end
+
+---@param msg string
+function utils.echo_info(msg)
+  vim.cmd(string.format('echom "%s"', msg))
 end
 
 ---@param word string
@@ -122,25 +127,15 @@ function utils.concat(first, second)
   return first
 end
 
--- Temporary test
-function utils.capture_menu()
-  return utils.menu('Select template:', {
-    { label = 'Da', key = 'd' },
-    { label = 'Ne', key = 'n' },
-    { label = '', key = '', separator = true },
-    { label = 'Abort', key = 'q', action = false },
-  })
-end
-
 function utils.menu(title, items, prompt)
-  local content = { title, vim.fn['repeat']('=', title:len()) }
+  local content = { title }
   local valid_keys = {}
   for _, item in ipairs(items) do
     if item.separator then
-      table.insert(content, vim.fn['repeat']('-', 80))
+      table.insert(content, vim.fn['repeat'](item.separator or '-', item.length or 80))
     else
       valid_keys[item.key] = item
-      table.insert(content, string.format('%s) %s', item.key, item.label))
+      table.insert(content, string.format('%s %s', item.key, item.label))
     end
   end
   prompt = prompt or 'key'

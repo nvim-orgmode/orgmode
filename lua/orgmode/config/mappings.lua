@@ -9,6 +9,14 @@ return {
     org_agenda_year_view = {'agenda.change_span', 'year'},
     org_agenda_quit = {'agenda.quit'},
     org_agenda_switch_to = {'agenda.select_item'},
+  },
+  capture = {
+    org_capture_finalize = {'capture.refile'},
+    org_capture_refile = {'capture.refile_to_destination'},
+    org_capture_kill = {'capture.kill'}
+  },
+  org = {
+    org_capture_refile = {'capture.refile_headline_to_destination'},
   }
 }
 -- org_agenda_goto_date = 'j', -- TODO
