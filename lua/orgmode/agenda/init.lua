@@ -135,6 +135,14 @@ function Agenda:render()
   colors.highlight(highlights)
 end
 
+function Agenda:prompt()
+  return utils.menu('Select action:', {
+    { label = 'Agenda', key = 'a', action = function() return self:open() end },
+    { label = '', key = '', separator = true },
+    { label = 'Quit', key = 'q' }
+  })
+end
+
 function Agenda:open()
   local dates = self.from:get_range_until(self.to)
   local agenda_days = {}
