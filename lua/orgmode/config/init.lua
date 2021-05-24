@@ -65,7 +65,7 @@ end
 function Config:setup_mappings(category)
   if self.mappings.disable_all then return end
   if not category then
-    utils.keymap('n', self.mappings.global.org_agenda, '<cmd>lua require("orgmode").action("agenda.open")<CR>')
+    utils.keymap('n', self.mappings.global.org_agenda, '<cmd>lua require("orgmode").action("agenda.prompt")<CR>')
     utils.keymap('n', self.mappings.global.org_capture, '<cmd>lua require("orgmode.utils").capture_menu()<CR>')
     return
   end
