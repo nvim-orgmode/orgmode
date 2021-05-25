@@ -126,7 +126,7 @@ function Root:get_opened_headlines()
 end
 
 ---@return Headline[]
-function Root:get_headlines_for_today()
+function Root:get_opened_unfinished_headlines()
   return vim.tbl_filter(function(item)
    return item.type == Types.HEADLINE and not item:is_archived() and not item:is_done()
   end, self.items)
