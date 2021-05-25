@@ -3,4 +3,5 @@ return {
   CONTENT = 'CONTENT',
   KEYWORD = 'KEYWORD',
   PLANNING = 'PLANNING',
+  DRAWER = 'DRAWER',
 }

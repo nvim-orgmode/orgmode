@@ -15,6 +15,7 @@ local config = require('orgmode.config')
 ---@field priority string
 ---@field title string
 ---@field category string
+---@field properties table
 ---@field file string
 ---@field dates Date[]
 ---@field tags string[]
@@ -37,6 +38,7 @@ function Headline:new(data)
   headline.category = data.category or ''
   headline.file = data.file or ''
   headline.dates = {}
+  headline.properties = {}
   -- TODO: Add configuration for
   -- - org-use-tag-inheritance
   -- - org-tags-exclude-from-inheritance
@@ -69,7 +71,7 @@ end
 ---@return boolean
 function Headline:is_archived()
   return #vim.tbl_filter(function(tag) return tag:upper() == 'ARCHIVE' end, self.tags) > 0
-    or self.category:upper() == 'ARCHIVE'
+    or self:get_category():upper() == 'ARCHIVE'
 end
 
 ---@return boolean
@@ -97,17 +99,43 @@ function Headline:has_closed()
 end
 
 ---@param content Content
----@return Content
-function Headline:add_content(content)
+function Headline:_parse_planning(content)
   if content:is_planning() and vim.tbl_isempty(self.content) then
     for _, plan in ipairs(content.dates) do
       table.insert(self.dates, plan)
     end
-  elseif content.dates then
+    return true
+  end
+  return false
+end
+
+---@param content Content
+function Headline:_parse_dates(content)
+  if content.dates then
     for _, date in ipairs(content.dates) do
       table.insert(self.dates, date:clone({ type = 'NONE' }))
     end
   end
+end
+
+---@param content Content
+---@param parent_content Content
+function Headline:_parse_properties(content, parent_content)
+  if content:is_parent_end() and parent_content and parent_content:is_properties_start() then
+    self.properties = vim.tbl_extend('force', self.properties, parent_content.drawer.properties or {})
+  end
+end
+
+---@param content Content
+---@param parent_content Content
+---@return Content
+function Headline:add_content(content, parent_content)
+  local is_planning = self:_parse_planning(content)
+  if not is_planning then
+    self:_parse_dates(content)
+  end
+  self:_parse_properties(content, parent_content)
+
   table.insert(self.content, content.id)
   return content
 end
@@ -188,6 +216,13 @@ function Headline:_parse_title(line)
     title = title:gsub(exclude_pattern, '')
   end
   self.title = vim.trim(title)
+end
+
+function Headline:get_category()
+  if self.properties.CATEGORY then
+    return self.properties.CATEGORY
+  end
+  return self.category
 end
 
 return Headline
