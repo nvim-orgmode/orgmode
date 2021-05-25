@@ -7,17 +7,11 @@ local FUTURE_DEADLINE_AS_WARNING_DAYS = 7
 ---@class AgendaItem
 ---@field date Date
 ---@field headline_date Date
----@field adjusted_date Date
 ---@field headline Headline
----@field has_adjustment boolean
 ---@field is_valid boolean
 ---@field is_today boolean
 ---@field is_same_day boolean
----@field is_after boolean
----@field is_before boolean
 ---@field label string
----@field time string
----@field diff number
 ---@field highlights table[]
 local AgendaItem = {}
 
@@ -29,16 +23,10 @@ function AgendaItem:new(headline_date, headline, date)
   local opts = {}
   opts.headline_date = headline_date
   opts.headline = headline
-  opts.has_adjustment = headline_date:get_negative_adjustment()
-  opts.adjusted_date = headline_date:get_adjusted_date()
   opts.date = date
   opts.is_valid = false
   opts.is_today = date:is_today()
   opts.is_same_day = headline_date:is_same(date, 'day') or headline_date:repeats_on(date)
-  opts.is_after = headline_date:is_after(date, 'day')
-  opts.is_before = headline_date:is_before(date, 'day')
-  opts.diff = math.abs(date:diff(headline_date))
-  opts.time = not headline_date.date_only and headline_date:format('%H:%M')..padding or ''
   opts.label = ''
   opts.highlights = {}
   setmetatable(opts, self)
@@ -72,19 +60,19 @@ function AgendaItem:_is_valid_for_today()
 
   if self.headline_date:is_deadline() then
     if self.is_same_day then return true end
-    if self.is_before then
+    if self.headline_date:is_before(self.date, 'day') then
       return not self.headline:is_done()
     end
-    return not self.headline:is_done() and self.date:is_between(self.adjusted_date, self.headline_date, 'day')
+    return not self.headline:is_done() and self.date:is_between(self.headline_date:get_adjusted_date(), self.headline_date, 'day')
   end
 
-  if not self.has_adjustment then
+  if not self.headline_date:get_negative_adjustment() then
     if self.is_same_day then return true end
-    if self.is_before and not self.headline:is_done() then return true end
+    if self.headline_date:is_before(self.date, 'day') and not self.headline:is_done() then return true end
     return false
   end
 
-  if self.adjusted_date:is_same_or_before(self.date, 'day') and not self.headline:is_done() then
+  if self.headline_date:get_adjusted_date():is_same_or_before(self.date, 'day') and not self.headline:is_done() then
     return true
   end
 
@@ -94,7 +82,7 @@ end
 function AgendaItem:_is_valid_for_date()
   if not self.headline_date.active or self.headline_date:is_closed() then return false end
 
-  if not self.headline_date:is_scheduled() or not self.has_adjustment then
+  if not self.headline_date:is_scheduled() or not self.headline_date:get_negative_adjustment() then
     return self.is_same_day
   end
 
@@ -102,22 +90,25 @@ function AgendaItem:_is_valid_for_date()
 end
 
 function AgendaItem:_generate_label()
+  local time = not self.headline_date.date_only and self.headline_date:format('%H:%M')..padding or ''
   if self.headline_date:is_deadline() then
     if self.is_same_day then
-      return self.time..'Deadline:'
+      return time..'Deadline:'
     end
     return self.headline_date:humanize(self.date)..':'
   end
 
   if self.headline_date:is_scheduled() then
     if self.is_same_day then
-      return self.time..'Scheduled:'
+      return time..'Scheduled:'
     end
 
-    return 'Sched. '..self.diff..'x:'
+    local diff = math.abs(self.date:diff(self.headline_date))
+
+    return 'Sched. '..diff..'x:'
   end
 
-  return self.time
+  return time
 end
 
 function AgendaItem:_generate_highlight()
@@ -125,8 +116,9 @@ function AgendaItem:_generate_highlight()
     if self.headline:is_done() then
       return { hlgroup = hl_map.scheduled }
     end
-    if self.is_today and self.is_after then
-      if self.diff <= FUTURE_DEADLINE_AS_WARNING_DAYS then
+    if self.is_today and self.headline_date:is_after(self.date, 'day') then
+      local diff = math.abs(self.date:diff(self.headline_date))
+      if diff <= FUTURE_DEADLINE_AS_WARNING_DAYS then
         return { hlgroup = hl_map.scheduledPast }
       end
       return nil

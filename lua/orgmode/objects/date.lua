@@ -410,8 +410,11 @@ end
 
 ---@return boolean
 function Date:is_today()
-  local date = Date:new()
-  return date.year == self.year and date.month == self.month and date.day == self.day
+  if self.is_today_date == nil then
+    local date = Date:new()
+    self.is_today_date = date.year == self.year and date.month == self.month and date.day == self.day
+  end
+  return self.is_today_date
 end
 
 ---@param date Date
