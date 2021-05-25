@@ -41,14 +41,21 @@ function Capture:open_template(template)
   self.templates:setup()
   vim.api.nvim_buf_set_var(0, 'org_template', template)
   config:setup_mappings('capture')
-  -- vim.cmd[[autocmd BufWipeout <buffer> ++once lua require('orgmode').action('capture.refile')]]
+  vim.cmd[[autocmd BufWipeout <buffer> ++once lua require('orgmode').action('capture.refile', true)]]
 end
 
-function Capture:refile()
-  local template = vim.api.nvim_buf_get_var(0, 'org_template')
-  local file = template.target or config.org_default_notes_file
+function Capture:refile(confirm)
+  local is_modified = vim.bo.modified
+  local template = vim.api.nvim_buf_get_var(0, 'org_template') or {}
+  local file = vim.fn.fnamemodify(template.target or config.org_default_notes_file, ':p')
+  if confirm and is_modified then
+    local choice = vim.fn.confirm(string.format('Do you want to refile this to %s?', file), '&Yes\n&No')
+    vim.cmd[[redraw!]]
+    if choice ~= 1 then
+      return utils.echo_info('Canceled.')
+    end
+  end
   local lines = table.concat(vim.api.nvim_buf_get_lines(0, 0, -1, true), '\n')..'\n'
-  file = vim.fn.fnamemodify(config.org_default_notes_file, ':p')
   return self:_refile_to_end(file, lines)
 end
 
