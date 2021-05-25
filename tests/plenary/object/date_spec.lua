@@ -518,4 +518,16 @@ describe('Date object', function()
     assert.is.True(sunday:repeats_on(sunday:add({ week = 1 })))
     assert.is.False(sunday:repeats_on(sunday:add({ day = 6 })))
   end)
+
+  it('should cache check for today', function()
+    local today = Date.today();
+    assert.is.Nil(today.is_today_date)
+    assert.is.True(today:is_today())
+    assert.is.True(today.is_today_date)
+
+    local future_date = Date.today():add({ day = 5 })
+    assert.is.Nil(future_date.is_today_date)
+    assert.is.False(future_date:is_today())
+    assert.is.False(future_date.is_today_date)
+  end)
 end)
