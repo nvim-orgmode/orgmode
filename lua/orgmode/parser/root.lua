@@ -138,6 +138,25 @@ function Root:get_unfinished_todo_entries()
   end, self.items)
 end
 
+function Root:get_headlines_matching_search_term(term)
+  return vim.tbl_filter(function(item)
+    local is_match = false
+    if item.type == Types.HEADLINE then
+      is_match = item.title:match(vim.pesc(term))
+      if not is_match then
+        for _, content_id in ipairs(item.content) do
+          local content = self.items[content_id]
+          if content.line:match(vim.pesc(term)) then
+            is_match = true
+            break
+          end
+        end
+      end
+      return is_match
+    end
+  end, self.items)
+end
+
 function Root:find_headline_by_title(title)
   local headlines = vim.tbl_filter(function(item)
    return item.type == Types.HEADLINE and item.title:match('^'..vim.pesc(title))

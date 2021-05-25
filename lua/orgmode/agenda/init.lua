@@ -4,6 +4,8 @@ local utils = require('orgmode.utils')
 local config = require('orgmode.config')
 local colors = require('orgmode.colors')
 local AgendaItem = require('orgmode.agenda.agenda_item')
+local agenda_highlights = require('orgmode.agenda.highlights')
+local hl_map = agenda_highlights.get_agenda_hl_map()
 
 ---@class Agenda
 ---@field files Root[]
@@ -163,12 +165,14 @@ function Agenda:todos()
     local todo_keyword_pos = category:len() + 3
     table.insert(content, {
       line_content = line,
-      value = todo,
-      id = todo.id,
+      line = #content,
+      jumpable = true,
+      file = todo.file,
+      file_position = todo.range.start_line
     })
 
     table.insert(highlights, {
-      hlgroup = 'OrgTODO',
+      hlgroup = hl_map[todo_keyword],
       range = Range:new({
         start_line = i + 1,
         end_line = i + 1,
@@ -198,11 +202,84 @@ function Agenda:todos()
   colors.highlight(highlights)
 end
 
+function Agenda:search()
+  local search_term = vim.fn.input('Enter search term: ', '')
+  if vim.trim(search_term) == '' then
+    return utils.echo_warning('Invalid search term.')
+  end
+  local headlines = {}
+  for _, orgfile in pairs(self.files) do
+    for _, headline in ipairs(orgfile:get_headlines_matching_search_term(search_term)) do
+      table.insert(headlines, headline)
+    end
+  end
+
+  local longest_category = utils.reduce(headlines, function(acc, todo)
+    return math.max(acc, todo.category:len())
+  end, 0)
+
+  local content = {{ line_content = 'Search words: '..search_term, highlight = nil }}
+  local highlights = {}
+
+  for i, headline in ipairs(headlines) do
+    local category = string.format('  %-'..(longest_category + 1)..'s', headline.category..':')
+    local todo_keyword = headline.todo_keyword.value
+    if todo_keyword ~= '' then
+      todo_keyword = ' '..todo_keyword
+    end
+    local line = string.format('  %s%s %s', category, todo_keyword, headline.title)
+    if #headline.tags > 0 then
+      line = string.format('%-99s %s', line, headline:tags_to_string())
+    end
+    table.insert(content, {
+      line_content = line,
+      line = #content,
+      jumpable = true,
+      file = headline.file,
+      file_position = headline.range.start_line
+    })
+
+    if headline.todo_keyword.value ~= '' then
+      local todo_keyword_pos = category:len() + 3
+      table.insert(highlights, {
+        hlgroup = hl_map[headline.todo_keyword.value],
+        range = Range:new({
+          start_line = i + 1,
+          end_line = i + 1,
+          start_col = todo_keyword_pos,
+          end_col = todo_keyword_pos + todo_keyword:len() + 1
+        })
+      })
+    end
+
+  end
+
+  self.content = content
+  local opened = self:is_opened()
+  if not opened then
+    vim.cmd[[16split orgagenda]]
+    vim.cmd[[setf orgagenda]]
+    vim.cmd[[setlocal buftype=nofile bufhidden=wipe nobuflisted nolist noswapfile nowrap nospell]]
+    config:setup_mappings('agenda')
+  else
+    vim.cmd(vim.fn.win_id2win(opened)..'wincmd w')
+  end
+  vim.bo.modifiable = true
+  local lines = vim.tbl_map(function(item)
+    return item.line_content
+  end, self.content)
+  vim.api.nvim_buf_set_lines(0, 0, -1, true, lines)
+  vim.bo.modifiable = false
+  vim.bo.modified = false
+  colors.highlight(highlights)
+end
+
 function Agenda:prompt()
   return utils.menu('Press key for an agenda command:', {
     { label = '', separator = '-', length = 34 },
     { label = 'Agenda for current week or day', key = 'a', action = function() return self:open() end },
     { label = 'List of all TODO entries', key = 't', action = function() return self:todos() end },
+    { label = 'Search for keywords', key = 's', action = function() return self:search() end },
     { label = 'Quit', key = 'q' },
     { label = '', separator = ' ', length = 1 },
   }, 'Press key for an agenda command:')
