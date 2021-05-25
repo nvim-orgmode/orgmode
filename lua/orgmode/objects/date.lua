@@ -1,3 +1,7 @@
+-- TODO
+-- Support date ranges <date>--<date>
+-- Support time ranges <date time-time>
+-- Support other adjustments (++1 --1, etc.)
 local spans = { d = 'day', m = 'month', y = 'year', h = 'hour', w = 'week' }
 local config = require('orgmode.config')
 local utils = require('orgmode.utils')
@@ -506,44 +510,28 @@ function Date:get_negative_adjustment()
   return adj
 end
 
-function Date:is_valid_for_today(today)
-  if not self.active then
-    return false
-  end
-  local is_same_day = self:is_same(today, 'day')
-  local warning_date = self:get_adjusted_date()
+function Date:get_repeater()
+  local repeater = nil
+  if #self.adjustments == 0 then return repeater end
 
-  if self:is_none() or self:is_closed() then
-    return is_same_day
-  end
-
-  if self:is_deadline() then
-    if is_same_day then
-      return true
+  for _, adj in ipairs(self.adjustments) do
+    if adj:match('^%+%d+') then
+      repeater = adj
+      break
     end
-    local is_future = self:is_after(today, 'day')
-    if is_future then
-      return today:is_between(warning_date, self, 'day')
-    end
-    return true
   end
-
-  if not self:get_negative_adjustment() then
-    return is_same_day or self:is_before(today, 'day')
-  end
-
-  return warning_date:is_same_or_before(today, 'day')
+  return repeater
 end
 
-function Date:is_valid_for_date(date)
-  if not self.active then
-    return false
+function Date:repeats_on(date)
+  local repeater = self:get_repeater()
+  if not repeater then return false end
+  local repeat_date = self:start_of('day')
+  local date_start = date:start_of('day')
+  while repeat_date.timestamp < date_start.timestamp do
+    repeat_date = repeat_date:adjust(repeater)
   end
-  if not self:get_negative_adjustment() or not self:is_scheduled() then
-    return self:is_same(date, 'day')
-  end
-
-  return false
+  return repeat_date:is_same(date, 'day')
 end
 
 ---@return Date

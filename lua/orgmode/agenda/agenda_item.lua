@@ -34,7 +34,7 @@ function AgendaItem:new(headline_date, headline, date)
   opts.date = date
   opts.is_valid = false
   opts.is_today = date:is_today()
-  opts.is_same_day = headline_date:is_same(date, 'day')
+  opts.is_same_day = headline_date:is_same(date, 'day') or headline_date:repeats_on(date)
   opts.is_after = headline_date:is_after(date, 'day')
   opts.is_before = headline_date:is_before(date, 'day')
   opts.diff = math.abs(date:diff(headline_date))
