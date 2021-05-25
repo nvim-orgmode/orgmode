@@ -369,29 +369,4 @@ hi def link org_subtask_percent String
 hi def link org_subtask_percent_100 Identifier
 hi def link org_subtask_number_all Identifier
 
-" Plugin SyntaxRange: {{{1
-" This only works if you have SyntaxRange installed:
-" https://github.com/vim-scripts/SyntaxRange
-
-" BEGIN_SRC
-if exists('g:loaded_SyntaxRange')
-  call SyntaxRange#Include('#+BEGIN_SRC vim', '#+END_SRC', 'vim', 'comment')
-  call SyntaxRange#Include('#+BEGIN_SRC python', '#+END_SRC', 'python', 'comment')
-  call SyntaxRange#Include('#+BEGIN_SRC c', '#+END_SRC', 'c', 'comment')
-  " cpp must be below c, otherwise you get c syntax hl for cpp files
-  call SyntaxRange#Include('#+BEGIN_SRC cpp', '#+END_SRC', 'cpp', 'comment')
-  call SyntaxRange#Include('#+BEGIN_SRC haskell', '#+END_SRC', 'haskell', 'comment')
-  call SyntaxRange#Include('#+BEGIN_SRC ocaml', '#+END_SRC', 'ocaml', 'comment')
-  call SyntaxRange#Include('#+BEGIN_SRC ruby', '#+END_SRC', 'ruby', 'comment')
-  call SyntaxRange#Include('#+BEGIN_SRC rust', '#+END_SRC', 'rust', 'comment')
-  " call SyntaxRange#Include('#+BEGIN_SRC lua', '#+END_SRC', 'lua', 'comment')
-  " call SyntaxRange#Include('#+BEGIN_SRC lisp', '#+END_SRC', 'lisp', 'comment')
-
-  " LaTeX
-  call SyntaxRange#Include('\\begin[.*]{.*}', '\\end{.*}', 'tex')
-  call SyntaxRange#Include('\\begin{.*}', '\\end{.*}', 'tex')
-  call SyntaxRange#Include('\\\[', '\\\]', 'tex')
-  call SyntaxRange#Include('\$[^$]', '\$', 'tex')
-endif
-
 " vi: ft=vim:tw=80:sw=4:ts=4:fdm=marker
