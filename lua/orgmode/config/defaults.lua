@@ -1,7 +1,7 @@
 return {
   org_agenda_files = '',
   org_default_notes_file = '',
-  org_todo_keywords = {'TODO', 'NEXT', 'DONE'},
+  org_todo_keywords = {'TODO', 'DONE'},
   org_agenda_skip_scheduled_if_done = false, -- hide DONE items if this is true
   org_deadline_warning_days = 14,
   -- https://emacs.stackexchange.com/a/12518

@@ -27,17 +27,12 @@ M.get_todo_keywords_colors = function()
    local error = M.parse_hl_fg_color('ErrorMsg')
    local warning = M.parse_hl_fg_color('WarningMsg')
    local ok = M.parse_hl_fg_color('diffAdded')
-   local info = M.parse_hl_fg_color('diffChanged')
-   if info == '' then
-     info = M.parse_hl_fg_color('DiffText')
-   end
    if ok == '' then
       ok = M.parse_hl_fg_color('DiffAdd')
    end
 
    return {
       TODO = error,
-      NEXT = info,
       DONE = ok,
       deadline = M.from_hex(error):lighten_by(0.1):to_rgb(),
       scheduled = M.from_hex(ok):lighten_by(0.1):to_rgb(),

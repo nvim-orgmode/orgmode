@@ -12,7 +12,7 @@ describe('Parser', function()
 
     local parsed = parser.parse(lines, 'todos')
     assert.are.same(parsed.tags, {'Tag1', 'Tag2'})
-    assert.are.same(parsed:get_item(2), {
+    assert.are.same({
       content = {},
       dates = {},
       headlines = {},
@@ -26,6 +26,7 @@ describe('Parser', function()
       priority = '',
       properties = {},
       todo_keyword = {
+        type = 'TODO',
         value = 'TODO',
         range = Range:new({
           start_line = 2,
@@ -37,7 +38,7 @@ describe('Parser', function()
       tags = {'WORK'},
       category = 'todos',
       file = '',
-    })
+    }, parsed:get_item(2))
   end)
 
   it('should parse lines', function()
@@ -46,13 +47,13 @@ describe('Parser', function()
       '* TODO Test orgmode',
       '** TODO [#A] Test orgmode level 2 :PRIVATE:',
       'Some content for level 2',
-      '*** NEXT [#1] Level 3',
+      '*** TODO [#1] Level 3',
       'Content Level 3',
       '* DONE top level todo :WORK:',
       'content for top level todo',
       '* TODO top level todo with multiple tags :OFFICE:PROJECT:',
       'multiple tags content, tags not read from content :FROMCONTENT:',
-      '** NEXT Working on this now :OFFICE:NESTED:',
+      '** TODO Working on this now :OFFICE:NESTED:',
       '* NOKEYWORD Headline with wrong todo keyword and wrong tag format :WORK : OFFICE:',
     }
 
@@ -84,6 +85,7 @@ describe('Parser', function()
       file = '',
       todo_keyword = {
         value = 'TODO',
+        type = 'TODO',
         range = Range:new({
           start_line = 2,
           end_line = 2,
@@ -110,6 +112,7 @@ describe('Parser', function()
       file = '',
       todo_keyword = {
         value = 'TODO',
+        type = 'TODO',
         range = Range:new({
           start_line = 3,
           end_line = 3,
@@ -134,7 +137,7 @@ describe('Parser', function()
       dates = {},
       headlines = {},
       level = 3,
-      line = "*** NEXT [#1] Level 3",
+      line = "*** TODO [#1] Level 3",
       id = 5,
       range = Range:new({ start_line = 5, end_line = 6 }),
       parent = 3,
@@ -145,7 +148,8 @@ describe('Parser', function()
       category = 'todos',
       file = '',
       todo_keyword = {
-        value = 'NEXT',
+        value = 'TODO',
+        type = 'TODO',
         range = Range:new({
           start_line = 5,
           end_line = 5,
@@ -182,6 +186,7 @@ describe('Parser', function()
       file = '',
       todo_keyword = {
         value = 'DONE',
+        type = 'DONE',
         range = Range:new({
           start_line = 7,
           end_line = 7,
@@ -218,6 +223,7 @@ describe('Parser', function()
       file = '',
       todo_keyword = {
         value = 'TODO',
+        type = 'TODO',
         range = Range:new({
           start_line = 9,
           end_line = 9,
@@ -242,7 +248,7 @@ describe('Parser', function()
       dates = {},
       headlines = {},
       level = 2,
-      line = "** NEXT Working on this now :OFFICE:NESTED:",
+      line = "** TODO Working on this now :OFFICE:NESTED:",
       id = 11,
       range = Range.from_line(11),
       parent = 9,
@@ -253,7 +259,8 @@ describe('Parser', function()
       properties = {},
       title = 'Working on this now',
       todo_keyword = {
-        value = 'NEXT',
+        value = 'TODO',
+        type = 'TODO',
         range = Range:new({
           start_line = 11,
           end_line = 11,
@@ -278,7 +285,7 @@ describe('Parser', function()
       type = "HEADLINE",
       category = 'todos',
       file = '',
-      todo_keyword = { value = '' },
+      todo_keyword = { value = '', type = '' },
       tags = {},
     }, parsed:get_item(12))
     assert.are.same(0, parsed.level)
@@ -360,6 +367,7 @@ describe('Parser', function()
       file = '',
       todo_keyword = {
         value = 'TODO',
+        type = 'TODO',
         range = Range:new({
           start_line = 1,
           end_line = 1,
@@ -444,6 +452,7 @@ describe('Parser', function()
       file = '',
       todo_keyword = {
         value = 'TODO',
+        type = 'TODO',
         range = Range:new({
           start_line = 3,
           end_line = 3,
@@ -534,6 +543,7 @@ describe('Parser', function()
       },
       todo_keyword = {
         value = 'TODO',
+        type = 'TODO',
         range = Range:new({
           start_line = 1,
           end_line = 1,

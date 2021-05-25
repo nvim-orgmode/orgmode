@@ -32,7 +32,7 @@ function Headline:new(data)
   headline.range = Range.from_line(data.lnum)
   headline.content = {}
   headline.headlines = {}
-  headline.todo_keyword = { value = '' }
+  headline.todo_keyword = { value = '', type = '' }
   headline.priority = ''
   headline.title = ''
   headline.category = data.category or ''
@@ -59,12 +59,12 @@ end
 
 ---@return boolean
 function Headline:is_done()
-  return self.todo_keyword.value:upper() == 'DONE'
+  return vim.tbl_contains(config:get_todo_keywords().DONE, self.todo_keyword.value:upper())
 end
 
 ---@return boolean
 function Headline:is_todo()
-  return self.todo_keyword.value:upper() == 'TODO'
+  return vim.tbl_contains(config:get_todo_keywords().TODO, self.todo_keyword.value:upper())
 end
 
 -- TODO: Check if this can be configured to be ignored
@@ -175,17 +175,23 @@ function Headline:_parse_line()
 end
 
 function Headline:_parse_todo_keyword()
-  for _, word in ipairs(config.org_todo_keywords) do
+  local todo_keywords = config:get_todo_keywords()
+  for _, word in ipairs(todo_keywords.ALL) do
     local star = self.line:match('^%*+%s+')
     local keyword = self.line:match('^%*+%s+'..word..'%s+')
     -- If keyword doesn't have a space after it, check if whole line
-    -- is just a keyword. For example: "* NEXT"
+    -- is just a keyword. For example: "* DONE"
     if not keyword then
       keyword = self.line == star..word
     end
     if keyword then
+      local type = 'TODO'
+      if vim.tbl_contains(todo_keywords.DONE, word) then
+        type = 'DONE'
+      end
       self.todo_keyword = {
         value = word,
+        type = type,
         range = Range:new({
           start_line = self.range.start_line,
           end_line = self.range.start_line,

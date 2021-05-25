@@ -71,6 +71,23 @@ function Config:get_agenda_span()
   return span
 end
 
+function Config:get_todo_keywords()
+  local types = { TODO = {}, DONE = {}, ALL = {} };
+  local type = 'TODO'
+  for _, word in ipairs(self.opts.org_todo_keywords) do
+    if word == '|' then
+      type = 'DONE'
+    else
+      table.insert(types[type], word)
+      table.insert(types.ALL, word)
+    end
+  end
+  if #types.DONE == 0 then
+    types.DONE = {table.remove(types.TODO, #types.TODO)}
+  end
+  return types
+end
+
 function Config:setup_mappings(category)
   if self.opts.mappings.disable_all then return end
   if not category then
