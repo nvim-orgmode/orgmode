@@ -138,10 +138,71 @@ function Agenda:render()
   colors.highlight(highlights)
 end
 
+function Agenda:todos()
+  local todos = {}
+  for _, orgfile in pairs(self.files) do
+    for _, headline in ipairs(orgfile:get_unfinished_todo_entries()) do
+      table.insert(todos, headline)
+    end
+  end
+
+  local longest_category = utils.reduce(todos, function(acc, todo)
+    return math.max(acc, todo.category:len())
+  end, 0)
+
+  local content = {{ line_content = 'Global list of TODO items of type: ALL', highlight = nil }}
+  local highlights = {}
+
+  for i, todo in ipairs(todos) do
+    local category = string.format('  %-'..(longest_category + 1)..'s', todo.category..':')
+    local todo_keyword = todo.todo_keyword.value
+    local line = string.format('  %s %s %s', category, todo_keyword, todo.title)
+    if #todo.tags > 0 then
+      line = string.format('%-99s %s', line, todo:tags_to_string())
+    end
+    local todo_keyword_pos = category:len() + 3
+    table.insert(content, {
+      line_content = line,
+      value = todo,
+      id = todo.id,
+    })
+
+    table.insert(highlights, {
+      hlgroup = 'OrgTODO',
+      range = Range:new({
+        start_line = i + 1,
+        end_line = i + 1,
+        start_col = todo_keyword_pos,
+        end_col = todo_keyword_pos + todo_keyword:len() + 1
+      })
+    })
+  end
+
+  self.content = content
+  local opened = self:is_opened()
+  if not opened then
+    vim.cmd[[16split orgagenda]]
+    vim.cmd[[setf orgagenda]]
+    vim.cmd[[setlocal buftype=nofile bufhidden=wipe nobuflisted nolist noswapfile nowrap nospell]]
+    config:setup_mappings('agenda')
+  else
+    vim.cmd(vim.fn.win_id2win(opened)..'wincmd w')
+  end
+  vim.bo.modifiable = true
+  local lines = vim.tbl_map(function(item)
+    return item.line_content
+  end, self.content)
+  vim.api.nvim_buf_set_lines(0, 0, -1, true, lines)
+  vim.bo.modifiable = false
+  vim.bo.modified = false
+  colors.highlight(highlights)
+end
+
 function Agenda:prompt()
   return utils.menu('Press key for an agenda command:', {
     { label = '', separator = '-', length = 34 },
     { label = 'Agenda for current week or day', key = 'a', action = function() return self:open() end },
+    { label = 'List of all TODO entries', key = 't', action = function() return self:todos() end },
     { label = 'Quit', key = 'q' },
     { label = '', separator = ' ', length = 1 },
   }, 'Press key for an agenda command:')

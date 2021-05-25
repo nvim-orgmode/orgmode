@@ -132,6 +132,12 @@ function Root:get_opened_unfinished_headlines()
   end, self.items)
 end
 
+function Root:get_unfinished_todo_entries()
+  return vim.tbl_filter(function(item)
+   return item.type == Types.HEADLINE and not item:is_archived() and item:is_todo()
+  end, self.items)
+end
+
 function Root:find_headline_by_title(title)
   local headlines = vim.tbl_filter(function(item)
    return item.type == Types.HEADLINE and item.title:match('^'..vim.pesc(title))
