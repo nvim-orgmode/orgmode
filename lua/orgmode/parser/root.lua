@@ -113,7 +113,7 @@ function Root:process_root_content(content)
   end
 end
 
----@return Headline[]|Content[]
+---@return Headline|Content[]
 function Root:get_items()
   return self.items
 end
@@ -170,10 +170,10 @@ function Root:get_headlines_with_tags(tags)
 
   return vim.tbl_filter(function(item)
     if not item.tags or #item.tags == 0 then return false end
-    local has_tag = false
+    local has_tag = true
     for _, tag in ipairs(taglist) do
-      if vim.tbl_contains(item.tags, tag) then
-        has_tag = true
+      if not vim.tbl_contains(item.tags, tag) then
+        has_tag = false
         break
       end
     end
