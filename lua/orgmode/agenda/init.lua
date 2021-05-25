@@ -358,7 +358,9 @@ function Agenda:open()
 end
 
 function Agenda:reset()
-  if self.active_view ~= 'agenda' then return end
+  if self.active_view ~= 'agenda' then
+    return utils.echo_warning('Not possible in this view.')
+  end
   self:_set_date_range()
   return self:open()
 end
@@ -373,7 +375,9 @@ function Agenda:is_opened()
 end
 
 function Agenda:advance_span(direction)
-  if self.active_view ~= 'agenda' then return end
+  if self.active_view ~= 'agenda' then
+    return utils.echo_warning('Not possible in this view.')
+  end
   local action = { [self.span] = direction }
   if type(self.span) == 'number' then
     action = { day = self.span * direction }
@@ -384,7 +388,9 @@ function Agenda:advance_span(direction)
 end
 
 function Agenda:change_span(span)
-  if self.active_view ~= 'agenda' then return end
+  if self.active_view ~= 'agenda' then
+    return utils.echo_warning('Not possible in this view.')
+  end
   if span == self.span then return end
   if span == 'year' then
     local c = vim.fn.confirm('Are you sure you want to print agenda for the whole year?', '&Yes\n&No')
