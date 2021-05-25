@@ -30,10 +30,12 @@ function Agenda:new(opts)
     content = {},
     highlights = {},
     items = {},
+    tags = {}
   }
   setmetatable(data, self)
   self.__index = self
   data:_set_date_range()
+  data:_build_tags()
   return data
 end
 
@@ -257,8 +259,8 @@ function Agenda:search()
 end
 
 -- TODO: Add PROP/TODO Query
-function Agenda:tags()
-  local tags = vim.fn.input('Match: ', '')
+function Agenda:tags_props()
+  local tags = vim.fn.input('Match: ', '', 'customlist,v:lua.org.autocomplete_tags')
   if vim.trim(tags) == '' then
     return utils.echo_warning('Invalid tag.')
   end
@@ -319,7 +321,7 @@ function Agenda:prompt()
     { label = '', separator = '-', length = 34 },
     { label = 'Agenda for current week or day', key = 'a', action = function() return self:open() end },
     { label = 'List of all TODO entries', key = 't', action = function() return self:todos() end },
-    { label = 'Match a TAGS/PROP/TODO query', key = 'm', action = function() return self:tags() end },
+    { label = 'Match a TAGS/PROP/TODO query', key = 'm', action = function() return self:tags_props() end },
     { label = 'Search for keywords', key = 's', action = function() return self:search() end },
     { label = 'Quit', key = 'q' },
     { label = '', separator = ' ', length = 1 },
@@ -443,6 +445,43 @@ end
 
 function Agenda:quit()
   vim.cmd[[bw!]]
+end
+
+function Agenda:update_file(file, content)
+  self.files[file] = content
+  self:_build_tags()
+end
+
+function Agenda:autocomplete_tags(arg_lead)
+  local parts = vim.split(arg_lead, '+', true)
+  local last = table.remove(parts, #parts)
+  local matches = vim.tbl_filter(function(tag)
+    return tag:match('^'..vim.pesc(last)) and not vim.tbl_contains(parts, tag)
+  end, self.tags)
+
+  local prefix = #parts > 0 and table.concat(parts, '+')..'+' or ''
+
+  return vim.tbl_map(function(tag)
+    return prefix..tag
+  end, matches)
+end
+
+function Agenda:_build_tags()
+  local tags = {}
+  for _, orgfile in pairs(self.files) do
+    for _, headline in ipairs(orgfile:get_items()) do
+      if headline.tags and #headline.tags > 0 then
+        for _, tag in ipairs(headline.tags) do
+          tags[tag] = 1
+        end
+      end
+    end
+  end
+  self.tags = vim.tbl_keys(tags)
+end
+
+function _G.org.autocomplete_tags(arg_lead)
+  return require('orgmode').action('agenda.autocomplete_tags', arg_lead)
 end
 
 return Agenda

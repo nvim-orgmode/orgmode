@@ -5,9 +5,12 @@ local Capture = require('orgmode.capture')
 local utils = require('orgmode.utils')
 local parser = require('orgmode.parser')
 local instance = nil
-local Org = {}
 
 ---@class Org
+---@field agenda Agenda
+---@field capture Capture
+local Org = {}
+
 function Org:new()
   local data = { files = {} }
   setmetatable(data, self)
@@ -27,6 +30,7 @@ function Org:load(file)
     return utils.readfile(file, function(err, result)
       if err then return end
       self.files[file] = parser.parse(result, filename)
+      self.agenda:update_file(file, self.files[file])
     end)
   end
 
@@ -36,7 +40,7 @@ function Org:load(file)
     utils.readfile(item, function(err, result)
       if err then return end
       self.files[item] = parser.parse(result, category, item)
-      self.agenda.files[item] = self.files[item]
+      self.agenda:update_file(item, self.files[item])
     end)
   end
   return self
