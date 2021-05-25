@@ -60,6 +60,11 @@ function Headline:is_done()
   return self.todo_keyword.value:upper() == 'DONE'
 end
 
+---@return boolean
+function Headline:is_todo()
+  return self.todo_keyword.value:upper() == 'TODO'
+end
+
 -- TODO: Check if this can be configured to be ignored
 ---@return boolean
 function Headline:is_archived()
