@@ -118,6 +118,13 @@ function Root:get_items()
   return self.items
 end
 
+--@return Headline[]
+function Root:get_headlines()
+  return vim.tbl_filter(function(item)
+   return item.type == Types.HEADLINE
+  end, self.items)
+end
+
 ---@return Headline[]
 function Root:get_opened_headlines()
   return vim.tbl_filter(function(item)
