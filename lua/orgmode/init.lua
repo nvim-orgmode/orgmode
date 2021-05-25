@@ -26,10 +26,10 @@ end
 ---@return string
 function Org:load(file)
   if file then
-    local filename = vim.fn.fnamemodify(file, ':t:r')
+    local category = vim.fn.fnamemodify(file, ':t:r')
     return utils.readfile(file, function(err, result)
       if err then return end
-      self.files[file] = parser.parse(result, filename)
+      self.files[file] = parser.parse(result, category, file)
       self.agenda:update_file(file, self.files[file])
     end)
   end
@@ -49,10 +49,11 @@ end
 ---@param file? string
 ---@return string
 function Org:reload(file)
-  if not file then
-    self.files = {}
+  if file then
+    return self:load(file)
   end
-  return self:load(file)
+  self.files = {}
+  return self:load()
 end
 
 function Org:setup_autocmds()
