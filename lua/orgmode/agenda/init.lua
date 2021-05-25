@@ -76,14 +76,14 @@ function Agenda:render()
     table.insert(content, { line_content = day:format(self.day_format) })
 
     local longest_items = utils.reduce(agenda_items, function(acc, agenda_item)
-      acc.category = math.max(acc.category, agenda_item.headline.category:len())
+      acc.category = math.max(acc.category, agenda_item.headline:get_category():len())
       acc.label = math.max(acc.label, agenda_item.label:len())
       return acc
     end, { category = 0, label = 0 })
 
     for _, agenda_item in ipairs(agenda_items) do
       local headline = agenda_item.headline
-      local category = string.format('  %-'..(longest_items.category + 1)..'s', headline.category..':')
+      local category = string.format('  %-'..(longest_items.category + 1)..'s', headline:get_category()..':')
       local date = agenda_item.label
       if date ~= '' then
         date = string.format(' %'..(longest_items.label)..'s', agenda_item.label)
@@ -162,14 +162,14 @@ function Agenda:todos()
   end
 
   local longest_category = utils.reduce(todos, function(acc, todo)
-    return math.max(acc, todo.category:len())
+    return math.max(acc, todo:get_category():len())
   end, 0)
 
   local content = {{ line_content = 'Global list of TODO items of type: ALL', highlight = nil }}
   local highlights = {}
 
   for i, todo in ipairs(todos) do
-    local category = string.format('  %-'..(longest_category + 1)..'s', todo.category..':')
+    local category = string.format('  %-'..(longest_category + 1)..'s', todo:get_category()..':')
     local todo_keyword = todo.todo_keyword.value
     local line = string.format('  %s %s %s', category, todo_keyword, todo.title)
     if #todo.tags > 0 then
@@ -214,14 +214,14 @@ function Agenda:search()
   end
 
   local longest_category = utils.reduce(headlines, function(acc, todo)
-    return math.max(acc, todo.category:len())
+    return math.max(acc, todo:get_category():len())
   end, 0)
 
   local content = {{ line_content = 'Search words: '..search_term, highlight = nil }}
   local highlights = {}
 
   for i, headline in ipairs(headlines) do
-    local category = string.format('  %-'..(longest_category + 1)..'s', headline.category..':')
+    local category = string.format('  %-'..(longest_category + 1)..'s', headline:get_category()..':')
     local todo_keyword = headline.todo_keyword.value
     if todo_keyword ~= '' then
       todo_keyword = ' '..todo_keyword
@@ -272,14 +272,14 @@ function Agenda:tags_props()
   end
 
   local longest_category = utils.reduce(headlines, function(acc, todo)
-    return math.max(acc, todo.category:len())
+    return math.max(acc, todo:get_category():len())
   end, 0)
 
   local content = {{ line_content = 'Headlines with TAGS match: '..tags, highlight = nil }}
   local highlights = {}
 
   for i, headline in ipairs(headlines) do
-    local category = string.format('  %-'..(longest_category + 1)..'s', headline.category..':')
+    local category = string.format('  %-'..(longest_category + 1)..'s', headline:get_category()..':')
     local todo_keyword = headline.todo_keyword.value
     if todo_keyword ~= '' then
       todo_keyword = ' '..todo_keyword

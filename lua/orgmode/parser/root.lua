@@ -52,15 +52,14 @@ function Root:add_headline(headline_data)
   return headline
 end
 
----@param content_data table
+---@param content Content
 ---@return Content
-function Root:add_content(content_data)
-  local content = Content:new(content_data)
+function Root:add_content(content, parent, parent_content)
   self.items[content.id] = content
   if content:is_keyword() then
     self:add_root_content(content)
-  elseif content_data.parent.level > 0 then
-    content_data.parent:add_content(content)
+  elseif parent.level > 0 then
+    parent:add_content(content, parent_content)
   end
   return content
 end
@@ -116,6 +115,11 @@ end
 ---@return Headline|Content[]
 function Root:get_items()
   return self.items
+end
+
+---@return Headline|Content
+function Root:get_item(id)
+  return self.items[id]
 end
 
 --@return Headline[]
