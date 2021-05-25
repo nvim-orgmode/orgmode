@@ -13,7 +13,9 @@ local hl_map = agenda_highlights.get_agenda_hl_map()
 ---@field span string|number
 ---@field day_format string
 ---@field items table[]
----@field content string[]
+---@field content table[]
+---@field highlights table[]
+---@field active_view string
 local Agenda = {}
 
 ---@param opts table
@@ -24,7 +26,9 @@ function Agenda:new(opts)
     files = opts.files or {},
     span = config:get_agenda_span(),
     day_format = '%A %d %B %Y',
+    active_view = 'agenda',
     content = {},
+    highlights = {},
     items = {},
   }
   setmetatable(data, self)
@@ -121,6 +125,12 @@ function Agenda:render()
   end
 
   self.content = content
+  self.highlights = highlights
+  self.active_view = 'agenda'
+  return self:_print_and_highlight()
+end
+
+function Agenda:_print_and_highlight()
   local opened = self:is_opened()
   if not opened then
     vim.cmd[[16split orgagenda]]
@@ -137,9 +147,10 @@ function Agenda:render()
   vim.api.nvim_buf_set_lines(0, 0, -1, true, lines)
   vim.bo.modifiable = false
   vim.bo.modified = false
-  colors.highlight(highlights)
+  colors.highlight(self.highlights)
 end
 
+-- TODO: Introduce searching ALL/DONE
 function Agenda:todos()
   local todos = {}
   for _, orgfile in pairs(self.files) do
@@ -183,23 +194,9 @@ function Agenda:todos()
   end
 
   self.content = content
-  local opened = self:is_opened()
-  if not opened then
-    vim.cmd[[16split orgagenda]]
-    vim.cmd[[setf orgagenda]]
-    vim.cmd[[setlocal buftype=nofile bufhidden=wipe nobuflisted nolist noswapfile nowrap nospell]]
-    config:setup_mappings('agenda')
-  else
-    vim.cmd(vim.fn.win_id2win(opened)..'wincmd w')
-  end
-  vim.bo.modifiable = true
-  local lines = vim.tbl_map(function(item)
-    return item.line_content
-  end, self.content)
-  vim.api.nvim_buf_set_lines(0, 0, -1, true, lines)
-  vim.bo.modifiable = false
-  vim.bo.modified = false
-  colors.highlight(highlights)
+  self.highlights = highlights
+  self.active_view = 'todos'
+  return self:_print_and_highlight()
 end
 
 function Agenda:search()
@@ -251,27 +248,70 @@ function Agenda:search()
         })
       })
     end
-
   end
 
   self.content = content
-  local opened = self:is_opened()
-  if not opened then
-    vim.cmd[[16split orgagenda]]
-    vim.cmd[[setf orgagenda]]
-    vim.cmd[[setlocal buftype=nofile bufhidden=wipe nobuflisted nolist noswapfile nowrap nospell]]
-    config:setup_mappings('agenda')
-  else
-    vim.cmd(vim.fn.win_id2win(opened)..'wincmd w')
+  self.highlights = highlights
+  self.active_view = 'search'
+  return self:_print_and_highlight()
+end
+
+-- TODO: Add PROP/TODO Query
+function Agenda:tags()
+  local tags = vim.fn.input('Match: ', '')
+  if vim.trim(tags) == '' then
+    return utils.echo_warning('Invalid tag.')
   end
-  vim.bo.modifiable = true
-  local lines = vim.tbl_map(function(item)
-    return item.line_content
-  end, self.content)
-  vim.api.nvim_buf_set_lines(0, 0, -1, true, lines)
-  vim.bo.modifiable = false
-  vim.bo.modified = false
-  colors.highlight(highlights)
+  local headlines = {}
+  for _, orgfile in pairs(self.files) do
+    for _, headline in ipairs(orgfile:get_headlines_with_tags(tags)) do
+      table.insert(headlines, headline)
+    end
+  end
+
+  local longest_category = utils.reduce(headlines, function(acc, todo)
+    return math.max(acc, todo.category:len())
+  end, 0)
+
+  local content = {{ line_content = 'Headlines with TAGS match: '..tags, highlight = nil }}
+  local highlights = {}
+
+  for i, headline in ipairs(headlines) do
+    local category = string.format('  %-'..(longest_category + 1)..'s', headline.category..':')
+    local todo_keyword = headline.todo_keyword.value
+    if todo_keyword ~= '' then
+      todo_keyword = ' '..todo_keyword
+    end
+    local line = string.format('  %s%s %s', category, todo_keyword, headline.title)
+    if #headline.tags > 0 then
+      line = string.format('%-99s %s', line, headline:tags_to_string())
+    end
+    table.insert(content, {
+      line_content = line,
+      line = #content,
+      jumpable = true,
+      file = headline.file,
+      file_position = headline.range.start_line
+    })
+
+    if headline.todo_keyword.value ~= '' then
+      local todo_keyword_pos = category:len() + 3
+      table.insert(highlights, {
+        hlgroup = hl_map[headline.todo_keyword.value],
+        range = Range:new({
+          start_line = i + 1,
+          end_line = i + 1,
+          start_col = todo_keyword_pos,
+          end_col = todo_keyword_pos + todo_keyword:len() + 1
+        })
+      })
+    end
+  end
+
+  self.content = content
+  self.highlights = highlights
+  self.active_view = 'tags'
+  return self:_print_and_highlight()
 end
 
 function Agenda:prompt()
@@ -279,6 +319,7 @@ function Agenda:prompt()
     { label = '', separator = '-', length = 34 },
     { label = 'Agenda for current week or day', key = 'a', action = function() return self:open() end },
     { label = 'List of all TODO entries', key = 't', action = function() return self:todos() end },
+    { label = 'Match a TAGS/PROP/TODO query', key = 'm', action = function() return self:tags() end },
     { label = 'Search for keywords', key = 's', action = function() return self:search() end },
     { label = 'Quit', key = 'q' },
     { label = '', separator = ' ', length = 1 },
@@ -315,6 +356,7 @@ function Agenda:open()
 end
 
 function Agenda:reset()
+  if self.active_view ~= 'agenda' then return end
   self:_set_date_range()
   return self:open()
 end
@@ -329,6 +371,7 @@ function Agenda:is_opened()
 end
 
 function Agenda:advance_span(direction)
+  if self.active_view ~= 'agenda' then return end
   local action = { [self.span] = direction }
   if type(self.span) == 'number' then
     action = { day = self.span * direction }
@@ -339,6 +382,7 @@ function Agenda:advance_span(direction)
 end
 
 function Agenda:change_span(span)
+  if self.active_view ~= 'agenda' then return end
   if span == self.span then return end
   if span == 'year' then
     local c = vim.fn.confirm('Are you sure you want to print agenda for the whole year?', '&Yes\n&No')

@@ -142,11 +142,11 @@ function Root:get_headlines_matching_search_term(term)
   return vim.tbl_filter(function(item)
     local is_match = false
     if item.type == Types.HEADLINE then
-      is_match = item.title:match(vim.pesc(term))
+      is_match = item.title:lower():match(vim.pesc(term:lower()))
       if not is_match then
         for _, content_id in ipairs(item.content) do
           local content = self.items[content_id]
-          if content.line:match(vim.pesc(term)) then
+          if content.line:lower():match(vim.pesc(term:lower())) then
             is_match = true
             break
           end
@@ -154,6 +154,30 @@ function Root:get_headlines_matching_search_term(term)
       end
       return is_match
     end
+  end, self.items)
+end
+
+function Root:get_headlines_with_tags(tags)
+  local taglist = vim.tbl_map(function(tag)
+    return vim.trim(tag)
+  end , vim.split(tags, '+', true))
+
+  taglist = vim.tbl_filter(function(t)
+    return t ~= ''
+  end, taglist)
+
+  if #taglist == 0 then return {} end
+
+  return vim.tbl_filter(function(item)
+    if not item.tags or #item.tags == 0 then return false end
+    local has_tag = false
+    for _, tag in ipairs(taglist) do
+      if vim.tbl_contains(item.tags, tag) then
+        has_tag = true
+        break
+      end
+    end
+    return has_tag
   end, self.items)
 end
 
