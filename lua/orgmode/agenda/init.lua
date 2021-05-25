@@ -469,7 +469,7 @@ end
 function Agenda:_build_tags()
   local tags = {}
   for _, orgfile in pairs(self.files) do
-    for _, headline in ipairs(orgfile:get_items()) do
+    for _, headline in ipairs(orgfile:get_headlines()) do
       if headline.tags and #headline.tags > 0 then
         for _, tag in ipairs(headline.tags) do
           tags[tag] = 1

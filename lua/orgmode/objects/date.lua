@@ -410,7 +410,8 @@ end
 
 ---@return boolean
 function Date:is_today()
-  return self:is_between(Date:new(), Date:new(), 'day')
+  local date = Date:new()
+  return date.year == self.year and date.month == self.month and date.day == self.day
 end
 
 ---@param date Date
