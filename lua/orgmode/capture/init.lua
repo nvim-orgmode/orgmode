@@ -3,6 +3,9 @@ local utils = require('orgmode.utils')
 local Types = require('orgmode.parser.types')
 local config = require('orgmode.config')
 local Templates = require('orgmode.capture.templates')
+vim.cmd[[augroup OrgCapture]]
+vim.cmd[[autocmd!]]
+vim.cmd[[augroup END]]
 
 ---@class Capture
 ---@field templates Templates
@@ -41,7 +44,7 @@ function Capture:open_template(template)
   self.templates:setup()
   vim.api.nvim_buf_set_var(0, 'org_template', template)
   config:setup_mappings('capture')
-  vim.cmd[[autocmd BufWipeout <buffer> ++once lua require('orgmode').action('capture.refile', true)]]
+  vim.cmd[[autocmd OrgCapture BufWipeout <buffer> ++once lua require('orgmode').action('capture.refile', true)]]
 end
 
 function Capture:refile(confirm)
@@ -62,6 +65,7 @@ end
 function Capture:_refile_to_end(file, lines)
   if not file then return end
   utils.writefile(file, lines, 'a')
+  vim.cmd[[autocmd! OrgCapture BufWipeout <buffer>]]
   vim.cmd[[silent! wq]]
   return utils.echo_info(string.format('Wrote %s', file))
 end
@@ -123,6 +127,7 @@ function Capture:_refile_content_with_fallback(lines_list, fallback_file)
   end
   local lines_str = table.concat(content, '\n')..'\n'
   utils.writefile(destination_file, lines_str, 'w')
+  vim.cmd[[autocmd! OrgCapture BufWipeout <buffer>]]
   vim.cmd[[silent! wq]]
   self.agenda.org:reload(destination_file)
   return utils.echo_info(string.format('Wrote %s', destination_file))
@@ -148,7 +153,7 @@ function Capture:autocomplete_refile(arg_lead)
   local agenda_file = self.agenda.files[selected_file]
   if not agenda_file then return {} end
 
-  local headlines = agenda_file:get_opened_headlines()
+  local headlines = agenda_file:get_opened_unfinished_headlines()
   local result = vim.tbl_map(function(headline)
     return string.format('%s/%s', vim.fn.fnamemodify(headline.file, ':t'), headline.title)
   end, headlines)
