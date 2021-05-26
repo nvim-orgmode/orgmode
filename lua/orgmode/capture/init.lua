@@ -47,6 +47,9 @@ function Capture:open_template(template)
   vim.cmd[[autocmd OrgCapture BufWipeout <buffer> ++once lua require('orgmode').action('capture.refile', true)]]
 end
 
+---Triggered when refiling from capture buffer
+---@param confirm boolean
+---@return string
 function Capture:refile(confirm)
   local is_modified = vim.bo.modified
   local template = vim.api.nvim_buf_get_var(0, 'org_template') or {}
@@ -59,18 +62,23 @@ function Capture:refile(confirm)
     end
   end
   local lines = table.concat(vim.api.nvim_buf_get_lines(0, 0, -1, true), '\n')..'\n'
-  return self:_refile_to_end(file, lines)
-end
-
-function Capture:_refile_to_end(file, lines)
-  if not file then return end
-  utils.writefile(file, lines, 'a')
+  self:_refile_to_end(file, lines)
   vim.cmd[[autocmd! OrgCapture BufWipeout <buffer>]]
   vim.cmd[[silent! wq]]
-  self.agenda:reload(file)
-  return utils.echo_info(string.format('Wrote %s', file))
 end
 
+---Triggered when refiling to destination from capture buffer
+function Capture:refile_to_destination()
+  local template = vim.api.nvim_buf_get_var(0, 'org_template')
+  local lines_list = vim.api.nvim_buf_get_lines(0, 0, -1, true)
+  local default_file = vim.fn.fnamemodify(template.target or config.org_default_notes_file, ':p')
+
+  self:_refile_content_with_fallback(lines_list, default_file)
+  vim.cmd[[autocmd! OrgCapture BufWipeout <buffer>]]
+  vim.cmd[[silent! wq]]
+end
+
+---Triggered from org file when we want to refile headline
 function Capture:refile_headline_to_destination()
   local file = vim.fn.fnamemodify(vim.api.nvim_buf_get_name(0), ':p')
   local agenda_file = self.agenda.files[file]
@@ -79,15 +87,15 @@ function Capture:refile_headline_to_destination()
     item = agenda_file.items[item.parent]
   end
   local lines = {unpack(agenda_file.lines, item.range.start_line, item.range.end_line)}
-  return self:_refile_content_with_fallback(lines, nil)
+  self:_refile_content_with_fallback(lines, nil)
+  vim.cmd(string.format(':%d,%ddelete', item.range.start_line, item.range.end_line))
 end
 
-function Capture:refile_to_destination()
-  local template = vim.api.nvim_buf_get_var(0, 'org_template')
-  local lines_list = vim.api.nvim_buf_get_lines(0, 0, -1, true)
-  local default_file = vim.fn.fnamemodify(template.target or config.org_default_notes_file, ':p')
-
-  return self:_refile_content_with_fallback(lines_list, default_file)
+function Capture:_refile_to_end(file, lines)
+  if not file then return end
+  utils.writefile(file, lines, 'a')
+  self.agenda:reload(file)
+  return utils.echo_info(string.format('Wrote %s', file))
 end
 
 function Capture:_refile_content_with_fallback(lines_list, fallback_file)
@@ -128,8 +136,6 @@ function Capture:_refile_content_with_fallback(lines_list, fallback_file)
   end
   local lines_str = table.concat(content, '\n')..'\n'
   utils.writefile(destination_file, lines_str, 'w')
-  vim.cmd[[autocmd! OrgCapture BufWipeout <buffer>]]
-  vim.cmd[[silent! wq]]
   self.agenda:reload(destination_file)
   return utils.echo_info(string.format('Wrote %s', destination_file))
 end
