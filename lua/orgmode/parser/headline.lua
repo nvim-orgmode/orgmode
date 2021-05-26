@@ -6,7 +6,7 @@ local config = require('orgmode.config')
 ---@class Headline
 ---@field id number
 ---@field level number
----@field parent number
+---@field parent Headline|Root
 ---@field line string
 ---@field range Range
 ---@field content Content[]
@@ -27,7 +27,7 @@ function Headline:new(data)
   local headline = { type = Types.HEADLINE }
   headline.id = data.lnum
   headline.level = data.line and #data.line:match('^%*+') or 0
-  headline.parent = data.parent.id
+  headline.parent = data.parent
   headline.line = data.line
   headline.range = Range.from_line(data.lnum)
   headline.content = {}
@@ -53,7 +53,7 @@ end
 ---@param headline Headline
 ---@return Headline
 function Headline:add_headline(headline)
-  table.insert(self.headlines, headline.id)
+  table.insert(self.headlines, headline)
   return headline
 end
 
@@ -119,24 +119,45 @@ function Headline:_parse_dates(content)
 end
 
 ---@param content Content
----@param parent_content Content
-function Headline:_parse_properties(content, parent_content)
-  if content:is_parent_end() and parent_content and parent_content:is_properties_start() then
-    self.properties = vim.tbl_extend('force', self.properties, parent_content.drawer.properties or {})
+function Headline:_parse_properties(content)
+  if content:is_parent_end() then
+    local properties_start_index = self:_get_properties_start_index()
+    if properties_start_index then
+      local start_index = properties_start_index + 1
+      while start_index < #self.content do
+        local property = self.content[start_index]
+        if property.drawer and property.drawer.properties then
+          self.properties = vim.tbl_extend('force', self.properties, property.drawer.properties or {})
+        end
+        start_index = start_index + 1
+      end
+    end
   end
 end
 
+function Headline:_get_properties_start_index()
+  local properties_start_index = nil
+  local len = #self.content
+  for i=1, len do
+    local idx = len + 1 - i
+    local item = self.content[idx]
+    if item:is_properties_start() then
+      properties_start_index = idx
+      break
+    end
+  end
+  return properties_start_index
+end
+
 ---@param content Content
----@param parent_content Content
 ---@return Content
-function Headline:add_content(content, parent_content)
+function Headline:add_content(content)
   local is_planning = self:_parse_planning(content)
   if not is_planning then
     self:_parse_dates(content)
   end
-  self:_parse_properties(content, parent_content)
-
-  table.insert(self.content, content.id)
+  table.insert(self.content, content)
+  self:_parse_properties(content)
   return content
 end
 
