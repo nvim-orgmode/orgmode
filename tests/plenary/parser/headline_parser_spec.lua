@@ -9,7 +9,7 @@ describe('Headline parser', function()
       lnum = 1,
       parent = { id = 0 },
     })
-    assert.are.same(0, headline.parent)
+    assert.are.same({ id = 0 }, headline.parent)
     assert.are.same(1, headline.level)
     assert.are.same(1, headline.id)
     assert.are.same('* TODO [#A] This is some content :WORK:PROJECT:', headline.line)
@@ -27,7 +27,7 @@ describe('Headline parser', function()
       lnum = 1,
       parent = { id = 0 },
     })
-    assert.are.same(0, headline.parent)
+    assert.are.same({ id = 0 }, headline.parent)
     assert.are.same(1, headline.level)
     assert.are.same(1, headline.id)
     assert.are.same('* TODO [#B] This is some content with date <2021-05-20 Thu> and datetime [2021-06-20 Sun 14:30] :WORK:PROJECT:', headline.line)

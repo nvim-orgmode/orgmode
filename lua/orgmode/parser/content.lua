@@ -4,7 +4,7 @@ local Date = require('orgmode.objects.date')
 local plannings = {'DEADLINE', 'SCHEDULED', 'CLOSED'}
 
 ---@class Content
----@field parent string
+---@field parent Headline|Root
 ---@field range Range
 ---@field line string
 ---@field dates Date[]
@@ -19,26 +19,15 @@ local Content = {}
 function Content:new(data)
   data = data or {}
   local content = { type = Types.CONTENT }
-  content.parent = data.parent.id
+  content.parent = data.parent
   content.level = data.parent.level
   content.line = data.line
   content.range = Range.from_line(data.lnum)
   content.dates = {}
   content.id = data.lnum
-  content.content = {}
   setmetatable(content, self)
   self.__index = self
   content:parse()
-  return content
-end
-
----@param content Content
----@return Content
-function Content:add_content(content)
-  if self:is_drawer() and content:is_drawer() then
-    self.drawer.properties = vim.tbl_deep_extend('force', self.drawer.properties or {}, content.drawer.properties or {})
-  end
-  table.insert(self.content, content.id)
   return content
 end
 

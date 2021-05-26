@@ -45,21 +45,22 @@ function Root:add_headline(headline_data)
   headline_data.file = self.file
   local headline = Headline:new(headline_data)
   self.items[headline.id] = headline
-  local plevel = headline_data.parent.level
+  local plevel = headline.parent.level
   if plevel > 0 and plevel < headline.level then
-    headline_data.parent:add_headline(headline)
+    headline.parent:add_headline(headline)
   end
   return headline
 end
 
----@param content Content
+---@param content_data table
 ---@return Content
-function Root:add_content(content, parent, parent_content)
+function Root:add_content(content_data)
+  local content = Content:new(content_data)
   self.items[content.id] = content
   if content:is_keyword() then
     self:add_root_content(content)
-  elseif parent.level > 0 then
-    parent:add_content(content, parent_content)
+  elseif content.parent.level > 0 then
+    content.parent:add_content(content)
   end
   return content
 end
@@ -68,9 +69,9 @@ end
 ---@param level number
 ---@return Headline
 function Root:get_parent_for_level(headline, level)
-  local parent = self:get_parent(headline)
+  local parent = headline.parent or self
   while parent.level > (level - 1) do
-    parent = self:get_parent(parent)
+    parent = parent.parent
   end
   return parent
 end
@@ -96,7 +97,7 @@ end
 function Root:set_headline_end(headline, lnum, level)
   while headline.level >= level do
     headline:set_range_end(lnum - 1)
-    headline = self:get_parent(headline)
+    headline = headline.parent
   end
 end
 
