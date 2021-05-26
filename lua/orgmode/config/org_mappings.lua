@@ -2,6 +2,7 @@
 ---@field agenda Agenda
 local OrgMappings = {}
 local Date = require('orgmode.objects.date')
+local Calendar = require('orgmode.objects.calendar')
 local utils = require('orgmode.utils')
 
 ---@param data table
@@ -53,6 +54,14 @@ end
 
 function OrgMappings:decrease_date()
   return self:adjust_date('-1d','<C-x>')
+end
+
+function OrgMappings:change_date()
+  -- TODO: Tweak
+  local cb = function(date)
+    vim.cmd('norm!ci<'..date:to_string())
+  end
+  Calendar.new({ callback = cb }).open()
 end
 
 return OrgMappings
