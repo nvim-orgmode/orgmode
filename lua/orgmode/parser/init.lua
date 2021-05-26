@@ -12,7 +12,7 @@ local function parse(lines, category, file)
     if is_headline then
       local level = #line:match('^%*+')
       if level <= parent.level then
-        root:set_headline_end(parent, lnum, level)
+        root:set_headline_end(parent, lnum - 1, level)
         parent = root:get_parent_for_level(parent, level)
       end
       parent = root:add_headline({ line = line, lnum = lnum, parent = parent })

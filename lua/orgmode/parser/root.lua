@@ -96,7 +96,7 @@ end
 ---@param level number
 function Root:set_headline_end(headline, lnum, level)
   while headline.level >= level do
-    headline:set_range_end(lnum - 1)
+    headline:set_range_end(lnum)
     headline = headline.parent
   end
 end
