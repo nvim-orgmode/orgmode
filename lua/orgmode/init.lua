@@ -2,6 +2,7 @@ _G.org = _G.org or {}
 local Config = require('orgmode.config')
 local Agenda = require('orgmode.agenda')
 local Capture = require('orgmode.capture')
+local OrgMappings = require('orgmode.config.org_mappings')
 local instance = nil
 
 ---@class Org
@@ -22,6 +23,7 @@ function Org:init()
   if self.initialized then return end
   self.agenda = Agenda:new()
   self.capture = Capture:new({ agenda = self.agenda })
+  self.org_mappings = OrgMappings:new({ agenda = self.agenda })
   self.initialized = true
 end
 
@@ -36,6 +38,7 @@ function Org:setup_autocmds()
   vim.cmd[[augroup orgmode_nvim]]
   vim.cmd[[autocmd!]]
   vim.cmd[[autocmd BufWritePost *.org call luaeval('require("orgmode").reload(_A)', expand('<afile>:p'))]]
+  vim.cmd[[autocmd FileType org call luaeval('require("orgmode").reload(_A)', expand('<afile>:p'))]]
   vim.cmd[[augroup END]]
 end
 

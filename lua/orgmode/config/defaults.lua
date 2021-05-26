@@ -39,6 +39,8 @@ return {
     },
     org = {
       org_capture_refile = '<Leader>or',
+      org_increase_date = '<C-a>',
+      org_decrease_date = '<C-x>',
     }
   }
 }
