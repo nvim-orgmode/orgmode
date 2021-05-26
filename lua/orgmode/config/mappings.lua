@@ -18,7 +18,8 @@ return {
   org = {
     org_capture_refile = {'capture.refile_headline_to_destination'},
     org_increase_date = {'org_mappings.increase_date'},
-    org_decrease_date = {'org_mappings.decrease_date'}
+    org_decrease_date = {'org_mappings.decrease_date'},
+    org_change_date = {'org_mappings.change_date'}
   }
 }
 -- org_agenda_goto_date = 'j', -- TODO
