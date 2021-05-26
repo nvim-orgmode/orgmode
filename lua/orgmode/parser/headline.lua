@@ -43,7 +43,7 @@ function Headline:new(data)
   -- - org-use-tag-inheritance
   -- - org-tags-exclude-from-inheritance
   -- - org-tags-match-list-sublevels
-  headline.tags = {}
+  headline.tags = {unpack(data.parent.tags or {})}
   setmetatable(headline, self)
   self.__index = self
   headline:_parse_line()
@@ -187,8 +187,8 @@ function Headline:_parse_line()
 
   self:_parse_todo_keyword()
   self.priority = line:match(self.todo_keyword.value..'%s+%[#([A-Z0-9])%]') or ''
-  self:_parse_tags(line)
-  self:_parse_title(line)
+  local parsed_tags = self:_parse_tags(line)
+  self:_parse_title(line, parsed_tags)
   local dates = Date.parse_all_from_line(self.line, self.range.start_line)
   for _, date in ipairs(dates) do
     table.insert(self.dates, date)
@@ -227,19 +227,24 @@ end
 
 function Headline:_parse_tags(line)
   local tags = line:match(':.*:$') or ''
+  local parsed_tags = {}
   if tags then
     for _, tag in ipairs(vim.split(tags, ':')) do
-      if tag:find('^[%w_%%@#]+$') and not vim.tbl_contains(self.tags, tag) then
-        table.insert(self.tags, tag)
+      if tag:find('^[%w_%%@#]+$') then
+        table.insert(parsed_tags, tag)
+        if not vim.tbl_contains(self.tags, tag) then
+          table.insert(self.tags, tag)
+        end
       end
     end
   end
+  return parsed_tags
 end
 
 -- NOTE: Exclude dates from title if it appears in agenda on that day
-function Headline:_parse_title(line)
+function Headline:_parse_title(line, tags)
   local title = line
-  for _, exclude_pattern in ipairs({ self.todo_keyword.value, '%[#[A-Z0-9]%]', vim.pesc(':'..table.concat(self.tags, ':')..':')..'$' }) do
+  for _, exclude_pattern in ipairs({ self.todo_keyword.value, '%[#[A-Z0-9]%]', vim.pesc(':'..table.concat(tags, ':')..':')..'$' }) do
     title = title:gsub(exclude_pattern, '')
   end
   self.title = vim.trim(title)

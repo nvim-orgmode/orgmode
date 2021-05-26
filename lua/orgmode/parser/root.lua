@@ -156,8 +156,7 @@ function Root:get_headlines_matching_search_term(term)
     if item.type == Types.HEADLINE then
       is_match = item.title:lower():match(vim.pesc(term:lower()))
       if not is_match then
-        for _, content_id in ipairs(item.content) do
-          local content = self.items[content_id]
+        for _, content in ipairs(item.content) do
           if content.line:lower():match(vim.pesc(term:lower())) then
             is_match = true
             break

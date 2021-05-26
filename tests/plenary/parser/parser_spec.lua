@@ -35,7 +35,7 @@ describe('Parser', function()
           end_col = 6
         }),
       },
-      tags = {'WORK'},
+      tags = {'Tag1', 'Tag2', 'WORK'},
       category = 'todos',
       file = '',
     }, parsed:get_item(2))
@@ -155,7 +155,7 @@ describe('Parser', function()
           end_col = 8
         }),
       },
-      tags = {},
+      tags = {'PRIVATE'},
     }, parsed:get_item(5))
     assert.are.same({
       level = 3,
@@ -263,7 +263,7 @@ describe('Parser', function()
           end_col = 7
         }),
       },
-      tags = {'OFFICE', 'NESTED'},
+      tags = {'OFFICE', 'PROJECT', 'NESTED'},
     }, parsed:get_item(11))
     assert.are.same({
       content = {},
