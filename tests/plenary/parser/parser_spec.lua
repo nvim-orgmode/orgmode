@@ -435,7 +435,7 @@ describe('Parser', function()
       id = 3,
       range = Range:new({
         start_line = 3,
-        end_line = 4,
+        end_line = 5,
       }),
       parent = parsed,
       priority = '',
