@@ -123,7 +123,7 @@ describe('Agenda item', function()
       agenda_item = AgendaItem:new(headline.dates[1], headline, today)
       assert.is.True(agenda_item.is_valid)
       assert.are.same({
-        { hlgroup = hl_map.scheduledPast },
+        { hlgroup = hl_map.warning },
         {
           hlgroup = hl_map.TODO,
           todo_keyword = 'TODO',
@@ -148,7 +148,7 @@ describe('Agenda item', function()
       agenda_item = AgendaItem:new(headline.dates[1], headline, today)
       assert.is.True(agenda_item.is_valid)
       assert.are.same({
-        { hlgroup = hl_map.scheduledPast },
+        { hlgroup = hl_map.warning },
         {
           hlgroup = hl_map.TODO,
           todo_keyword = 'TODO',
@@ -171,7 +171,7 @@ describe('Agenda item', function()
       local agenda_item = AgendaItem:new(headline.dates[1], headline, today)
       assert.is.True(agenda_item.is_valid)
       assert.are.same({
-        { hlgroup = hl_map.scheduled },
+        { hlgroup = hl_map.ok },
         {
           hlgroup = hl_map.TODO,
           todo_keyword = 'TODO',
@@ -184,7 +184,7 @@ describe('Agenda item', function()
       agenda_item = AgendaItem:new(headline.dates[1], headline, today)
       assert.is.True(agenda_item.is_valid)
       assert.are.same({
-        { hlgroup = hl_map.scheduledPast },
+        { hlgroup = hl_map.warning },
         {
           hlgroup = hl_map.TODO,
           todo_keyword = 'TODO',
@@ -211,7 +211,7 @@ describe('Agenda item', function()
       agenda_item = AgendaItem:new(headline.dates[1], headline, today)
       assert.is.True(agenda_item.is_valid)
       assert.are.same({
-        { hlgroup = hl_map.scheduledPast },
+        { hlgroup = hl_map.warning },
         {
           hlgroup = hl_map.TODO,
           todo_keyword = 'TODO',
@@ -224,7 +224,7 @@ describe('Agenda item', function()
       agenda_item = AgendaItem:new(headline.dates[1], headline, today)
       assert.is.True(agenda_item.is_valid)
       assert.are.same({
-        { hlgroup = hl_map.scheduledPast },
+        { hlgroup = hl_map.warning },
         {
           hlgroup = hl_map.TODO,
           todo_keyword = 'TODO',
@@ -299,7 +299,7 @@ describe('Agenda item', function()
       agenda_item = AgendaItem:new(headline.dates[1], headline, future_day)
       assert.is.True(agenda_item.is_valid)
       assert.are.same({
-        { hlgroup = hl_map.scheduled },
+        { hlgroup = hl_map.ok },
         {
           hlgroup = hl_map.DONE,
           todo_keyword = 'DONE',
@@ -323,7 +323,7 @@ describe('Agenda item', function()
       assert.is.True(agenda_item.is_valid)
       assert.are.same({
         {
-          hlgroup = hl_map.scheduled,
+          hlgroup = hl_map.ok,
         },
         {
           hlgroup = hl_map.TODO,
@@ -339,7 +339,7 @@ describe('Agenda item', function()
       assert.is.True(agenda_item.is_valid)
       assert.are.same({
         {
-          hlgroup = hl_map.scheduledPast,
+          hlgroup = hl_map.warning,
         },
         {
           hlgroup = hl_map.TODO,

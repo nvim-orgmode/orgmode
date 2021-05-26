@@ -35,8 +35,8 @@ M.get_todo_keywords_colors = function()
       TODO = error,
       DONE = ok,
       deadline = M.from_hex(error):lighten_by(0.1):to_rgb(),
-      scheduled = M.from_hex(ok):lighten_by(0.1):to_rgb(),
-      scheduledPast = M.from_hex(warning):lighten_by(0.1):to_rgb(),
+      ok = M.from_hex(ok):lighten_by(0.1):to_rgb(),
+      warning = M.from_hex(warning):lighten_by(0.1):to_rgb(),
    }
 end
 
