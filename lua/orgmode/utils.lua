@@ -164,4 +164,8 @@ function utils.buf_keymap(buf, mode, lhs, rhs, opts)
     }))
 end
 
+function utils.esc(cmd)
+  return vim.api.nvim_replace_termcodes(cmd, true, false, true)
+end
+
 return utils

@@ -52,10 +52,9 @@ function Date:new(data)
     opts.timestamp = os.time()
     local date = os.date('*t', opts.timestamp)
     opts = set_date_opts(date, opts)
-    opts.dayname = os.date('%a', opts.timestamp)
   end
   opts.date_only = date_only
-  opts.dayname = opts.dayname or data.dayname
+  opts.dayname = os.date('%a', opts.timestamp)
   opts.adjustments = data.adjustments or {}
   setmetatable(opts, self)
   self.__index = self
@@ -137,11 +136,15 @@ local function parse_date(date, dayname, adjustments, data)
   return Date:new(opts)
 end
 
+local function is_valid_date(datestr)
+  return datestr:match('^%d%d%d%d%-%d%d%-%d%d%s+') or datestr:match('^%d%d%d%d%-%d%d%-%d%d$')
+end
+
 ---@param datestr string
 ---@param opts table
 ---@return Date
 local function from_string(datestr, opts)
-  if not datestr:match('^%d%d%d%d%-%d%d%-%d%d$') and not datestr:match('^%d%d%d%d%-%d%d%-%d%d%s+') then
+  if not is_valid_date(datestr) then
     return Date:new(opts)
   end
   local parts = vim.split(datestr, '%s+')
@@ -607,6 +610,7 @@ return {
   now = now,
   today = today,
   parse_all_from_line = parse_all_from_line,
+  is_valid_date = is_valid_date,
   from_match = from_match,
   pattern = pattern
 }
