@@ -67,6 +67,7 @@ function Capture:_refile_to_end(file, lines)
   utils.writefile(file, lines, 'a')
   vim.cmd[[autocmd! OrgCapture BufWipeout <buffer>]]
   vim.cmd[[silent! wq]]
+  self.agenda.org:reload(file)
   return utils.echo_info(string.format('Wrote %s', file))
 end
 
