@@ -548,11 +548,13 @@ function Date:get_adjusted_date()
 
   if self:is_deadline() then
     local warning_days = config.org_deadline_warning_days
+    local span = 'day'
     if adjustment then
       local adj = self:_parse_adjustment(adjustment)
       warning_days = adj.amount
+      span = adj.span
     end
-    return self:subtract({ day = warning_days })
+    return self:subtract({ [span] = warning_days })
   end
 
   if not adjustment then return self end
