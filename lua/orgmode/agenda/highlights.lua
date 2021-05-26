@@ -21,8 +21,8 @@ function M.get_agenda_hl_map()
       TODO = 'OrgTODO',
       DONE = 'OrgDONE',
       deadline = 'OrgAgendaDeadline',
-      scheduled = 'OrgAgendaScheduled',
-      scheduledPast = 'OrgAgendaScheduledPast'
+      ok = 'OrgAgendaScheduled',
+      warning = 'OrgAgendaScheduledPast'
    }
 end
 

@@ -114,12 +114,12 @@ end
 function AgendaItem:_generate_highlight()
   if self.headline_date:is_deadline() then
     if self.headline:is_done() then
-      return { hlgroup = hl_map.scheduled }
+      return { hlgroup = hl_map.ok }
     end
     if self.is_today and self.headline_date:is_after(self.date, 'day') then
       local diff = math.abs(self.date:diff(self.headline_date))
       if diff <= FUTURE_DEADLINE_AS_WARNING_DAYS then
-        return { hlgroup = hl_map.scheduledPast }
+        return { hlgroup = hl_map.warning }
       end
       return nil
     end
@@ -129,10 +129,10 @@ function AgendaItem:_generate_highlight()
 
   if self.headline_date:is_scheduled() then
     if self.headline_date:is_past('day') then
-      return { hlgroup = hl_map.scheduledPast }
+      return { hlgroup = hl_map.warning }
     end
 
-    return { hlgroup = hl_map.scheduled }
+    return { hlgroup = hl_map.ok }
   end
 
   return nil
