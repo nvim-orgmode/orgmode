@@ -13,6 +13,9 @@ describe('Init', function()
     })
     local todo_file = vim.fn.getcwd()..'/tests/plenary/fixtures/todo.org'
     local refile_file = vim.fn.getcwd()..'/tests/plenary/fixtures/refile.org'
+    assert.is.Nil(org.files[todo_file])
+    assert.is.Nil(org.files[refile_file])
+    org:init()
     vim.wait(10)
     assert.is.Not.Nil(org.files[todo_file])
     assert.is.Not.Nil(org.files[refile_file])

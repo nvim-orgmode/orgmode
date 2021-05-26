@@ -12,14 +12,19 @@ local instance = nil
 local Org = {}
 
 function Org:new()
-  local data = { files = {} }
+  local data = { files = {}, initialized = false }
   setmetatable(data, self)
   self.__index = self
   data:setup_autocmds()
-  data:load()
-  data.agenda = Agenda:new({ files = data.files, org = data })
-  data.capture = Capture:new({ agenda = data.agenda })
   return data
+end
+
+function Org:init()
+  if self.initialized then return end
+  self:load()
+  self.agenda = Agenda:new({ files = self.files, org = self })
+  self.capture = Capture:new({ agenda = self.agenda })
+  self.initialized = true
 end
 
 ---@param file? string
@@ -49,6 +54,7 @@ end
 ---@param file? string
 ---@return string
 function Org:reload(file)
+  self:init()
   if file then
     return self:load(file)
   end
@@ -83,6 +89,7 @@ end
 local function action(cmd, opts)
   local parts = vim.split(cmd, '.', true)
   if not instance or #parts < 2 then return end
+  instance:init()
   if instance[parts[1]] and instance[parts[1]][parts[2]] then
     local item = instance[parts[1]]
     local method = item[parts[2]]
