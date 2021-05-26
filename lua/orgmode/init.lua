@@ -2,17 +2,16 @@ _G.org = _G.org or {}
 local Config = require('orgmode.config')
 local Agenda = require('orgmode.agenda')
 local Capture = require('orgmode.capture')
-local utils = require('orgmode.utils')
-local parser = require('orgmode.parser')
 local instance = nil
 
 ---@class Org
+---@field initialized boolean
 ---@field agenda Agenda
 ---@field capture Capture
 local Org = {}
 
 function Org:new()
-  local data = { files = {}, initialized = false }
+  local data = { initialized = false }
   setmetatable(data, self)
   self.__index = self
   data:setup_autocmds()
@@ -21,45 +20,16 @@ end
 
 function Org:init()
   if self.initialized then return end
-  self:load()
-  self.agenda = Agenda:new({ files = self.files, org = self })
+  self.agenda = Agenda:new()
   self.capture = Capture:new({ agenda = self.agenda })
   self.initialized = true
 end
 
 ---@param file? string
 ---@return string
-function Org:load(file)
-  if file then
-    local category = vim.fn.fnamemodify(file, ':t:r')
-    return utils.readfile(file, function(err, result)
-      if err then return end
-      self.files[file] = parser.parse(result, category, file)
-      self.agenda:update_file(file, self.files[file])
-    end)
-  end
-
-  local files = Config:get_all_files()
-  for _, item in ipairs(files) do
-    local category = vim.fn.fnamemodify(item, ':t:r')
-    utils.readfile(item, function(err, result)
-      if err then return end
-      self.files[item] = parser.parse(result, category, item)
-      self.agenda:update_file(item, self.files[item])
-    end)
-  end
-  return self
-end
-
----@param file? string
----@return string
 function Org:reload(file)
   self:init()
-  if file then
-    return self:load(file)
-  end
-  self.files = {}
-  return self:load()
+  return self.agenda:reload(file)
 end
 
 function Org:setup_autocmds()

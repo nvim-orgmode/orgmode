@@ -1,5 +1,6 @@
 local Date = require('orgmode.objects.date')
 local Range = require('orgmode.parser.range')
+local parser = require('orgmode.parser')
 local utils = require('orgmode.utils')
 local config = require('orgmode.config')
 local colors = require('orgmode.colors')
@@ -30,13 +31,47 @@ function Agenda:new(opts)
     content = {},
     highlights = {},
     items = {},
-    tags = {}
   }
   setmetatable(data, self)
   self.__index = self
+  data:load()
   data:_set_date_range()
-  data:_build_tags()
   return data
+end
+
+---@param file string
+function Agenda:reload(file)
+  if file then
+    local category = vim.fn.fnamemodify(file, ':t:r')
+    return utils.readfile(file, function(err, result)
+      if err then return end
+      self.files[file] = parser.parse(result, category, file)
+      self:_build_tags()
+    end)
+  end
+  return self:load()
+end
+
+---@param force boolean
+---@return string
+function Agenda:load(force)
+  if force then
+    self.files = {}
+  end
+  local files = config:get_all_files()
+  local files_to_process = #files
+  for _, item in ipairs(files) do
+    local category = vim.fn.fnamemodify(item, ':t:r')
+    utils.readfile(item, function(err, result)
+      if err then return end
+      self.files[item] = parser.parse(result, category, item)
+      files_to_process = files_to_process - 1
+      if files_to_process == 0 then
+        self:_build_tags()
+      end
+    end)
+  end
+  return self
 end
 
 function Agenda:_get_title()
@@ -451,11 +486,6 @@ end
 
 function Agenda:quit()
   vim.cmd[[bw!]]
-end
-
-function Agenda:update_file(file, content)
-  self.files[file] = content
-  self:_build_tags()
 end
 
 function Agenda:autocomplete_tags(arg_lead)

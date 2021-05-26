@@ -67,7 +67,7 @@ function Capture:_refile_to_end(file, lines)
   utils.writefile(file, lines, 'a')
   vim.cmd[[autocmd! OrgCapture BufWipeout <buffer>]]
   vim.cmd[[silent! wq]]
-  self.agenda.org:reload(file)
+  self.agenda:reload(file)
   return utils.echo_info(string.format('Wrote %s', file))
 end
 
@@ -130,7 +130,7 @@ function Capture:_refile_content_with_fallback(lines_list, fallback_file)
   utils.writefile(destination_file, lines_str, 'w')
   vim.cmd[[autocmd! OrgCapture BufWipeout <buffer>]]
   vim.cmd[[silent! wq]]
-  self.agenda.org:reload(destination_file)
+  self.agenda:reload(destination_file)
   return utils.echo_info(string.format('Wrote %s', destination_file))
 end
 
