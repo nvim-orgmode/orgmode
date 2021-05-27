@@ -1,4 +1,5 @@
 local colors = require('orgmode.colors.colors')
+local namespace = vim.api.nvim_create_namespace('org_agenda')
 local M = {}
 
 ---@param hex_color string hex color (#FFFFFFF)
@@ -43,8 +44,9 @@ end
 ---@param highlights table[]
 ---@return string
 M.highlight = function(highlights)
+  vim.api.nvim_buf_clear_namespace(0, namespace, 0, -1)
   for _, hl in ipairs(highlights) do
-    vim.api.nvim_buf_add_highlight(0, 0, hl.hlgroup, hl.range.start_line - 1, hl.range.start_col - 1, hl.range.end_col - 1)
+    vim.api.nvim_buf_add_highlight(0, namespace, hl.hlgroup, hl.range.start_line - 1, hl.range.start_col - 1, hl.range.end_col - 1)
   end
 end
 
