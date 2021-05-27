@@ -13,6 +13,9 @@ vim.cmd[[hi default link OrgCalendarToday DiffText]]
 function Calendar.new(data)
   data = data or {}
   Calendar.callback = data.callback
+  if data.month then
+    Calendar.month = data.month:set({ day = 1 })
+  end
   return Calendar
 end
 
