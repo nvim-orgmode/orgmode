@@ -517,6 +517,31 @@ describe('Date object', function()
     assert.are.same('+1w', sunday:get_repeater())
     assert.is.True(sunday:repeats_on(sunday:add({ week = 1 })))
     assert.is.False(sunday:repeats_on(sunday:add({ day = 6 })))
+
+    local saturday = Date.from_string('2021-05-15 Sat .+1w')
+    assert.is.True(saturday:repeats_on(saturday:add({ week = 1 })))
+    assert.is.False(saturday:repeats_on(saturday:add({ day = 5 })))
+
+    local friday = Date.from_string('2021-05-14 Fri ++1w')
+    assert.is.True(friday:repeats_on(friday:add({ week = 1 })))
+    assert.is.False(friday:repeats_on(friday:add({ day = 5 })))
+  end)
+
+  it('should apply different types of repeaters to the date', function()
+    local sunday = Date.from_string('2021-05-16 Sun 12:30 +1w')
+    local next_sunday = sunday:apply_repeater()
+    assert.are.same(next_sunday:to_string(), '2021-05-23 Sun 12:30 +1w')
+
+    local saturday = Date.from_string('2021-05-15 Sat 13:30 .+1w')
+    local week_in_future = saturday:apply_repeater()
+    local expect_week = Date.now():add({ week = 1 }):set({ hour = 13, min = 30 })
+    expect_week = Date.from_string(expect_week:to_string()..' .+1w')
+    assert.are.same(week_in_future:to_string(), expect_week:to_string())
+
+    local friday = Date.from_string('2021-05-14 Fri 14:45 ++1w')
+    local closest_friday = friday:apply_repeater()
+    assert.is.True(closest_friday:is_after(friday, 'day'))
+    assert.is.True(closest_friday:diff(Date.now()) < 7)
   end)
 
   it('should cache check for today', function()
