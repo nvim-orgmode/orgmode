@@ -87,7 +87,7 @@ function OrgMappings:change_date()
   local cb = function(date)
     self:_replace_date(data, date)
   end
-  Calendar.new({ callback = cb, month = data.date }).open()
+  Calendar.new({ callback = cb, date = data.date }).open()
 end
 
 return OrgMappings

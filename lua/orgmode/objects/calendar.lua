@@ -5,6 +5,7 @@ local Calendar = {
   buf = nil,
   callback = nil,
   namespace = vim.api.nvim_create_namespace('org_calendar'),
+  date = nil,
   month = Date.today():start_of('month')
 }
 
@@ -13,8 +14,9 @@ vim.cmd[[hi default link OrgCalendarToday DiffText]]
 function Calendar.new(data)
   data = data or {}
   Calendar.callback = data.callback
-  if data.month then
-    Calendar.month = data.month:set({ day = 1 })
+  if data.date then
+    Calendar.date = data.date
+    Calendar.month = data.date:set({ day = 1 })
   end
   return Calendar
 end
@@ -47,7 +49,12 @@ function Calendar.open()
   utils.buf_keymap(Calendar.buf, 'n', '<CR>', '<cmd>lua require("orgmode.objects.calendar").select()<CR>')
   utils.buf_keymap(Calendar.buf, 'n', '.', '<cmd>lua require("orgmode.objects.calendar").reset()<CR>')
   utils.buf_keymap(Calendar.buf, 'n', 'q', ':bw!<CR>')
-  vim.fn.search(Date.today():format('%d'))
+  local search_day = Date.today():format('%d')
+  if Calendar.date then
+    search_day = Calendar.date:format('%d')
+  end
+  vim.fn.cursor(2, 0)
+  vim.fn.search(search_day, 'W')
 end
 
 function Calendar.render()

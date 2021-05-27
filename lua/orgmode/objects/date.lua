@@ -522,7 +522,7 @@ function Date:get_repeater()
   if #self.adjustments == 0 then return repeater end
 
   for _, adj in ipairs(self.adjustments) do
-    if adj:match('^%+%d+') then
+    if adj:match('^[%+%.]?%+%d+') then
       repeater = adj
       break
     end
@@ -530,9 +530,37 @@ function Date:get_repeater()
   return repeater
 end
 
+function Date:set_todays_date()
+  local time = os.date('*t', os.time())
+  return self:set({
+    year = time.year,
+    month = time.month,
+    day = time.day,
+  })
+end
+
+function Date:apply_repeater()
+  local repeater = self:get_repeater()
+  local date = self
+  local current_time = now()
+  if not repeater then return self end
+  if repeater:match('^%.%+%d+') then
+    return date:set_todays_date():adjust(repeater:sub(2))
+  end
+  if repeater:match('^%+%+%d') then
+    while date.timestamp < current_time.timestamp do
+      date = date:adjust(repeater:sub(2))
+    end
+    return date
+  end
+
+  return date:adjust(repeater)
+end
+
 function Date:repeats_on(date)
   local repeater = self:get_repeater()
   if not repeater then return false end
+  repeater = repeater:gsub('^%.', ''):gsub('^%+%+', '+')
   local repeat_date = self:start_of('day')
   local date_start = date:start_of('day')
   while repeat_date.timestamp < date_start.timestamp do
