@@ -3,6 +3,7 @@
 local OrgMappings = {}
 local Date = require('orgmode.objects.date')
 local Calendar = require('orgmode.objects.calendar')
+local TodoState = require('orgmode.objects.todo_state')
 local utils = require('orgmode.utils')
 local pairs = {
   ['<'] = '>',
@@ -88,6 +89,19 @@ function OrgMappings:change_date()
     self:_replace_date(data, date)
   end
   Calendar.new({ callback = cb, date = data.date }).open()
+end
+
+function OrgMappings:change_todo_state()
+  local item = self.agenda:get_current_file():get_closest_headline(vim.fn.line('.'))
+  local todo = item.todo_keyword
+  local todo_state = TodoState:new({ current_state = todo.value })
+  local next_state = todo_state:get_next()
+  local linenr = todo.range.start_line
+  local line = vim.fn.getline(linenr)
+  if next_state.value == '' then
+    return vim.fn.setline(linenr, string.format('%s%s%s', line:sub(1, todo.range.start_col - 1), '', line:sub(todo.range.end_col + 2)))
+  end
+  vim.fn.setline(linenr, string.format('%s%s%s', line:sub(1, todo.range.start_col - 1), next_state.value, line:sub(todo.range.start_col + next_state.value:len())))
 end
 
 return OrgMappings

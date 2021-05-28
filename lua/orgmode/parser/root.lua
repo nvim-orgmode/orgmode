@@ -199,4 +199,12 @@ function Root:find_headline_by_title(title)
   return headlines[1]
 end
 
+function Root:get_closest_headline(id)
+  local item = self:get_item(id)
+  if item.type ~= Types.HEADLINE then
+    item = item.parent
+  end
+  return item
+end
+
 return Root

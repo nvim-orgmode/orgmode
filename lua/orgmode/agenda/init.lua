@@ -74,6 +74,13 @@ function Agenda:load(force)
   return self
 end
 
+function Agenda:get_current_file()
+  local filename = vim.api.nvim_buf_get_name(0)
+  local file = self.files[filename]
+  self.files[filename] = parser.parse(vim.api.nvim_buf_get_lines(0, 0, -1, true), file.category, file.file)
+  return self.files[filename]
+end
+
 function Agenda:_get_title()
   local span = self.span
   if type(span) == 'number' then
