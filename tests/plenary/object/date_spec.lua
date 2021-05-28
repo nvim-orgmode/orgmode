@@ -541,7 +541,7 @@ describe('Date object', function()
     local friday = Date.from_string('2021-05-14 Fri 14:45 ++1w')
     local closest_friday = friday:apply_repeater()
     assert.is.True(closest_friday:is_after(friday, 'day'))
-    assert.is.True(closest_friday:diff(Date.now()) < 7)
+    assert.is.True(closest_friday:diff(Date.now()) < 8)
   end)
 
   it('should cache check for today', function()
