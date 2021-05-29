@@ -4,6 +4,7 @@ local utils = require('orgmode.utils')
 local config = require('orgmode.config')
 local colors = require('orgmode.colors')
 local AgendaItem = require('orgmode.agenda.agenda_item')
+local Calendar = require('orgmode.objects.calendar')
 local agenda_highlights = require('orgmode.agenda.highlights')
 local hl_map = agenda_highlights.get_agenda_hl_map()
 
@@ -433,6 +434,15 @@ function Agenda:change_span(span)
   return self:open()
 end
 
+function Agenda:goto_date()
+  local cb = function(date)
+    self:_set_date_range(date)
+    self:open()
+    return vim.fn.search(self:_format_day(date))
+  end
+  Calendar.new({ callback = cb, date = Date.now() }).open()
+end
+
 function Agenda:switch_to_item()
   local item = self.content[vim.fn.line('.')]
   if not item or not item.jumpable then return end
@@ -469,9 +479,9 @@ function Agenda:goto_item()
   vim.fn.cursor(item.file_position, 0)
 end
 
-function Agenda:_set_date_range()
+function Agenda:_set_date_range(from)
   local span = self.span
-  local from = Date.now():start_of('day')
+  from = from or Date.now():start_of('day')
   local is_week = span == 'week' or span == '7'
   if is_week and config.org_agenda_start_on_weekday then
     from = from:set_isoweekday(config.org_agenda_start_on_weekday)
