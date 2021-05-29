@@ -45,7 +45,6 @@ end
 ---@class Agenda
 ---@field files OrgFiles
 ---@field span string|number
----@field day_format string
 ---@field items table[]
 ---@field content table[]
 ---@field highlights table[]
@@ -59,7 +58,6 @@ function Agenda:new(opts)
     org = opts.org,
     files = opts.files or {},
     span = config:get_agenda_span(),
-    day_format = '%A %d %B %Y',
     active_view = 'agenda',
     content = {},
     highlights = {},
@@ -105,20 +103,22 @@ function Agenda:render()
       })
     end
 
-    table.insert(content, { line_content = day:format(self.day_format) })
+    table.insert(content, { line_content = self:_format_day(day) })
 
     local longest_items = utils.reduce(agenda_items, function(acc, agenda_item)
       acc.category = math.max(acc.category, agenda_item.headline:get_category():len())
       acc.label = math.max(acc.label, agenda_item.label:len())
       return acc
     end, { category = 0, label = 0 })
+    local category_len = math.max(11, (longest_items.category + 1))
+    local date_len = math.min(11, longest_items.label)
 
     for _, agenda_item in ipairs(agenda_items) do
       local headline = agenda_item.headline
-      local category = string.format('  %-'..(longest_items.category + 1)..'s', headline:get_category()..':')
+      local category = string.format('  %-'..category_len..'s', headline:get_category()..':')
       local date = agenda_item.label
       if date ~= '' then
-        date = string.format(' %'..(longest_items.label)..'s', agenda_item.label)
+        date = string.format(' %-'..date_len..'s', agenda_item.label)
       end
       local todo_keyword = agenda_item.headline.todo_keyword.value
       if todo_keyword ~= '' then
@@ -386,7 +386,7 @@ function Agenda:open()
 
   self.items = agenda_days
   self:render()
-  vim.fn.search(Date.now():format(self.day_format))
+  vim.fn.search(self:_format_day(Date.now()))
 end
 
 function Agenda:reset()
@@ -497,6 +497,10 @@ function Agenda:autocomplete_tags(arg_lead)
   return vim.tbl_map(function(tag)
     return prefix..tag
   end, matches)
+end
+
+function Agenda:_format_day(day)
+  return string.format('%-10s %s', day:format('%A'), day:format('%d %B %Y'))
 end
 
 function _G.org.autocomplete_tags(arg_lead)
