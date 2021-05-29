@@ -23,4 +23,8 @@ function Range.from_line(lnum)
   return Range:new({ start_line = lnum, end_line = lnum })
 end
 
+function Range:is_col_in_range(col)
+  return col >= self.start_col and col <= self.end_col
+end
+
 return Range

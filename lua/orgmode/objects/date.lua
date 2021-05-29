@@ -1,7 +1,6 @@
 -- TODO
 -- Support date ranges <date>--<date>
 -- Support time ranges <date time-time>
--- Support other adjustments (++1 --1, etc.)
 local spans = { d = 'day', m = 'month', y = 'year', h = 'hour', w = 'week' }
 local config = require('orgmode.config')
 local utils = require('orgmode.utils')
