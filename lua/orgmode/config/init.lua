@@ -100,7 +100,13 @@ function Config:setup_mappings(category)
   for name, key in pairs(self.opts.mappings[category]) do
     if mappings[category] and mappings[category][name] then
       local map = vim.tbl_map(function(i) return string.format('"%s"', i) end, mappings[category][name])
-      utils.buf_keymap(0, 'n', key, string.format('<cmd>lua require("orgmode").action(%s)<CR>', table.concat(map, ', ')))
+      local keys = key
+      if type(keys) == 'string' then
+        keys = { keys }
+      end
+      for _, k in ipairs(keys) do
+        utils.buf_keymap(0, 'n', k, string.format('<cmd>lua require("orgmode").action(%s)<CR>', table.concat(map, ', ')))
+      end
     end
   end
 end
