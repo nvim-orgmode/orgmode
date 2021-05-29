@@ -28,8 +28,8 @@ return {
       org_agenda_year_view = 'vy',
       org_agenda_quit = 'q',
       org_agenda_switch_to = '<CR>',
+      org_agenda_goto = {'<TAB>', '<RightMouse>'},
       -- org_agenda_goto_date = 'j', -- TODO
-      -- org_agenda_goto = {'<TAB>', '<LeftMouse>'}, -- TODO
       -- org_agenda_follow_mode = 'F', -- TODO
     },
     capture = {

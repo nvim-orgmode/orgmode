@@ -8,7 +8,8 @@ return {
     org_agenda_month_view = {'agenda.change_span', 'month'},
     org_agenda_year_view = {'agenda.change_span', 'year'},
     org_agenda_quit = {'agenda.quit'},
-    org_agenda_switch_to = {'agenda.select_item'},
+    org_agenda_switch_to = {'agenda.switch_to_item'},
+    org_agenda_goto = {'agenda.goto_item'},
   },
   capture = {
     org_capture_finalize = {'capture.refile'},
@@ -24,5 +25,4 @@ return {
   }
 }
 -- org_agenda_goto_date = 'j', -- TODO
--- org_agenda_goto = {'<TAB>', '<LeftMouse>'}, -- TODO
 -- org_agenda_follow_mode = 'F', -- TODO

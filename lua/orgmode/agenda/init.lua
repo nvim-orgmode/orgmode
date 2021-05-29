@@ -433,28 +433,41 @@ function Agenda:change_span(span)
   return self:open()
 end
 
-function Agenda:select_item()
+function Agenda:switch_to_item()
   local item = self.content[vim.fn.line('.')]
   if not item or not item.jumpable then return end
   vim.cmd('edit '..vim.fn.fnameescape(item.file))
   vim.fn.cursor(item.file_position, 0)
 end
 
--- Items for today:
--- * Deadline for today
--- * Schedule for today (green)
--- * Schedule for past (orange) with counter in days
--- * Scheduled with delay (appears after the date, considers original date for counter)
--- * Overdue deadlines by num of days
--- * Future deadlines (consider warnings)
--- * Plain dates on the same day
--- ** Consider date range
--- ** Repaters
---
--- Items for non todays date
--- * Deadline for day (ignore warnings)
--- * Schedule for day (do not show if it has a delay)
--- * Plain date for day
+function Agenda:goto_item()
+  local item = self.content[vim.fn.line('.')]
+  if not item or not item.jumpable then return end
+  local target_window = nil
+  for _, win in ipairs(vim.api.nvim_list_wins()) do
+    if vim.api.nvim_buf_get_option(vim.api.nvim_win_get_buf(win),'filetype') == 'org' then
+      target_window = win
+    end
+  end
+
+  if not target_window then
+    for _, win in ipairs(vim.api.nvim_list_wins()) do
+      local buf = vim.api.nvim_win_get_buf(win)
+      if vim.api.nvim_buf_get_option(buf, 'buftype') == '' and vim.api.nvim_buf_get_option(buf, 'modifiable') then
+        target_window = win
+      end
+    end
+  end
+
+  if target_window then
+    vim.cmd(vim.fn.win_id2win(target_window)..'wincmd w')
+  else
+    vim.cmd[[aboveleft split]]
+  end
+
+  vim.cmd('edit '..vim.fn.fnameescape(item.file))
+  vim.fn.cursor(item.file_position, 0)
+end
 
 function Agenda:_set_date_range()
   local span = self.span
