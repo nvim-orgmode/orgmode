@@ -18,7 +18,13 @@ function OrgFiles:new()
 end
 
 function OrgFiles:all()
-  return self.files
+  local files = vim.tbl_values(self.files)
+  table.sort(files, function(a, b) return a.category < b.category end)
+  return files
+end
+
+function OrgFiles:filenames()
+  return vim.tbl_map(function(file) return file.file end, self:all())
 end
 
 function OrgFiles:get(file)
@@ -91,7 +97,9 @@ function OrgFiles:_build_tags()
       end
     end
   end
-  self.tags = vim.tbl_keys(tags)
+  local taglist = vim.tbl_keys(tags)
+  table.sort(taglist)
+  self.tags = taglist
 end
 
 

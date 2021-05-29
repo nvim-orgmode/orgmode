@@ -132,9 +132,15 @@ end
 
 ---@return Headline[]
 function Root:get_opened_headlines()
-  return vim.tbl_filter(function(item)
+  local headlines = vim.tbl_filter(function(item)
    return item.type == Types.HEADLINE and not item:is_archived()
   end, self.items)
+
+  table.sort(headlines, function(a, b)
+    return a:get_priority_number() > b:get_priority_number()
+  end)
+
+  return headlines
 end
 
 ---@return Headline[]

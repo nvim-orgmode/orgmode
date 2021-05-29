@@ -43,36 +43,6 @@ local function sort_deadline(a, b)
   end
 end
 
----TODO: Introduce priority
----@param dates table[]
----@return table[]
-function utils.sort_dates(dates)
-  table.sort(dates, function(first, second)
-    local a = first.date
-    local b = second.date
-    if a:is_deadline() then
-      if not b:is_deadline() then return true end
-      return sort_deadline(a, b)
-    end
-    if b:is_deadline() then
-      if not a:is_deadline() then return false end
-      return sort_deadline(a, b)
-    end
-
-    if a:is_scheduled() then
-      if not b:is_scheduled() then return true end
-      return a:is_before(b)
-    end
-    if b:is_scheduled() then
-      if not a:is_scheduled() then return false end
-      return a:is_before(b)
-    end
-
-    return a:is_before(b)
-  end)
-  return dates
-end
-
 ---@param msg string
 function utils.echo_warning(msg)
   vim.cmd[[echohl WarningMsg]]

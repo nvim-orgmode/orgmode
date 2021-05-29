@@ -64,6 +64,7 @@ function OrgMappings:change_date()
   Calendar.new({ callback = cb, date = date }).open()
 end
 
+-- TODO: Update headline with more data after changing to DONE state
 function OrgMappings:change_todo_state()
   local item = self.files:get_current_file():get_closest_headline(vim.fn.line('.'))
   local todo = item.todo_keyword

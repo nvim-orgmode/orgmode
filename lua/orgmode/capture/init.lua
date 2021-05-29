@@ -102,7 +102,7 @@ function Capture:_refile_content_with_fallback(lines_list, fallback_file)
   local default_file = fallback_file and fallback_file ~= '' and vim.fn.fnamemodify(fallback_file, ':p') or nil
 
   local valid_destinations = {}
-  for _, file in ipairs(vim.tbl_keys(self.files:all())) do
+  for _, file in ipairs(self.files:filenames()) do
     valid_destinations[vim.fn.fnamemodify(file, ':t')] = file
   end
 
@@ -141,7 +141,7 @@ end
 
 function Capture:autocomplete_refile(arg_lead)
   local valid_filenames = {}
-  for _, filename in ipairs(vim.tbl_keys(self.files:all())) do
+  for _, filename in ipairs(self.files:filenames()) do
     valid_filenames[vim.fn.fnamemodify(filename, ':t')..'/'] = filename
   end
 
