@@ -1,5 +1,5 @@
 ---@class OrgMappings
----@field agenda Agenda
+---@field files OrgFiles
 local OrgMappings = {}
 local Date = require('orgmode.objects.date')
 local Calendar = require('orgmode.objects.calendar')
@@ -13,7 +13,7 @@ local pairs = {
 ---@param data table
 function OrgMappings:new(data)
   local opts = {}
-  opts.agenda = data.agenda
+  opts.files = data.files
   setmetatable(opts, self)
   self.__index = self
   return opts
@@ -92,7 +92,7 @@ function OrgMappings:change_date()
 end
 
 function OrgMappings:change_todo_state()
-  local item = self.agenda:get_current_file():get_closest_headline(vim.fn.line('.'))
+  local item = self.files:get_current_file():get_closest_headline(vim.fn.line('.'))
   local todo = item.todo_keyword
   local todo_state = TodoState:new({ current_state = todo.value })
   local next_state = todo_state:get_next()

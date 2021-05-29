@@ -3,10 +3,12 @@ local Config = require('orgmode.config')
 local Agenda = require('orgmode.agenda')
 local Capture = require('orgmode.capture')
 local OrgMappings = require('orgmode.config.org_mappings')
+local OrgFiles = require('orgmode.agenda.files')
 local instance = nil
 
 ---@class Org
 ---@field initialized boolean
+---@field files OrgFiles
 ---@field agenda Agenda
 ---@field capture Capture
 local Org = {}
@@ -21,9 +23,10 @@ end
 
 function Org:init()
   if self.initialized then return end
-  self.agenda = Agenda:new()
-  self.capture = Capture:new({ agenda = self.agenda })
-  self.org_mappings = OrgMappings:new({ agenda = self.agenda })
+  self.files = OrgFiles:new()
+  self.agenda = Agenda:new({ files = self.files })
+  self.capture = Capture:new({ files = self.files })
+  self.org_mappings = OrgMappings:new({ files = self.files })
   self.initialized = true
 end
 
@@ -31,7 +34,7 @@ end
 ---@return string
 function Org:reload(file)
   self:init()
-  return self.agenda:reload(file)
+  return self.files:reload(file)
 end
 
 function Org:setup_autocmds()
