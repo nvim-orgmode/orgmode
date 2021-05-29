@@ -1,12 +1,46 @@
 local Date = require('orgmode.objects.date')
 local Range = require('orgmode.parser.range')
-local parser = require('orgmode.parser')
 local utils = require('orgmode.utils')
 local config = require('orgmode.config')
 local colors = require('orgmode.colors')
 local AgendaItem = require('orgmode.agenda.agenda_item')
 local agenda_highlights = require('orgmode.agenda.highlights')
 local hl_map = agenda_highlights.get_agenda_hl_map()
+
+---@param agenda_items AgendaItem[]
+---@return AgendaItem[]
+local function sort_agenda_items(agenda_items)
+  table.sort(agenda_items, function(a, b)
+    if a.is_today and a.is_same_day then
+      if b.is_today and b.is_same_day then
+        return a.headline_date:is_before(b.headline_date)
+      end
+      return true
+    end
+
+    if b.is_today and b.is_same_day then
+      if a.is_today and a.is_same_day then
+        return a.headline_date:is_before(b.headline_date)
+      end
+      return false
+    end
+
+    if a.headline:get_priority_number() ~= b.headline:get_priority_number() then
+      return a.headline:get_priority_number() > b.headline:get_priority_number()
+    end
+
+    if a.headline:has_priority() and b.headline:has_priority() then
+      return a.headline_date:is_before(b.headline_date)
+    end
+
+    if a.headline.category ~= b.headline.category then
+      return a.headline.category < b.headline.category
+    end
+
+    return a.headline_date:is_before(b.headline_date)
+  end)
+  return agenda_items
+end
 
 ---@class Agenda
 ---@field files OrgFiles
@@ -153,7 +187,7 @@ end
 -- TODO: Introduce searching ALL/DONE
 function Agenda:todos()
   local todos = {}
-  for _, orgfile in pairs(self.files:all()) do
+  for _, orgfile in ipairs(self.files:all()) do
     for _, headline in ipairs(orgfile:get_unfinished_todo_entries()) do
       table.insert(todos, headline)
     end
@@ -205,7 +239,7 @@ function Agenda:search()
     return utils.echo_warning('Invalid search term.')
   end
   local headlines = {}
-  for _, orgfile in pairs(self.files:all()) do
+  for _, orgfile in ipairs(self.files:all()) do
     for _, headline in ipairs(orgfile:get_headlines_matching_search_term(search_term)) do
       table.insert(headlines, headline)
     end
@@ -263,7 +297,7 @@ function Agenda:tags_props()
     return utils.echo_warning('Invalid tag.')
   end
   local headlines = {}
-  for _, orgfile in pairs(self.files:all()) do
+  for _, orgfile in ipairs(self.files:all()) do
     for _, headline in ipairs(orgfile:get_headlines_with_tags(tags)) do
       table.insert(headlines, headline)
     end
@@ -326,6 +360,7 @@ function Agenda:prompt()
   }, 'Press key for an agenda command:')
 end
 
+-- TODO: Setup rendering according to grid
 function Agenda:open()
   local dates = self.from:get_range_until(self.to)
   local agenda_days = {}
@@ -333,7 +368,7 @@ function Agenda:open()
   for _, day in ipairs(dates) do
     local date = { day = day, agenda_items = {} }
 
-    for _, orgfile in pairs(self.files:all()) do
+    for _, orgfile in ipairs(self.files:all()) do
       for _, headline in ipairs(orgfile:get_opened_headlines()) do
         for _, headline_date in ipairs(headline:get_valid_dates()) do
           local item = AgendaItem:new(headline_date, headline, day)
@@ -344,8 +379,7 @@ function Agenda:open()
       end
     end
 
-    -- TODO: Sort dates
-    -- day.headlines = sort_headlines(day.headlines)
+    date.agenda_items = sort_agenda_items(date.agenda_items)
 
     table.insert(agenda_days, date)
   end

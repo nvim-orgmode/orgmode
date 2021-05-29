@@ -57,6 +57,16 @@ function Headline:add_headline(headline)
   return headline
 end
 
+function Headline:has_priority()
+  return self.priority ~= ''
+end
+
+function Headline:get_priority_number()
+  if self.priority == config.org_priority_highest then return 2000 end
+  if self.priority == config.org_priority_lowest then return 0 end
+  return 1000
+end
+
 ---@return boolean
 function Headline:is_done()
   return vim.tbl_contains(config:get_todo_keywords().DONE, self.todo_keyword.value:upper())
@@ -244,7 +254,7 @@ end
 -- NOTE: Exclude dates from title if it appears in agenda on that day
 function Headline:_parse_title(line, tags)
   local title = line
-  for _, exclude_pattern in ipairs({ self.todo_keyword.value, '%[#[A-Z0-9]%]', vim.pesc(':'..table.concat(tags, ':')..':')..'$' }) do
+  for _, exclude_pattern in ipairs({ self.todo_keyword.value, vim.pesc(':'..table.concat(tags, ':')..':')..'$' }) do
     title = title:gsub(exclude_pattern, '')
   end
   self.title = vim.trim(title)

@@ -17,7 +17,7 @@ describe('Headline parser', function()
     assert.are.same({'WORK', 'PROJECT'}, headline.tags)
     assert.are.same('A', headline.priority)
     assert.are.same({}, headline.dates)
-    assert.are.same('This is some content', headline.title)
+    assert.are.same('[#A] This is some content', headline.title)
     assert.are.same(Range.from_line(1), headline.range)
   end)
 

@@ -9,6 +9,9 @@ return {
   org_agenda_start_day = nil, -- start from today + this modifier
   org_agenda_templates = {},
   org_refile_targets = {},
+  org_priority_highest = 'A',
+  org_priority_default = 'B',
+  org_priority_lowest = 'C',
   mappings = {
     disable_all = false,
     global = {
