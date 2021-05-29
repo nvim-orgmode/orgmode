@@ -20,58 +20,31 @@ function OrgMappings:new(data)
 end
 
 function OrgMappings:adjust_date(adjustment, fallback)
-  local data = self:_get_date_under_cursor()
-  if not data then
+  local date = self:_get_date_under_cursor()
+  if not date then
     return vim.api.nvim_feedkeys(utils.esc(fallback), 'n', true)
   end
-  local date = data.date:adjust(adjustment)
-  return self:_replace_date(data, date)
+  local new_date = date:adjust(adjustment)
+  return self:_replace_date(new_date)
 end
 
-function OrgMappings:_replace_date(data, date)
+function OrgMappings:_replace_date(date)
   local line = vim.fn.getline('.')
   local view = vim.fn.winsaveview()
-  vim.fn.setline(vim.fn.line('.'), string.format('%s%s%s', line:sub(1, data.start - 1), date:to_string(), line:sub(data.finish + 1)))
+  vim.fn.setline(vim.fn.line('.'), string.format('%s%s%s', line:sub(1, date.range.start_col), date:to_string(), line:sub(date.range.end_col)))
   vim.fn.winrestview(view)
 end
 
 function OrgMappings:_get_date_under_cursor()
-  local line = vim.fn.getline('.')
-  local last_col = vim.fn.col('$')
-  local start = vim.fn.col('.')
-  local finish = vim.fn.col('.')
-  local char = nil
-  while start > 0 do
-    local c = line:sub(start, start)
-    if c == '<' or c == '[' then
-      char = c
-      start = start + 1
-      break
-    end
-    start = start - 1
-  end
+  local item = self.files:get_current_item()
+  local col = vim.fn.col('.')
+  local dates = vim.tbl_filter(function(date)
+    return date.range:is_col_in_range(col)
+  end, item.dates)
 
-  if start == 0 or not char then return nil end
+  if #dates == 0 then return nil end
 
-  while finish < last_col do
-    local c = line:sub(finish, finish)
-    if c == pairs[char] then
-      finish = finish - 1
-      break
-    end
-    finish = finish + 1
-  end
-
-  local selection = line:sub(start, finish)
-  if not Date.is_valid_date(selection) then
-    return nil
-  end
-
-  return {
-    start = start,
-    finish = finish,
-    date = Date.from_string(selection)
-  }
+  return dates[1]
 end
 
 function OrgMappings:increase_date()
@@ -83,12 +56,12 @@ function OrgMappings:decrease_date()
 end
 
 function OrgMappings:change_date()
-  local data = self._get_date_under_cursor()
-  if not data then return end
-  local cb = function(date)
-    self:_replace_date(data, date)
+  local date = self:_get_date_under_cursor()
+  if not date then return end
+  local cb = function(new_date)
+    self:_replace_date(new_date)
   end
-  Calendar.new({ callback = cb, date = data.date }).open()
+  Calendar.new({ callback = cb, date = date }).open()
 end
 
 function OrgMappings:change_todo_state()
