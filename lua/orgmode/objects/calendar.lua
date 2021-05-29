@@ -11,6 +11,7 @@ local Calendar = {
 
 vim.cmd[[hi default link OrgCalendarToday DiffText]]
 
+-- TODO: Add more info to calendar, like shortcuts and label
 function Calendar.new(data)
   data = data or {}
   Calendar.callback = data.callback
@@ -32,7 +33,17 @@ function Calendar.open()
     col = vim.o.columns / 2 - 15,
   }
 
+  if vim.g.loaded_indent_blankline then
+    local exclude = vim.g.indent_blankline_bufname_exclude or {}
+    if not vim.tbl_contains(exclude, 'orgcalendar') then
+      table.insert(exclude, 'orgcalendar')
+    end
+    vim.g.indent_blankline_bufname_exclude = exclude
+  end
+
+
   Calendar.buf = vim.api.nvim_create_buf(false, true)
+  vim.api.nvim_buf_set_name(Calendar.buf, 'orgcalendar')
   Calendar.win = vim.api.nvim_open_win(Calendar.buf, true, opts)
 
   vim.cmd[[autocmd BufWipeout <buffer> lua require('orgmode.objects.calendar').dispose()]]

@@ -10,6 +10,7 @@ return {
     org_agenda_quit = {'agenda.quit'},
     org_agenda_switch_to = {'agenda.switch_to_item'},
     org_agenda_goto = {'agenda.goto_item'},
+    org_agenda_goto_date = {'agenda.goto_date'},
   },
   capture = {
     org_capture_finalize = {'capture.refile'},
@@ -24,5 +25,4 @@ return {
     org_todo = {'org_mappings.change_todo_state'}
   }
 }
--- org_agenda_goto_date = 'j', -- TODO
 -- org_agenda_follow_mode = 'F', -- TODO
