@@ -9,8 +9,7 @@ local agenda_highlights = require('orgmode.agenda.highlights')
 local hl_map = agenda_highlights.get_agenda_hl_map()
 
 ---@class Agenda
----@field files Root[]
----@field org Org
+---@field files OrgFiles
 ---@field span string|number
 ---@field day_format string
 ---@field items table[]
@@ -34,51 +33,8 @@ function Agenda:new(opts)
   }
   setmetatable(data, self)
   self.__index = self
-  data:load()
   data:_set_date_range()
   return data
-end
-
----@param file string
-function Agenda:reload(file)
-  if file then
-    local category = vim.fn.fnamemodify(file, ':t:r')
-    return utils.readfile(file, function(err, result)
-      if err then return end
-      self.files[file] = parser.parse(result, category, file)
-      self:_build_tags()
-    end)
-  end
-  return self:load()
-end
-
----@param force boolean
----@return string
-function Agenda:load(force)
-  if force then
-    self.files = {}
-  end
-  local files = config:get_all_files()
-  local files_to_process = #files
-  for _, item in ipairs(files) do
-    local category = vim.fn.fnamemodify(item, ':t:r')
-    utils.readfile(item, function(err, result)
-      if err then return end
-      self.files[item] = parser.parse(result, category, item)
-      files_to_process = files_to_process - 1
-      if files_to_process == 0 then
-        self:_build_tags()
-      end
-    end)
-  end
-  return self
-end
-
-function Agenda:get_current_file()
-  local filename = vim.api.nvim_buf_get_name(0)
-  local file = self.files[filename]
-  self.files[filename] = parser.parse(vim.api.nvim_buf_get_lines(0, 0, -1, true), file.category, file.file)
-  return self.files[filename]
 end
 
 function Agenda:_get_title()
@@ -197,7 +153,7 @@ end
 -- TODO: Introduce searching ALL/DONE
 function Agenda:todos()
   local todos = {}
-  for _, orgfile in pairs(self.files) do
+  for _, orgfile in pairs(self.files:all()) do
     for _, headline in ipairs(orgfile:get_unfinished_todo_entries()) do
       table.insert(todos, headline)
     end
@@ -249,7 +205,7 @@ function Agenda:search()
     return utils.echo_warning('Invalid search term.')
   end
   local headlines = {}
-  for _, orgfile in pairs(self.files) do
+  for _, orgfile in pairs(self.files:all()) do
     for _, headline in ipairs(orgfile:get_headlines_matching_search_term(search_term)) do
       table.insert(headlines, headline)
     end
@@ -307,7 +263,7 @@ function Agenda:tags_props()
     return utils.echo_warning('Invalid tag.')
   end
   local headlines = {}
-  for _, orgfile in pairs(self.files) do
+  for _, orgfile in pairs(self.files:all()) do
     for _, headline in ipairs(orgfile:get_headlines_with_tags(tags)) do
       table.insert(headlines, headline)
     end
@@ -377,7 +333,7 @@ function Agenda:open()
   for _, day in ipairs(dates) do
     local date = { day = day, agenda_items = {} }
 
-    for _, orgfile in pairs(self.files) do
+    for _, orgfile in pairs(self.files:all()) do
       for _, headline in ipairs(orgfile:get_opened_headlines()) do
         for _, headline_date in ipairs(headline:get_valid_dates()) do
           local item = AgendaItem:new(headline_date, headline, day)
@@ -500,27 +456,13 @@ function Agenda:autocomplete_tags(arg_lead)
   local last = table.remove(parts, #parts)
   local matches = vim.tbl_filter(function(tag)
     return tag:match('^'..vim.pesc(last)) and not vim.tbl_contains(parts, tag)
-  end, self.tags)
+  end, self.files:get_tags())
 
   local prefix = #parts > 0 and table.concat(parts, '+')..'+' or ''
 
   return vim.tbl_map(function(tag)
     return prefix..tag
   end, matches)
-end
-
-function Agenda:_build_tags()
-  local tags = {}
-  for _, orgfile in pairs(self.files) do
-    for _, headline in ipairs(orgfile:get_headlines()) do
-      if headline.tags and #headline.tags > 0 then
-        for _, tag in ipairs(headline.tags) do
-          tags[tag] = 1
-        end
-      end
-    end
-  end
-  self.tags = vim.tbl_keys(tags)
 end
 
 function _G.org.autocomplete_tags(arg_lead)
