@@ -1,14 +1,9 @@
 ---@class OrgMappings
 ---@field files OrgFiles
 local OrgMappings = {}
-local Date = require('orgmode.objects.date')
 local Calendar = require('orgmode.objects.calendar')
 local TodoState = require('orgmode.objects.todo_state')
 local utils = require('orgmode.utils')
-local pairs = {
-  ['<'] = '>',
-  ['['] = ']',
-}
 
 ---@param data table
 function OrgMappings:new(data)
@@ -38,8 +33,9 @@ end
 function OrgMappings:_get_date_under_cursor()
   local item = self.files:get_current_item()
   local col = vim.fn.col('.')
+  local line = vim.fn.line('.')
   local dates = vim.tbl_filter(function(date)
-    return date.range:is_col_in_range(col)
+    return date.range:is_in_range(line, col)
   end, item.dates)
 
   if #dates == 0 then return nil end
@@ -70,12 +66,18 @@ function OrgMappings:change_todo_state()
   local todo = item.todo_keyword
   local todo_state = TodoState:new({ current_state = todo.value })
   local next_state = todo_state:get_next()
-  local linenr = todo.range.start_line
-  local line = vim.fn.getline(linenr)
-  if next_state.value == '' then
-    return vim.fn.setline(linenr, string.format('%s%s%s', line:sub(1, todo.range.start_col - 1), '', line:sub(todo.range.end_col + 2)))
+  local linenr = item.range.start_line
+  local stars = vim.fn['repeat']('%*', item.level)
+  local old_state = todo.value
+  if old_state ~= '' then
+    old_state = old_state..'%s+'
   end
-  vim.fn.setline(linenr, string.format('%s%s%s', line:sub(1, todo.range.start_col - 1), next_state.value, line:sub(todo.range.start_col + next_state.value:len())))
+  local new_state = next_state.value
+  if new_state ~= '' then
+    new_state = new_state..' '
+  end
+  local new_line = vim.fn.getline(linenr):gsub('^'..stars..'%s+'..old_state, stars..' '..new_state)
+  vim.fn.setline(linenr, new_line)
 end
 
 return OrgMappings
