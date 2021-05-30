@@ -11,6 +11,7 @@ return {
     org_agenda_switch_to = {'agenda.switch_to_item'},
     org_agenda_goto = {'agenda.goto_item'},
     org_agenda_goto_date = {'agenda.goto_date'},
+    org_agenda_redo = {'agenda.redo'},
   },
   capture = {
     org_capture_finalize = {'capture.refile'},
