@@ -2,6 +2,7 @@
 ---@field files OrgFiles
 local OrgMappings = {}
 local Calendar = require('orgmode.objects.calendar')
+local Date = require('orgmode.objects.date')
 local TodoState = require('orgmode.objects.todo_state')
 local utils = require('orgmode.utils')
 
@@ -24,9 +25,9 @@ function OrgMappings:adjust_date(adjustment, fallback)
 end
 
 function OrgMappings:_replace_date(date)
-  local line = vim.fn.getline('.')
+  local line = vim.fn.getline(date.range.start_line)
   local view = vim.fn.winsaveview()
-  vim.fn.setline(vim.fn.line('.'), string.format('%s%s%s', line:sub(1, date.range.start_col), date:to_string(), line:sub(date.range.end_col)))
+  vim.fn.setline(date.range.start_line, string.format('%s%s%s', line:sub(1, date.range.start_col), date:to_string(), line:sub(date.range.end_col)))
   vim.fn.winrestview(view)
 end
 
@@ -60,13 +61,48 @@ function OrgMappings:change_date()
   Calendar.new({ callback = cb, date = date }).open()
 end
 
--- TODO: Update headline with more data after changing to DONE state
 function OrgMappings:todo_next_state()
-  return self:_change_todo_state('next')
+  local item = self.files:get_current_file():get_closest_headline(vim.fn.line('.'))
+  local old_state = item.todo_keyword.value
+  self:_change_todo_state('next')
+  item = self.files:get_current_file():get_closest_headline(vim.fn.line('.'))
+  if not item:is_done() then return item end
+
+  local repeater_dates = item:get_repeater_dates()
+  if #repeater_dates == 0 then return item end
+
+  for _, date in ipairs(repeater_dates) do
+    self:_replace_date(date:apply_repeater())
+  end
+
+  self:_change_todo_state('reset')
+  local state_change = string.format('- State "%s" from "%s" [%s]', item.todo_keyword.value, old_state, Date.now():to_string())
+
+  if not item.properties.LAST_REPEAT then
+    local properties_line = item:get_new_properties_line()
+    vim.fn.append(properties_line, {
+      ':PROPERTIES:',
+      ':LAST_REPEAT: ['..Date.now():to_string()..']',
+      ':END:',
+      state_change
+    })
+    return item
+  end
+
+  local prev_state_changes = item:get_content_matching('^%s*-%s*State%s*"%w+"%s+from%s+"%w+"')
+  if prev_state_changes then
+    vim.fn.append(prev_state_changes.range.start_line, state_change)
+    return item
+  end
+
+  local properties_end = item:get_content_matching('^%s*:END:%s*$')
+  if properties_end then
+    vim.fn.append(properties_end.range.start_line, state_change)
+  end
 end
 
 function OrgMappings:todo_prev_state()
-  return self:_change_todo_state('prev')
+  self:_change_todo_state('prev')
 end
 
 function OrgMappings:_change_todo_state(direction)
@@ -76,9 +112,12 @@ function OrgMappings:_change_todo_state(direction)
   local next_state = nil
   if direction == 'next' then
     next_state = todo_state:get_next()
-  else
+  elseif direction == 'prev' then
     next_state = todo_state:get_prev()
+  elseif direction == 'reset' then
+    next_state = todo_state:get_todo()
   end
+
   local linenr = item.range.start_line
   local stars = vim.fn['repeat']('%*', item.level)
   local old_state = todo.value

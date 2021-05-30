@@ -74,9 +74,7 @@ function OrgFiles:get_current_file()
   local filename = vim.api.nvim_buf_get_name(0)
   local file = self.files[filename]
   -- TODO: Figure out how to parse only parts that are changed
-  if vim.api.nvim_buf_get_option(0, 'modified') then
-    self.files[filename] = parser.parse(vim.api.nvim_buf_get_lines(0, 0, -1, true), file.category, file.file)
-  end
+  self.files[filename] = parser.parse(vim.api.nvim_buf_get_lines(0, 0, -1, true), file.category, file.file)
   return self.files[filename]
 end
 

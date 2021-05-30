@@ -69,19 +69,26 @@ end
 
 ---@return boolean
 function Headline:is_done()
-  return vim.tbl_contains(config:get_todo_keywords().DONE, self.todo_keyword.value:upper())
+  return self.todo_keyword.type == 'DONE'
 end
 
 ---@return boolean
 function Headline:is_todo()
-  return vim.tbl_contains(config:get_todo_keywords().TODO, self.todo_keyword.value:upper())
+  return self.todo_keyword.type == 'TODO'
+end
+
+function Headline:get_new_properties_line()
+  if #self.content == 0 or not self.content[1]:is_planning() then
+    return self.range.start_line
+  end
+  return self.content[1].range.start_line
 end
 
 -- TODO: Check if this can be configured to be ignored
 ---@return boolean
 function Headline:is_archived()
   return #vim.tbl_filter(function(tag) return tag:upper() == 'ARCHIVE' end, self.tags) > 0
-    or self:get_category():upper() == 'ARCHIVE'
+    or self:get_category():upper() == 'ARCHIVE' -- TODO: Respect Archive file config
 end
 
 ---@return boolean
@@ -90,6 +97,26 @@ function Headline:has_deadline()
     if date:is_deadline() then return true end
   end
   return false
+end
+
+---@return Date[]
+function Headline:get_repeater_dates()
+  local dates = {}
+  for _, date in ipairs(self.dates) do
+    if date:get_repeater() then
+      table.insert(dates, date)
+    end
+  end
+  return dates
+end
+
+function Headline:get_content_matching(val)
+  for _, content in ipairs(self.content) do
+    if content.line:match(val) then
+      return content
+    end
+  end
+  return nil
 end
 
 ---@return boolean
