@@ -48,12 +48,8 @@ function OrgFiles:reload(file)
   return self:load()
 end
 
----@param force boolean
----@return string
-function OrgFiles:load(force)
-  if force then
-    self.files = {}
-  end
+function OrgFiles:load(callback)
+  self.files = {}
   local files = config:get_all_files()
   local files_to_process = #files
   for _, item in ipairs(files) do
@@ -64,6 +60,9 @@ function OrgFiles:load(force)
       files_to_process = files_to_process - 1
       if files_to_process == 0 then
         self:_build_tags()
+        if callback then
+          callback()
+        end
       end
     end)
   end

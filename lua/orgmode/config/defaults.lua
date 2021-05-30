@@ -30,6 +30,7 @@ return {
       org_agenda_switch_to = '<CR>',
       org_agenda_goto = {'<TAB>', '<RightMouse>'},
       org_agenda_goto_date = 'J',
+      org_agenda_redo = 'r',
       -- org_agenda_follow_mode = 'F', -- TODO
     },
     capture = {
