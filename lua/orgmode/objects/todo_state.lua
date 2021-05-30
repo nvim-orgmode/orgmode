@@ -57,4 +57,8 @@ function TodoState:get_prev()
   return { value = prev_state,  type = type }
 end
 
+function TodoState:get_todo()
+  return { value = self.todos.TODO[1], type = 'TODO' }
+end
+
 return TodoState
