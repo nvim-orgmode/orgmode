@@ -45,6 +45,7 @@ end
 
 ---@param msg string
 function utils.echo_warning(msg)
+  vim.cmd[[redraw!]]
   vim.cmd[[echohl WarningMsg]]
   vim.cmd(string.format('echom "%s"', msg))
   vim.cmd[[echohl None]]
@@ -52,6 +53,7 @@ end
 
 ---@param msg string
 function utils.echo_info(msg)
+  vim.cmd[[redraw!]]
   vim.cmd(string.format('echom "%s"', msg))
 end
 
