@@ -61,11 +61,24 @@ function OrgMappings:change_date()
 end
 
 -- TODO: Update headline with more data after changing to DONE state
-function OrgMappings:change_todo_state()
+function OrgMappings:todo_next_state()
+  return self:_change_todo_state('next')
+end
+
+function OrgMappings:todo_prev_state()
+  return self:_change_todo_state('prev')
+end
+
+function OrgMappings:_change_todo_state(direction)
   local item = self.files:get_current_file():get_closest_headline(vim.fn.line('.'))
   local todo = item.todo_keyword
   local todo_state = TodoState:new({ current_state = todo.value })
-  local next_state = todo_state:get_next()
+  local next_state = nil
+  if direction == 'next' then
+    next_state = todo_state:get_next()
+  else
+    next_state = todo_state:get_prev()
+  end
   local linenr = item.range.start_line
   local stars = vim.fn['repeat']('%*', item.level)
   local old_state = todo.value

@@ -44,6 +44,7 @@ return {
       org_decrease_date = '<C-x>',
       org_change_date = 'cid',
       org_todo = 'cit',
+      org_todo_prev = 'ciT',
     }
   }
 }
