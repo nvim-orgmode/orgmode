@@ -87,7 +87,7 @@ function Capture:refile_headline_to_destination()
   end
   local lines = {unpack(agenda_file.lines, item.range.start_line, item.range.end_line)}
   self:_refile_content_with_fallback(lines, nil)
-  vim.cmd(string.format(':%d,%ddelete', item.range.start_line, item.range.end_line))
+  vim.cmd(string.format(':silent %d,%ddelete', item.range.start_line, item.range.end_line))
 end
 
 function Capture:_refile_to_end(file, lines)
