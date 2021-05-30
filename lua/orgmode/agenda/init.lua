@@ -5,7 +5,7 @@ local config = require('orgmode.config')
 local colors = require('orgmode.colors')
 local AgendaItem = require('orgmode.agenda.agenda_item')
 local Calendar = require('orgmode.objects.calendar')
-local agenda_highlights = require('orgmode.agenda.highlights')
+local agenda_highlights = require('orgmode.colors.highlights')
 local hl_map = agenda_highlights.get_agenda_hl_map()
 
 ---@param agenda_items AgendaItem[]

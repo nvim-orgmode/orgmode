@@ -1,5 +1,5 @@
-local AgendaHighlights = require('orgmode.agenda.highlights')
-local hl_map = AgendaHighlights.get_agenda_hl_map()
+local Highlights = require('orgmode.colors.highlights')
+local hl_map = Highlights.get_agenda_hl_map()
 local padding = '...... '
 -- TODO: Check if there is a configuration for this
 local FUTURE_DEADLINE_AS_WARNING_DAYS = 7

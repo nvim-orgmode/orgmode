@@ -2,8 +2,8 @@ local Headline = require('orgmode.parser.headline')
 local Content = require('orgmode.parser.content')
 local AgendaItem = require('orgmode.agenda.agenda_item')
 local Date = require('orgmode.objects.date')
-local AgendaHighlights = require('orgmode.agenda.highlights')
-local hl_map = AgendaHighlights.get_agenda_hl_map()
+local Highlights = require('orgmode.colors.highlights')
+local hl_map = Highlights.get_agenda_hl_map()
 
 local function generate(content_line, keyword)
   keyword = keyword or 'TODO'
