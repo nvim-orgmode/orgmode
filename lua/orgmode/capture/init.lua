@@ -43,6 +43,7 @@ function Capture:open_template(template)
   vim.api.nvim_buf_set_lines(0, 0, -1, true, self.templates:compile(template))
   self.templates:setup()
   vim.api.nvim_buf_set_var(0, 'org_template', template)
+  vim.api.nvim_buf_set_var(0, 'org_capture', true)
   config:setup_mappings('capture')
   vim.cmd[[autocmd OrgCapture BufWipeout <buffer> ++once lua require('orgmode').action('capture.refile', true)]]
 end
