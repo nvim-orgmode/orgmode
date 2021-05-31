@@ -2,8 +2,8 @@ _G.org = _G.org or {}
 local Config = require('orgmode.config')
 local Agenda = require('orgmode.agenda')
 local Capture = require('orgmode.capture')
-local OrgMappings = require('orgmode.config.org_mappings')
-local OrgFiles = require('orgmode.agenda.files')
+local OrgMappings = require('orgmode.org.mappings')
+local OrgFiles = require('orgmode.parser.files')
 local instance = nil
 
 ---@class Org
