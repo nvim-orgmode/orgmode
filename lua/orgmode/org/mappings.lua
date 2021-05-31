@@ -54,11 +54,11 @@ end
 -- TODO: Add hierarchy
 function OrgMappings:toggle_checkbox()
   local line = vim.fn.getline('.')
-  local pattern = '^(%s*[%-%+]%s*%[([%sXx]?)%])'
+  local pattern = '^(%s*[%-%+]%s*%[([%sXx%-]?)%])'
   local checkbox, state = line:match(pattern)
   if not checkbox then return end
   local new_val = vim.trim(state) == '' and '[X]' or '[ ]'
-  checkbox = checkbox:gsub('%[[%sXx]?%]$', new_val)
+  checkbox = checkbox:gsub('%[[%sXx%-]?%]$', new_val)
   local new_line = line:gsub(pattern, checkbox)
   vim.fn.setline('.', new_line)
 end
