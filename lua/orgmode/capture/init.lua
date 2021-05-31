@@ -2,6 +2,7 @@ _G.org.capture = {}
 local utils = require('orgmode.utils')
 local Types = require('orgmode.parser.types')
 local config = require('orgmode.config')
+local Files = require('orgmode.parser.files')
 local Templates = require('orgmode.capture.templates')
 vim.cmd[[augroup OrgCapture]]
 vim.cmd[[autocmd!]]
@@ -15,7 +16,6 @@ local Capture = {}
 function Capture:new(opts)
   local data = {}
   data.templates = Templates:new()
-  data.files = opts.files
   setmetatable(data, self)
   self.__index = self
   return data
@@ -81,7 +81,7 @@ end
 
 ---Triggered from org file when we want to refile headline
 function Capture:refile_headline_to_destination()
-  local agenda_file = self.files:get_current_file()
+  local agenda_file = Files.get_current_file()
   local item = agenda_file.items[vim.fn.line('.')]
   if item.type ~= Types.HEADLINE then
     item = agenda_file.items[item.parent]
@@ -94,7 +94,7 @@ end
 function Capture:_refile_to_end(file, lines)
   if not file then return end
   utils.writefile(file, lines, 'a')
-  self.files:reload(file)
+  Files.reload(file)
   return utils.echo_info(string.format('Wrote %s', file))
 end
 
@@ -103,7 +103,7 @@ function Capture:_refile_content_with_fallback(lines_list, fallback_file)
   local default_file = fallback_file and fallback_file ~= '' and vim.fn.fnamemodify(fallback_file, ':p') or nil
 
   local valid_destinations = {}
-  for _, file in ipairs(self.files:filenames()) do
+  for _, file in ipairs(Files.filenames()) do
     valid_destinations[vim.fn.fnamemodify(file, ':t')] = file
   end
 
@@ -120,7 +120,7 @@ function Capture:_refile_content_with_fallback(lines_list, fallback_file)
     return self:_refile_to_end(destination_file, lines)
   end
 
-  local agenda_file = self.files:get(destination_file)
+  local agenda_file = Files.get(destination_file)
   local headline = agenda_file:find_headline_by_title(destination[2])
   if not headline then
     return self._refile_to_end(destination_file, lines)
@@ -136,13 +136,13 @@ function Capture:_refile_content_with_fallback(lines_list, fallback_file)
   end
   local lines_str = table.concat(content, '\n')..'\n'
   utils.writefile(destination_file, lines_str, 'w')
-  self.files:reload(destination_file)
+  Files.reload(destination_file)
   return utils.echo_info(string.format('Wrote %s', destination_file))
 end
 
 function Capture:autocomplete_refile(arg_lead)
   local valid_filenames = {}
-  for _, filename in ipairs(self.files:filenames()) do
+  for _, filename in ipairs(Files.filenames()) do
     valid_filenames[vim.fn.fnamemodify(filename, ':t')..'/'] = filename
   end
 
@@ -157,7 +157,7 @@ function Capture:autocomplete_refile(arg_lead)
     end, vim.tbl_keys(valid_filenames))
   end
 
-  local agenda_file = self.files:get(selected_file)
+  local agenda_file = Files.get(selected_file)
   if not agenda_file then return {} end
 
   local headlines = agenda_file:get_opened_unfinished_headlines()

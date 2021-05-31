@@ -5,91 +5,89 @@ local config = require('orgmode.config')
 ---@class OrgFiles
 ---@field files Root[]
 ---@field tags string[]
-local OrgFiles = {}
+local Files = {
+  files = {},
+  tags = {}
+}
 
-function OrgFiles:new()
-  local opts = {}
-  opts.files = {}
-  opts.tags = {}
-  setmetatable(opts, self)
-  self.__index = self
-  opts:load()
-  return opts
+function Files.new()
+  Files.load()
+  return Files
 end
 
-function OrgFiles:all()
-  local files = vim.tbl_values(self.files)
+function Files.all()
+  local files = vim.tbl_values(Files.files)
   table.sort(files, function(a, b) return a.category < b.category end)
   return files
 end
 
-function OrgFiles:filenames()
-  return vim.tbl_map(function(file) return file.file end, self:all())
+function Files.filenames()
+  return vim.tbl_map(function(file) return file.file end, Files.all())
 end
 
-function OrgFiles:get(file)
-  return self.files[file]
+function Files.get(file)
+  return Files.files[file]
 end
 
-function OrgFiles:get_tags()
-  return self.tags
+function Files.get_tags()
+  return Files.tags
 end
 
 ---@param file string
-function OrgFiles:reload(file)
+function Files.reload(file)
   if file then
     local category = vim.fn.fnamemodify(file, ':t:r')
     return utils.readfile(file, function(err, result)
       if err then return end
-      self.files[file] = parser.parse(result, category, file)
-      self:_build_tags()
+      Files.files[file] = parser.parse(result, category, file)
+      Files._build_tags()
     end)
   end
-  return self:load()
+  return Files.load()
 end
 
-function OrgFiles:load(callback)
-  self.files = {}
+function Files.load(callback)
+  Files.files = {}
   local files = config:get_all_files()
   local files_to_process = #files
   for _, item in ipairs(files) do
     local category = vim.fn.fnamemodify(item, ':t:r')
     utils.readfile(item, function(err, result)
       if err then return end
-      self.files[item] = parser.parse(result, category, item)
+      Files.files[item] = parser.parse(result, category, item)
       files_to_process = files_to_process - 1
       if files_to_process == 0 then
-        self:_build_tags()
+        Files._build_tags()
         if callback then
           callback()
         end
       end
     end)
   end
-  return self
+  return Files
 end
 
 ---@return Root
-function OrgFiles:get_current_file()
+function Files.get_current_file()
   local filename = vim.api.nvim_buf_get_name(0)
   local has_capture_var, is_capture = pcall(vim.api.nvim_buf_get_var, 0, 'org_capture')
   if has_capture_var and is_capture then
     return parser.parse(vim.api.nvim_buf_get_lines(0, 0, -1, true), '', filename)
   end
-  local file = self.files[filename]
+  local file = Files.files[filename]
   -- TODO: Figure out how to parse only parts that are changed
-  self.files[filename] = parser.parse(vim.api.nvim_buf_get_lines(0, 0, -1, true), file.category, file.file)
-  return self.files[filename]
+  Files.files[filename] = parser.parse(vim.api.nvim_buf_get_lines(0, 0, -1, true), file.category, file.file)
+  return Files.files[filename]
 end
 
-function OrgFiles:get_current_item()
-  local file = self:get_current_file()
+function Files.get_current_item()
+  local file = Files.get_current_file()
   return file:get_item(vim.fn.line('.'))
 end
 
-function OrgFiles:_build_tags()
+function Files._build_tags()
   local tags = {}
-  for _, orgfile in pairs(self.files) do
+  for _, orgfile in pairs(Files.files) do
     for _, headline in ipairs(orgfile:get_headlines()) do
       if headline.tags and #headline.tags > 0 then
         for _, tag in ipairs(headline.tags) do
@@ -100,8 +98,8 @@ function OrgFiles:_build_tags()
   end
   local taglist = vim.tbl_keys(tags)
   table.sort(taglist)
-  self.tags = taglist
+  Files.tags = taglist
 end
 
 
-return OrgFiles
+return Files
