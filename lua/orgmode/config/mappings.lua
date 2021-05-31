@@ -24,7 +24,8 @@ return {
     org_decrease_date = {'org_mappings.decrease_date'},
     org_change_date = {'org_mappings.change_date'},
     org_todo = {'org_mappings.todo_next_state'},
-    org_todo_prev = {'org_mappings.todo_prev_state'}
+    org_todo_prev = {'org_mappings.todo_prev_state'},
+    org_toggle_checkbox = {'org_mappings.toggle_checkbox'},
   }
 }
 -- org_agenda_follow_mode = 'F', -- TODO
