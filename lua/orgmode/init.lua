@@ -23,10 +23,10 @@ end
 
 function Org:init()
   if self.initialized then return end
-  self.files = OrgFiles:new()
-  self.agenda = Agenda:new({ files = self.files })
-  self.capture = Capture:new({ files = self.files })
-  self.org_mappings = OrgMappings:new({ files = self.files })
+  self.files = OrgFiles.new()
+  self.agenda = Agenda:new()
+  self.capture = Capture:new()
+  self.org_mappings = OrgMappings:new()
   self.initialized = true
 end
 
@@ -34,7 +34,7 @@ end
 ---@return string
 function Org:reload(file)
   self:init()
-  return self.files:reload(file)
+  return self.files.reload(file)
 end
 
 function Org:setup_autocmds()

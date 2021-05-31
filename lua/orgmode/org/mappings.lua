@@ -2,6 +2,7 @@ local Calendar = require('orgmode.objects.calendar')
 local Date = require('orgmode.objects.date')
 local TodoState = require('orgmode.objects.todo_state')
 local utils = require('orgmode.utils')
+local Files = require('orgmode.parser.files')
 
 ---@class OrgMappings
 ---@field files OrgFiles
@@ -10,7 +11,6 @@ local OrgMappings = {}
 ---@param data table
 function OrgMappings:new(data)
   local opts = {}
-  opts.files = data.files
   opts.global_cycle_mode = 'all'
   setmetatable(opts, self)
   self.__index = self
@@ -81,10 +81,10 @@ function OrgMappings:change_date()
 end
 
 function OrgMappings:todo_next_state()
-  local item = self.files:get_current_file():get_closest_headline(vim.fn.line('.'))
+  local item = Files.get_current_file():get_closest_headline(vim.fn.line('.'))
   local old_state = item.todo_keyword.value
   self:_change_todo_state('next')
-  item = self.files:get_current_file():get_closest_headline(vim.fn.line('.'))
+  item = Files.get_current_file():get_closest_headline(vim.fn.line('.'))
   if not item:is_done() then return item end
 
   local repeater_dates = item:get_repeater_dates()
@@ -126,7 +126,7 @@ end
 
 ---@param direction string
 function OrgMappings:_change_todo_state(direction)
-  local item = self.files:get_current_file():get_closest_headline(vim.fn.line('.'))
+  local item = Files.get_current_file():get_closest_headline(vim.fn.line('.'))
   local todo = item.todo_keyword
   local todo_state = TodoState:new({ current_state = todo.value })
   local next_state = nil
@@ -162,7 +162,7 @@ end
 
 ---@return Date|nil
 function OrgMappings:_get_date_under_cursor()
-  local item = self.files:get_current_item()
+  local item = Files.get_current_item()
   local col = vim.fn.col('.')
   local line = vim.fn.line('.')
   local dates = vim.tbl_filter(function(date)
