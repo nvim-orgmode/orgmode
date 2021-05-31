@@ -85,7 +85,7 @@ syntax match org_hyperlinkBracketsRight	contained "\]\{2}"     conceal
 hi def link org_hyperlink Underlined
 
 " Comments: {{{1
-syntax match org_comment /^#.*/
+syntax match org_comment /^\s*#\s.*/
 hi def link org_comment Comment
 
 " Bullet Lists: {{{1

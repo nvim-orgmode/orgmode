@@ -68,4 +68,18 @@ describe('Content parser', function()
       })
     }, content.dates)
   end)
+
+  it('should not do any parsing on commented lines', function()
+    local content = Content:new({
+      line = '# DEADLINE: <2021-05-15 Sat> SCHEDULED: <2021-05-12 Wed 13:30 +1w> CLOSED: <2021-05-16 Sun 15:45>',
+      lnum = 1,
+      parent = { id = 0, level = 0 },
+    })
+    assert.are.same(Types.CONTENT, content.type)
+    assert.are.same('# DEADLINE: <2021-05-15 Sat> SCHEDULED: <2021-05-12 Wed 13:30 +1w> CLOSED: <2021-05-16 Sun 15:45>', content.line)
+    assert.are.same({}, content.dates)
+    assert.are.same({ id = 0, level = 0 }, content.parent)
+    assert.are.same(0, content.level)
+    assert.are.same(1, content.id)
+  end)
 end)

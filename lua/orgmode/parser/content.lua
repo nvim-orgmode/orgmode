@@ -46,6 +46,10 @@ function Content:is_drawer()
   return self.type == Types.DRAWER
 end
 
+function Content:is_commented()
+  return self.line:match('^%s*#%s')
+end
+
 ---@return boolean
 function Content:is_parent_start()
   return self:is_drawer() and self.drawer.name
@@ -62,6 +66,8 @@ function Content:is_properties_start()
 end
 
 function Content:parse()
+  if self:is_commented() then return end
+
   local keyword = self:_parse_keyword()
   if keyword then return self end
 
