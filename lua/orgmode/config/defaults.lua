@@ -35,7 +35,6 @@ return {
     },
     capture = {
       org_capture_finalize = '<C-c>',
-      org_capture_refile = '<Leader>or',
       org_capture_kill = '<Leader>k'
     },
     org = {
