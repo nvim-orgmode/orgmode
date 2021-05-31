@@ -72,8 +72,8 @@ end
 ---@return Root
 function OrgFiles:get_current_file()
   local filename = vim.api.nvim_buf_get_name(0)
-  local is_capture = vim.api.nvim_buf_get_var(0, 'org_capture')
-  if is_capture then
+  local has_capture_var, is_capture = pcall(vim.api.nvim_buf_get_var, 0, 'org_capture')
+  if has_capture_var and is_capture then
     return parser.parse(vim.api.nvim_buf_get_lines(0, 0, -1, true), '', filename)
   end
   local file = self.files[filename]
