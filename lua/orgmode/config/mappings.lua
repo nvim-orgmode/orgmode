@@ -28,4 +28,3 @@ return {
     org_toggle_checkbox = {'org_mappings.toggle_checkbox'},
   }
 }
--- org_agenda_follow_mode = 'F', -- TODO
