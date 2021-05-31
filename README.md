@@ -2,7 +2,6 @@
 
 TODO:
 
-* Fix date adjusting in capture buffer (file not parsed)
 * Add time range and date range for dates
 * Setup indent and folding
 * Setup archiving (org-archive, etc.)

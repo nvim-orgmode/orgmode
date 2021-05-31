@@ -72,6 +72,10 @@ end
 ---@return Root
 function OrgFiles:get_current_file()
   local filename = vim.api.nvim_buf_get_name(0)
+  local is_capture = vim.api.nvim_buf_get_var(0, 'org_capture')
+  if is_capture then
+    return parser.parse(vim.api.nvim_buf_get_lines(0, 0, -1, true), '', filename)
+  end
   local file = self.files[filename]
   -- TODO: Figure out how to parse only parts that are changed
   self.files[filename] = parser.parse(vim.api.nvim_buf_get_lines(0, 0, -1, true), file.category, file.file)
