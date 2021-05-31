@@ -44,6 +44,7 @@ return {
       org_change_date = 'cid',
       org_todo = 'cit',
       org_todo_prev = 'ciT',
+      org_toggle_checkbox = '<C-Space>',
     }
   }
 }

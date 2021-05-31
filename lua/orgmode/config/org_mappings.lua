@@ -1,10 +1,11 @@
----@class OrgMappings
----@field files OrgFiles
-local OrgMappings = {}
 local Calendar = require('orgmode.objects.calendar')
 local Date = require('orgmode.objects.date')
 local TodoState = require('orgmode.objects.todo_state')
 local utils = require('orgmode.utils')
+
+---@class OrgMappings
+---@field files OrgFiles
+local OrgMappings = {}
 
 ---@param data table
 function OrgMappings:new(data)
@@ -15,41 +16,24 @@ function OrgMappings:new(data)
   return opts
 end
 
-function OrgMappings:adjust_date(adjustment, fallback)
-  local date = self:_get_date_under_cursor()
-  if not date then
-    return vim.api.nvim_feedkeys(utils.esc(fallback), 'n', true)
-  end
-  local new_date = date:adjust(adjustment)
-  return self:_replace_date(new_date)
-end
-
-function OrgMappings:_replace_date(date)
-  local line = vim.fn.getline(date.range.start_line)
-  local view = vim.fn.winsaveview()
-  vim.fn.setline(date.range.start_line, string.format('%s%s%s', line:sub(1, date.range.start_col), date:to_string(), line:sub(date.range.end_col)))
-  vim.fn.winrestview(view)
-end
-
-function OrgMappings:_get_date_under_cursor()
-  local item = self.files:get_current_item()
-  local col = vim.fn.col('.')
-  local line = vim.fn.line('.')
-  local dates = vim.tbl_filter(function(date)
-    return date.range:is_in_range(line, col)
-  end, item.dates)
-
-  if #dates == 0 then return nil end
-
-  return dates[1]
+-- TODO: Add hierarchy
+function OrgMappings:toggle_checkbox()
+  local line = vim.fn.getline('.')
+  local pattern = '^(%s*[%-%+]%s*%[([%sXx]?)%])'
+  local checkbox, state = line:match(pattern)
+  if not checkbox then return end
+  local new_val = vim.trim(state) == '' and '[X]' or '[ ]'
+  checkbox = checkbox:gsub('%[[%sXx]?%]$', new_val)
+  local new_line = line:gsub(pattern, checkbox)
+  vim.fn.setline('.', new_line)
 end
 
 function OrgMappings:increase_date()
-  return self:adjust_date('+1d', '<C-a>')
+  return self:_adjust_date('+1d', '<C-a>')
 end
 
 function OrgMappings:decrease_date()
-  return self:adjust_date('-1d','<C-x>')
+  return self:_adjust_date('-1d','<C-x>')
 end
 
 function OrgMappings:change_date()
@@ -105,6 +89,7 @@ function OrgMappings:todo_prev_state()
   self:_change_todo_state('prev')
 end
 
+---@param direction string
 function OrgMappings:_change_todo_state(direction)
   local item = self.files:get_current_file():get_closest_headline(vim.fn.line('.'))
   local todo = item.todo_keyword
@@ -130,6 +115,40 @@ function OrgMappings:_change_todo_state(direction)
   end
   local new_line = vim.fn.getline(linenr):gsub('^'..stars..'%s+'..old_state, stars..' '..new_state)
   vim.fn.setline(linenr, new_line)
+end
+
+---@param date Date
+function OrgMappings:_replace_date(date)
+  local line = vim.fn.getline(date.range.start_line)
+  local view = vim.fn.winsaveview()
+  vim.fn.setline(date.range.start_line, string.format('%s%s%s', line:sub(1, date.range.start_col), date:to_string(), line:sub(date.range.end_col)))
+  vim.fn.winrestview(view)
+end
+
+---@return Date|nil
+function OrgMappings:_get_date_under_cursor()
+  local item = self.files:get_current_item()
+  local col = vim.fn.col('.')
+  local line = vim.fn.line('.')
+  local dates = vim.tbl_filter(function(date)
+    return date.range:is_in_range(line, col)
+  end, item.dates)
+
+  if #dates == 0 then return nil end
+
+  return dates[1]
+end
+
+---@param adjustment string
+---@param fallback function
+---@return string
+function OrgMappings:_adjust_date(adjustment, fallback)
+  local date = self:_get_date_under_cursor()
+  if not date then
+    return vim.api.nvim_feedkeys(utils.esc(fallback), 'n', true)
+  end
+  local new_date = date:adjust(adjustment)
+  return self:_replace_date(new_date)
 end
 
 return OrgMappings
