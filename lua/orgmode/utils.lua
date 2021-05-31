@@ -100,7 +100,7 @@ function utils.concat(first, second)
 end
 
 function utils.menu(title, items, prompt)
-  local content = { title }
+  local content = { title..':' }
   local valid_keys = {}
   for _, item in ipairs(items) do
     if item.separator then
@@ -111,8 +111,8 @@ function utils.menu(title, items, prompt)
     end
   end
   prompt = prompt or 'key'
-  table.insert(content, prompt..': \n')
-  vim.api.nvim_out_write(table.concat(content, '\n'))
+  table.insert(content, prompt..': ')
+  vim.cmd(string.format('echon "%s"', table.concat(content, '\\n')))
   local char = vim.fn.nr2char(vim.fn.getchar())
   vim.cmd[[redraw!]]
   local entry = valid_keys[char]
