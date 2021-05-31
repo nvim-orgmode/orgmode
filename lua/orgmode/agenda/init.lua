@@ -350,7 +350,7 @@ function Agenda:tags_props()
 end
 
 function Agenda:prompt()
-  return utils.menu('Press key for an agenda command:', {
+  return utils.menu('Press key for an agenda command', {
     { label = '', separator = '-', length = 34 },
     { label = 'Agenda for current week or day', key = 'a', action = function() return self:open() end },
     { label = 'List of all TODO entries', key = 't', action = function() return self:todos() end },
@@ -358,7 +358,7 @@ function Agenda:prompt()
     { label = 'Search for keywords', key = 's', action = function() return self:search() end },
     { label = 'Quit', key = 'q' },
     { label = '', separator = ' ', length = 1 },
-  }, 'Press key for an agenda command:')
+  }, 'Press key for an agenda command')
 end
 
 -- TODO: Setup rendering according to grid

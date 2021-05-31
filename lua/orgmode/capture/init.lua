@@ -33,7 +33,7 @@ function Capture:prompt()
   table.insert(templates, { label = '', key = '', separator = '-' })
   table.insert(templates, { label = 'Quit', key = 'q' })
 
-  return utils.menu('Select a capture template:', templates, 'Template key')
+  return utils.menu('Select a capture template', templates, 'Template key')
 end
 
 function Capture:open_template(template)
