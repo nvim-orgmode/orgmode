@@ -38,7 +38,7 @@ end
 
 function Capture:open_template(template)
   vim.cmd('16split '..vim.fn.tempname())
-  vim.cmd[[setf orgcapture]]
+  vim.cmd[[setf org]]
   vim.cmd[[setlocal bufhidden=wipe nobuflisted nolist noswapfile nowrap]]
   vim.api.nvim_buf_set_lines(0, 0, -1, true, self.templates:compile(template))
   self.templates:setup()
