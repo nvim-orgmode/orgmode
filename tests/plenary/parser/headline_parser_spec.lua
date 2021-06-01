@@ -19,6 +19,7 @@ describe('Headline parser', function()
     assert.are.same({}, headline.dates)
     assert.are.same('[#A] This is some content', headline.title)
     assert.are.same(Range.from_line(1), headline.range)
+    assert.are.same(false, headline:is_archived())
   end)
 
   it('should parse dates', function()
@@ -57,5 +58,25 @@ describe('Headline parser', function()
       }),
     }, headline.dates)
     assert.are.same(Range.from_line(1), headline.range)
+  end)
+
+  it('should accept archived flag', function()
+    local headline = Headline:new({
+      line = '* TODO [#A] This is some content :WORK:PROJECT:',
+      lnum = 1,
+      parent = { id = 0 },
+      archived = true
+    })
+    assert.are.same({ id = 0 }, headline.parent)
+    assert.are.same(1, headline.level)
+    assert.are.same(1, headline.id)
+    assert.are.same('* TODO [#A] This is some content :WORK:PROJECT:', headline.line)
+    assert.are.same('TODO', headline.todo_keyword.value)
+    assert.are.same({'WORK', 'PROJECT'}, headline.tags)
+    assert.are.same('A', headline.priority)
+    assert.are.same({}, headline.dates)
+    assert.are.same('[#A] This is some content', headline.title)
+    assert.are.same(Range.from_line(1), headline.range)
+    assert.are.same(true, headline:is_archived())
   end)
 end)

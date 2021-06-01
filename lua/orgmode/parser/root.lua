@@ -1,5 +1,6 @@
 local Headline = require('orgmode.parser.headline')
 local Content = require('orgmode.parser.content')
+local Config = require('orgmode.config')
 local Types = require('orgmode.parser.types')
 local Range = require('orgmode.parser.range')
 
@@ -14,12 +15,14 @@ local Range = require('orgmode.parser.range')
 ---@field range Range
 ---@field id number
 ---@field tags string[]
+---@field is_archive_file boolean
 local Root = {}
 
 ---@param lines string[]
 ---@param category string
 ---@param file string
-function Root:new(lines, category, file)
+---@param is_archive_file boolean
+function Root:new(lines, category, file, is_archive_file)
   local data = {
     lines = lines,
     content = {},
@@ -34,6 +37,7 @@ function Root:new(lines, category, file)
     id = 0,
     tags = {},
     source_code_filetypes = {},
+    is_archive_file = is_archive_file or false,
   }
   setmetatable(data, self)
   self.__index = self
@@ -45,6 +49,7 @@ end
 function Root:add_headline(headline_data)
   headline_data.category = self.category
   headline_data.file = self.file
+  headline_data.archived = self.is_archive_file
   local headline = Headline:new(headline_data)
   self.items[headline.id] = headline
   local plevel = headline.parent.level
@@ -132,15 +137,10 @@ function Root:get_item(id)
   return self.items[id]
 end
 
---@return Headline[]
-function Root:get_headlines()
-  return vim.tbl_filter(function(item)
-   return item.type == Types.HEADLINE
-  end, self.items)
-end
-
 ---@return Headline[]
 function Root:get_opened_headlines()
+  if self.is_archive_file then return {} end
+
   local headlines = vim.tbl_filter(function(item)
    return item.type == Types.HEADLINE and not item:is_archived()
   end, self.items)
@@ -154,18 +154,24 @@ end
 
 ---@return Headline[]
 function Root:get_opened_unfinished_headlines()
+  if self.is_archive_file then return {} end
+
   return vim.tbl_filter(function(item)
    return item.type == Types.HEADLINE and not item:is_archived() and not item:is_done()
   end, self.items)
 end
 
 function Root:get_unfinished_todo_entries()
+  if self.is_archive_file then return {} end
+
   return vim.tbl_filter(function(item)
    return item.type == Types.HEADLINE and not item:is_archived() and item:is_todo()
   end, self.items)
 end
 
 function Root:get_headlines_matching_search_term(term)
+  if self.is_archive_file then return {} end
+
   return vim.tbl_filter(function(item)
     local is_match = false
     if item.type == Types.HEADLINE then
@@ -184,6 +190,8 @@ function Root:get_headlines_matching_search_term(term)
 end
 
 function Root:get_headlines_with_tags(tags)
+  if self.is_archive_file then return {} end
+
   local taglist = vim.tbl_map(function(tag)
     return vim.trim(tag)
   end , vim.split(tags, '+', true))
@@ -229,6 +237,15 @@ function Root:_add_source_block(content)
   if not vim.tbl_contains(self.source_code_filetypes, filetype) then
     table.insert(self.source_code_filetypes, filetype)
   end
+end
+
+function Root:get_archive_file_location()
+  for _, content in ipairs(self.content) do
+    if content:is_keyword() and content.keyword.name == 'ARCHIVE' then
+      return Config:parse_archive_location(self.file, content.keyword.value)
+    end
+  end
+  return Config:parse_archive_location(self.file)
 end
 
 return Root

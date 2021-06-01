@@ -6,15 +6,30 @@ local Files = require('orgmode.parser.files')
 
 ---@class OrgMappings
 ---@field files OrgFiles
+---@field capture Capture
 local OrgMappings = {}
 
 ---@param data table
 function OrgMappings:new(data)
   local opts = {}
   opts.global_cycle_mode = 'all'
+  opts.capture = data.capture
   setmetatable(opts, self)
   self.__index = self
   return opts
+end
+
+-- TODO:
+-- Support archiving to headline
+-- add archive properties
+-- add mapping to add 'ARCHIVE' tag
+function OrgMappings:archive()
+  local file = Files.get_current_file()
+  if file.is_archive_file then
+    return utils.echo_warning('This file is already an archive file.')
+  end
+  local item = file:get_closest_headline(vim.fn.line('.'))
+  return self.capture:refile_file_headline_to_archive(file, item, file:get_archive_file_location())
 end
 
 function OrgMappings:cycle()

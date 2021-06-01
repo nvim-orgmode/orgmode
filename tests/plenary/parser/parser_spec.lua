@@ -12,6 +12,7 @@ describe('Parser', function()
 
     local parsed = parser.parse(lines, 'todos')
     assert.are.same(parsed.tags, {'Tag1', 'Tag2'})
+    assert.are.same(false, parsed.is_archive_file)
     assert.are.same({
       content = {},
       dates = {},
@@ -22,6 +23,7 @@ describe('Parser', function()
       range = Range.from_line(2),
       parent = parsed,
       type = "HEADLINE",
+      archived = false,
       title = 'Something with a lot of tags',
       priority = '',
       properties = {},
@@ -80,6 +82,7 @@ describe('Parser', function()
       properties = {},
       title = 'Test orgmode',
       type = "HEADLINE",
+      archived = false,
       category = 'todos',
       file = '',
       todo_keyword = {
@@ -107,6 +110,7 @@ describe('Parser', function()
       properties = {},
       title = '[#A] Test orgmode level 2',
       type = "HEADLINE",
+      archived = false,
       category = 'todos',
       file = '',
       todo_keyword = {
@@ -143,6 +147,7 @@ describe('Parser', function()
       properties = {},
       title = '[#1] Level 3',
       type = "HEADLINE",
+      archived = false,
       category = 'todos',
       file = '',
       todo_keyword = {
@@ -179,6 +184,7 @@ describe('Parser', function()
       title = 'top level todo',
       parent = parsed,
       type = "HEADLINE",
+      archived = false,
       category = 'todos',
       file = '',
       todo_keyword = {
@@ -215,6 +221,7 @@ describe('Parser', function()
       properties = {},
       title = 'top level todo with multiple tags',
       type = "HEADLINE",
+      archived = false,
       category = 'todos',
       file = '',
       todo_keyword = {
@@ -248,6 +255,7 @@ describe('Parser', function()
       range = Range.from_line(11),
       parent = parsed:get_item(9),
       type = "HEADLINE",
+      archived = false,
       category = 'todos',
       file = '',
       priority = '',
@@ -278,6 +286,7 @@ describe('Parser', function()
       properties = {},
       title = 'NOKEYWORD Headline with wrong todo keyword and wrong tag format :WORK : OFFICE:',
       type = "HEADLINE",
+      archived = false,
       category = 'todos',
       file = '',
       todo_keyword = { value = '', type = '' },
@@ -286,6 +295,7 @@ describe('Parser', function()
     assert.are.same(0, parsed.level)
     assert.are.same(0, parsed.id)
     assert.are.same(lines, parsed.lines)
+    assert.are.same(false, parsed.is_archive_file)
     assert.are.same(Range:new({
       start_line = 1,
       end_line = 12
@@ -358,6 +368,7 @@ describe('Parser', function()
       properties = {},
       title = 'Test orgmode <2021-05-15 Sat>',
       type = "HEADLINE",
+      archived = false,
       category = 'work',
       file = '',
       todo_keyword = {
@@ -442,6 +453,7 @@ describe('Parser', function()
       properties = {},
       title = 'get deadline only if first line after headline',
       type = "HEADLINE",
+      archived = false,
       category = 'work',
       file = '',
       todo_keyword = {
@@ -533,6 +545,7 @@ describe('Parser', function()
       }),
       parent = parsed,
       type = "HEADLINE",
+      archived = false,
       title = 'Test orgmode',
       priority = '',
       properties = {
@@ -671,5 +684,18 @@ describe('Parser', function()
     }
     local parsed = parser.parse(lines, 'work')
     assert.are.same({'javascript'}, parsed.source_code_filetypes)
+  end)
+
+  it('should consider file archived if file name is matching org-archive-location setting', function()
+    local lines = {
+      '* TODO Test orgmode :WORK:',
+      'DEADLINE: <2021-05-10 11:00>',
+      '#+BEGIN_SRC javascript',
+      'console.log("test");',
+      '#+END_SRC',
+      '* TODO Another todo'
+    }
+    local parsed = parser.parse(lines, 'work', '/tmp/my-work.org_archive', true)
+    assert.are.same(parsed.is_archive_file, true)
   end)
 end)

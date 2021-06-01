@@ -19,6 +19,7 @@ local config = require('orgmode.config')
 ---@field file string
 ---@field dates Date[]
 ---@field tags string[]
+---@field archived boolean
 local Headline = {}
 
 ---@param data table
@@ -39,6 +40,7 @@ function Headline:new(data)
   headline.file = data.file or ''
   headline.dates = {}
   headline.properties = {}
+  headline.archived = data.archived or false
   -- TODO: Add configuration for
   -- - org-use-tag-inheritance
   -- - org-tags-exclude-from-inheritance
@@ -84,19 +86,9 @@ function Headline:get_new_properties_line()
   return self.content[1].range.start_line
 end
 
--- TODO: Check if this can be configured to be ignored
 ---@return boolean
 function Headline:is_archived()
-  return #vim.tbl_filter(function(tag) return tag:upper() == 'ARCHIVE' end, self.tags) > 0
-    or self:get_category():upper() == 'ARCHIVE' -- TODO: Respect Archive file config
-end
-
----@return boolean
-function Headline:has_deadline()
-  for _, date in ipairs(self.dates) do
-    if date:is_deadline() then return true end
-  end
-  return false
+  return self.archived or #vim.tbl_filter(function(tag) return tag:upper() == 'ARCHIVE' end, self.tags) > 0
 end
 
 ---@return Date[]
@@ -117,22 +109,6 @@ function Headline:get_content_matching(val)
     end
   end
   return nil
-end
-
----@return boolean
-function Headline:has_scheduled()
-  for _, date in ipairs(self.dates) do
-    if date:is_scheduled() then return true end
-  end
-  return false
-end
-
----@return boolean
-function Headline:has_closed()
-  for _, date in ipairs(self.dates) do
-    if date:is_closed() then return true end
-  end
-  return false
 end
 
 ---@param content Content
