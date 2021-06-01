@@ -7,6 +7,7 @@ local Range = require('orgmode.parser.range')
 ---@field lines string[]
 ---@field content Content[]
 ---@field items Headline[]|Content[]
+---@field source_code_filetypes string[]
 ---@field level number
 ---@field category string
 ---@field file string
@@ -31,7 +32,8 @@ function Root:new(lines, category, file)
       end_line = #lines,
     }),
     id = 0,
-    tags = {}
+    tags = {},
+    source_code_filetypes = {},
   }
   setmetatable(data, self)
   self.__index = self
@@ -57,12 +59,19 @@ end
 function Root:add_content(content_data)
   local content = Content:new(content_data)
   self.items[content.id] = content
+
   if content:is_keyword() then
     self:add_root_content(content)
-  elseif content.parent.level > 0 then
+    return content
+  end
+
+  if content:is_block_src_start() then
+    self:_add_source_block(content)
+  end
+
+  if content.parent.level > 0 then
     content.parent:add_content(content)
   end
-  return content
 end
 
 ---@param headline Headline
@@ -211,6 +220,15 @@ function Root:get_closest_headline(id)
     item = item.parent
   end
   return item
+end
+
+function Root:_add_source_block(content)
+  local filetype = content.line:match('^%s*#%+BEGIN_SRC%s+(.*)$')
+  if not filetype then return end
+  filetype = vim.trim(filetype)
+  if not vim.tbl_contains(self.source_code_filetypes, filetype) then
+    table.insert(self.source_code_filetypes, filetype)
+  end
 end
 
 return Root
