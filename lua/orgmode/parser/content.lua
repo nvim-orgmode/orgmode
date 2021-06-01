@@ -60,6 +60,10 @@ function Content:is_parent_end()
   return self:is_drawer() and self.drawer.ended
 end
 
+function Content:is_block_src_start()
+  return self.line:match('^%s*#%+BEGIN_SRC%s+.*$')
+end
+
 ---@return boolean
 function Content:is_properties_start()
   return self:is_parent_start() and self.drawer.name == 'PROPERTIES'

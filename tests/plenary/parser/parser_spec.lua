@@ -659,4 +659,17 @@ describe('Parser', function()
     parsed = parser.parse(lines, 'work')
     assert.are.same('my-category', parsed:get_item(1):get_category())
   end)
+
+  it('should parse source code #BEGIN_SRC filetype', function()
+    local lines = {
+      '* TODO Test orgmode :WORK:',
+      'DEADLINE: <2021-05-10 11:00>',
+      '#+BEGIN_SRC javascript',
+      'console.log("test");',
+      '#+END_SRC',
+      '* TODO Another todo'
+    }
+    local parsed = parser.parse(lines, 'work')
+    assert.are.same({'javascript'}, parsed.source_code_filetypes)
+  end)
 end)
