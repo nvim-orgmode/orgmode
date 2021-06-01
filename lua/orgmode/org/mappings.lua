@@ -100,9 +100,9 @@ function OrgMappings:todo_next_state()
   if not item.properties.LAST_REPEAT then
     local properties_line = item:get_new_properties_line()
     vim.fn.append(properties_line, {
-      ':PROPERTIES:',
-      ':LAST_REPEAT: ['..Date.now():to_string()..']',
-      ':END:',
+      vim.fn['repeat'](' ', item.level + 1)..':PROPERTIES:',
+      vim.fn['repeat'](' ', item.level + 1)..':LAST_REPEAT: ['..Date.now():to_string()..']',
+      vim.fn['repeat'](' ', item.level + 1)..':END:',
       state_change
     })
     return item
