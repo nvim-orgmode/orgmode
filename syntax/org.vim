@@ -21,12 +21,12 @@ lua require('orgmode.colors.highlights').define_org_headline_colors()
 "        to make sure that org_heading syntax got higher priority(help :syn-priority) than org_bold.
 "        If there is any other good solution, please help fix it.
 "  \\\\*sinuate*
-syntax region org_bold      start="\S\zs\*\|\*\S\@="     end="\S\zs\*\|\*\S\@="  keepend oneline
-syntax region org_italic    start="\S\zs\/\|\/\S\@="     end="\S\zs\/\|\/\S\@="  keepend oneline
-syntax region org_underline start="\S\zs_\|_\S\@="       end="\S\zs_\|_\S\@="    keepend oneline
-syntax region org_code      start="\S\zs=\|=\S\@="       end="\S\zs=\|=\S\@="    keepend oneline
-syntax region org_code      start="\S\zs`\|`\S\@="       end="\S\zs'\|'\S\@="    keepend oneline
-syntax region org_verbatim  start="\S\zs\~\|\~\S\@="     end="\S\zs\~\|\~\S\@="  keepend oneline
+syntax region org_bold      start="\S\zs\*\|\*\S\@="     end="\S\zs\*\|\*\S\@="  keepend oneline contains=@Spell
+syntax region org_italic    start="\S\zs\/\|\/\S\@="     end="\S\zs\/\|\/\S\@="  keepend oneline contains=@Spell
+syntax region org_underline start="\S\zs_\|_\S\@="       end="\S\zs_\|_\S\@="    keepend oneline contains=@Spell
+syntax region org_code      start="\S\zs=\|=\S\@="       end="\S\zs=\|=\S\@="    keepend oneline contains=@Spell
+syntax region org_code      start="\S\zs`\|`\S\@="       end="\S\zs'\|'\S\@="    keepend oneline contains=@Spell
+syntax region org_verbatim  start="\S\zs\~\|\~\S\@="     end="\S\zs\~\|\~\S\@="  keepend oneline contains=@Spell
 
 hi def org_bold      term=bold      cterm=bold      gui=bold
 hi def org_italic    term=italic    cterm=italic    gui=italic
@@ -85,7 +85,7 @@ syntax match org_hyperlinkBracketsRight	contained "\]\{2}"     conceal
 hi def link org_hyperlink Underlined
 
 " Comments: {{{1
-syntax match org_comment /^\s*#\s.*/
+syntax match org_comment /^\s*#\s.*/ contains=@Spell
 hi def link org_comment Comment
 
 " Bullet Lists: {{{1
@@ -111,7 +111,7 @@ hi def link org_list_unordered Identifier
 syntax match org_list_def /.*\s\+::/ contained
 hi def link org_list_def PreProc
 
-syntax match org_list_item /.*$/ contained contains=org_subtask_percent,org_subtask_number,org_subtask_percent_100,org_subtask_number_all,org_list_checkbox,org_bold,org_italic,org_underline,org_code,org_verbatim,org_timestamp,org_timestamp_inactive,org_list_def
+syntax match org_list_item /.*$/ contained contains=org_subtask_percent,org_subtask_number,org_subtask_percent_100,org_subtask_number_all,org_list_checkbox,org_bold,org_italic,org_underline,org_code,org_verbatim,org_timestamp,org_timestamp_inactive,org_list_def,@Spell
 syntax match org_list_checkbox /\[[ X-]]/ contained
 hi def link org_list_bullet Identifier
 hi def link org_list_checkbox     PreProc
@@ -159,5 +159,7 @@ hi def link org_subtask_number String
 hi def link org_subtask_percent String
 hi def link org_subtask_percent_100 Identifier
 hi def link org_subtask_number_all Identifier
+
+syntax spell toplevel
 
 " vi: ft=vim:tw=80:sw=4:ts=4:fdm=marker
