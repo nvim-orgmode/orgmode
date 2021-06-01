@@ -12,6 +12,7 @@ return {
   org_priority_highest = 'A',
   org_priority_default = 'B',
   org_priority_lowest = 'C',
+  org_archive_location = '%s_archive::',
   mappings = {
     disable_all = false,
     global = {
@@ -47,6 +48,7 @@ return {
       org_toggle_checkbox = '<C-Space>',
       org_cycle = '<TAB>',
       org_global_cycle = '<S-TAB>',
+      org_archive_subtree = '<Leader>o$',
     }
   }
 }

@@ -111,5 +111,29 @@ function Config:setup_mappings(category)
   end
 end
 
+function Config:parse_archive_location(file, archive_loc)
+  if self:is_archive_file(file) then return nil end
+
+  archive_loc = archive_loc or self.opts.org_archive_location
+  -- TODO: Support archive to headline
+  local parts = vim.split(archive_loc, '::')
+  local archive_location = vim.trim(parts[1])
+  if archive_location:find('%%s') then
+    return string.format(archive_location, file)
+  end
+  return vim.fn.fnamemodify(archive_location, ':p')
+end
+
+function Config:is_archive_file(file)
+  local parts = vim.split(self.opts.org_archive_location, '::')
+  local archive_location = vim.trim(parts[1])
+  if archive_location:find('%%s') then
+    local suffix = archive_location:gsub('%%s', '')
+    local filename = file:gsub(suffix, '')
+    return string.format(archive_location, filename) == file
+  end
+  return vim.fn.fnamemodify(archive_location, ':p') == file
+end
+
 instance = Config:new()
 return instance

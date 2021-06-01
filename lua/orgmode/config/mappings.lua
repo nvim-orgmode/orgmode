@@ -28,5 +28,6 @@ return {
     org_toggle_checkbox = {'org_mappings.toggle_checkbox'},
     org_cycle = {'org_mappings.cycle'},
     org_global_cycle = {'org_mappings.global_cycle'},
+    org_archive_subtree = {'org_mappings.archive'},
   }
 }

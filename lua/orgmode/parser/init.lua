@@ -3,9 +3,10 @@ local Root = require('orgmode.parser.root')
 ---@param lines string[]
 ---@param category string
 ---@param file string
+---@param is_archive_file boolean
 ---@return Root
-local function parse(lines, category, file)
-  local root = Root:new(lines, category, file)
+local function parse(lines, category, file, is_archive_file)
+  local root = Root:new(lines, category, file, is_archive_file)
   local parent = root
   for lnum, line in ipairs(lines) do
     local is_headline = line:match('^%*+%s+')

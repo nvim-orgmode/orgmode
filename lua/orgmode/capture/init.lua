@@ -91,11 +91,18 @@ function Capture:refile_headline_to_destination()
   vim.cmd(string.format(':silent %d,%ddelete', item.range.start_line, item.range.end_line))
 end
 
-function Capture:_refile_to_end(file, lines)
+function Capture:refile_file_headline_to_archive(file, item, archive_file)
+  local lines = {unpack(file.lines, item.range.start_line, item.range.end_line)}
+  lines = table.concat(lines, '\n')..'\n'
+  self:_refile_to_end(archive_file, lines, string.format('Archived to %s', archive_file))
+  vim.cmd(string.format(':silent %d,%ddelete', item.range.start_line, item.range.end_line))
+end
+
+function Capture:_refile_to_end(file, lines, message)
   if not file then return end
   utils.writefile(file, lines, 'a')
   Files.reload(file)
-  return utils.echo_info(string.format('Wrote %s', file))
+  return utils.echo_info(message or string.format('Wrote %s', file))
 end
 
 function Capture:_refile_content_with_fallback(lines_list, fallback_file)

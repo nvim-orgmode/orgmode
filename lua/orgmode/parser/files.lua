@@ -37,9 +37,10 @@ end
 function Files.reload(file)
   if file then
     local category = vim.fn.fnamemodify(file, ':t:r')
+    local is_archived = config:is_archive_file(file)
     return utils.readfile(file, function(err, result)
       if err then return end
-      Files.files[file] = parser.parse(result, category, file)
+      Files.files[file] = parser.parse(result, category, file, is_archived)
       Files._build_tags()
     end)
   end
@@ -52,9 +53,10 @@ function Files.load(callback)
   local files_to_process = #files
   for _, item in ipairs(files) do
     local category = vim.fn.fnamemodify(item, ':t:r')
+    local is_archived = config:is_archive_file(item)
     utils.readfile(item, function(err, result)
       if err then return end
-      Files.files[item] = parser.parse(result, category, item)
+      Files.files[item] = parser.parse(result, category, item, is_archived)
       files_to_process = files_to_process - 1
       if files_to_process == 0 then
         Files._build_tags()
@@ -88,7 +90,7 @@ end
 function Files._build_tags()
   local tags = {}
   for _, orgfile in pairs(Files.files) do
-    for _, headline in ipairs(orgfile:get_headlines()) do
+    for _, headline in ipairs(orgfile:get_opened_headlines()) do
       if headline.tags and #headline.tags > 0 then
         for _, tag in ipairs(headline.tags) do
           tags[tag] = 1
