@@ -96,7 +96,7 @@ function Files.get_current_file()
   end
   local file = Files.files[filename]
   -- TODO: Figure out how to parse only parts that are changed
-  Files.files[filename] = parser.parse(vim.api.nvim_buf_get_lines(0, 0, -1, true), file.category, file.file)
+  Files.files[filename] = parser.parse(vim.api.nvim_buf_get_lines(0, 0, -1, true), file.category, file.file, file.is_archive_file)
   return Files.files[filename]
 end
 

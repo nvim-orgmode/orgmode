@@ -26,7 +26,7 @@ describe('Parser', function()
       archived = false,
       title = 'Something with a lot of tags',
       priority = '',
-      properties = {},
+      properties = { items = {} },
       todo_keyword = {
         type = 'TODO',
         value = 'TODO',
@@ -79,7 +79,7 @@ describe('Parser', function()
       id = 2,
       parent = parsed,
       priority = '',
-      properties = {},
+      properties = { items = {} },
       title = 'Test orgmode',
       type = "HEADLINE",
       archived = false,
@@ -107,7 +107,7 @@ describe('Parser', function()
       id = 3,
       parent = parsed:get_item(2),
       priority = 'A',
-      properties = {},
+      properties = { items = {} },
       title = '[#A] Test orgmode level 2',
       type = "HEADLINE",
       archived = false,
@@ -144,7 +144,7 @@ describe('Parser', function()
       range = Range:new({ start_line = 5, end_line = 6 }),
       parent = parsed:get_item(3),
       priority = '1',
-      properties = {},
+      properties = { items = {} },
       title = '[#1] Level 3',
       type = "HEADLINE",
       archived = false,
@@ -179,7 +179,7 @@ describe('Parser', function()
       line = "* DONE top level todo :WORK:",
       id = 7,
       priority = '',
-      properties = {},
+      properties = { items = {} },
       range = Range:new({ start_line = 7, end_line = 8 }),
       title = 'top level todo',
       parent = parsed,
@@ -218,7 +218,7 @@ describe('Parser', function()
       range = Range:new({ start_line = 9, end_line = 11 }),
       parent = parsed,
       priority = '',
-      properties = {},
+      properties = { items = {} },
       title = 'top level todo with multiple tags',
       type = "HEADLINE",
       archived = false,
@@ -259,7 +259,7 @@ describe('Parser', function()
       category = 'todos',
       file = '',
       priority = '',
-      properties = {},
+      properties = { items = {} },
       title = 'Working on this now',
       todo_keyword = {
         value = 'TODO',
@@ -283,7 +283,7 @@ describe('Parser', function()
       range = Range.from_line(12),
       parent = parsed,
       priority = '',
-      properties = {},
+      properties = { items = {} },
       title = 'NOKEYWORD Headline with wrong todo keyword and wrong tag format :WORK : OFFICE:',
       type = "HEADLINE",
       archived = false,
@@ -365,7 +365,7 @@ describe('Parser', function()
       }),
       parent = parsed,
       priority = '',
-      properties = {},
+      properties = { items = {} },
       title = 'Test orgmode <2021-05-15 Sat>',
       type = "HEADLINE",
       archived = false,
@@ -450,7 +450,7 @@ describe('Parser', function()
       }),
       parent = parsed,
       priority = '',
-      properties = {},
+      properties = { items = {} },
       title = 'get deadline only if first line after headline',
       type = "HEADLINE",
       archived = false,
@@ -549,7 +549,14 @@ describe('Parser', function()
       title = 'Test orgmode',
       priority = '',
       properties = {
-        SOME_PROP = 'some value'
+        items = {
+          SOME_PROP = 'some value'
+        },
+        range = Range:new({
+          start_line = 3,
+          end_line = 5,
+        }),
+        valid = true
       },
       todo_keyword = {
         value = 'TODO',
@@ -646,7 +653,7 @@ describe('Parser', function()
       '* TODO Another todo'
     }
     local parsed = parser.parse(lines, 'work')
-    assert.are.same({}, parsed:get_item(1).properties)
+    assert.are.same({ items = {} }, parsed:get_item(1).properties)
   end)
 
   it('should override headline category from property', function()

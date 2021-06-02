@@ -80,7 +80,7 @@ function Calendar.render()
   local is_today_month = today:is_same(Calendar.month, 'month')
   local dates = Calendar.month:get_range_until(Calendar.month:end_of('month'))
   local month = Calendar.month:format('%B %Y')
-  month = vim.fn['repeat'](' ', math.floor((36 - month:len()) / 2))..month
+  month = string.rep(' ', math.floor((36 - month:len()) / 2))..month
   local start_row = 1
   for _, date in ipairs(dates) do
     table.insert(content[start_row], date:format('%d'))

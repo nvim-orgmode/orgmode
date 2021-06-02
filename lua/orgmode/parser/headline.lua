@@ -39,7 +39,7 @@ function Headline:new(data)
   headline.category = data.category or ''
   headline.file = data.file or ''
   headline.dates = {}
-  headline.properties = {}
+  headline.properties = { items = {} }
   headline.archived = data.archived or false
   -- TODO: Add configuration for
   -- - org-use-tag-inheritance
@@ -79,7 +79,46 @@ function Headline:is_todo()
   return self.todo_keyword.type == 'TODO'
 end
 
-function Headline:get_new_properties_line()
+---@param name string
+---@return string|nil
+function Headline:get_property(name)
+  return self.properties.items[name]
+end
+
+---@param properties table<string,string>
+---@return table
+function Headline:add_properties(properties)
+  if self.properties.valid then
+    local start = self:_get_content_by_lnum(self.properties.range.start_line)
+    local indent = start.line:match('^%s*')
+    local content = {}
+    for name, val in pairs(properties) do
+      table.insert(content, string.format('%s:%s: %s', indent, name, val))
+    end
+
+    return {
+      content = content,
+      line = self.properties.range.end_line - 1,
+    }
+  end
+
+  local properties_line = self:_get_new_properties_line()
+  local indent = string.rep(' ', self.level + 1)
+  local content = { string.format('%s:PROPERTIES:', indent) }
+
+  for name, val in pairs(properties) do
+    table.insert(content, string.format('%s:%s: %s', indent, name, val))
+  end
+
+  table.insert(content, string.format('%s:END:', indent))
+  return {
+    line = properties_line,
+    is_new = true,
+    content = content,
+  }
+end
+
+function Headline:_get_new_properties_line()
   if #self.content == 0 or not self.content[1]:is_planning() then
     return self.range.start_line
   end
@@ -100,6 +139,10 @@ function Headline:get_repeater_dates()
     end
   end
   return dates
+end
+
+function Headline:_get_content_by_lnum(lnum)
+  return self.content[lnum - self.range.start_line]
 end
 
 function Headline:get_content_matching(val)
@@ -133,33 +176,26 @@ end
 
 ---@param content Content
 function Headline:_parse_properties(content)
+  if content:is_properties_start() then
+    if not self.properties.range then
+      self.properties.range = Range.from_line(content.range.start_line)
+    end
+  end
   if content:is_parent_end() then
-    local properties_start_index = self:_get_properties_start_index()
-    if properties_start_index then
-      local start_index = properties_start_index + 1
-      while start_index < #self.content do
-        local property = self.content[start_index]
-        if property.drawer and property.drawer.properties then
-          self.properties = vim.tbl_extend('force', self.properties, property.drawer.properties or {})
+    if self.properties.range and self.properties.range:is_same_line() then
+      self.properties.range.end_line = content.range.start_line
+      self.properties.valid = true
+      local start_index = self.properties.range.start_line - self.range.start_line
+      local end_index = self.properties.range.end_line - self.range.start_line
+      while start_index < end_index do
+        local entry = self.content[start_index]
+        if entry.drawer and entry.drawer.properties then
+          self.properties.items = vim.tbl_extend('force', self.properties.items, entry.drawer.properties or {})
         end
         start_index = start_index + 1
       end
     end
   end
-end
-
-function Headline:_get_properties_start_index()
-  local properties_start_index = nil
-  local len = #self.content
-  for i=1, len do
-    local idx = len + 1 - i
-    local item = self.content[idx]
-    if item:is_properties_start() then
-      properties_start_index = idx
-      break
-    end
-  end
-  return properties_start_index
 end
 
 ---@param content Content
@@ -264,8 +300,8 @@ function Headline:_parse_title(line, tags)
 end
 
 function Headline:get_category()
-  if self.properties.CATEGORY then
-    return self.properties.CATEGORY
+  if self.properties.items.CATEGORY then
+    return self.properties.items.CATEGORY
   end
   return self.category
 end
