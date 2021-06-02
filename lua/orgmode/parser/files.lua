@@ -41,6 +41,7 @@ function Files.reload(file)
     return utils.readfile(file, function(err, result)
       if err then return end
       Files.files[file] = parser.parse(result, category, file, is_archived)
+      Files._check_archive_status()
       Files._build_tags()
     end)
   end
@@ -60,6 +61,7 @@ function Files.load(callback)
       files_to_process = files_to_process - 1
       if files_to_process == 0 then
         Files._build_tags()
+        Files._check_archive_status()
         if callback then
           callback()
         end
@@ -67,6 +69,22 @@ function Files.load(callback)
     end)
   end
   return Files
+end
+
+function Files._check_archive_status()
+  local check_archived = vim.schedule_wrap(function(orgfile)
+    local archive_location = orgfile:get_archive_file_location()
+    local archive_orgfile = Files.get(archive_location)
+    if archive_orgfile then
+      archive_orgfile.is_archive_file = true
+    end
+  end)
+
+  for _, orgfile in ipairs(Files.all()) do
+    if not orgfile.is_archive_file then
+      check_archived(orgfile)
+    end
+  end
 end
 
 ---@return Root
