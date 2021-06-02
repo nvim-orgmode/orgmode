@@ -23,6 +23,14 @@ function Range.from_line(lnum)
   return Range:new({ start_line = lnum, end_line = lnum })
 end
 
+---@return boolean
+function Range:is_same_line()
+  return self.start_line == self.end_line
+end
+
+---@param line number
+---@param col number
+---@return boolean
 function Range:is_in_range(line, col)
   return line >= self.start_line and line <= self.end_line
   and col >= self.start_col and col <= self.end_col

@@ -104,7 +104,7 @@ function utils.menu(title, items, prompt)
   local valid_keys = {}
   for _, item in ipairs(items) do
     if item.separator then
-      table.insert(content, vim.fn['repeat'](item.separator or '-', item.length or 80))
+      table.insert(content, string.rep(item.separator or '-', item.length or 80))
     else
       valid_keys[item.key] = item
       table.insert(content, string.format('%s %s', item.key, item.label))

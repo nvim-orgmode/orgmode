@@ -112,14 +112,16 @@ function OrgMappings:todo_next_state()
   self:_change_todo_state('reset')
   local state_change = string.format('- State "%s" from "%s" [%s]', item.todo_keyword.value, old_state, Date.now():to_string())
 
-  if not item.properties.LAST_REPEAT then
-    local properties_line = item:get_new_properties_line()
-    vim.fn.append(properties_line, {
-      vim.fn['repeat'](' ', item.level + 1)..':PROPERTIES:',
-      vim.fn['repeat'](' ', item.level + 1)..':LAST_REPEAT: ['..Date.now():to_string()..']',
-      vim.fn['repeat'](' ', item.level + 1)..':END:',
-      state_change
-    })
+  if not item:get_property('LAST_REPEAT') then
+    local data = item:add_properties({ LAST_REPEAT = Date.now():to_string() })
+    local content = data.content
+    if data.is_new then
+      table.insert(content, state_change)
+      vim.fn.append(data.line, content)
+      return item
+    end
+    vim.fn.append(data.line, content)
+    vim.fn.append(data.line + 2, state_change)
     return item
   end
 
@@ -129,9 +131,8 @@ function OrgMappings:todo_next_state()
     return item
   end
 
-  local properties_end = item:get_content_matching('^%s*:END:%s*$')
-  if properties_end then
-    vim.fn.append(properties_end.range.start_line, state_change)
+  if item.properties.valid then
+    vim.fn.append(item.properties.range.end_line, state_change)
   end
 end
 
@@ -154,7 +155,7 @@ function OrgMappings:_change_todo_state(direction)
   end
 
   local linenr = item.range.start_line
-  local stars = vim.fn['repeat']('%*', item.level)
+  local stars = string.rep('%*', item.level)
   local old_state = todo.value
   if old_state ~= '' then
     old_state = old_state..'%s+'
