@@ -21,7 +21,6 @@ end
 
 -- TODO:
 -- Support archiving to headline
--- add archive properties
 -- add mapping to add 'ARCHIVE' tag
 function OrgMappings:archive()
   local file = Files.get_current_file()
@@ -29,6 +28,15 @@ function OrgMappings:archive()
     return utils.echo_warning('This file is already an archive file.')
   end
   local item = file:get_closest_headline(vim.fn.line('.'))
+  local data = item:add_properties({
+    ARCHIVE_TIME = Date.now():to_string(),
+    ARCHIVE_FILE = file.file,
+    ARCHIVE_CATEGORY = item.category,
+    ARCHIVE_TODO = item.todo_keyword.value,
+  })
+  vim.fn.append(data.line, data.content)
+  file = Files.get_current_file()
+  item = file:get_closest_headline(vim.fn.line('.'))
   return self.capture:refile_file_headline_to_archive(file, item, file:get_archive_file_location())
 end
 
