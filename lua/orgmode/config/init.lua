@@ -125,14 +125,7 @@ function Config:parse_archive_location(file, archive_loc)
 end
 
 function Config:is_archive_file(file)
-  local parts = vim.split(self.opts.org_archive_location, '::')
-  local archive_location = vim.trim(parts[1])
-  if archive_location:find('%%s') then
-    local suffix = archive_location:gsub('%%s', '')
-    local filename = file:gsub(suffix, '')
-    return string.format(archive_location, filename) == file
-  end
-  return vim.fn.fnamemodify(archive_location, ':p') == file
+  return vim.fn.fnamemodify(file, ':e') == 'org_archive'
 end
 
 instance = Config:new()

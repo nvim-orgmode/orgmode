@@ -132,13 +132,9 @@ end
 
 ---@return Date[]
 function Headline:get_repeater_dates()
-  local dates = {}
-  for _, date in ipairs(self.dates) do
-    if date:get_repeater() then
-      table.insert(dates, date)
-    end
-  end
-  return dates
+  return vim.tbl_filter(function(date)
+    return date:get_repeater()
+  end, self.dates)
 end
 
 function Headline:_get_content_by_lnum(lnum)
