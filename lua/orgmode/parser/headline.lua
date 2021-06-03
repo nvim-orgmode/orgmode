@@ -91,14 +91,22 @@ function Headline:add_properties(properties)
   if self.properties.valid then
     local start = self:_get_content_by_lnum(self.properties.range.start_line)
     local indent = start.line:match('^%s*')
-    local content = {}
     for name, val in pairs(properties) do
-      table.insert(content, string.format('%s:%s: %s', indent, name, val))
+      if self.properties.items[name] then
+        local existing = self:_get_content_with_property(name, self.properties.items[name])
+        if existing then
+          local new_line = existing.line:gsub(vim.pesc(self.properties.items[name]), val)
+          vim.api.nvim_call_function('setline', { existing.range.start_line, new_line })
+        end
+      else
+        vim.api.nvim_call_function('append', {
+          self.properties.range.start_line,
+          string.format('%s:%s: %s', indent, name, val),
+        })
+      end
     end
-
     return {
-      content = content,
-      line = self.properties.range.end_line - 1,
+      is_new = false,
     }
   end
 
@@ -111,11 +119,18 @@ function Headline:add_properties(properties)
   end
 
   table.insert(content, string.format('%s:END:', indent))
+  vim.api.nvim_call_function('append', { properties_line, content })
   return {
-    line = properties_line,
     is_new = true,
-    content = content,
+    end_line = properties_line + #content
   }
+end
+
+function Headline:_get_content_with_property(property, val)
+  local contents = vim.tbl_filter(function(content)
+    return content:is_drawer() and content.drawer.properties and content.drawer.properties[property] == val
+  end, self.content)
+  return contents[1]
 end
 
 function Headline:_get_new_properties_line()

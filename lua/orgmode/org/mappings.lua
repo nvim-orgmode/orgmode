@@ -34,7 +34,6 @@ function OrgMappings:archive()
     ARCHIVE_CATEGORY = item.category,
     ARCHIVE_TODO = item.todo_keyword.value,
   })
-  vim.fn.append(data.line, data.content)
   file = Files.get_current_file()
   item = file:get_closest_headline(vim.fn.line('.'))
   return self.capture:refile_file_headline_to_archive(file, item, file:get_archive_file_location())
@@ -120,18 +119,13 @@ function OrgMappings:todo_next_state()
   self:_change_todo_state('reset')
   local state_change = string.format('- State "%s" from "%s" [%s]', item.todo_keyword.value, old_state, Date.now():to_string())
 
-  if not item:get_property('LAST_REPEAT') then
-    local data = item:add_properties({ LAST_REPEAT = Date.now():to_string() })
-    local content = data.content
-    if data.is_new then
-      table.insert(content, state_change)
-      vim.fn.append(data.line, content)
-      return item
-    end
-    vim.fn.append(data.line, content)
-    vim.fn.append(data.line + 2, state_change)
+  local data = item:add_properties({ LAST_REPEAT = Date.now():to_string() })
+  local content = data.content
+  if data.is_new then
+    vim.fn.append(data.end_line, state_change)
     return item
   end
+  item = Files.get_current_file():get_closest_headline(vim.fn.line('.'))
 
   local prev_state_changes = item:get_content_matching('^%s*-%s*State%s*"%w+"%s+from%s+"%w+"')
   if prev_state_changes then
