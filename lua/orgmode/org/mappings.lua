@@ -104,13 +104,22 @@ end
 
 function OrgMappings:todo_next_state()
   local item = Files.get_current_file():get_closest_headline(vim.fn.line('.'))
+  local was_done = item:is_done()
   local old_state = item.todo_keyword.value
   self:_change_todo_state('next')
   item = Files.get_current_file():get_closest_headline(vim.fn.line('.'))
-  if not item:is_done() then return item end
+  if not item:is_done() and not was_done then return item end
 
   local repeater_dates = item:get_repeater_dates()
-  if #repeater_dates == 0 then return item end
+  if #repeater_dates == 0 then
+    if item:is_done() and not was_done then
+      item:add_closed_date()
+    end
+    if not item:is_done() and was_done then
+      item:remove_closed_date()
+    end
+    return item
+  end
 
   for _, date in ipairs(repeater_dates) do
     self:_replace_date(date:apply_repeater())

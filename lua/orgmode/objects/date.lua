@@ -499,7 +499,7 @@ end
 
 ---@return boolean
 function Date:is_closed()
-  return self.active and self.type == 'CLOSED'
+  return self.type == 'CLOSED'
 end
 
 ---@return boolean
