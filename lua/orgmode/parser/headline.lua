@@ -235,6 +235,39 @@ function Headline:tags_to_string()
   return tags
 end
 
+function Headline:_get_closed_date()
+  return vim.tbl_filter(function(date)
+    return date:is_closed()
+  end, self.dates)[1]
+end
+
+function Headline:add_closed_date()
+  local closed_date = self:_get_closed_date()
+  if closed_date then return nil end
+  local planning = self.content[1]
+  if planning and planning:is_planning() then
+    return vim.api.nvim_call_function('setline', {
+      planning.range.start_line,
+      string.format('%s CLOSED: [%s]', planning.line, Date.now():to_string())
+    })
+  end
+  return vim.api.nvim_call_function('append', {
+    self.range.start_line,
+    string.format('%sCLOSED: [%s]', string.rep(' ', self.level + 1), Date.now():to_string())
+  })
+end
+
+function Headline:remove_closed_date()
+  local closed_date = self:_get_closed_date()
+  if not closed_date then return nil end
+  local planning = self.content[1]
+  local new_line = planning.line:gsub('%s*CLOSED:%s*[%[<]'..vim.pesc(closed_date:to_string())..'[%]>]', '')
+  if vim.trim(new_line) == '' then
+    return vim.api.nvim_call_function('deletebufline', { vim.api.nvim_get_current_buf(), planning.range.start_line })
+  end
+  return vim.api.nvim_call_function('setline', { planning.range.start_line, new_line })
+end
+
 function Headline:get_valid_dates()
   return vim.tbl_filter(function(date)
     return date.active and not date:is_closed()
