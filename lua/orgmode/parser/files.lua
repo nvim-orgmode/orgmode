@@ -17,6 +17,9 @@ end
 
 function Files.all()
   local files = vim.tbl_values(Files.files)
+  files = vim.tbl_filter(function(file)
+    return not file.is_archive_file
+  end, files)
   table.sort(files, function(a, b) return a.category < b.category end)
   return files
 end
