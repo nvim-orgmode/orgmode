@@ -26,11 +26,11 @@ function Calendar.open()
   local opts = {
     relative = 'editor',
     width = 36,
-    height = 8,
+    height = 10,
     style = 'minimal',
     border = 'single',
     row = vim.o.lines / 2 - 4,
-    col = vim.o.columns / 2 - 15,
+    col = vim.o.columns / 2 - 20,
   }
 
   if vim.g.loaded_indent_blankline then
@@ -89,14 +89,18 @@ function Calendar.render()
     end
   end
   local value = vim.tbl_map(function(item)
-    return ' '..table.concat(item, '   ')
+    return ' '..table.concat(item, ' | ')
   end, content)
   first_row = ' '..table.concat(first_row, '  ')
   table.insert(value, 1, first_row)
   table.insert(value, 1, month)
+  table.insert(value, ' [f] - forward [b] - backward')
+  table.insert(value, ' [.] - today   [Enter] - select day')
 
   vim.api.nvim_buf_set_lines(Calendar.buf, 0, -1, true, value)
   vim.api.nvim_buf_clear_namespace(Calendar.buf, Calendar.namespace, 0, -1)
+  vim.api.nvim_buf_add_highlight(Calendar.buf, Calendar.namespace, 'Comment', #value - 2, 0, -1)
+  vim.api.nvim_buf_add_highlight(Calendar.buf, Calendar.namespace, 'Comment', #value - 1, 0, -1)
   if is_today_month then
     local day_formatted = today:format('%d')
     for i, line in ipairs(value) do

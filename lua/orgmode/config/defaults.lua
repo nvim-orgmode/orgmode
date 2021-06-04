@@ -49,6 +49,10 @@ return {
       org_cycle = '<TAB>',
       org_global_cycle = '<S-TAB>',
       org_archive_subtree = '<Leader>o$',
+      -- org_meta_return = '<Leader><CR>', -- Add headling, item or row
+      -- org_insert_heading_respect_content = '<Leader>oh', -- Add new headling after current heading block with same level
+      -- org_insert_todo_heading = '<Leader>oh', -- Add new todo headling right after current heading with same level
+      -- org_insert_todo_heading_respect_content = '<Leader>oh', -- Add new todo headling after current heading block on same level
     }
   }
 }

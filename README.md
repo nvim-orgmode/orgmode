@@ -2,10 +2,11 @@
 
 TODO:
 
-* Add CLOSED date https://orgmode.org/manual/Closing-items.html (Closing note)
+  * Add appending tags
 * Add more shortcuts (Add todo item (alt shift enter), add headline (Ctrl + enter))
-* Add hyperlinks
-* Improve checkbox hierarchy
 * Add autocompletion
+* Add hyperlinks
+* Introduce help in all buffers with "?"
 * Write up documentation and convert it with https://github.com/FooSoft/md2vim
+* Improve checkbox hierarchy
 * Add time range and date range for dates
