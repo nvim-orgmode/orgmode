@@ -50,6 +50,7 @@ end
 ---@field content table[]
 ---@field highlights table[]
 ---@field active_view string
+---@field last_search string
 local Agenda = {}
 
 ---@param opts table
@@ -58,6 +59,7 @@ function Agenda:new(opts)
   local data = {
     span = config:get_agenda_span(),
     active_view = 'agenda',
+    last_search = '',
     content = {},
     highlights = {},
     items = {},
@@ -209,7 +211,7 @@ function Agenda:todos()
     local todo_keyword_pos = category:len() + 3
     table.insert(content, {
       line_content = line,
-      line = #content,
+      line = i + 1,
       jumpable = true,
       file = todo.file,
       file_position = todo.range.start_line
@@ -232,11 +234,15 @@ function Agenda:todos()
   return self:_print_and_highlight()
 end
 
-function Agenda:search()
-  local search_term = vim.fn.input('Enter search term: ', '')
+function Agenda:search(clear_search)
+  if clear_search then
+    self.last_search = ''
+  end
+  local search_term = vim.fn.input('Enter search term: ', self.last_search)
   if vim.trim(search_term) == '' then
     return utils.echo_warning('Invalid search term.')
   end
+  self.last_search = search_term
   local headlines = {}
   for _, orgfile in ipairs(Files.all()) do
     for _, headline in ipairs(orgfile:get_headlines_matching_search_term(search_term)) do
@@ -248,8 +254,14 @@ function Agenda:search()
     return math.max(acc, todo:get_category():len())
   end, 0)
 
-  local content = {{ line_content = 'Search words: '..search_term, highlight = nil }}
-  local highlights = {}
+  local content = {
+    { line_content = 'Search words: '..search_term },
+    { line_content = 'Press "r" to update search' }
+  }
+  local highlights = {
+    { hlgroup = 'Comment', range = Range.for_line_hl(1) },
+    { hlgroup = 'Comment', range = Range.for_line_hl(2) },
+  }
 
   for i, headline in ipairs(headlines) do
     local category = string.format('  %-'..(longest_category + 1)..'s', headline:get_category()..':')
@@ -263,7 +275,7 @@ function Agenda:search()
     end
     table.insert(content, {
       line_content = line,
-      line = #content,
+      line = i + 2,
       jumpable = true,
       file = headline.file,
       file_position = headline.range.start_line
@@ -274,8 +286,8 @@ function Agenda:search()
       table.insert(highlights, {
         hlgroup = hl_map[headline.todo_keyword.type],
         range = Range:new({
-          start_line = i + 1,
-          end_line = i + 1,
+          start_line = i + 2,
+          end_line = i + 2,
           start_col = todo_keyword_pos,
           end_col = todo_keyword_pos + todo_keyword:len() + 1
         })
@@ -290,8 +302,11 @@ function Agenda:search()
 end
 
 -- TODO: Add PROP/TODO Query
-function Agenda:tags_props()
-  local tags = vim.fn.input('Match: ', '', 'customlist,v:lua.org.autocomplete_tags')
+function Agenda:tags(clear_search)
+  if clear_search then
+    self.last_search = ''
+  end
+  local tags = vim.fn.input('Match: ', self.last_search, 'customlist,v:lua.org.autocomplete_tags')
   if vim.trim(tags) == '' then
     return utils.echo_warning('Invalid tag.')
   end
@@ -306,8 +321,15 @@ function Agenda:tags_props()
     return math.max(acc, todo:get_category():len())
   end, 0)
 
-  local content = {{ line_content = 'Headlines with TAGS match: '..tags, highlight = nil }}
-  local highlights = {}
+  self.last_search = tags
+  local content = {
+    { line_content = 'Headlines with TAGS match: '..tags },
+    { line_content = 'Press "r" to update search' },
+  }
+  local highlights = {
+    { hlgroup = 'Comment', range = Range.for_line_hl(1) },
+    { hlgroup = 'Comment', range = Range.for_line_hl(2) },
+  }
 
   for i, headline in ipairs(headlines) do
     local category = string.format('  %-'..(longest_category + 1)..'s', headline:get_category()..':')
@@ -321,7 +343,7 @@ function Agenda:tags_props()
     end
     table.insert(content, {
       line_content = line,
-      line = #content,
+      line = i + 2,
       jumpable = true,
       file = headline.file,
       file_position = headline.range.start_line
@@ -332,8 +354,8 @@ function Agenda:tags_props()
       table.insert(highlights, {
         hlgroup = hl_map[headline.todo_keyword.type],
         range = Range:new({
-          start_line = i + 1,
-          end_line = i + 1,
+          start_line = i + 2,
+          end_line = i + 2,
           start_col = todo_keyword_pos,
           end_col = todo_keyword_pos + todo_keyword:len() + 1
         })
@@ -350,17 +372,17 @@ end
 function Agenda:prompt()
   return utils.menu('Press key for an agenda command', {
     { label = '', separator = '-', length = 34 },
-    { label = 'Agenda for current week or day', key = 'a', action = function() return self:open() end },
+    { label = 'Agenda for current week or day', key = 'a', action = function() return self:agenda() end },
     { label = 'List of all TODO entries', key = 't', action = function() return self:todos() end },
-    { label = 'Match a TAGS/PROP/TODO query', key = 'm', action = function() return self:tags_props() end },
-    { label = 'Search for keywords', key = 's', action = function() return self:search() end },
+    { label = 'Match a TAGS query', key = 'm', action = function() return self:tags(true) end },
+    { label = 'Search for keywords', key = 's', action = function() return self:search(true) end },
     { label = 'Quit', key = 'q' },
     { label = '', separator = ' ', length = 1 },
   }, 'Press key for an agenda command')
 end
 
 -- TODO: Setup rendering according to grid
-function Agenda:open()
+function Agenda:agenda()
   local dates = self.from:get_range_until(self.to)
   local agenda_days = {}
 
@@ -393,12 +415,12 @@ function Agenda:reset()
     return utils.echo_warning('Not possible in this view.')
   end
   self:_set_date_range()
-  return self:open()
+  return self:agenda()
 end
 
 function Agenda:redo()
   Files.load(vim.schedule_wrap(function()
-    self:open()
+    self[self.active_view](self)
   end))
 end
 
@@ -421,7 +443,7 @@ function Agenda:advance_span(direction)
   end
   self.from = self.from:add(action)
   self.to = self.to:add(action)
-  return self:open()
+  return self:agenda()
 end
 
 function Agenda:change_span(span)
@@ -435,13 +457,13 @@ function Agenda:change_span(span)
   end
   self.span = span
   self:_set_date_range()
-  return self:open()
+  return self:agenda()
 end
 
 function Agenda:goto_date()
   local cb = function(date)
     self:_set_date_range(date)
-    self:open()
+    self:agenda()
     return vim.fn.search(self:_format_day(date))
   end
   Calendar.new({ callback = cb, date = Date.now() }).open()
