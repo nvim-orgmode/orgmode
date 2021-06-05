@@ -41,11 +41,7 @@ function Headline:new(data)
   headline.dates = {}
   headline.properties = { items = {} }
   headline.archived = data.archived or false
-  -- TODO: Add configuration for
-  -- - org-use-tag-inheritance
-  -- - org-tags-exclude-from-inheritance
-  -- - org-tags-match-list-sublevels
-  headline.tags = {unpack(data.parent.tags or {})}
+  headline.tags = config:get_inheritable_tags(data.parent)
   setmetatable(headline, self)
   self.__index = self
   headline:_parse_line()

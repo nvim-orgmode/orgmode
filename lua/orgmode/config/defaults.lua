@@ -13,6 +13,8 @@ return {
   org_priority_default = 'B',
   org_priority_lowest = 'C',
   org_archive_location = '%s_archive::',
+  org_use_tag_inheritance = true,
+  org_tags_exclude_from_inheritance = {},
   mappings = {
     disable_all = false,
     global = {
