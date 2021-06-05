@@ -2,6 +2,7 @@ local Types = require('orgmode.parser.types')
 local Date = require('orgmode.objects.date')
 local Range = require('orgmode.parser.range')
 local config = require('orgmode.config')
+local utils = require('orgmode.utils')
 
 ---@class Headline
 ---@field id number
@@ -224,11 +225,7 @@ end
 
 ---@return string
 function Headline:tags_to_string()
-  local tags = ''
-  if #self.tags > 0 then
-    tags = ':'..table.concat(self.tags, ':')..':'
-  end
-  return tags
+  return utils.tags_to_string(self.tags)
 end
 
 function Headline:_get_closed_date()
@@ -268,6 +265,10 @@ function Headline:get_valid_dates()
   return vim.tbl_filter(function(date)
     return date.active and not date:is_closed()
   end, self.dates)
+end
+
+function Headline:get_own_tags()
+  return utils.parse_tags_string(self.line:match(':.*:$'))
 end
 
 function Headline:_parse_line()
@@ -315,16 +316,10 @@ function Headline:_parse_todo_keyword()
 end
 
 function Headline:_parse_tags(line)
-  local tags = line:match(':.*:$') or ''
-  local parsed_tags = {}
-  if tags then
-    for _, tag in ipairs(vim.split(tags, ':')) do
-      if tag:find('^[%w_%%@#]+$') then
-        table.insert(parsed_tags, tag)
-        if not vim.tbl_contains(self.tags, tag) then
-          table.insert(self.tags, tag)
-        end
-      end
+  local parsed_tags = utils.parse_tags_string(line:match(':.*:$'))
+  for _, tag in ipairs(parsed_tags) do
+    if not vim.tbl_contains(self.tags, tag) then
+      table.insert(self.tags, tag)
     end
   end
   return parsed_tags

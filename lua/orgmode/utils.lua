@@ -140,4 +140,22 @@ function utils.esc(cmd)
   return vim.api.nvim_replace_termcodes(cmd, true, false, true)
 end
 
+function utils.parse_tags_string(tags)
+  local parsed_tags = {}
+  for _, tag in ipairs(vim.split(tags or '', ':')) do
+    if tag:find('^[%w_%%@#]+$') then
+      table.insert(parsed_tags, tag)
+    end
+  end
+  return parsed_tags
+end
+
+function utils.tags_to_string(taglist)
+  local tags = ''
+  if #taglist > 0 then
+    tags = ':'..table.concat(taglist, ':')..':'
+  end
+  return tags
+end
+
 return utils

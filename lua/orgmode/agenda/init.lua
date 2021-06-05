@@ -306,7 +306,7 @@ function Agenda:tags(clear_search)
   if clear_search then
     self.last_search = ''
   end
-  local tags = vim.fn.input('Match: ', self.last_search, 'customlist,v:lua.org.autocomplete_tags')
+  local tags = vim.fn.input('Match: ', self.last_search, 'customlist,v:lua.org.autocomplete_agenda_filter_tags')
   if vim.trim(tags) == '' then
     return utils.echo_warning('Invalid tag.')
   end
@@ -534,26 +534,12 @@ function Agenda:quit()
   vim.cmd[[bw!]]
 end
 
-function Agenda:autocomplete_tags(arg_lead)
-  local parts = vim.split(arg_lead, '+', true)
-  local last = table.remove(parts, #parts)
-  local matches = vim.tbl_filter(function(tag)
-    return tag:match('^'..vim.pesc(last)) and not vim.tbl_contains(parts, tag)
-  end, Files.get_tags())
-
-  local prefix = #parts > 0 and table.concat(parts, '+')..'+' or ''
-
-  return vim.tbl_map(function(tag)
-    return prefix..tag
-  end, matches)
-end
-
 function Agenda:_format_day(day)
   return string.format('%-10s %s', day:format('%A'), day:format('%d %B %Y'))
 end
 
-function _G.org.autocomplete_tags(arg_lead)
-  return require('orgmode').action('agenda.autocomplete_tags', arg_lead)
+function _G.org.autocomplete_agenda_filter_tags(arg_lead)
+  return Files.autocomplete_tags(arg_lead)
 end
 
 return Agenda

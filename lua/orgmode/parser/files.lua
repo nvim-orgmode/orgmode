@@ -106,5 +106,20 @@ function Files._build_tags()
   Files.tags = taglist
 end
 
+function Files.autocomplete_tags(arg_lead, join_char)
+  join_char = join_char or '+'
+  local parts = vim.split(arg_lead, join_char, true)
+  local last = table.remove(parts, #parts)
+  local matches = vim.tbl_filter(function(tag)
+    return tag:match('^'..vim.pesc(last)) and not vim.tbl_contains(parts, tag)
+  end, Files.get_tags())
+
+  local prefix = #parts > 0 and table.concat(parts, join_char)..join_char or ''
+
+  return vim.tbl_map(function(tag)
+    return prefix..tag
+  end, matches)
+end
+
 
 return Files
