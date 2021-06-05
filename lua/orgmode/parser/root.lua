@@ -223,7 +223,7 @@ function Root:find_headline_by_title(title)
 end
 
 function Root:get_closest_headline(id)
-  local item = self:get_item(id)
+  local item = self:get_item(id or vim.fn.line('.'))
   if item.type ~= Types.HEADLINE then
     item = item.parent
   end

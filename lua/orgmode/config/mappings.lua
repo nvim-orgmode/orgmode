@@ -29,5 +29,6 @@ return {
     org_cycle = {'org_mappings.cycle'},
     org_global_cycle = {'org_mappings.global_cycle'},
     org_archive_subtree = {'org_mappings.archive'},
+    org_set_tags_command = {'org_mappings.set_tags'},
   }
 }

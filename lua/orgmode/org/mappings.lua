@@ -27,16 +27,34 @@ function OrgMappings:archive()
   if file.is_archive_file then
     return utils.echo_warning('This file is already an archive file.')
   end
-  local item = file:get_closest_headline(vim.fn.line('.'))
-  local data = item:add_properties({
+  local item = file:get_closest_headline()
+  item:add_properties({
     ARCHIVE_TIME = Date.now():to_string(),
     ARCHIVE_FILE = file.file,
     ARCHIVE_CATEGORY = item.category,
     ARCHIVE_TODO = item.todo_keyword.value,
   })
   file = Files.get_current_file()
-  item = file:get_closest_headline(vim.fn.line('.'))
+  item = file:get_closest_headline()
   return self.capture:refile_file_headline_to_archive(file, item, file:get_archive_file_location())
+end
+
+function OrgMappings:set_tags()
+  local headline = Files.get_current_file():get_closest_headline()
+  local own_tags = headline:get_own_tags()
+  local tags = vim.fn.input('Tags: ', utils.tags_to_string(own_tags), 'customlist,v:lua.org.autocomplete_set_tags')
+  return self:_set_headline_tags(headline, tags)
+end
+
+function OrgMappings:_set_headline_tags(headline, tags_string)
+  local tags = tags_string:gsub('^:+', ''):gsub(':+$', '')
+  if tags ~= '' then
+    tags = ':'..tags..':'
+  end
+  local line_without_tags = headline.line:gsub(vim.pesc(utils.tags_to_string(headline:get_own_tags()))..'%s*$', ''):gsub('%s*$', '')
+  local spaces = 80 - math.min(line_without_tags:len(), 79)
+  local new_line = string.format('%s%s%s', line_without_tags, string.rep(' ', spaces), tags):gsub('%s*$', '')
+  return vim.fn.setline( headline.range.start_line, new_line)
 end
 
 function OrgMappings:cycle()
@@ -103,11 +121,11 @@ function OrgMappings:change_date()
 end
 
 function OrgMappings:todo_next_state()
-  local item = Files.get_current_file():get_closest_headline(vim.fn.line('.'))
+  local item = Files.get_current_file():get_closest_headline()
   local was_done = item:is_done()
   local old_state = item.todo_keyword.value
   self:_change_todo_state('next')
-  item = Files.get_current_file():get_closest_headline(vim.fn.line('.'))
+  item = Files.get_current_file():get_closest_headline()
   if not item:is_done() and not was_done then return item end
 
   local repeater_dates = item:get_repeater_dates()
@@ -134,7 +152,7 @@ function OrgMappings:todo_next_state()
     vim.fn.append(data.end_line, state_change)
     return item
   end
-  item = Files.get_current_file():get_closest_headline(vim.fn.line('.'))
+  item = Files.get_current_file():get_closest_headline()
 
   local prev_state_changes = item:get_content_matching('^%s*-%s*State%s*"%w+"%s+from%s+"%w+"')
   if prev_state_changes then
@@ -153,7 +171,7 @@ end
 
 ---@param direction string
 function OrgMappings:_change_todo_state(direction)
-  local item = Files.get_current_file():get_closest_headline(vim.fn.line('.'))
+  local item = Files.get_current_file():get_closest_headline()
   local todo = item.todo_keyword
   local todo_state = TodoState:new({ current_state = todo.value })
   local next_state = nil
@@ -211,6 +229,10 @@ function OrgMappings:_adjust_date(adjustment, fallback)
   end
   local new_date = date:adjust(adjustment)
   return self:_replace_date(new_date)
+end
+
+function _G.org.autocomplete_set_tags(arg_lead)
+  return Files.autocomplete_tags(arg_lead, ':')
 end
 
 return OrgMappings
