@@ -21,7 +21,6 @@ end
 
 -- TODO:
 -- Support archiving to headline
--- add mapping to add 'ARCHIVE' tag
 function OrgMappings:archive()
   local file = Files.get_current_file()
   if file.is_archive_file then
@@ -46,15 +45,15 @@ function OrgMappings:set_tags()
   return self:_set_headline_tags(headline, tags)
 end
 
-function OrgMappings:_set_headline_tags(headline, tags_string)
-  local tags = tags_string:gsub('^:+', ''):gsub(':+$', '')
-  if tags ~= '' then
-    tags = ':'..tags..':'
+function OrgMappings:toggle_archive_tag()
+  local headline = Files.get_current_file():get_closest_headline()
+  local own_tags = headline:get_own_tags()
+  if vim.tbl_contains(own_tags, 'ARCHIVE') then
+    own_tags = vim.tbl_filter(function(tag) return tag ~= 'ARCHIVE' end, own_tags)
+  else
+    table.insert(own_tags, 'ARCHIVE')
   end
-  local line_without_tags = headline.line:gsub(vim.pesc(utils.tags_to_string(headline:get_own_tags()))..'%s*$', ''):gsub('%s*$', '')
-  local spaces = 80 - math.min(line_without_tags:len(), 79)
-  local new_line = string.format('%s%s%s', line_without_tags, string.rep(' ', spaces), tags):gsub('%s*$', '')
-  return vim.fn.setline( headline.range.start_line, new_line)
+  return self:_set_headline_tags(headline, utils.tags_to_string(own_tags))
 end
 
 function OrgMappings:cycle()
@@ -229,6 +228,17 @@ function OrgMappings:_adjust_date(adjustment, fallback)
   end
   local new_date = date:adjust(adjustment)
   return self:_replace_date(new_date)
+end
+
+function OrgMappings:_set_headline_tags(headline, tags_string)
+  local tags = tags_string:gsub('^:+', ''):gsub(':+$', ''):gsub(':+', ':')
+  if tags ~= '' then
+    tags = ':'..tags..':'
+  end
+  local line_without_tags = headline.line:gsub(vim.pesc(utils.tags_to_string(headline:get_own_tags()))..'%s*$', ''):gsub('%s*$', '')
+  local spaces = 80 - math.min(line_without_tags:len(), 79)
+  local new_line = string.format('%s%s%s', line_without_tags, string.rep(' ', spaces), tags):gsub('%s*$', '')
+  return vim.fn.setline( headline.range.start_line, new_line)
 end
 
 function _G.org.autocomplete_set_tags(arg_lead)

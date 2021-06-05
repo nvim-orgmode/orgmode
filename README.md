@@ -2,7 +2,6 @@
 
 TODO:
 
-  * Add appending tags
 * Add more shortcuts (Add todo item (alt shift enter), add headline (Ctrl + enter))
 * Add autocompletion
 * Add hyperlinks

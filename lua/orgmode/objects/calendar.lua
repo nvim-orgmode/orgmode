@@ -11,7 +11,6 @@ local Calendar = {
 
 vim.cmd[[hi default link OrgCalendarToday DiffText]]
 
--- TODO: Add more info to calendar, like shortcuts and label
 function Calendar.new(data)
   data = data or {}
   Calendar.callback = data.callback
@@ -60,6 +59,7 @@ function Calendar.open()
   utils.buf_keymap(Calendar.buf, 'n', '<CR>', '<cmd>lua require("orgmode.objects.calendar").select()<CR>')
   utils.buf_keymap(Calendar.buf, 'n', '.', '<cmd>lua require("orgmode.objects.calendar").reset()<CR>')
   utils.buf_keymap(Calendar.buf, 'n', 'q', ':bw!<CR>')
+  utils.buf_keymap(Calendar.buf, 'n', '<Esc>', ':bw!<CR>')
   local search_day = Date.today():format('%d')
   if Calendar.date then
     search_day = Calendar.date:format('%d')
