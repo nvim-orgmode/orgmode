@@ -128,12 +128,12 @@ function Calendar.reset()
 end
 
 function Calendar:select()
-  local col = vim.fn.col('.')
-  local char = vim.fn.getline('.'):sub(col, col)
-  if not char:match('%d') then
+  local day = vim.trim(vim.fn.expand('<cword>'))
+  local line = vim.fn.line('.')
+  if line < 3 or not day:match('%d+') then
     return utils.echo_warning('Please select valid day number.')
   end
-  local day = tonumber(vim.trim(vim.fn.expand('<cword>')))
+  day = tonumber(day)
   local selected_date = Calendar.month:set({ day = day })
   local cb = Calendar.callback
   vim.cmd[[bw!]]
