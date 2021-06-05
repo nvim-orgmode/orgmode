@@ -128,5 +128,18 @@ function Config:is_archive_file(file)
   return vim.fn.fnamemodify(file, ':e') == 'org_archive'
 end
 
+function Config:get_inheritable_tags(headline)
+  if not headline.tags or not self.opts.org_use_tag_inheritance then
+    return {}
+  end
+  if vim.tbl_isempty(self.opts.org_tags_exclude_from_inheritance) then
+    return {unpack(headline.tags)}
+  end
+
+  return vim.tbl_filter(function(tag)
+    return not vim.tbl_contains(self.opts.org_tags_exclude_from_inheritance, tag)
+  end, headline.tags)
+end
+
 instance = Config:new()
 return instance

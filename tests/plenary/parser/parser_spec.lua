@@ -2,6 +2,7 @@ local Types = require('orgmode.parser.types')
 local parser = require('orgmode.parser')
 local Range = require('orgmode.parser.range')
 local Date = require('orgmode.objects.date')
+local config = require('orgmode.config')
 
 describe('Parser', function()
   it('should parse filetags headline', function()
@@ -704,5 +705,33 @@ describe('Parser', function()
     }
     local parsed = parser.parse(lines, 'work', '/tmp/my-work.org_archive', true)
     assert.are.same(parsed.is_archive_file, true)
+  end)
+
+  it('should properly handle tag inheritance', function()
+    local lines = {
+      '#+FILETAGS: TOPTAG',
+      '',
+      '* TODO Test orgmode :WORK:MYPROJECT:',
+      '  First level content',
+      '** TODO Level 2 todo :CHILDPROJECT:',
+      '   Second level content',
+      '*** TODO Child todo'
+    }
+    local parsed = parser.parse(lines, 'work', '')
+    assert.are.same({'TOPTAG', 'WORK', 'MYPROJECT'}, parsed:get_item(3).tags)
+    assert.are.same({'TOPTAG', 'WORK', 'MYPROJECT', 'CHILDPROJECT'}, parsed:get_item(5).tags)
+    assert.are.same({'TOPTAG', 'WORK', 'MYPROJECT', 'CHILDPROJECT'}, parsed:get_item(7).tags)
+
+    config:extend({ org_use_tag_inheritance = false })
+    parsed = parser.parse(lines, 'work', '')
+    assert.are.same({'WORK', 'MYPROJECT'}, parsed:get_item(3).tags)
+    assert.are.same({'CHILDPROJECT'}, parsed:get_item(5).tags)
+    assert.are.same({}, parsed:get_item(7).tags)
+
+    config:extend({ org_use_tag_inheritance = true, org_tags_exclude_from_inheritance = {'MYPROJECT'} })
+    parsed = parser.parse(lines, 'work', '')
+    assert.are.same({'TOPTAG', 'WORK', 'MYPROJECT'}, parsed:get_item(3).tags)
+    assert.are.same({'TOPTAG', 'WORK', 'CHILDPROJECT'}, parsed:get_item(5).tags)
+    assert.are.same({'TOPTAG', 'WORK', 'CHILDPROJECT'}, parsed:get_item(7).tags)
   end)
 end)
