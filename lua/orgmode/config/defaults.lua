@@ -52,6 +52,7 @@ return {
       org_global_cycle = '<S-TAB>',
       org_archive_subtree = '<Leader>o$',
       org_set_tags_command = '<Leader>ot',
+      org_toggle_archive_tag = '<Leader>oA',
       -- org_meta_return = '<Leader><CR>', -- Add headling, item or row
       -- org_insert_heading_respect_content = '<Leader>oh', -- Add new headling after current heading block with same level
       -- org_insert_todo_heading = '<Leader>oh', -- Add new todo headling right after current heading with same level

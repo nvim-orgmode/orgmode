@@ -30,5 +30,6 @@ return {
     org_global_cycle = {'org_mappings.global_cycle'},
     org_archive_subtree = {'org_mappings.archive'},
     org_set_tags_command = {'org_mappings.set_tags'},
+    org_toggle_archive_tag = {'org_mappings.toggle_archive_tag'},
   }
 }
