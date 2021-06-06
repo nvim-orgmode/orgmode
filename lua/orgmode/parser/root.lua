@@ -7,6 +7,7 @@ local Range = require('orgmode.parser.range')
 ---@class Root
 ---@field lines string[]
 ---@field content Content[]
+---@field headlines Headline[]
 ---@field items Headline[]|Content[]
 ---@field source_code_filetypes string[]
 ---@field level number
@@ -26,6 +27,7 @@ function Root:new(lines, category, file, is_archive_file)
   local data = {
     lines = lines,
     content = {},
+    headlines = {},
     items = {},
     level = 0,
     category = category or '',
@@ -55,6 +57,9 @@ function Root:add_headline(headline_data)
   local plevel = headline.parent.level
   if plevel > 0 and plevel < headline.level then
     headline.parent:add_headline(headline)
+  end
+  if headline.level == 1 then
+    self:add_root_headline(headline)
   end
   return headline
 end
@@ -96,6 +101,11 @@ function Root:add_root_content(content)
   self:process_root_content(content)
 end
 
+---@param headline Headline
+function Root:add_root_headline(headline)
+  table.insert(self.headlines, headline)
+end
+
 ---@param item Headline|Content
 ---@return Headline
 function Root:get_parent(item)
@@ -135,6 +145,10 @@ end
 ---@return Headline|Content
 function Root:get_item(id)
   return self.items[id]
+end
+
+function Root:get_current_item()
+  return self:get_item(vim.fn.line('.'))
 end
 
 ---@return Headline[]

@@ -56,6 +56,26 @@ function Headline:add_headline(headline)
   return headline
 end
 
+---@return boolean
+function Headline:is_headline()
+  return true
+end
+
+---@return boolean
+function Headline:is_content()
+  return false
+end
+
+---@return boolean
+function Headline:is_first_headline()
+  return self.parent.headlines[1].id == self.id
+end
+
+---@return boolean
+function Headline:is_last_headline()
+  return self.parent.headlines[#self.parent.headlines].id == self.id
+end
+
 function Headline:has_priority()
   return self.priority ~= ''
 end
@@ -64,6 +84,28 @@ function Headline:get_priority_number()
   if self.priority == config.org_priority_highest then return 2000 end
   if self.priority == config.org_priority_lowest then return 0 end
   return 1000
+end
+
+function Headline:get_next_headline_same_level()
+  if self:is_last_headline() then return nil end
+  for _, headline in ipairs(self.parent.headlines) do
+    if headline.id > self.id and headline.level == self.level then
+      return headline
+    end
+  end
+  return nil
+end
+
+function Headline:get_prev_headline_same_level()
+  if self:is_first_headline() then return nil end
+  local len = #self.parent.headlines
+  for i = 1, len do
+    local headline = self.parent.headlines[len + 1 - i]
+    if headline.id < self.id and headline.level == self.level then
+      return headline
+    end
+  end
+  return nil
 end
 
 ---@return boolean

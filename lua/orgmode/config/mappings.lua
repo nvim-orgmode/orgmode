@@ -33,5 +33,11 @@ return {
     org_toggle_archive_tag = {'org_mappings.toggle_archive_tag'},
     org_do_promote = {'org_mappings.promote_heading'},
     org_do_demote = {'org_mappings.demote_heading'},
+    org_meta_return = {'org_mappings.handle_return'},
+    org_insert_heading_respect_content = {'org_mappings.insert_heading_respect_content'},
+    org_insert_todo_heading = {'org_mappings.insert_todo_heading'},
+    org_insert_todo_heading_respect_content = {'org_mappings.insert_todo_heading_respect_content'},
+    org_move_subtree_up = {'org_mappings.move_subtree_up'},
+    org_move_subtree_down = {'org_mappings.move_subtree_down'},
   }
 }

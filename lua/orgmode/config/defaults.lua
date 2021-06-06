@@ -55,10 +55,12 @@ return {
       org_toggle_archive_tag = '<Leader>oA',
       org_do_promote = '<<',
       org_do_demote = '>>',
-      -- org_meta_return = '<Leader><CR>', -- Add headling, item or row
-      -- org_insert_heading_respect_content = '<Leader>oh', -- Add new headling after current heading block with same level
-      -- org_insert_todo_heading = '<Leader>oh', -- Add new todo headling right after current heading with same level
-      -- org_insert_todo_heading_respect_content = '<Leader>oh', -- Add new todo headling after current heading block on same level
+      org_meta_return = '<Leader><CR>', -- Add headling, item or row
+      org_insert_heading_respect_content = '<Leader>oih', -- Add new headling after current heading block with same level
+      org_insert_todo_heading = '<Leader>oiT', -- Add new todo headling right after current heading with same level
+      org_insert_todo_heading_respect_content = '<Leader>oit', -- Add new todo headling after current heading block on same level
+      org_move_subtree_up = '<Leader>oK',
+      org_move_subtree_down = '<Leader>oJ',
     }
   }
 }

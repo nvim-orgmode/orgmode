@@ -3,6 +3,7 @@ local Date = require('orgmode.objects.date')
 local TodoState = require('orgmode.objects.todo_state')
 local utils = require('orgmode.utils')
 local Files = require('orgmode.parser.files')
+local config = require('orgmode.config')
 
 ---@class OrgMappings
 ---@field files OrgFiles
@@ -187,6 +188,68 @@ function OrgMappings:demote_heading()
       vim.fn.setline(content.range.start_line, content.line:sub(2))
     end
   end
+end
+
+function OrgMappings:handle_return(suffix)
+  suffix = suffix or ''
+  local item = Files.get_current_file():get_current_item()
+  if item:is_headline() then
+    vim.fn.append(vim.fn.line('.'), {'', string.rep('*', item.level)..' '..suffix})
+    vim.fn.cursor(vim.fn.line('.') + 2, 0)
+    return vim.cmd[[startinsert!]]
+  end
+  local checkbox = item:is_checkbox()
+  if checkbox then
+    vim.fn.append(vim.fn.line('.'), checkbox..' [ ] ')
+    vim.fn.cursor(vim.fn.line('.') + 1, 0)
+    return vim.cmd[[startinsert!]]
+  end
+  local plain_list = item:is_plain_list()
+  if plain_list then
+    vim.fn.append(vim.fn.line('.'), plain_list)
+    vim.fn.cursor(vim.fn.line('.') + 1, 0)
+    return vim.cmd[[startinsert!]]
+  end
+end
+
+function OrgMappings:insert_heading_respect_content(suffix)
+  suffix = suffix or ''
+  local item = Files.get_current_file():get_closest_headline()
+  local line = {string.rep('*', item.level)..' '..suffix, ''}
+  if #item.content > 0 and vim.trim(item.content[#item.content].line) ~= '' then
+    table.insert(line, 1, '')
+  end
+  vim.fn.append(item.range.end_line, line)
+  vim.fn.cursor(item.range.end_line + #line - 1, 0)
+  return vim.cmd[[startinsert!]]
+end
+
+function OrgMappings:insert_todo_heading_respect_content()
+  return self:insert_heading_respect_content(config:get_todo_keywords().TODO[1]..' ')
+end
+
+function OrgMappings:insert_todo_heading()
+  local item = Files.get_current_file():get_closest_headline()
+  vim.fn.cursor(item.range.start_line, 0)
+  return self:handle_return(config:get_todo_keywords().TODO[1]..' ')
+end
+
+function OrgMappings:move_subtree_up()
+  local item = Files.get_current_file():get_closest_headline()
+  local prev_headline = item:get_prev_headline_same_level()
+  if not prev_headline then
+    return utils.echo_warning('Cannot move past superior level.')
+  end
+  vim.cmd(string.format(':%d,%dmove %d', item.range.start_line, item.range.end_line, prev_headline.range.start_line - 1))
+end
+
+function OrgMappings:move_subtree_down()
+  local item = Files.get_current_file():get_closest_headline()
+  local next_headline = item:get_next_headline_same_level()
+  if not next_headline then
+    return utils.echo_warning('Cannot move past superior level.')
+  end
+  vim.cmd(string.format(':%d,%dmove %d', item.range.start_line, item.range.end_line, next_headline.range.end_line))
 end
 
 ---@param direction string

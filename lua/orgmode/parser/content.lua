@@ -42,6 +42,24 @@ function Content:is_planning()
 end
 
 ---@return boolean
+function Content:is_content()
+  return true
+end
+
+---@return boolean
+function Content:is_headline()
+  return false
+end
+
+function Content:is_plain_list()
+  return self.line:match('^%s*[%+%-]%s*')
+end
+
+function Content:is_checkbox()
+  return self.line:match('^(%s*[%+%-])%s*%[[%sXx%-]?%]')
+end
+
+---@return boolean
 function Content:is_drawer()
   return self.type == Types.DRAWER
 end
