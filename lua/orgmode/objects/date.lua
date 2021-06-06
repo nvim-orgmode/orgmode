@@ -1,6 +1,7 @@
 -- TODO
 -- Support date ranges <date>--<date>
 -- Support time ranges <date time-time>
+-- Support diary format and format without short date name
 local spans = { d = 'day', m = 'month', y = 'year', h = 'hour', w = 'week' }
 local config = require('orgmode.config')
 local utils = require('orgmode.utils')
@@ -36,7 +37,6 @@ local function set_date_opts(source, target)
   return target
 end
 
--- TODO: Support diary format and format without short date name
 ---@param data table
 function Date:new(data)
   data = data or {}
