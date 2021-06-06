@@ -301,6 +301,11 @@ describe('Parser', function()
       start_line = 1,
       end_line = 12
     }), parsed.range)
+    assert.are.same(4, #parsed.headlines)
+    assert.are.same(parsed.headlines[1], parsed.items[2])
+    assert.are.same(parsed.headlines[2], parsed.items[7])
+    assert.are.same(parsed.headlines[3], parsed.items[9])
+    assert.are.same(parsed.headlines[4], parsed.items[12])
   end)
 
   it('should parse headline and its planning dates', function()
