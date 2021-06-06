@@ -31,5 +31,7 @@ return {
     org_archive_subtree = {'org_mappings.archive'},
     org_set_tags_command = {'org_mappings.set_tags'},
     org_toggle_archive_tag = {'org_mappings.toggle_archive_tag'},
+    org_do_promote = {'org_mappings.promote_heading'},
+    org_do_demote = {'org_mappings.demote_heading'},
   }
 }
