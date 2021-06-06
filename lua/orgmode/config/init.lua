@@ -32,10 +32,19 @@ end
 
 ---@return string[]
 function Config:get_all_files()
-  if not self.org_agenda_files or self.org_agenda_files == '' then
+  if not self.org_agenda_files or self.org_agenda_files == '' or (type(self.org_agenda_files) == 'table' and vim.tbl_isempty(self.org_agenda_files)) then
     return {}
   end
-  return vim.fn.glob(vim.fn.fnamemodify(self.org_agenda_files, ':p'), 0, 1)
+  local files = self.org_agenda_files
+  if type(files) ~= 'table' then
+    files = { files }
+  end
+
+  local all_files = vim.tbl_map(function(file)
+    return vim.fn.glob(vim.fn.fnamemodify(file, ':p'), 0, 1)
+  end, files)
+
+  return vim.tbl_flatten(all_files)
 end
 
 ---@return number

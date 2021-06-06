@@ -381,7 +381,6 @@ function Agenda:prompt()
   }, 'Press key for an agenda command')
 end
 
--- TODO: Setup rendering according to grid
 function Agenda:agenda()
   local dates = self.from:get_range_until(self.to)
   local agenda_days = {}
