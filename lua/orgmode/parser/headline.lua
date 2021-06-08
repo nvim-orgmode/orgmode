@@ -309,8 +309,43 @@ function Headline:get_valid_dates()
   end, self.dates)
 end
 
+--- Get list of tags that are directly applied to this headline
+---@return string
 function Headline:get_own_tags()
   return utils.parse_tags_string(self.line:match(':.*:$'))
+end
+
+function Headline:demote(amount, promote_child_headlines)
+  amount = amount or 1
+  promote_child_headlines = promote_child_headlines or false
+  vim.fn.setline(self.range.start_line, string.rep('*', amount)..self.line)
+  for _, content in ipairs(self.content) do
+    vim.fn.setline(content.range.start_line, string.rep(' ', amount)..content.line)
+  end
+  if promote_child_headlines then
+    for _, headline in ipairs(self.headlines) do
+      headline:demote(amount, true)
+    end
+  end
+end
+
+function Headline:promote(amount, demote_child_headlines)
+  amount = amount or 1
+  demote_child_headlines = demote_child_headlines or false
+  if self.level == 1 then
+    return utils.echo_warning('Cannot demote top level heading.')
+  end
+  vim.fn.setline(self.range.start_line, self.line:sub(1 + amount))
+  for _, content in ipairs(self.content) do
+    if vim.trim(content.line:sub(1, amount)) == '' then
+      vim.fn.setline(content.range.start_line, content.line:sub(1 + amount))
+    end
+  end
+  if demote_child_headlines then
+    for _, headline in ipairs(self.headlines) do
+      headline:promote(amount, true)
+    end
+  end
 end
 
 function Headline:_parse_line()

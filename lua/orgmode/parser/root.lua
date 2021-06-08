@@ -236,12 +236,18 @@ function Root:find_headline_by_title(title)
   return headlines[1]
 end
 
+---@param id? string
+---@return Headline
 function Root:get_closest_headline(id)
   local item = self:get_item(id or vim.fn.line('.'))
   if item.type ~= Types.HEADLINE then
     item = item.parent
   end
   return item
+end
+
+function Root:get_headline_lines(headline)
+  return {unpack(self.lines, headline.range.start_line, headline.range.end_line)}
 end
 
 function Root:_add_source_block(content)

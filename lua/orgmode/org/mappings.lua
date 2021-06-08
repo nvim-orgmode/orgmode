@@ -171,23 +171,12 @@ end
 
 function OrgMappings:promote_heading()
   local item = Files.get_current_file():get_closest_headline()
-  vim.fn.setline(item.range.start_line, '*'..item.line)
-  for _, content in ipairs(item.content) do
-    vim.fn.setline(content.range.start_line, ' '..content.line)
-  end
+  return item:promote(1, true)
 end
 
 function OrgMappings:demote_heading()
   local item = Files.get_current_file():get_closest_headline()
-  if item.level == 1 then
-    return utils.echo_warning('Cannot demote top level heading.')
-  end
-  vim.fn.setline(item.range.start_line, item.line:sub(2))
-  for _, content in ipairs(item.content) do
-    if content.line:sub(1, 1) == ' ' then
-      vim.fn.setline(content.range.start_line, content.line:sub(2))
-    end
-  end
+  return item:demote(1, true)
 end
 
 function OrgMappings:handle_return(suffix)
