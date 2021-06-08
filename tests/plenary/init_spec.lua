@@ -9,6 +9,7 @@ describe('Init', function()
     local todo_file = vim.fn.getcwd()..'/tests/plenary/fixtures/todo.org'
     local todo_archive_file = vim.fn.getcwd()..'/tests/plenary/fixtures/todo.org_archive'
     local refile_file = vim.fn.getcwd()..'/tests/plenary/fixtures/refile.org'
+    local txt_file = vim.fn.getcwd()..'/tests/plenary/fixtures/text_notes.txt'
     assert.is.Nil(org.files)
     assert.is.Nil(org.agenda)
     assert.is.Nil(org.capture)
@@ -19,6 +20,7 @@ describe('Init', function()
     assert.is.Not.Nil(org.agenda)
     assert.is.Not.Nil(org.capture)
     assert.is.Not.Nil(org.org_mappings)
+    assert.is.Nil(org.files.get(txt_file))
     assert.are.same('todo', org.files.get(todo_file).category)
     assert.are.same(11, #org.files.get(todo_file).items)
     assert.are.same(false, org.files.get(todo_file).is_archive_file)

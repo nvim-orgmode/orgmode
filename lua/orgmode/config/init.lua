@@ -40,7 +40,13 @@ function Config:get_all_files()
     return vim.fn.glob(vim.fn.fnamemodify(file, ':p'), 0, 1)
   end, files)
 
-  return vim.tbl_flatten(all_files)
+
+  all_files = vim.tbl_flatten(all_files)
+
+  return vim.tbl_filter(function(file)
+    local ext = vim.fn.fnamemodify(file, ':e')
+    return ext == 'org' or ext == 'org_archive'
+  end, all_files)
 end
 
 ---@return number
