@@ -19,10 +19,6 @@ function Config:__index(key)
   return rawget(getmetatable(self), key)
 end
 
-function Config:get(opt, default)
-  return self.opts[opt] or default
-end
-
 ---@param opts table
 ---@return Config
 function Config:extend(opts)

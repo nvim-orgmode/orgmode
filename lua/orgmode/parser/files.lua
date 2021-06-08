@@ -37,7 +37,7 @@ function Files.get_tags()
 end
 
 ---@param file string
-function Files.reload(file)
+function Files.reload(file, callback)
   if file then
     local category = vim.fn.fnamemodify(file, ':t:r')
     local is_archived = config:is_archive_file(file)
@@ -45,9 +45,12 @@ function Files.reload(file)
       if err then return end
       Files.files[file] = parser.parse(result, category, file, is_archived)
       Files._build_tags()
+      if callback then
+        callback()
+      end
     end)
   end
-  return Files.load()
+  return Files.load(callback)
 end
 
 function Files.load(callback)

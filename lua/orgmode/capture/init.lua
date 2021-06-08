@@ -1,6 +1,5 @@
 _G.org.capture = {}
 local utils = require('orgmode.utils')
-local Types = require('orgmode.parser.types')
 local config = require('orgmode.config')
 local Files = require('orgmode.parser.files')
 local Templates = require('orgmode.capture.templates')
@@ -13,7 +12,7 @@ vim.cmd[[augroup END]]
 ---@field files OrgFiles
 local Capture = {}
 
-function Capture:new(opts)
+function Capture:new()
   local data = {}
   data.templates = Templates:new()
   setmetatable(data, self)
@@ -62,8 +61,8 @@ function Capture:refile(confirm)
       return utils.echo_info('Canceled.')
     end
   end
-  local lines = table.concat(vim.api.nvim_buf_get_lines(0, 0, -1, true), '\n')..'\n'
-  self:_refile_to_end(file, lines)
+  -- TODO: Parse refile content as org file and update refile destination to point to headline or root
+  self:_refile_to_end(file, vim.api.nvim_buf_get_lines(0, 0, -1, true))
   vim.cmd[[autocmd! OrgCapture BufWipeout <buffer>]]
   vim.cmd[[silent! wq]]
 end
@@ -71,10 +70,10 @@ end
 ---Triggered when refiling to destination from capture buffer
 function Capture:refile_to_destination()
   local template = vim.api.nvim_buf_get_var(0, 'org_template')
-  local lines_list = vim.api.nvim_buf_get_lines(0, 0, -1, true)
+  local lines = vim.api.nvim_buf_get_lines(0, 0, -1, true)
   local default_file = vim.fn.fnamemodify(template.target or config.org_default_notes_file, ':p')
-
-  self:_refile_content_with_fallback(lines_list, default_file)
+  -- TODO: Parse refile content as org file and update refile destination to point to headline or root
+  self:_refile_content_with_fallback(lines, default_file)
   vim.cmd[[autocmd! OrgCapture BufWipeout <buffer>]]
   vim.cmd[[silent! wq]]
 end
@@ -82,31 +81,31 @@ end
 ---Triggered from org file when we want to refile headline
 function Capture:refile_headline_to_destination()
   local agenda_file = Files.get_current_file()
-  local item = agenda_file.items[vim.fn.line('.')]
-  if item.type ~= Types.HEADLINE then
-    item = agenda_file.items[item.parent]
-  end
-  local lines = {unpack(agenda_file.lines, item.range.start_line, item.range.end_line)}
-  self:_refile_content_with_fallback(lines, nil)
-  vim.cmd(string.format(':silent %d,%ddelete', item.range.start_line, item.range.end_line))
+  local item = agenda_file:get_closest_headline()
+  local lines = agenda_file:get_headline_lines(item)
+  return self:_refile_content_with_fallback(lines, nil, item)
 end
 
+---@param file Root
+---@param item string
+---@param archive_file string
+---@return string
 function Capture:refile_file_headline_to_archive(file, item, archive_file)
-  local lines = {unpack(file.lines, item.range.start_line, item.range.end_line)}
-  lines = table.concat(lines, '\n')..'\n'
-  self:_refile_to_end(archive_file, lines, string.format('Archived to %s', archive_file))
-  vim.cmd(string.format(':silent %d,%ddelete', item.range.start_line, item.range.end_line))
+  local lines = file:get_headline_lines(item)
+  return self:_refile_to_end(archive_file, lines, item, string.format('Archived to %s', archive_file))
 end
 
-function Capture:_refile_to_end(file, lines, message)
-  if not file then return end
-  utils.writefile(file, lines, 'a')
-  Files.reload(file)
-  return utils.echo_info(message or string.format('Wrote %s', file))
+function Capture:_refile_to_end(file, lines, item, message)
+  local refiled = self:_refile_to(file, lines, item, '$')
+  if not refiled then return false end
+  utils.echo_info(message or string.format('Wrote %s', file))
+  return true
 end
 
-function Capture:_refile_content_with_fallback(lines_list, fallback_file)
-  local lines = table.concat(lines_list, '\n')..'\n'
+---@param lines string[]
+---@param fallback_file string
+---@return string
+function Capture:_refile_content_with_fallback(lines, fallback_file, item)
   local default_file = fallback_file and fallback_file ~= '' and vim.fn.fnamemodify(fallback_file, ':p') or nil
 
   local valid_destinations = {}
@@ -118,33 +117,55 @@ function Capture:_refile_content_with_fallback(lines_list, fallback_file)
   destination = vim.split(destination, '/', true)
 
   if not valid_destinations[destination[1]] then
-    return self:_refile_to_end(default_file, lines)
+    return self:_refile_to_end(default_file, lines, item)
   end
 
   local destination_file = valid_destinations[destination[1]]
 
   if not destination[2] or destination[2] == '' then
-    return self:_refile_to_end(destination_file, lines)
+    return self:_refile_to_end(destination_file, lines, item)
   end
 
   local agenda_file = Files.get(destination_file)
   local headline = agenda_file:find_headline_by_title(destination[2])
   if not headline then
-    return self._refile_to_end(destination_file, lines)
+    return self._refile_to_end(destination_file, lines, item)
   end
 
-  -- TODO:
-  -- * Keep it in sync by tracking the exact position of headline/item
-  -- * Nest under headline with bigger level
-  local content = agenda_file.lines
-  local start = headline.range.end_line
-  for i, line in ipairs(lines_list) do
-    table.insert(content, start + i, line)
+  if item.level <= headline.level then
+    item:demote(headline.level - item.level + 1, true)
   end
-  local lines_str = table.concat(content, '\n')..'\n'
-  utils.writefile(destination_file, lines_str, 'w')
-  Files.reload(destination_file)
-  return utils.echo_info(string.format('Wrote %s', destination_file))
+  local refiled = self:_refile_to(destination_file, lines, item, headline.range.end_line)
+  if not refiled then return false end
+  utils.echo_info(string.format('Wrote %s', destination_file))
+  return true
+end
+
+function Capture:_refile_to(file, lines, item, destination_line)
+  if not file then return false end
+
+  local is_same_file = file == vim.api.nvim_buf_get_name(0)
+
+  if is_same_file and item then
+    vim.cmd(string.format('silent %d,%d move %s', item.range.start_line, item.range.end_line, tostring(destination_line)))
+    return true
+  end
+
+  if not is_same_file then
+    vim.cmd('sp '..file)
+  end
+
+  vim.fn.append(destination_line, lines)
+
+  if not is_same_file then
+    vim.cmd('wq!')
+  end
+
+  if item then
+    vim.cmd(string.format('silent %d,%d delete', item.range.start_line, item.range.end_line))
+  end
+
+  return true
 end
 
 function Capture:autocomplete_refile(arg_lead)
