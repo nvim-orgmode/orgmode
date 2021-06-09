@@ -13,12 +13,13 @@ end
 function M.parse_hl_fg_color(hlgroup)
    local bg = vim.fn.synIDattr(vim.fn.synIDtrans(vim.fn.hlID(hlgroup)), 'bg', 'gui')
    local fg = vim.fn.synIDattr(vim.fn.synIDtrans(vim.fn.hlID(hlgroup)), 'fg', 'gui')
+   local normal_bg = vim.fn.synIDattr(vim.fn.synIDtrans(vim.fn.hlID('Normal')), 'bg', 'gui')
    local reverse = vim.fn.synIDattr(vim.fn.synIDtrans(vim.fn.hlID(hlgroup)), 'reverse', 'gui')
    -- If only one color defined return that one
    if bg == '' and fg ~= '' then return fg end
    if fg == '' and bg ~= '' then return bg end
 
-   if reverse == '' then
+   if reverse == '' and bg ~= normal_bg then
       return bg
    end
    return fg
