@@ -1,8 +1,8 @@
 local Highlights = require('orgmode.colors.highlights')
 local hl_map = Highlights.get_agenda_hl_map()
 local padding = '...... '
--- TODO: Check if there is a configuration for this
-local FUTURE_DEADLINE_AS_WARNING_DAYS = 7
+local config = require('orgmode.config')
+local FUTURE_DEADLINE_AS_WARNING_DAYS = math.floor(config.org_deadline_warning_days / 2)
 
 ---@class AgendaItem
 ---@field date Date
