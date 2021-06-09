@@ -145,6 +145,7 @@ function Capture:_refile_to(file, lines, item, destination_line)
   if not file then return false end
 
   local is_same_file = file == vim.api.nvim_buf_get_name(0)
+  local cur_win = vim.api.nvim_get_current_win()
 
   if is_same_file and item then
     vim.cmd(string.format('silent %d,%d move %s', item.range.start_line, item.range.end_line, tostring(destination_line)))
@@ -152,13 +153,14 @@ function Capture:_refile_to(file, lines, item, destination_line)
   end
 
   if not is_same_file then
-    vim.cmd('sp '..file)
+    vim.cmd('topleft split '..file)
   end
 
   vim.fn.append(destination_line, lines)
 
   if not is_same_file then
     vim.cmd('wq!')
+    vim.api.nvim_set_current_win(cur_win)
   end
 
   if item then
