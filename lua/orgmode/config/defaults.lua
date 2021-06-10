@@ -1,14 +1,17 @@
 return {
   org_agenda_files = '',
   org_default_notes_file = '',
-  org_todo_keywords = {'TODO', 'DONE'},
-  org_agenda_skip_scheduled_if_done = false, -- hide DONE items if this is true
+  org_todo_keywords = {'TODO', '|', 'DONE'},
   org_deadline_warning_days = 14,
   org_agenda_span = 'week', -- day/week/month/year/number of days
   org_agenda_start_on_weekday = 1,
   org_agenda_start_day = nil, -- start from today + this modifier
-  org_agenda_templates = {},
-  org_refile_targets = {},
+  org_agenda_templates = {
+    t = {
+      description = 'Task',
+      template = '* TODO %?\n  %u',
+    }
+  },
   org_priority_highest = 'A',
   org_priority_default = 'B',
   org_priority_lowest = 'C',
@@ -38,7 +41,7 @@ return {
     capture = {
       org_capture_finalize = '<C-c>',
       org_capture_refile = '<Leader>or',
-      org_capture_kill = '<Leader>k'
+      org_capture_kill = '<Leader>ok'
     },
     org = {
       org_capture_refile = '<Leader>or',
