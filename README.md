@@ -19,6 +19,8 @@ require('orgmode').setup({
 })
 ```
 
+Link to detailed documentation: [DOCS](DOCS.md)
+
 ## Thanks to
 * [@dhruvasagar](https://github.com/dhruvasagar) and his [vim-dotoo](https://github.com/dhruvasagar/vim-dotoo) plugin
   that got me started using orgmode. Without him this plugin would not happen.

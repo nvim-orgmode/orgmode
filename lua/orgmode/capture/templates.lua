@@ -13,15 +13,10 @@ local expansions = {
 ---@field templates table<string, table>
 local Templates = {}
 
+-- TODO Introduce type
 function Templates:new()
   local opts = {}
-  opts.templates = vim.tbl_extend('force', {
-    t = {
-      description = 'Task',
-      template = '* TODO %?\n  %u',
-      type = 'entry', -- TODO
-    }
-  }, config.org_agenda_templates)
+  opts.templates = config.org_agenda_templates
   setmetatable(opts, self)
   self.__index = self
   return opts
