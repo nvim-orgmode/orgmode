@@ -4,6 +4,7 @@ local TodoState = require('orgmode.objects.todo_state')
 local utils = require('orgmode.utils')
 local Files = require('orgmode.parser.files')
 local config = require('orgmode.config')
+local Help = require('orgmode.objects.help')
 
 ---@class OrgMappings
 ---@field files OrgFiles
@@ -239,6 +240,10 @@ function OrgMappings:move_subtree_down()
     return utils.echo_warning('Cannot move past superior level.')
   end
   vim.cmd(string.format(':%d,%dmove %d', item.range.start_line, item.range.end_line, next_headline.range.end_line))
+end
+
+function OrgMappings:show_help()
+  return Help.show()
 end
 
 ---@param direction string

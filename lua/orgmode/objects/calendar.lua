@@ -32,15 +32,6 @@ function Calendar.open()
     col = vim.o.columns / 2 - 20,
   }
 
-  if vim.g.loaded_indent_blankline then
-    local exclude = vim.g.indent_blankline_bufname_exclude or {}
-    if not vim.tbl_contains(exclude, 'orgcalendar') then
-      table.insert(exclude, 'orgcalendar')
-    end
-    vim.g.indent_blankline_bufname_exclude = exclude
-  end
-
-
   Calendar.buf = vim.api.nvim_create_buf(false, true)
   vim.api.nvim_buf_set_name(Calendar.buf, 'orgcalendar')
   Calendar.win = vim.api.nvim_open_win(Calendar.buf, true, opts)
@@ -53,6 +44,7 @@ function Calendar.open()
   vim.api.nvim_win_set_option(Calendar.win, 'wrap', false)
   vim.api.nvim_win_set_option(Calendar.win, 'scrolloff', 0)
   vim.api.nvim_win_set_option(Calendar.win, 'sidescrolloff', 0)
+  vim.api.nvim_buf_set_var(Calendar.buf, 'indent_blankline_enabled', false)
 
   utils.buf_keymap(Calendar.buf, 'n', 'f', '<cmd>lua require("orgmode.objects.calendar").forward()<CR>')
   utils.buf_keymap(Calendar.buf, 'n', 'b', '<cmd>lua require("orgmode.objects.calendar").backward()<CR>')
