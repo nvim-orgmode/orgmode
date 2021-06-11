@@ -34,14 +34,16 @@ return {
       org_agenda_year_view = 'vy',
       org_agenda_quit = 'q',
       org_agenda_switch_to = '<CR>',
-      org_agenda_goto = {'<TAB>', '<RightMouse>'},
+      org_agenda_goto = {'<TAB>'},
       org_agenda_goto_date = 'J',
       org_agenda_redo = 'r',
+      org_show_help = '?',
     },
     capture = {
       org_capture_finalize = '<C-c>',
       org_capture_refile = '<Leader>or',
-      org_capture_kill = '<Leader>ok'
+      org_capture_kill = '<Leader>ok',
+      org_show_help = '?',
     },
     org = {
       org_capture_refile = '<Leader>or',
@@ -64,6 +66,7 @@ return {
       org_insert_todo_heading_respect_content = '<Leader>oit', -- Add new todo headling after current heading block on same level
       org_move_subtree_up = '<Leader>oK',
       org_move_subtree_down = '<Leader>oJ',
+      org_show_help = '?',
     }
   }
 }

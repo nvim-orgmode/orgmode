@@ -239,7 +239,7 @@ Close agenda
 *mapped to*: `<CR>`
 Open selected agenda item in the same buffer
 #### `org_agenda_goto`
-*mapped to*: `{'<TAB>', '<RightMouse>'}`
+*mapped to*: `{'<TAB>'}`
 Open selected agenda item in split window
 #### `org_agenda_goto_date`
 *mapped to*: `J`
