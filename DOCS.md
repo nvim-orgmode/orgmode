@@ -296,7 +296,7 @@ These mappings live under `mappings.capture`, and can be changed like this:
 ### Org mappings
 
 Mappings for `org` files.
-#### **org_capture_refile**
+#### **org_refile**
 *mapped to*: `<Leader>or`
 Refile current headline to destination
 #### **org_increase_date**

@@ -3,7 +3,7 @@ local config = require('orgmode.config')
 
 local helps = {
   org = {
-    { key = 'org_capture_refile', description = 'Refile subtree under cursor to destination' },
+    { key = 'org_refile', description = 'Refile subtree under cursor to destination' },
     { key = 'org_increase_date', description = 'Increase date under cursor by 1 day' },
     { key = 'org_decrease_date', description = 'Decrease date under cursor by 1 day' },
     { key = 'org_change_date', description = 'Change date under cursor via calendar popup' },
