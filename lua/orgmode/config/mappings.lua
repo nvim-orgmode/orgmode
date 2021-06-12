@@ -12,13 +12,13 @@ return {
     org_agenda_goto = {'agenda.goto_item'},
     org_agenda_goto_date = {'agenda.goto_date'},
     org_agenda_redo = {'agenda.redo'},
-    org_show_help = {'org_mappings.show_help'},
+    org_agenda_show_help = {'org_mappings.show_help'},
   },
   capture = {
     org_capture_finalize = {'capture.refile'},
     org_capture_refile = {'capture.refile_to_destination'},
     org_capture_kill = {'capture.kill'},
-    org_show_help = {'org_mappings.show_help'},
+    org_capture_show_help = {'org_mappings.show_help'},
   },
   org = {
     org_refile = {'capture.refile_headline_to_destination'},

@@ -37,13 +37,13 @@ return {
       org_agenda_goto = {'<TAB>'},
       org_agenda_goto_date = 'J',
       org_agenda_redo = 'r',
-      org_show_help = '?',
+      org_agenda_show_help = '?',
     },
     capture = {
       org_capture_finalize = '<C-c>',
       org_capture_refile = '<Leader>or',
       org_capture_kill = '<Leader>ok',
-      org_show_help = '?',
+      org_capture_show_help = '?',
     },
     org = {
       org_refile = '<Leader>or',

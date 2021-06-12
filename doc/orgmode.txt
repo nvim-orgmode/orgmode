@@ -41,10 +41,12 @@ CONTENTS                                                        *orgmode-content
             1.2.2.10. org_agenda_goto....................|orgmode-org_agenda_goto|
             1.2.2.11. org_agenda_goto_date..........|orgmode-org_agenda_goto_date|
             1.2.2.12. org_agenda_redo....................|orgmode-org_agenda_redo|
+            1.2.2.13. org_agenda_show_help..........|orgmode-org_agenda_show_help|
         1.2.3. Capture mappings.........................|orgmode-capture_mappings|
             1.2.3.1. org_capture_finalize...........|orgmode-org_capture_finalize|
             1.2.3.2. org_capture_refile...............|orgmode-org_capture_refile|
             1.2.3.3. org_capture_kill...................|orgmode-org_capture_kill|
+            1.2.3.4. org_capture_show_help.........|orgmode-org_capture_show_help|
         1.2.4. Org mappings.................................|orgmode-org_mappings|
             1.2.4.1. org_refile...............................|orgmode-org_refile|
             1.2.4.2. org_increase_date.................|orgmode-org_increase_date|
@@ -66,6 +68,7 @@ CONTENTS                                                        *orgmode-content
             1.2.4.18. org_insert_todo_heading_respect_content.|orgmode-org_insert_todo_heading_respect_content|
             1.2.4.19. org_move_subtree_up............|orgmode-org_move_subtree_up|
             1.2.4.20. org_move_subtree_down........|orgmode-org_move_subtree_down|
+            1.2.4.21. org_show_help........................|orgmode-org_show_help|
 
 ================================================================================
 TABLE OF CONTENT                                        *orgmode-table_of_content*
@@ -75,10 +78,10 @@ TABLE OF CONTENT                                        *orgmode-table_of_conten
     2.  Agenda settings (#global-settings)
     3.  Tags settings (#global-settings)
 2.  Mappings (#mappings)
-    1.  Global Mappings (#global-mappings)
-    2.  Agenda Mappings (#agenda-mappings)
-    3.  Capture Mappings (#capture-mappings)
-    4.  Org Mappings (#org-mappings)
+    1.  Global mappings (#global-mappings)
+    2.  Agenda mappings (#agenda-mappings)
+    3.  Capture mappings (#capture-mappings)
+    4.  Org mappings (#org-mappings)
 
 --------------------------------------------------------------------------------
 SETTINGS                                                        *orgmode-settings*
@@ -358,6 +361,11 @@ ORG_AGENDA_REDO                                          *orgmode-org_agenda_red
 mapped to: `r`
 Reload all org files and refresh current agenda view
 
+ORG_AGENDA_SHOW_HELP                                *orgmode-org_agenda_show_help*
+
+mapped to: `?`
+Show help popup with mappings
+
 These mappings live under `mappings.agenda`, and can be changed like this:
 >
     require('orgmode').setup({
@@ -391,6 +399,11 @@ ORG_CAPTURE_KILL                                        *orgmode-org_capture_kil
 
 mapped to: `<Leader>ok`
 Close capture window without saving anything
+
+ORG_CAPTURE_SHOW_HELP                              *orgmode-org_capture_show_help*
+
+mapped to: `?`
+Show help popup with mappings
 
 These mappings live under `mappings.capture`, and can be changed like this:
 >
@@ -509,4 +522,9 @@ ORG_MOVE_SUBTREE_DOWN                              *orgmode-org_move_subtree_dow
 
 mapped to: `<Leader>oJ`
 Move current headline + it's content down by one headline
+
+ORG_SHOW_HELP                                              *orgmode-org_show_help*
+
+mapped to: `?`
+Show help popup with mappings
 
