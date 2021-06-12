@@ -1,4 +1,4 @@
-# Orgmode.nvim
+# Orgmode.nvim (Beta)
 
 Orgmode clone written in Lua for Neovim 0.5.
 
@@ -23,7 +23,7 @@ require('orgmode').setup({
 * **Open capture prompt**: <kbd>\<Leader\>oc</kbd>
 * In any orgmode buffer press <kbd>?</kbd> for help
 
-#### Features (TL;DR):
+### Features (TL;DR):
 * Agenda view
 * Search by tags/keyword
 * Repeatable dates
@@ -38,7 +38,7 @@ require('orgmode').setup({
   * Change tags
   * Toggle checkbox state
 
-#### Features (Detailed breakdown):
+### Features (Detailed breakdown):
 * Agenda prompt:
   * Agenda view (<kbd>a</kbd>):
     * Ability to show daily(<kbd>vd</kbd>)/weekly(<kbd>vw</kbd>)/monthly(<kbd>vm</kbd>)/yearly(<kbd>vy</kbd>) agenda
@@ -52,6 +52,7 @@ require('orgmode').setup({
     * Properly lists tasks according to defined dates (DEADLINE,SCHEDULED,Plain date)
     * Navigate forward (<kbd>f</kbd>)/backward(<kbd>b</kbd>) or jump to specific date (<kbd>J</kbd>)
     * Go to task under cursor in current window(<kbd>\<CR\></kbd>) or other window(<kbd>\<TAB\></kbd>)
+    * Print category from ":CATEGORY:" property if defined
   * List tasks that have "TODO" state (<kbd>t</kbd>):
   * Find headlines matching tag(s) (<kbd>m</kbd>):
   * Search for headlines (and it's content) for a query (<kbd>s</kbd>):
@@ -79,8 +80,39 @@ require('orgmode').setup({
   * Insert TODO heading after current heading and it's content: <kbd>\<Leader\>oit</kbd>
   * Move headline up: <kbd>\<Leader\>oK</kb>
   * Move headline down: <kbd>\<Leader\>oJ</kb>
+  * Highlighted code blocks (`#+BEGIN_SRC filetype`)
 
 Link to detailed documentation: [DOCS](DOCS.md)
+
+## Development
+
+### Tests
+ To run tests, [plenary.nvim](https://github.com/nvim-lua/plenary.nvim) is necessary. Once installed, run:
+```
+make test
+```
+
+### Documentation
+Vim documentation is auto generated from [DOCS.md](DOCS.md) file with [md2vim](https://github.com/kristijanhusak/md2vim).
+
+### Parser
+Parser is written manually from scratch. It doesn't follow any parser writing patterns (AFAIK), because I don't have
+much experience with those. Any help on this topic is appreciated.
+
+## Plans
+* [ ] Add autocompletion (omnifunc + nvim-compe)
+* [ ] Support searching by properties
+* [ ] Add better support for hyperlinks
+* [ ] Improve checkbox hierarchy
+* [ ] Support todo keyword faces
+* [ ] Support clocking work time
+* [ ] Improve folding
+* [ ] Support date and time ranges
+* [ ] Support exporting and publishing (via existing emacs tools)
+* [ ] Support archiving to specific headline
+* [ ] Support tables
+* [ ] Support diary format dates
+* [ ] Support evaluating code blocks
 
 ## Thanks to
 * [@dhruvasagar](https://github.com/dhruvasagar) and his [vim-dotoo](https://github.com/dhruvasagar/vim-dotoo) plugin
