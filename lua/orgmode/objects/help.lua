@@ -1,51 +1,50 @@
 local utils = require('orgmode.utils')
 local config = require('orgmode.config')
 
--- TODO: Sort
 local helps = {
   org = {
-    org_capture_refile = 'Refile subtree under cursor to destination',
-    org_increase_date = 'Increase date under cursor by 1 day',
-    org_decrease_date = 'Decrease date under cursor by 1 day',
-    org_change_date = 'Change date under cursor via calendar popup',
-    org_todo = 'Forward change TODO state of current headline',
-    org_todo_prev = 'Backward change TODO state of current headline',
-    org_toggle_checkbox = 'Toggle checkbox state',
-    org_cycle = 'Toggle folding on current headline',
-    org_global_cycle = 'Toggle folding in whole file',
-    org_archive_subtree = 'Archive subtree to archive file',
-    org_set_tags_command = 'Change tasg of current headline',
-    org_toggle_archive_tag = 'toggle "ARCHIVE" tag on current headline',
-    org_do_promote = 'Promote headline',
-    org_do_demote = 'Demote headline',
-    org_meta_return = 'Add headline, list item or checkbox (context aware)',
-    org_insert_heading_respect_content = 'Add new headline after current subtree',
-    org_insert_todo_heading = 'Add new TODO headline on line right after current line',
-    org_insert_todo_heading_respect_content = 'Add new TODO headline after current subtree',
-    org_move_subtree_up = 'Move subtree up',
-    org_move_subtree_down = 'Move subtree down',
-    org_show_help = 'Show this help',
+    { key = 'org_capture_refile', description = 'Refile subtree under cursor to destination' },
+    { key = 'org_increase_date', description = 'Increase date under cursor by 1 day' },
+    { key = 'org_decrease_date', description = 'Decrease date under cursor by 1 day' },
+    { key = 'org_change_date', description = 'Change date under cursor via calendar popup' },
+    { key = 'org_todo', description = 'Forward change TODO state of current headline' },
+    { key = 'org_todo_prev', description = 'Backward change TODO state of current headline' },
+    { key = 'org_toggle_checkbox', description = 'Toggle checkbox state' },
+    { key = 'org_cycle', description = 'Toggle folding on current headline' },
+    { key = 'org_global_cycle', description = 'Toggle folding in whole file' },
+    { key = 'org_archive_subtree', description = 'Archive subtree to archive file' },
+    { key = 'org_set_tags_command', description = 'Change tasg of current headline' },
+    { key = 'org_toggle_archive_tag', description = 'toggle "ARCHIVE" tag on current headline' },
+    { key = 'org_do_promote', description = 'Promote headline' },
+    { key = 'org_do_demote', description = 'Demote headline' },
+    { key = 'org_meta_return', description = 'Add headline, list item or checkbox (context aware)' },
+    { key = 'org_insert_heading_respect_content', description = 'Add new headline after current subtree' },
+    { key = 'org_insert_todo_heading', description = 'Add new TODO headline on line right after current line' },
+    { key = 'org_insert_todo_heading_respect_content', description = 'Add new TODO headline after current subtree' },
+    { key = 'org_move_subtree_up', description = 'Move subtree up' },
+    { key = 'org_move_subtree_down', description = 'Move subtree down' },
+    { key = 'org_show_help', description = 'Show this help' },
   },
   orgagenda = {
-    org_agenda_later = 'Go forward one span',
-    org_agenda_earlier = 'Go bakckward one span',
-    org_agenda_goto_today = "Go to today's span",
-    org_agenda_day_view = 'Show day view',
-    org_agenda_week_view = 'Show week view',
-    org_agenda_month_view = 'Show month view',
-    org_agenda_year_view = 'Show year view',
-    org_agenda_quit = 'Close agenda',
-    org_agenda_switch_to = 'Open in current window',
-    org_agenda_goto = 'Open in another window',
-    org_agenda_goto_date = 'Jump to specific date',
-    org_agenda_redo = 'reload org files and redraw',
-    org_show_help = 'Show this help',
+    { key = 'org_agenda_later', description = 'Go forward one span' },
+    { key = 'org_agenda_earlier', description = 'Go bakckward one span' },
+    { key = 'org_agenda_goto_today', description = "Go to today's span" },
+    { key = 'org_agenda_goto_date', description = 'Jump to specific date' },
+    { key = 'org_agenda_day_view', description = 'Show day view' },
+    { key = 'org_agenda_week_view', description = 'Show week view' },
+    { key = 'org_agenda_month_view', description = 'Show month view' },
+    { key = 'org_agenda_year_view', description = 'Show year view' },
+    { key = 'org_agenda_switch_to', description = 'Open in current window' },
+    { key = 'org_agenda_goto', description = 'Open in another window' },
+    { key = 'org_agenda_redo', description = 'Reload org files and redraw' },
+    { key = 'org_agenda_quit', description = 'Close agenda' },
+    { key = 'org_show_help', description = 'Show this help' },
   },
   capture = {
-    org_capture_finalize = 'Save to default notes file and close the window',
-    org_capture_refile = 'Save to specific destination',
-    org_capture_kill = 'Close without saving',
-    org_show_help = 'Show this help',
+    { key = 'org_capture_finalize', description = 'Save to default notes file and close the window' },
+    { key = 'org_capture_refile', description = 'Save to specific destination' },
+    { key = 'org_capture_kill', description = 'Close without saving' },
+    { key = 'org_show_help', description = 'Show this help' },
   },
 }
 
@@ -58,14 +57,14 @@ local Help = {
 function Help.prepare_content()
   local mappings = config.mappings
   local ft = vim.bo.filetype
-  local content = {' Orgmode mappings:', ''}
   if ft == 'orgagenda' then
-    for k, _ in pairs(mappings.agenda) do
-      local maps = mappings.agenda[k]
+    local content = {' **Orgmode mappings - Agenda:**', ''}
+    for _, item in ipairs(helps.orgagenda) do
+      local maps = mappings.agenda[item.key]
       if type(maps) == 'table' then
         maps = table.concat(maps, ', ')
       end
-      table.insert(content, string.format('  `%-6s` - %s', maps, helps.orgagenda[k] or 'No description, submit an issue to repository.'))
+      table.insert(content, string.format('  `%-6s` - %s', maps, item.description))
     end
     table.insert(content, '')
     table.insert(content, string.format('  `%-6s` - %s', '<Esc>, q', 'Close this help'))
@@ -73,23 +72,27 @@ function Help.prepare_content()
   end
 
   local has_capture, is_capture = pcall(vim.api.nvim_buf_get_var, 0, 'org_capture')
+  local content = {}
   if has_capture and is_capture then
-    for k, _ in pairs(mappings.capture) do
-      local maps = mappings.capture[k]
+  content = {' **Orgmode mappings Capture + Org:**', '', '  __Capture__'}
+    for _, item in ipairs(helps.capture) do
+      local maps = mappings.capture[item.key]
       if type(maps) == 'table' then
         maps = table.concat(maps, ', ')
       end
-      table.insert(content, string.format('  `%-12s` - %s', maps, helps.capture[k] or 'No description, submit an issue to repository.'))
+      table.insert(content, string.format('  `%-12s` - %s', maps, item.description))
     end
-    table.insert(content, '')
+    table.insert(content, '  __Org__')
+  else
+    content = {' **Orgmode mappings - Org:**', ''}
   end
 
-  for k, _ in pairs(mappings.org) do
-      local maps = mappings.org[k]
+  for _, item in ipairs(helps.org) do
+      local maps = mappings.org[item.key]
       if type(maps) == 'table' then
         maps = table.concat(maps, ', ')
       end
-    table.insert(content, string.format('  `%-12s` - %s', maps, helps.org[k] or 'No description, submit an issue to repository.'))
+    table.insert(content, string.format('  `%-12s` - %s', maps, item.description))
   end
 
   table.insert(content, '')
@@ -130,6 +133,7 @@ function Help.show()
   vim.api.nvim_win_set_option(Help.win, 'wrap', false)
   vim.api.nvim_win_set_option(Help.win, 'conceallevel', 3)
   vim.api.nvim_win_set_option(Help.win, 'concealcursor', 'nvic')
+  vim.api.nvim_buf_set_option(Help.buf, 'modifiable', false)
   vim.api.nvim_buf_set_var(Help.buf, 'indent_blankline_enabled', false)
 
   utils.buf_keymap(Help.buf, 'n', 'q', ':bw!<CR>')
