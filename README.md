@@ -19,16 +19,16 @@ require('orgmode').setup({
 })
 ```
 
-* **Open agenda prompt**: `<Leader>oa`
-* **Open capture prompt**: `<Leader>oc`
+* **Open agenda prompt**: <kbd>\<Leader\>oa</kbd>
+* **Open capture prompt**: <kbd>\<Leader\>oc</kbd>
 
-Features (TL;DR):
+#### Features (TL;DR):
 * Agenda view
 * Search by tags/keyword
 * Repeatable dates
 * Capturing to default notes file/destination
 * Archiving (archive file or ARCHIVE tag)
-* Calendar popup for easier navigation and date updats
+* Calendar popup for easier navigation and date updates
 * Various org file mappings:
   * Promote/Demote
   * Change TODO state
@@ -37,7 +37,7 @@ Features (TL;DR):
   * Change tags
   * Toggle checkbox state
 
-Features (Detailed breakdown):
+#### Features (Detailed breakdown):
 * Agenda prompt:
   * Agenda view (<kbd>a</kbd>):
     * Ability to show daily(<kbd>vd</kbd>)/weekly(<kbd>vw</kbd>)/monthly(<kbd>vm</kbd>)/yearly(<kbd>vy</kbd>) agenda
@@ -50,34 +50,34 @@ Features (Detailed breakdown):
         * Restart type: `<2021-06-11 Fri 11:00 .+1w>`
     * Properly lists tasks according to defined dates (DEADLINE,SCHEDULED,Plain date)
     * Navigate forward (<kbd>f</kbd>)/backward(<kbd>b</kbd>) or jump to specific date (<kbd>J</kbd>)
-    * Go to task under cursor in current window(<kbd><CR></kbd>) or other window(<kbd><TAB></kbd>)
+    * Go to task under cursor in current window(<kbd>\<CR\></kbd>) or other window(<kbd>\<TAB\></kbd>)
   * List tasks that have "TODO" state (<kbd>t</kbd>):
   * Find headlines matching tag(s) (<kbd>m</kbd>):
   * Search for headlines (and it's content) for a query (<kbd>s</kbd>):
 * Capture:
   * Define custom templates
-  * Fast capturing to default notes file via <kbd><C-c></kbd>
-  * Capturing to specific destination <kbd><Leader>or</kbd>
-  * Abort capture with <kbd><Leader>ok</kbd>
+  * Fast capturing to default notes file via <kbd>\<C-c\></kbd>
+  * Capturing to specific destination <kbd>\<Leader\>or</kbd>
+  * Abort capture with <kbd>\<Leader\>ok</kbd>
 * Org files
-  * Refile to destination/headline: <kbd><Leader>or</kbd>
-  * Increase/Decrease date under cursor: <kbd><C-a></kbd>/<kbd><C-x></kbd>
+  * Refile to destination/headline: <kbd>\<Leader\>or</kbd>
+  * Increase/Decrease date under cursor: <kbd>\<C-a\></kbd>/<kbd>\<C-x\></kbd>
   * Change date under cursor via calendar popup: <kbd>cid</kbd>
   * Change headline TODO state: forward<kbd>cit</kbd> or backward<kbd>ciT</kbd>
-  * Toggle checkbox: <kbd><C-space></kbd>
-  * Toggle folding of current headline: <kbd><TAB></kbd>
-  * Toggle folding in whole file: <kbd><TAB></kbd>
-  * Archive headline: <kbd><Leader>o$</kbd>
-  * Add archive tag: <kbd><Leader>oA</kbd>
-  * Change tags: <kbd><Leader>ot</kbd>
+  * Toggle checkbox: <kbd>\<C-space\></kbd>
+  * Toggle folding of current headline: <kbd>\<TAB\></kbd>
+  * Toggle folding in whole file: <kbd>\<S-TAB\></kbd>
+  * Archive headline: <kbd>\<Leader\>o$</kbd>
+  * Add archive tag: <kbd>\<Leader\>oA</kbd>
+  * Change tags: <kbd>\<Leader\>ot</kbd>
   * Promote: <kbd><<</kbd>
   * Demote: <kbd>>></kbd>
-  * Add headline/list item/checkbox: <kbd><Leader><CR></kbd>
-  * Insert heading after current heading and it's content: <kbd><Leader>oih</kbd>
-  * Insert TODO heading after current line: <kbd><Leader>oiT</kbd>
-  * Insert TODO heading after current heading and it's content: <kbd><Leader>oit</kbd>
-  * Move headline up: <kbd><Leader>oK</kb>
-  * Move headline down: <kbd><Leader>oJ</kb>
+  * Add headline/list item/checkbox: <kbd>\<Leader\><CR></kbd>
+  * Insert heading after current heading and it's content: <kbd>\<Leader\>oih</kbd>
+  * Insert TODO heading after current line: <kbd>\<Leader\>oiT</kbd>
+  * Insert TODO heading after current heading and it's content: <kbd>\<Leader\>oit</kbd>
+  * Move headline up: <kbd>\<Leader\>oK</kb>
+  * Move headline down: <kbd>\<Leader\>oJ</kb>
 
 Link to detailed documentation: [DOCS](DOCS.md)
 
