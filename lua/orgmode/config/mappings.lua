@@ -21,7 +21,7 @@ return {
     org_show_help = {'org_mappings.show_help'},
   },
   org = {
-    org_capture_refile = {'capture.refile_headline_to_destination'},
+    org_refile = {'capture.refile_headline_to_destination'},
     org_increase_date = {'org_mappings.increase_date'},
     org_decrease_date = {'org_mappings.decrease_date'},
     org_change_date = {'org_mappings.change_date'},
