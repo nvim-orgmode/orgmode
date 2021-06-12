@@ -38,13 +38,12 @@ local helps = {
     { key = 'org_agenda_goto', description = 'Open in another window' },
     { key = 'org_agenda_redo', description = 'Reload org files and redraw' },
     { key = 'org_agenda_quit', description = 'Close agenda' },
-    { key = 'org_show_help', description = 'Show this help' },
+    { key = 'org_agenda_show_help', description = 'Show this help' },
   },
   capture = {
     { key = 'org_capture_finalize', description = 'Save to default notes file and close the window' },
     { key = 'org_capture_refile', description = 'Save to specific destination' },
     { key = 'org_capture_kill', description = 'Close without saving' },
-    { key = 'org_show_help', description = 'Show this help' },
   },
 }
 

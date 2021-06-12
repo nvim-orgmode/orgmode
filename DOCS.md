@@ -5,10 +5,10 @@
    2. [Agenda settings](#global-settings)
    3. [Tags settings](#global-settings)
 2. [Mappings](#mappings)
-   1. [Global Mappings](#global-mappings)
-   2. [Agenda Mappings](#agenda-mappings)
-   3. [Capture Mappings](#capture-mappings)
-   4. [Org Mappings](#org-mappings)
+   1. [Global mappings](#global-mappings)
+   2. [Agenda mappings](#agenda-mappings)
+   3. [Capture mappings](#capture-mappings)
+   4. [Org mappings](#org-mappings)
 
 ## Settings
 Variable names mostly follow the same naming as Orgmode mappings.
@@ -247,6 +247,9 @@ Open calendar that allows selecting date to jump to
 #### **org_agenda_redo**
 *mapped to*: `r`
 Reload all org files and refresh current agenda view
+#### **org_agenda_show_help**
+*mapped to*: `?`
+Show help popup with mappings
 
 These mappings live under `mappings.agenda`, and can be changed like this:
 
@@ -277,6 +280,9 @@ Refile capture content to specific destination
 #### **org_capture_kill**
 *mapped to*: `<Leader>ok`
 Close capture window without saving anything
+#### **org_capture_show_help**
+*mapped to*: `?`
+Show help popup with mappings
 
 These mappings live under `mappings.capture`, and can be changed like this:
 
@@ -356,3 +362,6 @@ Move current headline + it's content up by one headline
 #### **org_move_subtree_down**
 *mapped to*: `<Leader>oJ`
 Move current headline + it's content down by one headline
+#### **org_show_help**
+*mapped to*: `?`
+Show help popup with mappings

@@ -21,6 +21,7 @@ require('orgmode').setup({
 
 * **Open agenda prompt**: <kbd>\<Leader\>oa</kbd>
 * **Open capture prompt**: <kbd>\<Leader\>oc</kbd>
+* In any orgmode buffer press <kbd>?</kbd> for help
 
 #### Features (TL;DR):
 * Agenda view
