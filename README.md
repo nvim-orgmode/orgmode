@@ -107,7 +107,7 @@ much experience with those. Any help on this topic is appreciated.
 * [ ] Support todo keyword faces
 * [ ] Support clocking work time
 * [ ] Improve folding
-* [ ] Support date and time ranges
+* [ ] Support date ranges
 * [ ] Support exporting and publishing (via existing emacs tools)
 * [ ] Support archiving to specific headline
 * [ ] Support tables

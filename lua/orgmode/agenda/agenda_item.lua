@@ -1,8 +1,11 @@
 local Highlights = require('orgmode.colors.highlights')
 local hl_map = Highlights.get_agenda_hl_map()
-local padding = '...... '
 local config = require('orgmode.config')
 local FUTURE_DEADLINE_AS_WARNING_DAYS = math.floor(config.org_deadline_warning_days / 2)
+local function add_padding(datetime)
+  if datetime:len() >= 11 then return datetime..' ' end
+  return datetime..string.rep('.', 11 - datetime:len())..' '
+end
 
 ---@class AgendaItem
 ---@field date Date
@@ -90,7 +93,7 @@ function AgendaItem:_is_valid_for_date()
 end
 
 function AgendaItem:_generate_label()
-  local time = not self.headline_date.date_only and self.headline_date:format('%H:%M')..padding or ''
+  local time = not self.headline_date.date_only and add_padding(self.headline_date:format_time()) or ''
   if self.headline_date:is_deadline() then
     if self.is_same_day then
       return time..'Deadline:'
