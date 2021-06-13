@@ -45,13 +45,7 @@ function Date:new(data)
   opts.type = data.type or 'NONE'
   opts.active = data.active or false
   opts.range = data.range
-  if opts.year and opts.month and opts.day then
-    opts.timestamp = os.time(opts)
-  else
-    opts.timestamp = os.time()
-    local date = os.date('*t', opts.timestamp)
-    opts = set_date_opts(date, opts)
-  end
+  opts.timestamp = os.time(opts)
   opts.date_only = date_only
   opts.dayname = os.date('%a', opts.timestamp)
   opts.adjustments = data.adjustments or {}
@@ -135,6 +129,20 @@ local function parse_date(date, dayname, adjustments, data)
   return Date:new(opts)
 end
 
+
+---@return Date
+local function today()
+  local opts = os.date('*t', os.time())
+  opts.date_only = true
+  return Date:new(opts)
+end
+
+---@return Date
+local function now()
+  local opts = os.date('*t', os.time())
+  return Date:new(opts)
+end
+
 local function is_valid_date(datestr)
   return datestr:match('^%d%d%d%d%-%d%d%-%d%d%s+') or datestr:match('^%d%d%d%d%-%d%d%-%d%d$')
 end
@@ -144,7 +152,7 @@ end
 ---@return Date
 local function from_string(datestr, opts)
   if not is_valid_date(datestr) then
-    return Date:new(opts)
+    return now().clone(opts)
   end
   local parts = vim.split(datestr, '%s+')
   local date = table.remove(parts, 1)
@@ -166,17 +174,6 @@ local function from_string(datestr, opts)
   end
 
   return parse_date(date, dayname, adjustments, opts)
-end
-
----@return Date
-local function today()
-  return Date:new()
-end
-
----@return Date
-local function now()
-  local opts = os.date('*t', os.time())
-  return Date:new(opts)
 end
 
 ---@return string
@@ -413,7 +410,7 @@ end
 ---@return boolean
 function Date:is_today()
   if self.is_today_date == nil then
-    local date = Date:new()
+    local date = now()
     self.is_today_date = date.year == self.year and date.month == self.month and date.day == self.day
   end
   return self.is_today_date
