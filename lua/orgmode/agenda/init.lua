@@ -39,6 +39,14 @@ local function sort_agenda_items(agenda_items)
       return a.headline.category < b.headline.category
     end
 
+    if a.is_in_date_range and not b.is_in_date_range then
+      return false
+    end
+
+    if not a.is_in_date_range and b.is_in_date_range then
+      return true
+    end
+
     return a.headline_date:is_before(b.headline_date)
   end)
   return agenda_items
@@ -122,7 +130,7 @@ function Agenda:render()
         date = string.format(' %-'..date_len..'s', agenda_item.label)
       end
       local todo_keyword = agenda_item.headline.todo_keyword.value
-      if todo_keyword ~= '' then
+      if todo_keyword ~= '' and vim.trim(agenda_item.label):find(':$') then
         todo_keyword = ' '..todo_keyword
       end
       local line = string.format(
@@ -390,7 +398,7 @@ function Agenda:agenda()
 
     for _, orgfile in ipairs(Files.all()) do
       for _, headline in ipairs(orgfile:get_opened_headlines()) do
-        for _, headline_date in ipairs(headline:get_valid_dates()) do
+        for _, headline_date in ipairs(headline:get_valid_dates_for_agenda()) do
           local item = AgendaItem:new(headline_date, headline, day)
           if item.is_valid then
             table.insert(date.agenda_items, item)

@@ -26,7 +26,7 @@ require('orgmode').setup({
 ### Features (TL;DR):
 * Agenda view
 * Search by tags/keyword
-* Repeatable dates
+* Repeatable dates, date and time ranges
 * Capturing to default notes file/destination
 * Archiving (archive file or ARCHIVE tag)
 * Calendar popup for easier navigation and date updates
@@ -45,10 +45,12 @@ require('orgmode').setup({
     * Support for various date settings:
       * DEADLINE:  Warning settings - example:  `<2021-06-11 Fri 11:00 -1d>`
       * SCHEDULED: Delay setting - example: `<2021-06-11 Fri 11:00 -2d>`
-      * All dates - Repeater settings
+      * All dates - Repeater settings:
         * Cumulate type: `<2021-06-11 Fri 11:00 +1w>`
         * Catch-up type: `<2021-06-11 Fri 11:00 ++1w>`
         * Restart type: `<2021-06-11 Fri 11:00 .+1w>`
+      * Time ranges - example: `<2021-06-11 Fri 11:00-12:30>`
+      * Date ranges - example: `<2021-06-11 Fri 11:00-12:30>--<2021-06-13 Sun 22:00>`
     * Properly lists tasks according to defined dates (DEADLINE,SCHEDULED,Plain date)
     * Navigate forward (<kbd>f</kbd>)/backward(<kbd>b</kbd>) or jump to specific date (<kbd>J</kbd>)
     * Go to task under cursor in current window(<kbd>\<CR\></kbd>) or other window(<kbd>\<TAB\></kbd>)
@@ -107,7 +109,6 @@ much experience with those. Any help on this topic is appreciated.
 * [ ] Support todo keyword faces
 * [ ] Support clocking work time
 * [ ] Improve folding
-* [ ] Support date ranges
 * [ ] Support exporting and publishing (via existing emacs tools)
 * [ ] Support archiving to specific headline
 * [ ] Support tables

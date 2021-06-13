@@ -1,6 +1,4 @@
 -- TODO
--- Support date ranges <date>--<date>
--- Support time ranges <date time-time>
 -- Support diary format and format without short date name
 local spans = { d = 'day', m = 'month', y = 'year', h = 'hour', w = 'week' }
 local config = require('orgmode.config')
@@ -20,8 +18,11 @@ local time_format = '%H:%M'
 ---@field year number
 ---@field hour number
 ---@field min number
----@field timestamp_end number
 ---@field timestamp number
+---@field timestamp_end number
+---@field is_date_range_start boolean
+---@field is_date_range_end boolean
+---@field related_date_range Date
 ---@field dayname string
 ---@field adjustments string[]
 local Date = {}
@@ -53,6 +54,9 @@ function Date:new(data)
   opts.dayname = os.date('%a', opts.timestamp)
   opts.adjustments = data.adjustments or {}
   opts.timestamp_end = data.timestamp_end
+  opts.is_date_range_start = data.is_date_range_start or false
+  opts.is_date_range_end = data.is_date_range_end or false
+  opts.related_date_range = data.related_date_range or nil
   setmetatable(opts, self)
   self.__index = self
   return opts
@@ -73,6 +77,9 @@ function Date:from_time_table(time)
   if self.timestamp_end then
     opts.timestamp_end = timestamp + range_diff
   end
+  opts.is_date_range_start = self.is_date_range_start
+  opts.is_date_range_end = self.is_date_range_end
+  opts.related_date_range = self.related_date_range
   return Date:new(opts)
 end
 
@@ -446,6 +453,26 @@ function Date:is_today()
   return self.is_today_date
 end
 
+function Date:is_obsolete_range_end()
+  return self.is_date_range_end and self.related_date_range:is_same(self, 'day')
+end
+
+function Date:get_date_range_days()
+  if not self:is_none() or not self.related_date_range then return 0 end
+  return math.abs(self.related_date_range:diff(self)) + 1
+end
+
+function Date:is_in_date_range(date)
+  if self.is_date_range_start then
+    local ranges_same_day = self.related_date_range:is_obsolete_range_end()
+    if ranges_same_day then
+      return false
+    end
+    return date:is_between(self, self.related_date_range:subtract({ day = 1 }), 'day')
+  end
+  return false
+end
+
 ---@param date Date
 ---@return Date[]
 function Date:get_range_until(date)
@@ -641,11 +668,21 @@ end
 local function from_match(line, lnum, open, datetime, close, last_match, type)
   local search_from = last_match and last_match.range.end_col or 0
   local from, to = line:find(vim.pesc(open..datetime..close), search_from)
-  return from_string(vim.trim(datetime), {
+  local is_date_range_end = last_match and last_match.is_date_range_start and line:sub(from - 2, from - 1) == '--'
+  local opts = {
     type = type,
     active = open == '<',
     range = Range:new({ start_line = lnum, end_line = lnum, start_col = from, end_col = to }),
-  })
+    is_date_range_start = line:sub(to + 1, to + 2) == '--'
+  }
+  local parsed_date = from_string(vim.trim(datetime), opts)
+  if is_date_range_end then
+    parsed_date.is_date_range_end = true
+    parsed_date.related_date_range = last_match
+    last_match.related_date_range = parsed_date
+  end
+
+  return parsed_date
 end
 
 ---@param line string
