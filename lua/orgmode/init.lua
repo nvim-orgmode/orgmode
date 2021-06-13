@@ -4,6 +4,7 @@ local Agenda = require('orgmode.agenda')
 local Capture = require('orgmode.capture')
 local OrgMappings = require('orgmode.org.mappings')
 local OrgFiles = require('orgmode.parser.files')
+local Autocompletion = require('orgmode.org.autocompletion')
 local instance = nil
 
 ---@class Org
@@ -73,6 +74,8 @@ local function action(cmd, opts)
     return method(item, opts)
   end
 end
+
+_G.org.omni = Autocompletion.omni
 
 return {
   setup = setup,
