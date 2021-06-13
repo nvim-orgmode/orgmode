@@ -363,4 +363,18 @@ describe('Agenda item', function()
       assert.are.same('', agenda_item.label)
     end)
   end)
+
+  it('should properly add dot padding only when needed', function()
+    local day_with_end_time = Date.now():set({ hour = 10, min = 0 })
+    day_with_end_time.timestamp_end = day_with_end_time.timestamp + 3600
+
+    local headline = generate(string.format('SCHEDULED: <%s>', day_with_end_time:to_string()))
+    local agenda_item = AgendaItem:new(headline.dates[1], headline, day_with_end_time)
+    assert.are.same('10:00-11:00 Scheduled:', agenda_item.label)
+
+    local day_with_only_time = Date.now():set({ hour = 10, min = 0 })
+    headline = generate(string.format('SCHEDULED: <%s>', day_with_only_time:to_string()))
+    agenda_item = AgendaItem:new(headline.dates[1], headline, day_with_only_time)
+    assert.are.same('10:00...... Scheduled:', agenda_item.label)
+  end)
 end)

@@ -7,6 +7,8 @@ local config = require('orgmode.config')
 local utils = require('orgmode.utils')
 local Range = require('orgmode.parser.range')
 local pattern = '([<%[])(%d%d%d%d%-%d?%d%-%d%d[^>%]]*)([>%]])'
+local date_format = '%Y-%m-%d'
+local time_format = '%H:%M'
 
 ---@class Date
 ---@field type string
@@ -18,6 +20,7 @@ local pattern = '([<%[])(%d%d%d%d%-%d?%d%-%d%d[^>%]]*)([>%]])'
 ---@field year number
 ---@field hour number
 ---@field min number
+---@field timestamp_end number
 ---@field timestamp number
 ---@field dayname string
 ---@field adjustments string[]
@@ -49,6 +52,7 @@ function Date:new(data)
   opts.date_only = date_only
   opts.dayname = os.date('%a', opts.timestamp)
   opts.adjustments = data.adjustments or {}
+  opts.timestamp_end = data.timestamp_end
   setmetatable(opts, self)
   self.__index = self
   return opts
@@ -57,6 +61,7 @@ end
 ---@param time table
 ---@return Date
 function Date:from_time_table(time)
+  local range_diff = self.timestamp_end and self.timestamp_end - self.timestamp or 0
   local timestamp = os.time(set_date_opts(time))
   local opts = set_date_opts(os.date('*t', timestamp))
   opts.date_only = self.date_only
@@ -65,6 +70,9 @@ function Date:from_time_table(time)
   opts.type = self.type
   opts.active = self.active
   opts.range = self.range
+  if self.timestamp_end then
+    opts.timestamp_end = timestamp + range_diff
+  end
   return Date:new(opts)
 end
 
@@ -95,7 +103,7 @@ end
 ---@param adjustments string
 ---@param data table
 ---@return Date
-local function parse_datetime(date, dayname, time, adjustments, data)
+local function parse_datetime(date, dayname, time, time_end, adjustments, data)
   local date_parts = vim.split(date, '-')
   local time_parts = vim.split(time, ':')
   local opts = {
@@ -107,6 +115,16 @@ local function parse_datetime(date, dayname, time, adjustments, data)
   }
   opts.dayname = dayname
   opts.adjustments = adjustments
+  if time_end then
+    local time_end_parts = vim.split(time_end, ':')
+    opts.timestamp_end = os.time({
+      year = tonumber(date_parts[1]),
+      month = tonumber(date_parts[2]),
+      day = tonumber(date_parts[3]),
+      hour = tonumber(time_end_parts[1]),
+      min = tonumber(time_end_parts[2])
+    })
+  end
   opts = vim.tbl_extend('force', opts, data or {})
   return Date:new(opts)
 end
@@ -158,10 +176,15 @@ local function from_string(datestr, opts)
   local date = table.remove(parts, 1)
   local dayname = nil
   local time = nil
+  local time_end = nil
   local adjustments = {}
   for _, part in ipairs(parts) do
     if part:match('%a%a%a') then
       dayname = part
+    elseif part:match('%d?%d:%d%d%-%d?%d:%d%d') then
+      local times = vim.split(part, '-')
+      time = times[1]
+      time_end = times[2]
     elseif part:match('%d?%d:%d%d') then
       time = part
     elseif part:match('[%.%+%-]+%d+[hdwmy]?') then
@@ -170,7 +193,7 @@ local function from_string(datestr, opts)
   end
 
   if time then
-    return parse_datetime(date, dayname, time, adjustments, opts)
+    return parse_datetime(date, dayname, time, time_end, adjustments, opts)
   end
 
   return parse_date(date, dayname, adjustments, opts)
@@ -179,7 +202,7 @@ end
 ---@return string
 function Date:to_string()
   local date = ''
-  local format = '%Y-%m-%d'
+  local format = date_format
   if self.dayname then
     format = format..' %a'
   end
@@ -187,7 +210,10 @@ function Date:to_string()
   if self.date_only then
     date = os.date(format, self.timestamp)
   else
-    date = os.date(format..' %H:%M', self.timestamp)
+    date = os.date(format..' '..time_format, self.timestamp)
+    if self.timestamp_end then
+      date = date..'-'..os.date(time_format, self.timestamp_end)
+    end
   end
 
   if #self.adjustments > 0 then
@@ -199,7 +225,11 @@ end
 
 function Date:format_time()
   if self.date_only then return '' end
-  return self:format('%H:%M')
+  local t = self:format(time_format)
+  if self.timestamp_end then
+    t = t..'-'..os.date(time_format, self.timestamp_end)
+  end
+  return t
 end
 
 ---@param value string
