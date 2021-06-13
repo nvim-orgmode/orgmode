@@ -21,20 +21,6 @@ function utils.readfile(file, callback)
   end)
 end
 
-local function sort_deadline(a, b)
-  local both_has_time = not a.date_only and not b.date_only
-  local both_missing_time = a.date_only and b.date_only
-  if both_has_time or both_missing_time then
-    return a:is_before(b)
-  end
-  if a.date_only and not b.date_only then
-    return false
-  end
-  if not a.date_only and b.date_only then
-    return true
-  end
-end
-
 ---@param msg string
 function utils.echo_warning(msg)
   vim.cmd[[redraw!]]
