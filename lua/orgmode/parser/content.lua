@@ -90,6 +90,11 @@ end
 function Content:parse()
   if self:is_commented() then return end
 
+  local dates = Date.parse_all_from_line(self.line, self.range.start_line)
+  for _, date in ipairs(dates) do
+    table.insert(self.dates, date)
+  end
+
   local keyword = self:_parse_keyword()
   if keyword then return self end
 
@@ -99,10 +104,6 @@ function Content:parse()
   local drawer = self:_parse_drawer()
   if drawer then return self end
 
-  local dates = Date.parse_all_from_line(self.line, self.range.start_line)
-  for _, date in ipairs(dates) do
-    table.insert(self.dates, date)
-  end
 end
 
 ---@return boolean
@@ -128,15 +129,12 @@ function Content:_parse_planning()
   end
   if not is_planning then return false end
   self.type = Types.PLANNING
-  local dates = {}
-  for _, planning in ipairs(plannings) do
-    for plan, open, datetime, close in self.line:gmatch('('..planning..'):%s*'..Date.pattern) do
-      local date = Date.from_match(self.line, self.range.start_line, open, datetime, close, dates[#dates], plan)
-      table.insert(dates, date)
+  for _, date in ipairs(self.dates) do
+    local line_content = self.line:sub(1, date.range.end_col)
+    local plan = line_content:match('([A-Z]*):?%s*'..Date.pattern..'$')
+    if plan and vim.tbl_contains(plannings, plan) then
+      date.type = plan
     end
-  end
-  for _, date in ipairs(dates) do
-    table.insert(self.dates, date)
   end
   return true
 end

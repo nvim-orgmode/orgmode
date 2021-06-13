@@ -14,6 +14,8 @@ end
 ---@field is_valid boolean
 ---@field is_today boolean
 ---@field is_same_day boolean
+---@field is_in_date_range boolean
+---@field date_range_days number
 ---@field label string
 ---@field highlights table[]
 local AgendaItem = {}
@@ -30,6 +32,8 @@ function AgendaItem:new(headline_date, headline, date)
   opts.is_valid = false
   opts.is_today = date:is_today()
   opts.is_same_day = headline_date:is_same(date, 'day') or headline_date:repeats_on(date)
+  opts.is_in_date_range = headline_date:is_none() and headline_date:is_in_date_range(date)
+  opts.date_range_days = headline_date:get_date_range_days()
   opts.label = ''
   opts.highlights = {}
   setmetatable(opts, self)
@@ -56,9 +60,9 @@ function AgendaItem:_process()
 end
 
 function AgendaItem:_is_valid_for_today()
-  if not self.headline_date.active or self.headline_date:is_closed() then return false end
+  if not self.headline_date.active or self.headline_date:is_closed() or self.headline_date:is_obsolete_range_end() then return false end
   if self.headline_date:is_none() then
-    return self.is_same_day
+    return self.is_same_day or self.is_in_date_range
   end
 
   if self.headline_date:is_deadline() then
@@ -83,10 +87,10 @@ function AgendaItem:_is_valid_for_today()
 end
 
 function AgendaItem:_is_valid_for_date()
-  if not self.headline_date.active or self.headline_date:is_closed() then return false end
+  if not self.headline_date.active or self.headline_date:is_closed() or self.headline_date:is_obsolete_range_end() then return false end
 
   if not self.headline_date:is_scheduled() or not self.headline_date:get_negative_adjustment() then
-    return self.is_same_day
+    return self.is_same_day or self.is_in_date_range
   end
 
   return false
@@ -109,6 +113,20 @@ function AgendaItem:_generate_label()
     local diff = math.abs(self.date:diff(self.headline_date))
 
     return 'Sched. '..diff..'x:'
+  end
+
+  if self.headline_date.is_date_range_start then
+    if not self.is_in_date_range then return time end
+    local range = string.format('(%d/%d):', self.date:diff(self.headline_date) + 1, self.date_range_days)
+    if not self.is_same_day then
+      return range
+    end
+    return time..range
+  end
+
+  if self.headline_date.is_date_range_end then
+    local range = string.format('(%d/%d):', self.date_range_days, self.date_range_days)
+    return time..range
   end
 
   return time

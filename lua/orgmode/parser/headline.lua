@@ -303,10 +303,21 @@ function Headline:remove_closed_date()
   return vim.api.nvim_call_function('setline', { planning.range.start_line, new_line })
 end
 
-function Headline:get_valid_dates()
-  return vim.tbl_filter(function(date)
-    return date.active and not date:is_closed()
-  end, self.dates)
+function Headline:get_valid_dates_for_agenda()
+  local dates = {}
+  for i, date in ipairs(self.dates) do
+    if date.active and not date:is_closed() and not date:is_obsolete_range_end() then
+      table.insert(dates, date)
+      if not date:is_none() and date.is_date_range_start then
+        local new_date = date:clone({ type = 'NONE' })
+        table.insert(dates, new_date)
+        if self.dates[i + 2] and self.dates[i + 1].is_date_range_end then
+          self.dates[i + 2].related_date_range = new_date
+        end
+      end
+    end
+  end
+  return dates
 end
 
 --- Get list of tags that are directly applied to this headline

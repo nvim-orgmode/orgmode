@@ -393,6 +393,9 @@ describe('Date object', function()
       hour = 0,
       min = 0,
       month = 5,
+      is_date_range_start = false,
+      is_date_range_end = false,
+      related_date_range = nil,
       range = Range:new({
         start_line = 1,
         end_line = 1,
@@ -418,6 +421,9 @@ describe('Date object', function()
       hour = 0,
       min = 0,
       month = 5,
+      is_date_range_start = false,
+      is_date_range_end = false,
+      related_date_range = nil,
       range = Range:new({
         start_line = 1,
         end_line = 1,
@@ -437,6 +443,9 @@ describe('Date object', function()
       hour = 9,
       min = 25,
       month = 6,
+      is_date_range_start = false,
+      is_date_range_end = false,
+      related_date_range = nil,
       range = Range:new({
         start_line = 1,
         end_line = 1,
@@ -462,6 +471,9 @@ describe('Date object', function()
       hour = 0,
       min = 0,
       month = 5,
+      is_date_range_start = false,
+      is_date_range_end = false,
+      related_date_range = nil,
       range = Range:new({
         start_line = 1,
         end_line = 1,
@@ -481,6 +493,9 @@ describe('Date object', function()
       hour = 0,
       min = 0,
       month = 5,
+      is_date_range_start = false,
+      is_date_range_end = false,
+      related_date_range = nil,
       range = Range:new({
         start_line = 1,
         end_line = 1,
@@ -492,6 +507,7 @@ describe('Date object', function()
       year = 2021,
     }, dates[2])
   end)
+
 
   it('should set and get isoweekday', function()
     local sunday = Date.from_string('2021-05-16')
@@ -583,5 +599,126 @@ describe('Date object', function()
     assert.are.same({'+1w'}, tuesday_morning.adjustments)
     assert.are.same('2021-05-17 Mon 23:30-00:30 +1w', tuesday_morning:to_string())
     assert.are.same('23:30-00:30', tuesday_morning:format_time())
+
+    local line = 'This line has a date rang <2021-05-15 Sat 14:30-15:30 +1w> and again has some date <2021-05-17 Mon> for no reason'
+    local dates = Date.parse_all_from_line(line, 1)
+    assert.are.same(2, #dates)
+    assert.are.same({
+      active = true,
+      adjustments = {'+1w'},
+      date_only = false,
+      day = 15,
+      dayname = "Sat",
+      hour = 14,
+      min = 30,
+      month = 5,
+      is_date_range_start = false,
+      is_date_range_end = false,
+      related_date_range = nil,
+      range = Range:new({
+        start_line = 1,
+        end_line = 1,
+        start_col = 27,
+        end_col = 58
+      }),
+      timestamp = 1621081800,
+      timestamp_end = 1621085400,
+      type = "NONE",
+      year = 2021,
+    }, dates[1])
+    assert.are.same({
+      active = true,
+      adjustments = {},
+      date_only = true,
+      day = 17,
+      dayname = "Mon",
+      hour = 0,
+      min = 0,
+      month = 5,
+      is_date_range_start = false,
+      is_date_range_end = false,
+      related_date_range = nil,
+      range = Range:new({
+        start_line = 1,
+        end_line = 1,
+        start_col = 84,
+        end_col = 99
+      }),
+      timestamp = 1621202400,
+      type = "NONE",
+      year = 2021,
+    }, dates[2])
+  end)
+
+  it('should parse date range from line', function()
+    local line = 'This line has a date rang <2021-05-15 Sat>--<2021-05-16 Sun> and again has some date <2021-05-17 Mon> for no reason'
+    local dates = Date.parse_all_from_line(line, 1)
+    assert.are.same(3, #dates)
+    assert.are.same({
+      active = true,
+      adjustments = {},
+      date_only = true,
+      day = 15,
+      dayname = "Sat",
+      hour = 0,
+      min = 0,
+      month = 5,
+      is_date_range_start = true,
+      is_date_range_end = false,
+      related_date_range = dates[2],
+      range = Range:new({
+        start_line = 1,
+        end_line = 1,
+        start_col = 27,
+        end_col = 42
+      }),
+      timestamp = 1621029600,
+      type = "NONE",
+      year = 2021,
+    }, dates[1])
+    assert.are.same({
+      active = true,
+      adjustments = {},
+      date_only = true,
+      day = 16,
+      dayname = "Sun",
+      hour = 0,
+      min = 0,
+      month = 5,
+      is_date_range_start = false,
+      is_date_range_end = true,
+      related_date_range = dates[1],
+      range = Range:new({
+        start_line = 1,
+        end_line = 1,
+        start_col = 45,
+        end_col = 60
+      }),
+      timestamp = 1621116000,
+      type = "NONE",
+      year = 2021,
+    }, dates[2])
+    assert.are.same({
+      active = true,
+      adjustments = {},
+      date_only = true,
+      day = 17,
+      dayname = "Mon",
+      hour = 0,
+      min = 0,
+      month = 5,
+      is_date_range_start = false,
+      is_date_range_end = false,
+      related_date_range = nil,
+      range = Range:new({
+        start_line = 1,
+        end_line = 1,
+        start_col = 86,
+        end_col = 101
+      }),
+      timestamp = 1621202400,
+      type = "NONE",
+      year = 2021,
+    }, dates[3])
   end)
 end)
