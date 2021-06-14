@@ -311,9 +311,6 @@ function Headline:get_valid_dates_for_agenda()
       if not date:is_none() and date.is_date_range_start then
         local new_date = date:clone({ type = 'NONE' })
         table.insert(dates, new_date)
-        if self.dates[i + 2] and self.dates[i + 1].is_date_range_end then
-          self.dates[i + 2].related_date_range = new_date
-        end
       end
     end
   end
