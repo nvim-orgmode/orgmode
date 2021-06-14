@@ -95,7 +95,7 @@ make test
 ```
 
 ### Documentation
-Vim documentation is auto generated from [DOCS.md](DOCS.md) file with [md2vim](https://github.com/kristijanhusak/md2vim).
+Vim documentation is auto generated from [DOCS.md](DOCS.md) file with [md2vim](https://github.com/FooSoft/md2vim).
 
 ### Parser
 Parser is written manually from scratch. It doesn't follow any parser writing patterns (AFAIK), because I don't have

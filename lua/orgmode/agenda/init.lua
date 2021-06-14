@@ -247,9 +247,6 @@ function Agenda:search(clear_search)
     self.last_search = ''
   end
   local search_term = vim.fn.input('Enter search term: ', self.last_search)
-  if vim.trim(search_term) == '' then
-    return utils.echo_warning('Invalid search term.')
-  end
   self.last_search = search_term
   local headlines = {}
   for _, orgfile in ipairs(Files.all()) do
