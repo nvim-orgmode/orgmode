@@ -29,15 +29,22 @@ function OrgMappings:archive()
     return utils.echo_warning('This file is already an archive file.')
   end
   local item = file:get_closest_headline()
-  item:add_properties({
-    ARCHIVE_TIME = Date.now():to_string(),
-    ARCHIVE_FILE = file.file,
-    ARCHIVE_CATEGORY = item.category,
-    ARCHIVE_TODO = item.todo_keyword.value,
-  })
   file = Files.get_current_file()
   item = file:get_closest_headline()
-  return self.capture:refile_file_headline_to_archive(file, item, file:get_archive_file_location())
+  local archive_location = file:get_archive_file_location()
+  self.capture:refile_file_headline_to_archive(file, item, archive_location)
+  Files.reload(archive_location, vim.schedule_wrap(function()
+    Files.update_file(archive_location, function(archive_file)
+      local last_item = archive_file:get_closest_headline(vim.fn.line('$'))
+      if not last_item then return end
+      last_item:add_properties({
+        ARCHIVE_TIME = Date.now():to_string(),
+        ARCHIVE_FILE = file.file,
+        ARCHIVE_CATEGORY = item.category,
+        ARCHIVE_TODO = item.todo_keyword.value,
+      })
+    end)
+  end))
 end
 
 function OrgMappings:set_tags()
