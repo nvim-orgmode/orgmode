@@ -155,7 +155,6 @@ function OrgMappings:todo_next_state()
   local state_change = string.format('- State "%s" from "%s" [%s]', item.todo_keyword.value, old_state, Date.now():to_string())
 
   local data = item:add_properties({ LAST_REPEAT = Date.now():to_string() })
-  local content = data.content
   if data.is_new then
     vim.fn.append(data.end_line, state_change)
     return item
