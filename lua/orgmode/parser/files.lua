@@ -92,6 +92,26 @@ function Files.get_current_item()
   return file:get_item(vim.fn.line('.'))
 end
 
+---@param filename string
+---@param action function
+---@return boolean
+function Files.update_file(filename, action)
+  local file = Files.get(filename)
+  if not file then return false end
+  local is_same_file = filename == vim.api.nvim_buf_get_name(0)
+  local cur_win = vim.api.nvim_get_current_win()
+  if is_same_file then
+    if action then action(file) end
+    vim.cmd(':w')
+    return true
+  end
+  vim.cmd('topleft split '..filename)
+  if action then action(file) end
+  vim.cmd('wq!')
+  vim.api.nvim_set_current_win(cur_win)
+  return true
+end
+
 function Files._build_tags()
   local tags = {}
   for _, orgfile in pairs(Files.files) do
