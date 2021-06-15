@@ -24,7 +24,7 @@ local directives = { rgx = vim.regex([[^\#+\?\w*$]]), list = data.directives }
 local properties = { rgx = vim.regex([[\(^\s*\)\@<=:\w*$]]), list = data.properties }
 local links = { rgx = vim.regex([[\(\(^\|\s+\)\[\[\)\@<=\(\(\*\|\#\)\?\(\w+\)\)?]]), list = {} }
 local tags = {
-  rgx = vim.regex([[:\([\w_%@\#]*\)$]]),
+  rgx = vim.regex([[:\([0-9A-Za-z_%@\#]*\)$]]),
   only_headline = true,
   fetcher = function()
     return vim.tbl_map(function(tag)
@@ -49,7 +49,7 @@ local headline_contexts = {
 }
 
 function Autocompletion.omni(findstart, base)
-  local line = vim.fn.getline('.'):sub(1, vim.fn.col('.'))
+  local line = vim.api.nvim_get_current_line():sub(1, vim.api.nvim_call_function('col', {'.'}))
   local is_headline = line:match('^%*+%s+')
   local ctx = is_headline and headline_contexts or contexts
   if findstart == 1 then
