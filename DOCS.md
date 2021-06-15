@@ -9,6 +9,7 @@
    2. [Agenda mappings](#agenda-mappings)
    3. [Capture mappings](#capture-mappings)
    4. [Org mappings](#org-mappings)
+3. [Autocompletion](#autocompletion)
 
 ## Settings
 Variable names mostly follow the same naming as Orgmode mappings.
@@ -365,3 +366,32 @@ Move current headline + it's content down by one headline
 #### **org_show_help**
 *mapped to*: `?`
 Show help popup with mappings
+
+## Autocompletion
+By default, `omnifunc` is provided in `org` files that autocompletes these types:
+* Tags
+* Todo keywords
+* Common drawer properties and values (`:PROPERTIES:`, `:CATEGORY:`, `:END:`, etc.)
+* Planning keywords (`DEADLINE`, `SCHEDULED`, `CLOSED`)
+* Orgfile special keywords (`#+TITLE`, `#+BEGIN_SRC`, `#+ARCHIVE`, etc.)
+* Links (TBD)
+
+If you use [nvim-compe](https://github.com/hrsh7th/nvim-compe) add this to compe setup:
+```lua
+  require'compe'.setup({
+    source = {
+      orgmode = true
+    }
+  })
+```
+
+Note that autocompletion is context aware, which means that
+for example tags autocompletion will kick in only when cursor is at the end of headline.
+Example (`|` marks the cursor):
+```org
+* TODO Some task :|
+```
+Or todo keywords only at the beginning of the headline:
+```org
+** |
+```
