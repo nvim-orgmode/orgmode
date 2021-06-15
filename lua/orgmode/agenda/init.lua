@@ -175,12 +175,14 @@ end
 
 function Agenda:_print_and_highlight()
   local opened = self:is_opened()
+  local win_height = math.min(34, #self.content + 5)
   if not opened then
-    vim.cmd[[16split orgagenda]]
+    vim.cmd(string.format('%dsplit orgagenda', win_height))
     vim.cmd[[setf orgagenda]]
     vim.cmd[[setlocal buftype=nofile bufhidden=wipe nobuflisted nolist noswapfile nowrap nospell]]
     config:setup_mappings('agenda')
   else
+    vim.cmd(string.format('resize %d', win_height))
     vim.cmd(vim.fn.win_id2win(opened)..'wincmd w')
   end
   vim.bo.modifiable = true
