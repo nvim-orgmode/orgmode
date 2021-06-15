@@ -19,6 +19,18 @@ require('orgmode').setup({
 })
 ```
 
+If you use [nvim-compe](https://github.com/hrsh7th/nvim-compe) and want
+to have some basic autocompletion, add this to your compe config:
+
+```lua
+  require'compe'.setup({
+    source = {
+      orgmode = true
+    }
+  })
+```
+Or just use `omnifunc` via <kbd>\<C-x\>\<C-o\></kbd>
+
 * **Open agenda prompt**: <kbd>\<Leader\>oa</kbd>
 * **Open capture prompt**: <kbd>\<Leader\>oc</kbd>
 * In any orgmode buffer press <kbd>?</kbd> for help
@@ -102,7 +114,7 @@ Parser is written manually from scratch. It doesn't follow any parser writing pa
 much experience with those. Any help on this topic is appreciated.
 
 ## Plans
-* [ ] Add autocompletion (omnifunc + nvim-compe)
+* [-] Add hyperlinks autocompletion
 * [ ] Support searching by properties
 * [ ] Add better support for hyperlinks
 * [ ] Improve checkbox hierarchy
