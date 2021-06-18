@@ -46,8 +46,8 @@ function Calendar.open()
   vim.api.nvim_win_set_option(Calendar.win, 'sidescrolloff', 0)
   vim.api.nvim_buf_set_var(Calendar.buf, 'indent_blankline_enabled', false)
 
-  utils.buf_keymap(Calendar.buf, 'n', 'f', '<cmd>lua require("orgmode.objects.calendar").forward()<CR>')
-  utils.buf_keymap(Calendar.buf, 'n', 'b', '<cmd>lua require("orgmode.objects.calendar").backward()<CR>')
+  utils.buf_keymap(Calendar.buf, 'n', '>', '<cmd>lua require("orgmode.objects.calendar").forward()<CR>')
+  utils.buf_keymap(Calendar.buf, 'n', '<', '<cmd>lua require("orgmode.objects.calendar").backward()<CR>')
   utils.buf_keymap(Calendar.buf, 'n', '<CR>', '<cmd>lua require("orgmode.objects.calendar").select()<CR>')
   utils.buf_keymap(Calendar.buf, 'n', '.', '<cmd>lua require("orgmode.objects.calendar").reset()<CR>')
   utils.buf_keymap(Calendar.buf, 'n', 'q', ':bw!<CR>')
@@ -86,7 +86,7 @@ function Calendar.render()
   first_row = ' '..table.concat(first_row, '  ')
   table.insert(value, 1, first_row)
   table.insert(value, 1, month)
-  table.insert(value, ' [f] - forward [b] - backward')
+  table.insert(value, ' [<] - prev month  [>] - next month')
   table.insert(value, ' [.] - today   [Enter] - select day')
 
   vim.api.nvim_buf_set_lines(Calendar.buf, 0, -1, true, value)
@@ -117,6 +117,8 @@ end
 function Calendar.reset()
   Calendar.month = Date.today():start_of('month')
   Calendar.render()
+  vim.fn.cursor(2, 0)
+  vim.fn.search(Date.today():format('%d'), 'W')
 end
 
 function Calendar:select()

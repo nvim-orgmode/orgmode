@@ -175,7 +175,7 @@ end
 
 function Agenda:_print_and_highlight()
   local opened = self:is_opened()
-  local win_height = math.min(34, #self.content + 5)
+  local win_height = math.max(math.min(34, #self.content), 16)
   if not opened then
     vim.cmd(string.format('%dsplit orgagenda', win_height))
     vim.cmd[[setf orgagenda]]
