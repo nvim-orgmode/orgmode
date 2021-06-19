@@ -1,69 +1,13 @@
 local compe = require('compe')
 local Files = require('orgmode.parser.files')
 local config = require('orgmode.config')
-local utils = require('orgmode.utils')
+local Hyperlinks = require('orgmode.org.hyperlinks')
 
 local data = {
   directives = {'#+TITLE', '#+AUTHOR', '#+EMAIL', '#+NAME', '#+BEGIN_SRC', '#+END_SRC', '#+BEGIN_EXAMPLE', '#+END_EXAMPLE', '#+FILETAGS', '#+ARCHIVE'},
   properties = {':PROPERTIES:', ':END:', ':LOGBOOK:', ':STYLE:', ':REPEAT_TO_STATE:', ':CUSTOM_ID:', ':CATEGORY:'},
   metadata = {'DEADLINE:', 'SCHEDULED:', 'CLOSED:'},
 }
-
-local function find_by_custom_id_property(base)
-  local headlines = Files.find_headlines_with_property_matching('CUSTOM_ID', base:sub(2))
-  return vim.tbl_map(function(headline)
-    return '#'..headline.properties.items.CUSTOM_ID
-  end, headlines)
-end
-
-local function find_by_title_pointer(base)
-  local headlines = Files.find_headlines_by_title(base:sub(2))
-  return vim.tbl_map(function(headline)
-    return '*'..headline.title
-  end, headlines)
-end
-
-local function find_by_dedicated_target(base)
-  if not base or base == '' then return {} end
-  local term = string.format('<<(%s[^>]*)>>', base):lower()
-  local headlines = Files.find_headlines_matching_search_term(term, true)
-  local targets = {}
-  for _, headline in ipairs(headlines) do
-    for m in headline.title:lower():gmatch(term) do
-      table.insert(targets, m)
-    end
-    for _, content in ipairs(headline.content) do
-    for m in content.line:lower():gmatch(term) do
-      table.insert(targets, m)
-    end
-    end
-  end
-  return targets
-end
-
-local function find_by_title(base)
-  if not base or base == '' then return {} end
-  local headlines = Files.find_headlines_by_title(base:sub(1, 1))
-  return vim.tbl_map(function(headline)
-    return headline.title
-  end, headlines)
-end
-
-local function find_matching_links(base)
-  base = vim.trim(base)
-  local prefix = base:sub(1, 1)
-  if prefix == '#' then
-    return find_by_custom_id_property(base)
-  end
-
-  if prefix == '*' then
-    return find_by_title_pointer(base)
-  end
-
-  local results = find_by_dedicated_target(base)
-  local all = utils.concat(results, find_by_title(base))
-  return all
-end
 
 local Autocompletion = {}
 
@@ -72,7 +16,7 @@ local properties = { rgx = vim.regex([[\(^\s*\)\@<=:\w*$]]), list = data.propert
 local links = {
   line_rgx = vim.regex([[\(\(^\|\s\+\)\[\[\)\@<=\(\*\|\#\)\?\(\w\+\)\?]]),
   rgx = vim.regex([[\(\*\|\#\)\?\(\w\+\)\?$]]),
-  fetcher = find_matching_links,
+  fetcher = Hyperlinks.find_matching_links,
 }
 local metadata = { rgx = vim.regex([[\(\s*\)\@<=\w\+$]]), list = data.metadata }
 local tags = {

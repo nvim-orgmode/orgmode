@@ -324,6 +324,9 @@ Cycle todo keyword forward on current headline  ()
 #### **org_toggle_checkbox**
 *mapped to*: `<C-Space>`
 Toggle current line checkbox state
+#### **org_open_at_point**
+*mapped to*: `<Leader>oo`
+Open hyperlink or date under cursor
 #### **org_cycle**
 *mapped to*: `<TAB>`
 Cycle folding for current headline

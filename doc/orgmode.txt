@@ -55,20 +55,21 @@ CONTENTS                                                        *orgmode-content
             1.2.4.5. org_todo...................................|orgmode-org_todo|
             1.2.4.6. org_todo_prev.........................|orgmode-org_todo_prev|
             1.2.4.7. org_toggle_checkbox.............|orgmode-org_toggle_checkbox|
-            1.2.4.8. org_cycle.................................|orgmode-org_cycle|
-            1.2.4.9. org_global_cycle...................|orgmode-org_global_cycle|
-            1.2.4.10. org_archive_subtree............|orgmode-org_archive_subtree|
-            1.2.4.11. org_set_tags_command..........|orgmode-org_set_tags_command|
-            1.2.4.12. org_toggle_archive_tag......|orgmode-org_toggle_archive_tag|
-            1.2.4.13. org_do_promote......................|orgmode-org_do_promote|
-            1.2.4.14. org_do_demote........................|orgmode-org_do_demote|
-            1.2.4.15. org_meta_return....................|orgmode-org_meta_return|
-            1.2.4.16. org_insert_heading_respect_content.|orgmode-org_insert_heading_respect_content|
-            1.2.4.17. org_insert_todo_heading....|orgmode-org_insert_todo_heading|
-            1.2.4.18. org_insert_todo_heading_respect_content.|orgmode-org_insert_todo_heading_respect_content|
-            1.2.4.19. org_move_subtree_up............|orgmode-org_move_subtree_up|
-            1.2.4.20. org_move_subtree_down........|orgmode-org_move_subtree_down|
-            1.2.4.21. org_show_help........................|orgmode-org_show_help|
+            1.2.4.8. org_open_at_point.................|orgmode-org_open_at_point|
+            1.2.4.9. org_cycle.................................|orgmode-org_cycle|
+            1.2.4.10. org_global_cycle..................|orgmode-org_global_cycle|
+            1.2.4.11. org_archive_subtree............|orgmode-org_archive_subtree|
+            1.2.4.12. org_set_tags_command..........|orgmode-org_set_tags_command|
+            1.2.4.13. org_toggle_archive_tag......|orgmode-org_toggle_archive_tag|
+            1.2.4.14. org_do_promote......................|orgmode-org_do_promote|
+            1.2.4.15. org_do_demote........................|orgmode-org_do_demote|
+            1.2.4.16. org_meta_return....................|orgmode-org_meta_return|
+            1.2.4.17. org_insert_heading_respect_content.|orgmode-org_insert_heading_respect_content|
+            1.2.4.18. org_insert_todo_heading....|orgmode-org_insert_todo_heading|
+            1.2.4.19. org_insert_todo_heading_respect_content.|orgmode-org_insert_todo_heading_respect_content|
+            1.2.4.20. org_move_subtree_up............|orgmode-org_move_subtree_up|
+            1.2.4.21. org_move_subtree_down........|orgmode-org_move_subtree_down|
+            1.2.4.22. org_show_help........................|orgmode-org_show_help|
     1.3. Autocompletion...................................|orgmode-autocompletion|
 
 ================================================================================
@@ -459,6 +460,11 @@ ORG_TOGGLE_CHECKBOX                                  *orgmode-org_toggle_checkbo
 
 mapped to: `<C-Space>`
 Toggle current line checkbox state
+
+ORG_OPEN_AT_POINT                                      *orgmode-org_open_at_point*
+
+mapped to: `<Leader>oo`
+Open hyperlink or date under cursor
 
 ORG_CYCLE                                                      *orgmode-org_cycle*
 

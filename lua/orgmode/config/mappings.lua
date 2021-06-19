@@ -28,6 +28,7 @@ return {
     org_todo = {'org_mappings.todo_next_state'},
     org_todo_prev = {'org_mappings.todo_prev_state'},
     org_toggle_checkbox = {'org_mappings.toggle_checkbox'},
+    org_open_at_point = {'org_mappings.open_at_point'},
     org_cycle = {'org_mappings.cycle'},
     org_global_cycle = {'org_mappings.global_cycle'},
     org_archive_subtree = {'org_mappings.archive'},
