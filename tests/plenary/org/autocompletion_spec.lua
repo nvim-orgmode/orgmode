@@ -12,7 +12,7 @@ describe('Autocompletion', function()
     local api = mock(vim.api, true)
     mock_line(api, '')
     local result = Autocompletion.omni(1, '')
-    assert.are.same(-1, result)
+    assert.are.same(0, result)
 
     mock_line(api, '* ')
     result = Autocompletion.omni(1, '')
@@ -28,7 +28,7 @@ describe('Autocompletion', function()
 
     mock_line(api, '* TODO some text ')
     result = Autocompletion.omni(1, '')
-    assert.are.same(-1, result)
+    assert.are.same(17, result)
 
     mock_line(api, '* TODO tags goes at the end :')
     result = Autocompletion.omni(1, '')
@@ -68,6 +68,22 @@ describe('Autocompletion', function()
     mock_line(api, '  :PROPERTI')
     result = Autocompletion.omni(1, '')
     assert.are.same(2, result)
+
+    mock_line(api, '  [[')
+    result = Autocompletion.omni(1, '')
+    assert.are.same(4, result)
+
+    mock_line(api, '  [[*some')
+    result = Autocompletion.omni(1, '')
+    assert.are.same(4, result)
+
+    mock_line(api, '  [[#val')
+    result = Autocompletion.omni(1, '')
+    assert.are.same(4, result)
+
+    mock_line(api, '  [[test')
+    result = Autocompletion.omni(1, '')
+    assert.are.same(4, result)
 
     mock.revert(api)
   end)
@@ -166,6 +182,8 @@ describe('Autocompletion', function()
       { menu = "[Org]", word = ":OFFICE:" },
       { menu = "[Org]", word = ":PRIVATE:" },
     }, result)
+
+    -- TODO: Add hyperlinks test
 
     mock.revert(api)
   end)

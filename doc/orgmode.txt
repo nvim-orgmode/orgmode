@@ -69,6 +69,7 @@ CONTENTS                                                        *orgmode-content
             1.2.4.19. org_move_subtree_up............|orgmode-org_move_subtree_up|
             1.2.4.20. org_move_subtree_down........|orgmode-org_move_subtree_down|
             1.2.4.21. org_show_help........................|orgmode-org_show_help|
+    1.3. Autocompletion...................................|orgmode-autocompletion|
 
 ================================================================================
 TABLE OF CONTENT                                        *orgmode-table_of_content*
@@ -82,6 +83,7 @@ TABLE OF CONTENT                                        *orgmode-table_of_conten
     2.  Agenda mappings (#agenda-mappings)
     3.  Capture mappings (#capture-mappings)
     4.  Org mappings (#org-mappings)
+3.  Autocompletion (#autocompletion)
 
 --------------------------------------------------------------------------------
 SETTINGS                                                        *orgmode-settings*
@@ -527,4 +529,41 @@ ORG_SHOW_HELP                                              *orgmode-org_show_hel
 
 mapped to: `?`
 Show help popup with mappings
+
+--------------------------------------------------------------------------------
+AUTOCOMPLETION                                            *orgmode-autocompletion*
+
+By default, `omnifunc` is provided in `org` files that autocompletes these types:
+* Tags
+* Todo keywords
+* Common drawer properties and values (`:PROPERTIES:`, `:CATEGORY:`, `:END:`, etc.)
+* Planning keywords (`DEADLINE`, `SCHEDULED`, `CLOSED`)
+* Orgfile special keywords (`#+TITLE`, `#+BEGIN_SRC`, `#+ARCHIVE`, etc.)
+* Hyperlinks (`* - headlines`, `# - headlines with CUSTOM_ID property`, `headlines matching title`)
+
+If you use nvim-compe (https://github.com/hrsh7th/nvim-compe) add this to compe setup:
+>
+      require'compe'.setup({
+        source = {
+          orgmode = true
+        }
+      })
+<
+
+Note that autocompletion is context aware, which means that
+for example tags autocompletion will kick in only when cursor is at the end of headline.
+Example (`|` marks the cursor):
+>
+    * TODO Some task :|
+<
+
+Or todo keywords only at the beginning of the headline:
+>
+    ** |
+<
+
+Or hyperlinks after double square bracket:
+>
+    Some content [[|
+<
 

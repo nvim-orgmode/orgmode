@@ -183,16 +183,20 @@ function Root:get_unfinished_todo_entries()
   end, self.items)
 end
 
-function Root:get_headlines_matching_search_term(term)
+function Root:get_headlines_matching_search_term(search_term, no_escape)
   if self.is_archive_file then return {} end
+  local term = search_term:lower()
+  if not no_escape then
+    term = vim.pesc(term)
+  end
 
   return vim.tbl_filter(function(item)
     local is_match = false
     if item.type == Types.HEADLINE then
-      is_match = item.title:lower():match(vim.pesc(term:lower()))
+      is_match = item.title:lower():match(term)
       if not is_match then
         for _, content in ipairs(item.content) do
-          if content.line:lower():match(vim.pesc(term:lower())) then
+          if content.line:lower():match(term) then
             is_match = true
             break
           end
@@ -229,10 +233,22 @@ function Root:get_headlines_with_tags(tags)
   end, self.items)
 end
 
-function Root:find_headline_by_title(title)
-  local headlines = vim.tbl_filter(function(item)
-   return item.type == Types.HEADLINE and item.title:match('^'..vim.pesc(title))
+function Root:find_headlines_by_title(title)
+  return vim.tbl_filter(function(item)
+    return item.type == Types.HEADLINE and item.title:lower():match('^'..vim.pesc(title:lower()))
   end, self.items)
+end
+
+function Root:find_headlines_with_property_matching(property_name, term)
+  return vim.tbl_filter(function(item)
+    return item.type == Types.HEADLINE
+      and item.properties.items[property_name]
+      and item.properties.items[property_name]:lower():match('^'..vim.pesc(term:lower()))
+  end, self.items)
+end
+
+function Root:find_headline_by_title(title)
+  local headlines = self:find_headlines_by_title(title)
   return headlines[1]
 end
 

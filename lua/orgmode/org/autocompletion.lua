@@ -1,6 +1,7 @@
 local compe = require('compe')
 local Files = require('orgmode.parser.files')
 local config = require('orgmode.config')
+local utils = require('orgmode.utils')
 
 local data = {
   directives = {'#+TITLE', '#+AUTHOR', '#+EMAIL', '#+NAME', '#+BEGIN_SRC', '#+END_SRC', '#+BEGIN_EXAMPLE', '#+END_EXAMPLE', '#+FILETAGS', '#+ARCHIVE'},
@@ -8,11 +9,71 @@ local data = {
   metadata = {'DEADLINE:', 'SCHEDULED:', 'CLOSED:'},
 }
 
+local function find_by_custom_id_property(base)
+  local headlines = Files.find_headlines_with_property_matching('CUSTOM_ID', base:sub(2))
+  return vim.tbl_map(function(headline)
+    return '#'..headline.properties.items.CUSTOM_ID
+  end, headlines)
+end
+
+local function find_by_title_pointer(base)
+  local headlines = Files.find_headlines_by_title(base:sub(2))
+  return vim.tbl_map(function(headline)
+    return '*'..headline.title
+  end, headlines)
+end
+
+local function find_by_dedicated_target(base)
+  if not base or base == '' then return {} end
+  local term = string.format('<<(%s[^>]*)>>', base):lower()
+  local headlines = Files.find_headlines_matching_search_term(term, true)
+  local targets = {}
+  for _, headline in ipairs(headlines) do
+    for m in headline.title:lower():gmatch(term) do
+      table.insert(targets, m)
+    end
+    for _, content in ipairs(headline.content) do
+    for m in content.line:lower():gmatch(term) do
+      table.insert(targets, m)
+    end
+    end
+  end
+  return targets
+end
+
+local function find_by_title(base)
+  if not base or base == '' then return {} end
+  local headlines = Files.find_headlines_by_title(base:sub(1, 1))
+  return vim.tbl_map(function(headline)
+    return headline.title
+  end, headlines)
+end
+
+local function find_matching_links(base)
+  base = vim.trim(base)
+  local prefix = base:sub(1, 1)
+  if prefix == '#' then
+    return find_by_custom_id_property(base)
+  end
+
+  if prefix == '*' then
+    return find_by_title_pointer(base)
+  end
+
+  local results = find_by_dedicated_target(base)
+  local all = utils.concat(results, find_by_title(base))
+  return all
+end
+
 local Autocompletion = {}
 
-local directives = { rgx = vim.regex([[^\#+\?\w*$]]), list = data.directives }
+local directives = { rgx = vim.regex([[^\#+\?\w*$]]), line_rgx = vim.regex([[^\#\?+\?\w*$]]), list = data.directives }
 local properties = { rgx = vim.regex([[\(^\s*\)\@<=:\w*$]]), list = data.properties }
-local links = { rgx = vim.regex([[\(\(^\|\s+\)\[\[\)\@<=\(\(\*\|\#\)\?\(\w+\)\)?]]), list = {} }
+local links = {
+  line_rgx = vim.regex([[\(\(^\|\s\+\)\[\[\)\@<=\(\*\|\#\)\?\(\w\+\)\?]]),
+  rgx = vim.regex([[\(\*\|\#\)\?\(\w\+\)\?$]]),
+  fetcher = find_matching_links,
+}
 local metadata = { rgx = vim.regex([[\(\s*\)\@<=\w\+$]]), list = data.metadata }
 local tags = {
   rgx = vim.regex([[:\([0-9A-Za-z_%@\#]*\)$]]),
@@ -44,7 +105,7 @@ local headline_contexts = {
 }
 
 function Autocompletion.omni(findstart, base)
-  local line = vim.api.nvim_get_current_line():sub(1, vim.api.nvim_call_function('col', {'.'}))
+  local line = vim.api.nvim_get_current_line():sub(1, vim.api.nvim_call_function('col', {'.'}) - 1)
   local is_headline = line:match('^%*+%s+')
   local ctx = is_headline and headline_contexts or contexts
   if findstart == 1 then
@@ -62,7 +123,7 @@ function Autocompletion.omni(findstart, base)
     if (not context.line_rgx or context.line_rgx:match_str(line)) and context.rgx:match_str(base) then
       local items = {}
       if context.fetcher then
-        items = context.fetcher()
+        items = context.fetcher(base)
       else
         items = {unpack(context.list)}
       end
@@ -72,7 +133,7 @@ function Autocompletion.omni(findstart, base)
       end, items)
 
       for _, item in ipairs(items) do
-        table.insert(results, { word = item, menu = '[Org]'})
+        table.insert(results, { word = item, menu = '[Org]' })
       end
     end
   end
