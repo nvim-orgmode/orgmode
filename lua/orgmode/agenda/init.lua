@@ -463,6 +463,14 @@ function Agenda:change_span(span)
   return self:agenda()
 end
 
+function Agenda:open_day(day)
+  self.active_view = 'agenda'
+  self.span = 'day'
+  self:_set_date_range(day)
+  self:agenda()
+  return vim.fn.search(self:_format_day(day))
+end
+
 function Agenda:goto_date()
   local cb = function(date)
     self:_set_date_range(date)

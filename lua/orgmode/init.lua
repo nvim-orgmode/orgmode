@@ -27,7 +27,10 @@ function Org:init()
   self.files = OrgFiles.new()
   self.agenda = Agenda:new()
   self.capture = Capture:new()
-  self.org_mappings = OrgMappings:new({ capture = self.capture })
+  self.org_mappings = OrgMappings:new({
+    capture = self.capture,
+    agenda = self.agenda,
+  })
   self.initialized = true
 end
 

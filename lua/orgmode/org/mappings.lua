@@ -1,6 +1,7 @@
 local Calendar = require('orgmode.objects.calendar')
 local Date = require('orgmode.objects.date')
 local TodoState = require('orgmode.objects.todo_state')
+local Hyperlinks = require('orgmode.org.hyperlinks')
 local utils = require('orgmode.utils')
 local Files = require('orgmode.parser.files')
 local config = require('orgmode.config')
@@ -9,6 +10,7 @@ local Help = require('orgmode.objects.help')
 ---@class OrgMappings
 ---@field files OrgFiles
 ---@field capture Capture
+---@field agenda Agenda
 local OrgMappings = {}
 
 ---@param data table
@@ -16,6 +18,7 @@ function OrgMappings:new(data)
   local opts = {}
   opts.global_cycle_mode = 'all'
   opts.capture = data.capture
+  opts.agenda = data.agenda
   setmetatable(opts, self)
   self.__index = self
   return opts
@@ -252,6 +255,48 @@ function OrgMappings:show_help()
   return Help.show()
 end
 
+function OrgMappings:open_at_point()
+  local date = self:_get_date_under_cursor()
+  if date then
+    return self.agenda:open_day(date)
+  end
+
+  local link = self:_get_link_under_cursor()
+  if not link then return end
+  local parts = vim.split(link, '][', true)
+  local url = parts[1]
+  if url:find('^file:') then
+    return vim.cmd(string.format('edit %s', url:sub(6)))
+  end
+  if url:find('^https?://') then
+    if not vim.g.loaded_netrwPlugin then
+      return utils.echo_warning('Netrw plugin must be loaded in order to open urls.')
+    end
+    return vim.fn['netrw#BrowseX'](url, vim.fn['netrw#CheckIfRemote']())
+  end
+  local current_headline = Files.get_current_file():get_closest_headline()
+  local headlines = vim.tbl_filter(function(headline)
+    return headline.line ~= current_headline.line and headline.id ~= current_headline.id
+  end, Hyperlinks.find_matching_links(url, true))
+  if #headlines == 0 then return end
+  local headline = headlines[1]
+  if #headlines > 1 then
+    local longest_headline = utils.reduce(headlines, function(acc, h)
+      return math.max(acc, h.line:len())
+    end, 0)
+    local options = {}
+    for i, h in ipairs(headlines) do
+      table.insert(options, string.format('%d) %-'..(longest_headline)..'s (%s)', i, h.line, h.file))
+    end
+    vim.cmd[[echo "Multiple targets found. Select target:"]]
+    local choice = vim.fn.inputlist(options)
+    if choice < 1 or choice > #headlines then return end
+    headline = headlines[choice]
+  end
+  vim.cmd(string.format('edit %s', headline.file))
+  vim.fn.cursor(headline.range.start_line, 0)
+end
+
 ---@param direction string
 function OrgMappings:_change_todo_state(direction)
   local item = Files.get_current_file():get_closest_headline()
@@ -323,6 +368,24 @@ function OrgMappings:_set_headline_tags(headline, tags_string)
   local spaces = 80 - math.min(line_without_tags:len(), 79)
   local new_line = string.format('%s%s%s', line_without_tags, string.rep(' ', spaces), tags):gsub('%s*$', '')
   return vim.fn.setline( headline.range.start_line, new_line)
+end
+
+---@return string|nil
+function OrgMappings:_get_link_under_cursor()
+  local found_link = nil
+  local links = {}
+  local line = vim.fn.getline('.')
+  local col = vim.fn.col('.')
+  for link in line:gmatch('%[%[(.-)%]%]') do
+    local start_from = #links > 0 and links[#links].to or nil
+    local from, to = line:find('%[%[(.-)%]%]', start_from)
+    if col >= from and col <= to then
+      found_link = link
+      break
+    end
+    table.insert(links, { link = link, from = from, to = to })
+  end
+  return found_link
 end
 
 function _G.org.autocomplete_set_tags(arg_lead)

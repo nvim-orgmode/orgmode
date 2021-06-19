@@ -53,6 +53,7 @@ return {
       org_todo = 'cit',
       org_todo_prev = 'ciT',
       org_toggle_checkbox = '<C-Space>',
+      org_open_at_point = '<Leader>oo',
       org_cycle = '<TAB>',
       org_global_cycle = '<S-TAB>',
       org_archive_subtree = '<Leader>o$',

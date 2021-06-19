@@ -81,6 +81,7 @@ Or just use `omnifunc` via <kbd>\<C-x\>\<C-o\></kbd>
   * Increase/Decrease date under cursor: <kbd>\<C-a\></kbd>/<kbd>\<C-x\></kbd>
   * Change date under cursor via calendar popup: <kbd>cid</kbd>
   * Change headline TODO state: forward<kbd>cit</kbd> or backward<kbd>ciT</kbd>
+  * Open hyperlink or date under cursor: <kbd>\<Leader\>oo</kbd>
   * Toggle checkbox: <kbd>\<C-space\></kbd>
   * Toggle folding of current headline: <kbd>\<TAB\></kbd>
   * Toggle folding in whole file: <kbd>\<S-TAB\></kbd>
@@ -115,7 +116,6 @@ Parser is written manually from scratch. It doesn't follow any parser writing pa
 much experience with those. Any help on this topic is appreciated.
 
 ## Plans
-* [ ] Add better support for hyperlinks
 * [ ] Support searching by properties
 * [ ] Improve checkbox hierarchy
 * [ ] Support todo keyword faces

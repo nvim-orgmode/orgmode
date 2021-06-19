@@ -10,6 +10,7 @@ local helps = {
     { key = 'org_todo', description = 'Forward change TODO state of current headline' },
     { key = 'org_todo_prev', description = 'Backward change TODO state of current headline' },
     { key = 'org_toggle_checkbox', description = 'Toggle checkbox state' },
+    { key = 'org_open_at_point', description = 'Open hyperlink or date under cursor' },
     { key = 'org_cycle', description = 'Toggle folding on current headline' },
     { key = 'org_global_cycle', description = 'Toggle folding in whole file' },
     { key = 'org_archive_subtree', description = 'Archive subtree to archive file' },
