@@ -25,7 +25,7 @@ require('orgmode').setup({
 
 ### Completion
 If you use [nvim-compe](https://github.com/hrsh7th/nvim-compe) and want
-to have some basic autocompletion, add this to your compe config:
+to enable autocompletion, add this to your compe config:
 
 ```lua
   require'compe'.setup({
@@ -115,9 +115,8 @@ Parser is written manually from scratch. It doesn't follow any parser writing pa
 much experience with those. Any help on this topic is appreciated.
 
 ## Plans
-* [ ] Add hyperlinks autocompletion
-* [ ] Support searching by properties
 * [ ] Add better support for hyperlinks
+* [ ] Support searching by properties
 * [ ] Improve checkbox hierarchy
 * [ ] Support todo keyword faces
 * [ ] Support clocking work time

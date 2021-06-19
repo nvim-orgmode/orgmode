@@ -15,6 +15,7 @@ function Files.new()
   return Files
 end
 
+---@return Root[]
 function Files.all()
   local files = vim.tbl_values(Files.files)
   files = vim.tbl_filter(function(file)
@@ -24,14 +25,18 @@ function Files.all()
   return files
 end
 
+---@return string[]
 function Files.filenames()
   return vim.tbl_map(function(file) return file.file end, Files.all())
 end
 
+---@param file string
+---@return Root
 function Files.get(file)
   return Files.files[file]
 end
 
+---@return string[]
 function Files.get_tags()
   return Files.tags
 end
@@ -87,9 +92,48 @@ function Files.get_current_file()
   return Files.files[filename]
 end
 
+---@return Headline|Content
 function Files.get_current_item()
   local file = Files.get_current_file()
   return file:get_item(vim.fn.line('.'))
+end
+
+---@param title string
+---@return Headline[]
+function Files.find_headlines_by_title(title)
+  local headlines = {}
+  for _, orgfile in ipairs(Files.all()) do
+    for _, headline in ipairs(orgfile:find_headlines_by_title(title)) do
+      table.insert(headlines, headline)
+    end
+  end
+  return headlines
+end
+
+---@param property_name string
+---@param term string
+---@return Headline[]
+function Files.find_headlines_with_property_matching(property_name, term)
+  local headlines = {}
+  for _, orgfile in ipairs(Files.all()) do
+    for _, headline in ipairs(orgfile:find_headlines_with_property_matching(property_name, term)) do
+      table.insert(headlines, headline)
+    end
+  end
+  return headlines
+end
+
+---@param term string
+---@param no_escape boolean
+---@return Headline[]
+function Files.find_headlines_matching_search_term(term, no_escape)
+  local headlines = {}
+  for _, orgfile in ipairs(Files.all()) do
+    for _, headline in ipairs(orgfile:get_headlines_matching_search_term(term, no_escape)) do
+      table.insert(headlines, headline)
+    end
+  end
+  return headlines
 end
 
 ---@param filename string

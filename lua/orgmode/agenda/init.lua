@@ -54,6 +54,8 @@ end
 
 ---@class Agenda
 ---@field span string|number
+---@field from Date
+---@field to Date
 ---@field items table[]
 ---@field content table[]
 ---@field highlights table[]
@@ -250,12 +252,7 @@ function Agenda:search(clear_search)
   end
   local search_term = vim.fn.input('Enter search term: ', self.last_search)
   self.last_search = search_term
-  local headlines = {}
-  for _, orgfile in ipairs(Files.all()) do
-    for _, headline in ipairs(orgfile:get_headlines_matching_search_term(search_term)) do
-      table.insert(headlines, headline)
-    end
-  end
+  local headlines = Files.find_headlines_matching_search_term(search_term)
 
   local longest_category = utils.reduce(headlines, function(acc, todo)
     return math.max(acc, todo:get_category():len())

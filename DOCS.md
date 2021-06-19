@@ -374,7 +374,7 @@ By default, `omnifunc` is provided in `org` files that autocompletes these types
 * Common drawer properties and values (`:PROPERTIES:`, `:CATEGORY:`, `:END:`, etc.)
 * Planning keywords (`DEADLINE`, `SCHEDULED`, `CLOSED`)
 * Orgfile special keywords (`#+TITLE`, `#+BEGIN_SRC`, `#+ARCHIVE`, etc.)
-* Links (TBD)
+* Hyperlinks (`* - headlines`, `# - headlines with CUSTOM_ID property`, `headlines matching title`)
 
 If you use [nvim-compe](https://github.com/hrsh7th/nvim-compe) add this to compe setup:
 ```lua
@@ -394,4 +394,9 @@ Example (`|` marks the cursor):
 Or todo keywords only at the beginning of the headline:
 ```org
 ** |
+```
+
+Or hyperlinks after double square bracket:
+```org
+Some content [[|
 ```
