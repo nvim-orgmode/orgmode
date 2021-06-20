@@ -274,6 +274,10 @@ function OrgMappings:open_at_point()
     end
     return vim.fn['netrw#BrowseX'](url, vim.fn['netrw#CheckIfRemote']())
   end
+  local stat = vim.loop.fs_stat(url)
+  if stat and stat.type == 'file' then
+    return vim.cmd(string.format('edit %s', url))
+  end
   local current_headline = Files.get_current_file():get_closest_headline()
   local headlines = vim.tbl_filter(function(headline)
     return headline.line ~= current_headline.line and headline.id ~= current_headline.id

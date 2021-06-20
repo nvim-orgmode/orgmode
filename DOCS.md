@@ -326,7 +326,14 @@ Cycle todo keyword forward on current headline  ()
 Toggle current line checkbox state
 #### **org_open_at_point**
 *mapped to*: `<Leader>oo`
-Open hyperlink or date under cursor
+Open hyperlink or date under cursor.<br />
+Hyperlink types supported:
+* URL (http://, https://)
+* File (starts with `file:`. Example: `file:/home/user/.config/nvim/init.lua`)
+* Headline title target (starts with `*`)
+* Headline with `CUSTOM_ID` property (starts with `#`)
+* Fallback: If file path, opens the file, otherwise, tries to find the Headline title.
+When date is under the cursor, open the agenda for that day.<br />
 #### **org_cycle**
 *mapped to*: `<TAB>`
 Cycle folding for current headline
