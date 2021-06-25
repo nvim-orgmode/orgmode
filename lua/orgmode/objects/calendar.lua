@@ -1,5 +1,13 @@
 local Date = require('orgmode.objects.date')
 local utils = require('orgmode.utils')
+---@class Calendar
+---@field win number
+---@field buf number
+---@field callback function
+---@field namespace function
+---@field date Date
+---@field month Date
+
 local Calendar = {
   win = nil,
   buf = nil,
@@ -11,6 +19,7 @@ local Calendar = {
 
 vim.cmd[[hi default link OrgCalendarToday DiffText]]
 
+---@param data table
 function Calendar.new(data)
   data = data or {}
   Calendar.callback = data.callback

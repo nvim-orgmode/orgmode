@@ -168,6 +168,8 @@ local function now()
   return Date:new(opts)
 end
 
+---@param datestr string
+---@return string|nil
 local function is_valid_date(datestr)
   return datestr:match('^%d%d%d%d%-%d%d%-%d%d%s+') or datestr:match('^%d%d%d%d%-%d%d%-%d%d$')
 end
@@ -230,6 +232,7 @@ function Date:to_string()
   return date
 end
 
+---@return string
 function Date:format_time()
   if self.date_only then return '' end
   local t = self:format(time_format)
@@ -453,15 +456,20 @@ function Date:is_today()
   return self.is_today_date
 end
 
+---@return boolean
 function Date:is_obsolete_range_end()
   return self.is_date_range_end and self.related_date_range:is_same(self, 'day')
 end
 
+---Return number of days for a date range
+---@return number
 function Date:get_date_range_days()
   if not self:is_none() or not self.related_date_range then return 0 end
   return math.abs(self.related_date_range:diff(self)) + 1
 end
 
+---@param date Date
+---@return boolean
 function Date:is_in_date_range(date)
   if self.is_date_range_start then
     local ranges_same_day = self.related_date_range:is_obsolete_range_end()
@@ -542,6 +550,7 @@ function Date:is_deadline()
   return self.active and self.type == 'DEADLINE'
 end
 
+---@return boolean
 function Date:is_none()
   return self.active and self.type == 'NONE'
 end
@@ -570,6 +579,8 @@ function Date:get_negative_adjustment()
   return adj
 end
 
+---Get repeater value (ex. +1w, .+1w, ++1w)
+---@return string
 function Date:get_repeater()
   local repeater = nil
   if #self.adjustments == 0 then return repeater end
@@ -610,6 +621,8 @@ function Date:apply_repeater()
   return date:adjust(repeater)
 end
 
+---@param date Date
+---@return boolean
 function Date:repeats_on(date)
   local repeater = self:get_repeater()
   if not repeater then return false end
