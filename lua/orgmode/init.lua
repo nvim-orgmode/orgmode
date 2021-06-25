@@ -1,4 +1,4 @@
-_G.org = _G.org or {}
+_G.orgmode = _G.orgmode or {}
 local Config = require('orgmode.config')
 local Agenda = require('orgmode.agenda')
 local Capture = require('orgmode.capture')
@@ -78,7 +78,7 @@ local function action(cmd, opts)
   end
 end
 
-_G.org.omni = Autocompletion.omni
+_G.orgmode.omni = Autocompletion.omni
 
 return {
   setup = setup,

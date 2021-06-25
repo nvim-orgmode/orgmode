@@ -1,4 +1,3 @@
-
 function! OrgmodeFoldExpr()
   return luaeval('require("orgmode.org.indent").foldexpr()')
 endfunction

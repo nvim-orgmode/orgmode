@@ -53,7 +53,7 @@ end
 function OrgMappings:set_tags()
   local headline = Files.get_current_file():get_closest_headline()
   local own_tags = headline:get_own_tags()
-  local tags = vim.fn.input('Tags: ', utils.tags_to_string(own_tags), 'customlist,v:lua.org.autocomplete_set_tags')
+  local tags = vim.fn.input('Tags: ', utils.tags_to_string(own_tags), 'customlist,v:lua.orgmode.autocomplete_set_tags')
   return self:_set_headline_tags(headline, tags)
 end
 
@@ -392,7 +392,7 @@ function OrgMappings:_get_link_under_cursor()
   return found_link
 end
 
-function _G.org.autocomplete_set_tags(arg_lead)
+function _G.orgmode.autocomplete_set_tags(arg_lead)
   return Files.autocomplete_tags(arg_lead, ':')
 end
 
