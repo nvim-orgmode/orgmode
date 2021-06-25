@@ -1,4 +1,4 @@
-_G.org.capture = {}
+_G.orgmode.capture = {}
 local utils = require('orgmode.utils')
 local config = require('orgmode.config')
 local Files = require('orgmode.parser.files')
@@ -113,7 +113,7 @@ function Capture:_refile_content_with_fallback(lines, fallback_file, item)
     valid_destinations[vim.fn.fnamemodify(file, ':t')] = file
   end
 
-  local destination = vim.fn.input('Enter destination: ', '', 'customlist,v:lua.org.autocomplete_refile')
+  local destination = vim.fn.input('Enter destination: ', '', 'customlist,v:lua.orgmode.autocomplete_refile')
   destination = vim.split(destination, '/', true)
 
   if not valid_destinations[destination[1]] then
@@ -200,7 +200,7 @@ function Capture:autocomplete_refile(arg_lead)
   end, result)
 end
 
-function _G.org.autocomplete_refile(arg_lead)
+function _G.orgmode.autocomplete_refile(arg_lead)
   return require('orgmode').action('capture.autocomplete_refile', arg_lead)
 end
 
