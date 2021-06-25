@@ -35,6 +35,7 @@ function Capture:prompt()
   return utils.menu('Select a capture template', templates, 'Template key')
 end
 
+---@param template table
 function Capture:open_template(template)
   vim.cmd('16split '..vim.fn.tempname())
   vim.cmd[[setf org]]
@@ -48,8 +49,7 @@ function Capture:open_template(template)
 end
 
 ---Triggered when refiling from capture buffer
----@param confirm boolean
----@return string
+---@param confirm? boolean
 function Capture:refile(confirm)
   local is_modified = vim.bo.modified
   local template = vim.api.nvim_buf_get_var(0, 'org_template') or {}
@@ -95,6 +95,11 @@ function Capture:refile_file_headline_to_archive(file, item, archive_file)
   return self:_refile_to_end(archive_file, lines, item, string.format('Archived to %s', archive_file))
 end
 
+---@param file string
+---@param lines string[]
+---@param item? Headline
+---@param message? string
+---@return boolean
 function Capture:_refile_to_end(file, lines, item, message)
   local refiled = self:_refile_to(file, lines, item, '$')
   if not refiled then return false end
@@ -104,6 +109,7 @@ end
 
 ---@param lines string[]
 ---@param fallback_file string
+---@param item? Headline
 ---@return string
 function Capture:_refile_content_with_fallback(lines, fallback_file, item)
   local default_file = fallback_file and fallback_file ~= '' and vim.fn.fnamemodify(fallback_file, ':p') or nil
@@ -141,6 +147,11 @@ function Capture:_refile_content_with_fallback(lines, fallback_file, item)
   return true
 end
 
+---@param file string
+---@param lines string[]
+---@param item? Headline
+---@param destination_line string|number
+---@return boolean
 function Capture:_refile_to(file, lines, item, destination_line)
   if not file then return false end
 
@@ -170,6 +181,8 @@ function Capture:_refile_to(file, lines, item, destination_line)
   return true
 end
 
+---@param arg_lead string
+---@return string[]
 function Capture:autocomplete_refile(arg_lead)
   local valid_filenames = {}
   for _, filename in ipairs(Files.filenames()) do
