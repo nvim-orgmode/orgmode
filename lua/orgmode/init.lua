@@ -1,10 +1,4 @@
 _G.orgmode = _G.orgmode or {}
-local Config = require('orgmode.config')
-local Agenda = require('orgmode.agenda')
-local Capture = require('orgmode.capture')
-local OrgMappings = require('orgmode.org.mappings')
-local OrgFiles = require('orgmode.parser.files')
-local Autocompletion = require('orgmode.org.autocompletion')
 local instance = nil
 
 ---@class Org
@@ -24,13 +18,14 @@ end
 
 function Org:init()
   if self.initialized then return end
-  self.files = OrgFiles.new()
-  self.agenda = Agenda:new()
-  self.capture = Capture:new()
-  self.org_mappings = OrgMappings:new({
+  self.files = require('orgmode.parser.files').new()
+  self.agenda = require('orgmode.agenda'):new()
+  self.capture = require('orgmode.capture'):new()
+  self.org_mappings = require('orgmode.org.mappings'):new({
     capture = self.capture,
     agenda = self.agenda,
   })
+  _G.orgmode.omni = require('orgmode.org.autocompletion').omni
   self.initialized = true
 end
 
@@ -53,9 +48,10 @@ end
 ---@param opts? table
 ---@return Org
 local function setup(opts)
-  Config = Config:extend(opts)
   instance = Org:new()
-  Config:setup_mappings()
+  vim.defer_fn(function()
+    require('orgmode.config'):extend(opts):setup_mappings()
+  end, 1)
   return instance
 end
 
@@ -78,7 +74,6 @@ local function action(cmd, opts)
   end
 end
 
-_G.orgmode.omni = Autocompletion.omni
 
 return {
   setup = setup,
