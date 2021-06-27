@@ -18,6 +18,8 @@ local helps = {
     { key = 'org_toggle_archive_tag', description = 'toggle "ARCHIVE" tag on current headline' },
     { key = 'org_do_promote', description = 'Promote headline' },
     { key = 'org_do_demote', description = 'Demote headline' },
+    { key = 'org_promote_subtree', description = 'Promote whole subtree' },
+    { key = 'org_demote_subtree', description = 'Demote whole subtree' },
     { key = 'org_meta_return', description = 'Add headline, list item or checkbox (context aware)' },
     { key = 'org_insert_heading_respect_content', description = 'Add new headline after current subtree' },
     { key = 'org_insert_todo_heading', description = 'Add new TODO headline on line right after current line' },

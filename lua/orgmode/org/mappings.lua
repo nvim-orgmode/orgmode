@@ -179,14 +179,14 @@ function OrgMappings:todo_prev_state()
   self:_change_todo_state('prev')
 end
 
-function OrgMappings:promote_heading()
+function OrgMappings:do_promote(whole_subtree)
   local item = Files.get_current_file():get_closest_headline()
-  return item:promote(1, true)
+  return item:promote(1, whole_subtree)
 end
 
-function OrgMappings:demote_heading()
+function OrgMappings:do_demote(whole_subtree)
   local item = Files.get_current_file():get_closest_headline()
-  return item:demote(1, true)
+  return item:demote(1, whole_subtree)
 end
 
 function OrgMappings:handle_return(suffix)
