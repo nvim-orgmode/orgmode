@@ -213,43 +213,43 @@ require('orgmode').setup({
 Mappings used in agenda view window.
 
 #### **org_agenda_later**
-*mapped to*: `f`
+*mapped to*: `f`<br />
 Go to next agenda span
 #### **org_agenda_earlier**
-*mapped to*: `b`
+*mapped to*: `b`<br />
 Go to previous agenda span
 #### **org_agenda_goto_today**
-*mapped to*: `.`
+*mapped to*: `.`<br />
 Go to span with for today
 #### **org_agenda_day_view **
-*mapped to*: `vd`
+*mapped to*: `vd`<br />
 Show agenda day view
 #### **org_agenda_week_view**
-*mapped to*: `vw`
+*mapped to*: `vw`<br />
 Show agenda week view
 #### **org_agenda_month_view**
-*mapped to*: `vm`
+*mapped to*: `vm`<br />
 Show agenda month view
 #### **org_agenda_year_view**
-*mapped to*: `vy`
+*mapped to*: `vy`<br />
 Show agenda year view
 #### **org_agenda_quit**
-*mapped to*: `q`
+*mapped to*: `q`<br />
 Close agenda
 #### **org_agenda_switch_to**
-*mapped to*: `<CR>`
+*mapped to*: `<CR>`<br />
 Open selected agenda item in the same buffer
 #### **org_agenda_goto**
-*mapped to*: `{'<TAB>'}`
+*mapped to*: `{'<TAB>'}`<br />
 Open selected agenda item in split window
 #### **org_agenda_goto_date**
-*mapped to*: `J`
+*mapped to*: `J`<br />
 Open calendar that allows selecting date to jump to
 #### **org_agenda_redo**
-*mapped to*: `r`
+*mapped to*: `r`<br />
 Reload all org files and refresh current agenda view
 #### **org_agenda_show_help**
-*mapped to*: `?`
+*mapped to*: `?`<br />
 Show help popup with mappings
 
 These mappings live under `mappings.agenda`, and can be changed like this:
@@ -273,16 +273,16 @@ require('orgmode').setup({
 Mappings used in capture window.
 
 #### **org_capture_finalize**
-*mapped to*: `<C-c>`
+*mapped to*: `<C-c>`<br />
 Save current capture content to `org_default_notes_file` and close capture window
 #### **org_capture_refile**
-*mapped to*: `<Leader>or`
+*mapped to*: `<Leader>or`<br />
 Refile capture content to specific destination
 #### **org_capture_kill**
-*mapped to*: `<Leader>ok`
+*mapped to*: `<Leader>ok`<br />
 Close capture window without saving anything
 #### **org_capture_show_help**
-*mapped to*: `?`
+*mapped to*: `?`<br />
 Show help popup with mappings
 
 These mappings live under `mappings.capture`, and can be changed like this:
@@ -304,28 +304,28 @@ These mappings live under `mappings.capture`, and can be changed like this:
 
 Mappings for `org` files.
 #### **org_refile**
-*mapped to*: `<Leader>or`
+*mapped to*: `<Leader>or`<br />
 Refile current headline to destination
 #### **org_increase_date**
-*mapped to*: `<C-a>`
+*mapped to*: `<C-a>`<br />
 Increase date under cursor by 1 day
 #### **org_decrease_date**
-*mapped to*: `<C-x>`
+*mapped to*: `<C-x>`<br />
 Decrease date under cursor by 1 day
 #### **org_change_date**
-*mapped to*: `cid`
+*mapped to*: `cid`<br />
 Change date under cursor. Opens calendar to select new date
 #### **org_todo**
-*mapped to*: `cit`
+*mapped to*: `cit`<br />
 Cycle todo keyword forward on current headline  ()
 #### **org_todo_prev**
-*mapped to*: `ciT`
+*mapped to*: `ciT`<br />
 Cycle todo keyword forward on current headline  ()
 #### **org_toggle_checkbox**
-*mapped to*: `<C-Space>`
+*mapped to*: `<C-Space>`<br />
 Toggle current line checkbox state
 #### **org_open_at_point**
-*mapped to*: `<Leader>oo`
+*mapped to*: `<Leader>oo`<br />
 Open hyperlink or date under cursor.<br />
 Hyperlink types supported:
 * URL (http://, https://)
@@ -335,46 +335,52 @@ Hyperlink types supported:
 * Fallback: If file path, opens the file, otherwise, tries to find the Headline title.
 When date is under the cursor, open the agenda for that day.<br />
 #### **org_cycle**
-*mapped to*: `<TAB>`
+*mapped to*: `<TAB>`<br />
 Cycle folding for current headline
 #### **org_global_cycle**
-*mapped to*: `<S-TAB>`
+*mapped to*: `<S-TAB>`<br />
 Cycle global folding
 #### **org_archive_subtree**
-*mapped to*: `<Leader>o$`
+*mapped to*: `<Leader>o$`<br />
 Archive current headline to archive location
 #### **org_set_tags_command**
-*mapped to*: `<Leader>ot`
+*mapped to*: `<Leader>ot`<br />
 Set tags on current headline
 #### **org_toggle_archive_tag**
-*mapped to*: `<Leader>oA`
+*mapped to*: `<Leader>oA`<br />
 Toggle "ARCHIVE" tag on current headline
 #### **org_do_promote**
-*mapped to*: `<<`
+*mapped to*: `<<`<br />
 Promote headline
 #### **org_do_demote**
-*mapped to*: `>>`
+*mapped to*: `>>`<br />
 Demote headline
+#### **org_promote_subtree**
+*mapped to*: `<s`<br />
+Promote subtree
+#### **org_demote_subtree**
+*mapped to*: `>s`<br />
+Demote subtree
 #### **org_meta_return**
-*mapped to*: `<Leader><CR>`
+*mapped to*: `<Leader><CR>`<br />
 Add headline, list item or checkbox below, depending on current line
 #### **org_insert_heading_respect_content**
-*mapped to*: `<Leader>oih`
+*mapped to*: `<Leader>oih`<br />
 Add headline after current headline + it's content with same level
 #### **org_insert_todo_heading**
-*mapped to*: `<Leader>oiT`
+*mapped to*: `<Leader>oiT`<br />
 Add TODO headline right after the current headline
 #### **org_insert_todo_heading_respect_content**
-*mapped to*: `<Leader>oit`
+*mapped to*: `<Leader>oit`<br />
 Add TODO headliner after current headline + it's content
 #### **org_move_subtree_up**
-*mapped to*: `<Leader>oK`
+*mapped to*: `<Leader>oK`<br />
 Move current headline + it's content up by one headline
 #### **org_move_subtree_down**
-*mapped to*: `<Leader>oJ`
+*mapped to*: `<Leader>oJ`<br />
 Move current headline + it's content down by one headline
 #### **org_show_help**
-*mapped to*: `?`
+*mapped to*: `?`<br />
 Show help popup with mappings
 
 ## Autocompletion
