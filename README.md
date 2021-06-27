@@ -35,6 +35,17 @@ to enable autocompletion, add this to your compe config:
   })
 ```
 Or just use `omnifunc` via <kbd>\<C-x\>\<C-o\></kbd>
+  
+### Gifs
+#### Agenda
+  ![agenda](https://user-images.githubusercontent.com/1782860/123549968-8521f600-d76b-11eb-9a93-02bad08b37ce.gif)
+  
+#### Org file
+  ![orgfile](https://user-images.githubusercontent.com/1782860/123549982-90752180-d76b-11eb-8828-9edf9f76af08.gif)
+
+#### Capturing and refiling
+  ![capture](https://user-images.githubusercontent.com/1782860/123549993-9a972000-d76b-11eb-814b-b348a93df08a.gif)
+
 
 ### Features (TL;DR):
 * Agenda view
