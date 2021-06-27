@@ -46,6 +46,9 @@ Or just use `omnifunc` via <kbd>\<C-x\>\<C-o\></kbd>
 #### Capturing and refiling
   ![capture](https://user-images.githubusercontent.com/1782860/123549993-9a972000-d76b-11eb-814b-b348a93df08a.gif)
 
+#### Autocompletion
+  ![autocomplete](https://user-images.githubusercontent.com/1782860/123550227-e8605800-d76c-11eb-96f6-c0a677d562d4.gif)
+
 
 ### Features (TL;DR):
 * Agenda view
