@@ -1,4 +1,3 @@
-local compe = require('compe')
 local Files = require('orgmode.parser.files')
 local config = require('orgmode.config')
 local Hyperlinks = require('orgmode.org.hyperlinks')
@@ -119,7 +118,10 @@ function Source.complete(_, context)
   })
 end
 
--- Register your custom source.
-compe.register_source('orgmode', Source)
+
+local has_compe, compe = pcall(require, 'compe')
+if has_compe then
+  compe.register_source('orgmode', Source)
+end
 
 return Autocompletion
