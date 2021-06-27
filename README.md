@@ -106,7 +106,7 @@ Or just use `omnifunc` via <kbd>\<C-x\>\<C-o\></kbd>
   * Demote headline: <kbd>>></kbd>
   * Promote subtree: <kbd>\<s</kbd>
   * Demote subtree: <kbd>\>s</kbd>
-  * Add headline/list item/checkbox: <kbd>\<Leader\><CR></kbd>
+  * Add headline/list item/checkbox: <kbd>\<Leader\>\<CR\></kbd>
   * Insert heading after current heading and it's content: <kbd>\<Leader\>oih</kbd>
   * Insert TODO heading after current line: <kbd>\<Leader\>oiT</kbd>
   * Insert TODO heading after current heading and it's content: <kbd>\<Leader\>oit</kbd>
