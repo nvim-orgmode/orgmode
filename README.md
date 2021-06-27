@@ -35,11 +35,11 @@ to enable autocompletion, add this to your compe config:
   })
 ```
 Or just use `omnifunc` via <kbd>\<C-x\>\<C-o\></kbd>
-  
+
 ### Gifs
 #### Agenda
   ![agenda](https://user-images.githubusercontent.com/1782860/123549968-8521f600-d76b-11eb-9a93-02bad08b37ce.gif)
-  
+
 #### Org file
   ![orgfile](https://user-images.githubusercontent.com/1782860/123549982-90752180-d76b-11eb-8828-9edf9f76af08.gif)
 
@@ -102,8 +102,10 @@ Or just use `omnifunc` via <kbd>\<C-x\>\<C-o\></kbd>
   * Archive headline: <kbd>\<Leader\>o$</kbd>
   * Add archive tag: <kbd>\<Leader\>oA</kbd>
   * Change tags: <kbd>\<Leader\>ot</kbd>
-  * Promote: <kbd><<</kbd>
-  * Demote: <kbd>>></kbd>
+  * Promote headline: <kbd><<</kbd>
+  * Demote headline: <kbd>>></kbd>
+  * Promote subtree: <kbd>\<s</kbd>
+  * Demote subtree: <kbd>\>s</kbd>
   * Add headline/list item/checkbox: <kbd>\<Leader\><CR></kbd>
   * Insert heading after current heading and it's content: <kbd>\<Leader\>oih</kbd>
   * Insert TODO heading after current line: <kbd>\<Leader\>oiT</kbd>

@@ -63,13 +63,15 @@ CONTENTS                                                        *orgmode-content
             1.2.4.13. org_toggle_archive_tag......|orgmode-org_toggle_archive_tag|
             1.2.4.14. org_do_promote......................|orgmode-org_do_promote|
             1.2.4.15. org_do_demote........................|orgmode-org_do_demote|
-            1.2.4.16. org_meta_return....................|orgmode-org_meta_return|
-            1.2.4.17. org_insert_heading_respect_content.|orgmode-org_insert_heading_respect_content|
-            1.2.4.18. org_insert_todo_heading....|orgmode-org_insert_todo_heading|
-            1.2.4.19. org_insert_todo_heading_respect_content.|orgmode-org_insert_todo_heading_respect_content|
-            1.2.4.20. org_move_subtree_up............|orgmode-org_move_subtree_up|
-            1.2.4.21. org_move_subtree_down........|orgmode-org_move_subtree_down|
-            1.2.4.22. org_show_help........................|orgmode-org_show_help|
+            1.2.4.16. org_promote_subtree............|orgmode-org_promote_subtree|
+            1.2.4.17. org_demote_subtree..............|orgmode-org_demote_subtree|
+            1.2.4.18. org_meta_return....................|orgmode-org_meta_return|
+            1.2.4.19. org_insert_heading_respect_content.|orgmode-org_insert_heading_respect_content|
+            1.2.4.20. org_insert_todo_heading....|orgmode-org_insert_todo_heading|
+            1.2.4.21. org_insert_todo_heading_respect_content.|orgmode-org_insert_todo_heading_respect_content|
+            1.2.4.22. org_move_subtree_up............|orgmode-org_move_subtree_up|
+            1.2.4.23. org_move_subtree_down........|orgmode-org_move_subtree_down|
+            1.2.4.24. org_show_help........................|orgmode-org_show_help|
     1.3. Autocompletion...................................|orgmode-autocompletion|
 
 ================================================================================
@@ -507,6 +509,16 @@ ORG_DO_DEMOTE                                              *orgmode-org_do_demot
 
 mapped to: `>>`
 Demote headline
+
+ORG_PROMOTE_SUBTREE                                  *orgmode-org_promote_subtree*
+
+mapped to: `<s`
+Promote subtree
+
+ORG_DEMOTE_SUBTREE                                    *orgmode-org_demote_subtree*
+
+mapped to: `>s`
+Demote subtree
 
 ORG_META_RETURN                                          *orgmode-org_meta_return*
 
