@@ -20,6 +20,9 @@ Steps to reproduce the behavior:
 **Expected behavior**
 A clear and concise description of what you expected to happen.
 
+**Emacs functionality**
+If this functionality exists in Emacs Orgmode, explain how it works there.
+
 **Screenshots**
 If applicable, add screenshots to help explain your problem.
 
