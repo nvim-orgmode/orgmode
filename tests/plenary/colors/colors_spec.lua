@@ -29,4 +29,22 @@ describe('Colors', function()
 
     vim.cmd[[hi clear OrgTestParse]]
   end)
+
+  it('should fallback to default colors if none provided for todo colors', function()
+    vim.cmd[[
+      hi clear Error
+      hi clear ErrorMsg
+      hi clear WarningMsg
+      hi clear diffAdded
+      hi clear DiffAdd
+    ]]
+    local todo_keywords_colors = colors.get_todo_keywords_colors()
+    assert.are.same({
+      DONE = "#00FF00",
+      TODO = "#FF0000",
+      deadline = "#ff1a1a",
+      ok = "#1aff1a",
+      warning = "#ff981a"
+    }, todo_keywords_colors)
+  end)
 end)

@@ -26,11 +26,26 @@ function M.parse_hl_fg_color(hlgroup)
 end
 
 M.get_todo_keywords_colors = function()
-   local error = M.parse_hl_fg_color('ErrorMsg')
+   local error = M.parse_hl_fg_color('Error')
    local warning = M.parse_hl_fg_color('WarningMsg')
    local ok = M.parse_hl_fg_color('diffAdded')
    if ok == '' then
       ok = M.parse_hl_fg_color('DiffAdd')
+   end
+   if error == '' then
+     error = M.parse_hl_fg_color('ErrorMsg')
+   end
+
+   if ok == '' or ok:sub(1, 1) ~= '#' then
+     ok = '#00FF00'
+   end
+
+   if warning == '' or warning:sub(1, 1) ~= '#' then
+     warning = '#FF8C00'
+   end
+
+   if error == '' or error:sub(1, 1) ~= '#' then
+     error = '#FF0000'
    end
 
    return {
