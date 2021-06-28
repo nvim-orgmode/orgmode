@@ -3,7 +3,8 @@ local config = require('orgmode.config')
 local Hyperlinks = require('orgmode.org.hyperlinks')
 
 local data = {
-  directives = {'#+TITLE', '#+AUTHOR', '#+EMAIL', '#+NAME', '#+BEGIN_SRC', '#+END_SRC', '#+BEGIN_EXAMPLE', '#+END_EXAMPLE', '#+FILETAGS', '#+ARCHIVE'},
+  directives = {'#+TITLE', '#+AUTHOR', '#+EMAIL', '#+NAME', '#+FILETAGS', '#+ARCHIVE'},
+  begin_blocks = {'#+BEGIN_SRC', '#+END_SRC', '#+BEGIN_EXAMPLE', '#+END_EXAMPLE'},
   properties = {':PROPERTIES:', ':END:', ':LOGBOOK:', ':STYLE:', ':REPEAT_TO_STATE:', ':CUSTOM_ID:', ':CATEGORY:'},
   metadata = {'DEADLINE:', 'SCHEDULED:', 'CLOSED:'},
 }
@@ -11,6 +12,7 @@ local data = {
 local Autocompletion = {}
 
 local directives = { rgx = vim.regex([[^\#+\?\w*$]]), line_rgx = vim.regex([[^\#\?+\?\w*$]]), list = data.directives }
+local begin_blocks = { rgx = vim.regex([[\(^\s*\)\@<=\#+\?\w*$]]), line_rgx = vim.regex([[^\s*\#\?+\?\w*$]]), list = data.begin_blocks }
 local properties = { rgx = vim.regex([[\(^\s*\)\@<=:\w*$]]), list = data.properties }
 local links = {
   line_rgx = vim.regex([[\(\(^\|\s\+\)\[\[\)\@<=\(\*\|\#\)\?\(\w\+\)\?]]),
@@ -36,6 +38,7 @@ local todo_keywords = {
 
 local contexts = {
   directives,
+  begin_blocks,
   properties,
   links,
   metadata,

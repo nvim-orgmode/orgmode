@@ -131,12 +131,12 @@ describe('Autocompletion', function()
       { menu = "[Org]", word = "#+AUTHOR" },
       { menu = "[Org]", word = "#+EMAIL" },
       { menu = "[Org]", word = "#+NAME" },
+      { menu = "[Org]", word = "#+FILETAGS" },
+      { menu = "[Org]", word = "#+ARCHIVE" },
       { menu = "[Org]", word = "#+BEGIN_SRC" },
       { menu = "[Org]", word = "#+END_SRC" },
       { menu = "[Org]", word = "#+BEGIN_EXAMPLE" },
       { menu = "[Org]", word = "#+END_EXAMPLE" },
-      { menu = "[Org]", word = "#+FILETAGS" },
-      { menu = "[Org]", word = "#+ARCHIVE" }
     } assert.are.same(directives, result)
 
     result = Autocompletion.omni(0, '#+')
