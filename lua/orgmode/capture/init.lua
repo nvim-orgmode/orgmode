@@ -37,10 +37,11 @@ end
 
 ---@param template table
 function Capture:open_template(template)
+  local content = self.templates:compile(template)
   vim.cmd('16split '..vim.fn.tempname())
   vim.cmd[[setf org]]
   vim.cmd[[setlocal bufhidden=wipe nobuflisted nolist noswapfile nowrap nofoldenable]]
-  vim.api.nvim_buf_set_lines(0, 0, -1, true, self.templates:compile(template))
+  vim.api.nvim_buf_set_lines(0, 0, -1, true, content)
   self.templates:setup()
   vim.api.nvim_buf_set_var(0, 'org_template', template)
   vim.api.nvim_buf_set_var(0, 'org_capture', true)

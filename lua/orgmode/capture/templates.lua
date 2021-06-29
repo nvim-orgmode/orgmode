@@ -5,6 +5,7 @@ local expansions = {
   ['%T'] = function() return string.format('<%s>', Date.now():to_string()) end,
   ['%u'] = function() return string.format('[%s]', Date.today():to_string()) end,
   ['%U'] = function() return string.format('[%s]', Date.now():to_string()) end,
+  ['%a'] = function() return string.format('[[file:%s]]', vim.api.nvim_buf_get_name(0)) end,
 }
 
 ---@see https://orgmode.org/manual/Capture-templates.html
