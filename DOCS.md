@@ -10,6 +10,7 @@
    3. [Capture mappings](#capture-mappings)
    4. [Org mappings](#org-mappings)
 3. [Autocompletion](#autocompletion)
+4. [Abbreviations][#abbreviations]
 
 ## Settings
 Variable names mostly follow the same naming as Orgmode mappings.
@@ -421,3 +422,9 @@ Or hyperlinks after double square bracket:
 ```org
 Some content [[|
 ```
+
+## Abbreviations
+`org` buffers have access to two abbreviations:
+
+* `:today:` - expands to today's date (example: `<2021-06-29 Tue>`)
+* `:now:` - expands to today's date and current time (example: `<2021-06-29 Tue 15:32>`)
