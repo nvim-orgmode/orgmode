@@ -103,7 +103,7 @@ Variables:
   * `%?`: Default cursor position when template is opened
 
 Example:<br />
-  `{ T = { description: 'Todo', template: '* TODO %?\n %u', target: '~/org/todo.org' } }`
+  `{ T = { description: 'Todo', template: '* TODO %?\n %u' } }`
 
 #### **org_priority_highest**
 *type*: `string|number`<br />
