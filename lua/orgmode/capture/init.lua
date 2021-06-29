@@ -55,6 +55,7 @@ function Capture:refile(confirm)
   local is_modified = vim.bo.modified
   local template = vim.api.nvim_buf_get_var(0, 'org_template') or {}
   local file = vim.fn.fnamemodify(template.target or config.org_default_notes_file, ':p')
+  local lines = vim.api.nvim_buf_get_lines(0, 0, -1, true)
   if confirm and is_modified then
     local choice = vim.fn.confirm(string.format('Do you want to refile this to %s?', file), '&Yes\n&No')
     vim.cmd[[redraw!]]
@@ -62,8 +63,10 @@ function Capture:refile(confirm)
       return utils.echo_info('Canceled.')
     end
   end
-  -- TODO: Parse refile content as org file and update refile destination to point to headline or root
-  self:_refile_to_end(file, vim.api.nvim_buf_get_lines(0, 0, -1, true))
+  vim.defer_fn(function()
+    -- TODO: Parse refile content as org file and update refile destination to point to headline or root
+    self:_refile_to_end(file, lines)
+  end, 0)
   vim.cmd[[autocmd! OrgCapture BufWipeout <buffer>]]
   vim.cmd[[silent! wq]]
 end
@@ -219,6 +222,7 @@ function _G.orgmode.autocomplete_refile(arg_lead)
 end
 
 function Capture:kill()
+  vim.cmd[[autocmd! OrgCapture BufWipeout <buffer>]]
   vim.cmd[[bw!]]
 end
 
