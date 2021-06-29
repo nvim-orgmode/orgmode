@@ -51,12 +51,22 @@ If you use [nvim-compe](https://github.com/hrsh7th/nvim-compe) and want
 to enable autocompletion, add this to your compe config:
 
 ```lua
-  require'compe'.setup({
-    source = {
-      orgmode = true
-    }
-  })
+require'compe'.setup({
+  source = {
+    orgmode = true
+  }
+})
 ```
+
+For [completion.nvim](https://github.com/nvim-lua/completion-nvim), add this to your completion nvim config:
+```lua
+vim.g.completion_chain_complete_list = {
+  org = {
+    { complete_items = {'orgmode'}},
+  },
+}
+```
+
 Or just use `omnifunc` via <kbd>\<C-x\>\<C-o\></kbd>
 
 ### Gifs

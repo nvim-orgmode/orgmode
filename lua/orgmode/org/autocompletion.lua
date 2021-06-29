@@ -87,13 +87,13 @@ function Autocompletion.omni(findstart, base)
   return results
 end
 
-local Source = {}
+local CompeSource = {}
 
-function Source.new()
-  return setmetatable({}, { __index = Source })
+function CompeSource.new()
+  return setmetatable({}, { __index = CompeSource })
 end
 
-function Source.get_metadata()
+function CompeSource.get_metadata()
   return {
     priority = 999,
     sort = false,
@@ -103,7 +103,7 @@ function Source.get_metadata()
   }
 end
 
-function Source.determine(_, context)
+function CompeSource.determine(_, context)
   local offset = Autocompletion.omni(1, '') + 1
   if offset > 0 then
     return {
@@ -113,7 +113,7 @@ function Source.determine(_, context)
   end
 end
 
-function Source.complete(_, context)
+function CompeSource.complete(_, context)
   local items = Autocompletion.omni(0, context.input)
   context.callback({
     items = items,
@@ -124,7 +124,22 @@ end
 
 local has_compe, compe = pcall(require, 'compe')
 if has_compe then
-  compe.register_source('orgmode', Source)
+  compe.register_source('orgmode', CompeSource)
+end
+
+local has_completion_nvim, completion_nvim = pcall(require, 'completion')
+if has_completion_nvim then
+  local CompletionNvim = {}
+  vim.cmd[[set iskeyword+=:,#,+]]
+  CompletionNvim.item = function(prefix)
+    local items = Autocompletion.omni(0, prefix)
+    for _, item in pairs(items) do
+      item.dup = 0
+    end
+
+    return items
+  end
+  completion_nvim.addCompletionSource('orgmode', CompletionNvim)
 end
 
 return Autocompletion
