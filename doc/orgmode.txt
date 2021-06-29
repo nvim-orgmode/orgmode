@@ -88,7 +88,7 @@ TABLE OF CONTENT                                        *orgmode-table_of_conten
     3.  Capture mappings (#capture-mappings)
     4.  Org mappings (#org-mappings)
 3.  Autocompletion (#autocompletion)
-4.  [Abbreviations][#abbreviations]
+4.  Abbreviations (#abbreviations)
 
 --------------------------------------------------------------------------------
 SETTINGS                                                        *orgmode-settings*
