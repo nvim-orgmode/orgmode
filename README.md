@@ -15,8 +15,9 @@ packager.add('kristijanhusak/orgmode.nvim')
 - [packer.nvim](https://github.com/wbthomason/packer.nvim)
 
 ```lua
-use {
-    'kristijanhusak/orgmode.nvim',
+use {'kristijanhusak/orgmode.nvim', config = function()
+        require('orgmode').setup{}
+end
 }
 ```
 
