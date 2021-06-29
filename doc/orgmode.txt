@@ -582,6 +582,15 @@ If you use nvim-compe (https://github.com/hrsh7th/nvim-compe) add this to compe 
       })
 <
 
+For completion.nvim (https://github.com/nvim-lua/completion-nvim), add this to your completion nvim config:
+>
+    vim.g.completion_chain_complete_list = {
+      org = {
+        { complete_items = {'orgmode'}},
+      },
+    }
+<
+
 Note that autocompletion is context aware, which means that
 for example tags autocompletion will kick in only when cursor is at the end of headline.
 Example (`|` marks the cursor):
