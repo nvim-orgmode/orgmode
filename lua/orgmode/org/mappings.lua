@@ -88,16 +88,13 @@ end
 function OrgMappings:global_cycle()
   if not vim.wo.foldenable or self.global_cycle_mode == 'Show All' then
     self.global_cycle_mode = 'Overview'
-    utils.echo_info(self.global_cycle_mode)
     return vim.cmd([[norm!zM]])
   end
   if self.global_cycle_mode == 'Contents' then
     self.global_cycle_mode = 'Show All'
-    utils.echo_info(self.global_cycle_mode)
     return vim.cmd([[norm!zR]])
   end
   self.global_cycle_mode = 'Contents'
-  utils.echo_info(self.global_cycle_mode)
   vim.wo.foldlevel = 1
   return vim.cmd([[norm!zx]])
 end
