@@ -40,11 +40,11 @@ describe('Colors', function()
     ]]
     local todo_keywords_colors = colors.get_todo_keywords_colors()
     assert.are.same({
-      DONE = "#00FF00",
-      TODO = "#FF0000",
-      deadline = "#ff1a1a",
-      ok = "#1aff1a",
-      warning = "#ff981a"
+      DONE = { gui = "#00FF00", cterm = 2 },
+      TODO = { gui = "#FF0000", cterm = 1 },
+      deadline = { gui = "#ff1a1a", cterm = 9 },
+      ok = { gui = "#1aff1a", cterm = 10 },
+      warning = { gui = "#ff981a", cterm = 11 },
     }, todo_keywords_colors)
   end)
 end)

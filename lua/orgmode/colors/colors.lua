@@ -36,6 +36,20 @@ end
 M.new = new
 
 -----------------------------------------------------------------------------
+-- Checks if string is valid hex
+--
+-- @param color_hex string
+-- @return string|nil
+-----------------------------------------------------------------------------
+local function validate(color_hex)
+   if type(color_hex) == 'string' and color_hex:len() == 7 and color_hex:sub(1, 1) == '#' then
+      return color_hex
+   end
+   return nil
+end
+M.validate = validate
+
+-----------------------------------------------------------------------------
 -- Converts an HSL triplet to RGB
 -- (see http://homepages.cwi.nl/~steven/css/hsl.html).
 --
