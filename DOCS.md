@@ -10,7 +10,7 @@
    3. [Capture mappings](#capture-mappings)
    4. [Org mappings](#org-mappings)
 3. [Autocompletion](#autocompletion)
-4. [Abbreviations][#abbreviations]
+4. [Abbreviations](#abbreviations)
 
 ## Settings
 Variable names mostly follow the same naming as Orgmode mappings.
