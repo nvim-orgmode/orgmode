@@ -127,19 +127,4 @@ if has_compe then
   compe.register_source('orgmode', CompeSource)
 end
 
-local has_completion_nvim, completion_nvim = pcall(require, 'completion')
-if has_completion_nvim then
-  local CompletionNvim = {}
-  vim.cmd[[set iskeyword+=:,#,+]]
-  CompletionNvim.item = function(prefix)
-    local items = Autocompletion.omni(0, prefix)
-    for _, item in pairs(items) do
-      item.dup = 0
-    end
-
-    return items
-  end
-  completion_nvim.addCompletionSource('orgmode', CompletionNvim)
-end
-
 return Autocompletion

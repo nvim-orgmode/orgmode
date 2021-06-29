@@ -582,11 +582,11 @@ If you use nvim-compe (https://github.com/hrsh7th/nvim-compe) add this to compe 
       })
 <
 
-For completion.nvim (https://github.com/nvim-lua/completion-nvim), add this to your completion nvim config:
+For completion.nvim (https://github.com/nvim-lua/completion-nvim), just add `omni` mode to chain complete list:
 >
     vim.g.completion_chain_complete_list = {
       org = {
-        { complete_items = {'orgmode'}},
+        { mode = 'omni'},
       },
     }
 <

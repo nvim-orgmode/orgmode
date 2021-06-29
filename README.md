@@ -58,11 +58,11 @@ require'compe'.setup({
 })
 ```
 
-For [completion.nvim](https://github.com/nvim-lua/completion-nvim), add this to your completion nvim config:
+For [completion.nvim](https://github.com/nvim-lua/completion-nvim), just add `omni` mode to chain complete list:
 ```lua
 vim.g.completion_chain_complete_list = {
   org = {
-    { complete_items = {'orgmode'}},
+    { mode = 'omni'},
   },
 }
 ```
