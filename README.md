@@ -7,9 +7,31 @@ Orgmode clone written in Lua for Neovim 0.5.
 Use your favourite package manager:
 
 * [vim-packager](https://github.com/kristijanhusak/vim-packager):
-  ```lua
-    packager.add('kristijanhusak/orgmode.nvim')
-  ```
+
+```lua
+packager.add('kristijanhusak/orgmode.nvim')
+```
+
+- [packer.nvim](https://github.com/wbthomason/packer.nvim)
+
+```lua
+use {
+    'kristijanhusak/orgmode.nvim',
+}
+```
+
+- [vim-plug](https://github.com/junegunn/vim-plug)
+
+```vim
+Plug 'kristijanhusak/orgmode.nvim'
+```
+
+- [dein](https://github.com/Shougo/dein.vim)
+
+```vim
+call dein#add('kristijanhusak/orgmode.nvim')
+```
+
 ## Setup
 
 ```lua
