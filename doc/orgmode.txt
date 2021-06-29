@@ -183,7 +183,8 @@ type: `table<string, table>`
 default value: `{ t = { description: 'Task', template: '* TODO %?\n  %u' } }`
 Templates for capture/refile prompt.
 Variables:
-  * `%t`: Prints current date (Example: `<2021-06-10 Thu>`) `%T`: Prints current date and time (Example: `<2021-06-10 Thu 12:30>`)
+  * `%t`: Prints current date (Example: `<2021-06-10 Thu>`)
+  * `%T`: Prints current date and time (Example: `<2021-06-10 Thu 12:30>`)
   * `%u`: Prints current date in inactive format (Example: `[2021-06-10 Thu]`)
   * `%U`: Prints current date and time in inactive format (Example: `[2021-06-10 Thu 12:30]`)
   * `%?`: Default cursor position when template is opened
