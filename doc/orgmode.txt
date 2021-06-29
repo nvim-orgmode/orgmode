@@ -73,6 +73,7 @@ CONTENTS                                                        *orgmode-content
             1.2.4.23. org_move_subtree_down........|orgmode-org_move_subtree_down|
             1.2.4.24. org_show_help........................|orgmode-org_show_help|
     1.3. Autocompletion...................................|orgmode-autocompletion|
+    1.4. Abbreviations.....................................|orgmode-abbreviations|
 
 ================================================================================
 TABLE OF CONTENT                                        *orgmode-table_of_content*
@@ -87,6 +88,7 @@ TABLE OF CONTENT                                        *orgmode-table_of_conten
     3.  Capture mappings (#capture-mappings)
     4.  Org mappings (#org-mappings)
 3.  Autocompletion (#autocompletion)
+4.  [Abbreviations][#abbreviations]
 
 --------------------------------------------------------------------------------
 SETTINGS                                                        *orgmode-settings*
@@ -596,4 +598,12 @@ Or hyperlinks after double square bracket:
 >
     Some content [[|
 <
+
+--------------------------------------------------------------------------------
+ABBREVIATIONS                                              *orgmode-abbreviations*
+
+`org` buffers have access to two abbreviations:
+
+*   `:today:` - expands to today's date (example: `<2021-06-29 Tue>`)
+*   `:now:` - expands to today's date and current time (example: `<2021-06-29 Tue 15:32>`)
 
