@@ -293,7 +293,8 @@ Show help popup with mappings
 
 These mappings live under `mappings.capture`, and can be changed like this:
 
-```lua require('orgmode').setup({
+```lua
+require('orgmode').setup({
   org_agenda_file = {'~/Dropbox/org/*', '~/my-orgs/**/*'},
   org_default_notes_file = '~/Dropbox/org/refile.org',
   mappings = {
@@ -389,6 +390,22 @@ Move current headline + it's content down by one headline
 #### **org_show_help**
 *mapped to*: `?`<br />
 Show help popup with mappings
+
+These mappings live under `mappings.org`, and can be changed like this:
+
+```lua
+require('orgmode').setup({
+  org_agenda_file = {'~/Dropbox/org/*', '~/my-orgs/**/*'},
+  org_default_notes_file = '~/Dropbox/org/refile.org',
+  mappings = {
+    org = {
+      org_increase_date = '+',
+      org_decrease_date = '-'
+    }
+  }
+})
+```
+
 
 ## Autocompletion
 By default, `omnifunc` is provided in `org` files that autocompletes these types:
