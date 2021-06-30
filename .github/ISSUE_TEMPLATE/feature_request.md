@@ -8,8 +8,7 @@ assignees: ''
 ---
 
 **Does this feature exist in Emacs orgmode?**
-* [ ] Yes
-* [ ] No
+Yes / No / N/A
 
 **If answer to first question is "Yes", please provide the link to the orgmode manual or any documentation related to the feature**
 
