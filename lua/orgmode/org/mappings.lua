@@ -115,11 +115,11 @@ function OrgMappings:toggle_checkbox()
 end
 
 function OrgMappings:increase_date()
-  return self:_adjust_date('+1d', '<C-a>')
+  return self:_adjust_date('+1d', config.mappings.org.org_increase_date, '<C-a>')
 end
 
 function OrgMappings:decrease_date()
-  return self:_adjust_date('-1d','<C-x>')
+  return self:_adjust_date('-1d', config.mappings.org.org_decrease_date, '<C-x>')
 end
 
 function OrgMappings:change_date()
@@ -358,15 +358,32 @@ function OrgMappings:_get_date_under_cursor()
 end
 
 ---@param adjustment string
----@param fallback function
+---@param fallback string
+---@param vim_mapping string
 ---@return string
-function OrgMappings:_adjust_date(adjustment, fallback)
+function OrgMappings:_adjust_date(adjustment, fallback, vim_mapping)
   local date = self:_get_date_under_cursor()
-  if not date then
+  if date then
+    local new_date = date:adjust(adjustment)
+    return self:_replace_date(new_date)
+  end
+
+  if fallback ~= vim_mapping then
     return vim.api.nvim_feedkeys(utils.esc(fallback), 'n', true)
   end
-  local new_date = date:adjust(adjustment)
-  return self:_replace_date(new_date)
+
+  local num = vim.fn.search([[\d]], 'c', vim.fn.line('.'))
+  if num == 0 then
+    return vim.api.nvim_feedkeys(utils.esc(fallback), 'n', true)
+  end
+
+  date = self:_get_date_under_cursor()
+  if date then
+    local new_date = date:adjust(adjustment)
+    return self:_replace_date(new_date)
+  end
+
+  return vim.api.nvim_feedkeys(utils.esc(fallback), 'n', true)
 end
 
 function OrgMappings:_set_headline_tags(headline, tags_string)
