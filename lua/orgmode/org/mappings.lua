@@ -266,7 +266,13 @@ function OrgMappings:open_at_point()
   local parts = vim.split(link, '][', true)
   local url = parts[1]
   if url:find('^file:') then
-    return vim.cmd(string.format('edit %s', url:sub(6)))
+      if url:find(' +') then
+          parts = vim.split(url, ' +', true)
+          url = parts[1]
+          line_number = parts[2]
+          return vim.cmd(string.format('edit +%s %s', line_number ,url:sub(6)))
+      end
+      return vim.cmd(string.format('edit %s', url:sub(6)))
   end
   if url:find('^https?://') then
     if not vim.g.loaded_netrwPlugin then
