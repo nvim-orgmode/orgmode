@@ -41,7 +41,6 @@ function Org:setup_autocmds()
   vim.cmd[[autocmd!]]
   vim.cmd[[autocmd BufWritePost *.org call luaeval('require("orgmode").reload(_A)', expand('<afile>:p'))]]
   vim.cmd[[autocmd FileType org call luaeval('require("orgmode").reload(_A)', expand('<afile>:p'))]]
-  vim.cmd[[autocmd FileType org call luaeval('require("orgmode.org.syntax").load_code_block_syntax(_A)', expand('<afile>:p'))]]
   vim.cmd[[augroup END]]
 end
 
