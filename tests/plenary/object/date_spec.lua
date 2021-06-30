@@ -1,5 +1,9 @@
 local Date = require('orgmode.objects.date')
 local Range = require('orgmode.parser.range')
+local function get_timestamp(year, month, day, hour, min)
+  return os.time({ year = year, month = month, day = day, hour = hour or 0, min = min or 0 })
+end
+
 describe('Date object', function()
   it('shoud parse date', function()
     local date = '2021-06-10'
@@ -11,7 +15,7 @@ describe('Date object', function()
     assert.are.same(0, result.min)
     assert.are.same('Thu', result.dayname)
     assert.are.same(true, result.date_only)
-    assert.are.same(1623276000, result.timestamp)
+    assert.are.same(get_timestamp(2021, 6, 10), result.timestamp)
     assert.are.same('2021-06-10 Thu', result:to_string())
     assert.are.same({}, result.adjustments)
 
@@ -24,7 +28,7 @@ describe('Date object', function()
     assert.are.same(0, result_with_dayname.min)
     assert.are.same('Thu', result_with_dayname.dayname)
     assert.are.same(true, result_with_dayname.date_only)
-    assert.are.same(1623276000, result_with_dayname.timestamp)
+    assert.are.same(get_timestamp(2021, 6, 10), result_with_dayname.timestamp)
     assert.are.same(date_with_dayname, result_with_dayname:to_string())
     assert.are.same({}, result_with_dayname.adjustments)
   end)
@@ -38,7 +42,7 @@ describe('Date object', function()
     assert.are.same(9, result.hour)
     assert.are.same(0, result.min)
     assert.are.same(false, result.date_only)
-    assert.are.same(1625468400, result.timestamp)
+    assert.are.same(get_timestamp(2021, 7, 5, 9), result.timestamp)
     assert.are.same('2021-07-05 Mon 09:00', result:to_string())
     assert.are.same({}, result.adjustments)
 
@@ -50,7 +54,7 @@ describe('Date object', function()
     assert.are.same(9, result_with_dayname.hour)
     assert.are.same(0, result_with_dayname.min)
     assert.are.same(false, result_with_dayname.date_only)
-    assert.are.same(1625468400, result_with_dayname.timestamp)
+    assert.are.same(get_timestamp(2021, 7, 5, 9), result_with_dayname.timestamp)
     assert.are.same(date_with_dayname, result_with_dayname:to_string())
     assert.are.same({}, result_with_dayname.adjustments)
   end)
@@ -61,7 +65,7 @@ describe('Date object', function()
     assert.are.same(2021, result.year)
     assert.are.same(6, result.month)
     assert.are.same(30, result.day)
-    assert.are.same(1625036400, result.timestamp)
+    assert.are.same(get_timestamp(2021, 6, 30, 9), result.timestamp)
     assert.are.same(9, result.hour)
     assert.are.same(0, result.min)
     assert.are.same(false, result.date_only)
@@ -78,7 +82,7 @@ describe('Date object', function()
     assert.are.same(9, result.hour)
     assert.are.same(0, result.min)
     assert.are.same(false, result.date_only)
-    assert.are.same(1625036400, result.timestamp)
+    assert.are.same(get_timestamp(2021, 6, 30, 9), result.timestamp)
     assert.are.same(date, result:to_string())
     assert.are.same({'+1m'}, result.adjustments)
   end)
@@ -92,7 +96,7 @@ describe('Date object', function()
     assert.are.same(9, result.hour)
     assert.are.same(0, result.min)
     assert.are.same(false, result.date_only)
-    assert.are.same(1625036400, result.timestamp)
+    assert.are.same(get_timestamp(2021, 6, 30, 9), result.timestamp)
     assert.are.same(date, result:to_string())
     assert.are.same({'+1m', '-1d'}, result.adjustments)
   end)
@@ -106,7 +110,7 @@ describe('Date object', function()
     assert.are.same(9, result.hour)
     assert.are.same(0, result.min)
     assert.are.same(false, result.date_only)
-    assert.are.same(1625036400, result.timestamp)
+    assert.are.same(get_timestamp(2021, 6, 30, 9), result.timestamp)
     assert.are.same(date, result:to_string())
     assert.are.same({'++5d'}, result.adjustments)
   end)
@@ -120,7 +124,7 @@ describe('Date object', function()
     assert.are.same(9, result.hour)
     assert.are.same(0, result.min)
     assert.are.same(false, result.date_only)
-    assert.are.same(1625036400, result.timestamp)
+    assert.are.same(get_timestamp(2021, 6, 30, 9), result.timestamp)
     assert.are.same(date, result:to_string())
     assert.are.same({'.+1m'}, result.adjustments)
   end)
@@ -135,7 +139,7 @@ describe('Date object', function()
     assert.are.same(0, result.min)
     assert.are.same('Thu', result.dayname)
     assert.are.same(true, result.date_only)
-    assert.are.same(1623276000, result.timestamp)
+    assert.are.same(get_timestamp(2021, 6, 10), result.timestamp)
     assert.are.same('2021-06-10 Thu', result:to_string())
     assert.are.same({}, result.adjustments)
 
@@ -147,7 +151,7 @@ describe('Date object', function()
     assert.are.same(0, result.min)
     assert.are.same('Fri', result.dayname)
     assert.are.same(true, result.date_only)
-    assert.are.same(1623362400, result.timestamp)
+    assert.are.same(get_timestamp(2021, 6, 11), result.timestamp)
     assert.are.same('2021-06-11 Fri', result:to_string())
     assert.are.same({}, result.adjustments)
 
@@ -159,7 +163,7 @@ describe('Date object', function()
     assert.are.same(0, result.min)
     assert.are.same('Sat', result.dayname)
     assert.are.same(true, result.date_only)
-    assert.are.same(1631311200, result.timestamp)
+    assert.are.same(get_timestamp(2021, 9, 11), result.timestamp)
     assert.are.same('2021-09-11 Sat', result:to_string())
     assert.are.same({}, result.adjustments)
 
@@ -171,7 +175,7 @@ describe('Date object', function()
     assert.are.same(0, result.min)
     assert.are.same('Sat', result.dayname)
     assert.are.same(true, result.date_only)
-    assert.are.same(1630706400, result.timestamp)
+    assert.are.same(get_timestamp(2021, 9, 4), result.timestamp)
     assert.are.same('2021-09-04 Sat', result:to_string())
     assert.are.same({}, result.adjustments)
 
@@ -183,7 +187,7 @@ describe('Date object', function()
     assert.are.same(0, result.min)
     assert.are.same('Mon', result.dayname)
     assert.are.same(true, result.date_only)
-    assert.are.same(1693778400, result.timestamp)
+    assert.are.same(get_timestamp(2023, 9, 4), result.timestamp)
     assert.are.same('2023-09-04 Mon', result:to_string())
     assert.are.same({}, result.adjustments)
 
@@ -195,7 +199,7 @@ describe('Date object', function()
     assert.are.same(0, result.min)
     assert.are.same('Wed', result.dayname)
     assert.are.same(true, result.date_only)
-    assert.are.same(1693951200, result.timestamp)
+    assert.are.same(get_timestamp(2023, 9, 6), result.timestamp)
     assert.are.same('2023-09-06 Wed', result:to_string())
     assert.are.same({}, result.adjustments)
   end)
@@ -209,7 +213,7 @@ describe('Date object', function()
     assert.are.same(9, result.hour)
     assert.are.same(0, result.min)
     assert.are.same(false, result.date_only)
-    assert.are.same(1625036400, result.timestamp)
+    assert.are.same(get_timestamp(2021, 6, 30, 9), result.timestamp)
     assert.are.same(date, result:to_string())
     assert.are.same({'+1m'}, result.adjustments)
 
@@ -220,7 +224,7 @@ describe('Date object', function()
     assert.are.same(9, result.hour)
     assert.are.same(0, result.min)
     assert.are.same(false, result.date_only)
-    assert.are.same(1625122800, result.timestamp)
+    assert.are.same(get_timestamp(2021, 7, 1, 9), result.timestamp)
     assert.are.same("2021-07-01 Thu 09:00 +1m", result:to_string())
     assert.are.same({'+1m'}, result.adjustments)
 
@@ -231,7 +235,7 @@ describe('Date object', function()
     assert.are.same(9, result.hour)
     assert.are.same(0, result.min)
     assert.are.same(false, result.date_only)
-    assert.are.same(1626332400, result.timestamp)
+    assert.are.same(get_timestamp(2021, 7, 15, 9), result.timestamp)
     assert.are.same("2021-07-15 Thu 09:00 +1m", result:to_string())
     assert.are.same({'+1m'}, result.adjustments)
 
@@ -242,7 +246,7 @@ describe('Date object', function()
     assert.are.same(6, result.hour)
     assert.are.same(0, result.min)
     assert.are.same(false, result.date_only)
-    assert.are.same(1626321600, result.timestamp)
+    assert.are.same(get_timestamp(2021, 7, 15, 6), result.timestamp)
     assert.are.same("2021-07-15 Thu 06:00 +1m", result:to_string())
     assert.are.same({'+1m'}, result.adjustments)
 
@@ -253,7 +257,7 @@ describe('Date object', function()
     assert.are.same(6, result.hour)
     assert.are.same(0, result.min)
     assert.are.same(false, result.date_only)
-    assert.are.same(1721016000, result.timestamp)
+    assert.are.same(get_timestamp(2024, 7, 15, 6), result.timestamp)
     assert.are.same("2024-07-15 Mon 06:00 +1m", result:to_string())
     assert.are.same({'+1m'}, result.adjustments)
 
@@ -264,7 +268,7 @@ describe('Date object', function()
     assert.are.same(6, result.hour)
     assert.are.same(0, result.min)
     assert.are.same(false, result.date_only)
-    assert.are.same(1718424000, result.timestamp)
+    assert.are.same(get_timestamp(2024, 6, 15, 6), result.timestamp)
     assert.are.same("2024-06-15 Sat 06:00 +1m", result:to_string())
     assert.are.same({'+1m'}, result.adjustments)
   end)
@@ -402,7 +406,7 @@ describe('Date object', function()
         start_col = 34,
         end_col = 49
       }),
-      timestamp = 1621029600,
+      timestamp = get_timestamp(2021, 5, 15),
       type = "NONE",
       year = 2021,
     }, dates[1])
@@ -430,7 +434,7 @@ describe('Date object', function()
         start_col = 34,
         end_col = 49
       }),
-      timestamp = 1621029600,
+      timestamp = get_timestamp(2021, 5, 15),
       type = "NONE",
       year = 2021,
     }, dates[1])
@@ -452,7 +456,7 @@ describe('Date object', function()
         start_col = 81,
         end_col = 102
       }),
-      timestamp = 1623741900,
+      timestamp = get_timestamp(2021, 6, 15, 9, 25),
       type = "NONE",
       year = 2021,
     }, dates[2])
@@ -480,7 +484,7 @@ describe('Date object', function()
         start_col = 34,
         end_col = 49
       }),
-      timestamp = 1621029600,
+      timestamp = get_timestamp(2021, 5, 15),
       type = "NONE",
       year = 2021,
     }, dates[1])
@@ -502,7 +506,7 @@ describe('Date object', function()
         start_col = 79,
         end_col = 94
       }),
-      timestamp = 1621029600,
+      timestamp = get_timestamp(2021, 5, 15),
       type = "NONE",
       year = 2021,
     }, dates[2])
@@ -621,8 +625,8 @@ describe('Date object', function()
         start_col = 27,
         end_col = 58
       }),
-      timestamp = 1621081800,
-      timestamp_end = 1621085400,
+      timestamp = get_timestamp(2021, 5, 15, 14, 30),
+      timestamp_end = get_timestamp(2021, 5, 15, 15, 30),
       type = "NONE",
       year = 2021,
     }, dates[1])
@@ -644,7 +648,7 @@ describe('Date object', function()
         start_col = 84,
         end_col = 99
       }),
-      timestamp = 1621202400,
+      timestamp = get_timestamp(2021, 5, 17),
       type = "NONE",
       year = 2021,
     }, dates[2])
@@ -672,7 +676,7 @@ describe('Date object', function()
         start_col = 27,
         end_col = 42
       }),
-      timestamp = 1621029600,
+      timestamp = get_timestamp(2021, 5, 15),
       type = "NONE",
       year = 2021,
     }, dates[1])
@@ -694,7 +698,7 @@ describe('Date object', function()
         start_col = 45,
         end_col = 60
       }),
-      timestamp = 1621116000,
+      timestamp = get_timestamp(2021, 5, 16),
       type = "NONE",
       year = 2021,
     }, dates[2])
@@ -716,7 +720,7 @@ describe('Date object', function()
         start_col = 86,
         end_col = 101
       }),
-      timestamp = 1621202400,
+      timestamp = get_timestamp(2021, 5, 17),
       type = "NONE",
       year = 2021,
     }, dates[3])
