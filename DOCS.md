@@ -11,7 +11,7 @@
    4. [Org mappings](#org-mappings)
 3. [Autocompletion](#autocompletion)
 4. [Abbreviations](#abbreviations)
-5. [Colors][#colors]
+5. [Colors](#colors)
 
 ## Settings
 Variable names mostly follow the same naming as Orgmode mappings.
