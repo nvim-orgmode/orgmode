@@ -408,13 +408,14 @@ If you use [nvim-compe](https://github.com/hrsh7th/nvim-compe) add this to compe
   })
 ```
 
-For [completion.nvim](https://github.com/nvim-lua/completion-nvim), just add `omni` mode to chain complete list:
+For [completion.nvim](https://github.com/nvim-lua/completion-nvim), just add `omni` mode to chain complete list and add additional keyword chars:
 ```lua
 vim.g.completion_chain_complete_list = {
   org = {
     { mode = 'omni'},
   },
 }
+vim.cmd[[autocmd FileType org setlocal iskeyword+=:,#,+]]
 ```
 
 Note that autocompletion is context aware, which means that

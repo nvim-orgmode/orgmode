@@ -58,13 +58,14 @@ require'compe'.setup({
 })
 ```
 
-For [completion.nvim](https://github.com/nvim-lua/completion-nvim), just add `omni` mode to chain complete list:
+For [completion.nvim](https://github.com/nvim-lua/completion-nvim), just add `omni` mode to chain complete list and add additional keyword chars:
 ```lua
 vim.g.completion_chain_complete_list = {
   org = {
     { mode = 'omni'},
   },
 }
+vim.cmd[[autocmd FileType org setlocal iskeyword+=:,#,+]]
 ```
 
 Or just use `omnifunc` via <kbd>\<C-x\>\<C-o\></kbd>
