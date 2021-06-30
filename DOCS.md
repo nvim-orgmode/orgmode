@@ -11,6 +11,7 @@
    4. [Org mappings](#org-mappings)
 3. [Autocompletion](#autocompletion)
 4. [Abbreviations](#abbreviations)
+5. [Colors][#colors]
 
 ## Settings
 Variable names mostly follow the same naming as Orgmode mappings.
@@ -456,3 +457,32 @@ Some content [[|
 
 * `:today:` - expands to today's date (example: `<2021-06-29 Tue>`)
 * `:now:` - expands to today's date and current time (example: `<2021-06-29 Tue 15:32>`)
+
+## Colors
+Colors used for todo keywords and agenda states (deadline, schedule ok, schedule warning)
+are parsed from the current colorsheme from several highlight groups (Error, WarningMsg, DiffAdd, etc.).
+If those colors are not suitable you can override them like this:
+
+```vim
+autocmd ColorScheme * call s:setup_org_colors()
+
+function! s:setup_org_colors() abort
+  hi OrgTODO guifg=#FF0000
+  hi OrgDONE guifg=#00FF00
+  hi OrgAgendaDeadline guifg=#FFAAAA
+  hi OrgAgendaScheduled guifg=#AAFFAA
+  hi OrgAgendaScheduledPast guifg=Orange
+endfunction
+```
+
+or you can link it to another highlight group:
+
+```vim
+function! s:setup_org_colors() abort
+  hi link OrgTODO ErrorMsg
+  hi link OrgDONE String
+  hi link OrgAgendaDeadline Error
+  hi link OrgAgendaScheduled DiffAdd
+  hi link OrgAgendaScheduledPast Statement
+endfunction
+```
