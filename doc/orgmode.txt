@@ -90,7 +90,7 @@ TABLE OF CONTENT                                        *orgmode-table_of_conten
     4.  Org mappings (#org-mappings)
 3.  Autocompletion (#autocompletion)
 4.  Abbreviations (#abbreviations)
-5.  [Colors][#colors]
+5.  Colors (#colors)
 
 --------------------------------------------------------------------------------
 SETTINGS                                                        *orgmode-settings*
