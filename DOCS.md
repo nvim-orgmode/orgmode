@@ -101,7 +101,7 @@ Variables:
   * `%T`: Prints current date and time (Example: `<2021-06-10 Thu 12:30>`)
   * `%u`: Prints current date in inactive format (Example: `[2021-06-10 Thu]`)
   * `%U`: Prints current date and time in inactive format (Example: `[2021-06-10 Thu 12:30]`)
-  * `%a`: File from where capture was initiated (Example: `[[file:/home/user/projects/myfile.txt]]`)
+  * `%a`: File and line number from where capture was initiated (Example: `[[file:/home/user/projects/myfile.txt +2]]`)
   * `%?`: Default cursor position when template is opened
 
 Example:<br />
@@ -335,7 +335,8 @@ Toggle current line checkbox state
 Open hyperlink or date under cursor.<br />
 Hyperlink types supported:
 * URL (http://, https://)
-* File (starts with `file:`. Example: `file:/home/user/.config/nvim/init.lua`)
+* File (starts with `file:`. Example: `file:/home/user/.config/nvim/init.lua`) Optionally, a line number can be specified
+using the '+' character. Example: `file:/home/user/.config/nvim/init.lua +10`
 * Headline title target (starts with `*`)
 * Headline with `CUSTOM_ID` property (starts with `#`)
 * Fallback: If file path, opens the file, otherwise, tries to find the Headline title.
