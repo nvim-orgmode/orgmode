@@ -11,7 +11,8 @@ function M.define_agenda_colors()
       if vim.tbl_contains(todo_keywords.ALL, type) then
          bold = ' gui=bold'
       end
-      vim.cmd(string.format('hi %s guifg=%s ctermfg=%s%s', hlname, keyword_colors[type].gui, keyword_colors[type].cterm, bold))
+      vim.cmd(string.format('hi %s_builtin guifg=%s ctermfg=%s%s', hlname, keyword_colors[type].gui, keyword_colors[type].cterm, bold))
+      vim.cmd(string.format('hi default link %s %s_builtin', hlname, hlname))
    end
 end
 
@@ -20,8 +21,10 @@ function M.define_org_todo_keyword_colors()
    local todo_keywords = config:get_todo_keywords()
    vim.cmd(string.format([[syn match OrgTODO "\<\(%s\)\>" contained]], table.concat(todo_keywords.TODO, [[\|]])))
    vim.cmd(string.format([[syn match OrgDONE "\<\(%s\)\>" contained]], table.concat(todo_keywords.DONE, [[\|]])))
-   vim.cmd(string.format('hi OrgTODO guifg=%s ctermfg=%s', keyword_colors.TODO.gui, keyword_colors.TODO.cterm))
-   vim.cmd(string.format('hi OrgDONE guifg=%s ctermfg=%s', keyword_colors.DONE.gui, keyword_colors.DONE.cterm))
+   vim.cmd(string.format('hi OrgTODO_builtin guifg=%s ctermfg=%s', keyword_colors.TODO.gui, keyword_colors.TODO.cterm))
+   vim.cmd('hi default link OrgTODO OrgTODO_builtin')
+   vim.cmd(string.format('hi OrgDONE_builtin guifg=%s ctermfg=%s', keyword_colors.DONE.gui, keyword_colors.DONE.cterm))
+   vim.cmd('hi default link OrgDONE OrgDONE_builtin')
 end
 
 function M.define_org_headline_colors()
