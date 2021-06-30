@@ -4,8 +4,7 @@ if exists('b:current_syntax')
   finish
 endif
 
-lua require('orgmode.colors.highlights').define_org_todo_keyword_colors()
-lua require('orgmode.colors.highlights').define_org_headline_colors()
+lua require('orgmode.colors.highlights').define_highlights()
 
 " Support org authoring markup as closely as possible
 " (we're adding two markdown-like variants for =code= and blockquotes)

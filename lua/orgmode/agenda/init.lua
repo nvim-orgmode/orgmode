@@ -132,13 +132,15 @@ function Agenda:render()
         date = string.format(' %-'..date_len..'s', agenda_item.label)
       end
       local todo_keyword = agenda_item.headline.todo_keyword.value
+      local todo_padding = ''
       if todo_keyword ~= '' and vim.trim(agenda_item.label):find(':$') then
-        todo_keyword = ' '..todo_keyword
+        todo_padding = ' '
       end
+      todo_keyword = todo_padding..todo_keyword
       local line = string.format(
         '%s%s%s %s', category, date, todo_keyword, headline.title
       )
-      local todo_keyword_pos = string.format('%s%s ', category, date):len()
+      local todo_keyword_pos = string.format('%s%s%s', category, date, todo_padding):len()
       if #headline.tags > 0 then
         line = string.format('%-99s %s', line, headline:tags_to_string())
       end
@@ -152,7 +154,7 @@ function Agenda:render()
             end_col = 0,
           })
           if hl.todo_keyword then
-            hl.range.start_col = todo_keyword_pos
+            hl.range.start_col = todo_keyword_pos + 1
             hl.range.end_col = todo_keyword_pos + hl.todo_keyword:len() + 1
           end
           return hl
@@ -220,7 +222,7 @@ function Agenda:todos()
     if #todo.tags > 0 then
       line = string.format('%-99s %s', line, todo:tags_to_string())
     end
-    local todo_keyword_pos = category:len() + 3
+    local todo_keyword_pos = category:len() + 4
     table.insert(content, {
       line_content = line,
       line = i + 1,
@@ -230,12 +232,12 @@ function Agenda:todos()
     })
 
     table.insert(highlights, {
-      hlgroup = hl_map[todo.todo_keyword.type],
+      hlgroup = hl_map[todo.todo_keyword.value],
       range = Range:new({
         start_line = i + 1,
         end_line = i + 1,
         start_col = todo_keyword_pos,
-        end_col = todo_keyword_pos + todo_keyword:len() + 1
+        end_col = todo_keyword_pos + todo_keyword:len()
       })
     })
   end
@@ -270,10 +272,8 @@ function Agenda:search(clear_search)
   for i, headline in ipairs(headlines) do
     local category = string.format('  %-'..(longest_category + 1)..'s', headline:get_category()..':')
     local todo_keyword = headline.todo_keyword.value
-    if todo_keyword ~= '' then
-      todo_keyword = ' '..todo_keyword
-    end
-    local line = string.format('  %s%s %s', category, todo_keyword, headline.title)
+    local todo_keyword_padding = todo_keyword ~= '' and ' ' or ''
+    local line = string.format('  %s%s%s %s', category, todo_keyword_padding, todo_keyword, headline.title)
     if #headline.tags > 0 then
       line = string.format('%-99s %s', line, headline:tags_to_string())
     end
@@ -286,14 +286,14 @@ function Agenda:search(clear_search)
     })
 
     if headline.todo_keyword.value ~= '' then
-      local todo_keyword_pos = category:len() + 3
+      local todo_keyword_pos = category:len() + 4
       table.insert(highlights, {
-        hlgroup = hl_map[headline.todo_keyword.type],
+        hlgroup = hl_map[headline.todo_keyword.value],
         range = Range:new({
           start_line = i + 2,
           end_line = i + 2,
           start_col = todo_keyword_pos,
-          end_col = todo_keyword_pos + todo_keyword:len() + 1
+          end_col = todo_keyword_pos + todo_keyword:len()
         })
       })
     end
@@ -338,10 +338,8 @@ function Agenda:tags(clear_search)
   for i, headline in ipairs(headlines) do
     local category = string.format('  %-'..(longest_category + 1)..'s', headline:get_category()..':')
     local todo_keyword = headline.todo_keyword.value
-    if todo_keyword ~= '' then
-      todo_keyword = ' '..todo_keyword
-    end
-    local line = string.format('  %s%s %s', category, todo_keyword, headline.title)
+    local todo_keyword_padding = todo_keyword ~= '' and ' ' or ''
+    local line = string.format('  %s%s%s %s', category, todo_keyword_padding, todo_keyword, headline.title)
     if #headline.tags > 0 then
       line = string.format('%-99s %s', line, headline:tags_to_string())
     end
@@ -354,14 +352,14 @@ function Agenda:tags(clear_search)
     })
 
     if headline.todo_keyword.value ~= '' then
-      local todo_keyword_pos = category:len() + 3
+      local todo_keyword_pos = category:len() + 4
       table.insert(highlights, {
-        hlgroup = hl_map[headline.todo_keyword.type],
+        hlgroup = hl_map[headline.todo_keyword.value],
         range = Range:new({
           start_line = i + 2,
           end_line = i + 2,
           start_col = todo_keyword_pos,
-          end_col = todo_keyword_pos + todo_keyword:len() + 1
+          end_col = todo_keyword_pos + todo_keyword:len()
         })
       })
     end

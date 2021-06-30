@@ -161,7 +161,7 @@ end
 
 function AgendaItem:_add_keyword_highlight()
   if self.headline.todo_keyword.value == '' then return end
-  local hlgroup = hl_map[self.headline.todo_keyword.type]
+  local hlgroup = hl_map[self.headline.todo_keyword.value]
   if hlgroup then
     table.insert(self.highlights, {
       hlgroup = hlgroup,

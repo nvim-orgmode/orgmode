@@ -46,6 +46,29 @@ Examples:
   * `{'TODO', 'NEXT', '|', 'DONE'}`
   * `{'TODO', 'WAITING', '|', 'DONE', 'DELEGATED'}`
 
+#### **org_todo_keyword_faces**
+*type*: `table<string, string>`<br />
+*default value*: `{}`<br />
+Custom colors for todo keywords.<br />
+Available options:
+* foreground - `:foreground hex/colorname`. Examples: `:foreground #FF0000`, `:foreground blue`
+* background - `:background hex/colorname`. Examples: `:background #FF0000`, `:background blue`
+* weight - `:weight bold`.
+* underline - `:underline on`
+* italic - `:slant italic`
+
+Full configuration example with additional todo keywords and their colors:
+```lua
+require('orgmode').setup({
+  org_todo_keywords = {'TODO', 'WAITING', '|', 'DONE', 'DELEGATED'},
+  org_todo_keyword_faces = {
+    WAITING = ':foreground blue :weight bold',
+    DELEGATED = ':background #FFFFFF :slant italic :underline on',
+    TODO - ':background #000000 :foreground red', -- overrides builtin color for `TODO` keyword
+  }
+})
+```
+
 #### **org_archive_location**
 *type*: `string`<br />
 *default value*: `'%s_archive::'`<br />
@@ -467,8 +490,6 @@ If those colors are not suitable you can override them like this:
 autocmd ColorScheme * call s:setup_org_colors()
 
 function! s:setup_org_colors() abort
-  hi OrgTODO guifg=#FF0000
-  hi OrgDONE guifg=#00FF00
   hi OrgAgendaDeadline guifg=#FFAAAA
   hi OrgAgendaScheduled guifg=#AAFFAA
   hi OrgAgendaScheduledPast guifg=Orange
@@ -479,10 +500,10 @@ or you can link it to another highlight group:
 
 ```vim
 function! s:setup_org_colors() abort
-  hi link OrgTODO ErrorMsg
-  hi link OrgDONE String
   hi link OrgAgendaDeadline Error
   hi link OrgAgendaScheduled DiffAdd
   hi link OrgAgendaScheduledPast Statement
 endfunction
 ```
+
+For adding/changing todo keyword colors see [org-todo-keyword-faces](#org_todo_keyword_faces)

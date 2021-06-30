@@ -1,4 +1,6 @@
 local colors = require('orgmode.colors')
+local highlights = require('orgmode.colors.highlights')
+local config = require('orgmode.config')
 
 describe('Colors', function()
   it('should lighten the color', function()
@@ -46,5 +48,81 @@ describe('Colors', function()
       ok = { gui = "#1aff1a", cterm = 10 },
       warning = { gui = "#ff981a", cterm = 11 },
     }, todo_keywords_colors)
+  end)
+
+  it('should parse todo keyword faces', function()
+    local get_color_opt = function(hlgroup, name, type)
+      return vim.fn.synIDattr(vim.fn.synIDtrans(vim.fn.hlID(hlgroup)), name, type)
+    end
+    config:extend({
+      org_todo_keyword_faces = {
+        NEXT = ':foreground "blue" :underline on :weight bold :background red :slant italic',
+        CANCELED = ':foreground green :slant italic',
+      }
+    })
+
+    local result = highlights.parse_todo_keyword_faces()
+
+    assert.are.same({
+      NEXT = 'OrgKeywordFaceNEXT',
+      CANCELED = 'OrgKeywordFaceCANCELED'
+    }, result)
+
+    assert.are.same('red', get_color_opt('OrgKeywordFaceNEXT', 'bg', 'gui'))
+    assert.are.same('', get_color_opt('OrgKeywordFaceNEXT', 'bg', 'cterm'))
+    assert.are.same('blue', get_color_opt('OrgKeywordFaceNEXT', 'fg', 'gui'))
+    assert.are.same('', get_color_opt('OrgKeywordFaceNEXT', 'fg', 'cterm'))
+    assert.are.same('1', get_color_opt('OrgKeywordFaceNEXT', 'bold', 'gui'))
+    assert.are.same('', get_color_opt('OrgKeywordFaceNEXT', 'bold', 'cterm'))
+    assert.are.same('1', get_color_opt('OrgKeywordFaceNEXT', 'italic', 'gui'))
+    assert.are.same('', get_color_opt('OrgKeywordFaceNEXT', 'italic', 'cterm'))
+    assert.are.same('1', get_color_opt('OrgKeywordFaceNEXT', 'underline', 'gui'))
+    assert.are.same('', get_color_opt('OrgKeywordFaceNEXT', 'underline', 'cterm'))
+
+    assert.are.same('green', get_color_opt('OrgKeywordFaceCANCELED', 'fg', 'gui'))
+    assert.are.same('', get_color_opt('OrgKeywordFaceCANCELED', 'fg', 'cterm'))
+    assert.are.same('1', get_color_opt('OrgKeywordFaceCANCELED', 'italic', 'gui'))
+    assert.are.same('', get_color_opt('OrgKeywordFaceCANCELED', 'italic', 'cterm'))
+    assert.are.same('', get_color_opt('OrgKeywordFaceCANCELED', 'bg', 'gui'))
+    assert.are.same('', get_color_opt('OrgKeywordFaceCANCELED', 'bg', 'cterm'))
+    assert.are.same('', get_color_opt('OrgKeywordFaceCANCELED', 'bold', 'gui'))
+    assert.are.same('', get_color_opt('OrgKeywordFaceCANCELED', 'bold', 'cterm'))
+    assert.are.same('', get_color_opt('OrgKeywordFaceCANCELED', 'underline', 'gui'))
+    assert.are.same('', get_color_opt('OrgKeywordFaceCANCELED', 'underline', 'cterm'))
+
+    vim.cmd[[
+      hi clear OrgKeywordFaceNEXT
+      hi clear OrgKeywordFaceCANCELED
+    ]]
+
+    vim.o.termguicolors = false
+    result = highlights.parse_todo_keyword_faces()
+
+    assert.are.same({
+      NEXT = 'OrgKeywordFaceNEXT',
+      CANCELED = 'OrgKeywordFaceCANCELED'
+    }, result)
+
+    assert.are.same('9', get_color_opt('OrgKeywordFaceNEXT', 'bg', 'cterm'))
+    assert.are.same('', get_color_opt('OrgKeywordFaceNEXT', 'bg', 'gui'))
+    assert.are.same('12', get_color_opt('OrgKeywordFaceNEXT', 'fg', 'cterm'))
+    assert.are.same('', get_color_opt('OrgKeywordFaceNEXT', 'fg', 'gui'))
+    assert.are.same('1', get_color_opt('OrgKeywordFaceNEXT', 'bold', 'cterm'))
+    assert.are.same('', get_color_opt('OrgKeywordFaceNEXT', 'bold', 'gui'))
+    assert.are.same('1', get_color_opt('OrgKeywordFaceNEXT', 'italic', 'cterm'))
+    assert.are.same('', get_color_opt('OrgKeywordFaceNEXT', 'italic', 'gui'))
+    assert.are.same('1', get_color_opt('OrgKeywordFaceNEXT', 'underline', 'cterm'))
+    assert.are.same('', get_color_opt('OrgKeywordFaceNEXT', 'underline', 'gui'))
+
+    assert.are.same('10', get_color_opt('OrgKeywordFaceCANCELED', 'fg', 'cterm'))
+    assert.are.same('', get_color_opt('OrgKeywordFaceCANCELED', 'fg', 'gui'))
+    assert.are.same('1', get_color_opt('OrgKeywordFaceCANCELED', 'italic', 'cterm'))
+    assert.are.same('', get_color_opt('OrgKeywordFaceCANCELED', 'italic', 'gui'))
+    assert.are.same('', get_color_opt('OrgKeywordFaceCANCELED', 'bg', 'gui'))
+    assert.are.same('', get_color_opt('OrgKeywordFaceCANCELED', 'bg', 'cterm'))
+    assert.are.same('', get_color_opt('OrgKeywordFaceCANCELED', 'bold', 'gui'))
+    assert.are.same('', get_color_opt('OrgKeywordFaceCANCELED', 'bold', 'cterm'))
+    assert.are.same('', get_color_opt('OrgKeywordFaceCANCELED', 'underline', 'gui'))
+    assert.are.same('', get_color_opt('OrgKeywordFaceCANCELED', 'underline', 'cterm'))
   end)
 end)

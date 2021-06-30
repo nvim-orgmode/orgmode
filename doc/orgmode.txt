@@ -11,7 +11,8 @@ CONTENTS                                                        *orgmode-content
             1.1.1.1. org_agenda_files...................|orgmode-org_agenda_files|
             1.1.1.2. org_default_notes_file.......|orgmode-org_default_notes_file|
             1.1.1.3. org_todo_keywords.................|orgmode-org_todo_keywords|
-            1.1.1.4. org_archive_location...........|orgmode-org_archive_location|
+            1.1.1.4. org_todo_keyword_faces.......|orgmode-org_todo_keyword_faces|
+            1.1.1.5. org_archive_location...........|orgmode-org_archive_location|
         1.1.2. Agenda settings...........................|orgmode-agenda_settings|
             1.1.2.1. org_deadline_warning_days.|orgmode-org_deadline_warning_days|
             1.1.2.2. org_agenda_span.....................|orgmode-org_agenda_span|
@@ -128,6 +129,30 @@ If `|` is omitted, only last entry in array is considered a "finished" state.
 Examples:
   * `{'TODO', 'NEXT', '|', 'DONE'}`
   * `{'TODO', 'WAITING', '|', 'DONE', 'DELEGATED'}`
+
+ORG_TODO_KEYWORD_FACES                            *orgmode-org_todo_keyword_faces*
+
+type: `table<string, string>`
+default value: `{}`
+Custom colors for todo keywords.
+Available options:
+* foreground - `:foreground hex/colorname`. Examples: `:foreground #FF0000`, `:foreground blue`
+* background - `:background hex/colorname`. Examples: `:background #FF0000`, `:background blue`
+* weight - `:weight bold`.
+* underline - `:underline on`
+* italic - `:slant italic`
+
+Full configuration example with additional todo keywords and their colors:
+>
+    require('orgmode').setup({
+      org_todo_keywords = {'TODO', 'WAITING', '|', 'DONE', 'DELEGATED'},
+      org_todo_keyword_faces = {
+        WAITING = ':foreground blue :weight bold',
+        DELEGATED = ':background #FFFFFF :slant italic :underline on',
+        TODO - ':background #000000 :foreground red', -- overrides builtin color for `TODO` keyword
+      }
+    })
+<
 
 ORG_ARCHIVE_LOCATION                                *orgmode-org_archive_location*
 
@@ -644,8 +669,6 @@ If those colors are not suitable you can override them like this:
 >
     autocmd ColorScheme * call s:setup_org_colors()
     function! s:setup_org_colors() abort
-      hi OrgTODO guifg=#FF0000
-      hi OrgDONE guifg=#00FF00
       hi OrgAgendaDeadline guifg=#FFAAAA
       hi OrgAgendaScheduled guifg=#AAFFAA
       hi OrgAgendaScheduledPast guifg=Orange
@@ -655,11 +678,11 @@ If those colors are not suitable you can override them like this:
 or you can link it to another highlight group:
 >
     function! s:setup_org_colors() abort
-      hi link OrgTODO ErrorMsg
-      hi link OrgDONE String
       hi link OrgAgendaDeadline Error
       hi link OrgAgendaScheduled DiffAdd
       hi link OrgAgendaScheduledPast Statement
     endfunction
 <
+
+For adding/changing todo keyword colors see org-todo-keyword-faces (#org_todo_keyword_faces)
 
