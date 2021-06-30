@@ -419,6 +419,7 @@ Show help popup with mappings
 
 These mappings live under `mappings.capture`, and can be changed like this:
 >
+    require('orgmode').setup({
       org_agenda_file = {'~/Dropbox/org/*', '~/my-orgs/**/*'},
       org_default_notes_file = '~/Dropbox/org/refile.org',
       mappings = {
@@ -562,6 +563,20 @@ ORG_SHOW_HELP                                              *orgmode-org_show_hel
 
 mapped to: `?`
 Show help popup with mappings
+
+These mappings live under `mappings.org`, and can be changed like this:
+>
+    require('orgmode').setup({
+      org_agenda_file = {'~/Dropbox/org/*', '~/my-orgs/**/*'},
+      org_default_notes_file = '~/Dropbox/org/refile.org',
+      mappings = {
+        org = {
+          org_increase_date = '+',
+          org_decrease_date = '-'
+        }
+      }
+    })
+<
 
 --------------------------------------------------------------------------------
 AUTOCOMPLETION                                            *orgmode-autocompletion*
