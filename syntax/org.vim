@@ -1,5 +1,9 @@
 " Bigger part of syntax borrowed from https://github.com/jceb/vim-orgmode
-"
+
+if exists('b:current_syntax')
+  finish
+endif
+
 lua require('orgmode.colors.highlights').define_org_todo_keyword_colors()
 lua require('orgmode.colors.highlights').define_org_headline_colors()
 
@@ -120,8 +124,8 @@ hi def link org_list_checkbox     PreProc
 
 " Block Delimiters: {{{1
 syntax case ignore
-syntax match  org_block_delimiter /^#+BEGIN_.*/
-syntax match  org_block_delimiter /^#+END_.*/
+syntax match  org_block_delimiter /^\s*#+BEGIN_.*/
+syntax match  org_block_delimiter /^\s*#+END_.*/
 syntax match  org_key_identifier  /^#+[^ ]*:/
 syntax match  org_title           /^#+TITLE:.*/  contains=org_key_identifier
 hi def link org_block_delimiter Comment
@@ -163,5 +167,9 @@ hi def link org_subtask_percent_100 Identifier
 hi def link org_subtask_number_all Identifier
 
 syntax spell toplevel
+
+lua require("orgmode.org.syntax").load_code_blocks()
+
+let b:current_syntax = 'org'
 
 " vi: ft=vim:tw=80:sw=4:ts=4:fdm=marker

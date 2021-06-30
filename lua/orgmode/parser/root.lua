@@ -267,7 +267,7 @@ function Root:get_headline_lines(headline)
 end
 
 function Root:_add_source_block(content)
-  local filetype = content.line:match('^%s*#%+BEGIN_SRC%s+(.*)$')
+  local filetype = content.line:match('^%s*#%+BEGIN_SRC%s+(.*)%s*$')
   if not filetype then return end
   filetype = vim.trim(filetype)
   if not vim.tbl_contains(self.source_code_filetypes, filetype) then
