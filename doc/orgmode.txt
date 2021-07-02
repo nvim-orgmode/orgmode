@@ -32,7 +32,7 @@ CONTENTS                                                        *orgmode-content
             1.2.2.1. org_agenda_later...................|orgmode-org_agenda_later|
             1.2.2.2. org_agenda_earlier...............|orgmode-org_agenda_earlier|
             1.2.2.3. org_agenda_goto_today.........|orgmode-org_agenda_goto_today|
-            1.2.2.4. **org_agenda_day_view **...|orgmode-**org_agenda_day_view_**|
+            1.2.2.4. org_agenda_day_view.............|orgmode-org_agenda_day_view|
             1.2.2.5. org_agenda_week_view...........|orgmode-org_agenda_week_view|
             1.2.2.6. org_agenda_month_view.........|orgmode-org_agenda_month_view|
             1.2.2.7. org_agenda_year_view...........|orgmode-org_agenda_year_view|
@@ -334,7 +334,7 @@ ORG_AGENDA_GOTO_TODAY                              *orgmode-org_agenda_goto_toda
 mapped to: `.`
 Go to span with for today
 
-**ORG_AGENDA_DAY_VIEW **                        *orgmode-**org_agenda_day_view_***
+ORG_AGENDA_DAY_VIEW                                  *orgmode-org_agenda_day_view*
 
 mapped to: `vd`
 Show agenda day view
