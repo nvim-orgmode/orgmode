@@ -33,6 +33,7 @@ function Templates:compile(template)
   if type(content) == 'table' then
     content = table.concat(content, '\n')
   end
+  content = self:_compile_dates(content)
   for expansion, compiler in pairs(expansions) do
     content = content:gsub(vim.pesc(expansion), compiler())
   end
@@ -45,6 +46,15 @@ function Templates:setup()
     vim.cmd[[norm!c2l]]
     vim.cmd[[startinsert!]]
   end
+end
+
+---@param content string
+---@return string
+function Templates:_compile_dates(content)
+  for exp in content:gmatch('%%<[^>]*>') do
+    content = content:gsub(vim.pesc(exp), os.date(exp:sub(3, -2)))
+  end
+  return content
 end
 
 return Templates

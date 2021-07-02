@@ -103,10 +103,14 @@ Variables:
   * `%u`: Prints current date in inactive format (Example: `[2021-06-10 Thu]`)
   * `%U`: Prints current date and time in inactive format (Example: `[2021-06-10 Thu 12:30]`)
   * `%a`: File and line number from where capture was initiated (Example: `[[file:/home/user/projects/myfile.txt +2]]`)
+  * `%<FORMAT>`: Insert current date/time formatted according to [lua date](https://www.lua.org/pil/22.1.html) format (Example: `%<%Y-%m-%d %A>` produces '2021-07-02 Friday')
   * `%?`: Default cursor position when template is opened
 
 Example:<br />
   `{ T = { description: 'Todo', template: '* TODO %?\n %u', target: '~/org/todo.org' } }`
+
+Journal example:<br />
+  `{ j = { description = 'Journal', template = '\n*** %<%Y-%m-%d> %<%A>\n**** %U\n\n%?', target = '~/sync/org/journal.org' } }`
 
 #### **org_priority_highest**
 *type*: `string|number`<br />
