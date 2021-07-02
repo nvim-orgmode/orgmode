@@ -1,6 +1,9 @@
 local config = require('orgmode.config')
 local Date = require('orgmode.objects.date')
 local expansions = {
+  ['%A'] = function() return os.date("%A") end,
+  ['%x'] = function() return os.date("%Y-%m-%d") end,
+  ['%X'] = function() return os.date("%X") end,
   ['%t'] = function() return string.format('<%s>', Date.today():to_string()) end,
   ['%T'] = function() return string.format('<%s>', Date.now():to_string()) end,
   ['%u'] = function() return string.format('[%s]', Date.today():to_string()) end,

@@ -185,17 +185,21 @@ ORG_AGENDA_TEMPLATES                                *orgmode-org_agenda_template
 
 type: `table<string, table>`
 default value: `{ t = { description: 'Task', template: '* TODO %?\n  %u' } }`
-Templates for capture/refile prompt.
+Templates for capture/refile prompt. Use `target =` to specify which file to append to.
 Variables:
   * `%t`: Prints current date (Example: `<2021-06-10 Thu>`)
+  * `%x`: Prints current date without brackets (Example: `2021-06-10`)
+  * `%X`: Prints current time without brackets (Example: `10:20:01`)
   * `%T`: Prints current date and time (Example: `<2021-06-10 Thu 12:30>`)
   * `%u`: Prints current date in inactive format (Example: `[2021-06-10 Thu]`)
+  * `%A`: Prints weekday name (Example: `Wednesday`)
   * `%U`: Prints current date and time in inactive format (Example: `[2021-06-10 Thu 12:30]`)
   * `%a`: File and line number from where capture was initiated (Example: `[[file:/home/user/projects/myfile.txt +2]]`)
   * `%?`: Default cursor position when template is opened
 
 Example:
   `{ T = { description: 'Todo', template: '* TODO %?\n %u', target: '~/org/todo.org' } }`
+  `{ description = 'Journal', template = '\n*** %x %A\n**** %U\n\n%?', target = '~/sync/org/journal.org' }`
 
 ORG_PRIORITY_HIGHEST                                *orgmode-org_priority_highest*
 
@@ -662,4 +666,3 @@ or you can link it to another highlight group:
       hi link OrgAgendaScheduledPast Statement
     endfunction
 <
-
