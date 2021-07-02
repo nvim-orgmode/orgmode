@@ -232,7 +232,7 @@ Go to previous agenda span
 #### **org_agenda_goto_today**
 *mapped to*: `.`<br />
 Go to span with for today
-#### **org_agenda_day_view **
+#### **org_agenda_day_view**
 *mapped to*: `vd`<br />
 Show agenda day view
 #### **org_agenda_week_view**
