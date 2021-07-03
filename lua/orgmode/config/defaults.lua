@@ -2,6 +2,7 @@ return {
   org_agenda_files = '',
   org_default_notes_file = '',
   org_todo_keywords = {'TODO', '|', 'DONE'},
+  org_todo_keyword_faces = {},
   org_deadline_warning_days = 14,
   org_agenda_span = 'week', -- day/week/month/year/number of days
   org_agenda_start_on_weekday = 1,
