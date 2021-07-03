@@ -168,7 +168,7 @@ much experience with those. Any help on this topic is appreciated.
 ## Plans
 * [ ] Support searching by properties
 * [ ] Improve checkbox hierarchy
-* [ ] Support todo keyword faces
+* [X] Support todo keyword faces
 * [ ] Support clocking work time
 * [ ] Improve folding
 * [ ] Support exporting and publishing (via existing emacs tools)
