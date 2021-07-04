@@ -118,7 +118,7 @@ Example:<br />
 
 #### **org_agenda_templates**
 *type*: `table<string, table>`<br />
-default value: `{ t = { description: 'Task', template: '* TODO %?\n  %u' } }`<br />
+default value: `{ t = { description = 'Task', template = '* TODO %?\n  %u' } }`<br />
 Templates for capture/refile prompt.<br />
 Variables:
   * `%t`: Prints current date (Example: `<2021-06-10 Thu>`)
@@ -130,7 +130,7 @@ Variables:
   * `%?`: Default cursor position when template is opened
 
 Example:<br />
-  `{ T = { description: 'Todo', template: '* TODO %?\n %u', target: '~/org/todo.org' } }`
+  `{ T = { description = 'Todo', template = '* TODO %?\n %u', target = '~/org/todo.org' } }`
 
 Journal example:<br />
   `{ j = { description = 'Journal', template = '\n*** %<%Y-%m-%d> %<%A>\n**** %U\n\n%?', target = '~/sync/org/journal.org' } }`
