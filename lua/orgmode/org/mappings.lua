@@ -410,7 +410,7 @@ function OrgMappings:_get_link_under_cursor()
 end
 
 function _G.orgmode.autocomplete_set_tags(arg_lead)
-  return Files.autocomplete_tags(arg_lead, ':')
+  return Files.autocomplete_tags(arg_lead)
 end
 
 return OrgMappings

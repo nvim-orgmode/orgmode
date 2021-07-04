@@ -119,6 +119,7 @@ Or just use `omnifunc` via <kbd>\<C-x\>\<C-o\></kbd>
   * List tasks that have "TODO" state (<kbd>t</kbd>):
   * Find headlines matching tag(s) (<kbd>m</kbd>):
   * Search for headlines (and it's content) for a query (<kbd>s</kbd>):
+  * [Advanced search](DOCS.md#advanced-search) for tags/todo kewords/properties
 * Capture:
   * Define custom templates
   * Fast capturing to default notes file via <kbd>\<C-c\></kbd>
@@ -166,7 +167,7 @@ Parser is written manually from scratch. It doesn't follow any parser writing pa
 much experience with those. Any help on this topic is appreciated.
 
 ## Plans
-* [ ] Support searching by properties
+* [X] Support searching by properties
 * [ ] Improve checkbox hierarchy
 * [X] Support todo keyword faces
 * [ ] Support clocking work time
