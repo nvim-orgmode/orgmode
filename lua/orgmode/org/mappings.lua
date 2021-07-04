@@ -164,12 +164,6 @@ function OrgMappings:todo_next_state()
   end
   item = Files.get_current_file():get_closest_headline()
 
-  local prev_state_changes = item:get_content_matching('^%s*-%s*State%s*"%w+"%s+from%s+"%w+"')
-  if prev_state_changes then
-    vim.fn.append(prev_state_changes.range.start_line, state_change)
-    return item
-  end
-
   if item.properties.valid then
     vim.fn.append(item.properties.range.end_line, state_change)
   end
