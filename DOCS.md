@@ -12,6 +12,7 @@
 3. [Autocompletion](#autocompletion)
 4. [Abbreviations](#abbreviations)
 5. [Colors](#colors)
+6. [Advanced search](#advanced-search)
 
 ## Settings
 Variable names mostly follow the same naming as Orgmode mappings.
@@ -537,3 +538,23 @@ endfunction
 ```
 
 For adding/changing todo keyword colors see [org-todo-keyword-faces](#org_todo_keyword_faces)
+
+## Advanced search
+Part of [Advanced search](https://orgmode.org/worg/org-tutorials/advanced-searching.html) functionality
+is implemented.
+
+To leverage advanced search, open up agenda prompt (default `<Leader>oa`), and select `m` or `M`(todos only) option.
+
+What is supported:
+
+* Operators: `|`, `&`, `+` and `-` (examples: `COMPUTER+URGENT`, `COMPUTER|URGENT`, `+COMPUTER-URGENT`, `COMPUTER|WORK+EMAIL`)
+* Search by property with basic arithmetic operators (`<`, `<=`, `=`, `>`, `>=`, `<>`) (examples: `CATEGORY="mycategory"`, `CUSTOM_ID=my_custom_id`, `AGE<10`, `ITEMS>=5`)
+* Search by todo keyword (example: `COMPUTER+URGENT/TODO|NEXT`)
+
+Few examples:
+
+* Search all with tag `COMPUTER` **or** `WORK` and `EMAIL`: `COMPUTER|WORK+EMAIL`. `And` always have precedence over `or`.
+  Workaround to use first `or` is to write it like this: `COMPUTER+EMAIL|WORK+EMAIL`
+* Search all with keyword `TODO`, tag `URGENT` and property `AGE` bigger than 10: `URGENT+AGE>10/TODO`
+* Search all with keyword `DONE` or `DELEGATED`, tag `COMPUTER` and property `AGE` not equal to 10: `COMPUTER+AGE<>10/DONE|DELEGATED`
+* Search all without keyword `DONE`, tag `URGENT` but without tag `COMPUTER` and property `CATEGORY` equal to `mywork`: `URGENT-COMPUTER+CATEGORY=mywork/-DONE`
