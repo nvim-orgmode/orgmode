@@ -3,6 +3,7 @@ local Content = require('orgmode.parser.content')
 local Config = require('orgmode.config')
 local Types = require('orgmode.parser.types')
 local Range = require('orgmode.parser.range')
+local utils = require('orgmode.utils')
 
 ---@class Root
 ---@field lines string[]
@@ -129,8 +130,9 @@ end
 ---@return string
 function Root:process_root_content(content)
   if content:is_keyword() and content.keyword.name == 'FILETAGS' then
-    for _, tag in ipairs(vim.split(content.keyword.value, '%s*,%s*')) do
-      if tag:find('^[%w_%%@#]+$') and not vim.tbl_contains(self.tags, tag) then
+    local filetags = utils.parse_tags_string(content.keyword.value)
+    for _, tag in ipairs(filetags) do
+      if not vim.tbl_contains(self.tags, tag) then
         table.insert(self.tags, tag)
       end
     end

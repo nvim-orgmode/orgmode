@@ -183,6 +183,17 @@ describe('Autocompletion', function()
       { menu = "[Org]", word = ":PRIVATE:" },
     }, result)
 
+    mock_line(api, '#+FILETAGS: ')
+    result = Autocompletion.omni(0, '')
+    assert.are.same({}, result)
+
+    mock_line(api, '#+FILETAGS: :')
+    result = Autocompletion.omni(0, ':')
+    assert.are.same({
+      { menu = "[Org]", word = ":OFFICE:" },
+      { menu = "[Org]", word = ":PRIVATE:" },
+    }, result)
+
     -- TODO: Add hyperlinks test
 
     mock.revert(api)

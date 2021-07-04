@@ -13,7 +13,11 @@ local Autocompletion = {}
 
 local directives = { rgx = vim.regex([[^\#+\?\w*$]]), line_rgx = vim.regex([[^\#\?+\?\w*$]]), list = data.directives }
 local begin_blocks = { rgx = vim.regex([[\(^\s*\)\@<=\#+\?\w*$]]), line_rgx = vim.regex([[^\s*\#\?+\?\w*$]]), list = data.begin_blocks }
-local properties = { rgx = vim.regex([[\(^\s*\)\@<=:\w*$]]), list = data.properties }
+local properties = {
+  line_rgx = vim.regex([[\(^\s\+\|^\s*:\?$\)]]),
+  rgx = vim.regex([[\(^\|^\s\+\)\@<=:\w*$]]),
+  list = data.properties,
+}
 local links = {
   line_rgx = vim.regex([[\(\(^\|\s\+\)\[\[\)\@<=\(\*\|\#\)\?\(\w\+\)\?]]),
   rgx = vim.regex([[\(\*\|\#\)\?\(\w\+\)\?$]]),
@@ -28,6 +32,17 @@ local tags = {
     end, Files.get_tags())
   end,
 }
+
+local filetags = {
+  line_rgx = vim.regex([[^\#+FILETAGS:\s\+]]),
+  rgx = vim.regex([[:\([0-9A-Za-z_%@\#]*\)$]]),
+  fetcher = function()
+    return vim.tbl_map(function(tag)
+      return ':'..tag..':'
+    end, Files.get_tags())
+  end,
+}
+
 local todo_keywords = {
   rgx = vim.regex([[\(^\(\*\+\s\+\)\?\)\@<=\w*$]]),
   line_rgx = vim.regex([[^\*\+\s\+\w*$]]),
@@ -39,6 +54,7 @@ local todo_keywords = {
 local contexts = {
   directives,
   begin_blocks,
+  filetags,
   properties,
   links,
   metadata,

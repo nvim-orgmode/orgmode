@@ -7,7 +7,7 @@ local config = require('orgmode.config')
 describe('Parser', function()
   it('should parse filetags headline', function()
     local lines = {
-      '#+FILETAGS: Tag1, Tag2',
+      '#+FILETAGS: :Tag1:Tag2:',
       '* TODO Something with a lot of tags :WORK:'
     }
 

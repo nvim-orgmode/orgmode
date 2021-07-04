@@ -20,7 +20,7 @@ describe('Content parser', function()
 
   it('should parse keyword', function()
     local content = Content:new({
-      line = ' #+FILETAGS: Tag1, Tag2',
+      line = ' #+FILETAGS: :Tag1:Tag2:',
       lnum = 1,
       parent = { id = 0, level = 0 },
     })
