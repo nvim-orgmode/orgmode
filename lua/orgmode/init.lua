@@ -62,14 +62,18 @@ local function reload(file)
 end
 
 ---@param opts table
-local function action(cmd, opts)
+local function action(cmd, opts, multiple)
   local parts = vim.split(cmd, '.', true)
   if not instance or #parts < 2 then return end
   instance:init()
   if instance[parts[1]] and instance[parts[1]][parts[2]] then
     local item = instance[parts[1]]
     local method = item[parts[2]]
-    return method(item, opts)
+    if multiple then
+      return method(item, unpack(opts))
+    else
+      return method(item, opts)
+    end
   end
 end
 

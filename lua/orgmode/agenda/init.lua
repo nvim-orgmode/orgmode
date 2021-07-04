@@ -306,17 +306,26 @@ function Agenda:search(clear_search)
 end
 
 -- TODO: Add PROP/TODO Query
-function Agenda:tags(clear_search)
+function Agenda:tags(clear_search, tags, todo_only)
   if clear_search then
     self.last_search = ''
   end
-  local tags = vim.fn.input('Match: ', self.last_search, 'customlist,v:lua.orgmode.autocomplete_agenda_filter_tags')
+
+  if not tags then
+    tags = vim.fn.input('Match: ', self.last_search, 'customlist,v:lua.orgmode.autocomplete_agenda_filter_tags')
+  end
   if vim.trim(tags) == '' then
     return utils.echo_warning('Invalid tag.')
   end
   local headlines = {}
   for _, orgfile in ipairs(Files.all()) do
-    for _, headline in ipairs(orgfile:get_headlines_with_tags(tags)) do
+    local headlines_filtered
+    if todo_only then
+      headlines_filtered = orgfile:get_unfinished_todo_entries_with_tags(tags)
+    else
+      headlines_filtered = orgfile:get_headlines_with_tags(tags)
+    end
+    for _, headline in ipairs(headlines_filtered) do
       table.insert(headlines, headline)
     end
   end
