@@ -305,8 +305,18 @@ function Agenda:search(clear_search)
   return self:_print_and_highlight()
 end
 
--- TODO: Add PROP/TODO Query
 function Agenda:tags(opts)
+  return self:_tags_view(opts, 'tags')
+end
+
+function Agenda:tags_todo(opts)
+  opts = opts or {}
+  opts.todo_only = true
+  return self:_tags_view(opts, 'tags_todo')
+end
+
+-- TODO: Add PROP/TODO Query
+function Agenda:_tags_view(opts, view)
   opts = opts or {}
   local tags = opts.tags
 
@@ -379,7 +389,7 @@ function Agenda:tags(opts)
 
   self.content = content
   self.highlights = highlights
-  self.active_view = 'tags'
+  self.active_view = view
   return self:_print_and_highlight()
 end
 
@@ -388,8 +398,8 @@ function Agenda:prompt()
     { label = '', separator = '-', length = 34 },
     { label = 'Agenda for current week or day', key = 'a', action = function() return self:agenda() end },
     { label = 'List of all TODO entries', key = 't', action = function() return self:todos() end },
-    { label = 'Match a TAGS query', key = 'm', action = function() return self:tags({clear_search = true, tags = nil, todo_only = false}) end },
-    { label = 'Like m, but only TODO entries', key = 'M', action = function() return self:tags({clear_search = true, tags = nil, todo_only = true}) end },
+    { label = 'Match a TAGS query', key = 'm', action = function() return self:tags({ clear_search = true }) end },
+    { label = 'Like m, but only TODO entries', key = 'M', action = function() return self:tags_todo({ clear_search = true }) end },
     { label = 'Search for keywords', key = 's', action = function() return self:search(true) end },
     { label = 'Quit', key = 'q' },
     { label = '', separator = ' ', length = 1 },
