@@ -177,6 +177,26 @@ function Root:get_opened_unfinished_headlines()
   end, self.items)
 end
 
+function Root:get_unfinished_todo_entries_with_tags(tags)
+  if self.is_archive_file then return {} end
+  local taglist = Root:_parse_taglist(tags)
+
+  return vim.tbl_filter(function(item)
+    if item.type ~= Types.HEADLINE or item:is_archived() or not item:is_todo() or not item.tags or #item.tags == 0 then
+      return false
+    end
+
+    local has_tag = true
+    for _, tag in ipairs(taglist) do
+      if not vim.tbl_contains(item.tags, tag) then
+        has_tag = false
+        break
+      end
+    end
+    return has_tag
+  end, self.items)
+end
+
 function Root:get_unfinished_todo_entries()
   if self.is_archive_file then return {} end
 
@@ -211,14 +231,7 @@ end
 
 function Root:get_headlines_with_tags(tags)
   if self.is_archive_file then return {} end
-
-  local taglist = vim.tbl_map(function(tag)
-    return vim.trim(tag)
-  end , vim.split(tags, '+', true))
-
-  taglist = vim.tbl_filter(function(t)
-    return t ~= ''
-  end, taglist)
+  local taglist = Root:_parse_taglist(tags)
 
   if #taglist == 0 then return {} end
 
@@ -284,6 +297,16 @@ function Root:get_archive_file_location()
     end
   end
   return Config:parse_archive_location(self.file)
+end
+
+function Root:_parse_taglist(tags)
+  local taglist = vim.tbl_map(function(tag)
+    return vim.trim(tag)
+  end , vim.split(tags, '+', true))
+
+  return vim.tbl_filter(function(t)
+    return t ~= ''
+  end, taglist)
 end
 
 return Root

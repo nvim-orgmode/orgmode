@@ -306,17 +306,29 @@ function Agenda:search(clear_search)
 end
 
 -- TODO: Add PROP/TODO Query
-function Agenda:tags(clear_search)
-  if clear_search then
+function Agenda:tags(opts)
+  opts = opts or {}
+  local tags = opts.tags
+
+  if opts.clear_search then
     self.last_search = ''
   end
-  local tags = vim.fn.input('Match: ', self.last_search, 'customlist,v:lua.orgmode.autocomplete_agenda_filter_tags')
+
+  if not tags then
+    tags = vim.fn.input('Match: ', self.last_search, 'customlist,v:lua.orgmode.autocomplete_agenda_filter_tags')
+  end
   if vim.trim(tags) == '' then
     return utils.echo_warning('Invalid tag.')
   end
   local headlines = {}
   for _, orgfile in ipairs(Files.all()) do
-    for _, headline in ipairs(orgfile:get_headlines_with_tags(tags)) do
+    local headlines_filtered
+    if opts.todo_only then
+      headlines_filtered = orgfile:get_unfinished_todo_entries_with_tags(tags)
+    else
+      headlines_filtered = orgfile:get_headlines_with_tags(tags)
+    end
+    for _, headline in ipairs(headlines_filtered) do
       table.insert(headlines, headline)
     end
   end
@@ -376,7 +388,8 @@ function Agenda:prompt()
     { label = '', separator = '-', length = 34 },
     { label = 'Agenda for current week or day', key = 'a', action = function() return self:agenda() end },
     { label = 'List of all TODO entries', key = 't', action = function() return self:todos() end },
-    { label = 'Match a TAGS query', key = 'm', action = function() return self:tags(true) end },
+    { label = 'Match a TAGS query', key = 'm', action = function() return self:tags({clear_search = true, tags = nil, todo_only = false}) end },
+    { label = 'Like m, but only TODO entries', key = 'M', action = function() return self:tags({clear_search = true, tags = nil, todo_only = true}) end },
     { label = 'Search for keywords', key = 's', action = function() return self:search(true) end },
     { label = 'Quit', key = 'q' },
     { label = '', separator = ' ', length = 1 },
