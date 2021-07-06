@@ -7,6 +7,7 @@ local AgendaItem = require('orgmode.agenda.agenda_item')
 local Calendar = require('orgmode.objects.calendar')
 local agenda_highlights = require('orgmode.colors.highlights')
 local Files = require('orgmode.parser.files')
+local Search = require('orgmode.parser.search')
 local hl_map = agenda_highlights.get_agenda_hl_map()
 
 ---@param agenda_items AgendaItem[]
@@ -317,7 +318,6 @@ function Agenda:tags_todo(opts)
   return self:_tags_view(opts, 'tags_todo')
 end
 
--- TODO: Add PROP/TODO Query
 function Agenda:_tags_view(opts, view)
   opts = opts or {}
   local tags = opts.tags
@@ -332,14 +332,10 @@ function Agenda:_tags_view(opts, view)
   if vim.trim(tags) == '' then
     return utils.echo_warning('Invalid tag.')
   end
+  local search = Search:new(tags)
   local headlines = {}
   for _, orgfile in ipairs(Files.all()) do
-    local headlines_filtered
-    if opts.todo_only then
-      headlines_filtered = orgfile:get_unfinished_todo_entries_with_tags(tags)
-    else
-      headlines_filtered = orgfile:get_headlines_with_tags(tags)
-    end
+    local headlines_filtered = orgfile:apply_search(search, opts.todo_only)
     for _, headline in ipairs(headlines_filtered) do
       table.insert(headlines, headline)
     end
@@ -400,7 +396,7 @@ function Agenda:prompt()
     { label = '', separator = '-', length = 34 },
     { label = 'Agenda for current week or day', key = 'a', action = function() return self:agenda() end },
     { label = 'List of all TODO entries', key = 't', action = function() return self:todos() end },
-    { label = 'Match a TAGS query', key = 'm', action = function() return self:tags({ clear_search = true }) end },
+    { label = 'Match a TAGS/PROP/TODO query', key = 'm', action = function() return self:tags({ clear_search = true }) end },
     { label = 'Like m, but only TODO entries', key = 'M', action = function() return self:tags_todo({ clear_search = true }) end },
     { label = 'Search for keywords', key = 's', action = function() return self:search(true) end },
     { label = 'Quit', key = 'q' },

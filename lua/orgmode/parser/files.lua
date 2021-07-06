@@ -159,7 +159,7 @@ end
 function Files._build_tags()
   local tags = {}
   for _, orgfile in pairs(Files.files) do
-    for _, headline in ipairs(orgfile:get_opened_headlines()) do
+    for _, headline in ipairs(orgfile:get_headlines()) do
       if headline.tags and #headline.tags > 0 then
         for _, tag in ipairs(headline.tags) do
           tags[tag] = 1
@@ -172,18 +172,17 @@ function Files._build_tags()
   Files.tags = taglist
 end
 
-function Files.autocomplete_tags(arg_lead, join_char)
-  join_char = join_char or '+'
-  local parts = vim.split(arg_lead, join_char, true)
-  local last = table.remove(parts, #parts)
+function Files.autocomplete_tags(arg_lead)
+  local join_char = '[%+%-:&|]'
+  local parts = vim.split(arg_lead, join_char)
+  local base = arg_lead:gsub('[^%+%-:&|]*$', '')
+  local last = arg_lead:match('[^%+%-:&|]*$')
   local matches = vim.tbl_filter(function(tag)
     return tag:match('^'..vim.pesc(last)) and not vim.tbl_contains(parts, tag)
   end, Files.get_tags())
 
-  local prefix = #parts > 0 and table.concat(parts, join_char)..join_char or ''
-
   return vim.tbl_map(function(tag)
-    return prefix..tag
+    return base..tag
   end, matches)
 end
 
