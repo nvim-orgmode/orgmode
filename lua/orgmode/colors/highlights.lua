@@ -38,6 +38,13 @@ function M.define_org_headline_colors(faces)
    for _, face in pairs(faces) do
       table.insert(contains, face)
    end
+   if config.org_hide_leading_stars then
+      vim.cmd[[
+         syntax match OrgHideLeadingStars /^\*\{2,\}/me=e-1 contained
+         hi def link OrgHideLeadingStars org_hide_leading_stars
+      ]]
+      table.insert(contains, 'OrgHideLeadingStars')
+   end
    contains = table.concat(contains, ',')
    for i, color in ipairs(headline_colors) do
       local j = i
