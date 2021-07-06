@@ -108,6 +108,12 @@ If this highlight group does not suit you, you can apply different highlight gro
 ```lua
 vim.cmd[[autocmd ColorScheme * hi link OrgHideLeadingStars MyCustomHlGroup]]
 ```
+
+#### **org_hide_emphasis_markers**
+*type*: `boolean`<br />
+*default value*: `false`<br />
+Conceal bold/italic/underline/code/verbatim markers.
+
 ### Agenda settings
 
 #### **org_deadline_warning_days**

@@ -11,7 +11,7 @@ lua require('orgmode.colors.highlights').define_highlights()
 " -----------------------------------------------------------------------------
 "
 " Inline markup {{{1
-" *bold*, /italic/, _underline_, +strike-through+, =code=, ~verbatim~
+" *bold*, /italic/, _underline_, +strike-through+, ~code~, =verbatim=
 " Note:
 " - /italic/ is rendered as reverse in most terms (works fine in gVim, though)
 " - +strike-through+ doesn't work on Vim / gVim
@@ -24,16 +24,26 @@ lua require('orgmode.colors.highlights').define_highlights()
 "        to make sure that org_heading syntax got higher priority(help :syn-priority) than org_bold.
 "        If there is any other good solution, please help fix it.
 "  \\\\*sinuate*
-syntax region org_bold      start="\S\zs\*\|\*\S\@="     end="\S\zs\*\|\*\S\@="  keepend oneline contains=@Spell
-syntax region org_italic    start="\S\zs\/\|\/\S\@="     end="\S\zs\/\|\/\S\@="  keepend oneline contains=@Spell
-syntax region org_underline start="\S\zs_\|_\S\@="       end="\S\zs_\|_\S\@="    keepend oneline contains=@Spell
-syntax region org_code      start="\S\zs=\|=\S\@="       end="\S\zs=\|=\S\@="    keepend oneline contains=@Spell
-syntax region org_code      start="\S\zs`\|`\S\@="       end="\S\zs'\|'\S\@="    keepend oneline contains=@Spell
-syntax region org_verbatim  start="\S\zs\~\|\~\S\@="     end="\S\zs\~\|\~\S\@="  keepend oneline contains=@Spell
+let s:concealends = ''
+let s:conceal = luaeval('require("orgmode.config").org_hide_emphasis_markers')
+if s:conceal
+  let s:concealends = ' concealends'
+endif
+exe 'syntax region org_bold      matchgroup=org_bold_delimiter       start="\S\zs\*\|\*\S\@="  end="\S\zs\*\|\*\S\@="  keepend oneline contains=@Spell' . s:concealends
+exe 'syntax region org_italic    matchgroup=org_italic_delimiter     start="\S\zs\/\|\/\S\@="  end="\S\zs\/\|\/\S\@="  keepend oneline contains=@Spell' . s:concealends
+exe 'syntax region org_underline matchgroup=org_underline_delimiter  start="\S\zs_\|_\S\@="    end="\S\zs_\|_\S\@="    keepend oneline contains=@Spell' . s:concealends
+exe 'syntax region org_code      matchgroup=org_code_delimiter       start="\S\zs\~\|\~\S\@="  end="\S\zs\~\|\~\S\@="  keepend oneline contains=@Spell' . s:concealends
+exe 'syntax region org_verbatim  matchgroup=org_verbatim_delimiter   start="\S\zs=\|=\S\@="    end="\S\zs=\|=\S\@="    keepend oneline contains=@Spell' . s:concealends
 
 hi def org_bold      term=bold      cterm=bold      gui=bold
 hi def org_italic    term=italic    cterm=italic    gui=italic
 hi def org_underline term=underline cterm=underline gui=underline
+
+hi link org_bold_delimiter org_bold
+hi link org_italic_delimiter org_italic
+hi link org_underline_delimiter org_underline
+hi link org_code_delimiter org_code
+hi link org_verbatim_delimiter org_verbatim
 
 " Org headlines
 " Todo keywords
