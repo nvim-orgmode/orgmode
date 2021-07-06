@@ -153,6 +153,11 @@ function Root:get_current_item()
   return self:get_item(vim.fn.line('.'))
 end
 
+function Root:get_headlines()
+  if self.is_archive_file then return {} end
+  return vim.tbl_filter(function(item) return item:is_headline() end, self.items)
+end
+
 ---@return Headline[]
 function Root:get_opened_headlines()
   if self.is_archive_file then return {} end
@@ -174,26 +179,6 @@ function Root:get_opened_unfinished_headlines()
 
   return vim.tbl_filter(function(item)
    return item.type == Types.HEADLINE and not item:is_archived() and not item:is_done()
-  end, self.items)
-end
-
-function Root:get_unfinished_todo_entries_with_tags(tags)
-  if self.is_archive_file then return {} end
-  local taglist = Root:_parse_taglist(tags)
-
-  return vim.tbl_filter(function(item)
-    if item.type ~= Types.HEADLINE or item:is_archived() or not item:is_todo() or not item.tags or #item.tags == 0 then
-      return false
-    end
-
-    local has_tag = true
-    for _, tag in ipairs(taglist) do
-      if not vim.tbl_contains(item.tags, tag) then
-        has_tag = false
-        break
-      end
-    end
-    return has_tag
   end, self.items)
 end
 
@@ -226,25 +211,6 @@ function Root:get_headlines_matching_search_term(search_term, no_escape)
       end
       return is_match
     end
-  end, self.items)
-end
-
-function Root:get_headlines_with_tags(tags)
-  if self.is_archive_file then return {} end
-  local taglist = Root:_parse_taglist(tags)
-
-  if #taglist == 0 then return {} end
-
-  return vim.tbl_filter(function(item)
-    if not item.tags or #item.tags == 0 then return false end
-    local has_tag = true
-    for _, tag in ipairs(taglist) do
-      if not vim.tbl_contains(item.tags, tag) then
-        has_tag = false
-        break
-      end
-    end
-    return has_tag
   end, self.items)
 end
 
@@ -281,6 +247,22 @@ function Root:get_headline_lines(headline)
   return {unpack(self.lines, headline.range.start_line, headline.range.end_line)}
 end
 
+---@param search Search
+---@param todo_only boolean
+---@return Headline[]
+function Root:apply_search(search, todo_only)
+  if self.is_archive_file then return {} end
+
+  return vim.tbl_filter(function(item)
+    if not item:is_headline() or item:is_archived() or (todo_only and not item:is_todo()) then return false end
+    return search:check({
+      props = item.properties.items,
+      tags = item.tags,
+      todo = item.todo_keyword.value,
+    })
+  end, self.items)
+end
+
 function Root:_add_source_block(content)
   local filetype = content.line:match('^%s*#%+BEGIN_SRC%s+(.*)%s*$')
   if not filetype then return end
@@ -297,16 +279,6 @@ function Root:get_archive_file_location()
     end
   end
   return Config:parse_archive_location(self.file)
-end
-
-function Root:_parse_taglist(tags)
-  local taglist = vim.tbl_map(function(tag)
-    return vim.trim(tag)
-  end , vim.split(tags, '+', true))
-
-  return vim.tbl_filter(function(t)
-    return t ~= ''
-  end, taglist)
 end
 
 return Root
