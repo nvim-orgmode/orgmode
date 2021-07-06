@@ -81,6 +81,32 @@ Example values:
 This value can be overridden per file basis with a org special keyword `#+ARCHIVE`.<br />
   Example: `#+ARCHIVE: ~/path/to/archive_file.org`
 
+#### **org_hide_leading_stars**
+*type*: `boolean`<br />
+*default value*: `false`<br />
+Hide leading stars for headings.<br />
+Example:
+
+Disabled (default):
+```
+* TODO First item
+** TODO Second Item
+*** TODO Third item
+```
+
+Enabled:
+```
+* TODO First item
+ * TODO Second Item
+  * TODO Third item
+```
+
+**NOTE**: Stars are hidden by applying highlight group that masks them with color that's same as background color.<br />
+If this highlight group does not suit you, you can apply different highlight group to it:
+
+```lua
+vim.cmd[[autocmd ColorScheme * hi link OrgHideLeadingStars MyCustomHlGroup]]
+```
 ### Agenda settings
 
 #### **org_deadline_warning_days**
@@ -159,33 +185,6 @@ Example:<br />
   `* TODO [#B] This task has the normal priority`<br />
   `* TODO And this one has the same priority`<br />
   `* TODO [#C] I'm lowest in priority`
-
-#### **org_hide_leading_stars**
-*type*: `boolean`<br />
-*default value*: `false`<br />
-Hide leading stars for headings.<br />
-Example:
-
-Disabled (default):
-```
-* TODO First item
-** TODO Second Item
-*** TODO Third item
-```
-
-Enabled:
-```
-* TODO First item
- * TODO Second Item
-  * TODO Third item
-```
-
-**NOTE**: Stars are hidden by applying highlight group that masks them with color that's same as background color.<br />
-If this highlight group does not suit you, you can apply different highlight group to it:
-
-```lua
-vim.cmd[[autocmd ColorScheme * hi link OrgHideLeadingStars MyCustomHlGroup]]
-```
 
 ### Tags settings
 
