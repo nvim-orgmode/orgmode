@@ -231,15 +231,17 @@ function Agenda:todos()
       file_position = todo.range.start_line
     })
 
-    table.insert(highlights, {
-      hlgroup = hl_map[todo.todo_keyword.value],
-      range = Range:new({
-        start_line = i + 1,
-        end_line = i + 1,
-        start_col = todo_keyword_pos,
-        end_col = todo_keyword_pos + todo_keyword:len()
+    if todo.todo_keyword.value ~= '' then
+      table.insert(highlights, {
+        hlgroup = hl_map[todo.todo_keyword.value] or hl_map[todo.todo_keyword.type],
+        range = Range:new({
+          start_line = i + 1,
+          end_line = i + 1,
+          start_col = todo_keyword_pos,
+          end_col = todo_keyword_pos + todo_keyword:len()
+        })
       })
-    })
+    end
   end
 
   self.content = content
@@ -288,7 +290,7 @@ function Agenda:search(clear_search)
     if headline.todo_keyword.value ~= '' then
       local todo_keyword_pos = category:len() + 4
       table.insert(highlights, {
-        hlgroup = hl_map[headline.todo_keyword.value],
+        hlgroup = hl_map[headline.todo_keyword.value] or hl_map[headline.todo_keyword.type],
         range = Range:new({
           start_line = i + 2,
           end_line = i + 2,
@@ -376,7 +378,7 @@ function Agenda:_tags_view(opts, view)
     if headline.todo_keyword.value ~= '' then
       local todo_keyword_pos = category:len() + 4
       table.insert(highlights, {
-        hlgroup = hl_map[headline.todo_keyword.value],
+        hlgroup = hl_map[headline.todo_keyword.value] or hl_map[headline.todo_keyword.type],
         range = Range:new({
           start_line = i + 2,
           end_line = i + 2,
