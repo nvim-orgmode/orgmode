@@ -574,24 +574,25 @@ end
 ---@return string
 function Date:get_negative_adjustment()
   if #self.adjustments == 0 then return nil end
-  local adj = self.adjustments[#self.adjustments]
-  if not adj:match('^%-%d+') then return nil end
-  return adj
+  for _, adj in ipairs(self.adjustments) do
+    if adj:match('^%-%d+') then
+      return adj
+    end
+  end
+  return nil
 end
 
 ---Get repeater value (ex. +1w, .+1w, ++1w)
 ---@return string
 function Date:get_repeater()
-  local repeater = nil
-  if #self.adjustments == 0 then return repeater end
+  if #self.adjustments == 0 then return nil end
 
   for _, adj in ipairs(self.adjustments) do
     if adj:match('^[%+%.]?%+%d+') then
-      repeater = adj
-      break
+      return adj
     end
   end
-  return repeater
+  return nil
 end
 
 function Date:set_todays_date()
