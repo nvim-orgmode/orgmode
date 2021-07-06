@@ -142,7 +142,7 @@ function Capture:_refile_content_with_fallback(lines, fallback_file, item)
     return self._refile_to_end(destination_file, lines, item)
   end
 
-  if item.level <= headline.level then
+  if item and item.level <= headline.level then
     item:demote(headline.level - item.level + 1, true)
   end
   local refiled = self:_refile_to(destination_file, lines, item, headline.range.end_line)
