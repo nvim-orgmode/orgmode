@@ -19,6 +19,7 @@ return {
   org_archive_location = '%s_archive::',
   org_use_tag_inheritance = true,
   org_tags_exclude_from_inheritance = {},
+  org_hide_leading_stars = false,
   mappings = {
     disable_all = false,
     global = {

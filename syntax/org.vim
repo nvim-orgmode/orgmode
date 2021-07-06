@@ -165,6 +165,8 @@ hi def link org_subtask_percent String
 hi def link org_subtask_percent_100 Identifier
 hi def link org_subtask_number_all Identifier
 
+hi org_hide_leading_stars ctermfg=0 guifg=bg
+
 syntax spell toplevel
 
 lua require("orgmode.org.syntax").load_code_blocks()
