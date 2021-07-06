@@ -20,6 +20,7 @@ return {
   org_use_tag_inheritance = true,
   org_tags_exclude_from_inheritance = {},
   org_hide_leading_stars = false,
+  org_hide_emphasis_markers = false,
   mappings = {
     disable_all = false,
     global = {

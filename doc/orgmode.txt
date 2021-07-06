@@ -14,6 +14,7 @@ CONTENTS                                                        *orgmode-content
             1.1.1.4. org_todo_keyword_faces.......|orgmode-org_todo_keyword_faces|
             1.1.1.5. org_archive_location...........|orgmode-org_archive_location|
             1.1.1.6. org_hide_leading_stars.......|orgmode-org_hide_leading_stars|
+            1.1.1.7. org_hide_emphasis_markers.|orgmode-org_hide_emphasis_markers|
         1.1.2. Agenda settings...........................|orgmode-agenda_settings|
             1.1.2.1. org_deadline_warning_days.|orgmode-org_deadline_warning_days|
             1.1.2.2. org_agenda_span.....................|orgmode-org_agenda_span|
@@ -196,6 +197,12 @@ If this highlight group does not suit you, you can apply different highlight gro
 >
     vim.cmd[[autocmd ColorScheme * hi link OrgHideLeadingStars MyCustomHlGroup]]
 <
+
+ORG_HIDE_EMPHASIS_MARKERS                      *orgmode-org_hide_emphasis_markers*
+
+type: `boolean`
+default value: `false`
+Conceal bold/italic/underline/code/verbatim markers.
 
 AGENDA SETTINGS                                          *orgmode-agenda_settings*
 
