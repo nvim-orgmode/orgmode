@@ -14,12 +14,26 @@ packager.add('kristijanhusak/orgmode.nvim')
 
 - [packer.nvim](https://github.com/wbthomason/packer.nvim)
 
+**Recommended**
+
+```lua
+use {'kristijanhusak/orgmode.nvim', config = function()
+        require('orgmode').setup{}
+end
+}
+```
+
+**Lazy loading (Not recommended)**
+
+Lazy loading via `ft` option works, but not completely. Global mappings are not set because plugin is not initialized on startup.
+Above setup has startup time of somewhere between 1 and 3 ms, so there are no many benefits in lazy loading.
+If you want to do it anyway, here's the lazy load setup:
 ```lua
 use {'kristijanhusak/orgmode.nvim',
-        ft = {'org'},
-        config = function()
+    ft = {'org'},
+    config = function()
             require('orgmode').setup{}
-        end
+    end
     }
 ```
 
