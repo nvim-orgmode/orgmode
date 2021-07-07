@@ -199,6 +199,19 @@ Example:<br />
   `* TODO And this one has the same priority`<br />
   `* TODO [#C] I'm lowest in priority`
 
+
+#### **org_agenda_skip_scheduled_if_done**
+*type*: `boolean`<br />
+*default value*: `false`<br />
+
+Hide scheduled entries from agenda if they are in a "DONE" state.
+
+#### **org_agenda_skip_deadline_if_done**
+*type*: `boolean`<br />
+*default value*: `false`<br />
+
+Hide deadline entries from agenda if they are in a "DONE" state.
+
 ### Tags settings
 
 #### **org_use_tag_inheritance**
