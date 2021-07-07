@@ -114,6 +114,12 @@ vim.cmd[[autocmd ColorScheme * hi link OrgHideLeadingStars MyCustomHlGroup]]
 *default value*: `false`<br />
 Conceal bold/italic/underline/code/verbatim markers.
 
+#### **org_log_done**
+*type*: `string|nil`<br />
+*default value*: `time`<br />
+When set to `time`(default), adds `CLOSED` date when marking headline as done.<br />
+When set to `nil`, it is disabled.
+
 ### Agenda settings
 
 #### **org_deadline_warning_days**

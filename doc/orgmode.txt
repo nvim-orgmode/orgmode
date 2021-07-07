@@ -15,6 +15,7 @@ CONTENTS                                                        *orgmode-content
             1.1.1.5. org_archive_location...........|orgmode-org_archive_location|
             1.1.1.6. org_hide_leading_stars.......|orgmode-org_hide_leading_stars|
             1.1.1.7. org_hide_emphasis_markers.|orgmode-org_hide_emphasis_markers|
+            1.1.1.8. org_log_done...........................|orgmode-org_log_done|
         1.1.2. Agenda settings...........................|orgmode-agenda_settings|
             1.1.2.1. org_deadline_warning_days.|orgmode-org_deadline_warning_days|
             1.1.2.2. org_agenda_span.....................|orgmode-org_agenda_span|
@@ -203,6 +204,13 @@ ORG_HIDE_EMPHASIS_MARKERS                      *orgmode-org_hide_emphasis_marker
 type: `boolean`
 default value: `false`
 Conceal bold/italic/underline/code/verbatim markers.
+
+ORG_LOG_DONE                                                *orgmode-org_log_done*
+
+type: `string|nil`
+default value: `time`
+When set to `time`(default), adds `CLOSED` date when marking headline as done.
+When set to `nil`, it is disabled.
 
 AGENDA SETTINGS                                          *orgmode-agenda_settings*
 
