@@ -141,10 +141,11 @@ function OrgMappings:todo_next_state()
 
   local repeater_dates = item:get_repeater_dates()
   if #repeater_dates == 0 then
-    if item:is_done() and not was_done then
+    local log_time = config.org_log_done == 'time'
+    if log_time and item:is_done() and not was_done then
       item:add_closed_date()
     end
-    if not item:is_done() and was_done then
+    if log_time and not item:is_done() and was_done then
       item:remove_closed_date()
     end
     return item
