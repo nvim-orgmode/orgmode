@@ -1,6 +1,18 @@
-# Orgmode.nvim (Beta)
 
-Orgmode clone written in Lua for Neovim 0.5.
+
+<div align="center">
+  <img alt="[org-neovim-blend" src="https://user-images.githubusercontent.com/1782860/124820564-eddc5000-df6d-11eb-9016-d0c073a9575c.png" width="250" />
+        
+  # Orgmode.nvim
+        
+  
+  <a href="/LICENSE">![License](https://img.shields.io/badge/license-MIT-brightgreen?style=flat-square)</a><a href="https://ko-fi.com/kristijanhusak"> ![Kofi](https://img.shields.io/badge/support-kofi-00b9fe?style=flat-square&logo=kofi)</a> 
+  
+  Orgmode clone written in Lua for Neovim 0.5.
+  
+  [Installation](#installation) | [Setup](#setup) | [Gifs](#gifs) | [Docs](/DOCS.md) | [Development](#development) | [Kudos](#thanks-to)
+        
+</div>
 
 ## Installation
 
