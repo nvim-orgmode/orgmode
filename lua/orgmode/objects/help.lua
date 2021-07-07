@@ -127,6 +127,7 @@ function Help.show()
   Help.buf = vim.api.nvim_create_buf(false, true)
   vim.api.nvim_buf_set_name(Help.buf, 'orghelp')
   vim.api.nvim_buf_set_option(Help.buf, 'filetype', 'orghelp')
+  vim.api.nvim_buf_set_option(Help.buf, 'bufhidden', 'wipe')
   Help.win = vim.api.nvim_open_win(Help.buf, true, opts)
 
   vim.api.nvim_buf_set_lines(Help.buf, 0, -1, true, content)

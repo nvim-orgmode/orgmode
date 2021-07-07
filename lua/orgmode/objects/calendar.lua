@@ -54,6 +54,7 @@ function Calendar.open()
   vim.api.nvim_win_set_option(Calendar.win, 'scrolloff', 0)
   vim.api.nvim_win_set_option(Calendar.win, 'sidescrolloff', 0)
   vim.api.nvim_buf_set_var(Calendar.buf, 'indent_blankline_enabled', false)
+  vim.api.nvim_buf_set_option(Calendar.buf, 'bufhidden', 'wipe')
 
   utils.buf_keymap(Calendar.buf, 'n', '>', '<cmd>lua require("orgmode.objects.calendar").forward()<CR>')
   utils.buf_keymap(Calendar.buf, 'n', '<', '<cmd>lua require("orgmode.objects.calendar").backward()<CR>')
