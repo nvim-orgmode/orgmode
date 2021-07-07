@@ -13,6 +13,8 @@ return {
       template = '* TODO %?\n  %u',
     }
   },
+  org_agenda_skip_scheduled_if_done = false,
+  org_agenda_skip_deadline_if_done = false,
   org_priority_highest = 'A',
   org_priority_default = 'B',
   org_priority_lowest = 'C',

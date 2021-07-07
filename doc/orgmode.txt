@@ -25,6 +25,8 @@ CONTENTS                                                        *orgmode-content
             1.1.2.6. org_priority_highest...........|orgmode-org_priority_highest|
             1.1.2.7. org_priority_default...........|orgmode-org_priority_default|
             1.1.2.8. org_priority_lowest.............|orgmode-org_priority_lowest|
+            1.1.2.9. org_agenda_skip_scheduled_if_done.|orgmode-org_agenda_skip_scheduled_if_done|
+            1.1.2.10. org_agenda_skip_deadline_if_done.|orgmode-org_agenda_skip_deadline_if_done|
         1.1.3. Tags settings...............................|orgmode-tags_settings|
             1.1.3.1. org_use_tag_inheritance.....|orgmode-org_use_tag_inheritance|
             1.1.3.2. org_tags_exclude_from_inheritance.|orgmode-org_tags_exclude_from_inheritance|
@@ -298,6 +300,20 @@ Example:
   `* TODO [#B] This task has the normal priority`
   `* TODO And this one has the same priority`
   `* TODO [#C] I'm lowest in priority`
+
+ORG_AGENDA_SKIP_SCHEDULED_IF_DONE      *orgmode-org_agenda_skip_scheduled_if_done*
+
+type: `boolean`
+default value: `false`
+
+Hide scheduled entries from agenda if they are in a "DONE" state.
+
+ORG_AGENDA_SKIP_DEADLINE_IF_DONE        *orgmode-org_agenda_skip_deadline_if_done*
+
+type: `boolean`
+default value: `false`
+
+Hide deadline entries from agenda if they are in a "DONE" state.
 
 TAGS SETTINGS                                              *orgmode-tags_settings*
 

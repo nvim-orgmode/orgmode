@@ -3,6 +3,7 @@ local Content = require('orgmode.parser.content')
 local AgendaItem = require('orgmode.agenda.agenda_item')
 local Date = require('orgmode.objects.date')
 local Highlights = require('orgmode.colors.highlights')
+local config = require('orgmode.config')
 local hl_map = Highlights.get_agenda_hl_map()
 
 local function generate(content_line, keyword)
@@ -239,6 +240,70 @@ describe('Agenda item', function()
       assert.are.same({}, agenda_item.highlights)
       assert.are.same('', agenda_item.label)
     end)
+
+    it('should not show scheduled DONE item if disabled in config', function()
+      local today = Date.now()
+      -- Scheduled done shown by default
+      local headline = generate(string.format('SCHEDULED: <%s>', today:to_string()), 'DONE')
+      local agenda_item = AgendaItem:new(headline.dates[1], headline, today)
+      assert.is.True(agenda_item.is_valid)
+      assert.are.same({ { hlgroup = hl_map.ok }, { hlgroup = hl_map.DONE, todo_keyword = 'DONE' } }, agenda_item.highlights)
+      assert.are.same(today:format_time()..'...... Scheduled:', agenda_item.label)
+
+      -- Deadline done shown by default
+      local headline_deadline = generate(string.format('DEADLINE: <%s>', today:to_string()), 'DONE')
+      local agenda_item_deadline = AgendaItem:new(headline_deadline.dates[1], headline_deadline, today)
+      assert.is.True(agenda_item_deadline.is_valid)
+      assert.are.same({ { hlgroup = hl_map.ok }, { hlgroup = hl_map.DONE, todo_keyword = 'DONE' } }, agenda_item_deadline.highlights)
+      assert.are.same(today:format_time()..'...... Deadline:', agenda_item_deadline.label)
+
+      config:extend({ org_agenda_skip_scheduled_if_done = true })
+
+      -- Scheduled done hidden
+      agenda_item = AgendaItem:new(headline.dates[1], headline, today)
+      assert.is.False(agenda_item.is_valid)
+      assert.are.same({}, agenda_item.highlights)
+      assert.are.same('', agenda_item.label)
+      -- Deadline done still showing
+      agenda_item_deadline = AgendaItem:new(headline_deadline.dates[1], headline_deadline, today)
+      assert.is.True(agenda_item_deadline.is_valid)
+      assert.are.same({ { hlgroup = hl_map.ok }, { hlgroup = hl_map.DONE, todo_keyword = 'DONE' } }, agenda_item_deadline.highlights)
+      assert.are.same(today:format_time()..'...... Deadline:', agenda_item_deadline.label)
+
+      config:extend({ org_agenda_skip_scheduled_if_done = false })
+    end)
+
+    it('should not show deadline DONE item if disabled in config', function()
+      local today = Date.now()
+      -- Scheduled done shown by default
+      local headline = generate(string.format('SCHEDULED: <%s>', today:to_string()), 'DONE')
+      local agenda_item = AgendaItem:new(headline.dates[1], headline, today)
+      assert.is.True(agenda_item.is_valid)
+      assert.are.same({ { hlgroup = hl_map.ok }, { hlgroup = hl_map.DONE, todo_keyword = 'DONE' } }, agenda_item.highlights)
+      assert.are.same(today:format_time()..'...... Scheduled:', agenda_item.label)
+
+      -- Deadline done shown by default
+      local headline_deadline = generate(string.format('DEADLINE: <%s>', today:to_string()), 'DONE')
+      local agenda_item_deadline = AgendaItem:new(headline_deadline.dates[1], headline_deadline, today)
+      assert.is.True(agenda_item_deadline.is_valid)
+      assert.are.same({ { hlgroup = hl_map.ok }, { hlgroup = hl_map.DONE, todo_keyword = 'DONE' } }, agenda_item_deadline.highlights)
+      assert.are.same(today:format_time()..'...... Deadline:', agenda_item_deadline.label)
+
+      config:extend({ org_agenda_skip_deadline_if_done = true })
+
+      -- Scheduled done still showing
+      assert.is.True(agenda_item.is_valid)
+      assert.are.same({ { hlgroup = hl_map.ok }, { hlgroup = hl_map.DONE, todo_keyword = 'DONE', } }, agenda_item.highlights)
+      assert.are.same(today:format_time()..'...... Scheduled:', agenda_item.label)
+
+      -- Deadline done hidden
+      agenda_item_deadline = AgendaItem:new(headline_deadline.dates[1], headline_deadline, today)
+      assert.is.False(agenda_item_deadline.is_valid)
+      assert.are.same({}, agenda_item_deadline.highlights)
+      assert.are.same('', agenda_item_deadline.label)
+
+      config:extend({ org_agenda_skip_deadline_if_done = false })
+    end)
   end)
 
   describe('for non today date', function()
@@ -435,5 +500,69 @@ describe('Agenda item', function()
     assert.is.False(agenda_item.is_valid)
     agenda_item = AgendaItem:new(headline.dates[2], headline, day)
     assert.is.False(agenda_item.is_valid)
-end)
+  end)
+
+    it('should not show scheduled DONE item if disabled in config', function()
+      local future_day = Date.now():add({ day = 2 })
+      -- Scheduled done shown by default
+      local headline = generate(string.format('SCHEDULED: <%s>', future_day:to_string()), 'DONE')
+      local agenda_item = AgendaItem:new(headline.dates[1], headline, future_day)
+      assert.is.True(agenda_item.is_valid)
+      assert.are.same({ { hlgroup = hl_map.ok }, { hlgroup = hl_map.DONE, todo_keyword = 'DONE' } }, agenda_item.highlights)
+      assert.are.same(future_day:format_time()..'...... Scheduled:', agenda_item.label)
+
+      -- Deadline done shown by default
+      local headline_deadline = generate(string.format('DEADLINE: <%s>', future_day:to_string()), 'DONE')
+      local agenda_item_deadline = AgendaItem:new(headline_deadline.dates[1], headline_deadline, future_day)
+      assert.is.True(agenda_item_deadline.is_valid)
+      assert.are.same({ { hlgroup = hl_map.ok }, { hlgroup = hl_map.DONE, todo_keyword = 'DONE' } }, agenda_item_deadline.highlights)
+      assert.are.same(future_day:format_time()..'...... Deadline:', agenda_item_deadline.label)
+
+      config:extend({ org_agenda_skip_scheduled_if_done = true })
+
+      -- Scheduled done hidden
+      agenda_item = AgendaItem:new(headline.dates[1], headline, future_day)
+      assert.is.False(agenda_item.is_valid)
+      assert.are.same({}, agenda_item.highlights)
+      assert.are.same('', agenda_item.label)
+      -- Deadline done still showing
+      agenda_item_deadline = AgendaItem:new(headline_deadline.dates[1], headline_deadline, future_day)
+      assert.is.True(agenda_item_deadline.is_valid)
+      assert.are.same({ { hlgroup = hl_map.ok }, { hlgroup = hl_map.DONE, todo_keyword = 'DONE' } }, agenda_item_deadline.highlights)
+      assert.are.same(future_day:format_time()..'...... Deadline:', agenda_item_deadline.label)
+
+      config:extend({ org_agenda_skip_scheduled_if_done = false })
+    end)
+
+    it('should not show deadline DONE item if disabled in config', function()
+      local past_day = Date.now():subtract({ day = 2 })
+      -- Scheduled done shown by default
+      local headline = generate(string.format('SCHEDULED: <%s>', past_day:to_string()), 'DONE')
+      local agenda_item = AgendaItem:new(headline.dates[1], headline, past_day)
+      assert.is.True(agenda_item.is_valid)
+      assert.are.same({ { hlgroup = hl_map.ok }, { hlgroup = hl_map.DONE, todo_keyword = 'DONE' } }, agenda_item.highlights)
+      assert.are.same(past_day:format_time()..'...... Scheduled:', agenda_item.label)
+
+      -- Deadline done shown by default
+      local headline_deadline = generate(string.format('DEADLINE: <%s>', past_day:to_string()), 'DONE')
+      local agenda_item_deadline = AgendaItem:new(headline_deadline.dates[1], headline_deadline, past_day)
+      assert.is.True(agenda_item_deadline.is_valid)
+      assert.are.same({ { hlgroup = hl_map.ok }, { hlgroup = hl_map.DONE, todo_keyword = 'DONE' } }, agenda_item_deadline.highlights)
+      assert.are.same(past_day:format_time()..'...... Deadline:', agenda_item_deadline.label)
+
+      config:extend({ org_agenda_skip_deadline_if_done = true })
+
+      -- Scheduled done still showing
+      assert.is.True(agenda_item.is_valid)
+      assert.are.same({ { hlgroup = hl_map.ok }, { hlgroup = hl_map.DONE, todo_keyword = 'DONE', } }, agenda_item.highlights)
+      assert.are.same(past_day:format_time()..'...... Scheduled:', agenda_item.label)
+
+      -- Deadline done hidden
+      agenda_item_deadline = AgendaItem:new(headline_deadline.dates[1], headline_deadline, past_day)
+      assert.is.False(agenda_item_deadline.is_valid)
+      assert.are.same({}, agenda_item_deadline.highlights)
+      assert.are.same('', agenda_item_deadline.label)
+
+      config:extend({ org_agenda_skip_deadline_if_done = false })
+    end)
 end)

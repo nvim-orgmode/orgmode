@@ -66,12 +66,15 @@ function AgendaItem:_is_valid_for_today()
   end
 
   if self.headline_date:is_deadline() then
+    if self.headline:is_done() and config.org_agenda_skip_deadline_if_done then return false end
     if self.is_same_day then return true end
     if self.headline_date:is_before(self.date, 'day') then
       return not self.headline:is_done()
     end
     return not self.headline:is_done() and self.date:is_between(self.headline_date:get_adjusted_date(), self.headline_date, 'day')
   end
+
+  if self.headline:is_done() and config.org_agenda_skip_scheduled_if_done then return false end
 
   if not self.headline_date:get_negative_adjustment() then
     if self.is_same_day then return true end
@@ -88,6 +91,15 @@ end
 
 function AgendaItem:_is_valid_for_date()
   if not self.headline_date.active or self.headline_date:is_closed() or self.headline_date:is_obsolete_range_end() then return false end
+
+  if self.headline:is_done() then
+    if self.headline_date:is_deadline() and config.org_agenda_skip_deadline_if_done then
+      return false
+    end
+    if self.headline_date:is_scheduled() and config.org_agenda_skip_scheduled_if_done then
+      return false
+    end
+  end
 
   if not self.headline_date:is_scheduled() or not self.headline_date:get_negative_adjustment() then
     return self.is_same_day or self.is_in_date_range
@@ -149,7 +161,7 @@ function AgendaItem:_generate_highlight()
   end
 
   if self.headline_date:is_scheduled() then
-    if self.headline_date:is_past('day') then
+    if self.headline_date:is_past('day') and not self.headline:is_done() then
       return { hlgroup = hl_map.warning }
     end
 
