@@ -46,6 +46,16 @@ function Files.reload(file, callback)
   if file then
     local category = vim.fn.fnamemodify(file, ':t:r')
     local is_archived = config:is_archive_file(file)
+    local stat = vim.loop.fs_stat(file)
+    if not stat then
+      local lines = vim.api.nvim_buf_get_lines(0, 0, -1, true)
+      Files.files[file] = parser.parse(lines, category, file, is_archived)
+      Files._build_tags()
+      if callback then
+        callback()
+      end
+      return Files.files[file]
+    end
     return utils.readfile(file, function(err, result)
       if err then return end
       Files.files[file] = parser.parse(result, category, file, is_archived)
