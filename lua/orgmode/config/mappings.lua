@@ -44,6 +44,7 @@ return {
     org_insert_todo_heading_respect_content = {'org_mappings.insert_todo_heading_respect_content'},
     org_move_subtree_up = {'org_mappings.move_subtree_up'},
     org_move_subtree_down = {'org_mappings.move_subtree_down'},
+    org_export = {'org_mappings.export'},
     org_show_help = {'org_mappings.show_help'},
   }
 }

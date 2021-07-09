@@ -26,6 +26,7 @@ local helps = {
     { key = 'org_insert_todo_heading_respect_content', description = 'Add new TODO headline after current subtree' },
     { key = 'org_move_subtree_up', description = 'Move subtree up' },
     { key = 'org_move_subtree_down', description = 'Move subtree down' },
+    { key = 'org_export', description = 'Open export options' },
     { key = 'org_show_help', description = 'Show this help' },
   },
   orgagenda = {

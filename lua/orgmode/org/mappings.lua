@@ -302,6 +302,10 @@ function OrgMappings:open_at_point()
   vim.fn.cursor(headline.range.start_line, 0)
 end
 
+function OrgMappings:export()
+  return require('orgmode.export').prompt()
+end
+
 ---@param direction string
 function OrgMappings:_change_todo_state(direction)
   local item = Files.get_current_file():get_closest_headline()
