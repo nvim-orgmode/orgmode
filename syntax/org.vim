@@ -25,8 +25,7 @@ lua require('orgmode.colors.highlights').define_highlights()
 "        If there is any other good solution, please help fix it.
 "  \\\\*sinuate*
 let s:concealends = ''
-let s:config = luaeval('require("orgmode.config").opts')
-let s:conceal = s:config.org_hide_emphasis_markers
+let s:conceal = luaeval('require("orgmode.config").org_hide_emphasis_markers')
 if s:conceal
   let s:concealends = ' concealends'
 endif
@@ -182,10 +181,12 @@ syntax spell toplevel
 
 lua require("orgmode.org.syntax").load_code_blocks()
 
-if s:config.org_highlight_latex_and_related == 'native'
+let s:highlight_latex = luaeval('require("orgmode.config").org_highlight_latex_and_related')
+
+if s:highlight_latex == 'native'
   unlet! b:current_syntax
   runtime! syntax/tex.vim
-elseif s:config.org_highlight_latex_and_related == 'entities'
+elseif s:highlight_latex == 'entities'
   syntax include @orgmodeLatex syntax/tex.vim
   unlet! b:current_syntax
   syntax region org_latex matchgroup=NONE start="^\s*\\begin{.*}$" end="^\s*\\end{.*}$" keepend contains=@orgmodeLatex
