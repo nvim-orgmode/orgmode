@@ -76,6 +76,7 @@ return {
       org_insert_todo_heading_respect_content = '<Leader>oit', -- Add new todo headling after current heading block on same level
       org_move_subtree_up = '<Leader>oK',
       org_move_subtree_down = '<Leader>oJ',
+      org_export = '<Leader>oe',
       org_show_help = '?',
     }
   }

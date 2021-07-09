@@ -133,6 +133,7 @@ describe('Autocompletion', function()
       { menu = "[Org]", word = "#+NAME" },
       { menu = "[Org]", word = "#+FILETAGS" },
       { menu = "[Org]", word = "#+ARCHIVE" },
+      { menu = "[Org]", word = "#+OPTIONS" },
       { menu = "[Org]", word = "#+BEGIN_SRC" },
       { menu = "[Org]", word = "#+END_SRC" },
       { menu = "[Org]", word = "#+BEGIN_EXAMPLE" },

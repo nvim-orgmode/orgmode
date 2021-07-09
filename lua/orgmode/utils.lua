@@ -21,18 +21,36 @@ function utils.readfile(file, callback)
   end)
 end
 
+function utils.open(target)
+  if vim.fn.executable('xdg-open') then
+    return vim.fn.system(string.format('xdg-open %s', target))
+  end
+
+  if vim.fn.executable('open') then
+    return vim.fn.system(string.format('open %s', target))
+  end
+
+  if vim.fn.has('win32') then
+    return vim.fn.system(string.format('start "%s"', target))
+  end
+end
+
 ---@param msg string
 function utils.echo_warning(msg)
   vim.cmd[[redraw!]]
-  vim.cmd[[echohl WarningMsg]]
-  vim.cmd(string.format('echom "%s"', msg))
-  vim.cmd[[echohl None]]
+  return vim.api.nvim_echo({{string.format('[orgmode] %s', msg), 'WarningMsg'}}, true, {})
+end
+
+---@param msg string
+function utils.echo_error(msg)
+  vim.cmd[[redraw!]]
+  return vim.api.nvim_echo({{string.format('[orgmode] %s', msg), 'ErrorMsg'}}, true, {})
 end
 
 ---@param msg string
 function utils.echo_info(msg)
   vim.cmd[[redraw!]]
-  vim.cmd(string.format('echom "%s"', msg))
+  return vim.api.nvim_echo({{ string.format('[orgmode] %s', msg) }}, true, {})
 end
 
 ---@param word string

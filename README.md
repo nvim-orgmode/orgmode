@@ -2,16 +2,16 @@
 
 <div align="center">
   <img alt="[org-neovim-blend" src="https://user-images.githubusercontent.com/1782860/124820564-eddc5000-df6d-11eb-9016-d0c073a9575c.png" width="250" />
-        
+
   # Orgmode.nvim
-        
-  
-  <a href="/LICENSE">![License](https://img.shields.io/badge/license-MIT-brightgreen?style=flat-square)</a><a href="https://ko-fi.com/kristijanhusak"> ![Kofi](https://img.shields.io/badge/support-kofi-00b9fe?style=flat-square&logo=kofi)</a> 
-  
+
+
+  <a href="/LICENSE">![License](https://img.shields.io/badge/license-MIT-brightgreen?style=flat-square)</a><a href="https://ko-fi.com/kristijanhusak"> ![Kofi](https://img.shields.io/badge/support-kofi-00b9fe?style=flat-square&logo=kofi)</a>
+
   Orgmode clone written in Lua for Neovim 0.5.
-  
+
   [Installation](#installation) | [Setup](#setup) | [Gifs](#gifs) | [Docs](/DOCS.md) | [Development](#development) | [Kudos](#thanks-to)
-        
+
 </div>
 
 ## Installation
@@ -118,6 +118,7 @@ Or just use `omnifunc` via <kbd>\<C-x\>\<C-o\></kbd>
 * Repeatable dates, date and time ranges
 * Capturing to default notes file/destination
 * Archiving (archive file or ARCHIVE tag)
+* Exporting (via `emacs`)
 * Calendar popup for easier navigation and date updates
 * Various org file mappings:
   * Promote/Demote
@@ -176,6 +177,7 @@ Or just use `omnifunc` via <kbd>\<C-x\>\<C-o\></kbd>
   * Move headline up: <kbd>\<Leader\>oK</kb>
   * Move headline down: <kbd>\<Leader\>oJ</kb>
   * Highlighted code blocks (`#+BEGIN_SRC filetype`)
+  * Exporting (via `emacs` cli.)
 
 Link to detailed documentation: [DOCS](DOCS.md)
 
@@ -200,7 +202,7 @@ much experience with those. Any help on this topic is appreciated.
 * [X] Support todo keyword faces
 * [ ] Support clocking work time
 * [ ] Improve folding
-* [ ] Support exporting and publishing (via existing emacs tools)
+* [X] Support exporting (via existing emacs tools)
 * [ ] Support archiving to specific headline
 * [ ] Support tables
 * [ ] Support diary format dates

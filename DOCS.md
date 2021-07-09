@@ -481,6 +481,11 @@ Move current headline + it's content up by one headline
 #### **org_move_subtree_down**
 *mapped to*: `<Leader>oJ`<br />
 Move current headline + it's content down by one headline
+#### **org_export**
+*mapped to*: `<Leader>oe`<br />
+Open export options.
+**NOTE**: Exports are completely handled via `emacs`. This means that `emacs` must be in `$PATH`.<br />
+To verify, check if `:echo executable('emacs')` returns `1`.
 #### **org_show_help**
 *mapped to*: `?`<br />
 Show help popup with mappings
