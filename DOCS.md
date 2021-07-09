@@ -120,6 +120,20 @@ Conceal bold/italic/underline/code/verbatim markers.
 When set to `time`(default), adds `CLOSED` date when marking headline as done.<br />
 When set to `nil`, it is disabled.
 
+
+#### **org_highlight_latex_and_related**
+*type*: `string|nil`<br />
+*default value*: `nil`<br />
+Possible values:
+* `native` - Includes whole latex syntax file into the org syntax. It can potentially cause some highlighting issues and slowness.
+* `entities` - Highlight latex only in these situations (see [Orgmode latex fragments](https://orgmode.org/manual/LaTeX-fragments.html#LaTeX-fragments)):
+  * between `/begin` and `/end` delimiters
+  * between `$` and `$` delimiters - example: `$a^2=b$`
+  * between `$$` and `$$` delimiters - example: `$$ a=+\sqrt{2} $$`
+  * between `\[` and `\]` delimiters - example: `\[ a=-\sqrt{2} \]`
+  * between `\(` and `\)` delimiters - example: `\( b=2 \)`
+
+
 ### Agenda settings
 
 #### **org_deadline_warning_days**

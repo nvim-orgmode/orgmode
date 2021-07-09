@@ -16,6 +16,7 @@ CONTENTS                                                        *orgmode-content
             1.1.1.6. org_hide_leading_stars.......|orgmode-org_hide_leading_stars|
             1.1.1.7. org_hide_emphasis_markers.|orgmode-org_hide_emphasis_markers|
             1.1.1.8. org_log_done...........................|orgmode-org_log_done|
+            1.1.1.9. org_highlight_latex_and_related.|orgmode-org_highlight_latex_and_related|
         1.1.2. Agenda settings...........................|orgmode-agenda_settings|
             1.1.2.1. org_deadline_warning_days.|orgmode-org_deadline_warning_days|
             1.1.2.2. org_agenda_span.....................|orgmode-org_agenda_span|
@@ -213,6 +214,19 @@ type: `string|nil`
 default value: `time`
 When set to `time`(default), adds `CLOSED` date when marking headline as done.
 When set to `nil`, it is disabled.
+
+ORG_HIGHLIGHT_LATEX_AND_RELATED          *orgmode-org_highlight_latex_and_related*
+
+type: `string|nil`
+default value: `nil`
+Possible values:
+* `native` - Includes whole latex syntax file into the org syntax. It can potentially cause some highlighting issues and slowness.
+* `entities` - Highlight latex only in these situations (see Orgmode latex fragments (https://orgmode.org/manual/LaTeX-fragments.html#LaTeX-fragments)):
+  * between `/begin` and `/end` delimiters
+  * between `$` and `$` delimiters - example: `$a^2=b$`
+  * between `$$` and `$$` delimiters - example: `$$ a=+\sqrt{2} $$`
+  * between `\[` and `\]` delimiters - example: `\[ a=-\sqrt{2} \]`
+  * between `\(` and `\)` delimiters - example: `\( b=2 \)`
 
 AGENDA SETTINGS                                          *orgmode-agenda_settings*
 

@@ -25,7 +25,8 @@ lua require('orgmode.colors.highlights').define_highlights()
 "        If there is any other good solution, please help fix it.
 "  \\\\*sinuate*
 let s:concealends = ''
-let s:conceal = luaeval('require("orgmode.config").org_hide_emphasis_markers')
+let s:config = luaeval('require("orgmode.config").opts')
+let s:conceal = s:config.org_hide_emphasis_markers
 if s:conceal
   let s:concealends = ' concealends'
 endif
@@ -180,6 +181,20 @@ hi org_hide_leading_stars ctermfg=0 guifg=bg
 syntax spell toplevel
 
 lua require("orgmode.org.syntax").load_code_blocks()
+
+if s:config.org_highlight_latex_and_related == 'native'
+  unlet! b:current_syntax
+  runtime! syntax/tex.vim
+elseif s:config.org_highlight_latex_and_related == 'entities'
+  syntax include @orgmodeLatex syntax/tex.vim
+  unlet! b:current_syntax
+  syntax region org_latex matchgroup=NONE start="^\s*\\begin{.*}$" end="^\s*\\end{.*}$" keepend contains=@orgmodeLatex
+  syntax region org_latex matchgroup=NONE start="^\s*\\begin{.*}$" end="^\s*\\end{.*}$" keepend contains=@orgmodeLatex
+  syntax region org_latex matchgroup=NONE start="\S\zs\$\|\$\S\@="  end="\S\zs\$\|\$\S\@="  keepend oneline contains=@orgmodeLatex
+  syntax region org_latex matchgroup=NONE start="\$\$\|\$\$\@="  end="\$\$\|\$\$\@="  keepend oneline contains=@orgmodeLatex
+  syntax region org_latex matchgroup=NONE start="\\)\|\\(\@="  end="\\)\|\\(\@="  keepend oneline contains=@orgmodeLatex
+  syntax region org_latex matchgroup=NONE start="\\\]\|\\\[\@="  end="\\\]\|\\\[\@="  keepend oneline contains=@orgmodeLatex
+endif
 
 let b:current_syntax = 'org'
 
