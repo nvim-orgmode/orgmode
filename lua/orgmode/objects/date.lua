@@ -29,14 +29,18 @@ local Date = {}
 
 ---@param source table
 ---@param target table
+---@param include_sec boolean
 ---@return table
-local function set_date_opts(source, target)
+local function set_date_opts(source, target, include_sec)
   target = target or {}
   for _, field in ipairs({'year', 'month', 'day'}) do
     target[field] = source[field]
   end
   for _, field in ipairs({'hour', 'min'}) do
     target[field] = source[field] or 0
+  end
+  if include_sec then
+    target.sec = source.sec or 0
   end
   return target
 end
@@ -66,7 +70,7 @@ end
 ---@return Date
 function Date:from_time_table(time)
   local range_diff = self.timestamp_end and self.timestamp_end - self.timestamp or 0
-  local timestamp = os.time(set_date_opts(time))
+  local timestamp = os.time(set_date_opts(time, {}, true))
   local opts = set_date_opts(os.date('*t', timestamp))
   opts.date_only = self.date_only
   opts.dayname = self.dayname
@@ -270,6 +274,10 @@ function Date:_parse_adjustment(value)
   }
 end
 
+function Date:without_adjustments()
+  return self:clone({ adjustments = {} })
+end
+
 ---@param span string
 ---@return Date
 function Date:start_of(span)
@@ -280,7 +288,8 @@ function Date:start_of(span)
     day =  { hour = 0, min = 0 },
     month = { day = 1, hour = 0, min = 0 },
     year = { month = 1, day = 1, hour = 0, min = 0 },
-    hour = { min = 0 }
+    hour = { min = 0 },
+    minute = { sec = 0 }
   }
   if opts[span] then
     return self:set(opts[span])
@@ -500,11 +509,16 @@ function Date:format(format)
 end
 
 ---@param from Date
+---@param span string
 ---@return number
-function Date:diff(from)
-  local diff = self:start_of('day').timestamp - from:start_of('day').timestamp
-  local day = 86400
-  return math.floor(diff / day)
+function Date:diff(from, span)
+  span = span or 'day'
+  local diff = self:start_of(span).timestamp - from:start_of(span).timestamp
+  local durations = {
+    day = 86400,
+    minute = 60,
+  }
+  return math.floor(diff / durations[span])
 end
 
 ---@param span string
@@ -571,15 +585,30 @@ function Date:is_weekend()
   return isoweekday >= 6
 end
 
----@return string
+---@return table|nil
 function Date:get_negative_adjustment()
   if #self.adjustments == 0 then return nil end
   for _, adj in ipairs(self.adjustments) do
     if adj:match('^%-%d+') then
-      return adj
+      return self:_parse_adjustment(adj)
     end
   end
   return nil
+end
+
+function Date:with_negative_adjustment()
+  local adj = self:get_negative_adjustment()
+  if not adj then return self end
+
+  if self:is_deadline() then
+    return self:subtract({ [adj.span] = adj.amount })
+  end
+
+  if self:is_scheduled() then
+    return self:add({ [adj.span] = adj.amount })
+  end
+
+  return self
 end
 
 ---Get repeater value (ex. +1w, .+1w, ++1w)
@@ -636,28 +665,41 @@ function Date:repeats_on(date)
   return repeat_date:is_same(date, 'day')
 end
 
+---@param date Date
+function Date:apply_repeater_until(date)
+  local repeater = self:get_repeater()
+  if not repeater then return self end
+
+  repeater = repeater:gsub('^%.', ''):gsub('^%+%+', '+')
+  local repeat_date = self
+
+  while repeat_date.timestamp < date.timestamp do
+    repeat_date = repeat_date:adjust(repeater)
+  end
+
+  return repeat_date
+end
+
 ---@return Date
 function Date:get_adjusted_date()
   if not self:is_deadline() and not self:is_scheduled() then
     return self
   end
 
-  local adjustment = self:get_negative_adjustment()
+  local adj = self:get_negative_adjustment()
 
   if self:is_deadline() then
-    local warning_days = config.org_deadline_warning_days
+    local warning_amount = config.org_deadline_warning_days
     local span = 'day'
-    if adjustment then
-      local adj = self:_parse_adjustment(adjustment)
-      warning_days = adj.amount
+    if adj then
+      warning_amount = adj.amount
       span = adj.span
     end
-    return self:subtract({ [span] = warning_days })
+    return self:subtract({ [span] = warning_amount })
   end
 
-  if not adjustment then return self end
-  local adj = self:_parse_adjustment(adjustment)
-  return self:add({ day = adj.amount })
+  if not adj then return self end
+  return self:add({ [adj.span] = adj.amount })
 end
 
 ---@return number

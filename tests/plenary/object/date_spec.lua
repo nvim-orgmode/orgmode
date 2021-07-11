@@ -725,4 +725,14 @@ describe('Date object', function()
       year = 2021,
     }, dates[3])
   end)
+
+  it('should allow diffing time in minutes', function()
+    local from = Date.from_string('2021-12-07 Mon 10:00')
+    local to = Date.from_string('2021-12-07 Mon 10:25')
+    assert.are.same(25, to:diff(from, 'minute'))
+
+    from = Date.from_string('2021-12-07 Mon 10:00')
+    to = Date.from_string('2021-12-07 Mon 12:35')
+    assert.are.same(155, to:diff(from, 'minute'))
+  end)
 end)

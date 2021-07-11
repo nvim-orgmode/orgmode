@@ -6,6 +6,7 @@ local instance = nil
 ---@field files OrgFiles
 ---@field agenda Agenda
 ---@field capture Capture
+---@field notifications Notifications
 local Org = {}
 
 function Org:new()
@@ -50,6 +51,11 @@ local function setup(opts)
   instance = Org:new()
   local config = require('orgmode.config'):extend(opts)
   vim.defer_fn(function()
+    if config.notifications.enabled and #vim.api.nvim_list_uis() > 0 then
+      require('orgmode.parser.files').load(vim.schedule_wrap(function()
+        instance.notifications = require('orgmode.notifications'):new():start_timer()
+      end))
+    end
     config:setup_mappings()
   end, 1)
   return instance
@@ -74,9 +80,20 @@ local function action(cmd, opts)
   end
 end
 
+local function cron(opts)
+  local config = require('orgmode.config'):extend(opts or {})
+  if not config.notifications.cron_enabled then
+    return vim.cmd[[qa!]]
+  end
+  require('orgmode.parser.files').load(vim.schedule_wrap(function()
+    instance.notifications = require('orgmode.notifications'):new():cron()
+  end))
+end
+
 
 return {
   setup = setup,
   reload = reload,
   action = action,
+  cron = cron,
 }

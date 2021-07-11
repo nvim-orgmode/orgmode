@@ -154,4 +154,11 @@ function utils.tags_to_string(taglist)
   return tags
 end
 
+function utils.ensure_array(val)
+  if type(val) ~= 'table' then
+    return { val }
+  end
+  return val
+end
+
 return utils

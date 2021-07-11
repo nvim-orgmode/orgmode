@@ -119,6 +119,7 @@ Or just use `omnifunc` via <kbd>\<C-x\>\<C-o\></kbd>
 * Capturing to default notes file/destination
 * Archiving (archive file or ARCHIVE tag)
 * Exporting (via `emacs`, `pandoc` and custom export options)
+* Notifications (experimental)
 * Calendar popup for easier navigation and date updates
 * Various org file mappings:
   * Promote/Demote
@@ -149,6 +150,7 @@ Or just use `omnifunc` via <kbd>\<C-x\>\<C-o\></kbd>
   * Find headlines matching tag(s) (<kbd>m</kbd>):
   * Search for headlines (and it's content) for a query (<kbd>s</kbd>):
   * [Advanced search](DOCS.md#advanced-search) for tags/todo kewords/properties
+  * Notifications (experimental)
 * Capture:
   * Define custom templates
   * Fast capturing to default notes file via <kbd>\<C-c\></kbd>
