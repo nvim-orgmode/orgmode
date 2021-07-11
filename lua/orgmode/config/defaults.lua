@@ -26,6 +26,15 @@ return {
   org_log_done = 'time',
   org_highlight_latex_and_related = nil,
   org_custom_exports = {},
+  notifications = {
+    enabled = false,
+    cron_enabled = true,
+    repeater_reminder_time = false,
+    deadline_warning_reminder_time = false,
+    reminder_time = 10,
+    deadline_reminder = true,
+    scheduled_reminder = true,
+  },
   mappings = {
     disable_all = false,
     global = {

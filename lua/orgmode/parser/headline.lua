@@ -191,6 +191,13 @@ function Headline:get_repeater_dates()
   end, self.dates)
 end
 
+---@return Date[]
+function Headline:get_deadline_and_scheduled_dates()
+  return vim.tbl_filter(function(date)
+    return date:is_deadline() or date:is_scheduled()
+  end, self.dates)
+end
+
 function Headline:_get_content_by_lnum(lnum)
   return self.content[lnum - self.range.start_line]
 end

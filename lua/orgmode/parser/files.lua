@@ -71,6 +71,12 @@ end
 function Files.load(callback)
   Files.files = {}
   local files = config:get_all_files()
+  if #files == 0 then
+    if callback then
+      callback()
+    end
+    return Files
+  end
   local files_to_process = #files
   for _, item in ipairs(files) do
     local category = vim.fn.fnamemodify(item, ':t:r')
