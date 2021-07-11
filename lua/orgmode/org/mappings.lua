@@ -264,7 +264,7 @@ function OrgMappings:open_at_point()
       if url:find(' +') then
           parts = vim.split(url, ' +', true)
           url = parts[1]
-          line_number = parts[2]
+          local line_number = parts[2]
           return vim.cmd(string.format('edit +%s %s', line_number ,url:sub(6)))
       end
       return vim.cmd(string.format('edit %s', url:sub(6)))

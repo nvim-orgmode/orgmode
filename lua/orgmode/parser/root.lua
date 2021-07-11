@@ -190,7 +190,7 @@ function Root:get_unfinished_todo_entries()
   end, self.items)
 end
 
-function Root:get_headlines_matching_search_term(search_term, no_escape)
+function Root:find_headlines_matching_search_term(search_term, no_escape)
   if self.is_archive_file then return {} end
   local term = search_term:lower()
   if not no_escape then

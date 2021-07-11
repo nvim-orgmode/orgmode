@@ -139,7 +139,7 @@ end
 function Files.find_headlines_matching_search_term(term, no_escape)
   local headlines = {}
   for _, orgfile in ipairs(Files.all()) do
-    for _, headline in ipairs(orgfile:get_headlines_matching_search_term(term, no_escape)) do
+    for _, headline in ipairs(orgfile:find_headlines_matching_search_term(term, no_escape)) do
       table.insert(headlines, headline)
     end
   end
