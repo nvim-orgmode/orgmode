@@ -3,7 +3,7 @@ local utils = require('orgmode.utils')
 local Hyperlinks = {}
 
 function Hyperlinks.find_by_custom_id_property(base, skip_mapping)
-  local headlines = Files.find_headlines_with_property_matching('CUSTOM_ID', base:sub(2))
+  local headlines = Files.get_current_file():find_headlines_with_property_matching('CUSTOM_ID', base:sub(2))
   if skip_mapping then return headlines end
   return vim.tbl_map(function(headline)
     return '#'..headline.properties.items.CUSTOM_ID
@@ -11,7 +11,7 @@ function Hyperlinks.find_by_custom_id_property(base, skip_mapping)
 end
 
 function Hyperlinks.find_by_title_pointer(base, skip_mapping)
-  local headlines = Files.find_headlines_by_title(base:sub(2))
+  local headlines = Files.get_current_file():find_headlines_by_title(base:sub(2))
   if skip_mapping then return headlines end
   return vim.tbl_map(function(headline)
     return '*'..headline.title
@@ -21,7 +21,7 @@ end
 function Hyperlinks.find_by_dedicated_target(base, skip_mapping)
   if not base or base == '' then return {} end
   local term = string.format('<<<?(%s[^>]*)>>>?', base):lower()
-  local headlines = Files.find_headlines_matching_search_term(term, true)
+  local headlines = Files.get_current_file():find_headlines_matching_search_term(term, true)
   if skip_mapping then return headlines end
   local targets = {}
   for _, headline in ipairs(headlines) do
@@ -39,7 +39,7 @@ end
 
 function Hyperlinks.find_by_title(base, skip_mapping)
   if not base or base == '' then return {} end
-  local headlines = Files.find_headlines_by_title(base)
+  local headlines = Files.get_current_file():find_headlines_by_title(base)
   if skip_mapping then return headlines end
   return vim.tbl_map(function(headline)
     return headline.title
