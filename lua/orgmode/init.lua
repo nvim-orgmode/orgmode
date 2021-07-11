@@ -48,8 +48,9 @@ end
 ---@return Org
 local function setup(opts)
   instance = Org:new()
+  local config = require('orgmode.config'):extend(opts)
   vim.defer_fn(function()
-    require('orgmode.config'):extend(opts):setup_mappings()
+    config:setup_mappings()
   end, 1)
   return instance
 end
