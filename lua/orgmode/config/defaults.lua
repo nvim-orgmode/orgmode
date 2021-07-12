@@ -1,4 +1,5 @@
 return {
+  org_capture_float = true,
   org_agenda_files = '',
   org_default_notes_file = '',
   org_todo_keywords = {'TODO', '|', 'DONE'},

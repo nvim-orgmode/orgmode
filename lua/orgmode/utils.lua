@@ -154,4 +154,61 @@ function utils.tags_to_string(taglist)
   return tags
 end
 
+function utils.open_float(content, template, capture)
+  local bufnr = vim.api.nvim_create_buf(false, true)
+
+  local fill = 0.4
+  local width = math.floor((vim.o.columns * fill))
+  local height = math.floor((vim.o.lines * fill))
+  local row = math.floor((((vim.o.lines - height) / 2) - 1))
+  local col = math.floor(((vim.o.columns - width) / 2))
+
+  local winnr = vim.api.nvim_open_win(bufnr, true, {
+    relative = "editor",
+    width = width,
+    height = height,
+    row = row,
+    col = col,
+    style = "minimal",
+    border = "rounded"
+  })
+
+  local bufopts = {
+    bufhidden = "wipe",
+    buflisted = false,
+    buftype = "nofile",
+    filetype = "org",
+    swapfile = false
+  }
+
+  local winopts = {
+    foldenable = false,
+    wrap = false, -- TODO: find the right key
+    winhl = "NormalFloat:Normal",
+    winblend = 5
+  }
+
+  for k, v in pairs(winopts) do
+    vim.api.nvim_win_set_option(winnr, k, v)
+  end
+
+  for k, v in pairs(bufopts) do
+    vim.api.nvim_buf_set_option(bufnr, k, v)
+  end
+
+  local vars = {
+    org_template = template,
+    org_capture = true
+  }
+
+  vim.api.nvim_buf_set_lines(bufnr, 0, -1, true, content)
+
+  if capture then capture.templates:setup() end
+
+  for k, v in pairs(vars) do
+    vim.api.nvim_buf_set_var(bufnr, k, v)
+  end
+  return winnr
+end
+
 return utils

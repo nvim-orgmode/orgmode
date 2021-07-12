@@ -3,6 +3,8 @@ local utils = require('orgmode.utils')
 local config = require('orgmode.config')
 local Files = require('orgmode.parser.files')
 local Templates = require('orgmode.capture.templates')
+local winnr = nil -- HACK for Capture:kill
+
 vim.cmd[[augroup OrgCapture]]
 vim.cmd[[autocmd!]]
 vim.cmd[[augroup END]]
@@ -38,15 +40,25 @@ end
 ---@param template table
 function Capture:open_template(template)
   local content = self.templates:compile(template)
-  vim.cmd('16split '..vim.fn.tempname())
-  vim.cmd[[setf org]]
-  vim.cmd[[setlocal bufhidden=wipe nobuflisted nolist noswapfile nowrap nofoldenable]]
-  vim.api.nvim_buf_set_lines(0, 0, -1, true, content)
-  self.templates:setup()
-  vim.api.nvim_buf_set_var(0, 'org_template', template)
-  vim.api.nvim_buf_set_var(0, 'org_capture', true)
+
+  if config.org_capture_float then
+    -- HACK FOR Capture:kill
+    winnr = utils.open_float(content,template, self)
+  else
+    vim.cmd('16split '..vim.fn.tempname())
+    vim.cmd[[setf org]]
+    vim.cmd[[setlocal bufhidden=wipe nobuflisted nolist noswapfile nowrap nofoldenable]]
+    vim.api.nvim_buf_set_lines(0, 0, -1, true, content)
+    self.templates:setup()
+    vim.api.nvim_buf_set_var(0, 'org_template', template)
+    vim.api.nvim_buf_set_var(0, 'org_capture', true)
+  end
+
   config:setup_mappings('capture')
-  vim.cmd[[autocmd OrgCapture BufWipeout <buffer> ++once lua require('orgmode').action('capture.refile', true)]]
+
+  -- local str = winnr and (",%s"):format(winnr) or ""
+  vim.cmd(([[autocmd OrgCapture BufWipeout <buffer> ++once lua require('orgmode').action('capture.refile', true%s)]]):format(""))
+
 end
 
 ---Triggered when refiling from capture buffer
@@ -68,6 +80,7 @@ function Capture:refile(confirm)
     self:_refile_to_end(file, lines)
   end, 0)
   vim.cmd[[autocmd! OrgCapture BufWipeout <buffer>]]
+
   vim.cmd[[silent! wq]]
 end
 
@@ -224,6 +237,7 @@ end
 function Capture:kill()
   vim.cmd[[autocmd! OrgCapture BufWipeout <buffer>]]
   vim.cmd[[bw!]]
+  if type(winnr) == "number" then vim.api.nvim_win_close(winnr, true) end
 end
 
 return Capture
