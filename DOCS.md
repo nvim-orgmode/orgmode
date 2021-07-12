@@ -133,6 +133,52 @@ Possible values:
   * between `\[` and `\]` delimiters - example: `\[ a=-\sqrt{2} \]`
   * between `\(` and `\)` delimiters - example: `\( b=2 \)`
 
+#### **org_custom_exports**
+*type*: `table`<br />
+*default value*: `{}`<br />
+Add custom export options to the export prompt. <br />
+Structure:
+```
+  [shortcut:string] = {
+    [label:string] = 'Label in export prompt',
+    [action:function] = function(exporter)
+      return exporter(command:table, target:string, on_success?:function, on_error?:function)
+    end
+  }
+```
+Breakdown:
+* `shortcut` - single char that will be used to select the export. Make sure it doesn't conflict with existing options
+* `action` - function that provides `exporter` function for generating the exports
+* `exporter` - function that calls the command provided via `job`
+  * `command` - table (array like) that contains command how to generate the export
+  * `target` - target file name that will be generated
+  * `on_success?` - function that is triggered when export succeeds (command exit status is 0). Provides table parameter with command output. Optional, defaults to prompt to open target file.
+  * `on_error?` - function that is triggered when export fails (command exit status is not 0). Provides table parameter with command output. Optional, defaults to printing output as error.
+
+For example, lets add option to export to `rtf` format via `pandoc`:
+```lua
+require('orgmode').setup({
+  org_custom_exports = {
+    f = {
+      label = 'Export to RTF format',
+      action = function(exporter)
+        local current_file = vim.api.nvim_buf_get_name(0)
+        local target = vim.fn.fnamemodify(current_file, ':p:r')..'.rtf'
+        local command = {'pandoc', current_file, '-o', target}
+        local on_success = function(output)
+          print('Success!')
+          vim.api.nvim_echo({{ table.concat(output, '\n') }}, true, {})
+        end
+        local on_error = function(err)
+          print('Error!')
+          vim.api.nvim_echo({{ table.concat(err, '\n'), 'ErrorMsg' }}, true, {})
+        end
+        return exporter(command , target, on_success, on_error)
+      end
+    }
+  }
+})
+```
 
 ### Agenda settings
 
@@ -484,8 +530,8 @@ Move current headline + it's content down by one headline
 #### **org_export**
 *mapped to*: `<Leader>oe`<br />
 Open export options.<br />
-**NOTE**: Exports are completely handled via `emacs`. This means that `emacs` must be in `$PATH`.<br />
-To verify, check if `:echo executable('emacs')` returns `1`.
+**NOTE**: Exports are handled via `emacs` and `pandoc`. This means that `emacs` and/or `pandoc` must be in `$PATH`.<br />
+see [org_custom_exports](#org_custom_exports) if you want to add your own export options.
 #### **org_show_help**
 *mapped to*: `?`<br />
 Show help popup with mappings

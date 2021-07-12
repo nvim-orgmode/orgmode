@@ -25,6 +25,7 @@ return {
   org_hide_emphasis_markers = false,
   org_log_done = 'time',
   org_highlight_latex_and_related = nil,
+  org_custom_exports = {},
   mappings = {
     disable_all = false,
     global = {
