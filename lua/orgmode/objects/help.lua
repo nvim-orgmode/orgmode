@@ -14,7 +14,7 @@ local helps = {
     { key = 'org_cycle', description = 'Toggle folding on current headline' },
     { key = 'org_global_cycle', description = 'Toggle folding in whole file' },
     { key = 'org_archive_subtree', description = 'Archive subtree to archive file' },
-    { key = 'org_set_tags_command', description = 'Change tasg of current headline' },
+    { key = 'org_set_tags_command', description = 'Change tags of current headline' },
     { key = 'org_toggle_archive_tag', description = 'toggle "ARCHIVE" tag on current headline' },
     { key = 'org_do_promote', description = 'Promote headline' },
     { key = 'org_do_demote', description = 'Demote headline' },
