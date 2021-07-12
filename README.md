@@ -118,7 +118,7 @@ Or just use `omnifunc` via <kbd>\<C-x\>\<C-o\></kbd>
 * Repeatable dates, date and time ranges
 * Capturing to default notes file/destination
 * Archiving (archive file or ARCHIVE tag)
-* Exporting (via `emacs`)
+* Exporting (via `emacs`, `pandoc` and custom export options)
 * Calendar popup for easier navigation and date updates
 * Various org file mappings:
   * Promote/Demote
@@ -177,7 +177,7 @@ Or just use `omnifunc` via <kbd>\<C-x\>\<C-o\></kbd>
   * Move headline up: <kbd>\<Leader\>oK</kb>
   * Move headline down: <kbd>\<Leader\>oJ</kb>
   * Highlighted code blocks (`#+BEGIN_SRC filetype`)
-  * Exporting (via `emacs` cli.)
+  * Exporting (via `emacs`, `pandoc` and custom export options)
 
 Link to detailed documentation: [DOCS](DOCS.md)
 

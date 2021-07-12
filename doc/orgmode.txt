@@ -17,6 +17,7 @@ CONTENTS                                                        *orgmode-content
             1.1.1.7. org_hide_emphasis_markers.|orgmode-org_hide_emphasis_markers|
             1.1.1.8. org_log_done...........................|orgmode-org_log_done|
             1.1.1.9. org_highlight_latex_and_related.|orgmode-org_highlight_latex_and_related|
+            1.1.1.10. org_custom_exports..............|orgmode-org_custom_exports|
         1.1.2. Agenda settings...........................|orgmode-agenda_settings|
             1.1.2.1. org_deadline_warning_days.|orgmode-org_deadline_warning_days|
             1.1.2.2. org_agenda_span.....................|orgmode-org_agenda_span|
@@ -228,6 +229,55 @@ Possible values:
   * between `$$` and `$$` delimiters - example: `$$ a=+\sqrt{2} $$`
   * between `\[` and `\]` delimiters - example: `\[ a=-\sqrt{2} \]`
   * between `\(` and `\)` delimiters - example: `\( b=2 \)`
+
+ORG_CUSTOM_EXPORTS                                    *orgmode-org_custom_exports*
+
+type: `table`
+default value: `{}`
+Add custom export options to the export prompt.
+Structure:
+>
+      [shortcut:string] = {
+        [label:string] = 'Label in export prompt',
+        [action:function] = function(exporter)
+          return exporter(command:table, target:string, on_success?:function, on_error?:function)
+        end
+      }
+<
+
+Breakdown:
+* `shortcut` - single char that will be used to select the export. Make sure it doesn't conflict with existing options
+* `action` - function that provides `exporter` function for generating the exports
+* `exporter` - function that calls the command provided via `job`
+  * `command` - table (array like) that contains command how to generate the export
+  * `target` - target file name that will be generated
+  * `on_success?` - function that is triggered when export succeeds (command exit status is 0). Provides table parameter with command output. Optional, defaults to prompt to open target file.
+  * `on_error?` - function that is triggered when export fails (command exit status is not 0). Provides table parameter with command output. Optional, defaults to printing output as error.
+
+For example, lets add option to export to `rtf` format via `pandoc`:
+>
+    require('orgmode').setup({
+      org_custom_exports = {
+        f = {
+          label = 'Export to RTF format',
+          action = function(exporter)
+            local current_file = vim.api.nvim_buf_get_name(0)
+            local target = vim.fn.fnamemodify(current_file, ':p:r')..'.rtf'
+            local command = {'pandoc', current_file, '-o', target}
+            local on_success = function(output)
+              print('Success!')
+              vim.api.nvim_echo({{ table.concat(output, '\n') }}, true, {})
+            end
+            local on_error = function(err)
+              print('Error!')
+              vim.api.nvim_echo({{ table.concat(err, '\n'), 'ErrorMsg' }}, true, {})
+            end
+            return exporter(command , target, on_success, on_error)
+          end
+        }
+      }
+    })
+<
 
 AGENDA SETTINGS                                          *orgmode-agenda_settings*
 
@@ -670,8 +720,8 @@ ORG_EXPORT                                                    *orgmode-org_expor
 
 mapped to: `<Leader>oe`
 Open export options.
-NOTE: Exports are completely handled via `emacs`. This means that `emacs` must be in `$PATH`.
-To verify, check if `:echo executable('emacs')` returns `1`.
+NOTE: Exports are handled via `emacs` and `pandoc`. This means that `emacs` and/or `pandoc` must be in `$PATH`.
+see org_custom_exports (#org_custom_exports) if you want to add your own export options.
 
 ORG_SHOW_HELP                                              *orgmode-org_show_help*
 
