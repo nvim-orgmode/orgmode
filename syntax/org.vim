@@ -6,24 +6,6 @@ endif
 
 lua require('orgmode.colors.highlights').define_highlights()
 
-" Support org authoring markup as closely as possible
-" (we're adding two markdown-like variants for =code= and blockquotes)
-" -----------------------------------------------------------------------------
-"
-" Inline markup {{{1
-" *bold*, /italic/, _underline_, +strike-through+, ~code~, =verbatim=
-" Note:
-" - /italic/ is rendered as reverse in most terms (works fine in gVim, though)
-" - +strike-through+ doesn't work on Vim / gVim
-" - the non-standard `code' markup is also supported
-" - =code= and ~verbatim~ are also supported as block-level markup, see below.
-" Ref: http://orgmode.org/manual/Emphasis-and-monospace.html
-"syntax match org_bold /\*[^ ]*\*/
-
-" FIXME: Always make org_bold syntax define before org_heading syntax
-"        to make sure that org_heading syntax got higher priority(help :syn-priority) than org_bold.
-"        If there is any other good solution, please help fix it.
-"  \\\\*sinuate*
 let s:concealends = ''
 let s:conceal = luaeval('require("orgmode.config").org_hide_emphasis_markers')
 if s:conceal
@@ -86,8 +68,6 @@ syn match org_timestamp_inactive /\(\[\d\d\d\d-\d\d-\d\d \k\k\k \d\d:\d\d\]--\[\
 
 syn match org_timestamp_inactive /\(\[%%(diary-float.\+\]\)/
 
-syn match org_adjustments /[+-\.]\?[+-]/
-
 hi def link org_timestamp PreProc
 hi def link org_timestamp_inactive Comment
 
@@ -129,7 +109,7 @@ hi def link org_list_unordered Identifier
 syntax match org_list_def /.*\s\+::/ contained
 hi def link org_list_def PreProc
 
-syntax match org_list_item /.*$/ contained contains=org_subtask_percent,org_subtask_number,org_subtask_percent_100,org_subtask_number_all,org_list_checkbox,org_bold,org_strike,org_italic,org_underline,org_code,org_verbatim,org_timestamp,org_timestamp_inactive,org_list_def,org_hyperlink,@Spell
+syntax match org_list_item /.*$/ contained
 syntax match org_list_checkbox /\[[ X-]]/ contained
 hi def link org_list_bullet Identifier
 hi def link org_list_checkbox     PreProc
