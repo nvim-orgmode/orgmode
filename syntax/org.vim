@@ -34,16 +34,19 @@ exe 'syntax region org_italic    matchgroup=org_italic_delimiter     start="\S\z
 exe 'syntax region org_underline matchgroup=org_underline_delimiter  start="\S\zs_\|_\S\@="    end="\S\zs_\|_\S\@="    keepend oneline contains=@Spell' . s:concealends
 exe 'syntax region org_code      matchgroup=org_code_delimiter       start="\S\zs\~\|\~\S\@="  end="\S\zs\~\|\~\S\@="  keepend oneline contains=@Spell' . s:concealends
 exe 'syntax region org_verbatim  matchgroup=org_verbatim_delimiter   start="\S\zs=\|=\S\@="    end="\S\zs=\|=\S\@="    keepend oneline contains=@Spell' . s:concealends
+exe 'syntax region org_strike    matchgroup=org_strike_delimiter     start="\S\zs+\|+\S\@="    end="\S\zs+\|+\S\@="    keepend oneline contains=@Spell' . s:concealends
 
 hi def org_bold      term=bold      cterm=bold      gui=bold
 hi def org_italic    term=italic    cterm=italic    gui=italic
 hi def org_underline term=underline cterm=underline gui=underline
+hi def org_strike    term=strikethrough cterm=strikethrough gui=strikethrough
 
 hi link org_bold_delimiter org_bold
 hi link org_italic_delimiter org_italic
 hi link org_underline_delimiter org_underline
 hi link org_code_delimiter org_code
 hi link org_verbatim_delimiter org_verbatim
+hi link org_strike_delimiter org_strike
 
 " Org headlines
 " Todo keywords
@@ -126,7 +129,7 @@ hi def link org_list_unordered Identifier
 syntax match org_list_def /.*\s\+::/ contained
 hi def link org_list_def PreProc
 
-syntax match org_list_item /.*$/ contained contains=org_subtask_percent,org_subtask_number,org_subtask_percent_100,org_subtask_number_all,org_list_checkbox,org_bold,org_italic,org_underline,org_code,org_verbatim,org_timestamp,org_timestamp_inactive,org_list_def,org_hyperlink,@Spell
+syntax match org_list_item /.*$/ contained contains=org_subtask_percent,org_subtask_number,org_subtask_percent_100,org_subtask_number_all,org_list_checkbox,org_bold,org_strike,org_italic,org_underline,org_code,org_verbatim,org_timestamp,org_timestamp_inactive,org_list_def,org_hyperlink,@Spell
 syntax match org_list_checkbox /\[[ X-]]/ contained
 hi def link org_list_bullet Identifier
 hi def link org_list_checkbox     PreProc
