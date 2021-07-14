@@ -4,6 +4,7 @@ return {
   org_todo_keywords = {'TODO', '|', 'DONE'},
   org_todo_keyword_faces = {},
   org_deadline_warning_days = 14,
+  org_agenda_min_height = 16,
   org_agenda_span = 'week', -- day/week/month/year/number of days
   org_agenda_start_on_weekday = 1,
   org_agenda_start_day = nil, -- start from today + this modifier

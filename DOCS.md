@@ -234,6 +234,11 @@ Example:<br />
 Journal example:<br />
   `{ j = { description = 'Journal', template = '\n*** %<%Y-%m-%d> %<%A>\n**** %U\n\n%?', target = '~/sync/org/journal.org' } }`
 
+#### **org_agenda_min_height**
+*type*: `number`<br />
+*default value*: `16`<br />
+Indicates the minimum height that the agenda window will occupy.<br />
+
 #### **org_priority_highest**
 *type*: `string|number`<br />
 *default value*: `A`<br />
