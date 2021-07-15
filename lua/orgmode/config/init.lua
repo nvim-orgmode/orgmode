@@ -1,10 +1,11 @@
 local instance = {}
-local Config = {}
 local utils = require('orgmode.utils')
 local defaults = require('orgmode.config.defaults')
 local mappings = require('orgmode.config.mappings')
 
 ---@class Config
+local Config = {}
+
 ---@param opts? table
 function Config:new(opts)
   local data = {

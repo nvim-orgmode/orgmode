@@ -13,6 +13,7 @@
 4. [Abbreviations](#abbreviations)
 5. [Colors](#colors)
 6. [Advanced search](#advanced-search)
+7. [Notifications (experimental)](#notifications-experimental)
 
 ## Settings
 Variable names mostly follow the same naming as Orgmode mappings.
@@ -653,3 +654,150 @@ Few examples:
 * Search all with keyword `TODO`, tag `URGENT` and property `AGE` bigger than 10: `URGENT+AGE>10/TODO`
 * Search all with keyword `DONE` or `DELEGATED`, tag `COMPUTER` and property `AGE` not equal to 10: `COMPUTER+AGE<>10/DONE|DELEGATED`
 * Search all without keyword `DONE`, tag `URGENT` but without tag `COMPUTER` and property `CATEGORY` equal to `mywork`: `URGENT-COMPUTER+CATEGORY=mywork/-DONE`
+
+## Notifications (experimental)
+There is an experimental support for agenda tasks notifications.
+
+Linux/MacOS has support for notifications via:
+* System notification app (notify-send/terminal-notifier) (See below for setup)
+* As part of Neovim running instance in floating window
+
+Windows support only notifications in running Neovim instance. Any help on this topic is appreciated.
+
+Default configuration (detailed description below):
+```lua
+require('orgmode').setup({
+  notifications = {
+    enabled = false,
+    cron_enabled = true,
+    repeater_reminder_time = false,
+    deadline_warning_reminder_time = false,
+    reminder_time = 10,
+    deadline_reminder = true,
+    scheduled_reminder = true,
+    notifier = function(tasks)
+      local result = {}
+      for _, task in ipairs(tasks) do
+        local task_values = {
+          string.format('# %s (in %d min.)', task.category, task.minutes),
+          string.format('%s %s %s', string.rep('*', task.level), task.todo, task.title),
+          string.format('%s: <%s>', task.type, task.time:to_string())
+        }
+        for _, val in ipairs(task_values) do
+          table.insert(result)
+        end
+      end
+
+      if not vim.tbl_isempty(result) then
+        require('orgmode.notifications.notification_popup'):new({ content = result })
+      end
+    end,
+    cron_notifier = function(tasks)
+      for _, task in ipairs(tasks) do
+        local title = string.format('%s (in %d min.)', task.category, task.minutes)
+        local subtitle = string.format('%s %s %s', string.rep('*', task.level), task.todo, task.title)
+        local date = string.format('%s: %s', task.type, task.time:to_string())
+
+        -- Linux
+        if vim.fn.executable('notify-send') then
+          vim.loop.spawn('notify-send', { args = { string.format('%s\n%s\n%s', title, subtitle, date) }})
+        end
+
+        -- MacOS
+        if vim.fn.executable('terminal-notifier') then
+          vim.loop.spawn('terminal-notifier', { args = { '-title', title, '-subtitle', subtitle, '-message', date }})
+        end
+      end
+    end
+  },
+})
+```
+
+Options description:
+* `enabled` (boolean) - Enable notifications inside Neovim. Not needed for cron notifications. Default: `false`
+* `cron_enabled` (boolean) - Enable notifications via cron. Requires additional setup, see [Cron](#cron) section. Default: `true`
+* `repeater_reminder_time` (boolean|number|number[]) - Number of minutes before the repeater time to send notifications.<br />
+  For example, if now is `2021-07-15 15:30`, and there's a todo item with date `<2021-07-01 15:30 +1w>`, notification will be sent if value of this setting is `0`.<br />
+  If this configuration has a value of `{1, 5, 10}`, this means that notification will be sent on  `2021-07-15 15:20`,  `2021-07-15 15:25` and `2021-07-15 15:29`.<br />
+  Default value: `false`, which is disabled.
+* `deadline_warning_reminder_time` (boolean|number|number[]) - Number of minutes before the warning time to send notifications.<br />
+  For example, if now is `2021-07-15 12:30`, and there's a todo item with date `<2021-07-15 18:30 -6h>`, notification will be sent.<br />
+  If this configuration has a value of `{1, 5, 10}`, this means that notification will be sent on  `2021-07-15 12:20`,  `2021-07-15 12:25` and `2021-07-15 12:29`.<br />
+  Default value: `0`, which means that it will send notification only on exact warning time
+* `reminder_time` (boolean|number|number[]) - Number of minutes before the time to send notifications.<br />
+  For example, if now is `2021-07-15 12:30`, and there's a todo item with date `<2021-07-15 12:40>`, notification will be sent.<br />
+  If this configuration has a value of `{1, 5, 10}`, this means that notification will be sent on  `2021-07-15 12:20`,  `2021-07-15 12:25` and `2021-07-15 12:29`.<br />
+  This reminder also applies to both repeater and warning time if the time is matching. So with the example above, both `2021-07-15 12:20 +1w` and `2021-07-15 12:20 -3h` will trigger notification.<br /> will trigger notification.<br />
+  Default value: `10`, which means that it will send notification 10 minutes before the time.
+* `deadline_reminder` (boolean) - Should notifications be sent for DEADLINE dates. Default: `true`
+* `scheduled_reminder` (boolean) - Should notifications be sent for SCHEDULED dates. Default: `true`
+* `notifier` (function) - function for sending notification inside Neovim. Accepts array of tasks (see below) and shows floating window with notifications.
+* `cron_notifier` (function) - function for sending notification via cron. Accepts array of tasks (see below) and triggers external program to send notifications.
+
+
+**Tasks**<br />
+
+Notifier functions accepts `tasks` parameter which is an array of this type:
+
+```lua
+{
+  file = string, -- (Path to org file containing this task. Example: /home/myhome/orgfiles/todos.org)
+  todo = string, -- (Todo keyword on the task. Example value: TODO)
+  title = string, -- (Content of the headline without the todo keyword and tag. Example: Submit papers)
+  level = number, -- (Headline level (number of asterisks). Example: 1)
+  category = string, -- (file name where this task lives. With example file above, this would be: todos),
+  priority = string, -- (priority on the task. Example: A)
+  tags = string[], -- (array of tags applied to the headline. Example: {'WORK', 'OFFICE'})
+  original_time = Date, -- (Date object (see [Date object](lua/orgmode/objects/date.lua) for details) containing original time of the task (with adjustments and everything))
+  time = Date, -- (Date object (see [Date object](lua/orgmode/objects/date.lua) for details) time that matched the reminder configuration (with applied adjustments))
+  reminder_type = string, -- (Type of the date that matched reminder settings. Can be one of these: repeater, warning or time),
+  minutes = number, -- (Number of minutes before the task)
+  type = string, -- (Date type. Can be one of these: DEADLINE or SCHEDULED),
+  range = table -- (Start and end line of the headline subtree. Example: { start_line = 2, end_line = 5 })
+}
+```
+
+### Cron
+
+In order to trigger notifications via cron, job needs to be added to the crontab.<br />
+This is currently possible only on Linux and MacOS, since I don't know how would this be done on Windows. Any help on this topic is appreciated. <br />
+This works by starting the headless Neovim instance, running one off function inside orgmode, and quitting the Neovim.
+
+Here's maximum simplified **Linux** example (Tested on Manjaro/Arch), but least optimized:
+
+Run this to open crontab:
+```
+crontab -e
+```
+
+Then add this (Ensure path to `nvim` is correct):
+```crontab
+* * * * * DISPLAY=:0 DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/1000/bus /usr/local/bin/nvim --headless --noplugin -c 'lua require("orgmode").cron()'
+```
+
+More optimized way would be to extract all your orgmode config to a separate file in your neovim configuration:
+```lua
+-- ~/.config/nvim/lua/partials/my_org_config.lua
+return {
+  org_agenda_files = '~/orgmode/*',
+  org_default_notes_file = '~/orgmode/notes.org',
+  notifications = {
+    reminder_time = {0, 5, 10},
+  },
+  -- etc.
+}
+```
+
+Have your default setup load this configuration:
+```
+require('orgmode').setup(require('partials.my_org_config'))
+```
+
+And update cron job to this:
+
+```crontab
+* * * * * DISPLAY=:0 DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/1000/bus /usr/local/bin/nvim -u NONE --noplugin --headless -c 'lua require("orgmode").cron(require("partials.my_org_config"))'
+```
+This option is most optimized because it doesn't load plugins and your init.vim
+
+For **MacOS**, things should be very similar, but I wasn't able to test it. Any help on this is appreciated.
