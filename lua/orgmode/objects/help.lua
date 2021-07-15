@@ -31,7 +31,7 @@ local helps = {
   },
   orgagenda = {
     { key = 'org_agenda_later', description = 'Go forward one span' },
-    { key = 'org_agenda_earlier', description = 'Go bakckward one span' },
+    { key = 'org_agenda_earlier', description = 'Go backward one span' },
     { key = 'org_agenda_goto_today', description = "Go to today's span" },
     { key = 'org_agenda_goto_date', description = 'Jump to specific date' },
     { key = 'org_agenda_day_view', description = 'Show day view' },
