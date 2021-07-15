@@ -656,7 +656,7 @@ Few examples:
 * Search all without keyword `DONE`, tag `URGENT` but without tag `COMPUTER` and property `CATEGORY` equal to `mywork`: `URGENT-COMPUTER+CATEGORY=mywork/-DONE`
 
 ## Notifications (experimental)
-There is an experimental support for agenda tasks notifications.
+There is an experimental support for agenda tasks notifications. Related [issue #49](https://github.com/kristijanhusak/orgmode.nvim/issues/49).
 
 Linux/MacOS has support for notifications via:
 * System notification app (notify-send/terminal-notifier) (See below for setup)
