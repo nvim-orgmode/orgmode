@@ -150,7 +150,10 @@ function Headline:add_properties(properties)
   end
 
   local properties_line = self:_get_new_properties_line()
-  local indent = string.rep(' ', self.level + 1)
+  local indent = ''
+  if config.org_indent_mode == 'indent' then
+    indent = string.rep(' ', self.level + 1)
+  end
   local content = { string.format('%s:PROPERTIES:', indent) }
 
   for name, val in pairs(properties) do
