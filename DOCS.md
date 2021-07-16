@@ -134,6 +134,13 @@ Possible values:
   * between `\[` and `\]` delimiters - example: `\[ a=-\sqrt{2} \]`
   * between `\(` and `\)` delimiters - example: `\( b=2 \)`
 
+#### **org_indent_mode**
+*type*: `string`<br />
+*default value*: `indent`<br />
+Possible values:
+* `indent` - Use default indentation that follows headlines/checkboxes/previous line indent
+* `noindent` - Disable indentation. All lines start from 1st column
+
 #### **org_custom_exports**
 *type*: `table`<br />
 *default value*: `{}`<br />
