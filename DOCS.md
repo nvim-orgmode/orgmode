@@ -545,6 +545,21 @@ Move current headline + it's content down by one headline
 Open export options.<br />
 **NOTE**: Exports are handled via `emacs` and `pandoc`. This means that `emacs` and/or `pandoc` must be in `$PATH`.<br />
 see [org_custom_exports](#org_custom_exports) if you want to add your own export options.
+#### **org_next_visible_heading**
+*mapped to*: `}`<br />
+Go to next heading (any level).<br />
+#### **org_previous_visible_heading**
+*mapped to*: `{`<br />
+Go to previous heading (any level).<br />
+#### **org_forward_heading_same_level**
+*mapped to*: `]]`<br />
+Go to next heading on same level. Doesn't go outside of parent.<br />
+#### **org_backward_heading_same_level**
+*mapped to*: `[[`<br />
+Go to previous heading on same level. Doesn't go outside of parent.<br />
+#### **outline_up_heading**
+*mapped to*: `g{`<br />
+Go to parent heading.<br />
 #### **org_show_help**
 *mapped to*: `?`<br />
 Show help popup with mappings

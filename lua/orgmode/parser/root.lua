@@ -263,6 +263,11 @@ function Root:apply_search(search, todo_only)
   end, self.items)
 end
 
+---@return boolean
+function Root:is_headline()
+  return false
+end
+
 function Root:_add_source_block(content)
   local filetype = content.line:match('^%s*#%+BEGIN_SRC%s+(.*)%s*$')
   if not filetype then return end
