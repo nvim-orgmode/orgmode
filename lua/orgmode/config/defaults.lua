@@ -27,6 +27,7 @@ return {
   org_log_done = 'time',
   org_highlight_latex_and_related = nil,
   org_custom_exports = {},
+  org_indent_mode = 'indent',
   notifications = {
     enabled = false,
     cron_enabled = true,

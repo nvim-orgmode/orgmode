@@ -1,3 +1,5 @@
+local config = require('orgmode.config')
+
 local function foldexpr()
   local line = vim.fn.getline(vim.v.lnum)
   if line:find('^%s*#%+%S+:') then
@@ -22,6 +24,9 @@ local function foldexpr()
 end
 
 local function indentexpr()
+  if config.org_indent_mode == 'noindent' then
+    return 0
+  end
   local prev_line = vim.fn.prevnonblank(vim.v.lnum - 1)
   if prev_line <= 0 then return 0 end
   local line = vim.fn.getline(prev_line)

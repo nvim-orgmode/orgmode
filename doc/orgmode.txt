@@ -17,7 +17,8 @@ CONTENTS                                                        *orgmode-content
             1.1.1.7. org_hide_emphasis_markers.|orgmode-org_hide_emphasis_markers|
             1.1.1.8. org_log_done...........................|orgmode-org_log_done|
             1.1.1.9. org_highlight_latex_and_related.|orgmode-org_highlight_latex_and_related|
-            1.1.1.10. org_custom_exports..............|orgmode-org_custom_exports|
+            1.1.1.10. org_indent_mode....................|orgmode-org_indent_mode|
+            1.1.1.11. org_custom_exports..............|orgmode-org_custom_exports|
         1.1.2. Agenda settings...........................|orgmode-agenda_settings|
             1.1.2.1. org_deadline_warning_days.|orgmode-org_deadline_warning_days|
             1.1.2.2. org_agenda_span.....................|orgmode-org_agenda_span|
@@ -233,6 +234,14 @@ Possible values:
   * between `$$` and `$$` delimiters - example: `$$ a=+\sqrt{2} $$`
   * between `\[` and `\]` delimiters - example: `\[ a=-\sqrt{2} \]`
   * between `\(` and `\)` delimiters - example: `\( b=2 \)`
+
+ORG_INDENT_MODE                                          *orgmode-org_indent_mode*
+
+type: `string`
+default value: `indent`
+Possible values:
+* `indent` - Use default indentation that follows headlines/checkboxes/previous line indent
+* `noindent` - Disable indentation. All lines start from 1st column
 
 ORG_CUSTOM_EXPORTS                                    *orgmode-org_custom_exports*
 
