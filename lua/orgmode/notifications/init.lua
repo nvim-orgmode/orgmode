@@ -44,7 +44,7 @@ function Notifications:notify(time)
   local result = {}
   for _, task in ipairs(tasks) do
     utils.concat(result, {
-      string.format('# %s (in %d min.)', task.category, task.minutes),
+      string.format('# %s (%s)', task.category, task.humanized_duration),
       string.format('%s %s %s', string.rep('*', task.level), task.todo, task.title),
       string.format('%s: <%s>', task.type, task.time:to_string())
     })
@@ -68,7 +68,7 @@ end
 ---@param tasks table[]
 function Notifications:_cron_notifier(tasks)
   for _, task in ipairs(tasks) do
-    local title = string.format('%s (in %d min.)', task.category, task.minutes)
+    local title = string.format('%s (%s)', task.category, task.humanized_duration)
     local subtitle = string.format('%s %s %s', string.rep('*', task.level), task.todo, task.title)
     local date = string.format('%s: %s', task.type, task.time:to_string())
 
@@ -102,6 +102,7 @@ function Notifications:get_tasks(time)
             time = reminder.time,
             reminder_type = reminder.reminder_type,
             minutes = reminder.minutes,
+            humanized_duration = utils.humanize_minutes(reminder.minutes),
             type = date.type,
             range = headline.range,
           })
@@ -131,7 +132,11 @@ function Notifications:_check_reminders(date, time)
     local times = utils.ensure_array(notifications.repeater_reminder_time)
     local minutes = repeater_time:diff(time, 'minute')
     if vim.tbl_contains(times, minutes) then
-      table.insert(result, { reminder_type = 'repeater', time = repeater_time:without_adjustments(), minutes = minutes })
+      table.insert(result, {
+        reminder_type = 'repeater',
+        time = repeater_time:without_adjustments(),
+        minutes = minutes,
+      })
     end
   end
 
@@ -140,7 +145,12 @@ function Notifications:_check_reminders(date, time)
     local times = utils.ensure_array(notifications.deadline_warning_reminder_time)
     local minutes = warning_time:diff(time, 'minute')
     if vim.tbl_contains(times, minutes) then
-      table.insert(result, { reminder_type = 'warning', time = warning_time:without_adjustments(), minutes = minutes })
+      local real_minutes = date:diff(time, 'minute')
+      table.insert(result, {
+        reminder_type = 'warning',
+        time = date:without_adjustments(),
+        minutes = real_minutes,
+      })
     end
   end
 
@@ -148,7 +158,11 @@ function Notifications:_check_reminders(date, time)
     local times = utils.ensure_array(notifications.reminder_time)
     local minutes = date:diff(time, 'minute')
     if vim.tbl_contains(times, minutes) then
-      table.insert(result, { reminder_type = 'time', time = date:without_adjustments(), minutes = minutes })
+      table.insert(result, {
+        reminder_type = 'time',
+        time = date:without_adjustments(),
+        minutes = minutes,
+      })
     end
   end
 

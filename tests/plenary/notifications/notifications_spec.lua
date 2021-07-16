@@ -41,6 +41,7 @@ describe('Notifications', function()
         time = first_heading.dates[1],
         type = 'DEADLINE',
         minutes = 10,
+        humanized_duration = 'in 10 min',
         reminder_type = 'time',
       },
       {
@@ -55,6 +56,7 @@ describe('Notifications', function()
         original_time = second_heading.dates[1],
         time = second_heading.dates[1],
         minutes = 10,
+        humanized_duration = 'in 10 min',
         type = 'SCHEDULED',
         reminder_type = 'time',
       },
@@ -109,6 +111,7 @@ describe('Notifications', function()
         type = 'DEADLINE',
         reminder_type = 'repeater',
         minutes = 10,
+        humanized_duration = 'in 10 min',
       },
       {
         file = filename,
@@ -124,6 +127,7 @@ describe('Notifications', function()
         type = 'SCHEDULED',
         reminder_type = 'time',
         minutes = 10,
+        humanized_duration = 'in 10 min',
       },
       {
         file = filename,
@@ -135,8 +139,9 @@ describe('Notifications', function()
         tags = {},
         range = Range:new({ start_line = 5, end_line = 6 }),
         original_time = third_heading.dates[1],
-        time = third_heading.dates[1]:with_negative_adjustment():without_adjustments(),
-        minutes = 10,
+        time = third_heading.dates[1]:without_adjustments(),
+        minutes = 430,
+        humanized_duration = 'in 7 hr and 10 min',
         type = 'DEADLINE',
         reminder_type = 'warning',
       },
@@ -160,6 +165,7 @@ describe('Notifications', function()
         type = 'DEADLINE',
         reminder_type = 'repeater',
         minutes = 5,
+        humanized_duration = 'in 5 min',
       },
       {
         file = filename,
@@ -171,10 +177,11 @@ describe('Notifications', function()
         tags = {},
         range = Range:new({ start_line = 5, end_line = 6 }),
         original_time = third_heading.dates[1],
-        time = third_heading.dates[1]:with_negative_adjustment():without_adjustments(),
+        time = third_heading.dates[1]:without_adjustments(),
         type = 'DEADLINE',
         reminder_type = 'warning',
-        minutes = 5,
+        minutes = 425,
+        humanized_duration = 'in 7 hr and 5 min',
       },
     }, tasks)
 
@@ -195,7 +202,8 @@ describe('Notifications', function()
         time = first_heading.dates[1]:apply_repeater_until(time):without_adjustments(),
         type = 'DEADLINE',
         reminder_type = 'repeater',
-        minutes = 0
+        minutes = 0,
+        humanized_duration = 'Now',
       },
       {
         file = filename,
@@ -211,6 +219,7 @@ describe('Notifications', function()
         type = 'SCHEDULED',
         reminder_type = 'time',
         minutes = 0,
+        humanized_duration = 'Now',
       },
       {
         file = filename,
@@ -222,9 +231,10 @@ describe('Notifications', function()
         tags = {},
         range = Range:new({ start_line = 5, end_line = 6 }),
         original_time = third_heading.dates[1],
-        time = third_heading.dates[1]:with_negative_adjustment():without_adjustments(),
+        time = third_heading.dates[1]:without_adjustments(),
         type = 'DEADLINE',
-        minutes = 0,
+        minutes = 420,
+        humanized_duration = 'in 7 hr',
         reminder_type = 'warning',
       },
     }, tasks)
@@ -243,10 +253,11 @@ describe('Notifications', function()
         tags = {},
         range = Range:new({ start_line = 5, end_line = 6 }),
         original_time = third_heading.dates[1],
-        time = third_heading.dates[1]:with_negative_adjustment():without_adjustments(),
+        time = third_heading.dates[1]:without_adjustments(),
         type = 'DEADLINE',
         reminder_type = 'warning',
-        minutes = -5,
+        minutes = 415,
+        humanized_duration = 'in 6 hr and 55 min',
       },
     }, tasks)
   end)
@@ -278,6 +289,7 @@ describe('Notifications', function()
         type = 'DEADLINE',
         reminder_type = 'repeater',
         minutes = 10,
+        humanized_duration = 'in 10 min',
       },
       {
         file = last_filename,
@@ -293,6 +305,7 @@ describe('Notifications', function()
         type = 'SCHEDULED',
         reminder_type = 'time',
         minutes = 10,
+        humanized_duration = 'in 10 min',
       },
       {
         file = last_filename,
@@ -304,10 +317,11 @@ describe('Notifications', function()
         tags = {},
         range = Range:new({ start_line = 5, end_line = 6 }),
         original_time = third_heading.dates[1],
-        time = third_heading.dates[1]:with_negative_adjustment():without_adjustments(),
+        time = third_heading.dates[1]:without_adjustments(),
         type = 'DEADLINE',
         reminder_type = 'warning',
-        minutes = 10,
+        minutes = 430,
+        humanized_duration = 'in 7 hr and 10 min',
       },
     }, tasks)
 
@@ -337,6 +351,7 @@ describe('Notifications', function()
         type = 'DEADLINE',
         reminder_type = 'repeater',
         minutes = 10,
+        humanized_duration = 'in 10 min',
       },
     }, tasks)
 
@@ -366,6 +381,7 @@ describe('Notifications', function()
         type = 'DEADLINE',
         reminder_type = 'repeater',
         minutes = 10,
+        humanized_duration = 'in 10 min',
       },
       {
         file = last_filename,
@@ -381,6 +397,7 @@ describe('Notifications', function()
         type = 'SCHEDULED',
         reminder_type = 'time',
         minutes = 10,
+        humanized_duration = 'in 10 min',
       },
       {
         file = last_filename,
@@ -392,10 +409,11 @@ describe('Notifications', function()
         tags = {},
         range = Range:new({ start_line = 5, end_line = 6 }),
         original_time = third_heading.dates[1],
-        time = third_heading.dates[1]:with_negative_adjustment():without_adjustments(),
+        time = third_heading.dates[1]:without_adjustments(),
         type = 'DEADLINE',
         reminder_type = 'warning',
-        minutes = 10,
+        minutes = 430,
+        humanized_duration = 'in 7 hr and 10 min',
       },
     }, tasks)
   end)
@@ -425,6 +443,7 @@ describe('Notifications', function()
         original_time = first_heading.dates[1],
         time = first_heading.dates[1]:apply_repeater_until(time):without_adjustments(),
         minutes = 10,
+        humanized_duration = 'in 10 min',
         type = 'DEADLINE',
         reminder_type = 'repeater',
       },
@@ -441,6 +460,7 @@ describe('Notifications', function()
         time = second_heading.dates[1],
         type = 'SCHEDULED',
         minutes = 10,
+        humanized_duration = 'in 10 min',
         reminder_type = 'time',
       },
       {
@@ -453,9 +473,10 @@ describe('Notifications', function()
         tags = {},
         range = Range:new({ start_line = 5, end_line = 6 }),
         original_time = third_heading.dates[1],
-        time = third_heading.dates[1]:with_negative_adjustment():without_adjustments(),
+        time = third_heading.dates[1]:without_adjustments(),
         type = 'DEADLINE',
-        minutes = 10,
+        minutes = 430,
+        humanized_duration = 'in 7 hr and 10 min',
         reminder_type = 'warning',
       },
     }, tasks)
@@ -483,6 +504,7 @@ describe('Notifications', function()
         type = 'SCHEDULED',
         reminder_type = 'time',
         minutes = 10,
+        humanized_duration = 'in 10 min',
       },
     }, tasks)
 
@@ -510,6 +532,7 @@ describe('Notifications', function()
         type = 'DEADLINE',
         reminder_type = 'repeater',
         minutes = 10,
+        humanized_duration = 'in 10 min',
       },
       {
         file = last_filename,
@@ -521,10 +544,11 @@ describe('Notifications', function()
         tags = {},
         range = Range:new({ start_line = 5, end_line = 6 }),
         original_time = third_heading.dates[1],
-        time = third_heading.dates[1]:with_negative_adjustment():without_adjustments(),
+        time = third_heading.dates[1]:without_adjustments(),
         type = 'DEADLINE',
         reminder_type = 'warning',
-        minutes = 10,
+        minutes = 430,
+        humanized_duration = 'in 7 hr and 10 min',
       },
     }, tasks)
   end)

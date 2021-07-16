@@ -31,7 +31,7 @@ return {
     enabled = false,
     cron_enabled = true,
     repeater_reminder_time = false,
-    deadline_warning_reminder_time = false,
+    deadline_warning_reminder_time = 0,
     reminder_time = 10,
     deadline_reminder = true,
     scheduled_reminder = true,
