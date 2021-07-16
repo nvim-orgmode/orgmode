@@ -23,10 +23,24 @@ local function foldexpr()
   return '='
 end
 
+local function noindent_mode()
+  local prev_line = vim.fn.prevnonblank(vim.v.lnum - 1)
+  if prev_line <= 0 then return 0 end
+  local line = vim.fn.getline(prev_line)
+
+  local list_item = line:match('^(%s*[%+%-]%s+)')
+  if list_item then
+    return list_item:len()
+  end
+
+  return 0
+end
+
 local function indentexpr()
   if config.org_indent_mode == 'noindent' then
-    return 0
+    return noindent_mode()
   end
+
   local prev_line = vim.fn.prevnonblank(vim.v.lnum - 1)
   if prev_line <= 0 then return 0 end
   local line = vim.fn.getline(prev_line)
@@ -38,9 +52,9 @@ local function indentexpr()
   if stars then
     return stars:len() + 1
   end
-  local checkbox = line:match('^(%s*[%+%-]%s+)%[.?%]')
-  if checkbox then
-    return checkbox:len()
+  local list_item = line:match('^(%s*[%+%-]%s+)')
+  if list_item then
+    return list_item:len()
   end
   return vim.fn.indent(prev_line)
 end
