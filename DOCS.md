@@ -215,7 +215,7 @@ From which day in week (ISO weekday, 1 is Monday) to show the agenda. Applies on
 If set to `nil`, starts from today
 
 #### **org_agenda_start_day**
-*type*: 'string'<br />
+*type*: `string`<br />
 *default value*: `nil`<br />
 *example values*: `+2d`, `-1d`<br />
 offset to apply to the agenda start date.<br />
