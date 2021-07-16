@@ -27,6 +27,11 @@ local helps = {
     { key = 'org_move_subtree_up', description = 'Move subtree up' },
     { key = 'org_move_subtree_down', description = 'Move subtree down' },
     { key = 'org_export', description = 'Open export options' },
+    { key = 'org_next_visible_heading', description = 'Go to next heading (any level)' },
+    { key = 'org_previous_visible_heading', description = 'Go to previous heading (any level)' },
+    { key = 'org_forward_heading_same_level', description = 'Go to next heading on same level' },
+    { key = 'org_backward_heading_same_level', description = 'Go to previous heading on same level' },
+    { key = 'outline_up_heading', description = 'Go to parent heading' },
     { key = 'org_show_help', description = 'Show this help' },
   },
   orgagenda = {

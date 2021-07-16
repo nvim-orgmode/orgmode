@@ -89,6 +89,11 @@ return {
       org_move_subtree_up = '<Leader>oK',
       org_move_subtree_down = '<Leader>oJ',
       org_export = '<Leader>oe',
+      org_next_visible_heading = '}',
+      org_previous_visible_heading = '{',
+      org_forward_heading_same_level = ']]',
+      org_backward_heading_same_level = '[[',
+      outline_up_heading = 'g{',
       org_show_help = '?',
     }
   }

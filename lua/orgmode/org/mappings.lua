@@ -306,6 +306,39 @@ function OrgMappings:export()
   return require('orgmode.export').prompt()
 end
 
+function OrgMappings:next_visible_heading()
+  return vim.fn.search([[^\*\+]], 'W')
+end
+
+function OrgMappings:previous_visible_heading()
+  return vim.fn.search([[^\*\+]], 'bW')
+end
+
+function OrgMappings:forward_heading_same_level()
+  local item = Files.get_current_file():get_closest_headline()
+  if not item or not item:is_headline() then return end
+  local next_headline_same_level = item:get_next_headline_same_level()
+  if not next_headline_same_level then return end
+  return vim.fn.cursor(next_headline_same_level.range.start_line, 1)
+end
+
+function OrgMappings:backward_heading_same_level()
+  local item = Files.get_current_file():get_closest_headline()
+  if not item or not item:is_headline() then return end
+  local prev_headline_same_level = item:get_prev_headline_same_level()
+  if not prev_headline_same_level then return end
+  return vim.fn.cursor(prev_headline_same_level.range.start_line, 1)
+end
+
+function OrgMappings:outline_up_heading()
+  local item = Files.get_current_file():get_closest_headline()
+  if not item or not item:is_headline() then return end
+  if item.level <= 1 then
+    return utils.echo_info('Already at top level of the outline')
+  end
+  return vim.fn.cursor(item.parent.range.start_line, 1)
+end
+
 ---@param direction string
 function OrgMappings:_change_todo_state(direction)
   local item = Files.get_current_file():get_closest_headline()
