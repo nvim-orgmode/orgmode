@@ -323,7 +323,7 @@ If set to `nil`, starts from today
 
 ORG_AGENDA_START_DAY                                *orgmode-org_agenda_start_day*
 
-type: 'string'
+type: `string`
 default value: `nil`
 example values: `+2d`, `-1d`
 offset to apply to the agenda start date.
