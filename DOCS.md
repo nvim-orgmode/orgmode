@@ -678,14 +678,11 @@ require('orgmode').setup({
     notifier = function(tasks)
       local result = {}
       for _, task in ipairs(tasks) do
-        local task_values = {
-          string.format('# %s (in %d min.)', task.category, task.minutes),
+        utils.concat(result, {
+          string.format('# %s (%s)', task.category, task.humanized_duration),
           string.format('%s %s %s', string.rep('*', task.level), task.todo, task.title),
           string.format('%s: <%s>', task.type, task.time:to_string())
-        }
-        for _, val in ipairs(task_values) do
-          table.insert(result)
-        end
+        })
       end
 
       if not vim.tbl_isempty(result) then
@@ -694,7 +691,7 @@ require('orgmode').setup({
     end,
     cron_notifier = function(tasks)
       for _, task in ipairs(tasks) do
-        local title = string.format('%s (in %d min.)', task.category, task.minutes)
+        local title = string.format('%s (%s)', task.category, task.humanized_duration)
         local subtitle = string.format('%s %s %s', string.rep('*', task.level), task.todo, task.title)
         local date = string.format('%s: %s', task.type, task.time:to_string())
 
@@ -752,6 +749,7 @@ Notifier functions accepts `tasks` parameter which is an array of this type:
   time = Date, -- (Date object (see [Date object](lua/orgmode/objects/date.lua) for details) time that matched the reminder configuration (with applied adjustments))
   reminder_type = string, -- (Type of the date that matched reminder settings. Can be one of these: repeater, warning or time),
   minutes = number, -- (Number of minutes before the task)
+  humanized_duration = string, -- (Humanized duration until the task. Examples: in 10 min., in 5 hr, in 3 hr and 10 min.)
   type = string, -- (Date type. Can be one of these: DEADLINE or SCHEDULED),
   range = table -- (Start and end line of the headline subtree. Example: { start_line = 2, end_line = 5 })
 }

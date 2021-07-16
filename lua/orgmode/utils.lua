@@ -161,4 +161,33 @@ function utils.ensure_array(val)
   return val
 end
 
+function utils.humanize_minutes(minutes)
+  if minutes == 0 then
+    return 'Now'
+  end
+  local is_past = minutes < 0
+  local minutes_abs = math.abs(minutes)
+  if minutes_abs < 60 then
+    if is_past then
+      return string.format('%d min ago', minutes_abs)
+    end
+    return string.format('in %d min', minutes_abs)
+  end
+
+  local hours = math.floor(minutes_abs / 60)
+  local remaining_minutes = minutes_abs - (hours * 60)
+
+  if remaining_minutes == 0 then
+    if is_past then
+      return string.format('%d hr ago', hours)
+    end
+    return string.format('in %d hr', hours)
+  end
+
+  if is_past then
+    return string.format('%d hr and %d min ago', hours, remaining_minutes)
+  end
+  return string.format('in %d hr and %d min', hours, remaining_minutes)
+end
+
 return utils
