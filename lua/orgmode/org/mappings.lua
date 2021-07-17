@@ -176,12 +176,20 @@ end
 
 function OrgMappings:do_promote(whole_subtree)
   local item = Files.get_current_file():get_closest_headline()
-  return item:promote(1, whole_subtree)
+  local foldclosed = vim.fn.foldclosed('.')
+  item:promote(1, whole_subtree)
+  if foldclosed > -1 and vim.fn.foldclosed('.') == -1 then
+    vim.cmd[[norm!zc]]
+  end
 end
 
 function OrgMappings:do_demote(whole_subtree)
   local item = Files.get_current_file():get_closest_headline()
-  return item:demote(1, whole_subtree)
+  local foldclosed = vim.fn.foldclosed('.')
+  item:demote(1, whole_subtree)
+  if foldclosed > -1 and vim.fn.foldclosed('.') == -1 then
+    vim.cmd[[norm!zc]]
+  end
 end
 
 function OrgMappings:handle_return(suffix)
