@@ -129,7 +129,7 @@ end
 ---@param content Content
 ---@return string
 function Root:process_root_content(content)
-  if content:is_keyword() and content.keyword.name == 'FILETAGS' then
+  if content:is_keyword() and content.keyword.name:upper() == 'FILETAGS' then
     local filetags = utils.parse_tags_string(content.keyword.value)
     for _, tag in ipairs(filetags) do
       if not vim.tbl_contains(self.tags, tag) then
@@ -279,7 +279,7 @@ end
 
 function Root:get_archive_file_location()
   for _, content in ipairs(self.content) do
-    if content:is_keyword() and content.keyword.name == 'ARCHIVE' then
+    if content:is_keyword() and content.keyword.name:upper() == 'ARCHIVE' then
       return Config:parse_archive_location(self.file, content.keyword.value)
     end
   end

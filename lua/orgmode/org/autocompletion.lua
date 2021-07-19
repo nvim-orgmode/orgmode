@@ -34,7 +34,7 @@ local tags = {
 }
 
 local filetags = {
-  line_rgx = vim.regex([[^\#+FILETAGS:\s\+]]),
+  line_rgx = vim.regex([[\c^\#+FILETAGS:\s\+]]),
   rgx = vim.regex([[:\([0-9A-Za-z_%@\#]*\)$]]),
   fetcher = function()
     return vim.tbl_map(function(tag)
