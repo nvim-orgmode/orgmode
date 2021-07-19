@@ -36,10 +36,6 @@ local function sort_agenda_items(agenda_items)
       return a.headline_date:is_before(b.headline_date)
     end
 
-    if a.headline.category ~= b.headline.category then
-      return a.headline.category < b.headline.category
-    end
-
     if a.is_in_date_range and not b.is_in_date_range then
       return false
     end
