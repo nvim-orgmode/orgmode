@@ -7,7 +7,12 @@ assignees: ''
 
 ---
 
-**Does this feature exist in Emacs orgmode?**
+<!--
+If provided feature request is a separate plugin in emacs orgmode, and not part of the emacs orgmode core functionality,
+request will be most likely rejected. Anything that's a separate plugin in emacs orgmode should be a separate plugin in here.
+Any suggestions how to improve infrastructure for building plugins should be posted here: https://github.com/kristijanhusak/orgmode.nvim/issues/26
+-->
+**Does this feature exist in Emacs orgmode core?**
 Yes / No / N/A
 
 **If answer to first question is "Yes", please provide the link to the orgmode manual or any documentation related to the feature**
