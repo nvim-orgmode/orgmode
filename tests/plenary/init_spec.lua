@@ -3,13 +3,13 @@ local orgmode = require('orgmode')
 describe('Init', function()
   it('should load and parse files from folder', function()
     local org = orgmode.setup({
-      org_agenda_files = vim.fn.getcwd()..'/tests/plenary/fixtures/*',
-      org_default_notes_file = vim.fn.getcwd()..'/tests/plenary/fixtures/refile.org',
+      org_agenda_files = vim.fn.getcwd() .. '/tests/plenary/fixtures/*',
+      org_default_notes_file = vim.fn.getcwd() .. '/tests/plenary/fixtures/refile.org',
     })
-    local todo_file = vim.fn.getcwd()..'/tests/plenary/fixtures/todo.org'
-    local todo_archive_file = vim.fn.getcwd()..'/tests/plenary/fixtures/todo.org_archive'
-    local refile_file = vim.fn.getcwd()..'/tests/plenary/fixtures/refile.org'
-    local txt_file = vim.fn.getcwd()..'/tests/plenary/fixtures/text_notes.txt'
+    local todo_file = vim.fn.getcwd() .. '/tests/plenary/fixtures/todo.org'
+    local todo_archive_file = vim.fn.getcwd() .. '/tests/plenary/fixtures/todo.org_archive'
+    local refile_file = vim.fn.getcwd() .. '/tests/plenary/fixtures/refile.org'
+    local txt_file = vim.fn.getcwd() .. '/tests/plenary/fixtures/text_notes.txt'
     assert.is.Nil(org.files)
     assert.is.Nil(org.agenda)
     assert.is.Nil(org.capture)
@@ -31,6 +31,6 @@ describe('Init', function()
     assert.are.same('todo', org.files.get(todo_archive_file).category)
     assert.are.same(3, #org.files.get(todo_archive_file).items)
     assert.are.same(true, org.files.get(todo_archive_file).is_archive_file)
-    assert.are.same({ 'NESTED',  'OFFICE', 'PRIVATE', 'PROJECT', 'WORK' }, org.files.get_tags())
+    assert.are.same({ 'NESTED', 'OFFICE', 'PRIVATE', 'PROJECT', 'WORK' }, org.files.get_tags())
   end)
 end)

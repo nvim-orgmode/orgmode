@@ -1,7 +1,7 @@
 local Types = require('orgmode.parser.types')
 local Range = require('orgmode.parser.range')
 local Date = require('orgmode.objects.date')
-local plannings = {'DEADLINE', 'SCHEDULED', 'CLOSED'}
+local plannings = { 'DEADLINE', 'SCHEDULED', 'CLOSED' }
 
 ---@class Content
 ---@field parent Headline|Root
@@ -88,7 +88,9 @@ function Content:is_properties_start()
 end
 
 function Content:parse()
-  if self:is_commented() then return end
+  if self:is_commented() then
+    return
+  end
 
   local dates = Date.parse_all_from_line(self.line, self.range.start_line)
   for _, date in ipairs(dates) do
@@ -96,24 +98,31 @@ function Content:parse()
   end
 
   local keyword = self:_parse_keyword()
-  if keyword then return self end
+  if keyword then
+    return self
+  end
 
   local planning = self:_parse_planning()
-  if planning then return self end
+  if planning then
+    return self
+  end
 
   local drawer = self:_parse_drawer()
-  if drawer then return self end
-
+  if drawer then
+    return self
+  end
 end
 
 ---@return boolean
 function Content:_parse_keyword()
   local keyword = self.line:match('^%s*#%+%S+:')
-  if not keyword then return false end
+  if not keyword then
+    return false
+  end
   self.type = Types.KEYWORD
   self.keyword = {
     name = keyword:gsub('^%s*#%+', ''):sub(1, -2),
-    value = vim.trim(self.line:sub(#keyword + 1))
+    value = vim.trim(self.line:sub(#keyword + 1)),
   }
   return true
 end
@@ -122,16 +131,18 @@ end
 function Content:_parse_planning()
   local is_planning = false
   for _, planning in ipairs(plannings) do
-    if self.line:match('^%s*'..planning..':%s*'..Date.pattern) then
+    if self.line:match('^%s*' .. planning .. ':%s*' .. Date.pattern) then
       is_planning = true
       break
     end
   end
-  if not is_planning then return false end
+  if not is_planning then
+    return false
+  end
   self.type = Types.PLANNING
   for _, date in ipairs(self.dates) do
     local line_content = self.line:sub(1, date.range.end_col)
-    local plan = line_content:match('([A-Z]*):?%s*'..Date.pattern..'$')
+    local plan = line_content:match('([A-Z]*):?%s*' .. Date.pattern .. '$')
     if plan and vim.tbl_contains(plannings, plan) then
       date.type = plan
     end
@@ -151,7 +162,7 @@ function Content:_parse_drawer()
   if drawer_start then
     self.type = Types.DRAWER
     self.drawer = {
-      name = drawer_start
+      name = drawer_start,
     }
     return true
   end
@@ -160,8 +171,8 @@ function Content:_parse_drawer()
     self.type = Types.DRAWER
     self.drawer = {
       properties = {
-        [drawer_prop_name] =  drawer_prop_value
-      }
+        [drawer_prop_name] = drawer_prop_value,
+      },
     }
     return true
   end

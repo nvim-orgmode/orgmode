@@ -35,7 +35,7 @@ describe('Notifications', function()
         level = 1,
         priority = '',
         title = 'I am the deadline task',
-        tags = {'OFFICE'},
+        tags = { 'OFFICE' },
         range = Range:new({ start_line = 1, end_line = 2 }),
         original_time = first_heading.dates[1],
         time = first_heading.dates[1],
@@ -60,16 +60,18 @@ describe('Notifications', function()
         type = 'SCHEDULED',
         reminder_type = 'time',
       },
-    }, notifications:get_tasks(Date.from_string('2021-07-12 Mon 12:20')))
+    }, notifications:get_tasks(
+      Date.from_string('2021-07-12 Mon 12:20')
+    ))
   end)
 
   it('should find repeatable and warning deadlines for notification', function()
     config:extend({
       notifications = {
-        reminder_time = {10, 0},
-        deadline_warning_reminder_time = {10, 5, 0, -5},
-        repeater_reminder_time = {10, 5, 0},
-      }
+        reminder_time = { 10, 0 },
+        deadline_warning_reminder_time = { 10, 5, 0, -5 },
+        repeater_reminder_time = { 10, 5, 0 },
+      },
     })
 
     local filename = vim.fn.tempname()
@@ -104,7 +106,7 @@ describe('Notifications', function()
         level = 1,
         priority = '',
         title = 'I am the deadline task',
-        tags = {'OFFICE'},
+        tags = { 'OFFICE' },
         range = Range:new({ start_line = 1, end_line = 2 }),
         original_time = first_heading.dates[1],
         time = first_heading.dates[1]:apply_repeater_until(time):without_adjustments(),
@@ -158,7 +160,7 @@ describe('Notifications', function()
         level = 1,
         priority = '',
         title = 'I am the deadline task',
-        tags = {'OFFICE'},
+        tags = { 'OFFICE' },
         range = Range:new({ start_line = 1, end_line = 2 }),
         original_time = first_heading.dates[1],
         time = first_heading.dates[1]:apply_repeater_until(time):without_adjustments(),
@@ -196,7 +198,7 @@ describe('Notifications', function()
         level = 1,
         priority = '',
         title = 'I am the deadline task',
-        tags = {'OFFICE'},
+        tags = { 'OFFICE' },
         range = Range:new({ start_line = 1, end_line = 2 }),
         original_time = first_heading.dates[1],
         time = first_heading.dates[1]:apply_repeater_until(time):without_adjustments(),
@@ -282,7 +284,7 @@ describe('Notifications', function()
         level = 1,
         priority = '',
         title = 'I am the deadline task',
-        tags = {'OFFICE'},
+        tags = { 'OFFICE' },
         range = Range:new({ start_line = 1, end_line = 2 }),
         original_time = first_heading.dates[1],
         time = first_heading.dates[1]:apply_repeater_until(time):without_adjustments(),
@@ -329,8 +331,8 @@ describe('Notifications', function()
       notifications = {
         reminder_time = false,
         deadline_warning_reminder_time = false,
-        repeater_reminder_time = {10, 5, 0},
-      }
+        repeater_reminder_time = { 10, 5, 0 },
+      },
     })
 
     time = Date.from_string('2021-07-14 Mon 12:20')
@@ -344,7 +346,7 @@ describe('Notifications', function()
         level = 1,
         priority = '',
         title = 'I am the deadline task',
-        tags = {'OFFICE'},
+        tags = { 'OFFICE' },
         range = Range:new({ start_line = 1, end_line = 2 }),
         original_time = first_heading.dates[1],
         time = first_heading.dates[1]:apply_repeater_until(time):without_adjustments(),
@@ -358,9 +360,9 @@ describe('Notifications', function()
     config:extend({
       notifications = {
         reminder_time = 10,
-        deadline_warning_reminder_time = {10, 5, 0},
-        repeater_reminder_time = {10, 5, 0},
-      }
+        deadline_warning_reminder_time = { 10, 5, 0 },
+        repeater_reminder_time = { 10, 5, 0 },
+      },
     })
 
     time = Date.from_string('2021-07-14 Mon 12:20')
@@ -374,7 +376,7 @@ describe('Notifications', function()
         level = 1,
         priority = '',
         title = 'I am the deadline task',
-        tags = {'OFFICE'},
+        tags = { 'OFFICE' },
         range = Range:new({ start_line = 1, end_line = 2 }),
         original_time = first_heading.dates[1],
         time = first_heading.dates[1]:apply_repeater_until(time):without_adjustments(),
@@ -438,7 +440,7 @@ describe('Notifications', function()
         level = 1,
         priority = '',
         title = 'I am the deadline task',
-        tags = {'OFFICE'},
+        tags = { 'OFFICE' },
         range = Range:new({ start_line = 1, end_line = 2 }),
         original_time = first_heading.dates[1],
         time = first_heading.dates[1]:apply_repeater_until(time):without_adjustments(),
@@ -484,7 +486,7 @@ describe('Notifications', function()
     config:extend({
       notifications = {
         deadline_reminder = false,
-      }
+      },
     })
 
     tasks = notifications:get_tasks(time)
@@ -512,7 +514,7 @@ describe('Notifications', function()
       notifications = {
         scheduled_reminder = false,
         deadline_reminder = true,
-      }
+      },
     })
 
     tasks = notifications:get_tasks(time)
@@ -525,7 +527,7 @@ describe('Notifications', function()
         level = 1,
         priority = '',
         title = 'I am the deadline task',
-        tags = {'OFFICE'},
+        tags = { 'OFFICE' },
         range = Range:new({ start_line = 1, end_line = 2 }),
         original_time = first_heading.dates[1],
         time = first_heading.dates[1]:apply_repeater_until(time):without_adjustments(),
@@ -553,4 +555,3 @@ describe('Notifications', function()
     }, tasks)
   end)
 end)
-

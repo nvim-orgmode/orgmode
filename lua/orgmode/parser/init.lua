@@ -28,5 +28,5 @@ local function parse(lines, category, file, is_archive_file)
 end
 
 return {
-  parse = parse
+  parse = parse,
 }

@@ -1,12 +1,21 @@
 local config = require('orgmode.config')
 local Date = require('orgmode.objects.date')
 local expansions = {
-  ['%t'] = function() return string.format('<%s>', Date.today():to_string()) end,
-  ['%T'] = function() return string.format('<%s>', Date.now():to_string()) end,
-  ['%u'] = function() return string.format('[%s]', Date.today():to_string()) end,
-  ['%U'] = function() return string.format('[%s]', Date.now():to_string()) end,
-  ['%a'] = function() return string.format('[[file:%s +%s]]', vim.api.nvim_buf_get_name(0),
-                                                              vim.api.nvim_win_get_cursor(0)[1]) end,
+  ['%t'] = function()
+    return string.format('<%s>', Date.today():to_string())
+  end,
+  ['%T'] = function()
+    return string.format('<%s>', Date.now():to_string())
+  end,
+  ['%u'] = function()
+    return string.format('[%s]', Date.today():to_string())
+  end,
+  ['%U'] = function()
+    return string.format('[%s]', Date.now():to_string())
+  end,
+  ['%a'] = function()
+    return string.format('[[file:%s +%s]]', vim.api.nvim_buf_get_name(0), vim.api.nvim_win_get_cursor(0)[1])
+  end,
 }
 
 ---@see https://orgmode.org/manual/Capture-templates.html
@@ -43,8 +52,8 @@ end
 function Templates:setup()
   local initial_position = vim.fn.search('%?')
   if initial_position > 0 then
-    vim.cmd[[norm!c2l]]
-    vim.cmd[[startinsert!]]
+    vim.cmd([[norm!c2l]])
+    vim.cmd([[startinsert!]])
   end
 end
 

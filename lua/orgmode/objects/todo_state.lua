@@ -13,7 +13,7 @@ function TodoState:new(data)
   opts.todos = {
     TODO = vim.tbl_add_reverse_lookup(todo_keywords.TODO),
     DONE = vim.tbl_add_reverse_lookup(todo_keywords.DONE),
-    ALL = vim.tbl_add_reverse_lookup(todo_keywords.ALL)
+    ALL = vim.tbl_add_reverse_lookup(todo_keywords.ALL),
   }
   setmetatable(opts, self)
   self.__index = self
@@ -35,7 +35,7 @@ function TodoState:get_next()
   self.current_state = next_state
   local type = self.todos.TODO[next_state] and 'TODO' or 'DONE'
 
-  return { value = next_state,  type = type }
+  return { value = next_state, type = type }
 end
 
 ---@return table
@@ -54,7 +54,7 @@ function TodoState:get_prev()
   self.current_state = prev_state
   local type = self.todos.TODO[prev_state] and 'TODO' or 'DONE'
 
-  return { value = prev_state,  type = type }
+  return { value = prev_state, type = type }
 end
 
 function TodoState:get_todo()

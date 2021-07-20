@@ -18,7 +18,9 @@ function Org:new()
 end
 
 function Org:init()
-  if self.initialized then return end
+  if self.initialized then
+    return
+  end
   self.files = require('orgmode.parser.files').new()
   self.agenda = require('orgmode.agenda'):new()
   self.capture = require('orgmode.capture'):new()
@@ -38,11 +40,11 @@ function Org:reload(file)
 end
 
 function Org:setup_autocmds()
-  vim.cmd[[augroup orgmode_nvim]]
-  vim.cmd[[autocmd!]]
-  vim.cmd[[autocmd BufWritePost *.org call luaeval('require("orgmode").reload(_A)', expand('<afile>:p'))]]
-  vim.cmd[[autocmd FileType org call luaeval('require("orgmode").reload(_A)', expand('<afile>:p'))]]
-  vim.cmd[[augroup END]]
+  vim.cmd([[augroup orgmode_nvim]])
+  vim.cmd([[autocmd!]])
+  vim.cmd([[autocmd BufWritePost *.org call luaeval('require("orgmode").reload(_A)', expand('<afile>:p'))]])
+  vim.cmd([[autocmd FileType org call luaeval('require("orgmode").reload(_A)', expand('<afile>:p'))]])
+  vim.cmd([[augroup END]])
 end
 
 ---@param opts? table
@@ -64,14 +66,18 @@ end
 ---@param file? string
 ---@return Org
 local function reload(file)
-  if not instance then return end
+  if not instance then
+    return
+  end
   return instance:reload(file)
 end
 
 ---@param opts table
 local function action(cmd, opts)
   local parts = vim.split(cmd, '.', true)
-  if not instance or #parts < 2 then return end
+  if not instance or #parts < 2 then
+    return
+  end
   instance:init()
   if instance[parts[1]] and instance[parts[1]][parts[2]] then
     local item = instance[parts[1]]
@@ -83,13 +89,12 @@ end
 local function cron(opts)
   local config = require('orgmode.config'):extend(opts or {})
   if not config.notifications.cron_enabled then
-    return vim.cmd[[qa!]]
+    return vim.cmd([[qa!]])
   end
   require('orgmode.parser.files').load(vim.schedule_wrap(function()
     instance.notifications = require('orgmode.notifications'):new():cron()
   end))
 end
-
 
 return {
   setup = setup,

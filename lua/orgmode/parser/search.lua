@@ -55,7 +55,9 @@ end
 function Search:_matches(val, item)
   local prop_name, operator, prop_val = val:match('([^=<>]*)([=<>]+)([^=<>]*)')
   if not prop_name then
-    if not item.tags then return false end
+    if not item.tags then
+      return false
+    end
     if type(item.tags) == 'table' then
       return vim.tbl_contains(item.tags, val)
     end
@@ -63,13 +65,17 @@ function Search:_matches(val, item)
   end
   prop_name = vim.trim(prop_name)
   prop_val = vim.trim(prop_val)
-  if not item.props or not item.props[prop_name] then return false end
+  if not item.props or not item.props[prop_name] then
+    return false
+  end
   local item_val = item.props[prop_name]
 
   if tonumber(prop_val) then
     prop_val = tonumber(prop_val)
     item_val = tonumber(item_val)
-    if not item_val then return false end
+    if not item_val then
+      return false
+    end
   end
 
   if type(prop_val) == 'string' then
@@ -77,15 +83,29 @@ function Search:_matches(val, item)
   end
 
   local operators = {
-    ['='] = function(a, b) return a == b end,
-    ['<='] = function(a, b) return a <= b end,
-    ['<'] = function(a, b) return a < b end,
-    ['>='] = function(a, b) return a >= b end,
-    ['>'] = function(a, b) return a > b end,
-    ['<>'] = function(a, b) return a ~= b end,
+    ['='] = function(a, b)
+      return a == b
+    end,
+    ['<='] = function(a, b)
+      return a <= b
+    end,
+    ['<'] = function(a, b)
+      return a < b
+    end,
+    ['>='] = function(a, b)
+      return a >= b
+    end,
+    ['>'] = function(a, b)
+      return a > b
+    end,
+    ['<>'] = function(a, b)
+      return a ~= b
+    end,
   }
 
-  if not operators[operator] then return false end
+  if not operators[operator] then
+    return false
+  end
 
   return operators[operator](item_val, prop_val)
 end

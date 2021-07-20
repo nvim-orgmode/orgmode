@@ -3,9 +3,9 @@ local utils = require('orgmode.utils')
 local config = require('orgmode.config')
 local Files = require('orgmode.parser.files')
 local Templates = require('orgmode.capture.templates')
-vim.cmd[[augroup OrgCapture]]
-vim.cmd[[autocmd!]]
-vim.cmd[[augroup END]]
+vim.cmd([[augroup OrgCapture]])
+vim.cmd([[autocmd!]])
+vim.cmd([[augroup END]])
 
 ---@class Capture
 ---@field templates Templates
@@ -26,7 +26,9 @@ function Capture:prompt()
     table.insert(templates, {
       label = template.description,
       key = key,
-      action = function() return self:open_template(template) end
+      action = function()
+        return self:open_template(template)
+      end,
     })
   end
   table.insert(templates, { label = '', key = '', separator = '-' })
@@ -38,15 +40,15 @@ end
 ---@param template table
 function Capture:open_template(template)
   local content = self.templates:compile(template)
-  vim.cmd('16split '..vim.fn.tempname())
-  vim.cmd[[setf org]]
-  vim.cmd[[setlocal bufhidden=wipe nobuflisted nolist noswapfile nowrap nofoldenable]]
+  vim.cmd('16split ' .. vim.fn.tempname())
+  vim.cmd([[setf org]])
+  vim.cmd([[setlocal bufhidden=wipe nobuflisted nolist noswapfile nowrap nofoldenable]])
   vim.api.nvim_buf_set_lines(0, 0, -1, true, content)
   self.templates:setup()
   vim.api.nvim_buf_set_var(0, 'org_template', template)
   vim.api.nvim_buf_set_var(0, 'org_capture', true)
   config:setup_mappings('capture')
-  vim.cmd[[autocmd OrgCapture BufWipeout <buffer> ++once lua require('orgmode').action('capture.refile', true)]]
+  vim.cmd([[autocmd OrgCapture BufWipeout <buffer> ++once lua require('orgmode').action('capture.refile', true)]])
 end
 
 ---Triggered when refiling from capture buffer
@@ -58,7 +60,7 @@ function Capture:refile(confirm)
   local lines = vim.api.nvim_buf_get_lines(0, 0, -1, true)
   if confirm and is_modified then
     local choice = vim.fn.confirm(string.format('Do you want to refile this to %s?', file), '&Yes\n&No')
-    vim.cmd[[redraw!]]
+    vim.cmd([[redraw!]])
     if choice ~= 1 then
       return utils.echo_info('Canceled.')
     end
@@ -67,8 +69,8 @@ function Capture:refile(confirm)
     -- TODO: Parse refile content as org file and update refile destination to point to headline or root
     self:_refile_to_end(file, lines)
   end, 0)
-  vim.cmd[[autocmd! OrgCapture BufWipeout <buffer>]]
-  vim.cmd[[silent! wq]]
+  vim.cmd([[autocmd! OrgCapture BufWipeout <buffer>]])
+  vim.cmd([[silent! wq]])
 end
 
 ---Triggered when refiling to destination from capture buffer
@@ -78,8 +80,8 @@ function Capture:refile_to_destination()
   local default_file = vim.fn.fnamemodify(template.target or config.org_default_notes_file, ':p')
   -- TODO: Parse refile content as org file and update refile destination to point to headline or root
   self:_refile_content_with_fallback(lines, default_file)
-  vim.cmd[[autocmd! OrgCapture BufWipeout <buffer>]]
-  vim.cmd[[silent! wq]]
+  vim.cmd([[autocmd! OrgCapture BufWipeout <buffer>]])
+  vim.cmd([[silent! wq]])
 end
 
 ---Triggered from org file when we want to refile headline
@@ -106,7 +108,9 @@ end
 ---@return boolean
 function Capture:_refile_to_end(file, lines, item, message)
   local refiled = self:_refile_to(file, lines, item, '$')
-  if not refiled then return false end
+  if not refiled then
+    return false
+  end
   utils.echo_info(message or string.format('Wrote %s', file))
   return true
 end
@@ -146,7 +150,9 @@ function Capture:_refile_content_with_fallback(lines, fallback_file, item)
     item:demote(headline.level - item.level + 1, true)
   end
   local refiled = self:_refile_to(destination_file, lines, item, headline.range.end_line)
-  if not refiled then return false end
+  if not refiled then
+    return false
+  end
   utils.echo_info(string.format('Wrote %s', destination_file))
   return true
 end
@@ -157,18 +163,22 @@ end
 ---@param destination_line string|number
 ---@return boolean
 function Capture:_refile_to(file, lines, item, destination_line)
-  if not file then return false end
+  if not file then
+    return false
+  end
 
   local is_same_file = file == vim.api.nvim_buf_get_name(0)
   local cur_win = vim.api.nvim_get_current_win()
 
   if is_same_file and item then
-    vim.cmd(string.format('silent %d,%d move %s', item.range.start_line, item.range.end_line, tostring(destination_line)))
+    vim.cmd(
+      string.format('silent %d,%d move %s', item.range.start_line, item.range.end_line, tostring(destination_line))
+    )
     return true
   end
 
   if not is_same_file then
-    vim.cmd('topleft split '..file)
+    vim.cmd('topleft split ' .. file)
   end
 
   vim.fn.append(destination_line, lines)
@@ -190,22 +200,28 @@ end
 function Capture:autocomplete_refile(arg_lead)
   local valid_filenames = {}
   for _, filename in ipairs(Files.filenames()) do
-    valid_filenames[vim.fn.fnamemodify(filename, ':t')..'/'] = filename
+    valid_filenames[vim.fn.fnamemodify(filename, ':t') .. '/'] = filename
   end
 
-  if not arg_lead then return vim.tbl_keys(valid_filenames) end
+  if not arg_lead then
+    return vim.tbl_keys(valid_filenames)
+  end
   local parts = vim.split(arg_lead, '/', true)
 
-  local selected_file = valid_filenames[parts[1]..'/']
+  local selected_file = valid_filenames[parts[1] .. '/']
 
   if not selected_file then
     return vim.tbl_filter(function(file)
-      return file:match('^'..vim.pesc(parts[1]))
-    end, vim.tbl_keys(valid_filenames))
+      return file:match('^' .. vim.pesc(parts[1]))
+    end, vim.tbl_keys(
+      valid_filenames
+    ))
   end
 
   local agenda_file = Files.get(selected_file)
-  if not agenda_file then return {} end
+  if not agenda_file then
+    return {}
+  end
 
   local headlines = agenda_file:get_opened_unfinished_headlines()
   local result = vim.tbl_map(function(headline)
@@ -222,8 +238,8 @@ function _G.orgmode.autocomplete_refile(arg_lead)
 end
 
 function Capture:kill()
-  vim.cmd[[autocmd! OrgCapture BufWipeout <buffer>]]
-  vim.cmd[[bw!]]
+  vim.cmd([[autocmd! OrgCapture BufWipeout <buffer>]])
+  vim.cmd([[bw!]])
 end
 
 return Capture

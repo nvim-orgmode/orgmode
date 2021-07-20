@@ -58,7 +58,7 @@ local helps = {
 
 local Help = {
   buf = nil,
-  win = nil
+  win = nil,
 }
 
 ---@return string[]
@@ -66,7 +66,7 @@ function Help.prepare_content()
   local mappings = config.mappings
   local ft = vim.bo.filetype
   if ft == 'orgagenda' then
-    local content = {' **Orgmode mappings - Agenda:**', ''}
+    local content = { ' **Orgmode mappings - Agenda:**', '' }
     for _, item in ipairs(helps.orgagenda) do
       local maps = mappings.agenda[item.key]
       if type(maps) == 'table' then
@@ -82,7 +82,7 @@ function Help.prepare_content()
   local has_capture, is_capture = pcall(vim.api.nvim_buf_get_var, 0, 'org_capture')
   local content = {}
   if has_capture and is_capture then
-  content = {' **Orgmode mappings Capture + Org:**', '', '  __Capture__'}
+    content = { ' **Orgmode mappings Capture + Org:**', '', '  __Capture__' }
     for _, item in ipairs(helps.capture) do
       local maps = mappings.capture[item.key]
       if type(maps) == 'table' then
@@ -92,14 +92,14 @@ function Help.prepare_content()
     end
     table.insert(content, '  __Org__')
   else
-    content = {' **Orgmode mappings - Org:**', ''}
+    content = { ' **Orgmode mappings - Org:**', '' }
   end
 
   for _, item in ipairs(helps.org) do
-      local maps = mappings.org[item.key]
-      if type(maps) == 'table' then
-        maps = table.concat(maps, ', ')
-      end
+    local maps = mappings.org[item.key]
+    if type(maps) == 'table' then
+      maps = table.concat(maps, ', ')
+    end
     table.insert(content, string.format('  `%-12s` - %s', maps, item.description))
   end
 
@@ -148,7 +148,7 @@ function Help.show()
   utils.buf_keymap(Help.buf, 'n', 'q', ':bw!<CR>')
   utils.buf_keymap(Help.buf, 'n', '<Esc>', ':bw!<CR>')
 
-  vim.cmd[[autocmd BufWipeout <buffer> lua require('orgmode.objects.help').dispose()]]
+  vim.cmd([[autocmd BufWipeout <buffer> lua require('orgmode.objects.help').dispose()]])
 end
 
 function Help.dispose()

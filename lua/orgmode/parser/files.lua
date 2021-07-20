@@ -7,7 +7,7 @@ local config = require('orgmode.config')
 ---@field tags string[]
 local Files = {
   files = {},
-  tags = {}
+  tags = {},
 }
 
 function Files.new()
@@ -21,13 +21,17 @@ function Files.all()
   files = vim.tbl_filter(function(file)
     return not file.is_archive_file
   end, files)
-  table.sort(files, function(a, b) return a.category < b.category end)
+  table.sort(files, function(a, b)
+    return a.category < b.category
+  end)
   return files
 end
 
 ---@return string[]
 function Files.filenames()
-  return vim.tbl_map(function(file) return file.file end, Files.all())
+  return vim.tbl_map(function(file)
+    return file.file
+  end, Files.all())
 end
 
 ---@param file string
@@ -57,7 +61,9 @@ function Files.reload(file, callback)
       return Files.files[file]
     end
     return utils.readfile(file, function(err, result)
-      if err then return end
+      if err then
+        return
+      end
       Files.files[file] = parser.parse(result, category, file, is_archived)
       Files._build_tags()
       if callback then
@@ -82,7 +88,9 @@ function Files.load(callback)
     local category = vim.fn.fnamemodify(item, ':t:r')
     local is_archived = config:is_archive_file(item)
     utils.readfile(item, function(err, result)
-      if err then return end
+      if err then
+        return
+      end
       Files.files[item] = parser.parse(result, category, item, is_archived)
       files_to_process = files_to_process - 1
       if files_to_process == 0 then
@@ -104,7 +112,12 @@ function Files.get_current_file()
     return parser.parse(vim.api.nvim_buf_get_lines(0, 0, -1, true), '', filename)
   end
   local file = Files.files[filename]
-  Files.files[filename] = parser.parse(vim.api.nvim_buf_get_lines(0, 0, -1, true), file.category, file.file, file.is_archive_file)
+  Files.files[filename] = parser.parse(
+    vim.api.nvim_buf_get_lines(0, 0, -1, true),
+    file.category,
+    file.file,
+    file.is_archive_file
+  )
   return Files.files[filename]
 end
 
@@ -157,16 +170,22 @@ end
 ---@return boolean
 function Files.update_file(filename, action)
   local file = Files.get(filename)
-  if not file then return false end
+  if not file then
+    return false
+  end
   local is_same_file = filename == vim.api.nvim_buf_get_name(0)
   local cur_win = vim.api.nvim_get_current_win()
   if is_same_file then
-    if action then action(file) end
+    if action then
+      action(file)
+    end
     vim.cmd(':w')
     return true
   end
-  vim.cmd('topleft split '..filename)
-  if action then action(file) end
+  vim.cmd('topleft split ' .. filename)
+  if action then
+    action(file)
+  end
   vim.cmd('wq!')
   vim.api.nvim_set_current_win(cur_win)
   return true
@@ -194,13 +213,12 @@ function Files.autocomplete_tags(arg_lead)
   local base = arg_lead:gsub('[^%+%-:&|]*$', '')
   local last = arg_lead:match('[^%+%-:&|]*$')
   local matches = vim.tbl_filter(function(tag)
-    return tag:match('^'..vim.pesc(last)) and not vim.tbl_contains(parts, tag)
+    return tag:match('^' .. vim.pesc(last)) and not vim.tbl_contains(parts, tag)
   end, Files.get_tags())
 
   return vim.tbl_map(function(tag)
-    return base..tag
+    return base .. tag
   end, matches)
 end
-
 
 return Files

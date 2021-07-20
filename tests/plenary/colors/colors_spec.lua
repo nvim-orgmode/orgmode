@@ -13,40 +13,40 @@ describe('Colors', function()
   end)
 
   it('should get appropriate fg color from hl group', function()
-    vim.cmd[[hi OrgTestParse guifg=#FF0000]]
+    vim.cmd([[hi OrgTestParse guifg=#FF0000]])
     local parsed_color = colors.parse_hl_fg_color('OrgTestParse')
     assert.are.same('#FF0000', parsed_color)
 
-    vim.cmd[[hi OrgTestParse guibg=#FF8888]]
+    vim.cmd([[hi OrgTestParse guibg=#FF8888]])
     parsed_color = colors.parse_hl_fg_color('OrgTestParse')
     assert.are.same('#FF8888', parsed_color)
 
-    vim.cmd[[hi OrgTestParse guifg=#FFFFFF guibg=#00FF00]]
+    vim.cmd([[hi OrgTestParse guifg=#FFFFFF guibg=#00FF00]])
     parsed_color = colors.parse_hl_fg_color('OrgTestParse')
     assert.are.same('#00FF00', parsed_color)
 
-    vim.cmd[[hi OrgTestParse guifg=#FFFFFF guibg=#00FF00 gui=reverse]]
+    vim.cmd([[hi OrgTestParse guifg=#FFFFFF guibg=#00FF00 gui=reverse]])
     parsed_color = colors.parse_hl_fg_color('OrgTestParse')
     assert.are.same('#FFFFFF', parsed_color)
 
-    vim.cmd[[hi clear OrgTestParse]]
+    vim.cmd([[hi clear OrgTestParse]])
   end)
 
   it('should fallback to default colors if none provided for todo colors', function()
-    vim.cmd[[
+    vim.cmd([[
       hi clear Error
       hi clear ErrorMsg
       hi clear WarningMsg
       hi clear diffAdded
       hi clear DiffAdd
-    ]]
+    ]])
     local todo_keywords_colors = colors.get_todo_keywords_colors()
     assert.are.same({
-      DONE = { gui = "#00FF00", cterm = 2 },
-      TODO = { gui = "#FF0000", cterm = 1 },
-      deadline = { gui = "#ff1a1a", cterm = 9 },
-      ok = { gui = "#1aff1a", cterm = 10 },
-      warning = { gui = "#ff981a", cterm = 11 },
+      DONE = { gui = '#00FF00', cterm = 2 },
+      TODO = { gui = '#FF0000', cterm = 1 },
+      deadline = { gui = '#ff1a1a', cterm = 9 },
+      ok = { gui = '#1aff1a', cterm = 10 },
+      warning = { gui = '#ff981a', cterm = 11 },
     }, todo_keywords_colors)
   end)
 
@@ -58,14 +58,14 @@ describe('Colors', function()
       org_todo_keyword_faces = {
         NEXT = ':foreground "blue" :underline on :weight bold :background red :slant italic',
         CANCELED = ':foreground green :slant italic',
-      }
+      },
     })
 
     local result = highlights.parse_todo_keyword_faces()
 
     assert.are.same({
       NEXT = 'OrgKeywordFaceNEXT',
-      CANCELED = 'OrgKeywordFaceCANCELED'
+      CANCELED = 'OrgKeywordFaceCANCELED',
     }, result)
 
     assert.are.same('red', get_color_opt('OrgKeywordFaceNEXT', 'bg', 'gui'))
@@ -90,17 +90,17 @@ describe('Colors', function()
     assert.are.same('', get_color_opt('OrgKeywordFaceCANCELED', 'underline', 'gui'))
     assert.are.same('', get_color_opt('OrgKeywordFaceCANCELED', 'underline', 'cterm'))
 
-    vim.cmd[[
+    vim.cmd([[
       hi clear OrgKeywordFaceNEXT
       hi clear OrgKeywordFaceCANCELED
-    ]]
+    ]])
 
     vim.o.termguicolors = false
     result = highlights.parse_todo_keyword_faces()
 
     assert.are.same({
       NEXT = 'OrgKeywordFaceNEXT',
-      CANCELED = 'OrgKeywordFaceCANCELED'
+      CANCELED = 'OrgKeywordFaceCANCELED',
     }, result)
 
     assert.are.same('9', get_color_opt('OrgKeywordFaceNEXT', 'bg', 'cterm'))

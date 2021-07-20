@@ -5,13 +5,21 @@ local utils = {}
 ---@param callback function
 function utils.readfile(file, callback)
   uv.fs_open(file, 'r', 438, function(err1, fd)
-    if err1 then return callback(err1) end
+    if err1 then
+      return callback(err1)
+    end
     uv.fs_fstat(fd, function(err2, stat)
-    if err2 then return callback(err2) end
+      if err2 then
+        return callback(err2)
+      end
       uv.fs_read(fd, stat.size, 0, function(err3, data)
-        if err3 then return callback(err3) end
+        if err3 then
+          return callback(err3)
+        end
         uv.fs_close(fd, function(err4)
-          if err4 then return callback(err4) end
+          if err4 then
+            return callback(err4)
+          end
           local lines = vim.split(data, '\n')
           table.remove(lines, #lines)
           return callback(nil, lines)
@@ -37,20 +45,20 @@ end
 
 ---@param msg string
 function utils.echo_warning(msg)
-  vim.cmd[[redraw!]]
-  return vim.api.nvim_echo({{string.format('[orgmode] %s', msg), 'WarningMsg'}}, true, {})
+  vim.cmd([[redraw!]])
+  return vim.api.nvim_echo({ { string.format('[orgmode] %s', msg), 'WarningMsg' } }, true, {})
 end
 
 ---@param msg string
 function utils.echo_error(msg)
-  vim.cmd[[redraw!]]
-  return vim.api.nvim_echo({{string.format('[orgmode] %s', msg), 'ErrorMsg'}}, true, {})
+  vim.cmd([[redraw!]])
+  return vim.api.nvim_echo({ { string.format('[orgmode] %s', msg), 'ErrorMsg' } }, true, {})
 end
 
 ---@param msg string
 function utils.echo_info(msg)
-  vim.cmd[[redraw!]]
-  return vim.api.nvim_echo({{ string.format('[orgmode] %s', msg) }}, true, {})
+  vim.cmd([[redraw!]])
+  return vim.api.nvim_echo({ { string.format('[orgmode] %s', msg) } }, true, {})
 end
 
 ---@param word string
@@ -62,14 +70,18 @@ end
 ---@param isoweekday number
 ---@return number
 function utils.convert_from_isoweekday(isoweekday)
-  if isoweekday == 7 then return 1 end
+  if isoweekday == 7 then
+    return 1
+  end
   return isoweekday + 1
 end
 
 ---@param weekday number
 ---@return number
 function utils.convert_to_isoweekday(weekday)
-  if weekday == 1 then return 7 end
+  if weekday == 1 then
+    return 7
+  end
   return weekday - 1
 end
 
@@ -96,7 +108,7 @@ function utils.concat(first, second)
 end
 
 function utils.menu(title, items, prompt)
-  local content = { title..':' }
+  local content = { title .. ':' }
   local valid_keys = {}
   for _, item in ipairs(items) do
     if item.separator then
@@ -107,29 +119,42 @@ function utils.menu(title, items, prompt)
     end
   end
   prompt = prompt or 'key'
-  table.insert(content, prompt..': ')
+  table.insert(content, prompt .. ': ')
   vim.cmd(string.format('echon "%s"', table.concat(content, '\\n')))
   local char = vim.fn.nr2char(vim.fn.getchar())
-  vim.cmd[[redraw!]]
+  vim.cmd([[redraw!]])
   local entry = valid_keys[char]
-  if not entry or not entry.action then return end
+  if not entry or not entry.action then
+    return
+  end
   return entry.action()
 end
 
 function utils.keymap(mode, lhs, rhs, opts)
-  return vim.api.nvim_set_keymap(mode, lhs, rhs, vim.tbl_extend('keep', opts or {}, {
-        nowait = true,
-        silent = true,
-        noremap = true,
-    }))
+  return vim.api.nvim_set_keymap(
+    mode,
+    lhs,
+    rhs,
+    vim.tbl_extend('keep', opts or {}, {
+      nowait = true,
+      silent = true,
+      noremap = true,
+    })
+  )
 end
 
 function utils.buf_keymap(buf, mode, lhs, rhs, opts)
-  return vim.api.nvim_buf_set_keymap(buf, mode, lhs, rhs, vim.tbl_extend('keep', opts or {}, {
-        nowait = true,
-        silent = true,
-        noremap = true,
-    }))
+  return vim.api.nvim_buf_set_keymap(
+    buf,
+    mode,
+    lhs,
+    rhs,
+    vim.tbl_extend('keep', opts or {}, {
+      nowait = true,
+      silent = true,
+      noremap = true,
+    })
+  )
 end
 
 function utils.esc(cmd)
@@ -149,7 +174,7 @@ end
 function utils.tags_to_string(taglist)
   local tags = ''
   if #taglist > 0 then
-    tags = ':'..table.concat(taglist, ':')..':'
+    tags = ':' .. table.concat(taglist, ':') .. ':'
   end
   return tags
 end

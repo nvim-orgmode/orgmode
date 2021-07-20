@@ -12,6 +12,6 @@ describe('Utils', function()
       table.insert(acc, num * 2)
       return acc
     end, {})
-    assert.are.same({2, 4, 6}, multiplied)
+    assert.are.same({ 2, 4, 6 }, multiplied)
   end)
 end)
