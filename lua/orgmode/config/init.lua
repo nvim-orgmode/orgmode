@@ -9,14 +9,16 @@ local Config = {}
 ---@param opts? table
 function Config:new(opts)
   local data = {
-    opts = vim.tbl_deep_extend('force', defaults, opts or {})
+    opts = vim.tbl_deep_extend('force', defaults, opts or {}),
   }
   setmetatable(data, self)
   return data
 end
 
 function Config:__index(key)
-  if self.opts[key] then return self.opts[key] end
+  if self.opts[key] then
+    return self.opts[key]
+  end
   return rawget(getmetatable(self), key)
 end
 
@@ -29,7 +31,11 @@ end
 
 ---@return string[]
 function Config:get_all_files()
-  if not self.org_agenda_files or self.org_agenda_files == '' or (type(self.org_agenda_files) == 'table' and vim.tbl_isempty(self.org_agenda_files)) then
+  if
+    not self.org_agenda_files
+    or self.org_agenda_files == ''
+    or (type(self.org_agenda_files) == 'table' and vim.tbl_isempty(self.org_agenda_files))
+  then
     return {}
   end
   local files = self.org_agenda_files
@@ -40,7 +46,6 @@ function Config:get_all_files()
   local all_files = vim.tbl_map(function(file)
     return vim.fn.glob(vim.fn.fnamemodify(file, ':p'), 0, 1)
   end, files)
-
 
   all_files = vim.tbl_flatten(all_files)
 
@@ -63,28 +68,32 @@ end
 ---@return string|number
 function Config:get_agenda_span()
   local span = self.opts.org_agenda_span
-  local valid_spans = {'day', 'month', 'week', 'year'}
+  local valid_spans = { 'day', 'month', 'week', 'year' }
   if type(span) == 'string' and not vim.tbl_contains(valid_spans, span) then
-    utils.echo_warning(string.format(
-      'Invalid agenda span %s. Valid spans: %s. Falling back to week',
-      span,
-      table.concat(valid_spans, ', ')
-    ))
+    utils.echo_warning(
+      string.format(
+        'Invalid agenda span %s. Valid spans: %s. Falling back to week',
+        span,
+        table.concat(valid_spans, ', ')
+      )
+    )
     span = 'week'
   end
   if type(span) == 'number' and span < 0 then
-    utils.echo_warning(string.format(
-      'Invalid agenda span number %d. Must be 0 or more. Falling back to week',
-      span,
-      table.concat(valid_spans, ', ')
-    ))
+    utils.echo_warning(
+      string.format(
+        'Invalid agenda span number %d. Must be 0 or more. Falling back to week',
+        span,
+        table.concat(valid_spans, ', ')
+      )
+    )
     span = 'week'
   end
   return span
 end
 
 function Config:get_todo_keywords()
-  local types = { TODO = {}, DONE = {}, ALL = {} };
+  local types = { TODO = {}, DONE = {}, ALL = {} }
   local type = 'TODO'
   for _, word in ipairs(self.opts.org_todo_keywords) do
     if word == '|' then
@@ -95,36 +104,49 @@ function Config:get_todo_keywords()
     end
   end
   if #types.DONE == 0 then
-    types.DONE = {table.remove(types.TODO, #types.TODO)}
+    types.DONE = { table.remove(types.TODO, #types.TODO) }
   end
   return types
 end
 
 function Config:setup_mappings(category)
-  if self.opts.mappings.disable_all then return end
+  if self.opts.mappings.disable_all then
+    return
+  end
   if not category then
     utils.keymap('n', self.opts.mappings.global.org_agenda, '<cmd>lua require("orgmode").action("agenda.prompt")<CR>')
     utils.keymap('n', self.opts.mappings.global.org_capture, '<cmd>lua require("orgmode").action("capture.prompt")<CR>')
     return
   end
-  if not self.opts.mappings[category] then return end
+  if not self.opts.mappings[category] then
+    return
+  end
 
   for name, key in pairs(self.opts.mappings[category]) do
     if mappings[category] and mappings[category][name] then
-      local map = vim.tbl_map(function(i) return string.format('"%s"', i) end, mappings[category][name])
+      local map = vim.tbl_map(function(i)
+        return string.format('"%s"', i)
+      end, mappings[category][name])
       local keys = key
       if type(keys) == 'string' then
         keys = { keys }
       end
       for _, k in ipairs(keys) do
-        utils.buf_keymap(0, 'n', k, string.format('<cmd>lua require("orgmode").action(%s)<CR>', table.concat(map, ', ')))
+        utils.buf_keymap(
+          0,
+          'n',
+          k,
+          string.format('<cmd>lua require("orgmode").action(%s)<CR>', table.concat(map, ', '))
+        )
       end
     end
   end
 end
 
 function Config:parse_archive_location(file, archive_loc)
-  if self:is_archive_file(file) then return nil end
+  if self:is_archive_file(file) then
+    return nil
+  end
 
   archive_loc = archive_loc or self.opts.org_archive_location
   -- TODO: Support archive to headline
@@ -145,7 +167,7 @@ function Config:get_inheritable_tags(headline)
     return {}
   end
   if vim.tbl_isempty(self.opts.org_tags_exclude_from_inheritance) then
-    return {unpack(headline.tags)}
+    return { unpack(headline.tags) }
   end
 
   return vim.tbl_filter(function(tag)

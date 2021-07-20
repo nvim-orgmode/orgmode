@@ -44,7 +44,7 @@ describe('Content parser', function()
           end_line = 1,
           start_col = 11,
           end_col = 26,
-        })
+        }),
       }),
       Date.from_string('2021-05-12 Wed 13:30 +1w', {
         type = 'SCHEDULED',
@@ -54,7 +54,7 @@ describe('Content parser', function()
           end_line = 1,
           start_col = 39,
           end_col = 64,
-        })
+        }),
       }),
       Date.from_string('2021-05-16 Sun 15:45', {
         type = 'CLOSED',
@@ -64,8 +64,8 @@ describe('Content parser', function()
           end_line = 1,
           start_col = 74,
           end_col = 95,
-        })
-      })
+        }),
+      }),
     }, content.dates)
   end)
 
@@ -76,7 +76,10 @@ describe('Content parser', function()
       parent = { id = 0, level = 0 },
     })
     assert.are.same(Types.CONTENT, content.type)
-    assert.are.same('# DEADLINE: <2021-05-15 Sat> SCHEDULED: <2021-05-12 Wed 13:30 +1w> CLOSED: <2021-05-16 Sun 15:45>', content.line)
+    assert.are.same(
+      '# DEADLINE: <2021-05-15 Sat> SCHEDULED: <2021-05-12 Wed 13:30 +1w> CLOSED: <2021-05-16 Sun 15:45>',
+      content.line
+    )
     assert.are.same({}, content.dates)
     assert.are.same({ id = 0, level = 0 }, content.parent)
     assert.are.same(0, content.level)

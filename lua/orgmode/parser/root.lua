@@ -154,16 +154,22 @@ function Root:get_current_item()
 end
 
 function Root:get_headlines()
-  if self.is_archive_file then return {} end
-  return vim.tbl_filter(function(item) return item:is_headline() end, self.items)
+  if self.is_archive_file then
+    return {}
+  end
+  return vim.tbl_filter(function(item)
+    return item:is_headline()
+  end, self.items)
 end
 
 ---@return Headline[]
 function Root:get_opened_headlines()
-  if self.is_archive_file then return {} end
+  if self.is_archive_file then
+    return {}
+  end
 
   local headlines = vim.tbl_filter(function(item)
-   return item.type == Types.HEADLINE and not item:is_archived()
+    return item.type == Types.HEADLINE and not item:is_archived()
   end, self.items)
 
   table.sort(headlines, function(a, b)
@@ -175,23 +181,29 @@ end
 
 ---@return Headline[]
 function Root:get_opened_unfinished_headlines()
-  if self.is_archive_file then return {} end
+  if self.is_archive_file then
+    return {}
+  end
 
   return vim.tbl_filter(function(item)
-   return item.type == Types.HEADLINE and not item:is_archived() and not item:is_done()
+    return item.type == Types.HEADLINE and not item:is_archived() and not item:is_done()
   end, self.items)
 end
 
 function Root:get_unfinished_todo_entries()
-  if self.is_archive_file then return {} end
+  if self.is_archive_file then
+    return {}
+  end
 
   return vim.tbl_filter(function(item)
-   return item.type == Types.HEADLINE and not item:is_archived() and item:is_todo()
+    return item.type == Types.HEADLINE and not item:is_archived() and item:is_todo()
   end, self.items)
 end
 
 function Root:find_headlines_matching_search_term(search_term, no_escape)
-  if self.is_archive_file then return {} end
+  if self.is_archive_file then
+    return {}
+  end
   local term = search_term:lower()
   if not no_escape then
     term = vim.pesc(term)
@@ -216,7 +228,7 @@ end
 
 function Root:find_headlines_by_title(title)
   return vim.tbl_filter(function(item)
-    return item.type == Types.HEADLINE and item.title:lower():match('^'..vim.pesc(title:lower()))
+    return item.type == Types.HEADLINE and item.title:lower():match('^' .. vim.pesc(title:lower()))
   end, self.items)
 end
 
@@ -224,7 +236,7 @@ function Root:find_headlines_with_property_matching(property_name, term)
   return vim.tbl_filter(function(item)
     return item.type == Types.HEADLINE
       and item.properties.items[property_name]
-      and item.properties.items[property_name]:lower():match('^'..vim.pesc(term:lower()))
+      and item.properties.items[property_name]:lower():match('^' .. vim.pesc(term:lower()))
   end, self.items)
 end
 
@@ -244,17 +256,21 @@ function Root:get_closest_headline(id)
 end
 
 function Root:get_headline_lines(headline)
-  return {unpack(self.lines, headline.range.start_line, headline.range.end_line)}
+  return { unpack(self.lines, headline.range.start_line, headline.range.end_line) }
 end
 
 ---@param search Search
 ---@param todo_only boolean
 ---@return Headline[]
 function Root:apply_search(search, todo_only)
-  if self.is_archive_file then return {} end
+  if self.is_archive_file then
+    return {}
+  end
 
   return vim.tbl_filter(function(item)
-    if not item:is_headline() or item:is_archived() or (todo_only and not item:is_todo()) then return false end
+    if not item:is_headline() or item:is_archived() or (todo_only and not item:is_todo()) then
+      return false
+    end
     return search:check({
       props = item.properties.items,
       tags = item.tags,
@@ -270,7 +286,9 @@ end
 
 function Root:_add_source_block(content)
   local filetype = content.line:match('^%s*#%+BEGIN_SRC%s+(.*)%s*$')
-  if not filetype then return end
+  if not filetype then
+    return
+  end
   filetype = vim.trim(filetype)
   if not vim.tbl_contains(self.source_code_filetypes, filetype) then
     table.insert(self.source_code_filetypes, filetype)

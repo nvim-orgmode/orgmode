@@ -7,18 +7,21 @@ describe('Org file', function()
     local lines = {
       '* TODO Test orgmode :WORK:',
       'DEADLINE: <2021-05-10 11:00 +1w>',
-      '* TODO Another todo'
+      '* TODO Another todo',
     }
     local parsed = parser.parse(lines, 'work')
     local api = mock(vim.api, true)
     api.nvim_call_function.returns(true)
     local headline = parsed:get_item(1)
     headline:add_properties({ CATEGORY = 'testing' })
-    assert.stub(api.nvim_call_function).was_called_with('append', { 2, {
-      '  :PROPERTIES:',
-      '  :CATEGORY: testing',
-      '  :END:'
-    }})
+    assert.stub(api.nvim_call_function).was_called_with(
+      'append',
+      { 2, {
+        '  :PROPERTIES:',
+        '  :CATEGORY: testing',
+        '  :END:',
+      } }
+    )
     mock.revert(api)
   end)
 
@@ -29,14 +32,14 @@ describe('Org file', function()
       '  :PROPERTIES:',
       '  :CATEGORY: Testing',
       '  :END:',
-      '* TODO Another todo'
+      '* TODO Another todo',
     }
     local parsed = parser.parse(lines, 'work')
     local api = mock(vim.api, true)
     api.nvim_call_function.returns(true)
     local headline = parsed:get_item(1)
     headline:add_properties({ CUSTOM_ID = '1' })
-    assert.stub(api.nvim_call_function).was.called_with('append', { 3, '  :CUSTOM_ID: 1'})
+    assert.stub(api.nvim_call_function).was.called_with('append', { 3, '  :CUSTOM_ID: 1' })
     mock.revert(api)
   end)
 
@@ -47,14 +50,14 @@ describe('Org file', function()
       '  :PROPERTIES:',
       '  :CATEGORY: Testing',
       '  :END:',
-      '* TODO Another todo'
+      '* TODO Another todo',
     }
     local parsed = parser.parse(lines, 'work')
     local api = mock(vim.api, true)
     api.nvim_call_function.returns(true)
     local headline = parsed:get_item(1)
     headline:add_properties({ CATEGORY = 'Newvalue' })
-    assert.stub(api.nvim_call_function).was.called_with('setline', { 4, '  :CATEGORY: Newvalue'})
+    assert.stub(api.nvim_call_function).was.called_with('setline', { 4, '  :CATEGORY: Newvalue' })
     mock.revert(api)
   end)
 
@@ -63,7 +66,7 @@ describe('Org file', function()
     local lines = {
       '* TODO Test orgmode :WORK:',
       'DEADLINE: <2021-05-10 11:00>',
-      '* TODO Another todo'
+      '* TODO Another todo',
     }
     local parsed = parser.parse(lines, 'work')
     local api = mock(vim.api, true)
@@ -73,13 +76,13 @@ describe('Org file', function()
     assert.are.same(true, result)
     assert.stub(api.nvim_call_function).was.called_with('setline', {
       2,
-      'DEADLINE: <2021-05-10 11:00> CLOSED: ['..now..']',
+      'DEADLINE: <2021-05-10 11:00> CLOSED: [' .. now .. ']',
     })
 
     lines = {
       '* TODO Test orgmode :WORK:',
-      'DEADLINE: <2021-05-10 11:00> CLOSED: ['..now..']',
-      '* TODO Another todo'
+      'DEADLINE: <2021-05-10 11:00> CLOSED: [' .. now .. ']',
+      '* TODO Another todo',
     }
     parsed = parser.parse(lines, 'work')
     headline = parsed:get_item(1)
@@ -92,8 +95,8 @@ describe('Org file', function()
     local now = Date.now():to_string()
     local lines = {
       '* TODO Test orgmode :WORK:',
-      'DEADLINE: <2021-05-10 11:00> CLOSED: ['..now..']',
-      '* TODO Another todo'
+      'DEADLINE: <2021-05-10 11:00> CLOSED: [' .. now .. ']',
+      '* TODO Another todo',
     }
     local parsed = parser.parse(lines, 'work')
     local api = mock(vim.api, true)
@@ -109,7 +112,7 @@ describe('Org file', function()
     lines = {
       '* TODO Test orgmode :WORK:',
       'DEADLINE: <2021-05-10 11:00>',
-      '* TODO Another todo'
+      '* TODO Another todo',
     }
     parsed = parser.parse(lines, 'work')
     headline = parsed:get_item(1)
@@ -118,8 +121,8 @@ describe('Org file', function()
 
     lines = {
       '* TODO Test orgmode :WORK:',
-      'CLOSED: ['..now..']',
-      '* TODO Another todo'
+      'CLOSED: [' .. now .. ']',
+      '* TODO Another todo',
     }
     parsed = parser.parse(lines, 'work')
     headline = parsed:get_item(1)

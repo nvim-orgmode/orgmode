@@ -14,10 +14,10 @@ local Calendar = {
   callback = nil,
   namespace = vim.api.nvim_create_namespace('org_calendar'),
   date = nil,
-  month = Date.today():start_of('month')
+  month = Date.today():start_of('month'),
 }
 
-vim.cmd[[hi default link OrgCalendarToday DiffText]]
+vim.cmd([[hi default link OrgCalendarToday DiffText]])
 
 ---@param data table
 function Calendar.new(data)
@@ -45,7 +45,7 @@ function Calendar.open()
   vim.api.nvim_buf_set_name(Calendar.buf, 'orgcalendar')
   Calendar.win = vim.api.nvim_open_win(Calendar.buf, true, opts)
 
-  vim.cmd[[autocmd BufWipeout <buffer> lua require('orgmode.objects.calendar').dispose()]]
+  vim.cmd([[autocmd BufWipeout <buffer> lua require('orgmode.objects.calendar').dispose()]])
 
   Calendar.render()
 
@@ -71,7 +71,7 @@ function Calendar.open()
 end
 
 function Calendar.render()
-  local first_row = {'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'}
+  local first_row = { 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun' }
   local content = { {}, {}, {}, {}, {}, {} }
   local start_weekday = Calendar.month:get_isoweekday()
   while start_weekday > 1 do
@@ -82,7 +82,7 @@ function Calendar.render()
   local is_today_month = today:is_same(Calendar.month, 'month')
   local dates = Calendar.month:get_range_until(Calendar.month:end_of('month'))
   local month = Calendar.month:format('%B %Y')
-  month = string.rep(' ', math.floor((36 - month:len()) / 2))..month
+  month = string.rep(' ', math.floor((36 - month:len()) / 2)) .. month
   local start_row = 1
   for _, date in ipairs(dates) do
     table.insert(content[start_row], date:format('%d'))
@@ -91,9 +91,9 @@ function Calendar.render()
     end
   end
   local value = vim.tbl_map(function(item)
-    return ' '..table.concat(item, ' | ')
+    return ' ' .. table.concat(item, ' | ')
   end, content)
-  first_row = ' '..table.concat(first_row, '  ')
+  first_row = ' ' .. table.concat(first_row, '  ')
   table.insert(value, 1, first_row)
   table.insert(value, 1, month)
   table.insert(value, ' [<] - prev month  [>] - next month')
@@ -140,7 +140,7 @@ function Calendar:select()
   day = tonumber(day)
   local selected_date = Calendar.month:set({ day = day })
   local cb = Calendar.callback
-  vim.cmd[[bw!]]
+  vim.cmd([[bw!]])
   if type(cb) == 'function' then
     cb(selected_date)
   end

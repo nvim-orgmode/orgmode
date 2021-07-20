@@ -36,18 +36,23 @@ function OrgMappings:archive()
   item = file:get_closest_headline()
   local archive_location = file:get_archive_file_location()
   self.capture:refile_file_headline_to_archive(file, item, archive_location)
-  Files.reload(archive_location, vim.schedule_wrap(function()
-    Files.update_file(archive_location, function(archive_file)
-      local last_item = archive_file:get_closest_headline(vim.fn.line('$'))
-      if not last_item then return end
-      last_item:add_properties({
-        ARCHIVE_TIME = Date.now():to_string(),
-        ARCHIVE_FILE = file.file,
-        ARCHIVE_CATEGORY = item.category,
-        ARCHIVE_TODO = item.todo_keyword.value,
-      })
+  Files.reload(
+    archive_location,
+    vim.schedule_wrap(function()
+      Files.update_file(archive_location, function(archive_file)
+        local last_item = archive_file:get_closest_headline(vim.fn.line('$'))
+        if not last_item then
+          return
+        end
+        last_item:add_properties({
+          ARCHIVE_TIME = Date.now():to_string(),
+          ARCHIVE_FILE = file.file,
+          ARCHIVE_CATEGORY = item.category,
+          ARCHIVE_TODO = item.todo_keyword.value,
+        })
+      end)
     end)
-  end))
+  )
 end
 
 function OrgMappings:set_tags()
@@ -61,7 +66,9 @@ function OrgMappings:toggle_archive_tag()
   local headline = Files.get_current_file():get_closest_headline()
   local own_tags = headline:get_own_tags()
   if vim.tbl_contains(own_tags, 'ARCHIVE') then
-    own_tags = vim.tbl_filter(function(tag) return tag ~= 'ARCHIVE' end, own_tags)
+    own_tags = vim.tbl_filter(function(tag)
+      return tag ~= 'ARCHIVE'
+    end, own_tags)
   else
     table.insert(own_tags, 'ARCHIVE')
   end
@@ -71,18 +78,18 @@ end
 function OrgMappings:cycle()
   local is_fold_closed = vim.fn.foldclosed('.') ~= -1
   if is_fold_closed then
-    return vim.cmd[[norm!zo]]
+    return vim.cmd([[norm!zo]])
   end
-  vim.cmd[[norm!j]]
+  vim.cmd([[norm!j]])
   local is_next_item_closed = vim.fn.foldclosed('.') ~= -1
-  vim.cmd[[norm!k]]
+  vim.cmd([[norm!k]])
   if is_next_item_closed then
-    return vim.cmd[[norm!zczO]]
+    return vim.cmd([[norm!zczO]])
   end
   if vim.fn.foldlevel('.') == 1 then
-    return vim.cmd[[norm!zCzxzc]]
+    return vim.cmd([[norm!zCzxzc]])
   end
-  return vim.cmd[[norm!zc]]
+  return vim.cmd([[norm!zc]])
 end
 
 function OrgMappings:global_cycle()
@@ -107,7 +114,9 @@ function OrgMappings:toggle_checkbox()
   local line = vim.fn.getline('.')
   local pattern = '^(%s*[%-%+]%s*%[([%sXx%-]?)%])'
   local checkbox, state = line:match(pattern)
-  if not checkbox then return end
+  if not checkbox then
+    return
+  end
   local new_val = vim.trim(state) == '' and '[X]' or '[ ]'
   checkbox = checkbox:gsub('%[[%sXx%-]?%]$', new_val)
   local new_line = line:gsub(pattern, checkbox)
@@ -124,7 +133,9 @@ end
 
 function OrgMappings:change_date()
   local date = self:_get_date_under_cursor()
-  if not date then return end
+  if not date then
+    return
+  end
   local cb = function(new_date)
     self:_replace_date(new_date)
   end
@@ -137,7 +148,9 @@ function OrgMappings:todo_next_state()
   local old_state = item.todo_keyword.value
   self:_change_todo_state('next')
   item = Files.get_current_file():get_closest_headline()
-  if not item:is_done() and not was_done then return item end
+  if not item:is_done() and not was_done then
+    return item
+  end
 
   local repeater_dates = item:get_repeater_dates()
   if #repeater_dates == 0 then
@@ -156,7 +169,12 @@ function OrgMappings:todo_next_state()
   end
 
   self:_change_todo_state('reset')
-  local state_change = string.format('- State "%s" from "%s" [%s]', item.todo_keyword.value, old_state, Date.now():to_string())
+  local state_change = string.format(
+    '- State "%s" from "%s" [%s]',
+    item.todo_keyword.value,
+    old_state,
+    Date.now():to_string()
+  )
 
   local data = item:add_properties({ LAST_REPEAT = Date.now():to_string() })
   if data.is_new then
@@ -179,7 +197,7 @@ function OrgMappings:do_promote(whole_subtree)
   local foldclosed = vim.fn.foldclosed('.')
   item:promote(1, whole_subtree)
   if foldclosed > -1 and vim.fn.foldclosed('.') == -1 then
-    vim.cmd[[norm!zc]]
+    vim.cmd([[norm!zc]])
   end
 end
 
@@ -188,7 +206,7 @@ function OrgMappings:do_demote(whole_subtree)
   local foldclosed = vim.fn.foldclosed('.')
   item:demote(1, whole_subtree)
   if foldclosed > -1 and vim.fn.foldclosed('.') == -1 then
-    vim.cmd[[norm!zc]]
+    vim.cmd([[norm!zc]])
   end
 end
 
@@ -196,44 +214,44 @@ function OrgMappings:handle_return(suffix)
   suffix = suffix or ''
   local item = Files.get_current_file():get_current_item()
   if item:is_headline() then
-    vim.fn.append(vim.fn.line('.'), {'', string.rep('*', item.level)..' '..suffix})
+    vim.fn.append(vim.fn.line('.'), { '', string.rep('*', item.level) .. ' ' .. suffix })
     vim.fn.cursor(vim.fn.line('.') + 2, 0)
-    return vim.cmd[[startinsert!]]
+    return vim.cmd([[startinsert!]])
   end
   local checkbox = item:is_checkbox()
   if checkbox then
-    vim.fn.append(vim.fn.line('.'), checkbox..' [ ] ')
+    vim.fn.append(vim.fn.line('.'), checkbox .. ' [ ] ')
     vim.fn.cursor(vim.fn.line('.') + 1, 0)
-    return vim.cmd[[startinsert!]]
+    return vim.cmd([[startinsert!]])
   end
   local plain_list = item:is_plain_list()
   if plain_list then
     vim.fn.append(vim.fn.line('.'), plain_list)
     vim.fn.cursor(vim.fn.line('.') + 1, 0)
-    return vim.cmd[[startinsert!]]
+    return vim.cmd([[startinsert!]])
   end
 end
 
 function OrgMappings:insert_heading_respect_content(suffix)
   suffix = suffix or ''
   local item = Files.get_current_file():get_closest_headline()
-  local line = {string.rep('*', item.level)..' '..suffix, ''}
+  local line = { string.rep('*', item.level) .. ' ' .. suffix, '' }
   if #item.content > 0 and vim.trim(item.content[#item.content].line) ~= '' then
     table.insert(line, 1, '')
   end
   vim.fn.append(item.range.end_line, line)
   vim.fn.cursor(item.range.end_line + #line - 1, 0)
-  return vim.cmd[[startinsert!]]
+  return vim.cmd([[startinsert!]])
 end
 
 function OrgMappings:insert_todo_heading_respect_content()
-  return self:insert_heading_respect_content(config:get_todo_keywords().TODO[1]..' ')
+  return self:insert_heading_respect_content(config:get_todo_keywords().TODO[1] .. ' ')
 end
 
 function OrgMappings:insert_todo_heading()
   local item = Files.get_current_file():get_closest_headline()
   vim.fn.cursor(item.range.start_line, 0)
-  return self:handle_return(config:get_todo_keywords().TODO[1]..' ')
+  return self:handle_return(config:get_todo_keywords().TODO[1] .. ' ')
 end
 
 function OrgMappings:move_subtree_up()
@@ -242,7 +260,9 @@ function OrgMappings:move_subtree_up()
   if not prev_headline then
     return utils.echo_warning('Cannot move past superior level.')
   end
-  vim.cmd(string.format(':%d,%dmove %d', item.range.start_line, item.range.end_line, prev_headline.range.start_line - 1))
+  vim.cmd(
+    string.format(':%d,%dmove %d', item.range.start_line, item.range.end_line, prev_headline.range.start_line - 1)
+  )
 end
 
 function OrgMappings:move_subtree_down()
@@ -265,17 +285,19 @@ function OrgMappings:open_at_point()
   end
 
   local link = self:_get_link_under_cursor()
-  if not link then return end
+  if not link then
+    return
+  end
   local parts = vim.split(link, '][', true)
   local url = parts[1]
   if url:find('^file:') then
-      if url:find(' +') then
-          parts = vim.split(url, ' +', true)
-          url = parts[1]
-          local line_number = parts[2]
-          return vim.cmd(string.format('edit +%s %s', line_number ,url:sub(6)))
-      end
-      return vim.cmd(string.format('edit %s', url:sub(6)))
+    if url:find(' +') then
+      parts = vim.split(url, ' +', true)
+      url = parts[1]
+      local line_number = parts[2]
+      return vim.cmd(string.format('edit +%s %s', line_number, url:sub(6)))
+    end
+    return vim.cmd(string.format('edit %s', url:sub(6)))
   end
   if url:find('^https?://') then
     if not vim.g.loaded_netrwPlugin then
@@ -290,8 +312,13 @@ function OrgMappings:open_at_point()
   local current_headline = Files.get_current_file():get_closest_headline()
   local headlines = vim.tbl_filter(function(headline)
     return headline.line ~= current_headline.line and headline.id ~= current_headline.id
-  end, Hyperlinks.find_matching_links(url, true))
-  if #headlines == 0 then return end
+  end, Hyperlinks.find_matching_links(
+    url,
+    true
+  ))
+  if #headlines == 0 then
+    return
+  end
   local headline = headlines[1]
   if #headlines > 1 then
     local longest_headline = utils.reduce(headlines, function(acc, h)
@@ -299,11 +326,13 @@ function OrgMappings:open_at_point()
     end, 0)
     local options = {}
     for i, h in ipairs(headlines) do
-      table.insert(options, string.format('%d) %-'..(longest_headline)..'s (%s)', i, h.line, h.file))
+      table.insert(options, string.format('%d) %-' .. longest_headline .. 's (%s)', i, h.line, h.file))
     end
-    vim.cmd[[echo "Multiple targets found. Select target:"]]
+    vim.cmd([[echo "Multiple targets found. Select target:"]])
     local choice = vim.fn.inputlist(options)
-    if choice < 1 or choice > #headlines then return end
+    if choice < 1 or choice > #headlines then
+      return
+    end
     headline = headlines[choice]
   end
   vim.cmd(string.format('edit %s', headline.file))
@@ -324,23 +353,33 @@ end
 
 function OrgMappings:forward_heading_same_level()
   local item = Files.get_current_file():get_closest_headline()
-  if not item or not item:is_headline() then return end
+  if not item or not item:is_headline() then
+    return
+  end
   local next_headline_same_level = item:get_next_headline_same_level()
-  if not next_headline_same_level then return end
+  if not next_headline_same_level then
+    return
+  end
   return vim.fn.cursor(next_headline_same_level.range.start_line, 1)
 end
 
 function OrgMappings:backward_heading_same_level()
   local item = Files.get_current_file():get_closest_headline()
-  if not item or not item:is_headline() then return end
+  if not item or not item:is_headline() then
+    return
+  end
   local prev_headline_same_level = item:get_prev_headline_same_level()
-  if not prev_headline_same_level then return end
+  if not prev_headline_same_level then
+    return
+  end
   return vim.fn.cursor(prev_headline_same_level.range.start_line, 1)
 end
 
 function OrgMappings:outline_up_heading()
   local item = Files.get_current_file():get_closest_headline()
-  if not item or not item:is_headline() then return end
+  if not item or not item:is_headline() then
+    return
+  end
   if item.level <= 1 then
     return utils.echo_info('Already at top level of the outline')
   end
@@ -365,13 +404,13 @@ function OrgMappings:_change_todo_state(direction)
   local stars = string.rep('%*', item.level)
   local old_state = todo.value
   if old_state ~= '' then
-    old_state = old_state..'%s+'
+    old_state = old_state .. '%s+'
   end
   local new_state = next_state.value
   if new_state ~= '' then
-    new_state = new_state..' '
+    new_state = new_state .. ' '
   end
-  local new_line = vim.fn.getline(linenr):gsub('^'..stars..'%s+'..old_state, stars..' '..new_state)
+  local new_line = vim.fn.getline(linenr):gsub('^' .. stars .. '%s+' .. old_state, stars .. ' ' .. new_state)
   vim.fn.setline(linenr, new_line)
 end
 
@@ -379,7 +418,10 @@ end
 function OrgMappings:_replace_date(date)
   local line = vim.fn.getline(date.range.start_line)
   local view = vim.fn.winsaveview()
-  vim.fn.setline(date.range.start_line, string.format('%s%s%s', line:sub(1, date.range.start_col), date:to_string(), line:sub(date.range.end_col)))
+  vim.fn.setline(
+    date.range.start_line,
+    string.format('%s%s%s', line:sub(1, date.range.start_col), date:to_string(), line:sub(date.range.end_col))
+  )
   vim.fn.winrestview(view)
 end
 
@@ -392,7 +434,9 @@ function OrgMappings:_get_date_under_cursor()
     return date.range:is_in_range(line, col)
   end, item.dates)
 
-  if #dates == 0 then return nil end
+  if #dates == 0 then
+    return nil
+  end
 
   return dates[1]
 end
@@ -429,12 +473,14 @@ end
 function OrgMappings:_set_headline_tags(headline, tags_string)
   local tags = tags_string:gsub('^:+', ''):gsub(':+$', ''):gsub(':+', ':')
   if tags ~= '' then
-    tags = ':'..tags..':'
+    tags = ':' .. tags .. ':'
   end
-  local line_without_tags = headline.line:gsub(vim.pesc(utils.tags_to_string(headline:get_own_tags()))..'%s*$', ''):gsub('%s*$', '')
+  local line_without_tags = headline.line
+    :gsub(vim.pesc(utils.tags_to_string(headline:get_own_tags())) .. '%s*$', '')
+    :gsub('%s*$', '')
   local spaces = 80 - math.min(line_without_tags:len(), 79)
   local new_line = string.format('%s%s%s', line_without_tags, string.rep(' ', spaces), tags):gsub('%s*$', '')
-  return vim.fn.setline( headline.range.start_line, new_line)
+  return vim.fn.setline(headline.range.start_line, new_line)
 end
 
 ---@return string|nil

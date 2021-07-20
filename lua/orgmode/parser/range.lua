@@ -38,8 +38,7 @@ end
 ---@param col number
 ---@return boolean
 function Range:is_in_range(line, col)
-  return line >= self.start_line and line <= self.end_line
-  and col >= self.start_col and col <= self.end_col
+  return line >= self.start_line and line <= self.end_line and col >= self.start_col and col <= self.end_col
 end
 
 return Range

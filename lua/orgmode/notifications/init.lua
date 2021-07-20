@@ -21,9 +21,13 @@ function Notifications:start_timer()
   self:stop_timer()
   self.timer = vim.loop.new_timer()
   self:notify(Date.now():start_of('minute'))
-  self.timer:start((60 - os.date('%S')) * 1000, 60000, vim.schedule_wrap(function()
-    self:notify(Date.now())
-  end))
+  self.timer:start(
+    (60 - os.date('%S')) * 1000,
+    60000,
+    vim.schedule_wrap(function()
+      self:notify(Date.now())
+    end)
+  )
 end
 
 function Notifications:stop_timer()
@@ -46,7 +50,7 @@ function Notifications:notify(time)
     utils.concat(result, {
       string.format('# %s (%s)', task.category, task.humanized_duration),
       string.format('%s %s %s', string.rep('*', task.level), task.todo, task.title),
-      string.format('%s: <%s>', task.type, task.time:to_string())
+      string.format('%s: <%s>', task.type, task.time:to_string()),
     })
   end
 
@@ -62,7 +66,7 @@ function Notifications:cron()
   else
     self:_cron_notifier(tasks)
   end
-  vim.cmd[[qall!]]
+  vim.cmd([[qall!]])
 end
 
 ---@param tasks table[]
@@ -73,11 +77,11 @@ function Notifications:_cron_notifier(tasks)
     local date = string.format('%s: %s', task.type, task.time:to_string())
 
     if vim.fn.executable('notify-send') then
-      vim.loop.spawn('notify-send', { args = { string.format('%s\n%s\n%s', title, subtitle, date) }})
+      vim.loop.spawn('notify-send', { args = { string.format('%s\n%s\n%s', title, subtitle, date) } })
     end
 
     if vim.fn.executable('terminal-notifier') then
-      vim.loop.spawn('terminal-notifier', { args = { '-title', title, '-subtitle', subtitle, '-message', date }})
+      vim.loop.spawn('terminal-notifier', { args = { '-title', title, '-subtitle', subtitle, '-message', date } })
     end
   end
 end
@@ -168,6 +172,5 @@ function Notifications:_check_reminders(date, time)
 
   return result
 end
-
 
 return Notifications

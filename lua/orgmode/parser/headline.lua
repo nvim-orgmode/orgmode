@@ -81,13 +81,19 @@ function Headline:has_priority()
 end
 
 function Headline:get_priority_number()
-  if self.priority == config.org_priority_highest then return 2000 end
-  if self.priority == config.org_priority_lowest then return 0 end
+  if self.priority == config.org_priority_highest then
+    return 2000
+  end
+  if self.priority == config.org_priority_lowest then
+    return 0
+  end
   return 1000
 end
 
 function Headline:get_next_headline_same_level()
-  if self:is_last_headline() then return nil end
+  if self:is_last_headline() then
+    return nil
+  end
   for _, headline in ipairs(self.parent.headlines) do
     if headline.id > self.id and headline.level == self.level then
       return headline
@@ -97,7 +103,9 @@ function Headline:get_next_headline_same_level()
 end
 
 function Headline:get_prev_headline_same_level()
-  if self:is_first_headline() then return nil end
+  if self:is_first_headline() then
+    return nil
+  end
   local len = #self.parent.headlines
   for i = 1, len do
     local headline = self.parent.headlines[len + 1 - i]
@@ -164,7 +172,7 @@ function Headline:add_properties(properties)
   vim.api.nvim_call_function('append', { properties_line, content })
   return {
     is_new = true,
-    end_line = properties_line + #content
+    end_line = properties_line + #content,
   }
 end
 
@@ -184,7 +192,9 @@ end
 
 ---@return boolean
 function Headline:is_archived()
-  return self.archived or #vim.tbl_filter(function(tag) return tag:upper() == 'ARCHIVE' end, self.tags) > 0
+  return self.archived or #vim.tbl_filter(function(tag)
+    return tag:upper() == 'ARCHIVE'
+  end, self.tags) > 0
 end
 
 ---@return Date[]
@@ -288,25 +298,29 @@ end
 
 function Headline:add_closed_date()
   local closed_date = self:_get_closed_date()
-  if closed_date then return nil end
+  if closed_date then
+    return nil
+  end
   local planning = self.content[1]
   if planning and planning:is_planning() then
     return vim.api.nvim_call_function('setline', {
       planning.range.start_line,
-      string.format('%s CLOSED: [%s]', planning.line, Date.now():to_string())
+      string.format('%s CLOSED: [%s]', planning.line, Date.now():to_string()),
     })
   end
   return vim.api.nvim_call_function('append', {
     self.range.start_line,
-    string.format('%sCLOSED: [%s]', string.rep(' ', self.level + 1), Date.now():to_string())
+    string.format('%sCLOSED: [%s]', string.rep(' ', self.level + 1), Date.now():to_string()),
   })
 end
 
 function Headline:remove_closed_date()
   local closed_date = self:_get_closed_date()
-  if not closed_date then return nil end
+  if not closed_date then
+    return nil
+  end
   local planning = self.content[1]
-  local new_line = planning.line:gsub('%s*CLOSED:%s*[%[<]'..vim.pesc(closed_date:to_string())..'[%]>]', '')
+  local new_line = planning.line:gsub('%s*CLOSED:%s*[%[<]' .. vim.pesc(closed_date:to_string()) .. '[%]>]', '')
   if vim.trim(new_line) == '' then
     return vim.api.nvim_call_function('deletebufline', { vim.api.nvim_get_current_buf(), planning.range.start_line })
   end
@@ -336,9 +350,9 @@ end
 function Headline:demote(amount, demote_child_headlines)
   amount = amount or 1
   demote_child_headlines = demote_child_headlines or false
-  vim.fn.setline(self.range.start_line, string.rep('*', amount)..self.line)
+  vim.fn.setline(self.range.start_line, string.rep('*', amount) .. self.line)
   for _, content in ipairs(self.content) do
-    vim.fn.setline(content.range.start_line, string.rep(' ', amount)..content.line)
+    vim.fn.setline(content.range.start_line, string.rep(' ', amount) .. content.line)
   end
   if demote_child_headlines then
     for _, headline in ipairs(self.headlines) do
@@ -371,7 +385,7 @@ function Headline:_parse_line()
   line = line:gsub('^%*+%s+', '')
 
   self:_parse_todo_keyword()
-  self.priority = line:match(self.todo_keyword.value..'%s+%[#([A-Z0-9])%]') or ''
+  self.priority = line:match(self.todo_keyword.value .. '%s+%[#([A-Z0-9])%]') or ''
   local parsed_tags = self:_parse_tags(line)
   self:_parse_title(line, parsed_tags)
   local dates = Date.parse_all_from_line(self.line, self.range.start_line)
@@ -384,11 +398,11 @@ function Headline:_parse_todo_keyword()
   local todo_keywords = config:get_todo_keywords()
   for _, word in ipairs(todo_keywords.ALL) do
     local star = self.line:match('^%*+%s+')
-    local keyword = self.line:match('^%*+%s+'..word..'%s+')
+    local keyword = self.line:match('^%*+%s+' .. word .. '%s+')
     -- If keyword doesn't have a space after it, check if whole line
     -- is just a keyword. For example: "* DONE"
     if not keyword then
-      keyword = self.line == star..word
+      keyword = self.line == star .. word
     end
     if keyword then
       local type = 'TODO'
@@ -403,7 +417,7 @@ function Headline:_parse_todo_keyword()
           end_line = self.range.start_line,
           start_col = #star + 1,
           end_col = #star + #word,
-        })
+        }),
       }
       break
     end
@@ -423,7 +437,7 @@ end
 -- NOTE: Exclude dates from title if it appears in agenda on that day
 function Headline:_parse_title(line, tags)
   local title = line
-  for _, exclude_pattern in ipairs({ self.todo_keyword.value, vim.pesc(':'..table.concat(tags, ':')..':')..'$' }) do
+  for _, exclude_pattern in ipairs({ self.todo_keyword.value, vim.pesc(':' .. table.concat(tags, ':') .. ':') .. '$' }) do
     title = title:gsub(exclude_pattern, '')
   end
   self.title = vim.trim(title)

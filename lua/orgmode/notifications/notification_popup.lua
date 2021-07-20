@@ -14,7 +14,9 @@ function NotificationPopup:new(opts)
 end
 
 function NotificationPopup:show()
-  if not self.content or self.content == '' then return end
+  if not self.content or self.content == '' then
+    return
+  end
   local opts = {
     relative = 'editor',
     width = 50,

@@ -1,7 +1,7 @@
 return {
   org_agenda_files = '',
   org_default_notes_file = '',
-  org_todo_keywords = {'TODO', '|', 'DONE'},
+  org_todo_keywords = { 'TODO', '|', 'DONE' },
   org_todo_keyword_faces = {},
   org_deadline_warning_days = 14,
   org_agenda_min_height = 16,
@@ -12,7 +12,7 @@ return {
     t = {
       description = 'Task',
       template = '* TODO %?\n  %u',
-    }
+    },
   },
   org_agenda_skip_scheduled_if_done = false,
   org_agenda_skip_deadline_if_done = false,
@@ -53,7 +53,7 @@ return {
       org_agenda_year_view = 'vy',
       org_agenda_quit = 'q',
       org_agenda_switch_to = '<CR>',
-      org_agenda_goto = {'<TAB>'},
+      org_agenda_goto = { '<TAB>' },
       org_agenda_goto_date = 'J',
       org_agenda_redo = 'r',
       org_agenda_show_help = '?',
@@ -95,6 +95,6 @@ return {
       org_backward_heading_same_level = '[[',
       outline_up_heading = 'g{',
       org_show_help = '?',
-    }
-  }
+    },
+  },
 }

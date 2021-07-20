@@ -9,7 +9,7 @@ local function foldexpr()
   local stars = line:match('^(%*+)%s+')
 
   if stars then
-    return '>'..stars:len()
+    return '>' .. stars:len()
   end
 
   if line:match('^%s*:END:%s*$') then
@@ -25,7 +25,9 @@ end
 
 local function noindent_mode()
   local prev_line = vim.fn.prevnonblank(vim.v.lnum - 1)
-  if prev_line <= 0 then return 0 end
+  if prev_line <= 0 then
+    return 0
+  end
   local line = vim.fn.getline(prev_line)
 
   local list_item = line:match('^(%s*[%+%-]%s+)')
@@ -42,7 +44,9 @@ local function indentexpr()
   end
 
   local prev_line = vim.fn.prevnonblank(vim.v.lnum - 1)
-  if prev_line <= 0 then return 0 end
+  if prev_line <= 0 then
+    return 0
+  end
   local line = vim.fn.getline(prev_line)
   if line:find('^%s*#%+%S+:') then
     return 0

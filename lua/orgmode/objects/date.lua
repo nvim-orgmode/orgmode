@@ -33,10 +33,10 @@ local Date = {}
 ---@return table
 local function set_date_opts(source, target, include_sec)
   target = target or {}
-  for _, field in ipairs({'year', 'month', 'day'}) do
+  for _, field in ipairs({ 'year', 'month', 'day' }) do
     target[field] = source[field]
   end
-  for _, field in ipairs({'hour', 'min'}) do
+  for _, field in ipairs({ 'hour', 'min' }) do
     target[field] = source[field] or 0
   end
   if include_sec then
@@ -133,7 +133,7 @@ local function parse_datetime(date, dayname, time, time_end, adjustments, data)
       month = tonumber(date_parts[2]),
       day = tonumber(date_parts[3]),
       hour = tonumber(time_end_parts[1]),
-      min = tonumber(time_end_parts[2])
+      min = tonumber(time_end_parts[2]),
     })
   end
   opts = vim.tbl_extend('force', opts, data or {})
@@ -157,7 +157,6 @@ local function parse_date(date, dayname, adjustments, data)
   opts = vim.tbl_extend('force', opts, data or {})
   return Date:new(opts)
 end
-
 
 ---@return Date
 local function today()
@@ -217,20 +216,20 @@ function Date:to_string()
   local date = ''
   local format = date_format
   if self.dayname then
-    format = format..' %a'
+    format = format .. ' %a'
   end
 
   if self.date_only then
     date = os.date(format, self.timestamp)
   else
-    date = os.date(format..' '..time_format, self.timestamp)
+    date = os.date(format .. ' ' .. time_format, self.timestamp)
     if self.timestamp_end then
-      date = date..'-'..os.date(time_format, self.timestamp_end)
+      date = date .. '-' .. os.date(time_format, self.timestamp_end)
     end
   end
 
   if #self.adjustments > 0 then
-    date = date..' '..table.concat(self.adjustments, ' ')
+    date = date .. ' ' .. table.concat(self.adjustments, ' ')
   end
 
   return date
@@ -238,10 +237,12 @@ end
 
 ---@return string
 function Date:format_time()
-  if self.date_only then return '' end
+  if self.date_only then
+    return ''
+  end
   local t = self:format(time_format)
   if self.timestamp_end then
-    t = t..'-'..os.date(time_format, self.timestamp_end)
+    t = t .. '-' .. os.date(time_format, self.timestamp_end)
   end
   return t
 end
@@ -270,7 +271,7 @@ function Date:_parse_adjustment(value)
   return {
     span = spans[span],
     amount = tonumber(amount),
-    is_negative = operation == '-'
+    is_negative = operation == '-',
   }
 end
 
@@ -285,11 +286,11 @@ function Date:start_of(span)
     span = spans[span]
   end
   local opts = {
-    day =  { hour = 0, min = 0 },
+    day = { hour = 0, min = 0 },
     month = { day = 1, hour = 0, min = 0 },
     year = { month = 1, day = 1, hour = 0, min = 0 },
     hour = { min = 0 },
-    minute = { sec = 0 }
+    minute = { sec = 0 },
   }
   if opts[span] then
     return self:set(opts[span])
@@ -317,7 +318,7 @@ function Date:end_of(span)
   local opts = {
     day = { hour = 23, min = 59 },
     year = { month = 12, day = 31, hour = 23, min = 59 },
-    hour = { min = 59 }
+    hour = { min = 59 },
   }
 
   if opts[span] then
@@ -334,7 +335,7 @@ function Date:end_of(span)
     return this:set(opts.day)
   end
 
-  if span == 'month'then
+  if span == 'month' then
     return self:add({ month = 1 }):start_of('month'):adjust('-1d'):end_of('day')
   end
 
@@ -473,7 +474,9 @@ end
 ---Return number of days for a date range
 ---@return number
 function Date:get_date_range_days()
-  if not self:is_none() or not self.related_date_range then return 0 end
+  if not self:is_none() or not self.related_date_range then
+    return 0
+  end
   return math.abs(self.related_date_range:diff(self)) + 1
 end
 
@@ -554,9 +557,9 @@ function Date:humanize(from)
     return 'Today'
   end
   if diff < 0 then
-    return math.abs(diff)..' d. ago'
+    return math.abs(diff) .. ' d. ago'
   end
-  return 'In '..diff..' d.'
+  return 'In ' .. diff .. ' d.'
 end
 
 ---@return boolean
@@ -587,7 +590,9 @@ end
 
 ---@return table|nil
 function Date:get_negative_adjustment()
-  if #self.adjustments == 0 then return nil end
+  if #self.adjustments == 0 then
+    return nil
+  end
   for _, adj in ipairs(self.adjustments) do
     if adj:match('^%-%d+') then
       return self:_parse_adjustment(adj)
@@ -598,7 +603,9 @@ end
 
 function Date:with_negative_adjustment()
   local adj = self:get_negative_adjustment()
-  if not adj then return self end
+  if not adj then
+    return self
+  end
 
   if self:is_deadline() then
     return self:subtract({ [adj.span] = adj.amount })
@@ -614,7 +621,9 @@ end
 ---Get repeater value (ex. +1w, .+1w, ++1w)
 ---@return string
 function Date:get_repeater()
-  if #self.adjustments == 0 then return nil end
+  if #self.adjustments == 0 then
+    return nil
+  end
 
   for _, adj in ipairs(self.adjustments) do
     if adj:match('^[%+%.]?%+%d+') then
@@ -637,7 +646,9 @@ function Date:apply_repeater()
   local repeater = self:get_repeater()
   local date = self
   local current_time = now()
-  if not repeater then return self end
+  if not repeater then
+    return self
+  end
   if repeater:match('^%.%+%d+') then
     return date:set_todays_date():adjust(repeater:sub(2))
   end
@@ -655,7 +666,9 @@ end
 ---@return boolean
 function Date:repeats_on(date)
   local repeater = self:get_repeater()
-  if not repeater then return false end
+  if not repeater then
+    return false
+  end
   repeater = repeater:gsub('^%.', ''):gsub('^%+%+', '+')
   local repeat_date = self:start_of('day')
   local date_start = date:start_of('day')
@@ -668,7 +681,9 @@ end
 ---@param date Date
 function Date:apply_repeater_until(date)
   local repeater = self:get_repeater()
-  if not repeater then return self end
+  if not repeater then
+    return self
+  end
 
   repeater = repeater:gsub('^%.', ''):gsub('^%+%+', '+')
   local repeat_date = self
@@ -698,7 +713,9 @@ function Date:get_adjusted_date()
     return self:subtract({ [span] = warning_amount })
   end
 
-  if not adj then return self end
+  if not adj then
+    return self
+  end
   return self:add({ [adj.span] = adj.amount })
 end
 
@@ -723,13 +740,13 @@ end
 ---@return Date
 local function from_match(line, lnum, open, datetime, close, last_match, type)
   local search_from = last_match and last_match.range.end_col or 0
-  local from, to = line:find(vim.pesc(open..datetime..close), search_from)
+  local from, to = line:find(vim.pesc(open .. datetime .. close), search_from)
   local is_date_range_end = last_match and last_match.is_date_range_start and line:sub(from - 2, from - 1) == '--'
   local opts = {
     type = type,
     active = open == '<',
     range = Range:new({ start_line = lnum, end_line = lnum, start_col = from, end_col = to }),
-    is_date_range_start = line:sub(to + 1, to + 2) == '--'
+    is_date_range_start = line:sub(to + 1, to + 2) == '--',
   }
   local parsed_date = from_string(vim.trim(datetime), opts)
   if is_date_range_end then
@@ -759,5 +776,5 @@ return {
   parse_all_from_line = parse_all_from_line,
   is_valid_date = is_valid_date,
   from_match = from_match,
-  pattern = pattern
+  pattern = pattern,
 }

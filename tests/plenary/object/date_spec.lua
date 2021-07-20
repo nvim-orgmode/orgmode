@@ -70,7 +70,7 @@ describe('Date object', function()
     assert.are.same(0, result.min)
     assert.are.same(false, result.date_only)
     assert.are.same(date, result:to_string())
-    assert.are.same({'-1d'}, result.adjustments)
+    assert.are.same({ '-1d' }, result.adjustments)
   end)
 
   it('should parse date time with dayname repeat adjustment', function()
@@ -84,7 +84,7 @@ describe('Date object', function()
     assert.are.same(false, result.date_only)
     assert.are.same(get_timestamp(2021, 6, 30, 9), result.timestamp)
     assert.are.same(date, result:to_string())
-    assert.are.same({'+1m'}, result.adjustments)
+    assert.are.same({ '+1m' }, result.adjustments)
   end)
 
   it('should parse date time with dayname and both repeat and warning adjustment', function()
@@ -98,7 +98,7 @@ describe('Date object', function()
     assert.are.same(false, result.date_only)
     assert.are.same(get_timestamp(2021, 6, 30, 9), result.timestamp)
     assert.are.same(date, result:to_string())
-    assert.are.same({'+1m', '-1d'}, result.adjustments)
+    assert.are.same({ '+1m', '-1d' }, result.adjustments)
   end)
 
   it('should parse date time with dayname and catch-up adjustment', function()
@@ -112,7 +112,7 @@ describe('Date object', function()
     assert.are.same(false, result.date_only)
     assert.are.same(get_timestamp(2021, 6, 30, 9), result.timestamp)
     assert.are.same(date, result:to_string())
-    assert.are.same({'++5d'}, result.adjustments)
+    assert.are.same({ '++5d' }, result.adjustments)
   end)
 
   it('should parse date time with dayname and restart adjustment', function()
@@ -126,7 +126,7 @@ describe('Date object', function()
     assert.are.same(false, result.date_only)
     assert.are.same(get_timestamp(2021, 6, 30, 9), result.timestamp)
     assert.are.same(date, result:to_string())
-    assert.are.same({'.+1m'}, result.adjustments)
+    assert.are.same({ '.+1m' }, result.adjustments)
   end)
 
   it('should adjust date', function()
@@ -215,7 +215,7 @@ describe('Date object', function()
     assert.are.same(false, result.date_only)
     assert.are.same(get_timestamp(2021, 6, 30, 9), result.timestamp)
     assert.are.same(date, result:to_string())
-    assert.are.same({'+1m'}, result.adjustments)
+    assert.are.same({ '+1m' }, result.adjustments)
 
     result = result:adjust('+1d')
     assert.are.same(2021, result.year)
@@ -225,8 +225,8 @@ describe('Date object', function()
     assert.are.same(0, result.min)
     assert.are.same(false, result.date_only)
     assert.are.same(get_timestamp(2021, 7, 1, 9), result.timestamp)
-    assert.are.same("2021-07-01 Thu 09:00 +1m", result:to_string())
-    assert.are.same({'+1m'}, result.adjustments)
+    assert.are.same('2021-07-01 Thu 09:00 +1m', result:to_string())
+    assert.are.same({ '+1m' }, result.adjustments)
 
     result = result:adjust('+2w')
     assert.are.same(2021, result.year)
@@ -236,8 +236,8 @@ describe('Date object', function()
     assert.are.same(0, result.min)
     assert.are.same(false, result.date_only)
     assert.are.same(get_timestamp(2021, 7, 15, 9), result.timestamp)
-    assert.are.same("2021-07-15 Thu 09:00 +1m", result:to_string())
-    assert.are.same({'+1m'}, result.adjustments)
+    assert.are.same('2021-07-15 Thu 09:00 +1m', result:to_string())
+    assert.are.same({ '+1m' }, result.adjustments)
 
     result = result:adjust('-3h')
     assert.are.same(2021, result.year)
@@ -247,8 +247,8 @@ describe('Date object', function()
     assert.are.same(0, result.min)
     assert.are.same(false, result.date_only)
     assert.are.same(get_timestamp(2021, 7, 15, 6), result.timestamp)
-    assert.are.same("2021-07-15 Thu 06:00 +1m", result:to_string())
-    assert.are.same({'+1m'}, result.adjustments)
+    assert.are.same('2021-07-15 Thu 06:00 +1m', result:to_string())
+    assert.are.same({ '+1m' }, result.adjustments)
 
     result = result:adjust('+3y')
     assert.are.same(2024, result.year)
@@ -258,8 +258,8 @@ describe('Date object', function()
     assert.are.same(0, result.min)
     assert.are.same(false, result.date_only)
     assert.are.same(get_timestamp(2024, 7, 15, 6), result.timestamp)
-    assert.are.same("2024-07-15 Mon 06:00 +1m", result:to_string())
-    assert.are.same({'+1m'}, result.adjustments)
+    assert.are.same('2024-07-15 Mon 06:00 +1m', result:to_string())
+    assert.are.same({ '+1m' }, result.adjustments)
 
     result = result:adjust('-1m')
     assert.are.same(2024, result.year)
@@ -269,8 +269,8 @@ describe('Date object', function()
     assert.are.same(0, result.min)
     assert.are.same(false, result.date_only)
     assert.are.same(get_timestamp(2024, 6, 15, 6), result.timestamp)
-    assert.are.same("2024-06-15 Sat 06:00 +1m", result:to_string())
-    assert.are.same({'+1m'}, result.adjustments)
+    assert.are.same('2024-06-15 Sat 06:00 +1m', result:to_string())
+    assert.are.same({ '+1m' }, result.adjustments)
   end)
 
   it('should get start of specific range', function()
@@ -393,7 +393,7 @@ describe('Date object', function()
       adjustments = {},
       date_only = true,
       day = 15,
-      dayname = "Sat",
+      dayname = 'Sat',
       hour = 0,
       min = 0,
       month = 5,
@@ -404,16 +404,17 @@ describe('Date object', function()
         start_line = 1,
         end_line = 1,
         start_col = 34,
-        end_col = 49
+        end_col = 49,
       }),
       timestamp = get_timestamp(2021, 5, 15),
-      type = "NONE",
+      type = 'NONE',
       year = 2021,
     }, dates[1])
   end)
 
   it('should parse multiple dates from line', function()
-    local line = 'This is some line and has a date <2021-05-15 Sat> that is active and has a date [2021-06-15 Tue 09:25] that is inactive'
+    local line =
+      'This is some line and has a date <2021-05-15 Sat> that is active and has a date [2021-06-15 Tue 09:25] that is inactive'
     local dates = Date.parse_all_from_line(line, 1)
     assert.are.same(2, #dates)
     assert.are.same({
@@ -421,7 +422,7 @@ describe('Date object', function()
       adjustments = {},
       date_only = true,
       day = 15,
-      dayname = "Sat",
+      dayname = 'Sat',
       hour = 0,
       min = 0,
       month = 5,
@@ -432,10 +433,10 @@ describe('Date object', function()
         start_line = 1,
         end_line = 1,
         start_col = 34,
-        end_col = 49
+        end_col = 49,
       }),
       timestamp = get_timestamp(2021, 5, 15),
-      type = "NONE",
+      type = 'NONE',
       year = 2021,
     }, dates[1])
     assert.are.same({
@@ -443,7 +444,7 @@ describe('Date object', function()
       adjustments = {},
       date_only = false,
       day = 15,
-      dayname = "Tue",
+      dayname = 'Tue',
       hour = 9,
       min = 25,
       month = 6,
@@ -454,16 +455,17 @@ describe('Date object', function()
         start_line = 1,
         end_line = 1,
         start_col = 81,
-        end_col = 102
+        end_col = 102,
       }),
       timestamp = get_timestamp(2021, 6, 15, 9, 25),
-      type = "NONE",
+      type = 'NONE',
       year = 2021,
     }, dates[2])
   end)
 
   it('should parse multiple dates from line and setup proper range with same dates', function()
-    local line = 'This is some line and has a date <2021-05-15 Sat> and again has the same date <2021-05-15 Sat> for no reason'
+    local line =
+      'This is some line and has a date <2021-05-15 Sat> and again has the same date <2021-05-15 Sat> for no reason'
     local dates = Date.parse_all_from_line(line, 1)
     assert.are.same(2, #dates)
     assert.are.same({
@@ -471,7 +473,7 @@ describe('Date object', function()
       adjustments = {},
       date_only = true,
       day = 15,
-      dayname = "Sat",
+      dayname = 'Sat',
       hour = 0,
       min = 0,
       month = 5,
@@ -482,10 +484,10 @@ describe('Date object', function()
         start_line = 1,
         end_line = 1,
         start_col = 34,
-        end_col = 49
+        end_col = 49,
       }),
       timestamp = get_timestamp(2021, 5, 15),
-      type = "NONE",
+      type = 'NONE',
       year = 2021,
     }, dates[1])
     assert.are.same({
@@ -493,7 +495,7 @@ describe('Date object', function()
       adjustments = {},
       date_only = true,
       day = 15,
-      dayname = "Sat",
+      dayname = 'Sat',
       hour = 0,
       min = 0,
       month = 5,
@@ -504,14 +506,13 @@ describe('Date object', function()
         start_line = 1,
         end_line = 1,
         start_col = 79,
-        end_col = 94
+        end_col = 94,
       }),
       timestamp = get_timestamp(2021, 5, 15),
-      type = "NONE",
+      type = 'NONE',
       year = 2021,
     }, dates[2])
   end)
-
 
   it('should set and get isoweekday', function()
     local sunday = Date.from_string('2021-05-16')
@@ -555,7 +556,7 @@ describe('Date object', function()
     local saturday = Date.from_string('2021-05-15 Sat 13:30 .+1w')
     local week_in_future = saturday:apply_repeater()
     local expect_week = Date.now():add({ week = 1 }):set({ hour = 13, min = 30 })
-    expect_week = Date.from_string(expect_week:to_string()..' .+1w')
+    expect_week = Date.from_string(expect_week:to_string() .. ' .+1w')
     assert.are.same(week_in_future:to_string(), expect_week:to_string())
 
     local friday = Date.from_string('2021-05-14 Fri 14:45 ++1w')
@@ -565,7 +566,7 @@ describe('Date object', function()
   end)
 
   it('should cache check for today', function()
-    local today = Date.today();
+    local today = Date.today()
     assert.is.Nil(today.is_today_date)
     assert.is.True(today:is_today())
     assert.is.True(today.is_today_date)
@@ -579,40 +580,41 @@ describe('Date object', function()
   it('should handle time range', function()
     local sunday = Date.from_string('2021-05-16 Sun 12:30-13:30 +1w')
     assert.are.same(sunday.timestamp + 3600, sunday.timestamp_end)
-    assert.are.same({'+1w'}, sunday.adjustments)
+    assert.are.same({ '+1w' }, sunday.adjustments)
     assert.are.same('2021-05-16 Sun 12:30-13:30 +1w', sunday:to_string())
     assert.are.same('12:30-13:30', sunday:format_time())
     local monday = sunday:adjust('+1d')
     assert.are.same(monday.timestamp + 3600, monday.timestamp_end)
-    assert.are.same({'+1w'}, monday.adjustments)
+    assert.are.same({ '+1w' }, monday.adjustments)
     assert.are.same('2021-05-17 Mon 12:30-13:30 +1w', monday:to_string())
     assert.are.same('12:30-13:30', monday:format_time())
     local thursday = sunday:adjust('-3d')
     assert.are.same(thursday.timestamp + 3600, thursday.timestamp_end)
-    assert.are.same({'+1w'}, thursday.adjustments)
+    assert.are.same({ '+1w' }, thursday.adjustments)
     assert.are.same('2021-05-13 Thu 12:30-13:30 +1w', thursday:to_string())
     assert.are.same('12:30-13:30', thursday:format_time())
 
     local monday_end_of_day = Date.from_string('2021-05-17 Mon 22:30-23:30 +1w')
     assert.are.same(monday_end_of_day.timestamp + 3600, monday_end_of_day.timestamp_end)
-    assert.are.same({'+1w'}, monday_end_of_day.adjustments)
+    assert.are.same({ '+1w' }, monday_end_of_day.adjustments)
     assert.are.same('2021-05-17 Mon 22:30-23:30 +1w', monday_end_of_day:to_string())
     assert.are.same('22:30-23:30', monday_end_of_day:format_time())
     local tuesday_morning = monday_end_of_day:adjust('+1h')
     assert.are.same(tuesday_morning.timestamp + 3600, tuesday_morning.timestamp_end)
-    assert.are.same({'+1w'}, tuesday_morning.adjustments)
+    assert.are.same({ '+1w' }, tuesday_morning.adjustments)
     assert.are.same('2021-05-17 Mon 23:30-00:30 +1w', tuesday_morning:to_string())
     assert.are.same('23:30-00:30', tuesday_morning:format_time())
 
-    local line = 'This line has a date rang <2021-05-15 Sat 14:30-15:30 +1w> and again has some date <2021-05-17 Mon> for no reason'
+    local line =
+      'This line has a date rang <2021-05-15 Sat 14:30-15:30 +1w> and again has some date <2021-05-17 Mon> for no reason'
     local dates = Date.parse_all_from_line(line, 1)
     assert.are.same(2, #dates)
     assert.are.same({
       active = true,
-      adjustments = {'+1w'},
+      adjustments = { '+1w' },
       date_only = false,
       day = 15,
-      dayname = "Sat",
+      dayname = 'Sat',
       hour = 14,
       min = 30,
       month = 5,
@@ -623,11 +625,11 @@ describe('Date object', function()
         start_line = 1,
         end_line = 1,
         start_col = 27,
-        end_col = 58
+        end_col = 58,
       }),
       timestamp = get_timestamp(2021, 5, 15, 14, 30),
       timestamp_end = get_timestamp(2021, 5, 15, 15, 30),
-      type = "NONE",
+      type = 'NONE',
       year = 2021,
     }, dates[1])
     assert.are.same({
@@ -635,7 +637,7 @@ describe('Date object', function()
       adjustments = {},
       date_only = true,
       day = 17,
-      dayname = "Mon",
+      dayname = 'Mon',
       hour = 0,
       min = 0,
       month = 5,
@@ -646,16 +648,17 @@ describe('Date object', function()
         start_line = 1,
         end_line = 1,
         start_col = 84,
-        end_col = 99
+        end_col = 99,
       }),
       timestamp = get_timestamp(2021, 5, 17),
-      type = "NONE",
+      type = 'NONE',
       year = 2021,
     }, dates[2])
   end)
 
   it('should parse date range from line', function()
-    local line = 'This line has a date rang <2021-05-15 Sat>--<2021-05-16 Sun> and again has some date <2021-05-17 Mon> for no reason'
+    local line =
+      'This line has a date rang <2021-05-15 Sat>--<2021-05-16 Sun> and again has some date <2021-05-17 Mon> for no reason'
     local dates = Date.parse_all_from_line(line, 1)
     assert.are.same(3, #dates)
     assert.are.same({
@@ -663,7 +666,7 @@ describe('Date object', function()
       adjustments = {},
       date_only = true,
       day = 15,
-      dayname = "Sat",
+      dayname = 'Sat',
       hour = 0,
       min = 0,
       month = 5,
@@ -674,10 +677,10 @@ describe('Date object', function()
         start_line = 1,
         end_line = 1,
         start_col = 27,
-        end_col = 42
+        end_col = 42,
       }),
       timestamp = get_timestamp(2021, 5, 15),
-      type = "NONE",
+      type = 'NONE',
       year = 2021,
     }, dates[1])
     assert.are.same({
@@ -685,7 +688,7 @@ describe('Date object', function()
       adjustments = {},
       date_only = true,
       day = 16,
-      dayname = "Sun",
+      dayname = 'Sun',
       hour = 0,
       min = 0,
       month = 5,
@@ -696,10 +699,10 @@ describe('Date object', function()
         start_line = 1,
         end_line = 1,
         start_col = 45,
-        end_col = 60
+        end_col = 60,
       }),
       timestamp = get_timestamp(2021, 5, 16),
-      type = "NONE",
+      type = 'NONE',
       year = 2021,
     }, dates[2])
     assert.are.same({
@@ -707,7 +710,7 @@ describe('Date object', function()
       adjustments = {},
       date_only = true,
       day = 17,
-      dayname = "Mon",
+      dayname = 'Mon',
       hour = 0,
       min = 0,
       month = 5,
@@ -718,10 +721,10 @@ describe('Date object', function()
         start_line = 1,
         end_line = 1,
         start_col = 86,
-        end_col = 101
+        end_col = 101,
       }),
       timestamp = get_timestamp(2021, 5, 17),
-      type = "NONE",
+      type = 'NONE',
       year = 2021,
     }, dates[3])
   end)
