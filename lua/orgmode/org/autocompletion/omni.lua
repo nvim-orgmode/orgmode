@@ -9,8 +9,6 @@ local data = {
   metadata = { 'DEADLINE:', 'SCHEDULED:', 'CLOSED:' },
 }
 
-local Autocompletion = {}
-
 local directives = { rgx = vim.regex([[^\#+\?\w*$]]), line_rgx = vim.regex([[^\#\?+\?\w*$]]), list = data.directives }
 local begin_blocks = {
   rgx = vim.regex([[\(^\s*\)\@<=\#+\?\w*$]]),
@@ -70,7 +68,7 @@ local headline_contexts = {
   todo_keywords,
 }
 
-function Autocompletion.omni(findstart, base)
+local function omni(findstart, base)
   local line = vim.api.nvim_get_current_line():sub(1, vim.api.nvim_call_function('col', { '.' }) - 1)
   local is_headline = line:match('^%*+%s+')
   local ctx = is_headline and headline_contexts or contexts
@@ -107,43 +105,4 @@ function Autocompletion.omni(findstart, base)
   return results
 end
 
-local CompeSource = {}
-
-function CompeSource.new()
-  return setmetatable({}, { __index = CompeSource })
-end
-
-function CompeSource.get_metadata()
-  return {
-    priority = 999,
-    sort = false,
-    dup = 0,
-    filetypes = { 'org' },
-    menu = '[Org]',
-  }
-end
-
-function CompeSource.determine(_, context)
-  local offset = Autocompletion.omni(1, '') + 1
-  if offset > 0 then
-    return {
-      keyword_pattern_offset = offset,
-      trigger_character_offset = vim.tbl_contains({ '#', '+', ':', '*' }, context.before_char) and context.col or 0,
-    }
-  end
-end
-
-function CompeSource.complete(_, context)
-  local items = Autocompletion.omni(0, context.input)
-  context.callback({
-    items = items,
-    incomplete = true,
-  })
-end
-
-local has_compe, compe = pcall(require, 'compe')
-if has_compe then
-  compe.register_source('orgmode', CompeSource)
-end
-
-return Autocompletion
+return omni

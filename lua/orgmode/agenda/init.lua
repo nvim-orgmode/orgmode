@@ -499,7 +499,7 @@ function Agenda:change_todo_state()
   Files.update_file(item.file, function(_)
     vim.fn.cursor(item.file_position, 0)
     require('orgmode').action('org_mappings.todo_next_state')
-    headline = Files.get_current_file():get_closest_headline()
+    headline = Files.get_closest_headline()
   end)
   if not headline then
     return

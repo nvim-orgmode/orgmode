@@ -10,7 +10,7 @@
 
   Orgmode clone written in Lua for Neovim 0.5.
 
-  [Installation](#installation) | [Setup](#setup) | [Gifs](#gifs) | [Docs](/DOCS.md) | [Plugins](#plugins) | [Development](#development) | [Kudos](#thanks-to)
+  [Installation](#installation) | [Setup](#setup) | [Gifs](#gifs) | [Docs](/DOCS.md) | [Tree-sitter info](#tree-sitter-info) | [Plugins](#plugins) | [Development](#development) | [Kudos](#thanks-to)
 
 </div>
 
@@ -21,7 +21,8 @@ Use your favourite package manager:
 * [vim-packager](https://github.com/kristijanhusak/vim-packager):
 
 ```lua
-packager.add('kristijanhusak/orgmode.nvim')
+packager.add('nvim-treesitter/nvim-treesitter')
+packager.add('kristijanhusak/orgmode.nvim', { branch = 'tree-sitter' })
 ```
 
 - [packer.nvim](https://github.com/wbthomason/packer.nvim)
@@ -29,7 +30,8 @@ packager.add('kristijanhusak/orgmode.nvim')
 **Recommended**
 
 ```lua
-use {'kristijanhusak/orgmode.nvim', config = function()
+use {'nvim-treesitter/nvim-treesitter'}
+use {'kristijanhusak/orgmode.nvim', branch = 'tree-sitter', config = function()
         require('orgmode').setup{}
 end
 }
@@ -41,7 +43,9 @@ Lazy loading via `ft` option works, but not completely. Global mappings are not 
 Above setup has startup time of somewhere between 1 and 3 ms, so there are no many benefits in lazy loading.
 If you want to do it anyway, here's the lazy load setup:
 ```lua
+use {'nvim-treesitter/nvim-treesitter'}
 use {'kristijanhusak/orgmode.nvim',
+    branch = 'tree-sitter',
     ft = {'org'},
     config = function()
             require('orgmode').setup{}
@@ -52,22 +56,75 @@ use {'kristijanhusak/orgmode.nvim',
 - [vim-plug](https://github.com/junegunn/vim-plug)
 
 ```vim
-Plug 'kristijanhusak/orgmode.nvim'
+Plug 'nvim-treesitter/nvim-treesitter'
+Plug 'kristijanhusak/orgmode.nvim', { 'branch' : 'tree-sitter' }
 ```
 
 - [dein](https://github.com/Shougo/dein.vim)
 
 ```vim
-call dein#add('kristijanhusak/orgmode.nvim')
+call dein#add('nvim-treesitter/nvim-treesitter')
+call dein#add('kristijanhusak/orgmode.nvim', { 'rev': 'tree-sitter' })
 ```
 
 ## Setup
 
 ```lua
+-- init.lua
+
+require'nvim-treesitter.configs'.setup {
+  -- If TS highlights are not enabled at all, or disabled via `disable` prop, highlighting will fallback to default Vim syntax highlighting
+  highlight = {
+    enable = true,
+    disable = {'org'}, -- Remove this to use TS highlighter for some of the highlights (Experimental)
+    additional_vim_regex_highlighting = {'org'}, -- Required since TS highlighter doesn't support all syntax features (conceal)
+  },
+}
+
+local parser_config = require "nvim-treesitter.parsers".get_parser_configs()
+parser_config.org = {
+  install_info = {
+    url = 'https://github.com/milisims/tree-sitter-org',
+    revision = 'main',
+    files = {'src/parser.c', 'src/scanner.cc'},
+  },
+  filetype = 'org',
+}
+
 require('orgmode').setup({
   org_agenda_files = {'~/Dropbox/org/*', '~/my-orgs/**/*'},
   org_default_notes_file = '~/Dropbox/org/refile.org',
 })
+```
+
+Or if you are using `init.vim`:
+```vim
+" init.vim
+lua << EOF
+require'nvim-treesitter.configs'.setup {
+  -- If TS highlights are not enabled at all, or disabled via `disable` prop, highlighting will fallback to default Vim syntax highlighting
+  highlight = {
+    enable = true,
+    disable = {'org'}, -- Remove this to use TS highlighter for some of the highlights (Experimental)
+    additional_vim_regex_highlighting = {'org'}, -- Required since TS highlighter doesn't support all syntax features (conceal)
+  },
+}
+
+local parser_config = require "nvim-treesitter.parsers".get_parser_configs()
+parser_config.org = {
+  install_info = {
+    url = 'https://github.com/milisims/tree-sitter-org',
+    revision = 'main',
+    files = {'src/parser.c', 'src/scanner.cc'},
+  },
+  filetype = 'org',
+}
+
+require('orgmode').setup({
+  org_agenda_files = {'~/Dropbox/org/*', '~/my-orgs/**/*'},
+  org_default_notes_file = '~/Dropbox/org/refile.org',
+})
+EOF
 ```
 
 * **Open agenda prompt**: <kbd>\<Leader\>oa</kbd>
@@ -82,6 +139,15 @@ to enable autocompletion, add this to your compe config:
 require'compe'.setup({
   source = {
     orgmode = true
+  }
+})
+```
+
+For [nvim-cmp](https://github.com/hrsh7th/nvim-cmp), add `orgmode` to list of sources:
+```lua
+require'cmp'.setup({
+  sources = {
+    { name = 'orgmode' }
   }
 })
 ```
@@ -111,6 +177,27 @@ Or just use `omnifunc` via <kbd>\<C-x\>\<C-o\></kbd>
 #### Autocompletion
   ![autocomplete](https://user-images.githubusercontent.com/1782860/123550227-e8605800-d76c-11eb-96f6-c0a677d562d4.gif)
 
+### Tree-sitter info
+Status: experimental
+Built in tree-sitter parser is used for parsing the org files.
+Highlights are partially supported.
+
+#### Advantages of tree-sitter over built in parsing/syntax:
+* More reliable, since parsing is done with proper parsing tool
+* Better highlighting (Experimental, still requires improvements)
+* Future features will be easier to implement because grammar already parses some things that were not parsed before (tables, latex, etc.)
+* Allows for easier hacking (custom motions that can work with TS nodes, etc.)
+
+#### Known highlighting issues and limitations
+* Performance issues. This is generally an issue in Neovim that should be resolved before 0.6 release (https://github.com/neovim/neovim/issues/14762, https://github.com/neovim/neovim/issues/14762)
+* Anything that requires concealing ([org_hide_emphasis_markers](/DOCS.md#org_hide_emphasis_markers), links concealing) is not (yet) supported in TS highlighter
+* Option [org_hide_leading_stars](/DOCS.md#org_hide_leading_stars) does not work due to limitations with grammar and Neovim.
+* LaTex is still highlighted through syntax file
+
+#### Improvements over Vim's syntax highlighting
+* Better highlighting of certain parts (tags, deadline/schedule/closed dates)
+* [Tree-sitter highlight injections](https://github.com/nvim-treesitter/nvim-treesitter/blob/4f2265632becabcd2c5b1791fa31ef278f1e496c/CONTRIBUTING.md#injections) through `#BEGIN_SRC filetype` blocks
+* Headline markup highlighting (https://github.com/kristijanhusak/orgmode.nvim/issues/67)
 
 ### Features (TL;DR):
 * Agenda view
@@ -211,8 +298,7 @@ make format
 ```
 
 ### Parser
-Parser is written manually from scratch. It doesn't follow any parser writing patterns (AFAIK), because I don't have
-much experience with those. Any help on this topic is appreciated.
+Parsing is done via builtin tree-sitter parser and [tree-sitter-org](https://github.com/milisims/tree-sitter-org) grammar.
 
 ## Plans
 * [X] Support searching by properties
@@ -229,4 +315,5 @@ much experience with those. Any help on this topic is appreciated.
 ## Thanks to
 * [@dhruvasagar](https://github.com/dhruvasagar) and his [vim-dotoo](https://github.com/dhruvasagar/vim-dotoo) plugin
   that got me started using orgmode. Without him this plugin would not happen.
+* [@milisims](https://github.com/milisims) for writing a tree-sitter parser for org
 * [vim-orgmode](https://github.com/jceb/vim-orgmode) for some parts of the code (mostly syntax)

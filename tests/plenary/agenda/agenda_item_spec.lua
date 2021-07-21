@@ -1,5 +1,4 @@
-local Headline = require('orgmode.parser.headline')
-local Content = require('orgmode.parser.content')
+local File = require('orgmode.parser.file')
 local AgendaItem = require('orgmode.agenda.agenda_item')
 local Date = require('orgmode.objects.date')
 local Highlights = require('orgmode.colors.highlights')
@@ -8,18 +7,11 @@ local hl_map = Highlights.get_agenda_hl_map()
 
 local function generate(content_line, keyword)
   keyword = keyword or 'TODO'
-  local headline = Headline:new({
-    line = '* ' .. keyword .. ' This is some content',
-    lnum = 1,
-    parent = { id = 0 },
-  })
-  local content = Content:new({
-    line = content_line,
-    lnum = 2,
-    parent = { id = 1, level = 0 },
-  })
-  headline:add_content(content)
-  return headline
+  local parsed = File.from_content({
+    '* ' .. keyword .. ' This is some content',
+    content_line,
+  }, '', '')
+  return parsed:get_section(1)
 end
 
 describe('Agenda item', function()
@@ -32,7 +24,7 @@ describe('Agenda item', function()
       assert.are.same({}, agenda_item.highlights)
       assert.are.same('', agenda_item.label)
 
-      headline = generate(string.format('CLOSED: <%s>', today:to_string()))
+      headline = generate(string.format('CLOSED: [%s]', today:to_string()))
       agenda_item = AgendaItem:new(headline.dates[1], headline, today)
       assert.is.False(agenda_item.is_valid)
       assert.are.same({}, agenda_item.highlights)
@@ -333,7 +325,7 @@ describe('Agenda item', function()
       assert.are.same({}, agenda_item.highlights)
       assert.are.same('', agenda_item.label)
 
-      headline = generate(string.format('CLOSED: <%s>', future_day:to_string()))
+      headline = generate(string.format('CLOSED: [%s]', future_day:to_string()))
       agenda_item = AgendaItem:new(headline.dates[1], headline, future_day)
       assert.is.False(agenda_item.is_valid)
       assert.are.same({}, agenda_item.highlights)

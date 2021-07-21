@@ -1,3 +1,8 @@
+if exists('b:did_ftplugin')
+  finish
+endif
+let b:did_ftplugin = 1
+
 function! OrgmodeFoldExpr()
   return luaeval('require("orgmode.org.indent").foldexpr()')
 endfunction
@@ -10,11 +15,7 @@ function! OrgmodeFoldText()
   return luaeval('require("orgmode.org.indent").foldtext()')
 endfunction
 
-setlocal foldmethod=expr
-setlocal foldexpr=OrgmodeFoldExpr()
-setlocal foldtext=OrgmodeFoldText()
 setlocal indentexpr=OrgmodeIndentExpr()
-setlocal foldlevel=0
 setlocal nolisp
 setlocal nosmartindent
 setlocal autoindent
