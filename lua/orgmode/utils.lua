@@ -1,9 +1,11 @@
+local ts = require('vim.treesitter.query')
 local uv = vim.loop
 local utils = {}
 
 ---@param file string
 ---@param callback function
-function utils.readfile(file, callback)
+---@param as_string boolean
+function utils.readfile(file, callback, as_string)
   uv.fs_open(file, 'r', 438, function(err1, fd)
     if err1 then
       return callback(err1)
@@ -20,8 +22,11 @@ function utils.readfile(file, callback)
           if err4 then
             return callback(err4)
           end
-          local lines = vim.split(data, '\n')
-          table.remove(lines, #lines)
+          local lines = data
+          if not as_string then
+            lines = vim.split(data, '\n')
+            table.remove(lines, #lines)
+          end
           return callback(nil, lines)
         end)
       end)
@@ -113,10 +118,13 @@ end
 --- Concat one table at the end of another table
 ---@param first table
 ---@param second table
+---@param unique boolean
 ---@return table
-function utils.concat(first, second)
+function utils.concat(first, second, unique)
   for _, v in ipairs(second) do
-    table.insert(first, v)
+    if not unique or not vim.tbl_contains(first, v) then
+      table.insert(first, v)
+    end
   end
   return first
 end
@@ -227,6 +235,55 @@ function utils.humanize_minutes(minutes)
     return string.format('%d hr and %d min ago', hours, remaining_minutes)
   end
   return string.format('in %d hr and %d min', hours, remaining_minutes)
+end
+
+---@param query string
+---@param node table
+---@param file_content string
+---@return table[]
+function utils.get_ts_matches(query, node, file_content)
+  local matches = {}
+  local ts_query = ts.parse_query('org', query)
+  for _, match, _ in ts_query:iter_matches(node, file_content) do
+    local items = {}
+    for id, matched_node in pairs(match) do
+      local name = ts_query.captures[id]
+      local node_text = utils.get_node_text(matched_node, file_content)
+      items[name] = {
+        node = matched_node,
+        text_list = node_text,
+        text = node_text[1],
+      }
+    end
+    table.insert(matches, items)
+  end
+  return matches
+end
+
+function utils.get_node_text(node, content)
+  if not node then
+    return {}
+  end
+  local all_lines = vim.split(content, '\n', true)
+  local start_row, start_col, end_row, end_col = node:range()
+
+  if start_row ~= end_row then
+    local start_line = start_row + 1
+    local end_line = end_row + 1
+    if end_col == 0 then
+      end_line = end_row
+    end
+    local lines = { unpack(all_lines, start_line, end_line) }
+    lines[1] = string.sub(lines[1], start_col + 1)
+    if end_col > 0 then
+      lines[#lines] = string.sub(lines[#lines], 1, end_col)
+    end
+    return lines
+  else
+    local line = all_lines[start_row + 1]
+    -- If line is nil then the line is empty
+    return line and { string.sub(line, start_col + 1, end_col) } or {}
+  end
 end
 
 return utils

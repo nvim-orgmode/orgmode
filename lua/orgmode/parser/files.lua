@@ -1,12 +1,10 @@
-local utils = require('orgmode.utils')
-local parser = require('orgmode.parser')
 local config = require('orgmode.config')
+local File = require('orgmode.parser.file')
 
----@class OrgFiles
----@field files Root[]
----@field tags string[]
+---@class Files
 local Files = {
-  files = {},
+  loaded = false,
+  orgfiles = {},
   tags = {},
 }
 
@@ -15,12 +13,60 @@ function Files.new()
   return Files
 end
 
----@return Root[]
+function Files.load(callback)
+  local files = config:get_all_files()
+  Files.orgfiles = {}
+  if #files == 0 then
+    Files.loaded = true
+    if callback then
+      callback()
+    end
+    return Files
+  end
+  local files_to_process = #files
+  for _, item in ipairs(files) do
+    File.load(item, function(file)
+      files_to_process = files_to_process - 1
+      if file then
+        Files.orgfiles[item] = file
+      end
+
+      if files_to_process == 0 then
+        Files._build_tags()
+        Files.loaded = true
+        if callback then
+          callback()
+        end
+      end
+    end)
+  end
+
+  return Files
+end
+
+function Files.reload(file, callback)
+  if file then
+    local prev_file = Files.get(file)
+    return File.load(file, function(orgfile)
+      if orgfile then
+        Files.orgfiles[file] = orgfile
+        Files._check_source_blocks(prev_file, Files.get(file))
+      end
+      if callback then
+        callback()
+      end
+      Files._build_tags()
+      return Files.get(file)
+    end)
+  end
+
+  return Files.load(callback)
+end
+
+---@return File[]
 function Files.all()
-  local files = vim.tbl_values(Files.files)
-  files = vim.tbl_filter(function(file)
-    return not file.is_archive_file
-  end, files)
+  Files._ensure_loaded()
+  local files = vim.tbl_values(Files.orgfiles)
   table.sort(files, function(a, b)
     return a.category < b.category
   end)
@@ -30,14 +76,14 @@ end
 ---@return string[]
 function Files.filenames()
   return vim.tbl_map(function(file)
-    return file.file
+    return file.filename
   end, Files.all())
 end
 
 ---@param file string
----@return Root
+---@return File
 function Files.get(file)
-  return Files.files[file]
+  return Files.orgfiles[file]
 end
 
 ---@return string[]
@@ -45,93 +91,29 @@ function Files.get_tags()
   return Files.tags
 end
 
----@param file string
-function Files.reload(file, callback)
-  if file then
-    local category = vim.fn.fnamemodify(file, ':t:r')
-    local is_archived = config:is_archive_file(file)
-    local stat = vim.loop.fs_stat(file)
-    local prev_file = Files.get(file)
-    if not stat then
-      local lines = vim.api.nvim_buf_get_lines(0, 0, -1, true)
-      Files.files[file] = parser.parse(lines, category, file, is_archived)
-      Files._check_source_blocks(prev_file, Files.get(file))
-      Files._build_tags()
-      if callback then
-        callback()
-      end
-      return Files.get(file)
-    end
-    return utils.readfile(file, function(err, result)
-      if err then
-        return
-      end
-      Files.files[file] = parser.parse(result, category, file, is_archived)
-      Files._check_source_blocks(prev_file, Files.get(file))
-      Files._build_tags()
-      if callback then
-        callback()
-      end
-    end)
-  end
-  return Files.load(callback)
-end
-
-function Files.load(callback)
-  Files.files = {}
-  local files = config:get_all_files()
-  if #files == 0 then
-    if callback then
-      callback()
-    end
-    return Files
-  end
-  local files_to_process = #files
-  for _, item in ipairs(files) do
-    local category = vim.fn.fnamemodify(item, ':t:r')
-    local is_archived = config:is_archive_file(item)
-    utils.readfile(item, function(err, result)
-      if err then
-        return
-      end
-      Files.files[item] = parser.parse(result, category, item, is_archived)
-      files_to_process = files_to_process - 1
-      if files_to_process == 0 then
-        Files._build_tags()
-        if callback then
-          callback()
-        end
-      end
-    end)
-  end
-  return Files
-end
-
----@return Root
+---@return File
 function Files.get_current_file()
-  local filename = vim.api.nvim_buf_get_name(0)
+  local name = vim.api.nvim_buf_get_name(0)
   local has_capture_var, is_capture = pcall(vim.api.nvim_buf_get_var, 0, 'org_capture')
   if has_capture_var and is_capture then
-    return parser.parse(vim.api.nvim_buf_get_lines(0, 0, -1, true), '', filename)
+    return File.from_content(vim.api.nvim_buf_get_lines(0, 0, -1, false))
   end
-  local file = Files.files[filename]
-  Files.files[filename] = parser.parse(
-    vim.api.nvim_buf_get_lines(0, 0, -1, true),
-    file.category,
-    file.file,
-    file.is_archive_file
-  )
-  return Files.files[filename]
+  local file = Files.get(name)
+  if file then
+    Files.orgfiles[name] = file:refresh()
+    return Files.get(name)
+  end
+  return nil
 end
 
----@return Headline|Content
+---@return Section
 function Files.get_current_item()
   local file = Files.get_current_file()
-  return file:get_item(vim.fn.line('.'))
+  return file:get_current_item()
 end
 
 ---@param title string
----@return Headline[]
+---@return Section[]
 function Files.find_headlines_by_title(title)
   local headlines = {}
   for _, orgfile in ipairs(Files.all()) do
@@ -144,24 +126,11 @@ end
 
 ---@param property_name string
 ---@param term string
----@return Headline[]
+---@return Section[]
 function Files.find_headlines_with_property_matching(property_name, term)
   local headlines = {}
   for _, orgfile in ipairs(Files.all()) do
     for _, headline in ipairs(orgfile:find_headlines_with_property_matching(property_name, term)) do
-      table.insert(headlines, headline)
-    end
-  end
-  return headlines
-end
-
----@param term string
----@param no_escape boolean
----@return Headline[]
-function Files.find_headlines_matching_search_term(term, no_escape)
-  local headlines = {}
-  for _, orgfile in ipairs(Files.all()) do
-    for _, headline in ipairs(orgfile:find_headlines_matching_search_term(term, no_escape)) do
       table.insert(headlines, headline)
     end
   end
@@ -196,9 +165,27 @@ function Files.update_file(filename, action)
   return true
 end
 
+---@param term string
+---@param no_escape boolean
+---@return Section
+function Files.find_headlines_matching_search_term(term, no_escape)
+  local headlines = {}
+  for _, orgfile in ipairs(Files.all()) do
+    for _, headline in ipairs(orgfile:find_headlines_matching_search_term(term, no_escape)) do
+      table.insert(headlines, headline)
+    end
+  end
+  return headlines
+end
+
+---@return Section
+function Files.get_closest_headline()
+  return Files.get_current_file():get_closest_headline()
+end
+
 function Files._build_tags()
   local tags = {}
-  for _, orgfile in pairs(Files.files) do
+  for _, orgfile in pairs(Files.orgfiles) do
     for _, headline in ipairs(orgfile:get_headlines()) do
       if headline.tags and #headline.tags > 0 then
         for _, tag in ipairs(headline.tags) do
@@ -210,20 +197,6 @@ function Files._build_tags()
   local taglist = vim.tbl_keys(tags)
   table.sort(taglist)
   Files.tags = taglist
-end
-
----@param old_file? Root
----@param new_file Root
-function Files._check_source_blocks(old_file, new_file)
-  local old_source_blocks = old_file and old_file.source_code_filetypes or {}
-  local new_source_blocks = new_file.source_code_filetypes or {}
-  for _, ft in ipairs(new_source_blocks) do
-    if not vim.tbl_contains(old_source_blocks, ft) then
-      return vim.schedule(function()
-        vim.cmd([[filetype detect]])
-      end)
-    end
-  end
 end
 
 function Files.autocomplete_tags(arg_lead)
@@ -238,6 +211,29 @@ function Files.autocomplete_tags(arg_lead)
   return vim.tbl_map(function(tag)
     return base .. tag
   end, matches)
+end
+
+---@param old_file? File
+---@param new_file File
+function Files._check_source_blocks(old_file, new_file)
+  local old_source_blocks = old_file and old_file.source_code_filetypes or {}
+  local new_source_blocks = new_file.source_code_filetypes or {}
+  for _, ft in ipairs(new_source_blocks) do
+    if not vim.tbl_contains(old_source_blocks, ft) then
+      return vim.schedule(function()
+        vim.cmd([[filetype detect]])
+      end)
+    end
+  end
+end
+
+function Files._ensure_loaded()
+  if Files.loaded then
+    return true
+  end
+  vim.wait(500, function()
+    return Files.loaded
+  end, 5)
 end
 
 return Files

@@ -17,6 +17,11 @@ jobs:
         with:
           repository: nvim-lua/plenary.nvim
           path: plenary.nvim
+      - name: Install Treesitter
+        uses: actions/checkout@v2
+        with:
+          repository: nvim-treesitter/nvim-treesitter
+          path: nvim-treesitter
       - name: Install Neovim
         uses: rhysd/action-setup-vim@v1
         id: neovim
@@ -24,4 +29,4 @@ jobs:
           neovim: true
           version: nightly
       - name: Run tests
-        run: make test
+        run: make ci

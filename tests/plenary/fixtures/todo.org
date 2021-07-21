@@ -1,4 +1,12 @@
+#+TITLE: Test
+
 * TODO Test orgmode
+  DEADLINE: <2021-07-21 Wed 22:02>  CLOSED: [2021-07-21 Wed 23:12]
+  :PROPERTIES:
+
+  :CUSTOM_ID: 1
+  :CATEGORY: testing
+  :END:
 ** TODO [#A] Test orgmode level 2 :PRIVATE:
 Some content for level 2
 *** NEXT [#1] Level 3
@@ -6,6 +14,12 @@ Content Level 3
 * DONE top level todo :WORK:
 content for top level todo
 * TODO top level todo with multiple tags :OFFICE:PROJECT:
+  - [ ] The checkbox
+  - [ ] The checkbox 2
+    - [ ] Nested checkbox
 multiple tags content, tags not read from content :FROMCONTENT:
 ** NEXT Working on this now :OFFICE:NESTED:
 * NOKEYWORD Headline with wrong todo keyword and wrong tag format :WORK : OFFICE:
+  - Regular item
+  - Second recular item
+    - Neste itemd

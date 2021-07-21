@@ -3,7 +3,7 @@ local instance = nil
 
 ---@class Org
 ---@field initialized boolean
----@field files OrgFiles
+---@field files Files
 ---@field agenda Agenda
 ---@field capture Capture
 ---@field notifications Notifications
@@ -28,6 +28,8 @@ function Org:init()
     capture = self.capture,
     agenda = self.agenda,
   })
+  require('orgmode.colors.todo_highlighter').add_todo_keyword_highlights()
+  require('orgmode.org.autocompletion').register()
   self.initialized = true
 end
 

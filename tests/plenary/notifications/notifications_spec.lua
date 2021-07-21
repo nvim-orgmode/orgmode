@@ -1,5 +1,5 @@
-local parser = require('orgmode.parser')
 local Files = require('orgmode.parser.files')
+local File = require('orgmode.parser.file')
 local Range = require('orgmode.parser.range')
 local Date = require('orgmode.objects.date')
 local Notifications = require('orgmode.notifications')
@@ -7,6 +7,12 @@ local config = require('orgmode.config')
 local last_filename = nil
 
 describe('Notifications', function()
+  before_each(function()
+    Files.loaded = true
+  end)
+  after_each(function()
+    Files.loaded = false
+  end)
   it('should find headlines for notification', function()
     local filename = vim.fn.tempname()
     last_filename = filename
@@ -20,13 +26,13 @@ describe('Notifications', function()
       '* TODO I am the scheduled task for evening',
       '  SCHEDULED: <2021-07-12 Mon 19:30>',
     }
-    local orgfile = parser.parse(lines, 'work', filename)
-    Files.files[filename] = orgfile
+    local orgfile = File.from_content(lines, 'work', filename)
+    Files.orgfiles[filename] = orgfile
     local notifications = Notifications:new()
     assert.are.same({}, notifications:get_tasks(Date.from_string('2021-07-11 Sun 12:30')))
     assert.are.same({}, notifications:get_tasks(Date.from_string('2021-07-12 Mon 10:30')))
-    local first_heading = orgfile:get_item(1)
-    local second_heading = orgfile:get_item(3)
+    local first_heading = orgfile:get_section(1)
+    local second_heading = orgfile:get_section(2)
     assert.are.same({
       {
         file = filename,
@@ -36,7 +42,7 @@ describe('Notifications', function()
         priority = '',
         title = 'I am the deadline task',
         tags = { 'OFFICE' },
-        range = Range:new({ start_line = 1, end_line = 2 }),
+        range = Range:new({ start_line = 1, end_line = 2, end_col = 0 }),
         original_time = first_heading.dates[1],
         time = first_heading.dates[1],
         type = 'DEADLINE',
@@ -52,7 +58,7 @@ describe('Notifications', function()
         priority = '',
         title = 'I am the scheduled task',
         tags = {},
-        range = Range:new({ start_line = 3, end_line = 4 }),
+        range = Range:new({ start_line = 3, end_line = 4, end_col = 0 }),
         original_time = second_heading.dates[1],
         time = second_heading.dates[1],
         minutes = 10,
@@ -86,14 +92,14 @@ describe('Notifications', function()
       '* TODO I am the scheduled task for evening',
       '  SCHEDULED: <2021-07-14 Wed 19:30>',
     }
-    local orgfile = parser.parse(lines, 'work', filename)
-    Files.files[filename] = orgfile
+    local orgfile = File.from_content(lines, 'work', filename)
+    Files.orgfiles[filename] = orgfile
     local notifications = Notifications:new()
     assert.are.same({}, notifications:get_tasks(Date.from_string('2021-07-13 Sun 12:30')))
     assert.are.same({}, notifications:get_tasks(Date.from_string('2021-07-14 Mon 10:30')))
-    local first_heading = orgfile:get_item(1)
-    local second_heading = orgfile:get_item(3)
-    local third_heading = orgfile:get_item(5)
+    local first_heading = orgfile:get_section(1)
+    local second_heading = orgfile:get_section(2)
+    local third_heading = orgfile:get_section(3)
 
     local time = Date.from_string('2021-07-14 Mon 12:20')
     local tasks = notifications:get_tasks(time)
@@ -107,7 +113,7 @@ describe('Notifications', function()
         priority = '',
         title = 'I am the deadline task',
         tags = { 'OFFICE' },
-        range = Range:new({ start_line = 1, end_line = 2 }),
+        range = Range:new({ start_line = 1, end_line = 2, end_col = 0 }),
         original_time = first_heading.dates[1],
         time = first_heading.dates[1]:apply_repeater_until(time):without_adjustments(),
         type = 'DEADLINE',
@@ -124,7 +130,7 @@ describe('Notifications', function()
         title = 'I am the scheduled task',
         tags = {},
         time = second_heading.dates[1],
-        range = Range:new({ start_line = 3, end_line = 4 }),
+        range = Range:new({ start_line = 3, end_line = 4, end_col = 0 }),
         original_time = second_heading.dates[1],
         type = 'SCHEDULED',
         reminder_type = 'time',
@@ -139,7 +145,7 @@ describe('Notifications', function()
         priority = '',
         title = 'I am the deadline task for evening',
         tags = {},
-        range = Range:new({ start_line = 5, end_line = 6 }),
+        range = Range:new({ start_line = 5, end_line = 6, end_col = 0 }),
         original_time = third_heading.dates[1],
         time = third_heading.dates[1]:without_adjustments(),
         minutes = 430,
@@ -161,7 +167,7 @@ describe('Notifications', function()
         priority = '',
         title = 'I am the deadline task',
         tags = { 'OFFICE' },
-        range = Range:new({ start_line = 1, end_line = 2 }),
+        range = Range:new({ start_line = 1, end_line = 2, end_col = 0 }),
         original_time = first_heading.dates[1],
         time = first_heading.dates[1]:apply_repeater_until(time):without_adjustments(),
         type = 'DEADLINE',
@@ -177,7 +183,7 @@ describe('Notifications', function()
         priority = '',
         title = 'I am the deadline task for evening',
         tags = {},
-        range = Range:new({ start_line = 5, end_line = 6 }),
+        range = Range:new({ start_line = 5, end_line = 6, end_col = 0 }),
         original_time = third_heading.dates[1],
         time = third_heading.dates[1]:without_adjustments(),
         type = 'DEADLINE',
@@ -199,7 +205,7 @@ describe('Notifications', function()
         priority = '',
         title = 'I am the deadline task',
         tags = { 'OFFICE' },
-        range = Range:new({ start_line = 1, end_line = 2 }),
+        range = Range:new({ start_line = 1, end_line = 2, end_col = 0 }),
         original_time = first_heading.dates[1],
         time = first_heading.dates[1]:apply_repeater_until(time):without_adjustments(),
         type = 'DEADLINE',
@@ -215,7 +221,7 @@ describe('Notifications', function()
         priority = '',
         title = 'I am the scheduled task',
         tags = {},
-        range = Range:new({ start_line = 3, end_line = 4 }),
+        range = Range:new({ start_line = 3, end_line = 4, end_col = 0 }),
         original_time = second_heading.dates[1],
         time = second_heading.dates[1],
         type = 'SCHEDULED',
@@ -231,7 +237,7 @@ describe('Notifications', function()
         priority = '',
         title = 'I am the deadline task for evening',
         tags = {},
-        range = Range:new({ start_line = 5, end_line = 6 }),
+        range = Range:new({ start_line = 5, end_line = 6, end_col = 0 }),
         original_time = third_heading.dates[1],
         time = third_heading.dates[1]:without_adjustments(),
         type = 'DEADLINE',
@@ -253,7 +259,7 @@ describe('Notifications', function()
         priority = '',
         title = 'I am the deadline task for evening',
         tags = {},
-        range = Range:new({ start_line = 5, end_line = 6 }),
+        range = Range:new({ start_line = 5, end_line = 6, end_col = 0 }),
         original_time = third_heading.dates[1],
         time = third_heading.dates[1]:without_adjustments(),
         type = 'DEADLINE',
@@ -269,9 +275,9 @@ describe('Notifications', function()
     local notifications = Notifications:new()
     assert.are.same({}, notifications:get_tasks(Date.from_string('2021-07-13 Sun 12:30')))
     assert.are.same({}, notifications:get_tasks(Date.from_string('2021-07-14 Mon 10:30')))
-    local first_heading = orgfile:get_item(1)
-    local second_heading = orgfile:get_item(3)
-    local third_heading = orgfile:get_item(5)
+    local first_heading = orgfile:get_section(1)
+    local second_heading = orgfile:get_section(2)
+    local third_heading = orgfile:get_section(3)
 
     local time = Date.from_string('2021-07-14 Mon 12:20')
     local tasks = notifications:get_tasks(time)
@@ -285,7 +291,7 @@ describe('Notifications', function()
         priority = '',
         title = 'I am the deadline task',
         tags = { 'OFFICE' },
-        range = Range:new({ start_line = 1, end_line = 2 }),
+        range = Range:new({ start_line = 1, end_line = 2, end_col = 0 }),
         original_time = first_heading.dates[1],
         time = first_heading.dates[1]:apply_repeater_until(time):without_adjustments(),
         type = 'DEADLINE',
@@ -301,7 +307,7 @@ describe('Notifications', function()
         priority = '',
         title = 'I am the scheduled task',
         tags = {},
-        range = Range:new({ start_line = 3, end_line = 4 }),
+        range = Range:new({ start_line = 3, end_line = 4, end_col = 0 }),
         original_time = second_heading.dates[1],
         time = second_heading.dates[1],
         type = 'SCHEDULED',
@@ -317,7 +323,7 @@ describe('Notifications', function()
         priority = '',
         title = 'I am the deadline task for evening',
         tags = {},
-        range = Range:new({ start_line = 5, end_line = 6 }),
+        range = Range:new({ start_line = 5, end_line = 6, end_col = 0 }),
         original_time = third_heading.dates[1],
         time = third_heading.dates[1]:without_adjustments(),
         type = 'DEADLINE',
@@ -347,7 +353,7 @@ describe('Notifications', function()
         priority = '',
         title = 'I am the deadline task',
         tags = { 'OFFICE' },
-        range = Range:new({ start_line = 1, end_line = 2 }),
+        range = Range:new({ start_line = 1, end_line = 2, end_col = 0 }),
         original_time = first_heading.dates[1],
         time = first_heading.dates[1]:apply_repeater_until(time):without_adjustments(),
         type = 'DEADLINE',
@@ -377,7 +383,7 @@ describe('Notifications', function()
         priority = '',
         title = 'I am the deadline task',
         tags = { 'OFFICE' },
-        range = Range:new({ start_line = 1, end_line = 2 }),
+        range = Range:new({ start_line = 1, end_line = 2, end_col = 0 }),
         original_time = first_heading.dates[1],
         time = first_heading.dates[1]:apply_repeater_until(time):without_adjustments(),
         type = 'DEADLINE',
@@ -393,7 +399,7 @@ describe('Notifications', function()
         priority = '',
         title = 'I am the scheduled task',
         tags = {},
-        range = Range:new({ start_line = 3, end_line = 4 }),
+        range = Range:new({ start_line = 3, end_line = 4, end_col = 0 }),
         original_time = second_heading.dates[1],
         time = second_heading.dates[1],
         type = 'SCHEDULED',
@@ -409,7 +415,7 @@ describe('Notifications', function()
         priority = '',
         title = 'I am the deadline task for evening',
         tags = {},
-        range = Range:new({ start_line = 5, end_line = 6 }),
+        range = Range:new({ start_line = 5, end_line = 6, end_col = 0 }),
         original_time = third_heading.dates[1],
         time = third_heading.dates[1]:without_adjustments(),
         type = 'DEADLINE',
@@ -425,9 +431,9 @@ describe('Notifications', function()
     local notifications = Notifications:new()
     assert.are.same({}, notifications:get_tasks(Date.from_string('2021-07-13 Sun 12:30')))
     assert.are.same({}, notifications:get_tasks(Date.from_string('2021-07-14 Mon 10:30')))
-    local first_heading = orgfile:get_item(1)
-    local second_heading = orgfile:get_item(3)
-    local third_heading = orgfile:get_item(5)
+    local first_heading = orgfile:get_section(1)
+    local second_heading = orgfile:get_section(2)
+    local third_heading = orgfile:get_section(3)
 
     local time = Date.from_string('2021-07-14 Mon 12:20')
     local tasks = notifications:get_tasks(time)
@@ -441,7 +447,7 @@ describe('Notifications', function()
         priority = '',
         title = 'I am the deadline task',
         tags = { 'OFFICE' },
-        range = Range:new({ start_line = 1, end_line = 2 }),
+        range = Range:new({ start_line = 1, end_line = 2, end_col = 0 }),
         original_time = first_heading.dates[1],
         time = first_heading.dates[1]:apply_repeater_until(time):without_adjustments(),
         minutes = 10,
@@ -457,7 +463,7 @@ describe('Notifications', function()
         priority = '',
         title = 'I am the scheduled task',
         tags = {},
-        range = Range:new({ start_line = 3, end_line = 4 }),
+        range = Range:new({ start_line = 3, end_line = 4, end_col = 0 }),
         original_time = second_heading.dates[1],
         time = second_heading.dates[1],
         type = 'SCHEDULED',
@@ -473,7 +479,7 @@ describe('Notifications', function()
         priority = '',
         title = 'I am the deadline task for evening',
         tags = {},
-        range = Range:new({ start_line = 5, end_line = 6 }),
+        range = Range:new({ start_line = 5, end_line = 6, end_col = 0 }),
         original_time = third_heading.dates[1],
         time = third_heading.dates[1]:without_adjustments(),
         type = 'DEADLINE',
@@ -500,7 +506,7 @@ describe('Notifications', function()
         priority = '',
         title = 'I am the scheduled task',
         tags = {},
-        range = Range:new({ start_line = 3, end_line = 4 }),
+        range = Range:new({ start_line = 3, end_line = 4, end_col = 0 }),
         original_time = second_heading.dates[1],
         time = second_heading.dates[1],
         type = 'SCHEDULED',
@@ -528,7 +534,7 @@ describe('Notifications', function()
         priority = '',
         title = 'I am the deadline task',
         tags = { 'OFFICE' },
-        range = Range:new({ start_line = 1, end_line = 2 }),
+        range = Range:new({ start_line = 1, end_line = 2, end_col = 0 }),
         original_time = first_heading.dates[1],
         time = first_heading.dates[1]:apply_repeater_until(time):without_adjustments(),
         type = 'DEADLINE',
@@ -544,7 +550,7 @@ describe('Notifications', function()
         priority = '',
         title = 'I am the deadline task for evening',
         tags = {},
-        range = Range:new({ start_line = 5, end_line = 6 }),
+        range = Range:new({ start_line = 5, end_line = 6, end_col = 0 }),
         original_time = third_heading.dates[1],
         time = third_heading.dates[1]:without_adjustments(),
         type = 'DEADLINE',
