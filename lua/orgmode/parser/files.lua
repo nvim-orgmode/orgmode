@@ -51,20 +51,23 @@ function Files.reload(file, callback)
     local category = vim.fn.fnamemodify(file, ':t:r')
     local is_archived = config:is_archive_file(file)
     local stat = vim.loop.fs_stat(file)
+    local prev_file = Files.get(file)
     if not stat then
       local lines = vim.api.nvim_buf_get_lines(0, 0, -1, true)
       Files.files[file] = parser.parse(lines, category, file, is_archived)
+      Files._check_source_blocks(prev_file, Files.get(file))
       Files._build_tags()
       if callback then
         callback()
       end
-      return Files.files[file]
+      return Files.get(file)
     end
     return utils.readfile(file, function(err, result)
       if err then
         return
       end
       Files.files[file] = parser.parse(result, category, file, is_archived)
+      Files._check_source_blocks(prev_file, Files.get(file))
       Files._build_tags()
       if callback then
         callback()
@@ -205,6 +208,20 @@ function Files._build_tags()
   local taglist = vim.tbl_keys(tags)
   table.sort(taglist)
   Files.tags = taglist
+end
+
+---@param old_file? Root
+---@param new_file Root
+function Files._check_source_blocks(old_file, new_file)
+  local old_source_blocks = old_file and old_file.source_code_filetypes or {}
+  local new_source_blocks = new_file.source_code_filetypes or {}
+  for _, ft in ipairs(new_source_blocks) do
+    if not vim.tbl_contains(old_source_blocks, ft) then
+      return vim.schedule(function()
+        vim.cmd([[filetype detect]])
+      end)
+    end
+  end
 end
 
 function Files.autocomplete_tags(arg_lead)
