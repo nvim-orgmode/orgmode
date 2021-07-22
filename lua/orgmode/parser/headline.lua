@@ -351,8 +351,10 @@ function Headline:demote(amount, demote_child_headlines)
   amount = amount or 1
   demote_child_headlines = demote_child_headlines or false
   vim.fn.setline(self.range.start_line, string.rep('*', amount) .. self.line)
-  for _, content in ipairs(self.content) do
-    vim.fn.setline(content.range.start_line, string.rep(' ', amount) .. content.line)
+  if config.org_indent_mode == 'indent' then
+    for _, content in ipairs(self.content) do
+      vim.fn.setline(content.range.start_line, string.rep(' ', amount) .. content.line)
+    end
   end
   if demote_child_headlines then
     for _, headline in ipairs(self.headlines) do
@@ -368,9 +370,11 @@ function Headline:promote(amount, promote_child_headlines)
     return utils.echo_warning('Cannot demote top level heading.')
   end
   vim.fn.setline(self.range.start_line, self.line:sub(1 + amount))
-  for _, content in ipairs(self.content) do
-    if vim.trim(content.line:sub(1, amount)) == '' then
-      vim.fn.setline(content.range.start_line, content.line:sub(1 + amount))
+  if config.org_indent_mode == 'indent' then
+    for _, content in ipairs(self.content) do
+      if vim.trim(content.line:sub(1, amount)) == '' then
+        vim.fn.setline(content.range.start_line, content.line:sub(1 + amount))
+      end
     end
   end
   if promote_child_headlines then
