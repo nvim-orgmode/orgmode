@@ -1,0 +1,31 @@
+name: Feature request
+description: Suggest an idea for this project
+labels: enhancement
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **NOTE**: If provided feature request is a separate plugin in emacs orgmode, and not part of the emacs orgmode core functionality,
+        request will be most likely rejected. Anything that's a separate plugin in emacs orgmode should be a separate plugin in here.
+        Any suggestions how to improve infrastructure for building plugins should be posted here: https://github.com/kristijanhusak/orgmode.nvim/issues/26
+  - type: dropdown
+    validations:
+      required: true
+    attributes:
+      label: Does this feature exist in Emacs orgmode core?
+      options:
+        - 'Yes'
+        - 'No'
+        - 'N/A'
+  - type: textarea
+    attributes:
+      label: Orgmode link
+      description: If answer to first question is "Yes", please provide the link to the orgmode manual or any documentation related to the feature,
+  - type: textarea
+    attributes:
+      label: Feature value
+      description: If answer to first question is "No", elaborate on how this feature is valuable and what problem does it solve.,
+  - type: textarea
+    attributes:
+      label: Additional context
+      description: Add any other context about the problem here. This can be themes, plugins, custom settings...
