@@ -125,10 +125,11 @@ function Calendar.backward()
 end
 
 function Calendar.reset()
-  Calendar.month = Date.today():start_of('month')
+  local today = Calendar.month:set_todays_date()
+  Calendar.month = today:set({ day = 1 })
   Calendar.render()
   vim.fn.cursor(2, 0)
-  vim.fn.search(Date.today():format('%d'), 'W')
+  vim.fn.search(today:format('%d'), 'W')
 end
 
 function Calendar:select()
