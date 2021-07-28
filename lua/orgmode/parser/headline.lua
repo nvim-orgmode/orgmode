@@ -247,24 +247,25 @@ end
 ---@param content Content
 function Headline:_parse_properties(content)
   if content:is_properties_start() then
-    if not self.properties.range then
-      self.properties.range = Range.from_line(content.range.start_line)
+    local is_valid_position = #self.content == 1 or #self.content == 2 and self.content[1]:is_planning()
+    if not is_valid_position then
+      return
     end
+    self.properties.range = Range.from_line(content.range.start_line)
+    self.properties.valid = true
+    self.properties.unfinished = true
   end
-  if content:is_parent_end() then
-    if self.properties.range and self.properties.range:is_same_line() then
-      self.properties.range.end_line = content.range.start_line
-      self.properties.valid = true
-      local start_index = self.properties.range.start_line - self.range.start_line
-      local end_index = self.properties.range.end_line - self.range.start_line
-      while start_index < end_index do
-        local entry = self.content[start_index]
-        if entry.drawer and entry.drawer.properties then
-          self.properties.items = vim.tbl_extend('force', self.properties.items, entry.drawer.properties or {})
-        end
-        start_index = start_index + 1
+  if content:is_parent_end() and self.properties.valid and self.properties.unfinished then
+    self.properties.range.end_line = content.range.start_line
+    local start_index = self.properties.range.start_line - self.range.start_line
+    local end_index = self.properties.range.end_line - self.range.start_line
+    local entries = { unpack(self.content, start_index, end_index) }
+    for _, entry in ipairs(entries) do
+      if entry.drawer and entry.drawer.properties then
+        self.properties.items = vim.tbl_extend('force', self.properties.items, entry.drawer.properties or {})
       end
     end
+    self.properties.unfinished = nil
   end
 end
 

@@ -550,7 +550,7 @@ describe('Parser', function()
     ))
   end)
 
-  it('should parse drawer', function()
+  it('should parse properties drawer', function()
     local lines = {
       '* TODO Test orgmode :WORK:',
       'DEADLINE: <2021-05-10 11:00>',
@@ -709,6 +709,60 @@ describe('Parser', function()
     }
     local parsed = parser.parse(lines, 'work')
     assert.are.same({ items = {} }, parsed:get_item(1).properties)
+  end)
+
+  it('should parse properties only if its positioned after headline or planning date', function()
+    local lines = {
+      '* TODO Test orgmode :WORK:',
+      'DEADLINE: <2021-05-10 11:00>',
+      'Some content in between',
+      ':PROPERTIES:',
+      ':SOME_PROP: some value',
+      ':END:',
+      '* TODO Another todo',
+    }
+
+    local parsed = parser.parse(lines, 'work')
+    local headline = parsed:get_item(1)
+    assert.are.same({}, headline.properties.items)
+
+    lines = {
+      '* TODO Test orgmode :WORK:',
+      'Some content in between',
+      ':PROPERTIES:',
+      ':SOME_PROP: some value',
+      ':END:',
+      '* TODO Another todo',
+    }
+
+    parsed = parser.parse(lines, 'work')
+    headline = parsed:get_item(1)
+    assert.are.same({}, headline.properties.items)
+
+    lines = {
+      '* TODO Test orgmode :WORK:',
+      ':PROPERTIES:',
+      ':SOME_PROP: some value',
+      ':END:',
+      '* TODO Another todo',
+    }
+
+    parsed = parser.parse(lines, 'work')
+    headline = parsed:get_item(1)
+    assert.are.same({ SOME_PROP = 'some value' }, headline.properties.items)
+
+    lines = {
+      '* TODO Test orgmode :WORK:',
+      'DEADLINE: <2021-05-10 11:00>',
+      ':PROPERTIES:',
+      ':SOME_PROP: some value',
+      ':END:',
+      '* TODO Another todo',
+    }
+
+    parsed = parser.parse(lines, 'work')
+    headline = parsed:get_item(1)
+    assert.are.same({ SOME_PROP = 'some value' }, headline.properties.items)
   end)
 
   it('should override headline category from property', function()
