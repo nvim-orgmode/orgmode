@@ -71,6 +71,8 @@ function Calendar.open()
 end
 
 function Calendar.render()
+  vim.api.nvim_buf_set_option(Calendar.buf, 'modifiable', true)
+
   local first_row = { 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun' }
   local content = { {}, {}, {}, {}, {}, {} }
   local start_weekday = Calendar.month:get_isoweekday()
@@ -112,6 +114,8 @@ function Calendar.render()
       end
     end
   end
+
+  vim.api.nvim_buf_set_option(Calendar.buf, 'modifiable', false)
 end
 
 function Calendar.forward()
