@@ -154,6 +154,7 @@ function Headline:add_properties(properties)
     end
     return {
       is_new = false,
+      indent = indent,
     }
   end
 
@@ -173,6 +174,7 @@ function Headline:add_properties(properties)
   return {
     is_new = true,
     end_line = properties_line + #content,
+    indent = indent,
   }
 end
 
