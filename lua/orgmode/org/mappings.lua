@@ -176,15 +176,15 @@ function OrgMappings:todo_next_state()
     Date.now():to_string()
   )
 
-  local data = item:add_properties({ LAST_REPEAT = Date.now():to_string() })
+  local data = item:add_properties({ LAST_REPEAT = '[' .. Date.now():to_string() .. ']' })
   if data.is_new then
-    vim.fn.append(data.end_line, state_change)
+    vim.fn.append(data.end_line, data.indent .. state_change)
     return item
   end
   item = Files.get_current_file():get_closest_headline()
 
   if item.properties.valid then
-    vim.fn.append(item.properties.range.end_line, state_change)
+    vim.fn.append(item.properties.range.end_line, data.indent .. state_change)
   end
 end
 
