@@ -438,17 +438,25 @@ function Agenda:agenda()
   local dates = self.from:get_range_until(self.to)
   local agenda_days = {}
 
+  local headline_dates = {}
+  for _, orgfile in ipairs(Files.all()) do
+    for _, headline in ipairs(orgfile:get_opened_headlines()) do
+      for _, headline_date in ipairs(headline:get_valid_dates_for_agenda()) do
+        table.insert(headline_dates, {
+          headline_date = headline_date,
+          headline = headline,
+        })
+      end
+    end
+  end
+
   for _, day in ipairs(dates) do
     local date = { day = day, agenda_items = {} }
 
-    for _, orgfile in ipairs(Files.all()) do
-      for _, headline in ipairs(orgfile:get_opened_headlines()) do
-        for _, headline_date in ipairs(headline:get_valid_dates_for_agenda()) do
-          local item = AgendaItem:new(headline_date, headline, day)
-          if item.is_valid then
-            table.insert(date.agenda_items, item)
-          end
-        end
+    for _, item in ipairs(headline_dates) do
+      local item = AgendaItem:new(item.headline_date, item.headline, day)
+      if item.is_valid then
+        table.insert(date.agenda_items, item)
       end
     end
 
