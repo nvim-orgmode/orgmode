@@ -12,6 +12,7 @@ return {
     org_agenda_goto = { 'agenda.goto_item' },
     org_agenda_goto_date = { 'agenda.goto_date' },
     org_agenda_redo = { 'agenda.redo' },
+    org_agenda_todo = { 'agenda.change_todo_state' },
     org_agenda_show_help = { 'org_mappings.show_help' },
   },
   capture = {

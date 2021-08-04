@@ -172,24 +172,26 @@ function Capture:_refile_to(file, lines, item, destination_line)
 
   if is_same_file and item then
     vim.cmd(
-      string.format('silent %d,%d move %s', item.range.start_line, item.range.end_line, tostring(destination_line))
+      string.format('silent! %d,%d move %s', item.range.start_line, item.range.end_line, tostring(destination_line))
     )
     return true
   end
 
+  local old_height = vim.api.nvim_win_get_height(0)
   if not is_same_file then
-    vim.cmd('topleft split ' .. file)
+    vim.cmd('silent! topleft split ' .. file)
   end
 
   vim.fn.append(destination_line, lines)
 
   if not is_same_file then
-    vim.cmd('wq!')
+    vim.cmd('silent! wq!')
     vim.api.nvim_set_current_win(cur_win)
+    vim.cmd(string.format('silent! resize %d', old_height))
   end
 
   if item then
-    vim.cmd(string.format('silent %d,%d delete', item.range.start_line, item.range.end_line))
+    vim.cmd(string.format('silent! %d,%d delete', item.range.start_line, item.range.end_line))
   end
 
   return true

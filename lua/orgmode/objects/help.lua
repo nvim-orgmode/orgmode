@@ -46,6 +46,7 @@ local helps = {
     { key = 'org_agenda_switch_to', description = 'Open in current window' },
     { key = 'org_agenda_goto', description = 'Open in another window' },
     { key = 'org_agenda_redo', description = 'Reload org files and redraw' },
+    { key = 'org_agenda_todo', description = 'Change TODO state of an item' },
     { key = 'org_agenda_quit', description = 'Close agenda' },
     { key = 'org_agenda_show_help', description = 'Show this help' },
   },

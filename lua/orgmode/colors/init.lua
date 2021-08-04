@@ -71,9 +71,12 @@ M.get_todo_keywords_colors = function()
 end
 
 ---@param highlights table[]
+---@param clear boolean
 ---@return string
-M.highlight = function(highlights)
-  vim.api.nvim_buf_clear_namespace(0, namespace, 0, -1)
+M.highlight = function(highlights, clear)
+  if clear then
+    vim.api.nvim_buf_clear_namespace(0, namespace, 0, -1)
+  end
   for _, hl in ipairs(highlights) do
     vim.api.nvim_buf_add_highlight(
       0,

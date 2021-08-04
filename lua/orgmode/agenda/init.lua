@@ -89,7 +89,7 @@ function Agenda:_get_title()
   return utils.capitalize(span) .. '-agenda' .. span_number .. ':'
 end
 
-function Agenda:render()
+function Agenda:render_agenda()
   local content = { { line_content = self:_get_title() } }
   local highlights = {}
   for _, item in ipairs(self.items) do
@@ -143,23 +143,21 @@ function Agenda:render()
         line = string.format('%-99s %s', line, headline:tags_to_string())
       end
 
+      local item_highlights = {}
       if #agenda_item.highlights then
-        utils.concat(
-          highlights,
-          vim.tbl_map(function(hl)
-            hl.range = Range:new({
-              start_line = #content + 1,
-              end_line = #content + 1,
-              start_col = 1,
-              end_col = 0,
-            })
-            if hl.todo_keyword then
-              hl.range.start_col = todo_keyword_pos + 1
-              hl.range.end_col = todo_keyword_pos + hl.todo_keyword:len() + 1
-            end
-            return hl
-          end, agenda_item.highlights)
-        )
+        item_highlights = vim.tbl_map(function(hl)
+          hl.range = Range:new({
+            start_line = #content + 1,
+            end_line = #content + 1,
+            start_col = 1,
+            end_col = 0,
+          })
+          if hl.todo_keyword then
+            hl.range.start_col = todo_keyword_pos + 1
+            hl.range.end_col = todo_keyword_pos + hl.todo_keyword:len() + 1
+          end
+          return hl
+        end, agenda_item.highlights)
       end
 
       table.insert(content, {
@@ -168,6 +166,8 @@ function Agenda:render()
         jumpable = true,
         file = headline.file,
         file_position = headline.range.start_line,
+        highlights = item_highlights,
+        agenda_item = agenda_item,
       })
     end
   end
@@ -176,6 +176,51 @@ function Agenda:render()
   self.highlights = highlights
   self.active_view = 'agenda'
   return self:_print_and_highlight()
+end
+
+function Agenda:render_todos(view)
+  local offset = #self.content
+  local longest_category = utils.reduce(self.items, function(acc, todo)
+    return math.max(acc, todo:get_category():len())
+  end, 0)
+
+  for i, headline in ipairs(self.items) do
+    table.insert(self.content, self:_generate_todo_item(headline, longest_category, i + offset))
+  end
+
+  self.active_view = view
+  return self:_print_and_highlight()
+end
+
+function Agenda:_generate_todo_item(headline, longest_category, line_nr)
+  local category = string.format('  %-' .. (longest_category + 1) .. 's', headline:get_category() .. ':')
+  local todo_keyword = headline.todo_keyword.value
+  local todo_keyword_padding = todo_keyword ~= '' and ' ' or ''
+  local line = string.format('  %s%s%s %s', category, todo_keyword_padding, todo_keyword, headline.title)
+  if #headline.tags > 0 then
+    line = string.format('%-99s %s', line, headline:tags_to_string())
+  end
+  local todo_keyword_pos = category:len() + 4
+  return {
+    line_content = line,
+    longest_category = longest_category,
+    line = line_nr,
+    jumpable = true,
+    file = headline.file,
+    file_position = headline.range.start_line,
+    headline = headline,
+    highlights = headline.todo_keyword.value ~= '' and {
+      {
+        hlgroup = hl_map[headline.todo_keyword.value] or hl_map[headline.todo_keyword.type],
+        range = Range:new({
+          start_line = line_nr,
+          end_line = line_nr,
+          start_col = todo_keyword_pos,
+          end_col = todo_keyword_pos + todo_keyword:len(),
+        }),
+      },
+    } or {},
+  }
 end
 
 function Agenda:_print_and_highlight()
@@ -197,58 +242,26 @@ function Agenda:_print_and_highlight()
   vim.api.nvim_buf_set_lines(0, 0, -1, true, lines)
   vim.bo.modifiable = false
   vim.bo.modified = false
-  colors.highlight(self.highlights)
+  colors.highlight(self.highlights, true)
+  vim.tbl_map(function(item)
+    if item.highlights then
+      return colors.highlight(item.highlights)
+    end
+  end, self.content)
 end
 
 -- TODO: Introduce searching ALL/DONE
 function Agenda:todos()
-  local todos = {}
+  self.items = {}
   for _, orgfile in ipairs(Files.all()) do
     for _, headline in ipairs(orgfile:get_unfinished_todo_entries()) do
-      table.insert(todos, headline)
+      table.insert(self.items, headline)
     end
   end
 
-  local longest_category = utils.reduce(todos, function(acc, todo)
-    return math.max(acc, todo:get_category():len())
-  end, 0)
-
-  local content = { { line_content = 'Global list of TODO items of type: ALL', highlight = nil } }
-  local highlights = {}
-
-  for i, todo in ipairs(todos) do
-    local category = string.format('  %-' .. (longest_category + 1) .. 's', todo:get_category() .. ':')
-    local todo_keyword = todo.todo_keyword.value
-    local line = string.format('  %s %s %s', category, todo_keyword, todo.title)
-    if #todo.tags > 0 then
-      line = string.format('%-99s %s', line, todo:tags_to_string())
-    end
-    local todo_keyword_pos = category:len() + 4
-    table.insert(content, {
-      line_content = line,
-      line = i + 1,
-      jumpable = true,
-      file = todo.file,
-      file_position = todo.range.start_line,
-    })
-
-    if todo.todo_keyword.value ~= '' then
-      table.insert(highlights, {
-        hlgroup = hl_map[todo.todo_keyword.value] or hl_map[todo.todo_keyword.type],
-        range = Range:new({
-          start_line = i + 1,
-          end_line = i + 1,
-          start_col = todo_keyword_pos,
-          end_col = todo_keyword_pos + todo_keyword:len(),
-        }),
-      })
-    end
-  end
-
-  self.content = content
-  self.highlights = highlights
-  self.active_view = 'todos'
-  return self:_print_and_highlight()
+  self.content = { { line_content = 'Global list of TODO items of type: ALL', highlight = nil } }
+  self.highlights = {}
+  self:render_todos('todos')
 end
 
 function Agenda:search(clear_search)
@@ -257,55 +270,18 @@ function Agenda:search(clear_search)
   end
   local search_term = vim.fn.input('Enter search term: ', self.last_search)
   self.last_search = search_term
-  local headlines = Files.find_headlines_matching_search_term(search_term)
+  self.items = Files.find_headlines_matching_search_term(search_term)
 
-  local longest_category = utils.reduce(headlines, function(acc, todo)
-    return math.max(acc, todo:get_category():len())
-  end, 0)
-
-  local content = {
+  self.content = {
     { line_content = 'Search words: ' .. search_term },
     { line_content = 'Press "r" to update search' },
   }
-  local highlights = {
+  self.highlights = {
     { hlgroup = 'Comment', range = Range.for_line_hl(1) },
     { hlgroup = 'Comment', range = Range.for_line_hl(2) },
   }
 
-  for i, headline in ipairs(headlines) do
-    local category = string.format('  %-' .. (longest_category + 1) .. 's', headline:get_category() .. ':')
-    local todo_keyword = headline.todo_keyword.value
-    local todo_keyword_padding = todo_keyword ~= '' and ' ' or ''
-    local line = string.format('  %s%s%s %s', category, todo_keyword_padding, todo_keyword, headline.title)
-    if #headline.tags > 0 then
-      line = string.format('%-99s %s', line, headline:tags_to_string())
-    end
-    table.insert(content, {
-      line_content = line,
-      line = i + 2,
-      jumpable = true,
-      file = headline.file,
-      file_position = headline.range.start_line,
-    })
-
-    if headline.todo_keyword.value ~= '' then
-      local todo_keyword_pos = category:len() + 4
-      table.insert(highlights, {
-        hlgroup = hl_map[headline.todo_keyword.value] or hl_map[headline.todo_keyword.type],
-        range = Range:new({
-          start_line = i + 2,
-          end_line = i + 2,
-          start_col = todo_keyword_pos,
-          end_col = todo_keyword_pos + todo_keyword:len(),
-        }),
-      })
-    end
-  end
-
-  self.content = content
-  self.highlights = highlights
-  self.active_view = 'search'
-  return self:_print_and_highlight()
+  return self:render_todos('search')
 end
 
 function Agenda:tags(opts)
@@ -333,62 +309,25 @@ function Agenda:_tags_view(opts, view)
     return utils.echo_warning('Invalid tag.')
   end
   local search = Search:new(tags)
-  local headlines = {}
+  self.items = {}
   for _, orgfile in ipairs(Files.all()) do
     local headlines_filtered = orgfile:apply_search(search, opts.todo_only)
     for _, headline in ipairs(headlines_filtered) do
-      table.insert(headlines, headline)
+      table.insert(self.items, headline)
     end
   end
 
-  local longest_category = utils.reduce(headlines, function(acc, todo)
-    return math.max(acc, todo:get_category():len())
-  end, 0)
-
   self.last_search = tags
-  local content = {
+  self.content = {
     { line_content = 'Headlines with TAGS match: ' .. tags },
     { line_content = 'Press "r" to update search' },
   }
-  local highlights = {
+  self.highlights = {
     { hlgroup = 'Comment', range = Range.for_line_hl(1) },
     { hlgroup = 'Comment', range = Range.for_line_hl(2) },
   }
 
-  for i, headline in ipairs(headlines) do
-    local category = string.format('  %-' .. (longest_category + 1) .. 's', headline:get_category() .. ':')
-    local todo_keyword = headline.todo_keyword.value
-    local todo_keyword_padding = todo_keyword ~= '' and ' ' or ''
-    local line = string.format('  %s%s%s %s', category, todo_keyword_padding, todo_keyword, headline.title)
-    if #headline.tags > 0 then
-      line = string.format('%-99s %s', line, headline:tags_to_string())
-    end
-    table.insert(content, {
-      line_content = line,
-      line = i + 2,
-      jumpable = true,
-      file = headline.file,
-      file_position = headline.range.start_line,
-    })
-
-    if headline.todo_keyword.value ~= '' then
-      local todo_keyword_pos = category:len() + 4
-      table.insert(highlights, {
-        hlgroup = hl_map[headline.todo_keyword.value] or hl_map[headline.todo_keyword.type],
-        range = Range:new({
-          start_line = i + 2,
-          end_line = i + 2,
-          start_col = todo_keyword_pos,
-          end_col = todo_keyword_pos + todo_keyword:len(),
-        }),
-      })
-    end
-  end
-
-  self.content = content
-  self.highlights = highlights
-  self.active_view = view
-  return self:_print_and_highlight()
+  return self:render_todos(view)
 end
 
 function Agenda:prompt()
@@ -454,9 +393,9 @@ function Agenda:agenda()
     local date = { day = day, agenda_items = {} }
 
     for _, item in ipairs(headline_dates) do
-      local item = AgendaItem:new(item.headline_date, item.headline, day)
-      if item.is_valid then
-        table.insert(date.agenda_items, item)
+      local agenda_item = AgendaItem:new(item.headline_date, item.headline, day)
+      if agenda_item.is_valid then
+        table.insert(date.agenda_items, agenda_item)
       end
     end
 
@@ -466,7 +405,7 @@ function Agenda:agenda()
   end
 
   self.items = agenda_days
-  self:render()
+  self:render_agenda()
   vim.fn.search(self:_format_day(Date.now()))
 end
 
@@ -548,6 +487,29 @@ function Agenda:switch_to_item()
   end
   vim.cmd('edit ' .. vim.fn.fnameescape(item.file))
   vim.fn.cursor(item.file_position, 0)
+end
+
+function Agenda:change_todo_state()
+  local line = vim.fn.line('.')
+  local item = self.content[line]
+  if not item or not item.jumpable then
+    return
+  end
+  local headline = nil
+  Files.update_file(item.file, function(_)
+    vim.fn.cursor(item.file_position, 0)
+    require('orgmode').action('org_mappings.todo_next_state')
+    headline = Files.get_current_file():get_closest_headline()
+  end)
+  if not headline then
+    return
+  end
+  if self.active_view == 'agenda' and item.agenda_item then
+    item.agenda_item:set_headline(headline)
+    return self:render_agenda()
+  end
+  self.content[line] = self:_generate_todo_item(headline, item.longest_category, item.line)
+  return self:_print_and_highlight()
 end
 
 function Agenda:goto_item()
