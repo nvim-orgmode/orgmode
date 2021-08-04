@@ -51,7 +51,8 @@ CONTENTS                                                        *orgmode-content
             1.2.2.10. org_agenda_goto....................|orgmode-org_agenda_goto|
             1.2.2.11. org_agenda_goto_date..........|orgmode-org_agenda_goto_date|
             1.2.2.12. org_agenda_redo....................|orgmode-org_agenda_redo|
-            1.2.2.13. org_agenda_show_help..........|orgmode-org_agenda_show_help|
+            1.2.2.13. org_agenda_todo....................|orgmode-org_agenda_todo|
+            1.2.2.14. org_agenda_show_help..........|orgmode-org_agenda_show_help|
         1.2.3. Capture mappings.........................|orgmode-capture_mappings|
             1.2.3.1. org_capture_finalize...........|orgmode-org_capture_finalize|
             1.2.3.2. org_capture_refile...............|orgmode-org_capture_refile|
@@ -553,6 +554,11 @@ ORG_AGENDA_REDO                                          *orgmode-org_agenda_red
 
 mapped to: `r`
 Reload all org files and refresh current agenda view
+
+ORG_AGENDA_TODO                                          *orgmode-org_agenda_todo*
+
+mapped to: `t`
+Change `TODO` state of an item in both agenda and original Org file
 
 ORG_AGENDA_SHOW_HELP                                *orgmode-org_agenda_show_help*
 

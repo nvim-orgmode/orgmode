@@ -56,6 +56,7 @@ return {
       org_agenda_goto = { '<TAB>' },
       org_agenda_goto_date = 'J',
       org_agenda_redo = 'r',
+      org_agenda_todo = 't',
       org_agenda_show_help = '?',
     },
     capture = {

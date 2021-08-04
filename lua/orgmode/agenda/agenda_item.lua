@@ -43,6 +43,14 @@ function AgendaItem:new(headline_date, headline, date)
   return opts
 end
 
+---@param headline Headline
+function AgendaItem:set_headline(headline)
+  self.headline = headline
+  if self.is_valid then
+    self:_generate_data()
+  end
+end
+
 function AgendaItem:_process()
   if self.is_today then
     self.is_valid = self:_is_valid_for_today()
@@ -51,13 +59,18 @@ function AgendaItem:_process()
   end
 
   if self.is_valid then
-    self.label = self:_generate_label()
-    local highlight = self:_generate_highlight()
-    if highlight then
-      table.insert(self.highlights, highlight)
-    end
-    self:_add_keyword_highlight()
+    self:_generate_data()
   end
+end
+
+function AgendaItem:_generate_data()
+  self.label = self:_generate_label()
+  self.highlights = {}
+  local highlight = self:_generate_highlight()
+  if highlight then
+    table.insert(self.highlights, highlight)
+  end
+  self:_add_keyword_highlight()
 end
 
 function AgendaItem:_is_valid_for_today()

@@ -407,6 +407,9 @@ Open calendar that allows selecting date to jump to
 #### **org_agenda_redo**
 *mapped to*: `r`<br />
 Reload all org files and refresh current agenda view
+#### **org_agenda_todo**
+*mapped to*: `t`<br />
+Change `TODO` state of an item in both agenda and original Org file
 #### **org_agenda_show_help**
 *mapped to*: `?`<br />
 Show help popup with mappings
