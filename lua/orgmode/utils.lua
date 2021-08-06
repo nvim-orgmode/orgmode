@@ -44,21 +44,35 @@ function utils.open(target)
 end
 
 ---@param msg string
-function utils.echo_warning(msg)
-  vim.cmd([[redraw!]])
-  return vim.api.nvim_echo({ { string.format('[orgmode] %s', msg), 'WarningMsg' } }, true, {})
+---@param additional_msg table
+function utils.echo_warning(msg, additional_msg)
+  return utils._echo(msg, 'WarningMsg', additional_msg)
 end
 
 ---@param msg string
-function utils.echo_error(msg)
-  vim.cmd([[redraw!]])
-  return vim.api.nvim_echo({ { string.format('[orgmode] %s', msg), 'ErrorMsg' } }, true, {})
+---@param additional_msg table
+function utils.echo_error(msg, additional_msg)
+  return utils._echo(msg, 'ErrorMsg', additional_msg)
 end
 
 ---@param msg string
-function utils.echo_info(msg)
+---@param additional_msg table
+function utils.echo_info(msg, additional_msg)
+  return utils._echo(msg, nil, additional_msg)
+end
+
+---@private
+function utils._echo(msg, hl, additional_msg)
   vim.cmd([[redraw!]])
-  return vim.api.nvim_echo({ { string.format('[orgmode] %s', msg) } }, true, {})
+  local msg_item = { string.format('[orgmode] %s', msg) }
+  if hl then
+    table.insert(msg_item, hl)
+  end
+  local msg_list = { msg_item }
+  if additional_msg then
+    msg_list = utils.concat(msg_list, additional_msg)
+  end
+  return vim.api.nvim_echo(msg_list, true, {})
 end
 
 ---@param word string

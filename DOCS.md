@@ -44,9 +44,18 @@ Example: `~/Dropbox/org/notes.org`
 List of "unfinished" and "finished" states.<br />
 `|` is used as a separator between "unfinished" and "finished".<br />
 If `|` is omitted, only last entry in array is considered a "finished" state.<br />
-Examples:
+To use [Fast access to TODO States](https://orgmode.org/manual/Fast-access-to-TODO-states.html#Fast-access-to-TODO-states)
+set a fast access key to at least one of the entries.<br />
+
+Examples (without the fast access):
   * `{'TODO', 'NEXT', '|', 'DONE'}`
   * `{'TODO', 'WAITING', '|', 'DONE', 'DELEGATED'}`
+
+Examples (With fast access):
+  * `{'TODO(t)', 'NEXT(n)', '|', 'DONE(d)'}`
+  * `{'TODO(t)', 'NEXT', '|', 'DONE'}` - will work same as above. Only one todo keyword needs to have fast access key, others will be parsed from first char.
+
+NOTE: Make sure fast access keys do not overlap. If that happens, first entry in list gets it.
 
 #### **org_todo_keyword_faces**
 *type*: `table<string, string>`<br />
@@ -480,10 +489,10 @@ Decrease date under cursor by 1 day
 Change date under cursor. Opens calendar to select new date
 #### **org_todo**
 *mapped to*: `cit`<br />
-Cycle todo keyword forward on current headline  ()
+Cycle todo keyword forward on current headline or open fast access to TODO states prompt (see [org_todo_keywords](#org_todo_keywords)) if it's enabled.
 #### **org_todo_prev**
 *mapped to*: `ciT`<br />
-Cycle todo keyword forward on current headline  ()
+Cycle todo keyword backward on current headline.
 #### **org_toggle_checkbox**
 *mapped to*: `<C-Space>`<br />
 Toggle current line checkbox state
