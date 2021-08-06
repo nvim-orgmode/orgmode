@@ -146,7 +146,10 @@ function OrgMappings:todo_next_state()
   local item = Files.get_current_file():get_closest_headline()
   local was_done = item:is_done()
   local old_state = item.todo_keyword.value
-  self:_change_todo_state('next')
+  local changed = self:_change_todo_state('next', true)
+  if not changed then
+    return
+  end
   item = Files.get_current_file():get_closest_headline()
   if not item:is_done() and not was_done then
     return item
@@ -168,7 +171,7 @@ function OrgMappings:todo_next_state()
     self:_replace_date(date:apply_repeater())
   end
 
-  self:_change_todo_state('reset')
+  self:_change_todo_state('reset', true)
   local state_change = string.format(
     '- State "%s" from "%s" [%s]',
     item.todo_keyword.value,
@@ -387,17 +390,34 @@ function OrgMappings:outline_up_heading()
 end
 
 ---@param direction string
-function OrgMappings:_change_todo_state(direction)
+---@param skip_fast_access boolean
+---@return string
+function OrgMappings:_change_todo_state(direction, use_fast_access)
   local item = Files.get_current_file():get_closest_headline()
   local todo = item.todo_keyword
   local todo_state = TodoState:new({ current_state = todo.value })
   local next_state = nil
-  if direction == 'next' then
-    next_state = todo_state:get_next()
-  elseif direction == 'prev' then
-    next_state = todo_state:get_prev()
-  elseif direction == 'reset' then
-    next_state = todo_state:get_todo()
+  if use_fast_access and todo_state:has_fast_access() then
+    next_state = todo_state:open_fast_access()
+  else
+    if direction == 'next' then
+      next_state = todo_state:get_next()
+    elseif direction == 'prev' then
+      next_state = todo_state:get_prev()
+    elseif direction == 'reset' then
+      next_state = todo_state:get_todo()
+    end
+  end
+
+  if not next_state then
+    return false
+  end
+
+  if next_state.value == todo.value then
+    if todo.value ~= '' then
+      utils.echo_info('TODO state was already ', { { next_state.value, next_state.hl } })
+    end
+    return false
   end
 
   local linenr = item.range.start_line
@@ -412,6 +432,7 @@ function OrgMappings:_change_todo_state(direction)
   end
   local new_line = vim.fn.getline(linenr):gsub('^' .. stars .. '%s+' .. old_state, stars .. ' ' .. new_state)
   vim.fn.setline(linenr, new_line)
+  return true
 end
 
 ---@param date Date

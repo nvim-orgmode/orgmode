@@ -4,12 +4,15 @@ local defaults = require('orgmode.config.defaults')
 local mappings = require('orgmode.config.mappings')
 
 ---@class Config
+---@field opts table
+---@field todo_keywords table
 local Config = {}
 
 ---@param opts? table
 function Config:new(opts)
   local data = {
     opts = vim.tbl_deep_extend('force', defaults, opts or {}),
+    todo_keywords = nil,
   }
   setmetatable(data, self)
   return data
@@ -25,6 +28,7 @@ end
 ---@param opts table
 ---@return Config
 function Config:extend(opts)
+  self.todo_keywords = nil
   self.opts = vim.tbl_deep_extend('force', self.opts, opts or {})
   return self
 end
@@ -93,19 +97,39 @@ function Config:get_agenda_span()
 end
 
 function Config:get_todo_keywords()
-  local types = { TODO = {}, DONE = {}, ALL = {} }
+  if self.todo_keywords then
+    return vim.deepcopy(self.todo_keywords)
+  end
+  local parse_todo = function(val)
+    local value, shortcut = val:match('(.*)%((.)[^%)]*%)$')
+    if value and shortcut then
+      return { value = value, shortcut = shortcut, custom_shortcut = true }
+    end
+    return { value = val, shortcut = val:sub(1, 1):lower(), custom_shortcut = false }
+  end
+  local types = { TODO = {}, DONE = {}, ALL = {}, FAST_ACCESS = {}, has_fast_access = false }
   local type = 'TODO'
   for _, word in ipairs(self.opts.org_todo_keywords) do
     if word == '|' then
       type = 'DONE'
     else
-      table.insert(types[type], word)
-      table.insert(types.ALL, word)
+      local data = parse_todo(word)
+      if not types.has_fast_access and data.custom_shortcut then
+        types.has_fast_access = true
+      end
+      table.insert(types[type], data.value)
+      table.insert(types.ALL, data.value)
+      table.insert(types.FAST_ACCESS, {
+        value = data.value,
+        type = type,
+        shortcut = data.shortcut,
+      })
     end
   end
   if #types.DONE == 0 then
     types.DONE = { table.remove(types.TODO, #types.TODO) }
   end
+  self.todo_keywords = types
   return types
 end
 
