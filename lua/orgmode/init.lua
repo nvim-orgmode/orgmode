@@ -28,7 +28,6 @@ function Org:init()
     capture = self.capture,
     agenda = self.agenda,
   })
-  _G.orgmode.omni = require('orgmode.org.autocompletion').omni
   self.initialized = true
 end
 
