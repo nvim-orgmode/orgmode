@@ -389,6 +389,28 @@ function OrgMappings:outline_up_heading()
   return vim.fn.cursor(item.parent.range.start_line, 1)
 end
 
+function OrgMappings:org_deadline()
+  local item = Files.get_current_file():get_closest_headline()
+  local deadline_date = item:get_deadline_date()
+  local cb = function(new_date)
+    item:remove_closed_date()
+    item = Files.get_current_file():get_closest_headline()
+    item:add_deadline_date(new_date)
+  end
+  Calendar.new({ callback = cb, date = deadline_date or Date.today() }).open()
+end
+
+function OrgMappings:org_schedule()
+  local item = Files.get_current_file():get_closest_headline()
+  local scheduled_date = item:get_scheduled_date()
+  local cb = function(new_date)
+    item:remove_closed_date()
+    item = Files.get_current_file():get_closest_headline()
+    item:add_scheduled_date(new_date)
+  end
+  Calendar.new({ callback = cb, date = scheduled_date or Date.today() }).open()
+end
+
 ---@param direction string
 ---@param skip_fast_access boolean
 ---@return string

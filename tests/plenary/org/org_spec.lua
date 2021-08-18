@@ -132,4 +132,82 @@ describe('Org file', function()
     assert.stub(api.nvim_call_function).was.called_with('deletebufline', { 4, 2 })
     mock.revert(api)
   end)
+
+  it('should add and update deadline date', function()
+    local deadline_date = Date.from_string('2021-08-18 Wed')
+    local lines = {
+      '* TODO Test orgmode :WORK:',
+      '* TODO Another todo',
+    }
+    local parsed = parser.parse(lines, 'work')
+    local api = mock(vim.api, true)
+    api.nvim_call_function.returns(true)
+    local headline = parsed:get_item(1)
+    local result = headline:add_deadline_date(deadline_date)
+    assert.are.same(true, result)
+    assert.stub(api.nvim_call_function).was.called_with('append', {
+      1,
+      '  DEADLINE: <2021-08-18 Wed>',
+    })
+    lines = {
+      '* TODO Test orgmode :WORK:',
+      '  DEADLINE: <2021-08-18 Wed>',
+      '* TODO Another todo',
+    }
+    parsed = parser.parse(lines, 'work')
+    headline = parsed:get_item(1)
+    api.nvim_call_function.returns('  DEADLINE: <2021-08-18 Wed>')
+    result = headline:add_deadline_date(deadline_date:add({ day = 2 }))
+    assert.stub(api.nvim_call_function).was.called_with('setline', {
+      2,
+      '  DEADLINE: <2021-08-20 Fri>',
+    })
+    mock.revert(api)
+  end)
+
+  it('should add and update scheduled date', function()
+    local scheduled_date = Date.from_string('2021-08-18 Wed')
+    local lines = {
+      '* TODO Test orgmode :WORK:',
+      '* TODO Another todo',
+    }
+    local parsed = parser.parse(lines, 'work')
+    local api = mock(vim.api, true)
+    api.nvim_call_function.returns(true)
+    local headline = parsed:get_item(1)
+    local result = headline:add_scheduled_date(scheduled_date)
+    assert.are.same(true, result)
+    assert.stub(api.nvim_call_function).was.called_with('append', {
+      1,
+      '  SCHEDULED: <2021-08-18 Wed>',
+    })
+
+    lines = {
+      '* TODO Test orgmode :WORK:',
+      '  DEADLINE: <2021-08-18 Wed>',
+      '* TODO Another todo',
+    }
+    parsed = parser.parse(lines, 'work')
+    headline = parsed:get_item(1)
+    result = headline:add_scheduled_date(scheduled_date:add({ day = 2 }))
+    assert.stub(api.nvim_call_function).was.called_with('setline', {
+      2,
+      '  DEADLINE: <2021-08-18 Wed> SCHEDULED: <2021-08-20 Fri>',
+    })
+
+    lines = {
+      '* TODO Test orgmode :WORK:',
+      '  DEADLINE: <2021-08-18 Wed> SCHEDULED: <2021-08-18 Wed>',
+      '* TODO Another todo',
+    }
+    parsed = parser.parse(lines, 'work')
+    headline = parsed:get_item(1)
+    api.nvim_call_function.returns('  DEADLINE: <2021-08-18 Wed> SCHEDULED: <2021-08-18 Wed>')
+    result = headline:add_scheduled_date(scheduled_date:add({ day = 4 }))
+    assert.stub(api.nvim_call_function).was.called_with('setline', {
+      2,
+      '  DEADLINE: <2021-08-18 Wed> SCHEDULED: <2021-08-22 Sun>',
+    })
+    mock.revert(api)
+  end)
 end)

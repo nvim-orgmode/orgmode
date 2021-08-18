@@ -572,6 +572,12 @@ Go to previous heading on same level. Doesn't go outside of parent.<br />
 #### **outline_up_heading**
 *mapped to*: `g{`<br />
 Go to parent heading.<br />
+#### **org_deadline**
+*mapped to*: `<Leader>oid`<br />
+Insert/Update deadline date.<br />
+#### **org_schedule**
+*mapped to*: `<Leader>ois`<br />
+Insert/Update scheduled date.<br />
 #### **org_show_help**
 *mapped to*: `?`<br />
 Show help popup with mappings

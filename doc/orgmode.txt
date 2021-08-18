@@ -88,7 +88,9 @@ CONTENTS                                                        *orgmode-content
             1.2.4.27. org_forward_heading_same_level.|orgmode-org_forward_heading_same_level|
             1.2.4.28. org_backward_heading_same_level.|orgmode-org_backward_heading_same_level|
             1.2.4.29. outline_up_heading..............|orgmode-outline_up_heading|
-            1.2.4.30. org_show_help........................|orgmode-org_show_help|
+            1.2.4.30. org_deadline..........................|orgmode-org_deadline|
+            1.2.4.31. org_schedule..........................|orgmode-org_schedule|
+            1.2.4.32. org_show_help........................|orgmode-org_show_help|
     1.3. Autocompletion...................................|orgmode-autocompletion|
     1.4. Abbreviations.....................................|orgmode-abbreviations|
     1.5. Colors...................................................|orgmode-colors|
@@ -786,6 +788,16 @@ OUTLINE_UP_HEADING                                    *orgmode-outline_up_headin
 
 mapped to: `g{`
 Go to parent heading.
+
+ORG_DEADLINE                                                *orgmode-org_deadline*
+
+mapped to: `<Leader>oid`
+Insert/Update deadline date.
+
+ORG_SCHEDULE                                                *orgmode-org_schedule*
+
+mapped to: `<Leader>ois`
+Insert/Update scheduled date.
 
 ORG_SHOW_HELP                                              *orgmode-org_show_help*
 

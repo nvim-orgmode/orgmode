@@ -51,6 +51,8 @@ return {
     org_forward_heading_same_level = { 'org_mappings.forward_heading_same_level' },
     org_backward_heading_same_level = { 'org_mappings.backward_heading_same_level' },
     outline_up_heading = { 'org_mappings.outline_up_heading' },
+    org_deadline = { 'org_mappings.org_deadline' },
+    org_schedule = { 'org_mappings.org_schedule' },
     org_show_help = { 'org_mappings.show_help' },
   },
 }

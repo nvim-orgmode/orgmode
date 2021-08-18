@@ -95,6 +95,8 @@ return {
       org_forward_heading_same_level = ']]',
       org_backward_heading_same_level = '[[',
       outline_up_heading = 'g{',
+      org_deadline = '<Leader>oid',
+      org_schedule = '<Leader>ois',
       org_show_help = '?',
     },
   },
