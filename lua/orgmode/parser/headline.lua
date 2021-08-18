@@ -213,6 +213,20 @@ function Headline:get_deadline_and_scheduled_dates()
   end, self.dates)
 end
 
+---@return Date
+function Headline:get_scheduled_date()
+  return vim.tbl_filter(function(date)
+    return date:is_scheduled()
+  end, self.dates)[1]
+end
+
+---@return Date
+function Headline:get_deadline_date()
+  return vim.tbl_filter(function(date)
+    return date:is_deadline()
+  end, self.dates)[1]
+end
+
 function Headline:_get_content_by_lnum(lnum)
   return self.content[lnum - self.range.start_line]
 end
@@ -304,17 +318,25 @@ function Headline:add_closed_date()
   if closed_date then
     return nil
   end
-  local planning = self.content[1]
-  if planning and planning:is_planning() then
-    return vim.api.nvim_call_function('setline', {
-      planning.range.start_line,
-      string.format('%s CLOSED: [%s]', planning.line, Date.now():to_string()),
-    })
+  return self:_add_planning_date(Date.now(), 'CLOSED')
+end
+
+---@param date Date
+function Headline:add_scheduled_date(date)
+  local scheduled_date = self:get_scheduled_date()
+  if scheduled_date then
+    return self:_update_date(scheduled_date, date)
   end
-  return vim.api.nvim_call_function('append', {
-    self.range.start_line,
-    string.format('%sCLOSED: [%s]', string.rep(' ', self.level + 1), Date.now():to_string()),
-  })
+  return self:_add_planning_date(date, 'SCHEDULED', true)
+end
+
+---@param date Date
+function Headline:add_deadline_date(date)
+  local deadline_date = self:get_deadline_date()
+  if deadline_date then
+    return self:_update_date(deadline_date, date)
+  end
+  return self:_add_planning_date(date, 'DEADLINE', true)
 end
 
 function Headline:remove_closed_date()
@@ -455,6 +477,52 @@ function Headline:get_category()
     return self.properties.items.CATEGORY
   end
   return self.category
+end
+
+function Headline:_update_date(date, new_date)
+  date = date:set({
+    year = new_date.year,
+    month = new_date.month,
+    day = new_date.day,
+  })
+  local line = vim.api.nvim_call_function('getline', { date.range.start_line })
+  local view = vim.fn.winsaveview()
+  local new_line = string.format(
+    '%s%s%s',
+    line:sub(1, date.range.start_col),
+    date:to_string(),
+    line:sub(date.range.end_col)
+  )
+  vim.api.nvim_call_function('setline', {
+    date.range.start_line,
+    new_line,
+  })
+  vim.fn.winrestview(view)
+  return true
+end
+
+---@param date Date
+---@param type string
+---@param active boolean
+---@return string
+function Headline:_add_planning_date(date, type, active)
+  local planning = self.content[1]
+  local date_string = string.format('%s%s%s', active and '<' or '[', date:to_string(), active and '>' or ']')
+  if planning and planning:is_planning() then
+    planning.line = string.format('%s %s: %s', planning.line, type, date_string)
+    return vim.api.nvim_call_function('setline', {
+      planning.range.start_line,
+      planning.line,
+    })
+  end
+  local indent = ''
+  if config.org_indent_mode == 'indent' then
+    indent = string.rep(' ', self.level + 1)
+  end
+  return vim.api.nvim_call_function('append', {
+    self.range.start_line,
+    string.format('%s%s: %s', indent, type, date_string),
+  })
 end
 
 return Headline
