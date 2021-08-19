@@ -10,7 +10,7 @@
 
   Orgmode clone written in Lua for Neovim 0.5.
 
-  [Installation](#installation) | [Setup](#setup) | [Gifs](#gifs) | [Docs](/DOCS.md) | [Development](#development) | [Kudos](#thanks-to)
+  [Installation](#installation) | [Setup](#setup) | [Gifs](#gifs) | [Docs](/DOCS.md) | [Plugins](#plugins) | [Development](#development) | [Kudos](#thanks-to)
 
 </div>
 
@@ -182,6 +182,16 @@ Or just use `omnifunc` via <kbd>\<C-x\>\<C-o\></kbd>
   * Exporting (via `emacs`, `pandoc` and custom export options)
 
 Link to detailed documentation: [DOCS](DOCS.md)
+
+## Plugins
+* [org-bullets.nvim](https://github.com/akinsho/org-bullets.nvim)
+
+**NOTE**: None of the Emacs Orgmode plugins will be built into orgmode.nvim.
+Anything that's a separate plugin in Emacs Orgmode should be a separate plugin in here.
+Point of this plugin is to provide functionality that's built into Emacs Orgmode core,
+and a good foundation for external plugins.<br />
+If you want to build a plugin, post suggestions and improvements on [Plugins infrastructure](https://github.com/kristijanhusak/orgmode.nvim/issues/26)
+issue.
 
 ## Development
 
