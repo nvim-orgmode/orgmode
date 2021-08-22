@@ -28,6 +28,7 @@ function Org:init()
     capture = self.capture,
     agenda = self.agenda,
   })
+  require('orgmode.org.autocompletion') -- Needed for registering compe source
   self.initialized = true
 end
 
