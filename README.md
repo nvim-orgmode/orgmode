@@ -86,6 +86,15 @@ require'compe'.setup({
 })
 ```
 
+For [nvim-cmp](https://github.com/hrsh7th/nvim-cmp), add `orgmode` to list of sources:
+```lua
+require'cmp'.setup({
+  sources = {
+    { name = 'orgmode' }
+  }
+})
+```
+
 For [completion.nvim](https://github.com/nvim-lua/completion-nvim), just add `omni` mode to chain complete list and add additional keyword chars:
 ```lua
 vim.g.completion_chain_complete_list = {

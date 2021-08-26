@@ -1,6 +1,6 @@
 lua require('orgmode.config'):setup_mappings('org')
 function OrgmodeOmni(findstart, base)
-  return luaeval('require("orgmode.org.autocompletion").omni(_A[1], _A[2])', [a:findstart, a:base])
+  return luaeval('require("orgmode.org.autocompletion.omni")(_A[1], _A[2])', [a:findstart, a:base])
 endfunction
 
 setlocal omnifunc=OrgmodeOmni
