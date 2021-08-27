@@ -128,7 +128,7 @@ Conceal bold/italic/underline/code/verbatim markers.
 *type*: `string|nil`<br />
 *default value*: `time`<br />
 When set to `time`(default), adds `CLOSED` date when marking headline as done.<br />
-When set to `nil`, it is disabled.
+When set to `false`, it is disabled.
 
 
 #### **org_highlight_latex_and_related**
@@ -221,7 +221,7 @@ Default time span shown when agenda is opened.
 *type*: `number`<br />
 *default value*: `1`<br />
 From which day in week (ISO weekday, 1 is Monday) to show the agenda. Applies only to `week` and number span.<br />
-If set to `nil`, starts from today
+If set to `false`, starts from today
 
 #### **org_agenda_start_day**
 *type*: `string`<br />
@@ -229,7 +229,7 @@ If set to `nil`, starts from today
 *example values*: `+2d`, `-1d`<br />
 offset to apply to the agenda start date.<br />
 Example:<br />
-  If `org_agenda_start_on_weekday` is `nil`, and `org_agenda_start_day` is `-2d`,<br />
+  If `org_agenda_start_on_weekday` is `false`, and `org_agenda_start_day` is `-2d`,<br />
   agenda will always show current week from today - 2 days
 
 #### **org_agenda_templates**

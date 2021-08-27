@@ -237,7 +237,7 @@ ORG_LOG_DONE                                                *orgmode-org_log_don
 type: `string|nil`
 default value: `time`
 When set to `time`(default), adds `CLOSED` date when marking headline as done.
-When set to `nil`, it is disabled.
+When set to `false`, it is disabled.
 
 ORG_HIGHLIGHT_LATEX_AND_RELATED          *orgmode-org_highlight_latex_and_related*
 
@@ -336,7 +336,7 @@ ORG_AGENDA_START_ON_WEEKDAY                  *orgmode-org_agenda_start_on_weekda
 type: `number`
 default value: `1`
 From which day in week (ISO weekday, 1 is Monday) to show the agenda. Applies only to `week` and number span.
-If set to `nil`, starts from today
+If set to `false`, starts from today
 
 ORG_AGENDA_START_DAY                                *orgmode-org_agenda_start_day*
 
@@ -345,7 +345,7 @@ default value: `nil`
 example values: `+2d`, `-1d`
 offset to apply to the agenda start date.
 Example:
-  If `org_agenda_start_on_weekday` is `nil`, and `org_agenda_start_day` is `-2d`,
+  If `org_agenda_start_on_weekday` is `false`, and `org_agenda_start_day` is `-2d`,
   agenda will always show current week from today - 2 days
 
 ORG_AGENDA_TEMPLATES                                *orgmode-org_agenda_templates*
