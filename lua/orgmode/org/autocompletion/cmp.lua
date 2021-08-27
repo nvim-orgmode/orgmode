@@ -33,6 +33,9 @@ function Source:complete(params, callback)
   for _, item in ipairs(results) do
     table.insert(items, {
       label = item.word,
+      labelDetails = {
+        description = item.menu,
+      },
     })
   end
 
