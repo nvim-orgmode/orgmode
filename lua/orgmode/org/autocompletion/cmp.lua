@@ -27,7 +27,6 @@ end
 function Source:complete(params, callback)
   local offset = OrgmodeOmniCompletion(1, '') + 1
   local input = string.sub(params.context.cursor_before_line, offset)
-  print(vim.inspect(input))
   local results = OrgmodeOmniCompletion(0, input)
   local items = {}
   for _, item in ipairs(results) do
