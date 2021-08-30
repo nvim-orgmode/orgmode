@@ -43,6 +43,11 @@ local function indentexpr()
     return noindent_mode()
   end
 
+  local cur_line = vim.trim(vim.fn.getline(vim.v.lnum))
+  if cur_line ~= '' then
+    return -1
+  end
+
   local prev_line = vim.fn.prevnonblank(vim.v.lnum - 1)
   if prev_line <= 0 then
     return 0
