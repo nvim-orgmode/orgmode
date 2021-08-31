@@ -64,10 +64,22 @@ call dein#add('kristijanhusak/orgmode.nvim')
 ## Setup
 
 ```lua
+-- init.lua
 require('orgmode').setup({
   org_agenda_files = {'~/Dropbox/org/*', '~/my-orgs/**/*'},
   org_default_notes_file = '~/Dropbox/org/refile.org',
 })
+```
+
+Or if you are using `init.vim`:
+```vim
+" init.vim
+lua << EOF
+require('orgmode').setup({
+  org_agenda_files = {'~/Dropbox/org/*', '~/my-orgs/**/*'},
+  org_default_notes_file = '~/Dropbox/org/refile.org',
+})
+EOF
 ```
 
 * **Open agenda prompt**: <kbd>\<Leader\>oa</kbd>
