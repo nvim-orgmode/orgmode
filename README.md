@@ -14,6 +14,9 @@
 
 </div>
 
+## Tree-sitter
+Experimental tree-sitter support branch: https://github.com/kristijanhusak/orgmode.nvim/tree/tree-sitter
+
 ## Installation
 
 Use your favourite package manager:
