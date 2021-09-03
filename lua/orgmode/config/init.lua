@@ -207,7 +207,6 @@ function Config:ts_highlights_enabled()
   end
   self.ts_hl_enabled = false
   local hl_module = require('nvim-treesitter.configs').get_module('highlight')
-  print(vim.inspect(hl_module))
   if hl_module and hl_module.enable and not vim.tbl_contains(hl_module.disable or {}, 'org') then
     self.ts_hl_enabled = true
   end
