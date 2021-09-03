@@ -201,6 +201,13 @@ Highlights are partially supported.
 * [Tree-sitter highlight injections](https://github.com/nvim-treesitter/nvim-treesitter/blob/4f2265632becabcd2c5b1791fa31ef278f1e496c/CONTRIBUTING.md#injections) through `#BEGIN_SRC filetype` blocks
 * Headline markup highlighting (https://github.com/kristijanhusak/orgmode.nvim/issues/67)
 
+#### Troubleshoot
+**Folding is not working**<br />
+Make sure you are not overriding foldexpr in Org buffers with [nvim-treesitter folding](https://github.com/nvim-treesitter/nvim-treesitter#folding)
+
+**Indentation is not working**<br />
+Make sure you are not overriding indentexpr in Org buffers with [nvim-treesitter indentation](https://github.com/nvim-treesitter/nvim-treesitter#indentation)
+
 ### Features (TL;DR):
 * Agenda view
 * Search by tags/keyword
