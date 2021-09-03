@@ -37,6 +37,9 @@ local function add_todo_keyword_highlights()
         table.insert(lines, string.format([[(item "keyword?" @%s (#eq? @%s %s))]], face_hl, face_hl, face_name))
       end
       vim.treesitter.set_query('org', 'highlights', table.concat(lines, '\n'))
+      if vim.bo.filetype == 'org' then
+        vim.cmd([[filetype detect]])
+      end
     end)
   )
 end
