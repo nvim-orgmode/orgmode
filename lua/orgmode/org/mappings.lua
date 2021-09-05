@@ -233,6 +233,7 @@ function OrgMappings:handle_return(suffix)
     local line = vim.fn.getline('.')
     local checkbox = line:match('^(%s*[%+%-])%s*%[[%sXx%-]?%]')
     local plain_list = line:match('^%s*[%+%-]%s*')
+    local indent, number_in_list, closer = line:match('^(%s*)(%d+)([%)%.])%s+')
     if checkbox then
       vim.fn.append(vim.fn.line('.'), checkbox .. ' [ ] ')
       vim.fn.cursor(vim.fn.line('.') + 1, 0)
@@ -240,6 +241,11 @@ function OrgMappings:handle_return(suffix)
     end
     if plain_list then
       vim.fn.append(vim.fn.line('.'), plain_list)
+      vim.fn.cursor(vim.fn.line('.') + 1, 0)
+      return vim.cmd([[startinsert!]])
+    end
+    if number_in_list then
+      vim.fn.append(vim.fn.line('.'), string.format('%s%d%s ', indent, tonumber(number_in_list) + 1, closer))
       vim.fn.cursor(vim.fn.line('.') + 1, 0)
       return vim.cmd([[startinsert!]])
     end
