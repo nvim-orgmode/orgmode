@@ -82,8 +82,9 @@ function OrgMappings:cycle()
   end
   vim.cmd([[norm!j]])
   local is_next_item_closed = vim.fn.foldclosed('.') ~= -1
+  local is_headline = vim.fn.getline('.'):match('^%*+%s+')
   vim.cmd([[norm!k]])
-  if is_next_item_closed then
+  if is_next_item_closed and not is_headline then
     return vim.cmd([[norm!zczO]])
   end
   if vim.fn.foldlevel('.') == 1 then
