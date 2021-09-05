@@ -172,7 +172,7 @@ function OrgMappings:todo_next_state()
     self:_replace_date(date:apply_repeater())
   end
 
-  self:_change_todo_state('reset', true)
+  self:_change_todo_state('reset')
   local state_change = string.format(
     '- State "%s" from "%s" [%s]',
     item.todo_keyword.value,
