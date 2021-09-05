@@ -230,15 +230,15 @@ function OrgMappings:handle_return(suffix)
     vim.fn.cursor(vim.fn.line('.') + 2, 0)
     return vim.cmd([[startinsert!]])
   end
-  if item.type == 'list' or item.type == 'listitem' then
+  if item.type == 'list' or item.type == 'itemtext' or item.type == 'bullet' then
     if item.type == 'list' then
-      vim.fn.cursor(vim.fn.line('.'), vim.fn.col('$'))
+      vim.cmd([[normal ^]])
       item = Files.get_current_file():get_current_node()
     end
     local line = vim.fn.getline('.')
     local checkbox = line:match('^(%s*[%+%-])%s*%[[%sXx%-]?%]')
     local plain_list = line:match('^%s*[%+%-]%s*')
-    local indent, number_in_list, closer = line:match('^(%s*)(%d+)([%)%.])%s+')
+    local indent, number_in_list, closer = line:match('^(%s*)(%d+)([%)%.])%s?')
     if checkbox then
       vim.fn.append(vim.fn.line('.'), checkbox .. ' [ ] ')
       vim.fn.cursor(vim.fn.line('.') + 1, 0)
@@ -250,8 +250,39 @@ function OrgMappings:handle_return(suffix)
       return vim.cmd([[startinsert!]])
     end
     if number_in_list then
-      vim.fn.append(vim.fn.line('.'), string.format('%s%d%s ', indent, tonumber(number_in_list) + 1, closer))
-      vim.fn.cursor(vim.fn.line('.') + 1, 0)
+      local next_sibling = item.node:parent()
+      local text_edits = {}
+      local counter = 1
+      local new_start
+      while next_sibling do
+        local bullet = next_sibling:child(0)
+        local text = table.concat(ts_utils.get_node_text(bullet))
+        local new_text = tostring(tonumber(text:match('%d+')) + 1) .. closer
+
+        if counter == 1 then
+          local row, _ = next_sibling:end_()
+          new_start = row + 2 -- +1 for 0 index and +1 for next line
+          local range = {}
+          range.start = { line = row + 1, character = 0 }
+          range['end'] = { line = row + 1, character = 0 }
+          table.insert(text_edits, {
+            range = range,
+            newText = indent .. new_text .. ' ' .. '\n',
+          })
+        else
+          table.insert(text_edits, {
+            range = ts_utils.node_to_lsp_range(bullet),
+            newText = new_text,
+          })
+        end
+
+        counter = counter + 1
+        next_sibling = next_sibling:next_named_sibling()
+      end
+
+      vim.lsp.util.apply_text_edits(text_edits, 0)
+
+      vim.fn.cursor(new_start, 0)
       return vim.cmd([[startinsert!]])
     end
   end
