@@ -59,6 +59,10 @@ function Content:is_checkbox()
   return self.line:match('^(%s*[%+%-])%s*%[[%sXx%-]?%]')
 end
 
+function Content:is_numbered_list()
+  return self.line:match('^(%s*)(%d+)([%)%.])%s+')
+end
+
 ---@return boolean
 function Content:is_drawer()
   return self.type == Types.DRAWER
