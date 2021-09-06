@@ -73,7 +73,7 @@ function Section.from_node(section_node, file, parent)
     content = {},
     properties = { items = {} },
     node = section_node,
-    todo_keyword_node = '',
+    todo_keyword_node = nil,
   }
   local child_sections = {}
 
