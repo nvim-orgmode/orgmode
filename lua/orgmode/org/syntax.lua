@@ -12,7 +12,7 @@ local function load_code_blocks()
   end
 
   for _, ft in ipairs(orgfile.source_code_filetypes) do
-    vim.cmd(string.format([[syntax include @orgmodeBlockSrc%s syntax/%s.vim]], ft, ft))
+    vim.cmd(string.format([[silent! syntax include @orgmodeBlockSrc%s syntax/%s.vim]], ft, ft))
     vim.cmd([[unlet! b:current_syntax]])
   end
 
