@@ -1,7 +1,7 @@
-if exists('b:did_ftplugin')
+if exists('b:did_indent')
   finish
 endif
-let b:did_ftplugin = 1
+let b:did_indent = 1
 
 function! OrgmodeFoldExpr()
   return luaeval('require("orgmode.org.indent").foldexpr()')
