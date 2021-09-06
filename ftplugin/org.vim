@@ -1,7 +1,7 @@
-if exists('b:did_indent')
+if exists('b:did_ftplugin')
   finish
 endif
-let b:did_indent = 1
+let b:did_ftplugin = 1
 
 lua require('orgmode.config'):setup_mappings('org')
 
