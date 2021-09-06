@@ -1,4 +1,5 @@
 local Files = require('orgmode.parser.files')
+local config = require('orgmode.config')
 
 local function load_code_blocks()
   local file = vim.api.nvim_buf_get_name(0)
@@ -28,6 +29,14 @@ local function load_code_blocks()
   end
 end
 
+local function add_todo_keywords_to_spellgood()
+  local todo_keywords = config:get_todo_keywords().ALL
+  for _, todo_keyword in ipairs(todo_keywords) do
+    vim.cmd(string.format('spellgood! %s', todo_keyword))
+  end
+end
+
 return {
   load_code_blocks = load_code_blocks,
+  add_todo_keywords_to_spellgood = add_todo_keywords_to_spellgood,
 }

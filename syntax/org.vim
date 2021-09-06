@@ -5,6 +5,7 @@ if exists('b:current_syntax')
 endif
 
 lua require('orgmode.colors.highlights').define_highlights()
+lua require('orgmode.org.syntax').add_todo_keywords_to_spellgood()
 let s:concealends = ''
 let s:conceal = luaeval('require("orgmode.config").org_hide_emphasis_markers')
 if s:conceal
