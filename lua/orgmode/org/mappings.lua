@@ -220,13 +220,15 @@ end
 
 function OrgMappings:handle_return(suffix)
   suffix = suffix or ''
-  local item = Files.get_current_file():get_current_node()
-  if item.type == 'headline' or item.node:parent():type() == 'headline' then
-    if item.type ~= 'stars' then
-      ts_utils.goto_node(item.node:parent())
-      item = Files.get_current_file():get_current_node()
-    end
-    local section = item.node:parent():parent()
+  local current_file = Files.get_current_file()
+  local item = current_file:get_current_node()
+
+  if item.node:parent() and item.node:parent():type() == 'headline' then
+    item = current_file:convert_to_file_node(item.node:parent())
+  end
+
+  if item.type == 'headline' then
+    local section = utils.get_closest_parent_of_type(item.node, 'section')
     local end_row, _ = section:end_()
     vim.api.nvim_buf_set_lines(0, end_row, end_row, false, { string.rep('*', item.level) .. ' ' .. suffix, '' })
     vim.fn.cursor(end_row + 1, 0)

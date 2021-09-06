@@ -39,8 +39,7 @@ function File:_parse()
   self:_parse_sections()
 end
 
-function File:get_current_node()
-  local node = ts_utils.get_node_at_cursor()
+function File:convert_to_file_node(node)
   local text = self:get_node_text(node)
   local stars = text:match('^%*+')
   return {
@@ -50,6 +49,11 @@ function File:get_current_node()
     range = Range.from_node(node),
     level = stars and stars:len() or 0,
   }
+end
+
+function File:get_current_node()
+  local node = ts_utils.get_node_at_cursor()
+  return self:convert_to_file_node(node)
 end
 
 function File:get_opened_headlines()

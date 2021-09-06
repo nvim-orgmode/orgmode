@@ -286,4 +286,17 @@ function utils.get_node_text(node, content)
   end
 end
 
+---@param node table
+---@param type string
+---@return table
+function utils.get_closest_parent_of_type(node, type)
+  local parent = node:parent()
+  while parent do
+    if parent:type() == type then
+      return parent
+    end
+    parent = parent:parent()
+  end
+end
+
 return utils
