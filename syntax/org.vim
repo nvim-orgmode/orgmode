@@ -44,10 +44,6 @@ syntax match org_hyperlinkURL				    contained "[^][]*\]\[" conceal
 syntax match org_hyperlinkBracketsRight	contained "\]\{2}"     conceal
 hi def link org_hyperlink Underlined
 
-
-syntax match org_list_checkbox /^\s*-\s\+\zs\[[ X-]]\ze/
-hi def link org_list_checkbox     PreProc
-
 hi org_hide_leading_stars ctermfg=0 guifg=bg
 
 syntax spell toplevel

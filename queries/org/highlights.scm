@@ -14,6 +14,8 @@
 (headline (stars) @stars (#eq? @stars "******")) @OrgHeadlineLevel6
 (headline (stars) @stars (#eq? @stars "*******")) @OrgHeadlineLevel7
 (headline (stars) @stars (#eq? @stars "********")) @OrgHeadlineLevel8
+(bullet) @Identifier
+(checkbox) @PreProc
 (property_drawer) @Constant
 (tag) @Function
 (plan) @Constant
