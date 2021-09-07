@@ -65,7 +65,7 @@ end
 
 ---@return File[]
 function Files.all()
-  Files._ensure_loaded()
+  Files.ensure_loaded()
   local files = vim.tbl_values(Files.orgfiles)
   table.sort(files, function(a, b)
     return a.category < b.category
@@ -227,11 +227,11 @@ function Files._check_source_blocks(old_file, new_file)
   end
 end
 
-function Files._ensure_loaded()
+function Files.ensure_loaded()
   if Files.loaded then
     return true
   end
-  vim.wait(500, function()
+  vim.wait(5000, function()
     return Files.loaded
   end, 5)
 end
