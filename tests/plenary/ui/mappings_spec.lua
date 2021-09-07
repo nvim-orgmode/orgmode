@@ -131,11 +131,11 @@ describe('Mappings', function()
       '    - Neste item',
     }, vim.api.nvim_buf_get_lines(
       0,
-      16,
-      22,
+      18,
+      24,
       false
     ))
-    vim.fn.cursor(17, 1)
+    vim.fn.cursor(19, 1)
     vim.cmd([[norm cit]])
     assert.are.same({
       '* TODO Repeatable task',
@@ -146,8 +146,8 @@ describe('Mappings', function()
       '  - State "DONE" from "TODO" [' .. Date.now():to_string() .. ']',
     }, vim.api.nvim_buf_get_lines(
       0,
-      16,
-      22,
+      18,
+      24,
       false
     ))
   end)
@@ -256,11 +256,11 @@ describe('Mappings', function()
       '    - Neste item',
     }, vim.api.nvim_buf_get_lines(
       0,
-      19,
-      22,
+      21,
+      24,
       false
     ))
-    vim.fn.cursor(20, 1)
+    vim.fn.cursor(22, 1)
     vim.cmd([[exe "norm ,\<CR>"]])
     assert.are.same({
       '  - Regular item',
@@ -269,8 +269,8 @@ describe('Mappings', function()
       '    - Neste item',
     }, vim.api.nvim_buf_get_lines(
       0,
-      19,
-      23,
+      21,
+      25,
       false
     ))
   end)
@@ -328,8 +328,31 @@ describe('Mappings', function()
   end)
 
   it('should add numbered list item', function()
-    -- @TODO
-    assert.is.True(true)
+    assert.are.same({
+      '** NEXT Working on this now :OFFICE:NESTED:',
+      '   1. First item',
+      '   2. Second item',
+      '* TODO Repeatable task',
+    }, vim.api.nvim_buf_get_lines(
+      0,
+      15,
+      19,
+      false
+    ))
+    vim.fn.cursor(18, 1)
+    vim.cmd([[exe "norm ,\<CR>"]])
+    assert.are.same({
+      '** NEXT Working on this now :OFFICE:NESTED:',
+      '   1. First item',
+      '   2. Second item',
+      '   3. ',
+      '* TODO Repeatable task',
+    }, vim.api.nvim_buf_get_lines(
+      0,
+      15,
+      20,
+      false
+    ))
   end)
 
   it('should insert new heading after current subtree (org_insert_heading_respect_content)', function()
@@ -484,10 +507,12 @@ describe('Mappings', function()
       '    - [ ] Nested checkbox',
       'multiple tags content, tags not read from content :FROMCONTENT:',
       '** NEXT Working on this now :OFFICE:NESTED:',
+      '   1. First item',
+      '   2. Second item',
     }, vim.api.nvim_buf_get_lines(
       0,
       2,
-      16,
+      18,
       false
     ))
     vim.fn.cursor(9, 1)
@@ -505,12 +530,14 @@ describe('Mappings', function()
       '    - [ ] Nested checkbox',
       'multiple tags content, tags not read from content :FROMCONTENT:',
       '** NEXT Working on this now :OFFICE:NESTED:',
+      '   1. First item',
+      '   2. Second item',
       '* DONE top level todo :WORK:',
       'content for top level todo',
     }, vim.api.nvim_buf_get_lines(
       0,
       2,
-      16,
+      18,
       false
     ))
   end)
@@ -534,11 +561,11 @@ describe('Mappings', function()
 
   it('should jump to previous heading on any level (org_previous_visible_heading)', function()
     vim.cmd([[norm G]])
-    assert.are.same(22, vim.fn.line('.'))
+    assert.are.same(24, vim.fn.line('.'))
+    vim.cmd([[norm {]])
+    assert.are.same(21, vim.fn.line('.'))
     vim.cmd([[norm {]])
     assert.are.same(19, vim.fn.line('.'))
-    vim.cmd([[norm {]])
-    assert.are.same(17, vim.fn.line('.'))
     vim.cmd([[norm {]])
     assert.are.same(16, vim.fn.line('.'))
     vim.cmd([[norm {]])
@@ -551,9 +578,9 @@ describe('Mappings', function()
 
   it('should jump to previous heading on same level (org_backward_heading_same_level)', function()
     vim.cmd([[norm G]])
-    assert.are.same(22, vim.fn.line('.'))
+    assert.are.same(24, vim.fn.line('.'))
     vim.cmd('norm [[')
-    assert.are.same(17, vim.fn.line('.'))
+    assert.are.same(19, vim.fn.line('.'))
     vim.cmd('norm [[')
     assert.are.same(11, vim.fn.line('.'))
     vim.cmd('norm [[')
