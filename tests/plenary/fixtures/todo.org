@@ -3,7 +3,6 @@
 * TODO Test orgmode
   DEADLINE: <2021-07-21 Wed 22:02>  CLOSED: [2021-07-21 Wed 23:12]
   :PROPERTIES:
-
   :CUSTOM_ID: 1
   :CATEGORY: testing
   :END:
