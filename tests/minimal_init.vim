@@ -5,6 +5,7 @@ set termguicolors
 set noswapfile
 runtime plugin/plenary.vim
 runtime plugin/nvim-treesitter.vim
+let mapleader = ','
 
 lua << EOF
 require('nvim-treesitter.configs').setup({})

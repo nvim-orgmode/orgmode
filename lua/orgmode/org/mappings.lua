@@ -144,10 +144,18 @@ function OrgMappings:change_date()
 end
 
 function OrgMappings:todo_next_state()
+  return self:_todo_change_state('next')
+end
+
+function OrgMappings:todo_prev_state()
+  self:_todo_change_state('prev')
+end
+
+function OrgMappings:_todo_change_state(direction)
   local item = Files.get_closest_headline()
   local was_done = item:is_done()
   local old_state = item.todo_keyword.value
-  local changed = self:_change_todo_state('next', true)
+  local changed = self:_change_todo_state(direction, true)
   if not changed then
     return
   end
@@ -190,10 +198,6 @@ function OrgMappings:todo_next_state()
   if item.properties.valid then
     vim.fn.append(item.properties.range.end_line, data.indent .. state_change)
   end
-end
-
-function OrgMappings:todo_prev_state()
-  self:_change_todo_state('prev')
 end
 
 function OrgMappings:do_promote(whole_subtree)
