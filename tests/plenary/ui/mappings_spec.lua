@@ -1,0 +1,17 @@
+local helpers = require('tests.plenary.ui.helpers')
+
+describe('Mappings', function()
+  before_each(function()
+    helpers.load_file('tests/plenary/fixtures/todo.org')
+  end)
+  after_each(function()
+    vim.cmd([[bw!]])
+  end)
+
+  it('should demote the heading', function()
+    vim.fn.cursor(3, 1)
+    assert.are.same('* TODO Test orgmode', vim.fn.getline('.'))
+    vim.cmd([[norm >>]])
+    assert.are.same('** TODO Test orgmode', vim.fn.getline('.'))
+  end)
+end)

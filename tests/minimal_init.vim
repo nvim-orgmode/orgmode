@@ -2,6 +2,7 @@ set rtp+=.
 set rtp+=./plenary.nvim
 set rtp+=./nvim-treesitter
 set termguicolors
+set noswapfile
 runtime plugin/plenary.vim
 runtime plugin/nvim-treesitter.vim
 
@@ -18,4 +19,9 @@ parser_config.org = {
   },
   filetype = 'org',
 }
+
+require('orgmode').setup({
+  org_agenda_files = vim.fn.getcwd() .. '/tests/plenary/fixtures/*',
+  org_default_notes_file = vim.fn.getcwd() .. '/tests/plenary/fixtures/refile.org',
+})
 EOF
