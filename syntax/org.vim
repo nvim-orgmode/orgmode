@@ -11,7 +11,7 @@ let s:conceal = luaeval('require("orgmode.config").org_hide_emphasis_markers')
 if s:conceal
   let s:concealends = ' concealends'
 endif
-exe 'syntax region org_bold      matchgroup=org_bold_delimiter       start="\S\zs\*\|\*\S\@="  end="\S\zs\*\|\*\S\@="  keepend oneline contains=@Spell' . s:concealends
+exe 'syntax region org_bold      matchgroup=org_bold_delimiter       start="[^\*]\zs\*\|\*[^\*]\@="  end="\S\zs\*\|\*\S\@="  keepend oneline contains=@Spell' . s:concealends
 exe 'syntax region org_italic    matchgroup=org_italic_delimiter     start="\S\zs\/\|\/\S\@="  end="\S\zs\/\|\/\S\@="  keepend oneline contains=@Spell' . s:concealends
 exe 'syntax region org_underline matchgroup=org_underline_delimiter  start="\S\zs_\|_\S\@="    end="\S\zs_\|_\S\@="    keepend oneline contains=@Spell' . s:concealends
 exe 'syntax region org_code      matchgroup=org_code_delimiter       start="\S\zs\~\|\~\S\@="  end="\S\zs\~\|\~\S\@="  keepend oneline contains=@Spell' . s:concealends
