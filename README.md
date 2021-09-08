@@ -208,6 +208,10 @@ Make sure you are not overriding foldexpr in Org buffers with [nvim-treesitter f
 **Indentation is not working**<br />
 Make sure you are not overriding indentexpr in Org buffers with [nvim-treesitter indentation](https://github.com/nvim-treesitter/nvim-treesitter#indentation)
 
+**I get `treesitter/query.lua` errors when opening agenda/capture prompt or org files**<br />
+Make sure you are using latest changes from [tree-sitter-org](https://github.com/milisims/tree-sitter-org) grammar.<br />
+by running `:TSUpdate org` and restarting the editor.
+
 ### Features (TL;DR):
 * Agenda view
 * Search by tags/keyword
