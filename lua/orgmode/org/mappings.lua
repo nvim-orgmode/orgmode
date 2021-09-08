@@ -287,7 +287,7 @@ function OrgMappings:handle_return(suffix)
         end
 
         counter = counter + 1
-        next_sibling = next_sibling:next_named_sibling()
+        next_sibling = ts_utils.get_next_node(next_sibling)
       end
     end
 
