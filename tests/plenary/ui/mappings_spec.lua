@@ -2,14 +2,17 @@ local helpers = require('tests.plenary.ui.helpers')
 local Date = require('orgmode.objects.date')
 
 describe('Mappings', function()
-  before_each(function()
-    helpers.load_file('tests/plenary/fixtures/todo.org')
-  end)
   after_each(function()
-    vim.cmd([[bw!]])
+    vim.cmd([[%bw!]])
   end)
 
   it('should increase the date by 1 day (org_increase_date)', function()
+    helpers.load_file_content({
+      '#TITLE: Test',
+      '',
+      '* TODO Test orgmode',
+      '  DEADLINE: <2021-07-21 Wed 22:02>',
+    })
     vim.fn.cursor(4, 21)
     assert.are.same('  DEADLINE: <2021-07-21 Wed 22:02>', vim.fn.getline('.'))
     vim.cmd([[exe "norm \<C-a>"]])
@@ -17,6 +20,12 @@ describe('Mappings', function()
   end)
 
   it('should decrease the date by 1 day (org_decrease_date)', function()
+    helpers.load_file_content({
+      '#TITLE: Test',
+      '',
+      '* TODO Test orgmode',
+      '  DEADLINE: <2021-07-21 Wed 22:02>',
+    })
     vim.fn.cursor(4, 21)
     assert.are.same('  DEADLINE: <2021-07-21 Wed 22:02>', vim.fn.getline('.'))
     vim.cmd([[exe "norm \<C-x>"]])
@@ -24,6 +33,12 @@ describe('Mappings', function()
   end)
 
   it('should change todo state of a headline forward (org_todo)', function()
+    helpers.load_file_content({
+      '#TITLE: Test',
+      '',
+      '* TODO Test orgmode',
+      '  DEADLINE: <2021-07-21 Wed 22:02>',
+    })
     assert.are.same({
       '* TODO Test orgmode',
       '  DEADLINE: <2021-07-21 Wed 22:02>',
@@ -73,6 +88,13 @@ describe('Mappings', function()
   end)
 
   it('should change todo state of a headline backward (org_todo_prev)', function()
+    helpers.load_file_content({
+      '#TITLE: Test',
+      '',
+      '* TODO Test orgmode',
+      '  DEADLINE: <2021-07-21 Wed 22:02>',
+    })
+
     assert.are.same({
       '* TODO Test orgmode',
       '  DEADLINE: <2021-07-21 Wed 22:02>',
@@ -122,48 +144,72 @@ describe('Mappings', function()
   end)
 
   it('should change todo state of repeatable task and add last repeat property and state change (org_todo)', function()
-    assert.are.same({
-      '* TODO Repeatable task',
+    helpers.load_file_content({
+      '#TITLE: Test',
+      '',
+      '* TODO Test orgmode',
       '  DEADLINE: <2021-09-07 Tue 12:00 +1w>',
-      '* NOKEYWORD Headline with wrong todo keyword and wrong tag format :WORK : OFFICE:',
-      '  - Regular item',
-      '  - Second recular item',
-      '    - Neste item',
+      '',
+      '* TODO Another task',
+    })
+
+    assert.are.same({
+      '* TODO Test orgmode',
+      '  DEADLINE: <2021-09-07 Tue 12:00 +1w>',
+      '',
+      '* TODO Another task',
     }, vim.api.nvim_buf_get_lines(
       0,
-      18,
-      24,
+      2,
+      6,
       false
     ))
-    vim.fn.cursor(19, 1)
+    vim.fn.cursor(3, 1)
     vim.cmd([[norm cit]])
     assert.are.same({
-      '* TODO Repeatable task',
+      '* TODO Test orgmode',
       '  DEADLINE: <2021-09-14 Tue 12:00 +1w>',
       '  :PROPERTIES:',
       '  :LAST_REPEAT: [' .. Date.now():to_string() .. ']',
       '  :END:',
       '  - State "DONE" from "TODO" [' .. Date.now():to_string() .. ']',
+      '',
+      '* TODO Another task',
     }, vim.api.nvim_buf_get_lines(
       0,
-      18,
-      24,
+      2,
+      10,
       false
     ))
   end)
 
   it('should toggle the checkbox state (org_toggle_checkbox)', function()
-    assert.are.same('  - [ ] The checkbox', vim.fn.getline(12))
-    assert.are.same('  - [X] The checkbox 2', vim.fn.getline(13))
-    vim.fn.cursor(12, 1)
+    helpers.load_file_content({
+      '* TODO top level todo with multiple tags :OFFICE:PROJECT:',
+      '  - [ ] The checkbox',
+      '  - [X] The checkbox 2',
+      '    - [ ] Nested checkbox',
+    })
+
+    assert.are.same('  - [ ] The checkbox', vim.fn.getline(2))
+    assert.are.same('  - [X] The checkbox 2', vim.fn.getline(3))
+    vim.fn.cursor(2, 1)
     vim.cmd([[exe "norm \<C-space>"]])
-    assert.are.same('  - [X] The checkbox', vim.fn.getline(12))
-    vim.fn.cursor(13, 1)
+    assert.are.same('  - [X] The checkbox', vim.fn.getline(2))
+    vim.fn.cursor(3, 1)
     vim.cmd([[exe "norm \<C-space>"]])
-    assert.are.same('  - [ ] The checkbox 2', vim.fn.getline(13))
+    assert.are.same('  - [ ] The checkbox 2', vim.fn.getline(3))
   end)
 
   it('should toggle archive tag on headline (org_toggle_archive_tag)', function()
+    helpers.load_file_content({
+      '#TITLE: Test',
+      '',
+      '* TODO Test orgmode',
+      '  DEADLINE: <2021-09-07 Tue 12:00 +1w>',
+      '',
+      '* TODO Another task',
+    })
     assert.are.same('* TODO Test orgmode', vim.fn.getline(3))
     vim.fn.cursor(3, 1)
     vim.cmd([[norm ,oA]])
@@ -174,6 +220,14 @@ describe('Mappings', function()
   end)
 
   it('should demote the heading (org_do_demote)', function()
+    helpers.load_file_content({
+      '#TITLE: Test',
+      '',
+      '* TODO Test orgmode',
+      '  DEADLINE: <2021-09-07 Tue 12:00 +1w>',
+      '',
+      '* TODO Another task',
+    })
     vim.fn.cursor(3, 1)
     assert.are.same('* TODO Test orgmode', vim.fn.getline('.'))
     vim.cmd([[norm >>]])
@@ -181,6 +235,19 @@ describe('Mappings', function()
   end)
 
   it('should demote the heading and its subtree (org_demote_subtree)', function()
+    helpers.load_file_content({
+      '#TITLE: Test',
+      '',
+      '* TODO Test orgmode',
+      '  DEADLINE: <2021-07-21 Wed 22:02>',
+      '** TODO [#A] Test orgmode level 2 :PRIVATE:',
+      'Some content for level 2',
+      '*** NEXT [#1] Level 3',
+      'Content Level 3',
+      '',
+      '* TODO Another task',
+    })
+
     assert.are.same({
       '* TODO Test orgmode',
       '  DEADLINE: <2021-07-21 Wed 22:02>',
@@ -212,6 +279,17 @@ describe('Mappings', function()
   end)
 
   it('should promote the heading (org_do_promote)', function()
+    helpers.load_file_content({
+      '#TITLE: Test',
+      '',
+      '* TODO Test orgmode',
+      '  DEADLINE: <2021-07-21 Wed 22:02>',
+      '** TODO [#A] Test orgmode level 2 :PRIVATE:',
+      'Some content for level 2',
+      '*** NEXT [#1] Level 3',
+      'Content Level 3',
+    })
+
     vim.fn.cursor(5, 1)
     assert.are.same('** TODO [#A] Test orgmode level 2 :PRIVATE:', vim.fn.getline('.'))
     vim.cmd([[norm <<]])
@@ -219,6 +297,19 @@ describe('Mappings', function()
   end)
 
   it('should promote the heading and its subtree (org_promote_subtree)', function()
+    helpers.load_file_content({
+      '#TITLE: Test',
+      '',
+      '* TODO Test orgmode',
+      '  DEADLINE: <2021-07-21 Wed 22:02>',
+      '** TODO [#A] Test orgmode level 2 :PRIVATE:',
+      'Some content for level 2',
+      '*** NEXT [#1] Level 3',
+      'Content Level 3',
+      '',
+      '* TODO Another task',
+    })
+
     assert.are.same({
       '* TODO Test orgmode',
       '  DEADLINE: <2021-07-21 Wed 22:02>',
@@ -250,17 +341,26 @@ describe('Mappings', function()
   end)
 
   it('should add list item with Enter (org_meta_return)', function()
+    helpers.load_file_content({
+      '#TITLE: Test',
+      '',
+      '* TODO Test orgmode',
+      '  - Regular item',
+      '  - Second recular item',
+      '    - Neste item',
+    })
+
     assert.are.same({
       '  - Regular item',
       '  - Second recular item',
       '    - Neste item',
     }, vim.api.nvim_buf_get_lines(
       0,
-      21,
-      24,
+      3,
+      6,
       false
     ))
-    vim.fn.cursor(22, 1)
+    vim.fn.cursor(4, 1)
     vim.cmd([[exe "norm ,\<CR>"]])
     assert.are.same({
       '  - Regular item',
@@ -269,13 +369,22 @@ describe('Mappings', function()
       '    - Neste item',
     }, vim.api.nvim_buf_get_lines(
       0,
-      21,
-      25,
+      3,
+      7,
       false
     ))
   end)
 
   it('should add headline with Enter (org_meta_return)', function()
+    helpers.load_file_content({
+      '#TITLE: Test',
+      '',
+      '* DONE top level todo :WORK:',
+      'content for top level todo',
+      '* TODO top level todo with multiple tags :OFFICE:PROJECT:',
+      '  - [ ] The checkbox',
+    })
+
     assert.are.same({
       '* DONE top level todo :WORK:',
       'content for top level todo',
@@ -283,11 +392,11 @@ describe('Mappings', function()
       '  - [ ] The checkbox',
     }, vim.api.nvim_buf_get_lines(
       0,
-      8,
-      12,
+      2,
+      6,
       false
     ))
-    vim.fn.cursor(9, 1)
+    vim.fn.cursor(3, 1)
     vim.cmd([[exe "norm ,\<CR>"]])
     assert.are.same({
       '* DONE top level todo :WORK:',
@@ -298,13 +407,25 @@ describe('Mappings', function()
       '  - [ ] The checkbox',
     }, vim.api.nvim_buf_get_lines(
       0,
+      2,
       8,
-      14,
       false
     ))
   end)
 
   it('should add headline with Enter after the whole section of the current headline (org_meta_return)', function()
+    helpers.load_file_content({
+      '#TITLE: Test',
+      '',
+      '* TODO Test orgmode',
+      '  DEADLINE: <2021-07-21 Wed 22:02>',
+      '** TODO [#A] Test orgmode level 2 :PRIVATE:',
+      'Some content for level 2',
+      '*** NEXT [#1] Level 3',
+      'Content Level 3',
+      '* DONE top level todo :WORK:',
+    })
+
     assert.are.same({
       '* TODO Test orgmode',
       '  DEADLINE: <2021-07-21 Wed 22:02>',
@@ -340,42 +461,61 @@ describe('Mappings', function()
   end)
 
   it('should add checkbox item with Enter (org_meta_return)', function()
+    helpers.load_file_content({
+      '#TITLE: Test',
+      '',
+      '* TODO Test orgmode',
+      '  - [ ] The checkbox',
+      '  - [X] The checkbox 2',
+      '    - [ ] Nested checkbox',
+    })
+
     assert.are.same({
       '  - [ ] The checkbox',
       '  - [X] The checkbox 2',
       '    - [ ] Nested checkbox',
     }, vim.api.nvim_buf_get_lines(
       0,
-      11,
-      14,
+      3,
+      6,
       false
     ))
-    vim.fn.cursor(12, 1)
+    vim.fn.cursor(4, 1)
     vim.cmd([[exe "norm ,\<CR>"]])
     assert.are.same({
       '  - [ ] The checkbox',
       '  - [ ] ',
       '  - [X] The checkbox 2',
+      '    - [ ] Nested checkbox',
     }, vim.api.nvim_buf_get_lines(
       0,
-      11,
-      14,
+      3,
+      7,
       false
     ))
   end)
 
   it('should add a list item after a multiline list item with Enter (org_meta_return)', function()
+    helpers.load_file_content({
+      '#TITLE: Test',
+      '',
+      '* TODO Test orgmode',
+      '  - this list item',
+      '    spans more than',
+      '    one line',
+    })
+
     assert.are.same({
       '  - this list item',
       '    spans more than',
       '    one line',
     }, vim.api.nvim_buf_get_lines(
       0,
-      25,
-      28,
+      3,
+      6,
       false
     ))
-    vim.fn.cursor(26, 1)
+    vim.fn.cursor(4, 1)
     vim.cmd([[exe "norm ,\<CR>"]])
     assert.are.same({
       '  - this list item',
@@ -384,8 +524,8 @@ describe('Mappings', function()
       '  - ',
     }, vim.api.nvim_buf_get_lines(
       0,
-      25,
-      29,
+      3,
+      7,
       false
     ))
   end)
@@ -393,17 +533,26 @@ describe('Mappings', function()
   it(
     'should add a list item with Enter after a multiline list item from anywhere in the list item (org_meta_return)',
     function()
+      helpers.load_file_content({
+        '#TITLE: Test',
+        '',
+        '* TODO Test orgmode',
+        '  - this list item',
+        '    spans more than',
+        '    one line',
+      })
+
       assert.are.same({
         '  - this list item',
         '    spans more than',
         '    one line',
       }, vim.api.nvim_buf_get_lines(
         0,
-        25,
-        28,
+        3,
+        6,
         false
       ))
-      vim.fn.cursor(28, 1)
+      vim.fn.cursor(6, 1)
       vim.cmd([[exe "norm ,\<CR>"]])
       assert.are.same({
         '  - this list item',
@@ -412,25 +561,35 @@ describe('Mappings', function()
         '  - ',
       }, vim.api.nvim_buf_get_lines(
         0,
-        25,
-        29,
+        3,
+        7,
         false
       ))
     end
   )
 
   it('should add a list item with Enter skipping over any nested content (org_meta_return)', function()
+    helpers.load_file_content({
+      '#TITLE: Test',
+      '',
+      '* TODO Test orgmode',
+      '  - [ ] The checkbox',
+      '  - [X] The checkbox 2',
+      '    - [ ] Nested checkbox',
+      'multiple tags content, tags not read from content :FROMCONTENT:',
+    })
+
     assert.are.same({
       '  - [X] The checkbox 2',
       '    - [ ] Nested checkbox',
       'multiple tags content, tags not read from content :FROMCONTENT:',
     }, vim.api.nvim_buf_get_lines(
       0,
-      12,
-      15,
+      4,
+      7,
       false
     ))
-    vim.fn.cursor(13, 1)
+    vim.fn.cursor(5, 1)
     vim.cmd([[exe "norm ,\<CR>"]])
     assert.are.same({
       '  - [X] The checkbox 2',
@@ -439,13 +598,27 @@ describe('Mappings', function()
       'multiple tags content, tags not read from content :FROMCONTENT:',
     }, vim.api.nvim_buf_get_lines(
       0,
-      12,
-      16,
+      4,
+      8,
       false
     ))
   end)
 
   it('should add numbered list item', function()
+    helpers.load_file_content({
+      '#TITLE: Test',
+      '',
+      '* TODO Test orgmode',
+      '  - [ ] The checkbox',
+      '  - [X] The checkbox 2',
+      '    - [ ] Nested checkbox',
+      'multiple tags content, tags not read from content :FROMCONTENT:',
+      '** NEXT Working on this now :OFFICE:NESTED:',
+      '   1. First item',
+      '   2. Second item',
+      '* TODO Repeatable task',
+    })
+
     assert.are.same({
       '** NEXT Working on this now :OFFICE:NESTED:',
       '   1. First item',
@@ -453,11 +626,11 @@ describe('Mappings', function()
       '* TODO Repeatable task',
     }, vim.api.nvim_buf_get_lines(
       0,
-      15,
-      19,
+      7,
+      11,
       false
     ))
-    vim.fn.cursor(18, 1)
+    vim.fn.cursor(10, 1)
     vim.cmd([[exe "norm ,\<CR>"]])
     assert.are.same({
       '** NEXT Working on this now :OFFICE:NESTED:',
@@ -467,13 +640,27 @@ describe('Mappings', function()
       '* TODO Repeatable task',
     }, vim.api.nvim_buf_get_lines(
       0,
-      15,
-      20,
+      7,
+      12,
       false
     ))
   end)
 
   it('should add numbered list item in the middle of the list', function()
+    helpers.load_file_content({
+      '#TITLE: Test',
+      '',
+      '* TODO Test orgmode',
+      '  - [ ] The checkbox',
+      '  - [X] The checkbox 2',
+      '    - [ ] Nested checkbox',
+      'multiple tags content, tags not read from content :FROMCONTENT:',
+      '** NEXT Working on this now :OFFICE:NESTED:',
+      '   1. First item',
+      '   2. Second item',
+      '* TODO Repeatable task',
+    })
+
     assert.are.same({
       '** NEXT Working on this now :OFFICE:NESTED:',
       '   1. First item',
@@ -481,11 +668,11 @@ describe('Mappings', function()
       '* TODO Repeatable task',
     }, vim.api.nvim_buf_get_lines(
       0,
-      15,
-      19,
+      7,
+      11,
       false
     ))
-    vim.fn.cursor(17, 1)
+    vim.fn.cursor(9, 1)
     vim.cmd([[exe "norm ,\<CR>"]])
     assert.are.same({
       '** NEXT Working on this now :OFFICE:NESTED:',
@@ -495,13 +682,24 @@ describe('Mappings', function()
       '* TODO Repeatable task',
     }, vim.api.nvim_buf_get_lines(
       0,
-      15,
-      20,
+      7,
+      12,
       false
     ))
   end)
 
   it('should insert new heading after current subtree (org_insert_heading_respect_content)', function()
+    helpers.load_file_content({
+      '#TITLE: Test',
+      '',
+      '* DONE top level todo :WORK:',
+      'content for top level todo',
+      '* TODO top level todo with multiple tags :OFFICE:PROJECT:',
+      '  - [ ] The checkbox',
+      '  - [X] The checkbox 2',
+      '    - [ ] Nested checkbox',
+      'multiple tags content, tags not read from content :FROMCONTENT:',
+    })
     assert.are.same({
       '* DONE top level todo :WORK:',
       'content for top level todo',
@@ -512,11 +710,11 @@ describe('Mappings', function()
       'multiple tags content, tags not read from content :FROMCONTENT:',
     }, vim.api.nvim_buf_get_lines(
       0,
-      8,
-      15,
+      2,
+      10,
       false
     ))
-    vim.fn.cursor(10, 1)
+    vim.fn.cursor(3, 1)
     vim.cmd([[norm ,oih]])
     assert.are.same({
       '* DONE top level todo :WORK:',
@@ -526,15 +724,28 @@ describe('Mappings', function()
       '',
       '* TODO top level todo with multiple tags :OFFICE:PROJECT:',
       '  - [ ] The checkbox',
+      '  - [X] The checkbox 2',
     }, vim.api.nvim_buf_get_lines(
       0,
-      8,
-      15,
+      2,
+      10,
       false
     ))
   end)
 
   it('should insert new todo heading after current one (org_insert_todo_heading)', function()
+    helpers.load_file_content({
+      '#TITLE: Test',
+      '',
+      '* DONE top level todo :WORK:',
+      'content for top level todo',
+      '* TODO top level todo with multiple tags :OFFICE:PROJECT:',
+      '  - [ ] The checkbox',
+      '  - [X] The checkbox 2',
+      '    - [ ] Nested checkbox',
+      'multiple tags content, tags not read from content :FROMCONTENT:',
+    })
+
     assert.are.same({
       '* DONE top level todo :WORK:',
       'content for top level todo',
@@ -545,11 +756,11 @@ describe('Mappings', function()
       'multiple tags content, tags not read from content :FROMCONTENT:',
     }, vim.api.nvim_buf_get_lines(
       0,
-      8,
-      15,
+      2,
+      10,
       false
     ))
-    vim.fn.cursor(9, 1)
+    vim.fn.cursor(3, 1)
     vim.cmd([[norm ,oiT]])
     assert.are.same({
       '* DONE top level todo :WORK:',
@@ -559,15 +770,27 @@ describe('Mappings', function()
       '* TODO top level todo with multiple tags :OFFICE:PROJECT:',
       '  - [ ] The checkbox',
       '  - [X] The checkbox 2',
+      '    - [ ] Nested checkbox',
     }, vim.api.nvim_buf_get_lines(
       0,
-      8,
-      15,
+      2,
+      10,
       false
     ))
   end)
 
   it('should insert new todo heading after current subtree (org_insert_todo_heading_respect_content)', function()
+    helpers.load_file_content({
+      '#TITLE: Test',
+      '',
+      '* DONE top level todo :WORK:',
+      'content for top level todo',
+      '* TODO top level todo with multiple tags :OFFICE:PROJECT:',
+      '  - [ ] The checkbox',
+      '  - [X] The checkbox 2',
+      '    - [ ] Nested checkbox',
+      'multiple tags content, tags not read from content :FROMCONTENT:',
+    })
     assert.are.same({
       '* DONE top level todo :WORK:',
       'content for top level todo',
@@ -578,11 +801,11 @@ describe('Mappings', function()
       'multiple tags content, tags not read from content :FROMCONTENT:',
     }, vim.api.nvim_buf_get_lines(
       0,
-      8,
-      15,
+      2,
+      10,
       false
     ))
-    vim.fn.cursor(9, 1)
+    vim.fn.cursor(3, 1)
     vim.cmd([[norm ,oit]])
     assert.are.same({
       '* DONE top level todo :WORK:',
@@ -592,15 +815,30 @@ describe('Mappings', function()
       '',
       '* TODO top level todo with multiple tags :OFFICE:PROJECT:',
       '  - [ ] The checkbox',
+      '  - [X] The checkbox 2',
     }, vim.api.nvim_buf_get_lines(
       0,
-      8,
-      15,
+      2,
+      10,
       false
     ))
   end)
 
   it('should move subtree up (org_move_subtree_up)', function()
+    helpers.load_file_content({
+      '#TITLE: Test',
+      '',
+      '* TODO Test orgmode',
+      '  DEADLINE: <2021-07-21 Wed 22:02>',
+      '** TODO [#A] Test orgmode level 2 :PRIVATE:',
+      'Some content for level 2',
+      '*** NEXT [#1] Level 3',
+      'Content Level 3',
+      '* DONE top level todo :WORK:',
+      'content for top level todo',
+      '* TODO top level todo with multiple tags :OFFICE:PROJECT:',
+    })
+
     assert.are.same({
       '* TODO Test orgmode',
       '  DEADLINE: <2021-07-21 Wed 22:02>',
@@ -638,6 +876,27 @@ describe('Mappings', function()
   end)
 
   it('should move subtree down (org_move_subtree_down)', function()
+    helpers.load_file_content({
+      '#TITLE: Test',
+      '',
+      '* TODO Test orgmode',
+      '  DEADLINE: <2021-07-21 Wed 22:02>',
+      '** TODO [#A] Test orgmode level 2 :PRIVATE:',
+      'Some content for level 2',
+      '*** NEXT [#1] Level 3',
+      'Content Level 3',
+      '* DONE top level todo :WORK:',
+      'content for top level todo',
+      '* TODO top level todo with multiple tags :OFFICE:PROJECT:',
+      '  - [ ] The checkbox',
+      '  - [X] The checkbox 2',
+      '    - [ ] Nested checkbox',
+      'multiple tags content, tags not read from content :FROMCONTENT:',
+      '** NEXT Working on this now :OFFICE:NESTED:',
+      '   1. First item',
+      '   2. Second item',
+    })
+
     assert.are.same({
       '* TODO Test orgmode',
       '  DEADLINE: <2021-07-21 Wed 22:02>',
@@ -689,6 +948,27 @@ describe('Mappings', function()
   end)
 
   it('should jump to next heading on any level (org_next_visible_heading)', function()
+    helpers.load_file_content({
+      '#TITLE: Test',
+      '',
+      '* TODO Test orgmode',
+      '  DEADLINE: <2021-07-21 Wed 22:02>',
+      '** TODO [#A] Test orgmode level 2 :PRIVATE:',
+      'Some content for level 2',
+      '*** NEXT [#1] Level 3',
+      'Content Level 3',
+      '* DONE top level todo :WORK:',
+      'content for top level todo',
+      '* TODO top level todo with multiple tags :OFFICE:PROJECT:',
+      '  - [ ] The checkbox',
+      '  - [X] The checkbox 2',
+      '    - [ ] Nested checkbox',
+      'multiple tags content, tags not read from content :FROMCONTENT:',
+      '** NEXT Working on this now :OFFICE:NESTED:',
+      '   1. First item',
+      '   2. Second item',
+    })
+
     vim.cmd([[norm gg]])
     assert.are.same(1, vim.fn.line('.'))
     vim.cmd([[norm }]])
@@ -706,14 +986,29 @@ describe('Mappings', function()
   end)
 
   it('should jump to previous heading on any level (org_previous_visible_heading)', function()
+    helpers.load_file_content({
+      '#TITLE: Test',
+      '',
+      '* TODO Test orgmode',
+      '  DEADLINE: <2021-07-21 Wed 22:02>',
+      '** TODO [#A] Test orgmode level 2 :PRIVATE:',
+      'Some content for level 2',
+      '*** NEXT [#1] Level 3',
+      'Content Level 3',
+      '* DONE top level todo :WORK:',
+      'content for top level todo',
+      '* TODO top level todo with multiple tags :OFFICE:PROJECT:',
+      '  - [ ] The checkbox',
+      '  - [X] The checkbox 2',
+      '    - [ ] Nested checkbox',
+      'multiple tags content, tags not read from content :FROMCONTENT:',
+      '** NEXT Working on this now :OFFICE:NESTED:',
+      '   1. First item',
+      '   2. Second item',
+    })
+
     vim.cmd([[norm G]])
-    assert.are.same(28, vim.fn.line('.'))
-    vim.cmd([[norm {]])
-    assert.are.same(25, vim.fn.line('.'))
-    vim.cmd([[norm {]])
-    assert.are.same(21, vim.fn.line('.'))
-    vim.cmd([[norm {]])
-    assert.are.same(19, vim.fn.line('.'))
+    assert.are.same(18, vim.fn.line('.'))
     vim.cmd([[norm {]])
     assert.are.same(16, vim.fn.line('.'))
     vim.cmd([[norm {]])
@@ -722,14 +1017,70 @@ describe('Mappings', function()
     assert.are.same(9, vim.fn.line('.'))
     vim.cmd([[norm {]])
     assert.are.same(7, vim.fn.line('.'))
+    vim.cmd([[norm {]])
+    assert.are.same(5, vim.fn.line('.'))
+    vim.cmd([[norm {]])
+    assert.are.same(3, vim.fn.line('.'))
+    vim.cmd([[norm {]])
+    assert.are.same(3, vim.fn.line('.'))
+  end)
+
+  it('should jump to next heading on same level (org_backward_heading_same_level)', function()
+    helpers.load_file_content({
+      '#TITLE: Test',
+      '',
+      '* TODO Test orgmode',
+      '  DEADLINE: <2021-07-21 Wed 22:02>',
+      '** TODO [#A] Test orgmode level 2 :PRIVATE:',
+      'Some content for level 2',
+      '*** NEXT [#1] Level 3',
+      'Content Level 3',
+      '* DONE top level todo :WORK:',
+      'content for top level todo',
+      '* TODO top level todo with multiple tags :OFFICE:PROJECT:',
+      '  - [ ] The checkbox',
+      '  - [X] The checkbox 2',
+      '    - [ ] Nested checkbox',
+      'multiple tags content, tags not read from content :FROMCONTENT:',
+      '** NEXT Working on this now :OFFICE:NESTED:',
+      '   1. First item',
+      '   2. Second item',
+      '* TODO Last Item',
+    })
+
+    vim.fn.cursor(3, 1)
+    vim.cmd('norm ]]')
+    assert.are.same(9, vim.fn.line('.'))
+    vim.cmd('norm ]]')
+    assert.are.same(11, vim.fn.line('.'))
+    vim.cmd('norm ]]')
+    assert.are.same(19, vim.fn.line('.'))
   end)
 
   it('should jump to previous heading on same level (org_backward_heading_same_level)', function()
+    helpers.load_file_content({
+      '#TITLE: Test',
+      '',
+      '* TODO Test orgmode',
+      '  DEADLINE: <2021-07-21 Wed 22:02>',
+      '** TODO [#A] Test orgmode level 2 :PRIVATE:',
+      'Some content for level 2',
+      '*** NEXT [#1] Level 3',
+      'Content Level 3',
+      '* DONE top level todo :WORK:',
+      'content for top level todo',
+      '* TODO top level todo with multiple tags :OFFICE:PROJECT:',
+      '  - [ ] The checkbox',
+      '  - [X] The checkbox 2',
+      '    - [ ] Nested checkbox',
+      'multiple tags content, tags not read from content :FROMCONTENT:',
+      '** NEXT Working on this now :OFFICE:NESTED:',
+      '   1. First item',
+      '   2. Second item',
+      '* TODO Last Item',
+    })
+
     vim.cmd([[norm G]])
-    assert.are.same(28, vim.fn.line('.'))
-    vim.cmd('norm [[')
-    assert.are.same(21, vim.fn.line('.'))
-    vim.cmd('norm [[')
     assert.are.same(19, vim.fn.line('.'))
     vim.cmd('norm [[')
     assert.are.same(11, vim.fn.line('.'))
@@ -740,6 +1091,20 @@ describe('Mappings', function()
   end)
 
   it('should walk up to parent headline (outline_up_heading)', function()
+    helpers.load_file_content({
+      '#TITLE: Test',
+      '',
+      '* TODO Test orgmode',
+      '  DEADLINE: <2021-07-21 Wed 22:02>',
+      '** TODO [#A] Test orgmode level 2 :PRIVATE:',
+      'Some content for level 2',
+      '*** NEXT [#1] Level 3',
+      'Content Level 3',
+      '* DONE top level todo :WORK:',
+      'content for top level todo',
+      '* TODO top level todo with multiple tags :OFFICE:PROJECT:',
+    })
+
     vim.fn.cursor(7, 1)
     vim.cmd('norm g{')
     assert.are.same(5, vim.fn.line('.'))
