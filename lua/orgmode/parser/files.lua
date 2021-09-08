@@ -52,6 +52,7 @@ function Files.reload(file, callback)
         Files.orgfiles[file] = orgfile
         Files._check_source_blocks(prev_file, Files.get(file))
       end
+      Files.loaded = true
       if callback then
         callback()
       end
