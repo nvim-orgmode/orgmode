@@ -220,39 +220,82 @@ end
 
 function OrgMappings:handle_return(suffix)
   suffix = suffix or ''
-  local item = Files.get_current_file():get_current_node()
-  if item.type == 'headline' or item.node:parent():type() == 'headline' then
-    if item.type ~= 'headline' then
-      ts_utils.goto_node(item.node:parent())
-      item = Files.get_current_file():get_current_node()
-    end
-    vim.fn.append(vim.fn.line('.'), { '', string.rep('*', item.level) .. ' ' .. suffix })
-    vim.fn.cursor(vim.fn.line('.') + 2, 0)
+  local current_file = Files.get_current_file()
+  local item = current_file:get_current_node()
+
+  if item.node:parent() and item.node:parent():type() == 'headline' then
+    item = current_file:convert_to_file_node(item.node:parent())
+  end
+
+  if item.type == 'headline' then
+    local section = utils.get_closest_parent_of_type(item.node, 'section')
+    local end_row, _ = section:end_()
+    vim.api.nvim_buf_set_lines(0, end_row, end_row, false, { string.rep('*', item.level) .. ' ' .. suffix, '' })
+    vim.fn.cursor(end_row + 1, 0)
     return vim.cmd([[startinsert!]])
   end
-  if item.type == 'list' or item.type == 'listitem' then
-    if item.type == 'list' then
-      vim.fn.cursor(vim.fn.line('.'), vim.fn.col('$'))
-      item = Files.get_current_file():get_current_node()
+
+  if item.type == 'list' then
+    vim.cmd([[normal! ^]])
+    item = Files.get_current_file():get_current_node()
+  end
+
+  if item.type == 'itemtext' or item.type == 'bullet' or item.type == 'checkbox' or item.type == 'itemtag' then
+    local text_edits = {}
+    local list_item = item.node:parent()
+    if list_item:type() ~= 'listitem' then
+      return
     end
-    local line = vim.fn.getline('.')
+    local line = vim.fn.getline(list_item:start() + 1)
+    local end_row, _ = list_item:end_()
+    local range = {
+      start = { line = end_row + 1, character = 0 },
+      ['end'] = { line = end_row + 1, character = 0 },
+    }
+
     local checkbox = line:match('^(%s*[%+%-])%s*%[[%sXx%-]?%]')
-    local plain_list = line:match('^%s*[%+%-]%s*')
-    local indent, number_in_list, closer = line:match('^(%s*)(%d+)([%)%.])%s+')
+    local plain_list = line:match('^%s*[%+%-]')
+    local indent, number_in_list, closer = line:match('^(%s*)(%d+)([%)%.])%s?')
     if checkbox then
-      vim.fn.append(vim.fn.line('.'), checkbox .. ' [ ] ')
-      vim.fn.cursor(vim.fn.line('.') + 1, 0)
-      return vim.cmd([[startinsert!]])
+      table.insert(text_edits, {
+        range = range,
+        newText = checkbox .. ' [ ] \n',
+      })
+    elseif plain_list then
+      table.insert(text_edits, {
+        range = range,
+        newText = plain_list .. ' \n',
+      })
+    elseif number_in_list then
+      local next_sibling = list_item
+      local counter = 1
+      while next_sibling do
+        local bullet = next_sibling:child(0)
+        local text = table.concat(ts_utils.get_node_text(bullet))
+        local new_text = tostring(tonumber(text:match('%d+')) + 1) .. closer
+
+        if counter == 1 then
+          table.insert(text_edits, {
+            range = range,
+            newText = indent .. new_text .. ' ' .. '\n',
+          })
+        else
+          table.insert(text_edits, {
+            range = ts_utils.node_to_lsp_range(bullet),
+            newText = new_text,
+          })
+        end
+
+        counter = counter + 1
+        next_sibling = ts_utils.get_next_node(next_sibling)
+      end
     end
-    if plain_list then
-      vim.fn.append(vim.fn.line('.'), plain_list)
-      vim.fn.cursor(vim.fn.line('.') + 1, 0)
-      return vim.cmd([[startinsert!]])
-    end
-    if number_in_list then
-      vim.fn.append(vim.fn.line('.'), string.format('%s%d%s ', indent, tonumber(number_in_list) + 1, closer))
-      vim.fn.cursor(vim.fn.line('.') + 1, 0)
-      return vim.cmd([[startinsert!]])
+
+    if #text_edits > 0 then
+      vim.lsp.util.apply_text_edits(text_edits, 0)
+
+      vim.fn.cursor(end_row + 2, 0) -- +1 for 0 index and +1 for next line
+      vim.cmd([[startinsert!]])
     end
   end
 end

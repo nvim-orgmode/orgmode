@@ -22,3 +22,7 @@ multiple tags content, tags not read from content :FROMCONTENT:
   - Regular item
   - Second recular item
     - Neste item
+* Multi line list
+  - this list item
+    spans more than
+    one line

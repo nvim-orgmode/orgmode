@@ -291,13 +291,50 @@ describe('Mappings', function()
     vim.cmd([[exe "norm ,\<CR>"]])
     assert.are.same({
       '* DONE top level todo :WORK:',
-      '',
-      '* ',
       'content for top level todo',
+      '* ',
+      '',
+      '* TODO top level todo with multiple tags :OFFICE:PROJECT:',
+      '  - [ ] The checkbox',
     }, vim.api.nvim_buf_get_lines(
       0,
       8,
-      12,
+      14,
+      false
+    ))
+  end)
+
+  it('should add headline with Enter after the whole section of the current headline (org_meta_return)', function()
+    assert.are.same({
+      '* TODO Test orgmode',
+      '  DEADLINE: <2021-07-21 Wed 22:02>',
+      '** TODO [#A] Test orgmode level 2 :PRIVATE:',
+      'Some content for level 2',
+      '*** NEXT [#1] Level 3',
+      'Content Level 3',
+      '* DONE top level todo :WORK:',
+    }, vim.api.nvim_buf_get_lines(
+      0,
+      2,
+      9,
+      false
+    ))
+    vim.fn.cursor(3, 1)
+    vim.cmd([[exe "norm ,\<CR>"]])
+    assert.are.same({
+      '* TODO Test orgmode',
+      '  DEADLINE: <2021-07-21 Wed 22:02>',
+      '** TODO [#A] Test orgmode level 2 :PRIVATE:',
+      'Some content for level 2',
+      '*** NEXT [#1] Level 3',
+      'Content Level 3',
+      '* ',
+      '',
+      '* DONE top level todo :WORK:',
+    }, vim.api.nvim_buf_get_lines(
+      0,
+      2,
+      11,
       false
     ))
   end)
@@ -327,6 +364,87 @@ describe('Mappings', function()
     ))
   end)
 
+  it('should add a list item after a multiline list item with Enter (org_meta_return)', function()
+    assert.are.same({
+      '  - this list item',
+      '    spans more than',
+      '    one line',
+    }, vim.api.nvim_buf_get_lines(
+      0,
+      25,
+      28,
+      false
+    ))
+    vim.fn.cursor(26, 1)
+    vim.cmd([[exe "norm ,\<CR>"]])
+    assert.are.same({
+      '  - this list item',
+      '    spans more than',
+      '    one line',
+      '  - ',
+    }, vim.api.nvim_buf_get_lines(
+      0,
+      25,
+      29,
+      false
+    ))
+  end)
+
+  it(
+    'should add a list item with Enter after a multiline list item from anywhere in the list item (org_meta_return)',
+    function()
+      assert.are.same({
+        '  - this list item',
+        '    spans more than',
+        '    one line',
+      }, vim.api.nvim_buf_get_lines(
+        0,
+        25,
+        28,
+        false
+      ))
+      vim.fn.cursor(28, 1)
+      vim.cmd([[exe "norm ,\<CR>"]])
+      assert.are.same({
+        '  - this list item',
+        '    spans more than',
+        '    one line',
+        '  - ',
+      }, vim.api.nvim_buf_get_lines(
+        0,
+        25,
+        29,
+        false
+      ))
+    end
+  )
+
+  it('should add a list item with Enter skipping over any nested content (org_meta_return)', function()
+    assert.are.same({
+      '  - [X] The checkbox 2',
+      '    - [ ] Nested checkbox',
+      'multiple tags content, tags not read from content :FROMCONTENT:',
+    }, vim.api.nvim_buf_get_lines(
+      0,
+      12,
+      15,
+      false
+    ))
+    vim.fn.cursor(13, 1)
+    vim.cmd([[exe "norm ,\<CR>"]])
+    assert.are.same({
+      '  - [X] The checkbox 2',
+      '    - [ ] Nested checkbox',
+      '  - [ ] ',
+      'multiple tags content, tags not read from content :FROMCONTENT:',
+    }, vim.api.nvim_buf_get_lines(
+      0,
+      12,
+      16,
+      false
+    ))
+  end)
+
   it('should add numbered list item', function()
     assert.are.same({
       '** NEXT Working on this now :OFFICE:NESTED:',
@@ -346,6 +464,34 @@ describe('Mappings', function()
       '   1. First item',
       '   2. Second item',
       '   3. ',
+      '* TODO Repeatable task',
+    }, vim.api.nvim_buf_get_lines(
+      0,
+      15,
+      20,
+      false
+    ))
+  end)
+
+  it('should add numbered list item in the middle of the list', function()
+    assert.are.same({
+      '** NEXT Working on this now :OFFICE:NESTED:',
+      '   1. First item',
+      '   2. Second item',
+      '* TODO Repeatable task',
+    }, vim.api.nvim_buf_get_lines(
+      0,
+      15,
+      19,
+      false
+    ))
+    vim.fn.cursor(17, 1)
+    vim.cmd([[exe "norm ,\<CR>"]])
+    assert.are.same({
+      '** NEXT Working on this now :OFFICE:NESTED:',
+      '   1. First item',
+      '   2. ',
+      '   3. Second item',
       '* TODO Repeatable task',
     }, vim.api.nvim_buf_get_lines(
       0,
@@ -407,9 +553,9 @@ describe('Mappings', function()
     vim.cmd([[norm ,oiT]])
     assert.are.same({
       '* DONE top level todo :WORK:',
-      '',
-      '* TODO ',
       'content for top level todo',
+      '* TODO ',
+      '',
       '* TODO top level todo with multiple tags :OFFICE:PROJECT:',
       '  - [ ] The checkbox',
       '  - [X] The checkbox 2',
@@ -561,7 +707,9 @@ describe('Mappings', function()
 
   it('should jump to previous heading on any level (org_previous_visible_heading)', function()
     vim.cmd([[norm G]])
-    assert.are.same(24, vim.fn.line('.'))
+    assert.are.same(28, vim.fn.line('.'))
+    vim.cmd([[norm {]])
+    assert.are.same(25, vim.fn.line('.'))
     vim.cmd([[norm {]])
     assert.are.same(21, vim.fn.line('.'))
     vim.cmd([[norm {]])
@@ -578,7 +726,9 @@ describe('Mappings', function()
 
   it('should jump to previous heading on same level (org_backward_heading_same_level)', function()
     vim.cmd([[norm G]])
-    assert.are.same(24, vim.fn.line('.'))
+    assert.are.same(28, vim.fn.line('.'))
+    vim.cmd('norm [[')
+    assert.are.same(21, vim.fn.line('.'))
     vim.cmd('norm [[')
     assert.are.same(19, vim.fn.line('.'))
     vim.cmd('norm [[')
