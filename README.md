@@ -209,6 +209,11 @@ Link to detailed documentation: [DOCS](DOCS.md)
 
 ## Plugins
 * [org-bullets.nvim](https://github.com/akinsho/org-bullets.nvim)
+* [headlines.nvim](https://github.com/lukas-reineke/headlines.nvim)
+
+See all available plugins on [orgmode-nvim](https://github.com/topics/orgmode-nvim)
+
+**If you built a plugin please add "orgmode-nvim" topic to it.**
 
 **NOTE**: None of the Emacs Orgmode plugins will be built into orgmode.nvim.
 Anything that's a separate plugin in Emacs Orgmode should be a separate plugin in here.
