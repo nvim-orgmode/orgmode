@@ -568,6 +568,47 @@ describe('Mappings', function()
     end
   )
 
+  it('should add a list item with Enter from the description of the list item (org_meta_return)', function()
+    helpers.load_file_content({
+      '#TITLE: Test',
+      '',
+      '* TODO Test orgmode',
+      '  - description :: item',
+    })
+
+    assert.are.same({
+      '  - description :: item',
+    }, vim.api.nvim_buf_get_lines(0, 3, 4, false))
+    vim.fn.cursor(4, 8)
+    vim.cmd([[exe "norm ,\<CR>"]])
+    assert.are.same({
+      '  - description :: item',
+      '  - ',
+    }, vim.api.nvim_buf_get_lines(0, 3, 5, false))
+  end)
+
+  it(
+    'should add a list item with Enter when the cursor is between the bullet and the item (org_meta_return)',
+    function()
+      helpers.load_file_content({
+        '#TITLE: Test',
+        '',
+        '* TODO Test orgmode',
+        '  - item',
+      })
+
+      assert.are.same({
+        '  - item',
+      }, vim.api.nvim_buf_get_lines(0, 3, 4, false))
+      vim.fn.cursor(4, 4)
+      vim.cmd([[exe "norm ,\<CR>"]])
+      assert.are.same({
+        '  - item',
+        '  - ',
+      }, vim.api.nvim_buf_get_lines(0, 3, 5, false))
+    end
+  )
+
   it('should add a list item with Enter skipping over any nested content (org_meta_return)', function()
     helpers.load_file_content({
       '#TITLE: Test',
