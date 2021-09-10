@@ -235,12 +235,12 @@ function OrgMappings:handle_return(suffix)
     return vim.cmd([[startinsert!]])
   end
 
-  if item.type == 'list' then
+  if item.type == 'list' or item.type == 'listitem' then
     vim.cmd([[normal! ^]])
     item = Files.get_current_file():get_current_node()
   end
 
-  if item.type == 'itemtext' or item.type == 'bullet' or item.type == 'checkbox' or item.type == 'itemtag' then
+  if item.type == 'itemtext' or item.type == 'bullet' or item.type == 'checkbox' or item.type == 'description' then
     local text_edits = {}
     local list_item = item.node:parent()
     if list_item:type() ~= 'listitem' then
