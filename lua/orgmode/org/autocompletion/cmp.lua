@@ -17,7 +17,7 @@ Source.get_debug_name = function()
 end
 
 function Source:is_available()
-  return true
+  return vim.bo.filetype == 'org'
 end
 
 function Source:get_trigger_characters(_)
