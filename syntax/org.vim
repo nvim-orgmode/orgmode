@@ -117,8 +117,8 @@ hi def link org_list_checkbox     PreProc
 
 " Block Delimiters: {{{1
 syntax case ignore
-syntax match  org_block_delimiter /^\s*#+BEGIN_.*/
-syntax match  org_block_delimiter /^\s*#+END_.*/
+syntax match  org_block_delimiter /^\s*#+begin.*/
+syntax match  org_block_delimiter /^\s*#+end.*/
 syntax match  org_key_identifier  /^#+[^ ]*:/
 syntax match  org_title           /^#+TITLE:.*/  contains=org_key_identifier
 hi def link org_block_delimiter Comment
@@ -126,7 +126,7 @@ hi def link org_key_identifier  Comment
 hi def link org_title           Title
 
 " Block Markup: {{{1
-" we consider all BEGIN/END sections as 'verbatim' blocks (inc. 'quote', 'verse', 'center')
+" we consider all begin/end sections as 'verbatim' blocks (inc. 'quote', 'verse', 'center')
 " except 'example' and 'src' which are treated as 'code' blocks.
 " Note: the non-standard '>' prefix is supported for quotation lines.
 " Note: the '^:.*" rule must be defined before the ':PROPERTIES:' one below.
@@ -134,9 +134,9 @@ hi def link org_title           Title
 syntax match  org_verbatim /^\s*>.*/
 syntax match  org_code     /^\s*:.*/
 
-syntax region org_verbatim start="^\s*#+BEGIN_.*"      end="^\s*#+END_.*"      keepend contains=org_block_delimiter
-syntax region org_code     start="^\s*#+BEGIN_SRC"     end="^\s*#+END_SRC"     keepend contains=org_block_delimiter
-syntax region org_code     start="^\s*#+BEGIN_EXAMPLE" end="^\s*#+END_EXAMPLE" keepend contains=org_block_delimiter
+syntax region org_verbatim start="^\s*#+begin_.*"      end="^\s*#+end_.*"      keepend contains=org_block_delimiter
+syntax region org_code     start="^\s*#+begin_src"     end="^\s*#+end_src"     keepend contains=org_block_delimiter
+syntax region org_code     start="^\s*#+begin_example" end="^\s*#+end_example" keepend contains=org_block_delimiter
 
 hi def link org_code     String
 hi def link org_verbatim String
