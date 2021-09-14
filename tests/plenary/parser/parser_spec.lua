@@ -7,7 +7,7 @@ local config = require('orgmode.config')
 describe('Parser', function()
   it('should parse filetags headline', function()
     local lines = {
-      '#+FILETAGS: :Tag1:Tag2:',
+      '#+filetags: :Tag1:Tag2:',
       '* TODO Something with a lot of tags :WORK:',
     }
 
@@ -789,13 +789,13 @@ describe('Parser', function()
     assert.are.same('my-category', parsed:get_item(1):get_category())
   end)
 
-  it('should parse source code #BEGIN_SRC filetype', function()
+  it('should parse source code #+begin_src filetype', function()
     local lines = {
       '* TODO Test orgmode :WORK:',
       'DEADLINE: <2021-05-10 11:00>',
-      '#+BEGIN_SRC javascript',
+      '#+begin_src javascript',
       'console.log("test");',
-      '#+END_SRC',
+      '#+end_src',
       '* TODO Another todo',
     }
     local parsed = parser.parse(lines, 'work')
@@ -806,9 +806,9 @@ describe('Parser', function()
     local lines = {
       '* TODO Test orgmode :WORK:',
       'DEADLINE: <2021-05-10 11:00>',
-      '#+BEGIN_SRC javascript',
+      '#+begin_src javascript',
       'console.log("test");',
-      '#+END_SRC',
+      '#+end_src',
       '* TODO Another todo',
     }
     local parsed = parser.parse(lines, 'work', '/tmp/my-work.org_archive', true)
@@ -817,7 +817,7 @@ describe('Parser', function()
 
   it('should properly handle tag inheritance', function()
     local lines = {
-      '#+FILETAGS: TOPTAG',
+      '#+filetags: TOPTAG',
       '',
       '* TODO Test orgmode :WORK:MYPROJECT:',
       '  First level content',
