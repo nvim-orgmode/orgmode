@@ -17,7 +17,7 @@ local Calendar = {
   month = Date.today():start_of('month'),
 }
 
-vim.cmd([[hi default link OrgCalendarToday DiffText]])
+vim.cmd([[hi OrgCalendarToday gui=reverse cterm=reverse]])
 
 ---@param data table
 function Calendar.new(data)
