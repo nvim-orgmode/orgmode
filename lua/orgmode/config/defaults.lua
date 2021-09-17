@@ -97,6 +97,8 @@ return {
       outline_up_heading = 'g{',
       org_deadline = '<Leader>oid',
       org_schedule = '<Leader>ois',
+      org_time_stamp = '<Leader>oi.',
+      org_time_stamp_inactive = '<Leader>oi!',
       org_show_help = '?',
     },
   },

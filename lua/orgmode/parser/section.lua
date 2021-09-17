@@ -520,7 +520,7 @@ end
 ---@param active boolean
 ---@return string
 function Section:_add_planning_date(date, type, active)
-  local date_string = string.format('%s%s%s', active and '<' or '[', date:to_string(), active and '>' or ']')
+  local date_string = date:to_wrapped_string(active)
   if self:has_planning() then
     local planning_linenr = self.range.start_line + 1
     return vim.api.nvim_call_function('setline', {

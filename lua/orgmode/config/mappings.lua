@@ -53,6 +53,8 @@ return {
     outline_up_heading = { 'org_mappings.outline_up_heading' },
     org_deadline = { 'org_mappings.org_deadline' },
     org_schedule = { 'org_mappings.org_schedule' },
+    org_time_stamp = { 'org_mappings.org_time_stamp' },
+    org_time_stamp_inactive = { 'org_mappings.org_time_stamp', true },
     org_show_help = { 'org_mappings.show_help' },
   },
 }
