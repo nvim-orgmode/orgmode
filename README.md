@@ -284,8 +284,10 @@ by running `:TSUpdate org` and restarting the editor.
 Link to detailed documentation: [DOCS](DOCS.md)
 
 ## Plugins
-* [org-bullets.nvim](https://github.com/akinsho/org-bullets.nvim)
-* [headlines.nvim](https://github.com/lukas-reineke/headlines.nvim)
+* [org-bullets.nvim](https://github.com/akinsho/org-bullets.nvim) - Show org mode bullets as UTF-8 characters
+* [headlines.nvim](https://github.com/lukas-reineke/headlines.nvim) - Add few highlight options for code blocks and headlines
+* [sniprun](https://github.com/michaelb/sniprun) - For code evaluation in blocks
+* [vim-table-mode](https://github.com/dhruvasagar/vim-table-mode) - For table support
 
 See all available plugins on [orgmode-nvim](https://github.com/topics/orgmode-nvim)
 
