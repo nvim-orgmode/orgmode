@@ -507,7 +507,7 @@ end
 ---@return string
 function Headline:_add_planning_date(date, type, active)
   local planning = self.content[1]
-  local date_string = string.format('%s%s%s', active and '<' or '[', date:to_string(), active and '>' or ']')
+  local date_string = date:to_wrapped_string(active)
   if planning and planning:is_planning() then
     planning.line = string.format('%s %s: %s', planning.line, type, date_string)
     return vim.api.nvim_call_function('setline', {

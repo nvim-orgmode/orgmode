@@ -578,6 +578,12 @@ Insert/Update deadline date.<br />
 #### **org_schedule**
 *mapped to*: `<Leader>ois`<br />
 Insert/Update scheduled date.<br />
+#### **org_time_stamp**
+*mapped to*: `<Leader>oi.`<br />
+Insert/Update date under cursor.<br />
+#### **org_time_stamp_inactive**
+*mapped to*: `<Leader>oi!`<br />
+Insert/Update inactive date under cursor.<br />
 #### **org_show_help**
 *mapped to*: `?`<br />
 Show help popup with mappings
