@@ -279,6 +279,18 @@ function Date:to_string()
   return date
 end
 
+---@param active boolean|nil
+---@return string
+function Date:to_wrapped_string(active)
+  if type(active) ~= 'boolean' then
+    active = self.active
+  end
+  local date = self:to_string()
+  local open = active and '<' or '['
+  local close = active and '>' or ']'
+  return string.format('%s%s%s', open, date, close)
+end
+
 ---@return string
 function Date:format_time()
   if self.date_only then

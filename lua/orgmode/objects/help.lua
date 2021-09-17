@@ -34,6 +34,8 @@ local helps = {
     { key = 'outline_up_heading', description = 'Go to parent heading' },
     { key = 'org_deadline', description = 'Insert/Update deadline date' },
     { key = 'org_schedule', description = 'Insert/Update scheduled date' },
+    { key = 'org_time_stamp', description = 'Insert date under cursor' },
+    { key = 'org_time_stamp_inactive', description = 'Insert/Update inactive date under cursor' },
     { key = 'org_show_help', description = 'Show this help' },
   },
   orgagenda = {
