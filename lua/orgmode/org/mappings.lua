@@ -418,8 +418,31 @@ function OrgMappings:org_schedule()
   Calendar.new({ callback = cb, date = scheduled_date or Date.today() }).open()
 end
 
+---@param inactive boolean
+function OrgMappings:org_time_stamp(inactive)
+  local date = self:_get_date_under_cursor()
+  if date then
+    local cb = function(new_date)
+      self:_replace_date(new_date)
+    end
+    return Calendar.new({ callback = cb, date = date }).open()
+  end
+
+  local date_start = self:_get_date_under_cursor(-1)
+
+  local new_cb = function(new_date)
+    local date_string = new_date:to_wrapped_string(not inactive)
+    if date_start then
+      date_string = '--' .. date_string
+    end
+    vim.cmd(string.format('norm!i%s', date_string))
+  end
+
+  return Calendar.new({ callback = new_cb, date = Date.today() }).open()
+end
+
 ---@param direction string
----@param skip_fast_access boolean
+---@param use_fast_access boolean
 ---@return string
 function OrgMappings:_change_todo_state(direction, use_fast_access)
   local item = Files.get_current_file():get_closest_headline()
@@ -476,9 +499,10 @@ function OrgMappings:_replace_date(date)
 end
 
 ---@return Date|nil
-function OrgMappings:_get_date_under_cursor()
+function OrgMappings:_get_date_under_cursor(col_offset)
+  col_offset = col_offset or 0
   local item = Files.get_current_item()
-  local col = vim.fn.col('.')
+  local col = vim.fn.col('.') + col_offset
   local line = vim.fn.line('.')
   local dates = vim.tbl_filter(function(date)
     return date.range:is_in_range(line, col)
