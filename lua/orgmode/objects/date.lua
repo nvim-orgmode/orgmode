@@ -733,13 +733,22 @@ end
 
 ---@return number
 function Date:get_week_number()
-  local start_of_year = self:start_of('year')
-  local week = 1
-  while start_of_year.timestamp < self.timestamp do
-    start_of_year = start_of_year:add({ week = 1 })
-    week = week + 1
+  local first_week_start = self:start_of('year')
+  local is_first_week = self:is_same(first_week_start, 'week')
+  if is_first_week then
+    if first_week_start:get_isoweekday() <= 4 then
+      return 1
+    end
+    first_week_start = first_week_start:subtract({ year = 1 })
   end
-  return week
+  -- If there are no at least 4 days in the first week, it belongs to previous year
+  if first_week_start:get_isoweekday() > 4 then
+    first_week_start = first_week_start:add({ week = 1 })
+  end
+  first_week_start = first_week_start:start_of('week')
+  local this_week_start = self:start_of('week')
+  local number_of_days = math.ceil((this_week_start.timestamp - first_week_start.timestamp) / (24 * 60 * 60))
+  return math.floor(number_of_days / 7) + 1
 end
 
 ---@param line string
