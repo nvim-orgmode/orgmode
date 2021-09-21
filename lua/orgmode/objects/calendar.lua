@@ -108,9 +108,9 @@ function Calendar.render()
   if is_today_month then
     local day_formatted = today:format('%d')
     for i, line in ipairs(value) do
-      local from, to = line:find(day_formatted)
+      local from, to = line:find('%s' .. day_formatted .. '%s')
       if from and to then
-        vim.api.nvim_buf_add_highlight(Calendar.buf, Calendar.namespace, 'OrgCalendarToday', i - 1, from - 2, to + 1)
+        vim.api.nvim_buf_add_highlight(Calendar.buf, Calendar.namespace, 'OrgCalendarToday', i - 1, from - 1, to)
       end
     end
   end
