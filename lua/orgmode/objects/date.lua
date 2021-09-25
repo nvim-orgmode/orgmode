@@ -231,7 +231,7 @@ local function from_org_date(datestr, opts)
         start_line = line,
         end_line = line,
         start_col = opts.range.start_col,
-        end_col = opts.range.start_col + (from_open .. from .. from_close):len(),
+        end_col = opts.range.start_col + (from_open .. from .. from_close):len() - 1,
       }),
     })
   )
@@ -244,8 +244,8 @@ local function from_org_date(datestr, opts)
       range = Range:new({
         start_line = line,
         end_line = line,
-        start_col = start_date.range.end_col + 2,
-        end_col = start_date.range.end_col + 2 + opts.range.end_col,
+        start_col = start_date.range.end_col + 3,
+        end_col = opts.range.end_col,
       }),
       related_date_range = start_date,
     })
