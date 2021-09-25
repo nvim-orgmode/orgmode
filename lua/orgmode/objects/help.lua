@@ -36,6 +36,8 @@ local helps = {
     { key = 'org_schedule', description = 'Insert/Update scheduled date' },
     { key = 'org_time_stamp', description = 'Insert date under cursor' },
     { key = 'org_time_stamp_inactive', description = 'Insert/Update inactive date under cursor' },
+    { key = 'org_clock_in', description = 'Clock in heading' },
+    { key = 'org_clock_out', description = 'Clock out heading' },
     { key = 'org_show_help', description = 'Show this help' },
   },
   orgagenda = {

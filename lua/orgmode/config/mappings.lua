@@ -14,6 +14,7 @@ return {
     org_agenda_redo = { 'agenda.redo' },
     org_agenda_todo = { 'agenda.change_todo_state' },
     org_agenda_show_help = { 'org_mappings.show_help' },
+    org_clock_goto = { 'org_mappings.org_clock_goto' },
   },
   capture = {
     org_capture_finalize = { 'capture.refile' },
@@ -25,6 +26,8 @@ return {
     org_refile = { 'capture.refile_headline_to_destination' },
     org_increase_date = { 'org_mappings.increase_date' },
     org_decrease_date = { 'org_mappings.decrease_date' },
+    org_timestamp_up = { 'org_mappings.timestamp_up' },
+    org_timestamp_down = { 'org_mappings.timestamp_down' },
     org_change_date = { 'org_mappings.change_date' },
     org_todo = { 'org_mappings.todo_next_state' },
     org_todo_prev = { 'org_mappings.todo_prev_state' },
@@ -55,6 +58,10 @@ return {
     org_schedule = { 'org_mappings.org_schedule' },
     org_time_stamp = { 'org_mappings.org_time_stamp' },
     org_time_stamp_inactive = { 'org_mappings.org_time_stamp', true },
+    org_clock_in = { 'org_mappings.org_clock_in' },
+    org_clock_out = { 'org_mappings.org_clock_out' },
+    org_clock_cancel = { 'org_mappings.org_clock_cancel' },
+    org_clock_goto = { 'org_mappings.org_clock_goto' },
     org_show_help = { 'org_mappings.show_help' },
   },
 }

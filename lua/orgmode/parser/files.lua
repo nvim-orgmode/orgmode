@@ -2,10 +2,15 @@ local config = require('orgmode.config')
 local File = require('orgmode.parser.file')
 
 ---@class Files
+---@field loaded boolean
+---@field orgfiles table
+---@field tags string[]
+---@field clocked_headline Section|nil
 local Files = {
   loaded = false,
   orgfiles = {},
   tags = {},
+  clocked_headline = nil,
 }
 
 function Files.new()
@@ -28,6 +33,9 @@ function Files.load(callback)
     File.load(item, function(file)
       files_to_process = files_to_process - 1
       if file then
+        if file.clocked_headline then
+          Files.set_clocked_headline(file.clocked_headline)
+        end
         Files.orgfiles[item] = file
       end
 
@@ -186,9 +194,20 @@ function Files.find_headlines_matching_search_term(term, no_escape)
   return headlines
 end
 
+---@param id number
 ---@return Section
-function Files.get_closest_headline()
-  return Files.get_current_file():get_closest_headline()
+function Files.get_closest_headline(id)
+  return Files.get_current_file():get_closest_headline(id)
+end
+
+---@return Section
+function Files.get_clocked_headline()
+  return Files.clocked_headline
+end
+
+---@param headline Section
+function Files.set_clocked_headline(headline)
+  Files.clocked_headline = headline
 end
 
 function Files._build_tags()

@@ -1,6 +1,6 @@
 -- TODO
 -- Support diary format and format without short date name
-local spans = { d = 'day', m = 'month', y = 'year', h = 'hour', w = 'week' }
+local spans = { d = 'day', m = 'month', y = 'year', h = 'hour', w = 'week', M = 'min' }
 local config = require('orgmode.config')
 local utils = require('orgmode.utils')
 local Range = require('orgmode.parser.range')
@@ -158,16 +158,18 @@ local function parse_date(date, dayname, adjustments, data)
   return Date:new(opts)
 end
 
+---@param data table
 ---@return Date
-local function today()
-  local opts = os.date('*t', os.time())
+local function today(data)
+  local opts = vim.tbl_deep_extend('force', os.date('*t', os.time()), data or {})
   opts.date_only = true
   return Date:new(opts)
 end
 
+---@param data table
 ---@return Date
-local function now()
-  local opts = os.date('*t', os.time())
+local function now(data)
+  local opts = vim.tbl_deep_extend('force', os.date('*t', os.time()), data or {})
   return Date:new(opts)
 end
 
@@ -315,9 +317,21 @@ function Date:adjust(value)
 end
 
 ---@param value string
+---@return Date
+function Date:adjust_end_time(value)
+  if not self.timestamp_end then
+    return self
+  end
+  local time_end = from_string(os.date(date_format .. ' ' .. time_format, self.timestamp_end))
+  time_end = time_end:adjust(value)
+  self.timestamp_end = time_end.timestamp
+  return self
+end
+
+---@param value string
 ---@return table
 function Date:_parse_adjustment(value)
-  local operation, amount, span = value:match('^([%+%-])(%d+)([hdwmy]?)')
+  local operation, amount, span = value:match('^([%+%-])(%d+)([hdwmyM]?)')
   if not operation or not amount then
     return { span = 'day', amount = 0 }
   end
@@ -629,6 +643,11 @@ function Date:is_none()
 end
 
 ---@return boolean
+function Date:is_logbook()
+  return self.type == 'LOGBOOK'
+end
+
+---@return boolean
 function Date:is_scheduled()
   return self.active and self.type == 'SCHEDULED'
 end
@@ -636,6 +655,10 @@ end
 ---@return boolean
 function Date:is_closed()
   return self.type == 'CLOSED'
+end
+
+function Date:is_planning_date()
+  return self:is_deadline() or self:is_scheduled() or self:is_closed()
 end
 
 ---@return boolean

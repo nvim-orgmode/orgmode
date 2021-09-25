@@ -46,7 +46,7 @@ function OrgMappings:archive()
         end
         last_item:add_properties({
           ARCHIVE_TIME = Date.now():to_string(),
-          ARCHIVE_FILE = file.file,
+          ARCHIVE_FILE = file.filename,
           ARCHIVE_CATEGORY = item.category,
           ARCHIVE_TODO = item.todo_keyword.value,
         })
@@ -125,11 +125,108 @@ function OrgMappings:toggle_checkbox()
 end
 
 function OrgMappings:increase_date()
-  return self:_adjust_date('+1d', config.mappings.org.org_increase_date, '<C-a>')
+  return self:_adjust_date('+1d', config.mappings.org.org_increase_date, '<S-UP>')
 end
 
 function OrgMappings:decrease_date()
-  return self:_adjust_date('-1d', config.mappings.org.org_decrease_date, '<C-x>')
+  return self:_adjust_date('-1d', config.mappings.org.org_decrease_date, '<S-DOWN>')
+end
+
+function OrgMappings:timestamp_up()
+  return self:_adjust_date_part('+', config.mappings.org.org_timestamp_up, '<C-a>')
+end
+
+function OrgMappings:timestamp_down()
+  return self:_adjust_date_part('-', config.mappings.org.org_timestamp_up, '<C-a>')
+end
+
+function OrgMappings:_adjust_date_part(direction, fallback, vim_mapping)
+  local date_on_cursor = self:_get_date_under_cursor()
+  local do_replacement = function(date)
+    local col = vim.fn.col('.')
+    local char = vim.fn.getline('.'):sub(col, col)
+    if col == date.range.start_col or col == date.range.end_col then
+      date.active = not date.active
+      return self:_replace_date(date)
+    end
+    local node = ts_utils.get_node_at_cursor()
+    local col_from_start = col - date.range.start_col
+    local modify_end_time = false
+    local adj = nil
+    if node:type() == 'date' then
+      if col_from_start <= 5 then
+        adj = '1y'
+      elseif col_from_start <= 8 then
+        adj = '1m'
+      elseif col_from_start <= 15 then
+        adj = '1d'
+      end
+    elseif node:type() == 'time' then
+      local has_end_time = node:parent() and node:parent():type() == 'timerange'
+      if col_from_start <= 17 then
+        adj = '1h'
+      elseif col_from_start <= 20 then
+        adj = '5M'
+      elseif has_end_time and col_from_start <= 23 then
+        adj = '1h'
+        modify_end_time = true
+      elseif has_end_time and col_from_start <= 26 then
+        adj = '5M'
+        modify_end_time = true
+      end
+    elseif (node:type() == 'repeater' or node:type() == 'delay') and char:match('[hdwmy]') ~= nil then
+      local map = { h = 'd', d = 'w', w = 'm', m = 'y', y = 'h' }
+      vim.cmd(string.format('norm!r%s', map[char]))
+      return true
+    end
+
+    if not adj then
+      return false
+    end
+
+    local new_date = nil
+    if modify_end_time then
+      new_date = date:adjust_end_time(direction .. adj)
+    else
+      new_date = date:adjust(direction .. adj)
+    end
+
+    self:_replace_date(new_date)
+
+    if date:is_logbook() and date.related_date_range then
+      local item = Files.get_closest_headline()
+      if item and item.logbook then
+        item.logbook:recalculate_estimate(new_date.range.start_line)
+      end
+    end
+    return true
+  end
+
+  if date_on_cursor then
+    local replaced = do_replacement(date_on_cursor)
+    if replaced then
+      return true
+    end
+  end
+
+  if fallback ~= vim_mapping then
+    return vim.api.nvim_feedkeys(utils.esc(fallback), 'n', true)
+  end
+
+  local num = vim.fn.search([[\d]], 'c', vim.fn.line('.'))
+  if num == 0 then
+    return vim.api.nvim_feedkeys(utils.esc(fallback), 'n', true)
+  end
+
+  date_on_cursor = self:_get_date_under_cursor()
+  if date_on_cursor then
+    local replaced = do_replacement(date_on_cursor)
+    if replaced then
+      return true
+    end
+  end
+
+  return vim.api.nvim_feedkeys(utils.esc(fallback), 'n', true)
 end
 
 function OrgMappings:change_date()
@@ -475,6 +572,63 @@ function OrgMappings:org_schedule()
     item:add_scheduled_date(new_date)
   end
   Calendar.new({ callback = cb, date = scheduled_date or Date.today() }).open()
+end
+
+function OrgMappings:org_clock_in()
+  local item = Files.get_closest_headline()
+  local last_clocked_headline = Files.get_clocked_headline()
+  if item:is_clocked_in() then
+    return utils.echo_info(string.format('Clock continues in "%s"', item.title))
+  end
+
+  if last_clocked_headline and last_clocked_headline:is_clocked_in() then
+    Files.update_file(last_clocked_headline.file, function(file)
+      local clocked_item = file:get_closest_headline(last_clocked_headline.range.start_line)
+      if not clocked_item then
+        return
+      end
+      clocked_item:clock_out()
+    end)
+  end
+
+  item:clock_in()
+  utils.echo_info(string.format('Clock starts at %s', Date.now({ active = false }):to_wrapped_string()))
+  Files.set_clocked_headline(item)
+end
+
+function OrgMappings:org_clock_out()
+  local item = Files.get_closest_headline()
+  if not item:is_clocked_in() then
+    return
+  end
+
+  item:clock_out()
+  Files.set_clocked_headline(item)
+end
+
+function OrgMappings:org_clock_cancel()
+  local item = Files.get_closest_headline()
+  if not item:is_clocked_in() then
+    return utils.echo_info('No active clock')
+  end
+  item:cancel_active_clock()
+  utils.echo_info('Clock canceled')
+end
+
+function OrgMappings:org_clock_goto()
+  local active_headline = Files.get_clocked_headline()
+  if not active_headline then
+    return utils.echo_info('No active or recent clock task')
+  end
+
+  if not active_headline:is_clocked_in() then
+    utils.echo_info('No running clock, this is the most recently clocked task')
+  end
+
+  if vim.api.nvim_buf_get_name(0) ~= active_headline.file then
+    vim.cmd('edit ' .. vim.fn.fnameescape(active_headline.file))
+  end
+  vim.fn.cursor(active_headline.range.start_line, 0)
 end
 
 ---@param inactive boolean
