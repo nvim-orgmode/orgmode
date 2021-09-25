@@ -2,6 +2,7 @@ local File = require('orgmode.parser.file')
 local Range = require('orgmode.parser.range')
 local Date = require('orgmode.objects.date')
 local config = require('orgmode.config')
+local Logbook = require('orgmode.parser.logbook')
 
 local function assert_section(root, section, expect)
   assert.are.same(expect.content or {}, section.content)
@@ -21,6 +22,7 @@ local function assert_section(root, section, expect)
   assert.are.same(expect.file or '', section.file)
   assert.are.same(root, section.root)
   assert.are.same(expect.parent, section.parent)
+  assert.are.same(expect.logbook, section.logbook)
   assert.is.Not.Nil(section.node)
 end
 
@@ -548,5 +550,143 @@ describe('Parser', function()
     assert.are.same({ 'TOPTAG', 'WORK', 'MYPROJECT' }, parsed:get_section(1).tags)
     assert.are.same({ 'TOPTAG', 'WORK', 'CHILDPROJECT' }, parsed:get_section(2).tags)
     assert.are.same({ 'TOPTAG', 'WORK', 'CHILDPROJECT' }, parsed:get_section(3).tags)
+  end)
+
+  it('should parse logbook drawer', function()
+    local lines = {
+      '* TODO Test orgmode :WORK:',
+      'DEADLINE: <2021-05-10 11:00>',
+      ':PROPERTIES:',
+      ':SOME_PROP: some value',
+      ':END:',
+      ':LOGBOOK:',
+      ':CLOCK: [2021-09-23 Thu 10:00]--[2021-09-23 Thu 12:00] => 02:00',
+      ':CLOCK: [2021-09-25 Sat 10:00]',
+      ':END:',
+      '* TODO Another todo',
+    }
+
+    local parsed = File.from_content(lines, 'work')
+    local first_clock_start = Date.from_string('2021-09-23 10:00', {
+      type = 'LOGBOOK',
+      active = false,
+      is_date_range_start = true,
+      range = Range:new({
+        start_line = 7,
+        end_line = 7,
+        start_col = 9,
+        end_col = 30,
+      }),
+    })
+    local first_clock_end = Date.from_string('2021-09-23 12:00', {
+      type = 'LOGBOOK',
+      active = false,
+      is_date_range_end = true,
+      related_date_range = first_clock_start,
+      range = Range:new({
+        start_line = 7,
+        end_line = 7,
+        start_col = 33,
+        end_col = 54,
+      }),
+    })
+    first_clock_start.related_date_range = first_clock_end
+    assert_section(parsed, parsed:get_section(1), {
+      line = '* TODO Test orgmode :WORK:',
+      id = 1,
+      level = 1,
+      title = 'Test orgmode',
+      content = { unpack(lines, 6, 9) },
+      todo_keyword = {
+        type = 'TODO',
+        value = 'TODO',
+        range = Range:new({
+          start_line = 1,
+          end_line = 1,
+          start_col = 3,
+          end_col = 6,
+        }),
+      },
+      dates = {
+        Date.from_string('2021-05-10 11:00', {
+          type = 'DEADLINE',
+          active = true,
+          range = Range:new({
+            start_line = 2,
+            end_line = 2,
+            start_col = 11,
+            end_col = 28,
+          }),
+        }),
+        first_clock_start,
+        first_clock_end,
+        Date.from_string('2021-09-25 10:00', {
+          type = 'LOGBOOK',
+          active = false,
+          range = Range:new({
+            start_line = 8,
+            end_line = 8,
+            start_col = 9,
+            end_col = 30,
+          }),
+        }),
+      },
+      tags = { 'WORK' },
+      own_tags = { 'WORK' },
+      category = 'work',
+      properties_items = {
+        SOME_PROP = 'some value',
+      },
+      properties_range = Range:new({
+        start_line = 3,
+        end_line = 5,
+        start_col = 1,
+        end_col = 0,
+      }),
+      logbook = Logbook:new({
+        range = Range:new({
+          start_line = 6,
+          end_line = 9,
+          start_col = 1,
+          end_col = 0,
+        }),
+        items = {
+          {
+            start_time = first_clock_start,
+            end_time = first_clock_end,
+          },
+          {
+            start_time = Date.from_string('2021-09-25 10:00', {
+              type = 'LOGBOOK',
+              active = false,
+              range = Range:new({
+                start_line = 8,
+                end_line = 8,
+                start_col = 9,
+                end_col = 30,
+              }),
+            }),
+          },
+        },
+      }),
+    })
+
+    assert_section(parsed, parsed:get_section(2), {
+      line = '* TODO Another todo',
+      id = 10,
+      level = 1,
+      title = 'Another todo',
+      todo_keyword = {
+        type = 'TODO',
+        value = 'TODO',
+        range = Range:new({
+          start_line = 10,
+          end_line = 10,
+          start_col = 3,
+          end_col = 6,
+        }),
+      },
+      category = 'work',
+    })
   end)
 end)

@@ -6,6 +6,7 @@ local ts_utils = require('nvim-treesitter.ts_utils')
 local Range = require('orgmode.parser.range')
 local utils = require('orgmode.utils')
 local Date = require('orgmode.objects.date')
+local Logbook = require('orgmode.parser.logbook')
 local config = require('orgmode.config')
 
 ---@class Section
@@ -27,6 +28,7 @@ local config = require('orgmode.config')
 ---@field properties table
 ---@field tags string[]
 ---@field own_tags string[]
+---@field logbook Logbook
 local Section = {}
 
 function Section:new(data)
@@ -49,6 +51,7 @@ function Section:new(data)
   section.own_tags = { unpack(data.own_tags or {}) }
   section.tags = utils.concat(config:get_inheritable_tags(data.parent or {}), data.tags, true)
   section.content = data.content or {}
+  section.logbook = data.logbook
   section.node = data.node
   setmetatable(section, self)
   self.__index = self
@@ -74,6 +77,7 @@ function Section.from_node(section_node, file, parent)
     properties = { items = {} },
     node = section_node,
     todo_keyword_node = nil,
+    logbook = nil,
   }
   local child_sections = {}
 
@@ -105,6 +109,17 @@ function Section.from_node(section_node, file, parent)
             range = Range.from_node(date.timestamp.node),
           })
         )
+      end
+      local drawers = file:get_ts_matches('(drawer) @drawer', child)
+      for _, drawer_item in ipairs(drawers) do
+        local drawer = drawer_item.drawer
+        if drawer and drawer.text:upper() == ':LOGBOOK:' then
+          if data.logbook then
+            data.logbook:add(drawer.text_list, drawer.node, data.dates)
+          else
+            data.logbook = Logbook.parse(drawer.text_list, drawer.node, data.dates)
+          end
+        end
       end
     end
 
@@ -456,14 +471,40 @@ end
 ---@return boolean
 function Section:has_planning()
   for _, date in ipairs(self.dates) do
-    if not date:is_none() then
+    if date:is_planning_date() then
       return true
     end
   end
   return false
 end
 
----@return string
+function Section:is_clocked_in()
+  return self.logbook and self.logbook:is_active()
+end
+
+function Section:clock_in()
+  if self.logbook then
+    return self.logbook:add_clock_in()
+  end
+
+  self.logbook = Logbook.new_from_section(self)
+end
+
+function Section:clock_out()
+  if not self.logbook then
+    return
+  end
+  return self.logbook:clock_out()
+end
+
+function Section:cancel_active_clock()
+  if not self.logbook then
+    return
+  end
+  return self.logbook:cancel_active_clock()
+end
+
+---@return Date
 function Section:_get_closed_date()
   return vim.tbl_filter(function(date)
     return date:is_closed()

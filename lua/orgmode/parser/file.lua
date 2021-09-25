@@ -13,6 +13,7 @@ local utils = require('orgmode.utils')
 ---@field sections Section[]
 ---@field source_code_filetypes string[]
 ---@field is_archive_file boolean
+---@field clocked_headline Section
 ---@field tags string[]
 local File = {}
 
@@ -26,6 +27,7 @@ function File:new(tree, file_content, category, filename, is_archive_file)
     source_code_filetypes = {},
     is_archive_file = is_archive_file or false,
     tags = {},
+    clocked_headline = nil,
   }
   setmetatable(data, self)
   self.__index = self
@@ -235,7 +237,15 @@ end
 ---@param id? string
 ---@return Section
 function File:get_closest_headline(id)
-  local node = ts_utils.get_node_at_cursor()
+  local node = nil
+  if not id then
+    node = ts_utils.get_node_at_cursor()
+  else
+    local cursor_range = { id - 1, vim.fn.col('$') - 2 }
+    node = self.tree
+      :root()
+      :named_descendant_for_range(cursor_range[1], cursor_range[2], cursor_range[1], cursor_range[2])
+  end
   if not node then
     return nil
   end
@@ -281,6 +291,9 @@ function File:_parse_sections()
   local sections = self:get_ts_matches('(document (section) @section)')
   for _, section_item in ipairs(sections) do
     local section = Section.from_node(section_item.section.node, self)
+    if section:is_clocked_in() then
+      self.clocked_headline = section
+    end
     table.insert(self.sections, section)
     self:_insert_child_sections(section)
   end
