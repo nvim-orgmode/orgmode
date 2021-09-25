@@ -552,7 +552,12 @@ function OrgMappings:_replace_date(date)
   local view = vim.fn.winsaveview()
   vim.fn.setline(
     date.range.start_line,
-    string.format('%s%s%s', line:sub(1, date.range.start_col), date:to_string(), line:sub(date.range.end_col))
+    string.format(
+      '%s%s%s',
+      line:sub(1, date.range.start_col - 1),
+      date:to_wrapped_string(),
+      line:sub(date.range.end_col + 1)
+    )
   )
   vim.fn.winrestview(view)
 end

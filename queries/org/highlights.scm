@@ -17,6 +17,7 @@
 (bullet) @Identifier
 (checkbox) @PreProc
 (property_drawer) @Constant
+(drawer) @Constant
 (tag) @Function
 (plan) @Constant
 (comment) @Comment
