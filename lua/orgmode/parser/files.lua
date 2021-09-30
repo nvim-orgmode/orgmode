@@ -185,14 +185,21 @@ function Files.update_file(filename, action)
     vim.cmd(':silent! w')
     return true
   end
-  local old_height = vim.api.nvim_win_get_height(0)
-  vim.cmd('silent! topleft split ' .. filename)
+  local bufnr = vim.fn.bufadd(filename)
+  vim.api.nvim_open_win(bufnr, true, {
+    relative = 'editor',
+    width = 1,
+    height = 1,
+    row = 99999,
+    col = 99999,
+    zindex = 1,
+    style = 'minimal',
+  })
   if action then
     action(file)
   end
   vim.cmd('silent! wq!')
   vim.api.nvim_set_current_win(cur_win)
-  vim.cmd(string.format('silent! resize %d', old_height))
   return true
 end
 
