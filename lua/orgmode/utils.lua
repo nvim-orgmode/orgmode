@@ -45,24 +45,27 @@ end
 
 ---@param msg string
 ---@param additional_msg table
-function utils.echo_warning(msg, additional_msg)
-  return utils._echo(msg, 'WarningMsg', additional_msg)
+---@param store_in_history boolean
+function utils.echo_warning(msg, additional_msg, store_in_history)
+  return utils._echo(msg, 'WarningMsg', additional_msg, store_in_history)
 end
 
 ---@param msg string
 ---@param additional_msg table
-function utils.echo_error(msg, additional_msg)
-  return utils._echo(msg, 'ErrorMsg', additional_msg)
+---@param store_in_history boolean
+function utils.echo_error(msg, additional_msg, store_in_history)
+  return utils._echo(msg, 'ErrorMsg', additional_msg, store_in_history)
 end
 
 ---@param msg string
 ---@param additional_msg table
-function utils.echo_info(msg, additional_msg)
-  return utils._echo(msg, nil, additional_msg)
+---@param store_in_history boolean
+function utils.echo_info(msg, additional_msg, store_in_history)
+  return utils._echo(msg, nil, additional_msg, store_in_history)
 end
 
 ---@private
-function utils._echo(msg, hl, additional_msg)
+function utils._echo(msg, hl, additional_msg, store_in_history)
   vim.cmd([[redraw!]])
   local msg_item = { string.format('[orgmode] %s', msg) }
   if hl then
@@ -72,7 +75,11 @@ function utils._echo(msg, hl, additional_msg)
   if additional_msg then
     msg_list = utils.concat(msg_list, additional_msg)
   end
-  return vim.api.nvim_echo(msg_list, true, {})
+  local store = true
+  if type(store_in_history) == 'boolean' then
+    store = store_in_history
+  end
+  return vim.api.nvim_echo(msg_list, store, {})
 end
 
 ---@param word string

@@ -93,7 +93,7 @@ function Calendar.render()
     end
   end
   local value = vim.tbl_map(function(item)
-    return ' ' .. table.concat(item, ' | ')
+    return ' ' .. table.concat(item, '   ') .. ' '
   end, content)
   first_row = ' ' .. table.concat(first_row, '  ')
   table.insert(value, 1, first_row)
@@ -121,11 +121,15 @@ end
 function Calendar.forward()
   Calendar.month = Calendar.month:add({ month = 1 })
   Calendar.render()
+  vim.fn.cursor(2, 0)
+  vim.fn.search('01')
 end
 
 function Calendar.backward()
   Calendar.month = Calendar.month:subtract({ month = 1 })
   Calendar.render()
+  vim.fn.cursor('$', 0)
+  vim.fn.search([[\d\d]], 'b')
 end
 
 function Calendar.reset()
@@ -137,14 +141,18 @@ function Calendar.reset()
 end
 
 function Calendar:select()
+  local col = vim.fn.col('.')
+  local char = vim.fn.getline('.'):sub(col, col)
   local day = vim.trim(vim.fn.expand('<cword>'))
   local line = vim.fn.line('.')
-  if line < 3 or not day:match('%d+') then
-    return utils.echo_warning('Please select valid day number.')
+  vim.cmd([[redraw!]])
+  if line < 3 or not char:match('%d') then
+    return utils.echo_warning('Please select valid day number.', nil, false)
   end
   day = tonumber(day)
   local selected_date = Calendar.month:set({ day = day })
   local cb = Calendar.callback
+  vim.cmd([[echon]])
   vim.cmd([[bw!]])
   if type(cb) == 'function' then
     cb(selected_date)
