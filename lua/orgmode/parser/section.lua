@@ -80,12 +80,18 @@ function Section.from_node(section_node, file, parent)
   for child in section_node:iter_children() do
     if child:type() == 'plan' then
       for _, plan_date in ipairs(ts_utils.get_named_children(child)) do
-        local date = file:get_node_text(plan_date:child(0))
+        local type = plan_date:type():upper()
+        local node = plan_date:child(0)
+        if type == 'TIMESTAMP' then
+          type = 'NONE'
+          node = plan_date
+        end
+        local date = file:get_node_text(node)
         utils.concat(
           data.dates,
           Date.from_org_date(date, {
-            type = plan_date:type():upper(),
-            range = Range.from_node(plan_date:child(0)),
+            type = type,
+            range = Range.from_node(node),
           })
         )
       end
