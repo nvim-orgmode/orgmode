@@ -290,6 +290,50 @@ describe('Parser', function()
     })
   end)
 
+  it('should properly parse non planning date from planning line', function()
+    local lines = {
+      '* TODO Test orgmode :WORK:',
+      '<2021-10-01 Fri>',
+      '* TODO get deadline only if first line after headline',
+      'Some content',
+      'DEADLINE: <2021-05-22 Sat>',
+    }
+
+    local parsed = File.from_content(lines, 'work')
+    local first_section = parsed:get_section(1)
+    assert_section(parsed, first_section, {
+      line = '* TODO Test orgmode :WORK:',
+      id = 1,
+      level = 1,
+      title = 'Test orgmode',
+      todo_keyword = {
+        type = 'TODO',
+        value = 'TODO',
+        range = Range:new({
+          start_line = 1,
+          end_line = 1,
+          start_col = 3,
+          end_col = 6,
+        }),
+      },
+      tags = { 'WORK' },
+      own_tags = { 'WORK' },
+      category = 'work',
+      dates = {
+        Date.from_string('2021-10-01 Fri', {
+          type = 'NONE',
+          active = true,
+          range = Range:new({
+            start_line = 2,
+            end_line = 2,
+            start_col = 1,
+            end_col = 16,
+          }),
+        }),
+      },
+    })
+  end)
+
   it('should parse properties drawer', function()
     local lines = {
       '* TODO Test orgmode :WORK:',
