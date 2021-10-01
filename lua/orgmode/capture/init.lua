@@ -176,9 +176,17 @@ function Capture:_refile_to(file, lines, item, destination_line)
     return true
   end
 
-  local old_height = vim.api.nvim_win_get_height(0)
   if not is_same_file then
-    vim.cmd('silent! topleft split ' .. file)
+    local bufnr = vim.fn.bufadd(file)
+    vim.api.nvim_open_win(bufnr, true, {
+      relative = 'editor',
+      width = 1,
+      height = 1,
+      row = 99999,
+      col = 99999,
+      zindex = 1,
+      style = 'minimal',
+    })
   end
 
   vim.fn.append(destination_line, lines)
@@ -186,7 +194,6 @@ function Capture:_refile_to(file, lines, item, destination_line)
   if not is_same_file then
     vim.cmd('silent! wq!')
     vim.api.nvim_set_current_win(cur_win)
-    vim.cmd(string.format('silent! resize %d', old_height))
   end
 
   if item then
