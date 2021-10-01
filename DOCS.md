@@ -733,7 +733,7 @@ require('orgmode').setup({
     notifier = function(tasks)
       local result = {}
       for _, task in ipairs(tasks) do
-        utils.concat(result, {
+        require('orgmode.utils').concat(result, {
           string.format('# %s (%s)', task.category, task.humanized_duration),
           string.format('%s %s %s', string.rep('*', task.level), task.todo, task.title),
           string.format('%s: <%s>', task.type, task.time:to_string())
