@@ -593,7 +593,6 @@ function OrgMappings:org_clock_in()
   end
 
   item:clock_in()
-  utils.echo_info(string.format('Clock starts at %s', Date.now({ active = false }):to_wrapped_string()))
   Files.set_clocked_headline(item)
 end
 
@@ -613,6 +612,7 @@ function OrgMappings:org_clock_cancel()
     return utils.echo_info('No active clock')
   end
   item:cancel_active_clock()
+  Files.set_clocked_headline(item)
   utils.echo_info('Clock canceled')
 end
 

@@ -160,6 +160,19 @@ function Agenda:render_agenda()
         end, agenda_item.highlights)
       end
 
+      if headline:is_clocked_in() then
+        table.insert(item_highlights, {
+          range = Range:new({
+            start_line = #content + 1,
+            end_line = #content + 1,
+            start_col = 1,
+            end_col = 0,
+          }),
+          hl_group = 'Visual',
+          whole_line = true,
+        })
+      end
+
       table.insert(content, {
         line_content = line,
         line = #content,
@@ -201,6 +214,30 @@ function Agenda:_generate_todo_item(headline, longest_category, line_nr)
     line = string.format('%-99s %s', line, headline:tags_to_string())
   end
   local todo_keyword_pos = category:len() + 4
+  local highlights = {}
+  if headline.todo_keyword.value ~= '' then
+    table.insert(highlights, {
+      hlgroup = hl_map[headline.todo_keyword.value] or hl_map[headline.todo_keyword.type],
+      range = Range:new({
+        start_line = line_nr,
+        end_line = line_nr,
+        start_col = todo_keyword_pos,
+        end_col = todo_keyword_pos + todo_keyword:len(),
+      }),
+    })
+  end
+  if headline:is_clocked_in() then
+    table.insert(highlights, {
+      range = Range:new({
+        start_line = line_nr,
+        end_line = line_nr,
+        start_col = 1,
+        end_col = 0,
+      }),
+      hl_group = 'Visual',
+      whole_line = true,
+    })
+  end
   return {
     line_content = line,
     longest_category = longest_category,
@@ -209,17 +246,7 @@ function Agenda:_generate_todo_item(headline, longest_category, line_nr)
     file = headline.file,
     file_position = headline.range.start_line,
     headline = headline,
-    highlights = headline.todo_keyword.value ~= '' and {
-      {
-        hlgroup = hl_map[headline.todo_keyword.value] or hl_map[headline.todo_keyword.type],
-        range = Range:new({
-          start_line = line_nr,
-          end_line = line_nr,
-          start_col = todo_keyword_pos,
-          end_col = todo_keyword_pos + todo_keyword:len(),
-        }),
-      },
-    } or {},
+    highlights = highlights,
   }
 end
 
@@ -417,9 +444,16 @@ function Agenda:reset()
   return self:agenda()
 end
 
-function Agenda:redo()
+function Agenda:redo(preserve_cursor_pos)
   Files.load(vim.schedule_wrap(function()
+    local view = nil
+    if preserve_cursor_pos then
+      view = vim.fn.winsaveview()
+    end
     self[self.active_view](self)
+    if preserve_cursor_pos then
+      vim.fn.winrestview(view)
+    end
   end))
 end
 
@@ -510,6 +544,41 @@ function Agenda:change_todo_state()
   end
   self.content[line] = self:_generate_todo_item(headline, item.longest_category, item.line)
   return self:_print_and_highlight()
+end
+
+function Agenda:clock_in()
+  local line = vim.fn.line('.')
+  local item = self.content[line]
+  if not item or not item.jumpable then
+    return
+  end
+  Files.update_file(item.file, function(_)
+    vim.fn.cursor(item.file_position, 0)
+    require('orgmode').action('org_mappings.org_clock_in')
+  end)
+  return self:redo(true)
+end
+
+function Agenda:clock_out()
+  local last_clocked = Files.get_clocked_headline()
+  if last_clocked and last_clocked:is_clocked_in() then
+    Files.update_file(last_clocked.file, function(_)
+      vim.fn.cursor(last_clocked.range.start_line, 0)
+      require('orgmode').action('org_mappings.org_clock_out')
+    end)
+    return self:redo(true)
+  end
+end
+
+function Agenda:clock_cancel()
+  local last_clocked = Files.get_clocked_headline()
+  if last_clocked and last_clocked:is_clocked_in() then
+    Files.update_file(last_clocked.file, function(_)
+      vim.fn.cursor(last_clocked.range.start_line, 0)
+      require('orgmode').action('org_mappings.org_clock_cancel')
+    end)
+    return self:redo(true)
+  end
 end
 
 function Agenda:goto_item()

@@ -29,6 +29,7 @@ local config = require('orgmode.config')
 ---@field tags string[]
 ---@field own_tags string[]
 ---@field logbook Logbook
+---@field clocked_in boolean
 local Section = {}
 
 function Section:new(data)
@@ -52,6 +53,7 @@ function Section:new(data)
   section.tags = utils.concat(config:get_inheritable_tags(data.parent or {}), data.tags, true)
   section.content = data.content or {}
   section.logbook = data.logbook
+  section.clocked_in = data.logbook and data.logbook:is_active()
   section.node = data.node
   setmetatable(section, self)
   self.__index = self
@@ -479,7 +481,7 @@ function Section:has_planning()
 end
 
 function Section:is_clocked_in()
-  return self.logbook and self.logbook:is_active()
+  return self.clocked_in
 end
 
 function Section:clock_in()
