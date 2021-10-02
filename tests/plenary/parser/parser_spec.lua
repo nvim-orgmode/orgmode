@@ -378,7 +378,7 @@ describe('Parser', function()
       own_tags = { 'WORK' },
       category = 'work',
       properties_items = {
-        SOME_PROP = 'some value',
+        some_prop = 'some value',
       },
       properties_range = Range:new({
         start_line = 3,
@@ -458,7 +458,7 @@ describe('Parser', function()
 
     parsed = File.from_content(lines, 'work')
     headline = parsed:get_section(1)
-    assert.are.same({ SOME_PROP = 'some value' }, headline.properties.items)
+    assert.are.same({ some_prop = 'some value' }, headline.properties.items)
 
     lines = {
       '* TODO Test orgmode :WORK:',
@@ -471,7 +471,7 @@ describe('Parser', function()
 
     parsed = File.from_content(lines, 'work')
     headline = parsed:get_section(1)
-    assert.are.same({ SOME_PROP = 'some value' }, headline.properties.items)
+    assert.are.same({ some_prop = 'some value' }, headline.properties.items)
   end)
 
   it('should override headline category from property', function()
@@ -635,7 +635,7 @@ describe('Parser', function()
       own_tags = { 'WORK' },
       category = 'work',
       properties_items = {
-        SOME_PROP = 'some value',
+        some_prop = 'some value',
       },
       properties_range = Range:new({
         start_line = 3,

@@ -62,6 +62,7 @@ return {
     org_clock_out = { 'org_mappings.org_clock_out' },
     org_clock_cancel = { 'org_mappings.org_clock_cancel' },
     org_clock_goto = { 'org_mappings.org_clock_goto' },
+    org_set_effort = { 'org_mappings.org_set_effort' },
     org_show_help = { 'org_mappings.show_help' },
   },
 }
