@@ -5,7 +5,7 @@ local File = require('orgmode.parser.file')
 ---@field loaded boolean
 ---@field orgfiles table
 ---@field tags string[]
----@field clocked_headline Section|nil
+---@field clocked_headline string|nil
 local Files = {
   loaded = false,
   orgfiles = {},
@@ -90,9 +90,17 @@ function Files.filenames()
 end
 
 ---@param file string
+---@param refresh boolean
 ---@return File
-function Files.get(file)
-  return Files.orgfiles[file]
+function Files.get(file, refresh)
+  local f = Files.orgfiles[file]
+  if f then
+    if refresh then
+      Files.orgfiles[file] = f:refresh()
+    end
+    return Files.orgfiles[file]
+  end
+  return nil
 end
 
 ---@return string[]
@@ -107,18 +115,7 @@ function Files.get_current_file()
   if has_capture_var and is_capture then
     return File.from_content(vim.api.nvim_buf_get_lines(0, 0, -1, false))
   end
-  local file = Files.get(name)
-  if file then
-    Files.orgfiles[name] = file:refresh()
-    return Files.get(name)
-  end
-  return nil
-end
-
----@return Section
-function Files.get_current_item()
-  local file = Files.get_current_file()
-  return file:get_current_item()
+  return Files.get(name, true)
 end
 
 ---@param title string
@@ -202,12 +199,27 @@ end
 
 ---@return Section
 function Files.get_clocked_headline()
-  return Files.clocked_headline
+  if Files.clocked_headline then
+    return Files.get_headline_by_id(Files.clocked_headline)
+  end
+  return nil
 end
 
 ---@param headline Section
 function Files.set_clocked_headline(headline)
-  Files.clocked_headline = headline
+  Files.clocked_headline = headline.id
+end
+
+function Files.get_headline_by_id(id)
+  local parts = vim.split(id, '####', true)
+  if #parts ~= 2 then
+    return nil
+  end
+  local file = Files.get(parts[1], true)
+  if file then
+    return file:get_closest_headline(tonumber(parts[2]))
+  end
+  return nil
 end
 
 function Files._build_tags()

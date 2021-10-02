@@ -178,7 +178,17 @@ local function from_seconds(seconds)
   })
 end
 
+---@param minutes number
+---@returns Duration
+local function from_minutes(minutes)
+  return Duration:new({
+    parts = { minutes = minutes },
+    minutes = minutes,
+  })
+end
+
 return {
   parse = parse,
   from_seconds = from_seconds,
+  from_minutes = from_minutes,
 }
