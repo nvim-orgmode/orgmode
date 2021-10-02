@@ -106,6 +106,7 @@ return {
       org_clock_out = '<Leader>oxo',
       org_clock_cancel = '<leader>oxq',
       org_clock_goto = '<leader>oxj',
+      org_set_effort = '<leader>oxe',
       org_show_help = '?',
     },
   },

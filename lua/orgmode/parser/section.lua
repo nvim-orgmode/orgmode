@@ -44,7 +44,7 @@ function Section:new(data)
   section.todo_keyword = { value = '', type = '', node = data.todo_keyword_node }
   section.priority = data.priority
   section.title = data.title
-  section.category = data.properties.items.CATEGORY or data.root.category
+  section.category = data.properties.items.category or data.root.category
   section.file = data.root.filename or ''
   section.dates = data.dates or {}
   section.properties = data.properties
@@ -131,7 +131,7 @@ function Section.from_node(section_node, file, parent)
         local line = file:get_node_text(prop)
         local prop_name, prop_value = line:match('^%s*:([^:]-):%s*(.*)$')
         if prop_name and prop_value and vim.trim(prop_value) ~= '' then
-          data.properties.items[prop_name] = prop_value
+          data.properties.items[prop_name:lower()] = prop_value
         end
       end
     end
@@ -287,11 +287,11 @@ function Section:add_properties(properties)
     local start = vim.api.nvim_call_function('getline', { self.properties.range.start_line })
     local indent = start:match('^%s*')
     for name, val in pairs(properties) do
-      if self.properties.items[name] then
+      if self.properties.items[name:lower()] then
         local properties_content = self.root:get_node_text_list(self.properties.node)
         for i, content in ipairs(properties_content) do
-          if content:match('^%s*:' .. name .. ':.*$') then
-            local new_line = content:gsub(vim.pesc(self.properties.items[name]), val)
+          if content:lower():match('^%s*:' .. name:lower() .. ':.*$') then
+            local new_line = content:gsub(vim.pesc(self.properties.items[name:lower()]), val)
             vim.api.nvim_call_function('setline', { self.properties.range.start_line + i - 1, new_line })
             break
           end

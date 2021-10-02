@@ -1,6 +1,7 @@
 local ts_utils = require('nvim-treesitter.ts_utils')
 local Calendar = require('orgmode.objects.calendar')
 local Date = require('orgmode.objects.date')
+local Duration = require('orgmode.objects.duration')
 local TodoState = require('orgmode.objects.todo_state')
 local Hyperlinks = require('orgmode.org.hyperlinks')
 local utils = require('orgmode.utils')
@@ -629,6 +630,17 @@ function OrgMappings:org_clock_goto()
     vim.cmd('edit ' .. vim.fn.fnameescape(active_headline.file))
   end
   vim.fn.cursor(active_headline.range.start_line, 0)
+end
+
+function OrgMappings:org_set_effort()
+  local item = Files.get_closest_headline()
+  -- TODO: Add Effort_ALL property as autocompletion
+  local effort = vim.fn.input('Effort: ', '')
+  local duration = Duration.parse(effort)
+  if duration == nil then
+    return utils.echo_error('Invalid duration format: ' .. effort)
+  end
+  item:add_properties({ Effort = effort })
 end
 
 ---@param inactive boolean

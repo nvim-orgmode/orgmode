@@ -2,6 +2,7 @@ local Range = require('orgmode.parser.range')
 local utils = require('orgmode.utils')
 local config = require('orgmode.config')
 local Date = require('orgmode.objects.date')
+local Duration = require('orgmode.objects.duration')
 
 ---@class Logbook
 ---@field range Range
@@ -100,10 +101,8 @@ end
 ---@return string
 function Logbook:_calculate_minutes(start_time, end_time)
   local seconds = end_time.timestamp - start_time.timestamp
-  local minutes = math.floor(seconds / 60)
-  local hours = math.floor(minutes / 60)
-  local min = minutes % 60
-  return string.format('%02d:%02d', hours, min)
+  local duration = Duration.from_seconds(seconds)
+  return duration:to_string('HH:MM')
 end
 
 ---@param lines string
