@@ -11,6 +11,7 @@ local config = require('orgmode.config')
 
 ---@class Section
 ---@field id number
+---@field line_number number
 ---@field level number
 ---@field node table
 ---@field root File
@@ -35,7 +36,8 @@ local Section = {}
 function Section:new(data)
   data = data or {}
   local section = {}
-  section.id = data.range.start_line
+  section.id = string.format('%s####%s', data.root.filename or '', data.range.start_line)
+  section.line_number = data.range.start_line
   section.level = data.level or 0
   section.root = data.root
   section.parent = data.parent
@@ -237,6 +239,12 @@ function Section:get_category()
   return self.category
 end
 
+---@param name string
+---@return string|nil
+function Section:get_property(name)
+  return self.properties.items[name:lower()]
+end
+
 function Section:matches_search_term(term)
   if self.title:lower():match(term) then
     return true
@@ -356,7 +364,7 @@ function Section:get_prev_headline_same_level()
   local len = #parent.sections
   for i = 1, len do
     local section = parent.sections[len + 1 - i]
-    if section.id < self.id and section.level == self.level then
+    if section.line_number < self.line_number and section.level == self.level then
       return section
     end
   end
@@ -370,7 +378,7 @@ function Section:get_next_headline_same_level()
   end
   local parent = self.parent or self.root
   for _, section in ipairs(parent.sections) do
-    if section.id > self.id and section.level == self.level then
+    if section.line_number > self.line_number and section.level == self.level then
       return section
     end
   end
@@ -486,24 +494,29 @@ end
 
 function Section:clock_in()
   if self.logbook then
-    return self.logbook:add_clock_in()
+    self.logbook:add_clock_in()
+    self.clocked_in = self.logbook:is_active()
+    return
   end
 
   self.logbook = Logbook.new_from_section(self)
+  self.clocked_in = self.logbook:is_active()
 end
 
 function Section:clock_out()
   if not self.logbook then
     return
   end
-  return self.logbook:clock_out()
+  self.logbook:clock_out()
+  self.clocked_in = self.logbook:is_active()
 end
 
 function Section:cancel_active_clock()
   if not self.logbook then
     return
   end
-  return self.logbook:cancel_active_clock()
+  self.logbook:cancel_active_clock()
+  self.clocked_in = self.logbook:is_active()
 end
 
 ---@return Date

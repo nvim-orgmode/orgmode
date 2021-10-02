@@ -1,6 +1,7 @@
 local File = require('orgmode.parser.file')
 local Range = require('orgmode.parser.range')
 local Date = require('orgmode.objects.date')
+local Duration = require('orgmode.objects.duration')
 local config = require('orgmode.config')
 local Logbook = require('orgmode.parser.logbook')
 
@@ -9,7 +10,7 @@ local function assert_section(root, section, expect)
   assert.are.same(expect.dates or {}, section.dates)
   assert.are.same(expect.sections or {}, section.sections)
   assert.are.same(expect.line or '', section.line)
-  assert.are.same(expect.id or 0, section.id)
+  assert.are.same(expect.line_number or 0, section.line_number)
   assert.are.same(expect.level or 0, section.level)
   assert.are.same(expect.title or '', section.title)
   assert.are.same(expect.priority or '', section.priority)
@@ -39,7 +40,7 @@ describe('Parser', function()
     assert_section(parsed, parsed:get_section(1), {
       line = '* TODO Something with a lot of tags :WORK:',
       title = 'Something with a lot of tags',
-      id = 2,
+      line_number = 2,
       level = 1,
       todo_keyword = {
         type = 'TODO',
@@ -78,7 +79,7 @@ describe('Parser', function()
     assert_section(parsed, first_section, {
       sections = { parsed:get_section(2) },
       line = '* TODO Test orgmode',
-      id = 2,
+      line_number = 2,
       level = 1,
       title = 'Test orgmode',
       todo_keyword = {
@@ -99,7 +100,7 @@ describe('Parser', function()
       content = { 'Some content for level 2' },
       sections = { parsed:get_section(3) },
       line = '** TODO [#A] Test orgmode level 2 :PRIVATE:',
-      id = 3,
+      line_number = 3,
       level = 2,
       title = '[#A] Test orgmode level 2',
       priority = 'A',
@@ -123,7 +124,7 @@ describe('Parser', function()
     assert_section(parsed, third_section, {
       content = { 'Content Level 3' },
       line = '*** TODO [#1] Level 3',
-      id = 5,
+      line_number = 5,
       level = 3,
       title = '[#1] Level 3',
       priority = '1',
@@ -146,7 +147,7 @@ describe('Parser', function()
     assert_section(parsed, fourth_section, {
       content = { 'content for top level todo' },
       line = '* DONE top level todo :WORK:',
-      id = 7,
+      line_number = 7,
       level = 1,
       title = 'top level todo',
       todo_keyword = {
@@ -169,7 +170,7 @@ describe('Parser', function()
       content = { 'multiple tags content, tags not read from content :FROMCONTENT:' },
       sections = { parsed:get_section(6) },
       line = '* TODO top level todo with multiple tags :OFFICE:PROJECT:',
-      id = 9,
+      line_number = 9,
       level = 1,
       title = 'top level todo with multiple tags',
       todo_keyword = {
@@ -190,7 +191,7 @@ describe('Parser', function()
 
     assert_section(parsed, sixth_section, {
       line = '** TODO Working on this now :OFFICE:NESTED:',
-      id = 11,
+      line_number = 11,
       level = 2,
       title = 'Working on this now',
       todo_keyword = {
@@ -212,7 +213,7 @@ describe('Parser', function()
 
     assert_section(parsed, seventh_section, {
       line = '* NOKEYWORD Headline with wrong todo keyword and wrong tag format :WORK : OFFICE:',
-      id = 12,
+      line_number = 12,
       level = 1,
       title = 'NOKEYWORD Headline with wrong todo keyword and wrong tag format :WORK : OFFICE:',
     })
@@ -231,7 +232,7 @@ describe('Parser', function()
     local first_section = parsed:get_section(1)
     assert_section(parsed, first_section, {
       line = '* TODO Test orgmode <2021-05-15 Sat> :WORK:',
-      id = 1,
+      line_number = 1,
       level = 1,
       title = 'Test orgmode <2021-05-15 Sat>',
       todo_keyword = {
@@ -305,7 +306,7 @@ describe('Parser', function()
     local first_section = parsed:get_section(1)
     assert_section(parsed, first_section, {
       line = '* TODO Test orgmode :WORK:',
-      id = 1,
+      line_number = 1,
       level = 1,
       title = 'Test orgmode',
       todo_keyword = {
@@ -349,7 +350,7 @@ describe('Parser', function()
     local parsed = File.from_content(lines, 'work')
     assert_section(parsed, parsed:get_section(1), {
       line = '* TODO Test orgmode :WORK:',
-      id = 1,
+      line_number = 1,
       level = 1,
       title = 'Test orgmode',
       todo_keyword = {
@@ -390,7 +391,7 @@ describe('Parser', function()
 
     assert_section(parsed, parsed:get_section(2), {
       line = '* TODO Another todo',
-      id = 6,
+      line_number = 6,
       level = 1,
       title = 'Another todo',
       todo_keyword = {
@@ -593,7 +594,7 @@ describe('Parser', function()
     first_clock_start.related_date_range = first_clock_end
     assert_section(parsed, parsed:get_section(1), {
       line = '* TODO Test orgmode :WORK:',
-      id = 1,
+      line_number = 1,
       level = 1,
       title = 'Test orgmode',
       content = { unpack(lines, 6, 9) },
@@ -654,6 +655,7 @@ describe('Parser', function()
           {
             start_time = first_clock_start,
             end_time = first_clock_end,
+            duration = Duration.from_seconds(first_clock_end.timestamp - first_clock_start.timestamp),
           },
           {
             start_time = Date.from_string('2021-09-25 10:00', {
@@ -673,7 +675,7 @@ describe('Parser', function()
 
     assert_section(parsed, parsed:get_section(2), {
       line = '* TODO Another todo',
-      id = 10,
+      line_number = 10,
       level = 1,
       title = 'Another todo',
       todo_keyword = {

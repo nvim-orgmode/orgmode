@@ -40,6 +40,17 @@ function Logbook:get_active()
   end, self.items)[1]
 end
 
+function Logbook:get_total()
+  local total_minutes = 0
+  for _, item in ipairs(self.items) do
+    if item.duration then
+      total_minutes = total_minutes + item.duration.minutes
+    end
+  end
+
+  return Duration.from_minutes(total_minutes):to_string('HH:MM')
+end
+
 function Logbook:add_clock_in()
   local indent = vim.fn.getline(self.range.start_line):match('^%s*')
   local line = self.range.end_line - 1
@@ -62,7 +73,8 @@ function Logbook:clock_out()
   local line = vim.fn.getline(line_nr)
   local date = Date.now({ active = false })
   active_item.end_time = date
-  local minutes = self:_calculate_minutes(active_item.start_time, active_item.end_time)
+  active_item.duration = Duration.from_seconds(date.timestamp - active_item.start_time.timestamp)
+  local minutes = active_item.duration:to_string('HH:MM')
   line = string.format('%s--%s => %s', line, date:to_wrapped_string(), minutes)
   utils.echo_info(string.format('Clock stopped at %s after %s', date:to_wrapped_string(), minutes))
   vim.api.nvim_call_function('setline', { line_nr, line })
@@ -90,19 +102,10 @@ function Logbook:recalculate_estimate(line)
     return
   end
   local content = vim.fn.getline(line):gsub('%s*=>%s*[%-%+]?%d+:%d+%s*$', '')
-  content = string.format('%s => %s', content, self:_calculate_minutes(item.start_time, item.end_time))
+  content = string.format('%s => %s', content, item.duration:to_string('HH:MM'))
   local view = vim.fn.winsaveview()
   vim.api.nvim_call_function('setline', { line, content })
   vim.fn.winrestview(view)
-end
-
----@param start_time Date
----@param end_time Date
----@return string
-function Logbook:_calculate_minutes(start_time, end_time)
-  local seconds = end_time.timestamp - start_time.timestamp
-  local duration = Duration.from_seconds(seconds)
-  return duration:to_string('HH:MM')
 end
 
 ---@param lines string
@@ -162,10 +165,14 @@ function Logbook._parse_clocks(lines, node, dates)
         end
       end
       if #dates_for_line > 0 then
-        table.insert(items, {
+        local item = {
           start_time = dates_for_line[1],
           end_time = dates_for_line[2],
-        })
+        }
+        if item.start_time and item.end_time then
+          item.duration = Duration.from_seconds(item.end_time.timestamp - item.start_time.timestamp)
+        end
+        table.insert(items, item)
       end
     end
   end

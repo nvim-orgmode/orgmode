@@ -97,6 +97,23 @@ local function cron(opts)
   end))
 end
 
+function _G.orgmode.statusline()
+  if not instance or not instance.initialized then
+    return ''
+  end
+  local clocked_headline = require('orgmode.parser.files').get_clocked_headline()
+  if not clocked_headline or not clocked_headline:is_clocked_in() then
+    return ''
+  end
+
+  local effort = clocked_headline:get_property('effort')
+  local total = clocked_headline.logbook:get_total()
+  if effort then
+    return string.format('(Org) [%s/%s] (%s)', total, effort, clocked_headline.title)
+  end
+  return string.format('(Org) [%s] (%s)', total, clocked_headline.title)
+end
+
 return {
   setup = setup,
   reload = reload,

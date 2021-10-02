@@ -10,6 +10,7 @@ local utils = require('orgmode.utils')
 ---@field file_content string
 ---@field category string
 ---@field filename string
+---@field changedtick number
 ---@field sections Section[]
 ---@field source_code_filetypes string[]
 ---@field is_archive_file boolean
@@ -23,6 +24,7 @@ function File:new(tree, file_content, category, filename, is_archive_file)
     file_content = file_content,
     category = category,
     filename = filename,
+    changedtick = 0,
     sections = {},
     source_code_filetypes = {},
     is_archive_file = is_archive_file or false,
@@ -150,11 +152,17 @@ function File.from_content(content, category, filename, is_archive_file)
 end
 
 function File:refresh()
-  if not vim.bo.modified then
+  local bufnr = vim.fn.bufnr(self.filename)
+  if bufnr < 0 then
     return self
   end
-  local content = vim.api.nvim_buf_get_lines(0, 0, -1, false)
+  local changed = self.changedtick ~= vim.api.nvim_buf_get_var(bufnr, 'changedtick')
+  if not changed then
+    return self
+  end
+  local content = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
   local refreshed_file = File.from_content(content, self.category, self.filename, self.is_archive_file)
+  refreshed_file.changedtick = vim.api.nvim_buf_get_var(bufnr, 'changedtick')
   if refreshed_file then
     return refreshed_file
   end
