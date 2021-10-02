@@ -58,6 +58,9 @@ return {
       org_agenda_redo = 'r',
       org_agenda_todo = 't',
       org_clock_goto = '<leader>oxj',
+      org_agenda_clock_in = 'I',
+      org_agenda_clock_out = 'O',
+      org_agenda_clock_cancel = 'X',
       org_agenda_show_help = '?',
     },
     capture = {
