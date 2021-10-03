@@ -1,4 +1,5 @@
 local Range = require('orgmode.parser.range')
+local Duration = require('orgmode.objects.duration')
 local Section = require('orgmode.parser.section')
 local ts_utils = require('nvim-treesitter.ts_utils')
 local LanguageTree = require('vim.treesitter.languagetree')
@@ -271,6 +272,28 @@ function File:get_closest_headline(id)
     end
   end
   return nil
+end
+
+---@param from Date
+---@param to Date
+---@return table
+function File:get_clock_report(from, to)
+  local result = {
+    total_duration = 0,
+    headlines = {},
+  }
+  for _, section in ipairs(self.sections) do
+    if section.logbook then
+      local minutes = section.logbook:get_total_minutes(from, to)
+      if minutes > 0 then
+        table.insert(result.headlines, section)
+        result.total_duration = result.total_duration + minutes
+      end
+    end
+  end
+
+  result.total_duration = Duration.from_minutes(result.total_duration)
+  return result
 end
 
 ---@param headline Section

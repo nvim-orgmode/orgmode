@@ -210,6 +210,8 @@ function Files.set_clocked_headline(headline)
   Files.clocked_headline = headline.id
 end
 
+---@param id string
+---@return Section
 function Files.get_headline_by_id(id)
   local parts = vim.split(id, '####', true)
   if #parts ~= 2 then
@@ -220,6 +222,22 @@ function Files.get_headline_by_id(id)
     return file:get_closest_headline(tonumber(parts[2]))
   end
   return nil
+end
+
+function Files.get_clock_report(from, to)
+  local report = {
+    total = 0,
+    files = {},
+  }
+  for name, orgfile in pairs(Files.all()) do
+    local file_clocks = orgfile:get_clock_report(from, to)
+    if #file_clocks.headlines > 0 then
+      report.total = report.total + file_clocks.total_minutes
+      report.files[name] = file_clocks.headlines
+    end
+  end
+
+  return report
 end
 
 function Files._build_tags()
