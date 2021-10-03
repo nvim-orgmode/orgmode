@@ -1,9 +1,11 @@
 local Date = require('orgmode.objects.date')
 local Range = require('orgmode.parser.range')
+local Table = require('orgmode.parser.table')
 local utils = require('orgmode.utils')
 local config = require('orgmode.config')
 local colors = require('orgmode.colors')
 local AgendaItem = require('orgmode.agenda.agenda_item')
+local AgendaClockReport = require('orgmode.agenda.clock_report')
 local Calendar = require('orgmode.objects.calendar')
 local agenda_highlights = require('orgmode.colors.highlights')
 local Files = require('orgmode.parser.files')
@@ -57,6 +59,7 @@ end
 ---@field content table[]
 ---@field highlights table[]
 ---@field active_view string
+---@field show_clock_report boolean
 ---@field last_search string
 local Agenda = {}
 
@@ -66,6 +69,7 @@ function Agenda:new(opts)
   local data = {
     span = config:get_agenda_span(),
     active_view = 'agenda',
+    show_clock_report = false,
     last_search = '',
     content = {},
     highlights = {},
@@ -188,6 +192,10 @@ function Agenda:render_agenda()
   self.content = content
   self.highlights = highlights
   self.active_view = 'agenda'
+  if self.show_clock_report then
+    local clock_report = AgendaClockReport.from_range(self.from, self.to)
+    utils.concat(self.content, clock_report:draw_for_agenda())
+  end
   return self:_print_and_highlight()
 end
 
@@ -262,10 +270,10 @@ function Agenda:_print_and_highlight()
     vim.cmd(string.format('resize %d', win_height))
     vim.cmd(vim.fn.win_id2win(opened) .. 'wincmd w')
   end
-  vim.bo.modifiable = true
   local lines = vim.tbl_map(function(item)
     return item.line_content
   end, self.content)
+  vim.bo.modifiable = true
   vim.api.nvim_buf_set_lines(0, 0, -1, true, lines)
   vim.bo.modifiable = false
   vim.bo.modified = false
@@ -286,7 +294,7 @@ function Agenda:todos()
     end
   end
 
-  self.content = { { line_content = 'Global list of TODO items of type: ALL', highlight = nil } }
+  self.content = { { line_content = 'Global list of TODO items of type: ALL' } }
   self.highlights = {}
   self:render_todos('todos')
 end
@@ -579,6 +587,28 @@ function Agenda:clock_cancel()
     end)
     return self:redo(true)
   end
+end
+
+function Agenda:toggle_clock_report()
+  if self.active_view ~= 'agenda' then
+    return utils.warning('Not possible to view clock report in non-agenda view.')
+  end
+  self.show_clock_report = not self.show_clock_report
+  local text = self.show_clock_report and 'on' or 'off'
+  utils.echo_info(string.format('Clocktable mode is %s', text))
+  return self:redo(true)
+end
+
+function Agenda:generate_clock_report(lines)
+  local data_with_long_names = {
+    { 'one', 'two', 'three' },
+    {},
+    { 'four', 'five', 'six', 'seven longer long' },
+    { 'eight', 'iamverylong' },
+    { 'nine', 'ten', 'a' },
+  }
+  local table = Table.from_list(data_with_long_names)
+  utils.concat(lines, table:draw())
 end
 
 function Agenda:goto_item()

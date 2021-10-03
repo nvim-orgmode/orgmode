@@ -17,7 +17,8 @@ return {
     org_agenda_clock_out = { 'agenda.clock_out' },
     org_agenda_clock_cancel = { 'agenda.clock_cancel' },
     org_agenda_show_help = { 'org_mappings.show_help' },
-    org_clock_goto = { 'org_mappings.org_clock_goto' },
+    org_agenda_clock_goto = { 'org_mappings.org_clock_goto' },
+    org_agenda_clockreport_mode = { 'agenda.toggle_clock_report' },
   },
   capture = {
     org_capture_finalize = { 'capture.refile' },

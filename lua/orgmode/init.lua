@@ -107,7 +107,7 @@ function _G.orgmode.statusline()
   end
 
   local effort = clocked_headline:get_property('effort')
-  local total = clocked_headline.logbook:get_total()
+  local total = clocked_headline.logbook:get_total():to_string()
   if effort then
     return string.format('(Org) [%s/%s] (%s)', total, effort, clocked_headline.title)
   end

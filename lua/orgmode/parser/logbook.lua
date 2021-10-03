@@ -40,15 +40,23 @@ function Logbook:get_active()
   end, self.items)[1]
 end
 
-function Logbook:get_total()
+---@return number
+function Logbook:get_total_minutes(from, to)
   local total_minutes = 0
+  local has_range = from and to
   for _, item in ipairs(self.items) do
     if item.duration then
-      total_minutes = total_minutes + item.duration.minutes
+      if not has_range or (item.start_time:is_between(from, to) or item.end_time:is_between(from, to)) then
+        total_minutes = total_minutes + item.duration.minutes
+      end
     end
   end
+  return total_minutes
+end
 
-  return Duration.from_minutes(total_minutes):to_string('HH:MM')
+---@return Duration
+function Logbook:get_total()
+  return Duration.from_minutes(self:get_total_minutes())
 end
 
 function Logbook:add_clock_in()

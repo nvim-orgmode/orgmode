@@ -26,7 +26,7 @@ describe('Duration', function()
       hours = 2,
     })
 
-    result = Duration.parse('2y4m2w3d15h25min')
+    result = Duration.parse('2y 4m 2w 3d 15:25')
     assert.is.Not.Nil(result)
     assert.are.same(result.minutes, 1051200 + 172800 + 20160 + 4320 + 900 + 25)
     assert.are.same(result.parts, {
@@ -67,8 +67,8 @@ describe('Duration', function()
 
   it('should properly format duration to string', function()
     local result = Duration.parse('0:35')
-    assert.are.same(result:to_string('HH:MM'), '00:35')
-    assert.are.same(result:to_string(), '00:35')
+    assert.are.same(result:to_string('HH:MM'), '0:35')
+    assert.are.same(result:to_string(), '0:35')
 
     result = Duration.parse('13:28')
     assert.are.same(result:to_string('HH:MM'), '13:28')
@@ -76,14 +76,14 @@ describe('Duration', function()
 
     result = Duration.parse('1d 2h 5min')
     assert.are.same(result:to_string('HH:MM'), '26:05')
-    assert.are.same(result:to_string(), '1d2h5min')
+    assert.are.same(result:to_string(), '1d 2:05')
 
     result = Duration.parse('2y4m2w3d15h25min')
     assert.are.same(result:to_string('HH:MM'), '20823:25')
-    assert.are.same(result:to_string(), '2y4m2w3d15h25min')
+    assert.are.same(result:to_string(), '2y 4m 2w 3d 15:25')
 
     result = Duration.parse('2y 4m 2w 3d 15h 42min')
     assert.are.same(result:to_string('HH:MM'), '20823:42')
-    assert.are.same(result:to_string(), '2y4m2w3d15h42min')
+    assert.are.same(result:to_string(), '2y 4m 2w 3d 15:42')
   end)
 end)
