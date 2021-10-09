@@ -54,14 +54,16 @@ function Logbook:get_total_minutes(from, to)
   return total_minutes
 end
 
+---@param from string
+---@param to string
 ---@return Duration
-function Logbook:get_total()
-  return Duration.from_minutes(self:get_total_minutes())
+function Logbook:get_total(from, to)
+  return Duration.from_minutes(self:get_total_minutes(from, to))
 end
 
 function Logbook:add_clock_in()
   local indent = vim.fn.getline(self.range.start_line):match('^%s*')
-  local line = self.range.end_line - 1
+  local line = self.range.start_line
   local date = Date.now({ active = false })
   local content = string.format('%sCLOCK: %s', indent, date:to_wrapped_string())
   table.insert(self.items, {

@@ -6,6 +6,7 @@ local instance = nil
 ---@field files Files
 ---@field agenda Agenda
 ---@field capture Capture
+---@field clock Clock
 ---@field notifications Notifications
 local Org = {}
 
@@ -28,6 +29,7 @@ function Org:init()
     capture = self.capture,
     agenda = self.agenda,
   })
+  self.clock = require('orgmode.clock'):new()
   require('orgmode.colors.todo_highlighter').add_todo_keyword_highlights()
   require('orgmode.org.autocompletion').register()
   self.initialized = true

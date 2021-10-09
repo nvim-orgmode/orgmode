@@ -5,7 +5,7 @@ local utils = require('orgmode.utils')
 local config = require('orgmode.config')
 local colors = require('orgmode.colors')
 local AgendaItem = require('orgmode.agenda.agenda_item')
-local AgendaClockReport = require('orgmode.agenda.clock_report')
+local ClockReport = require('orgmode.clock.report')
 local Calendar = require('orgmode.objects.calendar')
 local agenda_highlights = require('orgmode.colors.highlights')
 local Files = require('orgmode.parser.files')
@@ -193,8 +193,8 @@ function Agenda:render_agenda()
   self.highlights = highlights
   self.active_view = 'agenda'
   if self.show_clock_report then
-    local clock_report = AgendaClockReport.from_range(self.from, self.to)
-    utils.concat(self.content, clock_report:draw_for_agenda())
+    local clock_report = ClockReport.from_date_range(self.from, self.to)
+    utils.concat(self.content, clock_report:draw_for_agenda(#self.content))
   end
   return self:_print_and_highlight()
 end
