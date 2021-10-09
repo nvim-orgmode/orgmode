@@ -1,3 +1,4 @@
+local Range = require('orgmode.parser.range')
 local Table = require('orgmode.parser.table')
 
 describe('Table', function()
@@ -19,6 +20,20 @@ describe('Table', function()
       '| eight |      |       |       |',
       '| nine  | ten  |       |       |',
     }, tbl:draw())
+
+    assert.are.same(tbl.rows[1].cells[1].range, Range:new({ start_line = 1, end_line = 1, start_col = 3, end_col = 5 }))
+    assert.are.same(
+      tbl.rows[1].cells[2].range,
+      Range:new({ start_line = 1, end_line = 1, start_col = 11, end_col = 13 })
+    )
+    assert.are.same(
+      tbl.rows[1].cells[3].range,
+      Range:new({ start_line = 1, end_line = 1, start_col = 18, end_col = 22 })
+    )
+    assert.are.same(
+      tbl.rows[1].cells[4].range,
+      Range:new({ start_line = 1, end_line = 1, start_col = 26, end_col = 26 })
+    )
 
     local data_with_long_names = {
       { 'one', 'two', 'three' },

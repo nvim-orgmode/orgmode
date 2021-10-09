@@ -194,7 +194,7 @@ function Agenda:render_agenda()
   self.active_view = 'agenda'
   if self.show_clock_report then
     local clock_report = ClockReport.from_date_range(self.from, self.to)
-    utils.concat(self.content, clock_report:draw_for_agenda(#self.content))
+    utils.concat(self.content, clock_report:draw_for_agenda(#self.content + 1))
   end
   return self:_print_and_highlight()
 end
