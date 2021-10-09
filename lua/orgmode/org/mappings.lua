@@ -125,12 +125,12 @@ function OrgMappings:toggle_checkbox()
   vim.fn.setline('.', new_line)
 end
 
-function OrgMappings:increase_date()
-  return self:_adjust_date('+1d', config.mappings.org.org_increase_date, '<S-UP>')
+function OrgMappings:timestamp_up_day()
+  return self:_adjust_date('+1d', config.mappings.org.org_timestamp_up_day, '<S-UP>')
 end
 
-function OrgMappings:decrease_date()
-  return self:_adjust_date('-1d', config.mappings.org.org_decrease_date, '<S-DOWN>')
+function OrgMappings:timestamp_down_day()
+  return self:_adjust_date('-1d', config.mappings.org.org_timestamp_down_day, '<S-DOWN>')
 end
 
 function OrgMappings:timestamp_up()
@@ -143,6 +143,7 @@ end
 
 function OrgMappings:_adjust_date_part(direction, fallback, vim_mapping)
   local date_on_cursor = self:_get_date_under_cursor()
+  local minute_adj = string.format('%dM', tonumber(config.org_time_stamp_rounding_minutes))
   local do_replacement = function(date)
     local col = vim.fn.col('.')
     local char = vim.fn.getline('.'):sub(col, col)
@@ -167,12 +168,12 @@ function OrgMappings:_adjust_date_part(direction, fallback, vim_mapping)
       if col_from_start <= 17 then
         adj = '1h'
       elseif col_from_start <= 20 then
-        adj = '5M'
+        adj = minute_adj
       elseif has_end_time and col_from_start <= 23 then
         adj = '1h'
         modify_end_time = true
       elseif has_end_time and col_from_start <= 26 then
-        adj = '5M'
+        adj = minute_adj
         modify_end_time = true
       end
     elseif (node:type() == 'repeater' or node:type() == 'delay') and char:match('[hdwmy]') ~= nil then

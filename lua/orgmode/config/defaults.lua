@@ -28,6 +28,7 @@ return {
   org_highlight_latex_and_related = nil,
   org_custom_exports = {},
   org_indent_mode = 'indent',
+  org_time_stamp_rounding_minutes = 5,
   notifications = {
     enabled = false,
     cron_enabled = true,
@@ -72,8 +73,8 @@ return {
     },
     org = {
       org_refile = '<Leader>or',
-      org_increase_date = '<S-UP>',
-      org_decrease_date = '<S-DOWN>',
+      org_timestamp_up_day = '<S-UP>',
+      org_timestamp_down_day = '<S-DOWN>',
       org_timestamp_up = '<C-a>',
       org_timestamp_down = '<C-x>',
       org_change_date = 'cid',

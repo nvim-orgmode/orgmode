@@ -14,6 +14,7 @@
 5. [Colors](#colors)
 6. [Advanced search](#advanced-search)
 7. [Notifications (experimental)](#notifications-experimental)
+8. [Changelog](#changelog)
 
 ## Settings
 Variable names mostly follow the same naming as Orgmode mappings.
@@ -196,6 +197,11 @@ require('orgmode').setup({
   }
 })
 ```
+
+#### **org_time_stamp_rounding_minutes**
+*type*: `number`<br />
+*default value*: `5`<br />
+Number of minutes to increase/decrease when using [org_timestamp_up](#org_timestamp_up)/[org_timestamp_down](#org_timestamp_down)
 
 ### Agenda settings
 
@@ -478,11 +484,26 @@ Mappings for `org` files.
 #### **org_refile**
 *mapped to*: `<Leader>or`<br />
 Refile current headline to destination
-#### **org_increase_date**
+#### **org_timestamp_up**
 *mapped to*: `<C-a>`<br />
-Increase date under cursor by 1 day
-#### **org_decrease_date**
+Increase date part under under cursor.<br />
+`|` in examples references cursor position.<br />
+* Year - Example date: `<202|1-10-01 Fri 10:30>` becomes `<202|2-10-01 Sat 10:30>`
+* Month - Example date: `<2021-1|0-01 Fri 10:30>` becomes `<2022-1|1-01 Mon 10:30>`
+* Day - Example date: `<2021-10-0|1 Fri 10:30>` becomes `<2022-10-0|2 Sat 10:30>`. Same thing happens when cursor is on day name.
+* Hour - Example date: `<2021-10-01 Fri 1|0:30>` becomes `<2022-10-02 Sat 1|1:30>`.
+* Minute - Example date: `<2021-10-01 Fri 10:3|0>` becomes `<2022-10-02 Sat 11:3|5>`. See [org_time_stamp_rounding_minutes](#org_time_stamp_rounding_minutes) for steps configuration.
+* Repeater/Delay range (`h->d->w->m->y`) - Example date: `<2021-10-01 Fri 10:30 +1|w>` becomes `<2021-10-01 Fri 10:30 +1|m>`
+* Active/Inactive state - (`<` to `[` and vice versa) - Example date: `|<2021-10-01 Fri 10:30>` becomes `|[2021-10-01 Fri 10:30]`
+#### **org_timestamp_down**
 *mapped to*: `<C-x>`<br />
+Decrease date part under under cursor.<br />
+Same as [org_timestamp_up](#org_timestamp_up), just opposite direction.
+#### **org_timestamp_up_day**
+*mapped to*: `<S-UP>`<br />
+Increase date under cursor by 1 day
+#### **org_timestamp_down_day**
+*mapped to*: `<S-DOWN>`<br />
 Decrease date under cursor by 1 day
 #### **org_change_date**
 *mapped to*: `cid`<br />
@@ -596,8 +617,8 @@ require('orgmode').setup({
   org_default_notes_file = '~/Dropbox/org/refile.org',
   mappings = {
     org = {
-      org_increase_date = '+',
-      org_decrease_date = '-'
+      org_timestamp_up = '+',
+      org_timestamp_down = '-'
     }
   }
 })
@@ -854,3 +875,10 @@ And update cron job to this:
 This option is most optimized because it doesn't load plugins and your init.vim
 
 For **MacOS**, things should be very similar, but I wasn't able to test it. Any help on this is appreciated.
+
+## Changelog
+
+#### 11 October
+* Mappings `org_increase_date` and `org_decrease_date` are deprecated in favor of [org_timestamp_up](#org_timestamp_up) and [org_timestamp_down](#org_timestamp_down).<br />
+  If you have these mappings in your custom configuration, you will get a warning each time Orgmode is loaded. To remove the warning, rename the configuration properties accordingly.<br />
+  To return the old functionality where mappings increase only the day, add `org_timestamp_up_day`/`org_timestamp_down_day` to your configuration.

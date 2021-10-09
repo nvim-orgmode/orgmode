@@ -72,6 +72,9 @@ end
 ---@private
 function utils._echo(msg, hl, additional_msg, store_in_history)
   vim.cmd([[redraw!]])
+  if type(msg) == 'table' then
+    msg = table.concat(msg, '\n')
+  end
   local msg_item = { string.format('[orgmode] %s', msg) }
   if hl then
     table.insert(msg_item, hl)
