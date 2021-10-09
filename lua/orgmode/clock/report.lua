@@ -1,13 +1,16 @@
 local Files = require('orgmode.parser.files')
 local Table = require('orgmode.parser.table')
+local Range = require('orgmode.parser.range')
 local Duration = require('orgmode.objects.duration')
 
----@class AgendaClockReport
+---@class ClockReport
 ---@field total_duration Duration
+---@field from Date
+---@field to Date
 ---@field files table[]
-local AgendaClockReport = {}
+local ClockReport = {}
 
-function AgendaClockReport:new(opts)
+function ClockReport:new(opts)
   opts = opts or {}
   local data = {}
   data.from = opts.from
@@ -19,7 +22,9 @@ function AgendaClockReport:new(opts)
   return data
 end
 
-function AgendaClockReport:draw_for_agenda()
+---@param start_line number
+---@return table[]
+function ClockReport:draw_for_agenda(start_line)
   local data = {
     { 'File', 'Headline', 'Time' },
     {},
@@ -28,26 +33,47 @@ function AgendaClockReport:draw_for_agenda()
   }
 
   for _, file in ipairs(self.files) do
-    table.insert(data, { file.name, 'File time', file.total_duration:to_string() })
+    table.insert(data, { { value = file.name, reference = file }, 'File time', file.total_duration:to_string() })
     for _, headline in ipairs(file.headlines) do
-      table.insert(data, { '', headline.title, headline.logbook:get_total():to_string() })
+      table.insert(data, {
+        '',
+        { value = headline.title, reference = headline },
+        headline.logbook:get_total(self.from, self.to):to_string(),
+      })
     end
     table.insert(data, {})
   end
 
-  local table = Table.from_list(data)
-  return vim.tbl_map(function(row)
-    return {
-      line_content = row,
+  local clock_table = Table.from_list(data, start_line):compile()
+  local result = {}
+  for i, row in ipairs(clock_table.rows) do
+    local highlights = {}
+    local prev_row = clock_table.rows[i - 1]
+    if prev_row and prev_row.is_separator then
+      for _, cell in ipairs(row.cells) do
+        local range = cell.range:clone()
+        range.end_col = range.end_col + 1
+        table.insert(highlights, {
+          hlgroup = 'OrgBold',
+          range = range,
+        })
+      end
+    end
+
+    table.insert(result, {
+      line_content = row.content,
       is_table = true,
-    }
-  end, table:draw())
+      table = clock_table,
+      highlights = highlights,
+    })
+  end
+  return result
 end
 
 ---@param from Date
 ---@param to Date
----@return AgendaClockReport
-function AgendaClockReport.from_range(from, to)
+---@return ClockReport
+function ClockReport.from_date_range(from, to)
   local report = {
     from = from,
     to = to,
@@ -66,7 +92,7 @@ function AgendaClockReport.from_range(from, to)
     end
   end
   report.total_duration = Duration.from_minutes(report.total_duration)
-  return AgendaClockReport:new(report)
+  return ClockReport:new(report)
 end
 
-return AgendaClockReport
+return ClockReport
