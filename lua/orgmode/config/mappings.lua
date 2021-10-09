@@ -28,8 +28,8 @@ return {
   },
   org = {
     org_refile = { 'capture.refile_headline_to_destination' },
-    org_increase_date = { 'org_mappings.increase_date' },
-    org_decrease_date = { 'org_mappings.decrease_date' },
+    org_timestamp_up_day = { 'org_mappings.timestamp_up_day' },
+    org_timestamp_down_day = { 'org_mappings.timestamp_down_day' },
     org_timestamp_up = { 'org_mappings.timestamp_up' },
     org_timestamp_down = { 'org_mappings.timestamp_down' },
     org_change_date = { 'org_mappings.change_date' },

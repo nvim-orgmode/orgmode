@@ -4,8 +4,16 @@ local config = require('orgmode.config')
 local helps = {
   org = {
     { key = 'org_refile', description = 'Refile subtree under cursor to destination' },
-    { key = 'org_increase_date', description = 'Increase date under cursor by 1 day' },
-    { key = 'org_decrease_date', description = 'Decrease date under cursor by 1 day' },
+    {
+      key = 'org_timestamp_up',
+      description = 'Increase date part under cursor (year/month/day/hour/minute/repeater/active|inactive)',
+    },
+    {
+      key = 'org_timestamp_down',
+      description = 'Decerase date part under cursor (year/month/day/hour/minute/repeater/active|inactive)',
+    },
+    { key = 'org_timestamp_up_day', description = 'Increase date under cursor by 1 day' },
+    { key = 'org_timestamp_down_day', description = 'Decrease date under cursor by 1 day' },
     { key = 'org_change_date', description = 'Change date under cursor via calendar popup' },
     { key = 'org_todo', description = 'Forward change TODO state of current headline' },
     { key = 'org_todo_prev', description = 'Backward change TODO state of current headline' },

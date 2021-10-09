@@ -6,7 +6,7 @@ describe('Mappings', function()
     vim.cmd([[%bw!]])
   end)
 
-  it('should increase the date by 1 day (org_increase_date)', function()
+  it('should increase the date by 1 day (org_timestamp_up_day)', function()
     helpers.load_file_content({
       '#TITLE: Test',
       '',
@@ -19,7 +19,7 @@ describe('Mappings', function()
     assert.are.same('  DEADLINE: <2021-07-22 Thu 22:02>', vim.fn.getline('.'))
   end)
 
-  it('should decrease the date by 1 day (org_decrease_date)', function()
+  it('should decrease the date by 1 day (org_timestamp_down_day)', function()
     helpers.load_file_content({
       '#TITLE: Test',
       '',
