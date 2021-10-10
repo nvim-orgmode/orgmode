@@ -7,6 +7,7 @@ local Duration = require('orgmode.objects.duration')
 ---@field total_duration Duration
 ---@field from Date
 ---@field to Date
+---@field table Table
 ---@field files table[]
 local ClockReport = {}
 
@@ -17,6 +18,7 @@ function ClockReport:new(opts)
   data.to = opts.to
   data.total_duration = opts.total_duration
   data.files = opts.files or {}
+  data.table = opts.table
   setmetatable(data, self)
   self.__index = self
   return data
@@ -45,6 +47,7 @@ function ClockReport:draw_for_agenda(start_line)
   end
 
   local clock_table = Table.from_list(data, start_line):compile()
+  self.table = clock_table
   local result = {}
   for i, row in ipairs(clock_table.rows) do
     local highlights = {}
@@ -58,16 +61,51 @@ function ClockReport:draw_for_agenda(start_line)
           range = range,
         })
       end
+    elseif i > 1 and not row.is_separator then
+      for _, cell in ipairs(row.cells) do
+        if cell.reference then
+          local range = cell.range:clone()
+          range.end_col = range.end_col + 1
+          table.insert(highlights, {
+            hlgroup = 'OrgUnderline',
+            range = range,
+          })
+        end
+      end
     end
 
     table.insert(result, {
       line_content = row.content,
       is_table = true,
-      table = clock_table,
+      table_row = row,
       highlights = highlights,
     })
   end
   return result
+end
+
+---@param item table
+function ClockReport:find_agenda_item(item)
+  local line = vim.fn.line('.')
+  local col = vim.fn.col('.')
+  local found_cell = nil
+  for _, cell in ipairs(item.table_row.cells) do
+    if cell.range:is_in_range(line, col) then
+      found_cell = cell
+      break
+    end
+  end
+
+  if found_cell and found_cell.reference then
+    return {
+      jumpable = true,
+      file = found_cell.reference.file,
+      file_position = found_cell.reference.range.start_line,
+    }
+  end
+  return {
+    jumpable = false,
+  }
 end
 
 ---@param from Date
