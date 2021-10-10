@@ -59,6 +59,7 @@ end
 ---@field content table[]
 ---@field highlights table[]
 ---@field active_view string
+---@field clock_report ClockReport
 ---@field show_clock_report boolean
 ---@field last_search string
 local Agenda = {}
@@ -70,6 +71,7 @@ function Agenda:new(opts)
     span = config:get_agenda_span(),
     active_view = 'agenda',
     show_clock_report = false,
+    clock_report = nil,
     last_search = '',
     content = {},
     highlights = {},
@@ -193,8 +195,8 @@ function Agenda:render_agenda()
   self.highlights = highlights
   self.active_view = 'agenda'
   if self.show_clock_report then
-    local clock_report = ClockReport.from_date_range(self.from, self.to)
-    utils.concat(self.content, clock_report:draw_for_agenda(#self.content + 1))
+    self.clock_report = ClockReport.from_date_range(self.from, self.to)
+    utils.concat(self.content, self.clock_report:draw_for_agenda(#self.content + 1))
   end
   return self:_print_and_highlight()
 end
@@ -523,8 +525,8 @@ function Agenda:goto_date()
 end
 
 function Agenda:switch_to_item()
-  local item = self.content[vim.fn.line('.')]
-  if not item or not item.jumpable then
+  local item = self:_get_jumpable_item()
+  if not item then
     return
   end
   vim.cmd('edit ' .. vim.fn.fnameescape(item.file))
@@ -599,21 +601,9 @@ function Agenda:toggle_clock_report()
   return self:redo(true)
 end
 
-function Agenda:generate_clock_report(lines)
-  local data_with_long_names = {
-    { 'one', 'two', 'three' },
-    {},
-    { 'four', 'five', 'six', 'seven longer long' },
-    { 'eight', 'iamverylong' },
-    { 'nine', 'ten', 'a' },
-  }
-  local table = Table.from_list(data_with_long_names)
-  utils.concat(lines, table:draw())
-end
-
 function Agenda:goto_item()
-  local item = self.content[vim.fn.line('.')]
-  if not item or not item.jumpable then
+  local item = self:_get_jumpable_item()
+  if not item then
     return
   end
   local target_window = nil
@@ -640,6 +630,21 @@ function Agenda:goto_item()
 
   vim.cmd('edit ' .. vim.fn.fnameescape(item.file))
   vim.fn.cursor(item.file_position, 0)
+end
+
+---@return table|nil
+function Agenda:_get_jumpable_item()
+  local item = self.content[vim.fn.line('.')]
+  if not item then
+    return nil
+  end
+  if item.is_table and item.table_row and self.clock_report then
+    item = self.clock_report:find_agenda_item(item)
+  end
+  if not item.jumpable then
+    return nil
+  end
+  return item
 end
 
 function Agenda:_set_date_range(from)

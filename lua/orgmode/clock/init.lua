@@ -80,4 +80,18 @@ function Clock:org_set_effort()
   item:add_properties({ Effort = effort })
 end
 
+function Clock:get_statusline()
+  local clocked_headline = Files.get_clocked_headline()
+  if not clocked_headline or not clocked_headline:is_clocked_in() then
+    return ''
+  end
+
+  local effort = clocked_headline:get_property('effort')
+  local total = clocked_headline.logbook:get_total():to_string()
+  if effort then
+    return string.format('(Org) [%s/%s] (%s)', total, effort, clocked_headline.title)
+  end
+  return string.format('(Org) [%s] (%s)', total, clocked_headline.title)
+end
+
 return Clock
