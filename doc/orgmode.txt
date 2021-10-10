@@ -119,9 +119,11 @@ CONTENTS                                                        *orgmode-content
                 1.8.4. Clock goto.............................|orgmode-clock_goto|
                 1.8.5. Set effort.............................|orgmode-set_effort|
                 1.8.6. Clock report table.............|orgmode-clock_report_table|
-                1.8.7. Statusline function...........|orgmode-statusline_function|
+                1.8.7. Automatic updates of totals.|orgmode-automatic_updates_of_totals|
+                1.8.8. Recalculating totals.........|orgmode-recalculating_totals|
+                1.8.9. Statusline function...........|orgmode-statusline_function|
     1.9. Changelog.............................................|orgmode-changelog|
-            1.9.1. 11 October.................................|orgmode-11_october|
+            1.9.1. 10 October.................................|orgmode-10_october|
 
 ================================================================================
 TABLE OF CONTENT                                        *orgmode-table_of_content*
@@ -1205,7 +1207,7 @@ CLOCK IN                                                        *orgmode-clock_i
 Org file mapping: `<leader>oxi`
 Agenda view mapping: `I`
 Start the clock by adding or updating the `:LOGBOOK:` drawer. Note that this clocks out any currently active clock.
-Also, agenda/todo/search view highlight item that is clocked in.
+Also, agenda/todo/search view highlights item that is clocked in.
 
 CLOCK OUT                                                      *orgmode-clock_out*
 
@@ -1239,6 +1241,17 @@ Agenda view mapping: `R`
 Show the clocking report for the current agenda time range. Headlines from table can be jumped to via `<TAB>/<CR>` (underlined)
 Note that this is visible only in Agenda view, since it's the only view that have a time range. Todo/Search views are not supported.
 
+AUTOMATIC UPDATES OF TOTALS                  *orgmode-automatic_updates_of_totals*
+
+When updating closed logbook dates that have a total at the right (example: `=> 1:05`), updating any of the dates via
+org_timestamp_up (#org_timestamp_up)/org_timestamp_down (#org_timestamp_down) automatically recalculates this value.
+
+RECALCULATING TOTALS                                *orgmode-recalculating_totals*
+
+Org file mapping: `gq` (Note: This is Vim's built in mapping that calls `formatexpr`, see `:help gq`)
+If you changed any of the dates in closed logbook entry, and want to recalculate the total, select the line and press `gq`, or
+if you want to do it in normal mode, just do `gqgq`.
+
 STATUSLINE FUNCTION                                  *orgmode-statusline_function*
 
 Function: `v:lua.orgmode.statusline()`
@@ -1250,7 +1263,7 @@ Show the currently clocked in headline (if any), with total clocked time / effor
 --------------------------------------------------------------------------------
 CHANGELOG                                                      *orgmode-changelog*
 
-11 OCTOBER                                                    *orgmode-11_october*
+10 OCTOBER                                                    *orgmode-10_october*
 
 *   Mappings `org_increase_date` and `org_decrease_date` are deprecated in favor of org_timestamp_up (#org_timestamp_up) and org_timestamp_down (#org_timestamp_down).
     If you have these mappings in your custom configuration, you will get a warning each time Orgmode is loaded. To remove the warning, rename the configuration properties accordingly.

@@ -951,7 +951,7 @@ Show the clocking report for the current agenda time range. Headlines from table
 Note that this is visible only in Agenda view, since it's the only view that have a time range. Todo/Search views are not supported.
 ##### Automatic updates of totals
 When updating closed logbook dates that have a total at the right (example: `=> 1:05`), updating any of the dates via
-[org-timestamp-up](#org-timestamp-up)/[org-timestamp-down](#org-timestamp-down) automatically recalculates this value.
+[org_timestamp_up](#org_timestamp_up)/[org_timestamp_down](#org_timestamp_down) automatically recalculates this value.
 ##### Recalculating totals
 Org file mapping: `gq` (Note: This is Vim's built in mapping that calls `formatexpr`, see `:help gq`)<br />
 If you changed any of the dates in closed logbook entry, and want to recalculate the total, select the line and press `gq`, or
