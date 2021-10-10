@@ -63,4 +63,13 @@ function Range:is_in_line_range(line)
   return line >= self.start_line and line <= self.end_line
 end
 
+function Range:clone()
+  return Range:new({
+    start_line = self.start_line,
+    end_line = self.end_line,
+    start_col = self.start_col,
+    end_col = self.end_col,
+  })
+end
+
 return Range

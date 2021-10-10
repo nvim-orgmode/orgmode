@@ -1,9 +1,11 @@
 local Date = require('orgmode.objects.date')
 local Range = require('orgmode.parser.range')
+local Table = require('orgmode.parser.table')
 local utils = require('orgmode.utils')
 local config = require('orgmode.config')
 local colors = require('orgmode.colors')
 local AgendaItem = require('orgmode.agenda.agenda_item')
+local ClockReport = require('orgmode.clock.report')
 local Calendar = require('orgmode.objects.calendar')
 local agenda_highlights = require('orgmode.colors.highlights')
 local Files = require('orgmode.parser.files')
@@ -57,6 +59,8 @@ end
 ---@field content table[]
 ---@field highlights table[]
 ---@field active_view string
+---@field clock_report ClockReport
+---@field show_clock_report boolean
 ---@field last_search string
 local Agenda = {}
 
@@ -66,6 +70,8 @@ function Agenda:new(opts)
   local data = {
     span = config:get_agenda_span(),
     active_view = 'agenda',
+    show_clock_report = false,
+    clock_report = nil,
     last_search = '',
     content = {},
     highlights = {},
@@ -160,6 +166,19 @@ function Agenda:render_agenda()
         end, agenda_item.highlights)
       end
 
+      if headline:is_clocked_in() then
+        table.insert(item_highlights, {
+          range = Range:new({
+            start_line = #content + 1,
+            end_line = #content + 1,
+            start_col = 1,
+            end_col = 0,
+          }),
+          hl_group = 'Visual',
+          whole_line = true,
+        })
+      end
+
       table.insert(content, {
         line_content = line,
         line = #content,
@@ -175,6 +194,10 @@ function Agenda:render_agenda()
   self.content = content
   self.highlights = highlights
   self.active_view = 'agenda'
+  if self.show_clock_report then
+    self.clock_report = ClockReport.from_date_range(self.from, self.to)
+    utils.concat(self.content, self.clock_report:draw_for_agenda(#self.content + 1))
+  end
   return self:_print_and_highlight()
 end
 
@@ -201,6 +224,30 @@ function Agenda:_generate_todo_item(headline, longest_category, line_nr)
     line = string.format('%-99s %s', line, headline:tags_to_string())
   end
   local todo_keyword_pos = category:len() + 4
+  local highlights = {}
+  if headline.todo_keyword.value ~= '' then
+    table.insert(highlights, {
+      hlgroup = hl_map[headline.todo_keyword.value] or hl_map[headline.todo_keyword.type],
+      range = Range:new({
+        start_line = line_nr,
+        end_line = line_nr,
+        start_col = todo_keyword_pos,
+        end_col = todo_keyword_pos + todo_keyword:len(),
+      }),
+    })
+  end
+  if headline:is_clocked_in() then
+    table.insert(highlights, {
+      range = Range:new({
+        start_line = line_nr,
+        end_line = line_nr,
+        start_col = 1,
+        end_col = 0,
+      }),
+      hl_group = 'Visual',
+      whole_line = true,
+    })
+  end
   return {
     line_content = line,
     longest_category = longest_category,
@@ -209,17 +256,7 @@ function Agenda:_generate_todo_item(headline, longest_category, line_nr)
     file = headline.file,
     file_position = headline.range.start_line,
     headline = headline,
-    highlights = headline.todo_keyword.value ~= '' and {
-      {
-        hlgroup = hl_map[headline.todo_keyword.value] or hl_map[headline.todo_keyword.type],
-        range = Range:new({
-          start_line = line_nr,
-          end_line = line_nr,
-          start_col = todo_keyword_pos,
-          end_col = todo_keyword_pos + todo_keyword:len(),
-        }),
-      },
-    } or {},
+    highlights = highlights,
   }
 end
 
@@ -235,10 +272,10 @@ function Agenda:_print_and_highlight()
     vim.cmd(string.format('resize %d', win_height))
     vim.cmd(vim.fn.win_id2win(opened) .. 'wincmd w')
   end
-  vim.bo.modifiable = true
   local lines = vim.tbl_map(function(item)
     return item.line_content
   end, self.content)
+  vim.bo.modifiable = true
   vim.api.nvim_buf_set_lines(0, 0, -1, true, lines)
   vim.bo.modifiable = false
   vim.bo.modified = false
@@ -259,7 +296,7 @@ function Agenda:todos()
     end
   end
 
-  self.content = { { line_content = 'Global list of TODO items of type: ALL', highlight = nil } }
+  self.content = { { line_content = 'Global list of TODO items of type: ALL' } }
   self.highlights = {}
   self:render_todos('todos')
 end
@@ -417,9 +454,16 @@ function Agenda:reset()
   return self:agenda()
 end
 
-function Agenda:redo()
+function Agenda:redo(preserve_cursor_pos)
   Files.load(vim.schedule_wrap(function()
+    local view = nil
+    if preserve_cursor_pos then
+      view = vim.fn.winsaveview()
+    end
     self[self.active_view](self)
+    if preserve_cursor_pos then
+      vim.fn.winrestview(view)
+    end
   end))
 end
 
@@ -481,8 +525,8 @@ function Agenda:goto_date()
 end
 
 function Agenda:switch_to_item()
-  local item = self.content[vim.fn.line('.')]
-  if not item or not item.jumpable then
+  local item = self:_get_jumpable_item()
+  if not item then
     return
   end
   vim.cmd('edit ' .. vim.fn.fnameescape(item.file))
@@ -512,9 +556,64 @@ function Agenda:change_todo_state()
   return self:_print_and_highlight()
 end
 
-function Agenda:goto_item()
+function Agenda:clock_in()
   local item = self.content[vim.fn.line('.')]
   if not item or not item.jumpable then
+    return
+  end
+  Files.update_file(item.file, function(_)
+    vim.fn.cursor(item.file_position, 0)
+    require('orgmode').action('clock.org_clock_in')
+  end)
+  return self:redo(true)
+end
+
+function Agenda:clock_out()
+  local last_clocked = Files.get_clocked_headline()
+  if last_clocked and last_clocked:is_clocked_in() then
+    Files.update_file(last_clocked.file, function(_)
+      vim.fn.cursor(last_clocked.range.start_line, 0)
+      require('orgmode').action('clock.org_clock_out')
+    end)
+    return self:redo(true)
+  end
+end
+
+function Agenda:clock_cancel()
+  local last_clocked = Files.get_clocked_headline()
+  if last_clocked and last_clocked:is_clocked_in() then
+    Files.update_file(last_clocked.file, function(_)
+      vim.fn.cursor(last_clocked.range.start_line, 0)
+      require('orgmode').action('clock.org_clock_cancel')
+    end)
+    return self:redo(true)
+  end
+end
+
+function Agenda:set_effort()
+  local item = self.content[vim.fn.line('.')]
+  if not item or not item.jumpable then
+    return
+  end
+  Files.update_file(item.file, function(_)
+    vim.fn.cursor(item.file_position, 0)
+    require('orgmode').action('clock.org_set_effort')
+  end)
+end
+
+function Agenda:toggle_clock_report()
+  if self.active_view ~= 'agenda' then
+    return utils.warning('Not possible to view clock report in non-agenda view.')
+  end
+  self.show_clock_report = not self.show_clock_report
+  local text = self.show_clock_report and 'on' or 'off'
+  utils.echo_info(string.format('Clocktable mode is %s', text))
+  return self:redo(true)
+end
+
+function Agenda:goto_item()
+  local item = self:_get_jumpable_item()
+  if not item then
     return
   end
   local target_window = nil
@@ -541,6 +640,21 @@ function Agenda:goto_item()
 
   vim.cmd('edit ' .. vim.fn.fnameescape(item.file))
   vim.fn.cursor(item.file_position, 0)
+end
+
+---@return table|nil
+function Agenda:_get_jumpable_item()
+  local item = self.content[vim.fn.line('.')]
+  if not item then
+    return nil
+  end
+  if item.is_table and item.table_row and self.clock_report then
+    item = self.clock_report:find_agenda_item(item)
+  end
+  if not item.jumpable then
+    return nil
+  end
+  return item
 end
 
 function Agenda:_set_date_range(from)

@@ -215,6 +215,7 @@ by running `:TSUpdate org` and restarting the editor.
 ### Features (TL;DR):
 * Agenda view
 * Search by tags/keyword
+* Clocking time
 * Repeatable dates, date and time ranges
 * Capturing to default notes file/destination
 * Archiving (archive file or ARCHIVE tag)
@@ -251,12 +252,14 @@ by running `:TSUpdate org` and restarting the editor.
   * Search for headlines (and it's content) for a query (<kbd>s</kbd>):
   * [Advanced search](DOCS.md#advanced-search) for tags/todo kewords/properties
   * Notifications (experimental, see [Issue #49](https://github.com/kristijanhusak/orgmode.nvim/issues/49))
+  * Clocking time
 * Capture:
   * Define custom templates
   * Fast capturing to default notes file via <kbd>\<C-c\></kbd>
   * Capturing to specific destination <kbd>\<Leader\>or</kbd>
   * Abort capture with <kbd>\<Leader\>ok</kbd>
 * Org files
+  * Clocking time
   * Refile to destination/headline: <kbd>\<Leader\>or</kbd>
   * Increase/Decrease date under cursor: <kbd>\<C-a\></kbd>/<kbd>\<C-x\></kbd>
   * Change date under cursor via calendar popup: <kbd>cid</kbd>
@@ -324,7 +327,7 @@ Parsing is done via builtin tree-sitter parser and [tree-sitter-org](https://git
 * [X] Support searching by properties
 * [ ] Improve checkbox hierarchy
 * [X] Support todo keyword faces
-* [ ] Support clocking work time
+* [X] Support clocking work time
 * [ ] Improve folding
 * [X] Support exporting (via existing emacs tools)
 * [ ] Support archiving to specific headline

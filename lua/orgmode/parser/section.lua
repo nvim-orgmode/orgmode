@@ -6,10 +6,12 @@ local ts_utils = require('nvim-treesitter.ts_utils')
 local Range = require('orgmode.parser.range')
 local utils = require('orgmode.utils')
 local Date = require('orgmode.objects.date')
+local Logbook = require('orgmode.parser.logbook')
 local config = require('orgmode.config')
 
 ---@class Section
 ---@field id number
+---@field line_number number
 ---@field level number
 ---@field node table
 ---@field root File
@@ -27,12 +29,15 @@ local config = require('orgmode.config')
 ---@field properties table
 ---@field tags string[]
 ---@field own_tags string[]
+---@field logbook Logbook
+---@field clocked_in boolean
 local Section = {}
 
 function Section:new(data)
   data = data or {}
   local section = {}
-  section.id = data.range.start_line
+  section.id = string.format('%s####%s', data.root.filename or '', data.range.start_line)
+  section.line_number = data.range.start_line
   section.level = data.level or 0
   section.root = data.root
   section.parent = data.parent
@@ -42,13 +47,15 @@ function Section:new(data)
   section.todo_keyword = { value = '', type = '', node = data.todo_keyword_node }
   section.priority = data.priority
   section.title = data.title
-  section.category = data.properties.items.CATEGORY or data.root.category
+  section.category = data.properties.items.category or data.root.category
   section.file = data.root.filename or ''
   section.dates = data.dates or {}
   section.properties = data.properties
   section.own_tags = { unpack(data.own_tags or {}) }
   section.tags = utils.concat(config:get_inheritable_tags(data.parent or {}), data.tags, true)
   section.content = data.content or {}
+  section.logbook = data.logbook
+  section.clocked_in = data.logbook and data.logbook:is_active()
   section.node = data.node
   setmetatable(section, self)
   self.__index = self
@@ -74,6 +81,7 @@ function Section.from_node(section_node, file, parent)
     properties = { items = {} },
     node = section_node,
     todo_keyword_node = nil,
+    logbook = nil,
   }
   local child_sections = {}
 
@@ -106,6 +114,17 @@ function Section.from_node(section_node, file, parent)
           })
         )
       end
+      local drawers = file:get_ts_matches('(drawer) @drawer', child)
+      for _, drawer_item in ipairs(drawers) do
+        local drawer = drawer_item.drawer
+        if drawer and drawer.text:upper() == ':LOGBOOK:' then
+          if data.logbook then
+            data.logbook:add(drawer.text_list, drawer.node, data.dates)
+          else
+            data.logbook = Logbook.parse(drawer.text_list, drawer.node, data.dates)
+          end
+        end
+      end
     end
 
     if child:type() == 'property_drawer' then
@@ -116,7 +135,7 @@ function Section.from_node(section_node, file, parent)
         local line = file:get_node_text(prop)
         local prop_name, prop_value = line:match('^%s*:([^:]-):%s*(.*)$')
         if prop_name and prop_value and vim.trim(prop_value) ~= '' then
-          data.properties.items[prop_name] = prop_value
+          data.properties.items[prop_name:lower()] = prop_value
         end
       end
     end
@@ -220,6 +239,12 @@ function Section:get_category()
   return self.category
 end
 
+---@param name string
+---@return string|nil
+function Section:get_property(name)
+  return self.properties.items[name:lower()]
+end
+
 function Section:matches_search_term(term)
   if self.title:lower():match(term) then
     return true
@@ -272,11 +297,11 @@ function Section:add_properties(properties)
     local start = vim.api.nvim_call_function('getline', { self.properties.range.start_line })
     local indent = start:match('^%s*')
     for name, val in pairs(properties) do
-      if self.properties.items[name] then
+      if self.properties.items[name:lower()] then
         local properties_content = self.root:get_node_text_list(self.properties.node)
         for i, content in ipairs(properties_content) do
-          if content:match('^%s*:' .. name .. ':.*$') then
-            local new_line = content:gsub(vim.pesc(self.properties.items[name]), val)
+          if content:lower():match('^%s*:' .. name:lower() .. ':.*$') then
+            local new_line = content:gsub(vim.pesc(self.properties.items[name:lower()]), val)
             vim.api.nvim_call_function('setline', { self.properties.range.start_line + i - 1, new_line })
             break
           end
@@ -339,7 +364,7 @@ function Section:get_prev_headline_same_level()
   local len = #parent.sections
   for i = 1, len do
     local section = parent.sections[len + 1 - i]
-    if section.id < self.id and section.level == self.level then
+    if section.line_number < self.line_number and section.level == self.level then
       return section
     end
   end
@@ -353,7 +378,7 @@ function Section:get_next_headline_same_level()
   end
   local parent = self.parent or self.root
   for _, section in ipairs(parent.sections) do
-    if section.id > self.id and section.level == self.level then
+    if section.line_number > self.line_number and section.level == self.level then
       return section
     end
   end
@@ -456,14 +481,45 @@ end
 ---@return boolean
 function Section:has_planning()
   for _, date in ipairs(self.dates) do
-    if not date:is_none() then
+    if date:is_planning_date() then
       return true
     end
   end
   return false
 end
 
----@return string
+function Section:is_clocked_in()
+  return self.clocked_in
+end
+
+function Section:clock_in()
+  if self.logbook then
+    self.logbook:add_clock_in()
+    self.clocked_in = self.logbook:is_active()
+    return
+  end
+
+  self.logbook = Logbook.new_from_section(self)
+  self.clocked_in = self.logbook:is_active()
+end
+
+function Section:clock_out()
+  if not self.logbook then
+    return
+  end
+  self.logbook:clock_out()
+  self.clocked_in = self.logbook:is_active()
+end
+
+function Section:cancel_active_clock()
+  if not self.logbook then
+    return
+  end
+  self.logbook:cancel_active_clock()
+  self.clocked_in = self.logbook:is_active()
+end
+
+---@return Date
 function Section:_get_closed_date()
   return vim.tbl_filter(function(date)
     return date:is_closed()

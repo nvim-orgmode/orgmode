@@ -14,6 +14,8 @@
 5. [Colors](#colors)
 6. [Advanced search](#advanced-search)
 7. [Notifications (experimental)](#notifications-experimental)
+8. [Clocking](#clocking)
+9. [Changelog](#changelog)
 
 ## Settings
 Variable names mostly follow the same naming as Orgmode mappings.
@@ -196,6 +198,11 @@ require('orgmode').setup({
   }
 })
 ```
+
+#### **org_time_stamp_rounding_minutes**
+*type*: `number`<br />
+*default value*: `5`<br />
+Number of minutes to increase/decrease when using [org_timestamp_up](#org_timestamp_up)/[org_timestamp_down](#org_timestamp_down)
 
 ### Agenda settings
 
@@ -419,6 +426,27 @@ Reload all org files and refresh current agenda view
 #### **org_agenda_todo**
 *mapped to*: `t`<br />
 Change `TODO` state of an item in both agenda and original Org file
+#### **org_agenda_clock_in**
+*mapped to*: `I`<br />
+Clock in item under cursor.<br />
+See [Clocking](#clocking) for more details.
+#### **org_agenda_clock_out**
+*mapped to*: `O`<br />
+Clock out currently active clock item.<br />
+See [Clocking](#clocking) for more details.
+#### **org_agenda_clock_cancel**
+*mapped to*: `X`<br />
+Cancel clock on currently active clock item.<br />
+See [Clocking](#clocking) for more details.
+#### **org_agenda_clock_goto**
+*mapped to*: `<Leader>oxj`<br />
+Jump to currently clocked in headline.<br />
+See [Clocking](#clocking) for more details.
+#### **org_agenda_clockreport_mode**
+*mapped to*: `R`<br />
+Show clock report at the end of the agenda for current agenda time range<br />
+See [Clocking](#clocking) for more details.
+
 #### **org_agenda_show_help**
 *mapped to*: `?`<br />
 Show help popup with mappings
@@ -478,11 +506,26 @@ Mappings for `org` files.
 #### **org_refile**
 *mapped to*: `<Leader>or`<br />
 Refile current headline to destination
-#### **org_increase_date**
+#### **org_timestamp_up**
 *mapped to*: `<C-a>`<br />
-Increase date under cursor by 1 day
-#### **org_decrease_date**
+Increase date part under under cursor.<br />
+`|` in examples references cursor position.<br />
+* Year - Example date: `<202|1-10-01 Fri 10:30>` becomes `<202|2-10-01 Sat 10:30>`
+* Month - Example date: `<2021-1|0-01 Fri 10:30>` becomes `<2022-1|1-01 Mon 10:30>`
+* Day - Example date: `<2021-10-0|1 Fri 10:30>` becomes `<2022-10-0|2 Sat 10:30>`. Same thing happens when cursor is on day name.
+* Hour - Example date: `<2021-10-01 Fri 1|0:30>` becomes `<2022-10-02 Sat 1|1:30>`.
+* Minute - Example date: `<2021-10-01 Fri 10:3|0>` becomes `<2022-10-02 Sat 11:3|5>`. See [org_time_stamp_rounding_minutes](#org_time_stamp_rounding_minutes) for steps configuration.
+* Repeater/Delay range (`h->d->w->m->y`) - Example date: `<2021-10-01 Fri 10:30 +1|w>` becomes `<2021-10-01 Fri 10:30 +1|m>`
+* Active/Inactive state - (`<` to `[` and vice versa) - Example date: `|<2021-10-01 Fri 10:30>` becomes `|[2021-10-01 Fri 10:30]`
+#### **org_timestamp_down**
 *mapped to*: `<C-x>`<br />
+Decrease date part under under cursor.<br />
+Same as [org_timestamp_up](#org_timestamp_up), just opposite direction.
+#### **org_timestamp_up_day**
+*mapped to*: `<S-UP>`<br />
+Increase date under cursor by 1 day
+#### **org_timestamp_down_day**
+*mapped to*: `<S-DOWN>`<br />
 Decrease date under cursor by 1 day
 #### **org_change_date**
 *mapped to*: `cid`<br />
@@ -584,6 +627,27 @@ Insert/Update date under cursor.<br />
 #### **org_time_stamp_inactive**
 *mapped to*: `<Leader>oi!`<br />
 Insert/Update inactive date under cursor.<br />
+#### **org_clock_in**
+*mapped to*: `<Leader>oxi`<br />
+Clock in headline under cursor.<br />
+See [Clocking](#clocking) for more details.
+#### **org_clock_out**
+*mapped to*: `<Leader>oxi`<br />
+Clock out headline under cursor.<br />
+See [Clocking](#clocking) for more details.
+#### **org_clock_cancel**
+*mapped to*: `<Leader>oxq`<br />
+Cancel currently active clock on current headline.<br />
+See [Clocking](#clocking) for more details.
+#### **org_clock_goto**
+*mapped to*: `<Leader>oxj`<br />
+Jump to currently clocked in headline.<br />
+See [Clocking](#clocking) for more details.
+#### **org_set_effort**
+*mapped to*: `<Leader>oxe`<br />
+Set effort estimate property on for current headline.<br />
+See [Clocking](#clocking) for more details.
+
 #### **org_show_help**
 *mapped to*: `?`<br />
 Show help popup with mappings
@@ -596,8 +660,8 @@ require('orgmode').setup({
   org_default_notes_file = '~/Dropbox/org/refile.org',
   mappings = {
     org = {
-      org_increase_date = '+',
-      org_decrease_date = '-'
+      org_timestamp_up = '+',
+      org_timestamp_down = '-'
     }
   }
 })
@@ -854,3 +918,54 @@ And update cron job to this:
 This option is most optimized because it doesn't load plugins and your init.vim
 
 For **MacOS**, things should be very similar, but I wasn't able to test it. Any help on this is appreciated.
+
+## Clocking
+There is partial suport for [Clocking work time](https://orgmode.org/manual/Clocking-Work-Time.html).<br />
+Supported actions:
+##### Clock in
+Org file mapping: `<leader>oxi`<br />
+Agenda view mapping: `I`<br />
+Start the clock by adding or updating the `:LOGBOOK:` drawer. Note that this clocks out any currently active clock.<br />
+Also, agenda/todo/search view highlights item that is clocked in.
+##### Clock out
+Org file mapping: `<leader>oxi`<br />
+Agenda view mapping: `O`<br />
+Clock out the entry and update the `:LOGBOOK:` drawer, and also add a total tracked time.<br />
+Note that in agenda view pressing `O` anywhere clocks the currently active entry, while in org file cursor must be in the headline subtree.
+##### Clock cancel
+Org file mapping: `<leader>oxq`<br />
+Agenda view mapping: `X`<br />
+Cancel the currently active clock. This just removes the entry added by clock in from `:LOGBOOK:` drawer.<br />
+Note that in agenda view pressing `X` anywhere cancels clock on the currently active entry, while in org file cursor must be in the headline subtree.
+##### Clock goto
+Org file mapping: `<leader>oxj`<br />
+Agenda view mapping: `<leader>oxj`<br />
+Jump to currently clocked in headline in the current window
+##### Set effort
+Org file mapping: `<leader>oxe`<br />
+Agenda view mapping: `<leader>oxe`<br />
+Add/Update an Effort estimate property for the current headline
+##### Clock report table
+Agenda view mapping: `R`<br />
+Show the clocking report for the current agenda time range. Headlines from table can be jumped to via `<TAB>/<CR>` (underlined)<br />
+Note that this is visible only in Agenda view, since it's the only view that have a time range. Todo/Search views are not supported.
+##### Automatic updates of totals
+When updating closed logbook dates that have a total at the right (example: `=> 1:05`), updating any of the dates via
+[org-timestamp-up](#org-timestamp-up)/[org-timestamp-down](#org-timestamp-down) automatically recalculates this value.
+##### Recalculating totals
+Org file mapping: `gq` (Note: This is Vim's built in mapping that calls `formatexpr`, see `:help gq`)<br />
+If you changed any of the dates in closed logbook entry, and want to recalculate the total, select the line and press `gq`, or
+if you want to do it in normal mode, just do `gqgq`.
+##### Statusline function
+Function: `v:lua.orgmode.statusline()`<br />
+Show the currently clocked in headline (if any), with total clocked time / effort estimate (if set).
+```vim
+set statusline=%{v:lua.orgmode.statusline()}
+```
+
+## Changelog
+
+#### 10 October
+* Mappings `org_increase_date` and `org_decrease_date` are deprecated in favor of [org_timestamp_up](#org_timestamp_up) and [org_timestamp_down](#org_timestamp_down).<br />
+  If you have these mappings in your custom configuration, you will get a warning each time Orgmode is loaded. To remove the warning, rename the configuration properties accordingly.<br />
+  To return the old functionality where mappings increase only the day, add `org_timestamp_up_day`/`org_timestamp_down_day` to your configuration.

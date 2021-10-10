@@ -19,6 +19,7 @@ CONTENTS                                                        *orgmode-content
             1.1.1.9. org_highlight_latex_and_related.|orgmode-org_highlight_latex_and_related|
             1.1.1.10. org_indent_mode....................|orgmode-org_indent_mode|
             1.1.1.11. org_custom_exports..............|orgmode-org_custom_exports|
+            1.1.1.12. org_time_stamp_rounding_minutes.|orgmode-org_time_stamp_rounding_minutes|
         1.1.2. Agenda settings...........................|orgmode-agenda_settings|
             1.1.2.1. org_deadline_warning_days.|orgmode-org_deadline_warning_days|
             1.1.2.2. org_agenda_span.....................|orgmode-org_agenda_span|
@@ -52,7 +53,12 @@ CONTENTS                                                        *orgmode-content
             1.2.2.11. org_agenda_goto_date..........|orgmode-org_agenda_goto_date|
             1.2.2.12. org_agenda_redo....................|orgmode-org_agenda_redo|
             1.2.2.13. org_agenda_todo....................|orgmode-org_agenda_todo|
-            1.2.2.14. org_agenda_show_help..........|orgmode-org_agenda_show_help|
+            1.2.2.14. org_agenda_clock_in............|orgmode-org_agenda_clock_in|
+            1.2.2.15. org_agenda_clock_out..........|orgmode-org_agenda_clock_out|
+            1.2.2.16. org_agenda_clock_cancel....|orgmode-org_agenda_clock_cancel|
+            1.2.2.17. org_agenda_clock_goto........|orgmode-org_agenda_clock_goto|
+            1.2.2.18. org_agenda_clockreport_mode.|orgmode-org_agenda_clockreport_mode|
+            1.2.2.19. org_agenda_show_help..........|orgmode-org_agenda_show_help|
         1.2.3. Capture mappings.........................|orgmode-capture_mappings|
             1.2.3.1. org_capture_finalize...........|orgmode-org_capture_finalize|
             1.2.3.2. org_capture_refile...............|orgmode-org_capture_refile|
@@ -60,45 +66,62 @@ CONTENTS                                                        *orgmode-content
             1.2.3.4. org_capture_show_help.........|orgmode-org_capture_show_help|
         1.2.4. Org mappings.................................|orgmode-org_mappings|
             1.2.4.1. org_refile...............................|orgmode-org_refile|
-            1.2.4.2. org_increase_date.................|orgmode-org_increase_date|
-            1.2.4.3. org_decrease_date.................|orgmode-org_decrease_date|
-            1.2.4.4. org_change_date.....................|orgmode-org_change_date|
-            1.2.4.5. org_todo...................................|orgmode-org_todo|
-            1.2.4.6. org_todo_prev.........................|orgmode-org_todo_prev|
-            1.2.4.7. org_toggle_checkbox.............|orgmode-org_toggle_checkbox|
-            1.2.4.8. org_open_at_point.................|orgmode-org_open_at_point|
-            1.2.4.9. org_cycle.................................|orgmode-org_cycle|
-            1.2.4.10. org_global_cycle..................|orgmode-org_global_cycle|
-            1.2.4.11. org_archive_subtree............|orgmode-org_archive_subtree|
-            1.2.4.12. org_set_tags_command..........|orgmode-org_set_tags_command|
-            1.2.4.13. org_toggle_archive_tag......|orgmode-org_toggle_archive_tag|
-            1.2.4.14. org_do_promote......................|orgmode-org_do_promote|
-            1.2.4.15. org_do_demote........................|orgmode-org_do_demote|
-            1.2.4.16. org_promote_subtree............|orgmode-org_promote_subtree|
-            1.2.4.17. org_demote_subtree..............|orgmode-org_demote_subtree|
-            1.2.4.18. org_meta_return....................|orgmode-org_meta_return|
-            1.2.4.19. org_insert_heading_respect_content.|orgmode-org_insert_heading_respect_content|
-            1.2.4.20. org_insert_todo_heading....|orgmode-org_insert_todo_heading|
-            1.2.4.21. org_insert_todo_heading_respect_content.|orgmode-org_insert_todo_heading_respect_content|
-            1.2.4.22. org_move_subtree_up............|orgmode-org_move_subtree_up|
-            1.2.4.23. org_move_subtree_down........|orgmode-org_move_subtree_down|
-            1.2.4.24. org_export..............................|orgmode-org_export|
-            1.2.4.25. org_next_visible_heading..|orgmode-org_next_visible_heading|
-            1.2.4.26. org_previous_visible_heading.|orgmode-org_previous_visible_heading|
-            1.2.4.27. org_forward_heading_same_level.|orgmode-org_forward_heading_same_level|
-            1.2.4.28. org_backward_heading_same_level.|orgmode-org_backward_heading_same_level|
-            1.2.4.29. outline_up_heading..............|orgmode-outline_up_heading|
-            1.2.4.30. org_deadline..........................|orgmode-org_deadline|
-            1.2.4.31. org_schedule..........................|orgmode-org_schedule|
-            1.2.4.32. org_time_stamp......................|orgmode-org_time_stamp|
-            1.2.4.33. org_time_stamp_inactive....|orgmode-org_time_stamp_inactive|
-            1.2.4.34. org_show_help........................|orgmode-org_show_help|
+            1.2.4.2. org_timestamp_up...................|orgmode-org_timestamp_up|
+            1.2.4.3. org_timestamp_down...............|orgmode-org_timestamp_down|
+            1.2.4.4. org_timestamp_up_day...........|orgmode-org_timestamp_up_day|
+            1.2.4.5. org_timestamp_down_day.......|orgmode-org_timestamp_down_day|
+            1.2.4.6. org_change_date.....................|orgmode-org_change_date|
+            1.2.4.7. org_todo...................................|orgmode-org_todo|
+            1.2.4.8. org_todo_prev.........................|orgmode-org_todo_prev|
+            1.2.4.9. org_toggle_checkbox.............|orgmode-org_toggle_checkbox|
+            1.2.4.10. org_open_at_point................|orgmode-org_open_at_point|
+            1.2.4.11. org_cycle................................|orgmode-org_cycle|
+            1.2.4.12. org_global_cycle..................|orgmode-org_global_cycle|
+            1.2.4.13. org_archive_subtree............|orgmode-org_archive_subtree|
+            1.2.4.14. org_set_tags_command..........|orgmode-org_set_tags_command|
+            1.2.4.15. org_toggle_archive_tag......|orgmode-org_toggle_archive_tag|
+            1.2.4.16. org_do_promote......................|orgmode-org_do_promote|
+            1.2.4.17. org_do_demote........................|orgmode-org_do_demote|
+            1.2.4.18. org_promote_subtree............|orgmode-org_promote_subtree|
+            1.2.4.19. org_demote_subtree..............|orgmode-org_demote_subtree|
+            1.2.4.20. org_meta_return....................|orgmode-org_meta_return|
+            1.2.4.21. org_insert_heading_respect_content.|orgmode-org_insert_heading_respect_content|
+            1.2.4.22. org_insert_todo_heading....|orgmode-org_insert_todo_heading|
+            1.2.4.23. org_insert_todo_heading_respect_content.|orgmode-org_insert_todo_heading_respect_content|
+            1.2.4.24. org_move_subtree_up............|orgmode-org_move_subtree_up|
+            1.2.4.25. org_move_subtree_down........|orgmode-org_move_subtree_down|
+            1.2.4.26. org_export..............................|orgmode-org_export|
+            1.2.4.27. org_next_visible_heading..|orgmode-org_next_visible_heading|
+            1.2.4.28. org_previous_visible_heading.|orgmode-org_previous_visible_heading|
+            1.2.4.29. org_forward_heading_same_level.|orgmode-org_forward_heading_same_level|
+            1.2.4.30. org_backward_heading_same_level.|orgmode-org_backward_heading_same_level|
+            1.2.4.31. outline_up_heading..............|orgmode-outline_up_heading|
+            1.2.4.32. org_deadline..........................|orgmode-org_deadline|
+            1.2.4.33. org_schedule..........................|orgmode-org_schedule|
+            1.2.4.34. org_time_stamp......................|orgmode-org_time_stamp|
+            1.2.4.35. org_time_stamp_inactive....|orgmode-org_time_stamp_inactive|
+            1.2.4.36. org_clock_in..........................|orgmode-org_clock_in|
+            1.2.4.37. org_clock_out........................|orgmode-org_clock_out|
+            1.2.4.38. org_clock_cancel..................|orgmode-org_clock_cancel|
+            1.2.4.39. org_clock_goto......................|orgmode-org_clock_goto|
+            1.2.4.40. org_set_effort......................|orgmode-org_set_effort|
+            1.2.4.41. org_show_help........................|orgmode-org_show_help|
     1.3. Autocompletion...................................|orgmode-autocompletion|
     1.4. Abbreviations.....................................|orgmode-abbreviations|
     1.5. Colors...................................................|orgmode-colors|
     1.6. Advanced search.................................|orgmode-advanced_search|
     1.7. Notifications (experimental).......|orgmode-notifications_(experimental)|
         1.7.1. Cron.................................................|orgmode-cron|
+    1.8. Clocking...............................................|orgmode-clocking|
+                1.8.1. Clock in.................................|orgmode-clock_in|
+                1.8.2. Clock out...............................|orgmode-clock_out|
+                1.8.3. Clock cancel.........................|orgmode-clock_cancel|
+                1.8.4. Clock goto.............................|orgmode-clock_goto|
+                1.8.5. Set effort.............................|orgmode-set_effort|
+                1.8.6. Clock report table.............|orgmode-clock_report_table|
+                1.8.7. Statusline function...........|orgmode-statusline_function|
+    1.9. Changelog.............................................|orgmode-changelog|
+            1.9.1. 11 October.................................|orgmode-11_october|
 
 ================================================================================
 TABLE OF CONTENT                                        *orgmode-table_of_content*
@@ -117,6 +140,8 @@ TABLE OF CONTENT                                        *orgmode-table_of_conten
 5.  Colors (#colors)
 6.  Advanced search (#advanced-search)
 7.  Notifications (experimental) (#notifications-experimental)
+8.  Clocking (#clocking)
+9.  Changelog (#changelog)
 
 --------------------------------------------------------------------------------
 SETTINGS                                                        *orgmode-settings*
@@ -310,6 +335,12 @@ For example, lets add option to export to `rtf` format via `pandoc`:
       }
     })
 <
+
+ORG_TIME_STAMP_ROUNDING_MINUTES          *orgmode-org_time_stamp_rounding_minutes*
+
+type: `number`
+default value: `5`
+Number of minutes to increase/decrease when using org_timestamp_up (#org_timestamp_up)/org_timestamp_down (#org_timestamp_down)
 
 AGENDA SETTINGS                                          *orgmode-agenda_settings*
 
@@ -573,6 +604,36 @@ ORG_AGENDA_TODO                                          *orgmode-org_agenda_tod
 mapped to: `t`
 Change `TODO` state of an item in both agenda and original Org file
 
+ORG_AGENDA_CLOCK_IN                                  *orgmode-org_agenda_clock_in*
+
+mapped to: `I`
+Clock in item under cursor.
+See Clocking (#clocking) for more details.
+
+ORG_AGENDA_CLOCK_OUT                                *orgmode-org_agenda_clock_out*
+
+mapped to: `O`
+Clock out currently active clock item.
+See Clocking (#clocking) for more details.
+
+ORG_AGENDA_CLOCK_CANCEL                          *orgmode-org_agenda_clock_cancel*
+
+mapped to: `X`
+Cancel clock on currently active clock item.
+See Clocking (#clocking) for more details.
+
+ORG_AGENDA_CLOCK_GOTO                              *orgmode-org_agenda_clock_goto*
+
+mapped to: `<Leader>oxj`
+Jump to currently clocked in headline.
+See Clocking (#clocking) for more details.
+
+ORG_AGENDA_CLOCKREPORT_MODE                  *orgmode-org_agenda_clockreport_mode*
+
+mapped to: `R`
+Show clock report at the end of the agenda for current agenda time range
+See Clocking (#clocking) for more details.
+
 ORG_AGENDA_SHOW_HELP                                *orgmode-org_agenda_show_help*
 
 mapped to: `?`
@@ -641,14 +702,33 @@ ORG_REFILE                                                    *orgmode-org_refil
 mapped to: `<Leader>or`
 Refile current headline to destination
 
-ORG_INCREASE_DATE                                      *orgmode-org_increase_date*
+ORG_TIMESTAMP_UP                                        *orgmode-org_timestamp_up*
 
 mapped to: `<C-a>`
-Increase date under cursor by 1 day
+Increase date part under under cursor.
+`|` in examples references cursor position.
+* Year - Example date: `<202|1-10-01 Fri 10:30>` becomes `<202|2-10-01 Sat 10:30>`
+* Month - Example date: `<2021-1|0-01 Fri 10:30>` becomes `<2022-1|1-01 Mon 10:30>`
+* Day - Example date: `<2021-10-0|1 Fri 10:30>` becomes `<2022-10-0|2 Sat 10:30>`. Same thing happens when cursor is on day name.
+* Hour - Example date: `<2021-10-01 Fri 1|0:30>` becomes `<2022-10-02 Sat 1|1:30>`.
+* Minute - Example date: `<2021-10-01 Fri 10:3|0>` becomes `<2022-10-02 Sat 11:3|5>`. See org_time_stamp_rounding_minutes (#org_time_stamp_rounding_minutes) for steps configuration.
+* Repeater/Delay range (`h->d->w->m->y`) - Example date: `<2021-10-01 Fri 10:30 +1|w>` becomes `<2021-10-01 Fri 10:30 +1|m>`
+* Active/Inactive state - (`<` to `[` and vice versa) - Example date: `|<2021-10-01 Fri 10:30>` becomes `|[2021-10-01 Fri 10:30]`
 
-ORG_DECREASE_DATE                                      *orgmode-org_decrease_date*
+ORG_TIMESTAMP_DOWN                                    *orgmode-org_timestamp_down*
 
 mapped to: `<C-x>`
+Decrease date part under under cursor.
+Same as org_timestamp_up (#org_timestamp_up), just opposite direction.
+
+ORG_TIMESTAMP_UP_DAY                                *orgmode-org_timestamp_up_day*
+
+mapped to: `<S-UP>`
+Increase date under cursor by 1 day
+
+ORG_TIMESTAMP_DOWN_DAY                            *orgmode-org_timestamp_down_day*
+
+mapped to: `<S-DOWN>`
 Decrease date under cursor by 1 day
 
 ORG_CHANGE_DATE                                          *orgmode-org_change_date*
@@ -811,6 +891,36 @@ ORG_TIME_STAMP_INACTIVE                          *orgmode-org_time_stamp_inactiv
 mapped to: `<Leader>oi!`
 Insert/Update inactive date under cursor.
 
+ORG_CLOCK_IN                                                *orgmode-org_clock_in*
+
+mapped to: `<Leader>oxi`
+Clock in headline under cursor.
+See Clocking (#clocking) for more details.
+
+ORG_CLOCK_OUT                                              *orgmode-org_clock_out*
+
+mapped to: `<Leader>oxi`
+Clock out headline under cursor.
+See Clocking (#clocking) for more details.
+
+ORG_CLOCK_CANCEL                                        *orgmode-org_clock_cancel*
+
+mapped to: `<Leader>oxq`
+Cancel currently active clock on current headline.
+See Clocking (#clocking) for more details.
+
+ORG_CLOCK_GOTO                                            *orgmode-org_clock_goto*
+
+mapped to: `<Leader>oxj`
+Jump to currently clocked in headline.
+See Clocking (#clocking) for more details.
+
+ORG_SET_EFFORT                                            *orgmode-org_set_effort*
+
+mapped to: `<Leader>oxe`
+Set effort estimate property on for current headline.
+See Clocking (#clocking) for more details.
+
 ORG_SHOW_HELP                                              *orgmode-org_show_help*
 
 mapped to: `?`
@@ -823,8 +933,8 @@ These mappings live under `mappings.org`, and can be changed like this:
       org_default_notes_file = '~/Dropbox/org/refile.org',
       mappings = {
         org = {
-          org_increase_date = '+',
-          org_decrease_date = '-'
+          org_timestamp_up = '+',
+          org_timestamp_down = '-'
         }
       }
     })
@@ -1083,4 +1193,66 @@ And update cron job to this:
 This option is most optimized because it doesn't load plugins and your init.vim
 
 For MacOS, things should be very similar, but I wasn't able to test it. Any help on this is appreciated.
+
+--------------------------------------------------------------------------------
+CLOCKING                                                        *orgmode-clocking*
+
+There is partial suport for Clocking work time (https://orgmode.org/manual/Clocking-Work-Time.html).
+Supported actions:
+
+CLOCK IN                                                        *orgmode-clock_in*
+
+Org file mapping: `<leader>oxi`
+Agenda view mapping: `I`
+Start the clock by adding or updating the `:LOGBOOK:` drawer. Note that this clocks out any currently active clock.
+Also, agenda/todo/search view highlight item that is clocked in.
+
+CLOCK OUT                                                      *orgmode-clock_out*
+
+Org file mapping: `<leader>oxi`
+Agenda view mapping: `O`
+Clock out the entry and update the `:LOGBOOK:` drawer, and also add a total tracked time.
+Note that in agenda view pressing `O` anywhere clocks the currently active entry, while in org file cursor must be in the headline subtree.
+
+CLOCK CANCEL                                                *orgmode-clock_cancel*
+
+Org file mapping: `<leader>oxq`
+Agenda view mapping: `X`
+Cancel the currently active clock. This just removes the entry added by clock in from `:LOGBOOK:` drawer.
+Note that in agenda view pressing `X` anywhere cancels clock on the currently active entry, while in org file cursor must be in the headline subtree.
+
+CLOCK GOTO                                                    *orgmode-clock_goto*
+
+Org file mapping: `<leader>oxj`
+Agenda view mapping: `<leader>oxj`
+Jump to currently clocked in headline in the current window
+
+SET EFFORT                                                    *orgmode-set_effort*
+
+Org file mapping: `<leader>oxe`
+Agenda view mapping: `<leader>oxe`
+Add/Update an Effort estimate property for the current headline
+
+CLOCK REPORT TABLE                                    *orgmode-clock_report_table*
+
+Agenda view mapping: `R`
+Show the clocking report for the current agenda time range. Headlines from table can be jumped to via `<TAB>/<CR>` (underlined)
+Note that this is visible only in Agenda view, since it's the only view that have a time range. Todo/Search views are not supported.
+
+STATUSLINE FUNCTION                                  *orgmode-statusline_function*
+
+Function: `v:lua.orgmode.statusline()`
+Show the currently clocked in headline (if any), with total clocked time / effort estimate (if set).
+>
+    set statusline=%{v:lua.orgmode.statusline()}
+<
+
+--------------------------------------------------------------------------------
+CHANGELOG                                                      *orgmode-changelog*
+
+11 OCTOBER                                                    *orgmode-11_october*
+
+*   Mappings `org_increase_date` and `org_decrease_date` are deprecated in favor of org_timestamp_up (#org_timestamp_up) and org_timestamp_down (#org_timestamp_down).
+    If you have these mappings in your custom configuration, you will get a warning each time Orgmode is loaded. To remove the warning, rename the configuration properties accordingly.
+    To return the old functionality where mappings increase only the day, add `org_timestamp_up_day`/`org_timestamp_down_day` to your configuration.
 
