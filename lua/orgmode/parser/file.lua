@@ -1,4 +1,5 @@
 local Range = require('orgmode.parser.range')
+local Duration = require('orgmode.objects.duration')
 local Section = require('orgmode.parser.section')
 local ts_utils = require('nvim-treesitter.ts_utils')
 local LanguageTree = require('vim.treesitter.languagetree')
@@ -10,9 +11,11 @@ local utils = require('orgmode.utils')
 ---@field file_content string
 ---@field category string
 ---@field filename string
+---@field changedtick number
 ---@field sections Section[]
 ---@field source_code_filetypes string[]
 ---@field is_archive_file boolean
+---@field clocked_headline Section
 ---@field tags string[]
 local File = {}
 
@@ -22,10 +25,12 @@ function File:new(tree, file_content, category, filename, is_archive_file)
     file_content = file_content,
     category = category,
     filename = filename,
+    changedtick = 0,
     sections = {},
     source_code_filetypes = {},
     is_archive_file = is_archive_file or false,
     tags = {},
+    clocked_headline = nil,
   }
   setmetatable(data, self)
   self.__index = self
@@ -148,11 +153,17 @@ function File.from_content(content, category, filename, is_archive_file)
 end
 
 function File:refresh()
-  if not vim.bo.modified then
+  local bufnr = vim.fn.bufnr(self.filename)
+  if bufnr < 0 then
     return self
   end
-  local content = vim.api.nvim_buf_get_lines(0, 0, -1, false)
+  local changed = self.changedtick ~= vim.api.nvim_buf_get_var(bufnr, 'changedtick')
+  if not changed then
+    return self
+  end
+  local content = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
   local refreshed_file = File.from_content(content, self.category, self.filename, self.is_archive_file)
+  refreshed_file.changedtick = vim.api.nvim_buf_get_var(bufnr, 'changedtick')
   if refreshed_file then
     return refreshed_file
   end
@@ -235,7 +246,15 @@ end
 ---@param id? string
 ---@return Section
 function File:get_closest_headline(id)
-  local node = ts_utils.get_node_at_cursor()
+  local node = nil
+  if not id then
+    node = ts_utils.get_node_at_cursor()
+  else
+    local cursor_range = { id - 1, vim.fn.col('$') - 2 }
+    node = self.tree
+      :root()
+      :named_descendant_for_range(cursor_range[1], cursor_range[2], cursor_range[1], cursor_range[2])
+  end
   if not node then
     return nil
   end
@@ -253,6 +272,28 @@ function File:get_closest_headline(id)
     end
   end
   return nil
+end
+
+---@param from Date
+---@param to Date
+---@return table
+function File:get_clock_report(from, to)
+  local result = {
+    total_duration = 0,
+    headlines = {},
+  }
+  for _, section in ipairs(self.sections) do
+    if section.logbook then
+      local minutes = section.logbook:get_total_minutes(from, to)
+      if minutes > 0 then
+        table.insert(result.headlines, section)
+        result.total_duration = result.total_duration + minutes
+      end
+    end
+  end
+
+  result.total_duration = Duration.from_minutes(result.total_duration)
+  return result
 end
 
 ---@param headline Section
@@ -288,6 +329,9 @@ end
 
 ---@param section Section
 function File:_insert_child_sections(section)
+  if section:is_clocked_in() then
+    self.clocked_headline = section
+  end
   if #section.sections == 0 then
     return
   end

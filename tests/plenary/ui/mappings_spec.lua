@@ -3,10 +3,10 @@ local Date = require('orgmode.objects.date')
 
 describe('Mappings', function()
   after_each(function()
-    vim.cmd([[%bw!]])
+    vim.cmd([[silent! %bw!]])
   end)
 
-  it('should increase the date by 1 day (org_increase_date)', function()
+  it('should increase the date by 1 day (org_timestamp_up_day)', function()
     helpers.load_file_content({
       '#TITLE: Test',
       '',
@@ -15,11 +15,11 @@ describe('Mappings', function()
     })
     vim.fn.cursor(4, 21)
     assert.are.same('  DEADLINE: <2021-07-21 Wed 22:02>', vim.fn.getline('.'))
-    vim.cmd([[exe "norm \<C-a>"]])
+    vim.cmd([[exe "norm \<S-UP>"]])
     assert.are.same('  DEADLINE: <2021-07-22 Thu 22:02>', vim.fn.getline('.'))
   end)
 
-  it('should decrease the date by 1 day (org_decrease_date)', function()
+  it('should decrease the date by 1 day (org_timestamp_down_day)', function()
     helpers.load_file_content({
       '#TITLE: Test',
       '',
@@ -28,7 +28,7 @@ describe('Mappings', function()
     })
     vim.fn.cursor(4, 21)
     assert.are.same('  DEADLINE: <2021-07-21 Wed 22:02>', vim.fn.getline('.'))
-    vim.cmd([[exe "norm \<C-x>"]])
+    vim.cmd([[exe "norm \<S-DOWN>"]])
     assert.are.same('  DEADLINE: <2021-07-20 Tue 22:02>', vim.fn.getline('.'))
   end)
 
@@ -1173,7 +1173,7 @@ describe('Mappings', function()
 
     -- Increase by one day
     vim.fn.cursor(6, 16)
-    vim.cmd([[exe "norm \<C-a>"]])
+    vim.cmd([[exe "norm \<S-UP>"]])
     assert.are.same('   DEADLINE: <' .. Date.today():add({ day = 1 }):to_string() .. '>', vim.fn.getline(6))
 
     -- Update back to today
@@ -1207,7 +1207,7 @@ describe('Mappings', function()
 
     -- Increase by one day
     vim.fn.cursor(6, 51)
-    vim.cmd([[exe "norm \<C-a>"]])
+    vim.cmd([[exe "norm \<S-UP>"]])
     assert.are.same(
       '  DEADLINE: <2021-09-15 Wed 22:02> SCHEDULED: <' .. Date.today():add({ day = 1 }):to_string() .. '>',
       vim.fn.getline(6)
@@ -1240,7 +1240,7 @@ describe('Mappings', function()
     -- date inserted
     assert.are.same('<' .. Date.today():to_string() .. '>', vim.fn.getline(7))
     -- increase by 1 day
-    vim.cmd([[exe "norm \<C-a>"]])
+    vim.cmd([[exe "norm \<S-UP>"]])
     assert.are.same('<' .. Date.today():add({ day = 1 }):to_string() .. '>', vim.fn.getline(7))
     -- make sure it updated back to todays date by opening the calendar and pressing . to go to today's date
     vim.cmd('norm ,oi..')
@@ -1282,7 +1282,7 @@ describe('Mappings', function()
     -- date inserted
     assert.are.same('[' .. Date.today():to_string() .. ']', vim.fn.getline(7))
     -- increase by 1 day
-    vim.cmd([[exe "norm \<C-a>"]])
+    vim.cmd([[exe "norm \<S-UP>"]])
     assert.are.same('[' .. Date.today():add({ day = 1 }):to_string() .. ']', vim.fn.getline(7))
     -- make sure it updated back to todays date by opening the calendar and pressing . to go to today's date
     vim.cmd('norm ,oi!.')

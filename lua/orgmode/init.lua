@@ -6,6 +6,7 @@ local instance = nil
 ---@field files Files
 ---@field agenda Agenda
 ---@field capture Capture
+---@field clock Clock
 ---@field notifications Notifications
 local Org = {}
 
@@ -28,8 +29,10 @@ function Org:init()
     capture = self.capture,
     agenda = self.agenda,
   })
+  self.clock = require('orgmode.clock'):new()
   require('orgmode.colors.todo_highlighter').add_todo_keyword_highlights()
   require('orgmode.org.autocompletion').register()
+  self.statusline_debounced = require('orgmode.utils').debounce(self.clock.get_statusline, 300)
   self.initialized = true
 end
 
@@ -95,6 +98,13 @@ local function cron(opts)
   require('orgmode.parser.files').load(vim.schedule_wrap(function()
     instance.notifications = require('orgmode.notifications'):new():cron()
   end))
+end
+
+function _G.orgmode.statusline()
+  if not instance or not instance.initialized then
+    return ''
+  end
+  return instance.statusline_debounced() or ''
 end
 
 return {

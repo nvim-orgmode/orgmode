@@ -4,8 +4,16 @@ local config = require('orgmode.config')
 local helps = {
   org = {
     { key = 'org_refile', description = 'Refile subtree under cursor to destination' },
-    { key = 'org_increase_date', description = 'Increase date under cursor by 1 day' },
-    { key = 'org_decrease_date', description = 'Decrease date under cursor by 1 day' },
+    {
+      key = 'org_timestamp_up',
+      description = 'Increase date part under cursor (year/month/day/hour/minute/repeater/active|inactive)',
+    },
+    {
+      key = 'org_timestamp_down',
+      description = 'Decerase date part under cursor (year/month/day/hour/minute/repeater/active|inactive)',
+    },
+    { key = 'org_timestamp_up_day', description = 'Increase date under cursor by 1 day' },
+    { key = 'org_timestamp_down_day', description = 'Decrease date under cursor by 1 day' },
     { key = 'org_change_date', description = 'Change date under cursor via calendar popup' },
     { key = 'org_todo', description = 'Forward change TODO state of current headline' },
     { key = 'org_todo_prev', description = 'Backward change TODO state of current headline' },
@@ -36,6 +44,11 @@ local helps = {
     { key = 'org_schedule', description = 'Insert/Update scheduled date' },
     { key = 'org_time_stamp', description = 'Insert date under cursor' },
     { key = 'org_time_stamp_inactive', description = 'Insert/Update inactive date under cursor' },
+    { key = 'org_clock_in', description = 'Clock in current heading' },
+    { key = 'org_clock_out', description = 'Clock out current heading' },
+    { key = 'org_clock_cancel', description = 'Cancel active clock on current heading' },
+    { key = 'org_clock_goto', description = 'Jump to currently clocked in heading' },
+    { key = 'org_set_effort', description = 'Set effort estimate on current heading' },
     { key = 'org_show_help', description = 'Show this help' },
   },
   orgagenda = {
@@ -51,6 +64,12 @@ local helps = {
     { key = 'org_agenda_goto', description = 'Open in another window' },
     { key = 'org_agenda_redo', description = 'Reload org files and redraw' },
     { key = 'org_agenda_todo', description = 'Change TODO state of an item' },
+    { key = 'org_agenda_clock_in', description = 'Clock in item under cursor' },
+    { key = 'org_agenda_clock_out', description = 'Clock out currently active clocked item' },
+    { key = 'org_agenda_clock_cancel', description = 'Cancel clocking on currently active clocked item' },
+    { key = 'org_agenda_clock_goto', description = 'Jump to currently active clock item' },
+    { key = 'org_agenda_set_effort', description = 'Set effor estimate for item under cursor' },
+    { key = 'org_agenda_clockreport_mode', description = 'Toggle clock report for current agenda time range' },
     { key = 'org_agenda_quit', description = 'Close agenda' },
     { key = 'org_agenda_show_help', description = 'Show this help' },
   },
@@ -77,10 +96,10 @@ function Help.prepare_content()
       if type(maps) == 'table' then
         maps = table.concat(maps, ', ')
       end
-      table.insert(content, string.format('  `%-6s` - %s', maps, item.description))
+      table.insert(content, string.format('  `%-12s` - %s', maps, item.description))
     end
     table.insert(content, '')
-    table.insert(content, string.format('  `%-6s` - %s', '<Esc>, q', 'Close this help'))
+    table.insert(content, string.format('  `%-12s` - %s', '<Esc>, q', 'Close this help'))
     return content
   end
 

@@ -46,6 +46,10 @@ hi def link org_hyperlink Underlined
 
 hi org_hide_leading_stars ctermfg=0 guifg=bg
 
+" Tables
+syntax match org_table_hrule /^\s*|[-+]*|\s*$/
+hi org_table_hrule gui=NONE cterm=NONE
+
 syntax spell toplevel
 
 lua require("orgmode.org.syntax").load_code_blocks()

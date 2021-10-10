@@ -1,6 +1,7 @@
 local ts_utils = require('nvim-treesitter.ts_utils')
 local Calendar = require('orgmode.objects.calendar')
 local Date = require('orgmode.objects.date')
+local Duration = require('orgmode.objects.duration')
 local TodoState = require('orgmode.objects.todo_state')
 local Hyperlinks = require('orgmode.org.hyperlinks')
 local utils = require('orgmode.utils')
@@ -46,7 +47,7 @@ function OrgMappings:archive()
         end
         last_item:add_properties({
           ARCHIVE_TIME = Date.now():to_string(),
-          ARCHIVE_FILE = file.file,
+          ARCHIVE_FILE = file.filename,
           ARCHIVE_CATEGORY = item.category,
           ARCHIVE_TODO = item.todo_keyword.value,
         })
@@ -124,12 +125,110 @@ function OrgMappings:toggle_checkbox()
   vim.fn.setline('.', new_line)
 end
 
-function OrgMappings:increase_date()
-  return self:_adjust_date('+1d', config.mappings.org.org_increase_date, '<C-a>')
+function OrgMappings:timestamp_up_day()
+  return self:_adjust_date('+1d', config.mappings.org.org_timestamp_up_day, '<S-UP>')
 end
 
-function OrgMappings:decrease_date()
-  return self:_adjust_date('-1d', config.mappings.org.org_decrease_date, '<C-x>')
+function OrgMappings:timestamp_down_day()
+  return self:_adjust_date('-1d', config.mappings.org.org_timestamp_down_day, '<S-DOWN>')
+end
+
+function OrgMappings:timestamp_up()
+  return self:_adjust_date_part('+', config.mappings.org.org_timestamp_up, '<C-a>')
+end
+
+function OrgMappings:timestamp_down()
+  return self:_adjust_date_part('-', config.mappings.org.org_timestamp_up, '<C-a>')
+end
+
+function OrgMappings:_adjust_date_part(direction, fallback, vim_mapping)
+  local date_on_cursor = self:_get_date_under_cursor()
+  local minute_adj = string.format('%dM', tonumber(config.org_time_stamp_rounding_minutes))
+  local do_replacement = function(date)
+    local col = vim.fn.col('.')
+    local char = vim.fn.getline('.'):sub(col, col)
+    if col == date.range.start_col or col == date.range.end_col then
+      date.active = not date.active
+      return self:_replace_date(date)
+    end
+    local node = ts_utils.get_node_at_cursor()
+    local col_from_start = col - date.range.start_col
+    local modify_end_time = false
+    local adj = nil
+    if node:type() == 'date' then
+      if col_from_start <= 5 then
+        adj = '1y'
+      elseif col_from_start <= 8 then
+        adj = '1m'
+      elseif col_from_start <= 15 then
+        adj = '1d'
+      end
+    elseif node:type() == 'time' then
+      local has_end_time = node:parent() and node:parent():type() == 'timerange'
+      if col_from_start <= 17 then
+        adj = '1h'
+      elseif col_from_start <= 20 then
+        adj = minute_adj
+      elseif has_end_time and col_from_start <= 23 then
+        adj = '1h'
+        modify_end_time = true
+      elseif has_end_time and col_from_start <= 26 then
+        adj = minute_adj
+        modify_end_time = true
+      end
+    elseif (node:type() == 'repeater' or node:type() == 'delay') and char:match('[hdwmy]') ~= nil then
+      local map = { h = 'd', d = 'w', w = 'm', m = 'y', y = 'h' }
+      vim.cmd(string.format('norm!r%s', map[char]))
+      return true
+    end
+
+    if not adj then
+      return false
+    end
+
+    local new_date = nil
+    if modify_end_time then
+      new_date = date:adjust_end_time(direction .. adj)
+    else
+      new_date = date:adjust(direction .. adj)
+    end
+
+    self:_replace_date(new_date)
+
+    if date:is_logbook() and date.related_date_range then
+      local item = Files.get_closest_headline()
+      if item and item.logbook then
+        item.logbook:recalculate_estimate(new_date.range.start_line)
+      end
+    end
+    return true
+  end
+
+  if date_on_cursor then
+    local replaced = do_replacement(date_on_cursor)
+    if replaced then
+      return true
+    end
+  end
+
+  if fallback ~= vim_mapping then
+    return vim.api.nvim_feedkeys(utils.esc(fallback), 'n', true)
+  end
+
+  local num = vim.fn.search([[\d]], 'c', vim.fn.line('.'))
+  if num == 0 then
+    return vim.api.nvim_feedkeys(utils.esc(fallback), 'n', true)
+  end
+
+  date_on_cursor = self:_get_date_under_cursor()
+  if date_on_cursor then
+    local replaced = do_replacement(date_on_cursor)
+    if replaced then
+      return true
+    end
+  end
+
+  return vim.api.nvim_feedkeys(utils.esc(fallback), 'n', true)
 end
 
 function OrgMappings:change_date()

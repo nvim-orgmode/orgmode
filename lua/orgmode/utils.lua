@@ -72,6 +72,9 @@ end
 ---@private
 function utils._echo(msg, hl, additional_msg, store_in_history)
   vim.cmd([[redraw!]])
+  if type(msg) == 'table' then
+    msg = table.concat(msg, '\n')
+  end
   local msg_item = { string.format('[orgmode] %s', msg) }
   if hl then
     table.insert(msg_item, hl)
@@ -303,6 +306,23 @@ function utils.get_closest_parent_of_type(node, type)
       return parent
     end
     parent = parent:parent()
+  end
+end
+
+function utils.debounce(fn, ms)
+  local timer = vim.loop.new_timer()
+  local result = nil
+  return function(...)
+    local argv = { ... }
+    timer:start(
+      ms,
+      0,
+      vim.schedule_wrap(function()
+        timer:stop()
+        result = fn(unpack(argv))
+      end)
+    )
+    return result
   end
 end
 

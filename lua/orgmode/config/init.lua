@@ -30,8 +30,38 @@ end
 ---@return Config
 function Config:extend(opts)
   self.todo_keywords = nil
-  self.opts = vim.tbl_deep_extend('force', self.opts, opts or {})
+  opts = opts or {}
+  self:_deprecation_notify(opts)
+  self.opts = vim.tbl_deep_extend('force', self.opts, opts)
   return self
+end
+
+function Config:_deprecation_notify(opts)
+  local messages = {}
+  if
+    opts.mappings
+    and opts.mappings.org
+    and (opts.mappings.org.org_increase_date or opts.mappings.org.org_decrease_date)
+  then
+    table.insert(
+      messages,
+      'org_increase_date/org_decrease_date mappings are deprecated in favor of org_timestamp_up/org_timestamp_down (More granular increase/decrease).'
+    )
+    table.insert(messages, 'See https://github.com/kristijanhusak/orgmode.nvim/blob/tree-sitter/DOCS.md#changelog')
+    if opts.mappings.org.org_increase_date then
+      opts.mappings.org.org_timestamp_up = opts.mappings.org.org_increase_date
+    end
+    if opts.mappings.org.org_decrease_date then
+      opts.mappings.org.org_timestamp_down = opts.mappings.org.org_decrease_date
+    end
+  end
+
+  if #messages > 0 then
+    -- Schedule so it gets printed out once whole init.vim is loaded
+    vim.schedule(function()
+      utils.echo_warning(table.concat(messages, '\n'))
+    end)
+  end
 end
 
 ---@return string[]
