@@ -322,9 +322,6 @@ function File:_parse_sections()
   local sections = self:get_ts_matches('(document (section) @section)')
   for _, section_item in ipairs(sections) do
     local section = Section.from_node(section_item.section.node, self)
-    if section:is_clocked_in() then
-      self.clocked_headline = section
-    end
     table.insert(self.sections, section)
     self:_insert_child_sections(section)
   end
@@ -332,6 +329,9 @@ end
 
 ---@param section Section
 function File:_insert_child_sections(section)
+  if section:is_clocked_in() then
+    self.clocked_headline = section
+  end
   if #section.sections == 0 then
     return
   end

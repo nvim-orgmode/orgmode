@@ -557,14 +557,13 @@ function Agenda:change_todo_state()
 end
 
 function Agenda:clock_in()
-  local line = vim.fn.line('.')
-  local item = self.content[line]
+  local item = self.content[vim.fn.line('.')]
   if not item or not item.jumpable then
     return
   end
   Files.update_file(item.file, function(_)
     vim.fn.cursor(item.file_position, 0)
-    require('orgmode').action('org_mappings.org_clock_in')
+    require('orgmode').action('clock.org_clock_in')
   end)
   return self:redo(true)
 end
@@ -574,7 +573,7 @@ function Agenda:clock_out()
   if last_clocked and last_clocked:is_clocked_in() then
     Files.update_file(last_clocked.file, function(_)
       vim.fn.cursor(last_clocked.range.start_line, 0)
-      require('orgmode').action('org_mappings.org_clock_out')
+      require('orgmode').action('clock.org_clock_out')
     end)
     return self:redo(true)
   end
@@ -585,10 +584,21 @@ function Agenda:clock_cancel()
   if last_clocked and last_clocked:is_clocked_in() then
     Files.update_file(last_clocked.file, function(_)
       vim.fn.cursor(last_clocked.range.start_line, 0)
-      require('orgmode').action('org_mappings.org_clock_cancel')
+      require('orgmode').action('clock.org_clock_cancel')
     end)
     return self:redo(true)
   end
+end
+
+function Agenda:set_effort()
+  local item = self.content[vim.fn.line('.')]
+  if not item or not item.jumpable then
+    return
+  end
+  Files.update_file(item.file, function(_)
+    vim.fn.cursor(item.file_position, 0)
+    require('orgmode').action('clock.org_set_effort')
+  end)
 end
 
 function Agenda:toggle_clock_report()
