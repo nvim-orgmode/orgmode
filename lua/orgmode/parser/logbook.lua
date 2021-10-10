@@ -61,6 +61,16 @@ function Logbook:get_total(from, to)
   return Duration.from_minutes(self:get_total_minutes(from, to))
 end
 
+function Logbook:get_total_with_active()
+  local duration = self:get_total()
+  local active = self:get_active()
+  if not active then
+    return duration
+  end
+  local active_duration = Duration.from_seconds(Date.now().timestamp - active.start_time.timestamp)
+  return Duration.from_minutes(duration.minutes + active_duration.minutes)
+end
+
 function Logbook:add_clock_in()
   local indent = vim.fn.getline(self.range.start_line):match('^%s*')
   local line = self.range.start_line
@@ -135,7 +145,7 @@ end
 function Logbook.new_from_section(section)
   local line = nil
   if section.properties.valid then
-    line = section.properties.range.end_line + 1
+    line = section.properties.range.end_line
   else
     line = section:has_planning() and section.range.start_line + 1 or section.range.start_line
   end

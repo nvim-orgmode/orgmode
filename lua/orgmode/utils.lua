@@ -309,4 +309,21 @@ function utils.get_closest_parent_of_type(node, type)
   end
 end
 
+function utils.debounce(fn, ms)
+  local timer = vim.loop.new_timer()
+  local result = nil
+  return function(...)
+    local argv = { ... }
+    timer:start(
+      ms,
+      0,
+      vim.schedule_wrap(function()
+        timer:stop()
+        result = fn(unpack(argv))
+      end)
+    )
+    return result
+  end
+end
+
 return utils

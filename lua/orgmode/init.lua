@@ -32,6 +32,7 @@ function Org:init()
   self.clock = require('orgmode.clock'):new()
   require('orgmode.colors.todo_highlighter').add_todo_keyword_highlights()
   require('orgmode.org.autocompletion').register()
+  self.statusline_debounced = require('orgmode.utils').debounce(self.clock.get_statusline, 300)
   self.initialized = true
 end
 
@@ -103,7 +104,7 @@ function _G.orgmode.statusline()
   if not instance or not instance.initialized then
     return ''
   end
-  return instance.clock:get_statusline()
+  return instance.statusline_debounced() or ''
 end
 
 return {

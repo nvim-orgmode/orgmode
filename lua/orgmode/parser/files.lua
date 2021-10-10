@@ -52,12 +52,19 @@ function Files.load(callback)
   return Files
 end
 
+function Files._set_loaded_file(filename, orgfile)
+  Files.orgfiles[filename] = orgfile
+  if orgfile.clocked_headline then
+    Files.set_clocked_headline(orgfile.clocked_headline)
+  end
+end
+
 function Files.reload(file, callback)
   if file then
     local prev_file = Files.get(file)
     return File.load(file, function(orgfile)
       if orgfile then
-        Files.orgfiles[file] = orgfile
+        Files._set_loaded_file(file, orgfile)
         Files._check_source_blocks(prev_file, Files.get(file))
       end
       Files.loaded = true
@@ -96,7 +103,7 @@ function Files.get(file, refresh)
   local f = Files.orgfiles[file]
   if f then
     if refresh then
-      Files.orgfiles[file] = f:refresh()
+      Files._set_loaded_file(file, f:refresh())
     end
     return Files.orgfiles[file]
   end

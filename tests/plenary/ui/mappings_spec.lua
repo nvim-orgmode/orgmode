@@ -3,7 +3,7 @@ local Date = require('orgmode.objects.date')
 
 describe('Mappings', function()
   after_each(function()
-    vim.cmd([[%bw!]])
+    vim.cmd([[silent! %bw!]])
   end)
 
   it('should increase the date by 1 day (org_timestamp_up_day)', function()

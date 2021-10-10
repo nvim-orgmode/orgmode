@@ -53,7 +53,12 @@ CONTENTS                                                        *orgmode-content
             1.2.2.11. org_agenda_goto_date..........|orgmode-org_agenda_goto_date|
             1.2.2.12. org_agenda_redo....................|orgmode-org_agenda_redo|
             1.2.2.13. org_agenda_todo....................|orgmode-org_agenda_todo|
-            1.2.2.14. org_agenda_show_help..........|orgmode-org_agenda_show_help|
+            1.2.2.14. org_agenda_clock_in............|orgmode-org_agenda_clock_in|
+            1.2.2.15. org_agenda_clock_out..........|orgmode-org_agenda_clock_out|
+            1.2.2.16. org_agenda_clock_cancel....|orgmode-org_agenda_clock_cancel|
+            1.2.2.17. org_agenda_clock_goto........|orgmode-org_agenda_clock_goto|
+            1.2.2.18. org_agenda_clockreport_mode.|orgmode-org_agenda_clockreport_mode|
+            1.2.2.19. org_agenda_show_help..........|orgmode-org_agenda_show_help|
         1.2.3. Capture mappings.........................|orgmode-capture_mappings|
             1.2.3.1. org_capture_finalize...........|orgmode-org_capture_finalize|
             1.2.3.2. org_capture_refile...............|orgmode-org_capture_refile|
@@ -95,15 +100,28 @@ CONTENTS                                                        *orgmode-content
             1.2.4.33. org_schedule..........................|orgmode-org_schedule|
             1.2.4.34. org_time_stamp......................|orgmode-org_time_stamp|
             1.2.4.35. org_time_stamp_inactive....|orgmode-org_time_stamp_inactive|
-            1.2.4.36. org_show_help........................|orgmode-org_show_help|
+            1.2.4.36. org_clock_in..........................|orgmode-org_clock_in|
+            1.2.4.37. org_clock_out........................|orgmode-org_clock_out|
+            1.2.4.38. org_clock_cancel..................|orgmode-org_clock_cancel|
+            1.2.4.39. org_clock_goto......................|orgmode-org_clock_goto|
+            1.2.4.40. org_set_effort......................|orgmode-org_set_effort|
+            1.2.4.41. org_show_help........................|orgmode-org_show_help|
     1.3. Autocompletion...................................|orgmode-autocompletion|
     1.4. Abbreviations.....................................|orgmode-abbreviations|
     1.5. Colors...................................................|orgmode-colors|
     1.6. Advanced search.................................|orgmode-advanced_search|
     1.7. Notifications (experimental).......|orgmode-notifications_(experimental)|
         1.7.1. Cron.................................................|orgmode-cron|
-    1.8. Changelog.............................................|orgmode-changelog|
-            1.8.1. 11 October.................................|orgmode-11_october|
+    1.8. Clocking...............................................|orgmode-clocking|
+                1.8.1. Clock in.................................|orgmode-clock_in|
+                1.8.2. Clock out...............................|orgmode-clock_out|
+                1.8.3. Clock cancel.........................|orgmode-clock_cancel|
+                1.8.4. Clock goto.............................|orgmode-clock_goto|
+                1.8.5. Set effort.............................|orgmode-set_effort|
+                1.8.6. Clock report table.............|orgmode-clock_report_table|
+                1.8.7. Statusline function...........|orgmode-statusline_function|
+    1.9. Changelog.............................................|orgmode-changelog|
+            1.9.1. 11 October.................................|orgmode-11_october|
 
 ================================================================================
 TABLE OF CONTENT                                        *orgmode-table_of_content*
@@ -122,7 +140,8 @@ TABLE OF CONTENT                                        *orgmode-table_of_conten
 5.  Colors (#colors)
 6.  Advanced search (#advanced-search)
 7.  Notifications (experimental) (#notifications-experimental)
-8.  Changelog (#changelog)
+8.  Clocking (#clocking)
+9.  Changelog (#changelog)
 
 --------------------------------------------------------------------------------
 SETTINGS                                                        *orgmode-settings*
@@ -585,6 +604,36 @@ ORG_AGENDA_TODO                                          *orgmode-org_agenda_tod
 mapped to: `t`
 Change `TODO` state of an item in both agenda and original Org file
 
+ORG_AGENDA_CLOCK_IN                                  *orgmode-org_agenda_clock_in*
+
+mapped to: `I`
+Clock in item under cursor.
+See Clocking (#clocking) for more details.
+
+ORG_AGENDA_CLOCK_OUT                                *orgmode-org_agenda_clock_out*
+
+mapped to: `O`
+Clock out currently active clock item.
+See Clocking (#clocking) for more details.
+
+ORG_AGENDA_CLOCK_CANCEL                          *orgmode-org_agenda_clock_cancel*
+
+mapped to: `X`
+Cancel clock on currently active clock item.
+See Clocking (#clocking) for more details.
+
+ORG_AGENDA_CLOCK_GOTO                              *orgmode-org_agenda_clock_goto*
+
+mapped to: `<Leader>oxj`
+Jump to currently clocked in headline.
+See Clocking (#clocking) for more details.
+
+ORG_AGENDA_CLOCKREPORT_MODE                  *orgmode-org_agenda_clockreport_mode*
+
+mapped to: `R`
+Show clock report at the end of the agenda for current agenda time range
+See Clocking (#clocking) for more details.
+
 ORG_AGENDA_SHOW_HELP                                *orgmode-org_agenda_show_help*
 
 mapped to: `?`
@@ -841,6 +890,36 @@ ORG_TIME_STAMP_INACTIVE                          *orgmode-org_time_stamp_inactiv
 
 mapped to: `<Leader>oi!`
 Insert/Update inactive date under cursor.
+
+ORG_CLOCK_IN                                                *orgmode-org_clock_in*
+
+mapped to: `<Leader>oxi`
+Clock in headline under cursor.
+See Clocking (#clocking) for more details.
+
+ORG_CLOCK_OUT                                              *orgmode-org_clock_out*
+
+mapped to: `<Leader>oxi`
+Clock out headline under cursor.
+See Clocking (#clocking) for more details.
+
+ORG_CLOCK_CANCEL                                        *orgmode-org_clock_cancel*
+
+mapped to: `<Leader>oxq`
+Cancel currently active clock on current headline.
+See Clocking (#clocking) for more details.
+
+ORG_CLOCK_GOTO                                            *orgmode-org_clock_goto*
+
+mapped to: `<Leader>oxj`
+Jump to currently clocked in headline.
+See Clocking (#clocking) for more details.
+
+ORG_SET_EFFORT                                            *orgmode-org_set_effort*
+
+mapped to: `<Leader>oxe`
+Set effort estimate property on for current headline.
+See Clocking (#clocking) for more details.
 
 ORG_SHOW_HELP                                              *orgmode-org_show_help*
 
@@ -1114,6 +1193,59 @@ And update cron job to this:
 This option is most optimized because it doesn't load plugins and your init.vim
 
 For MacOS, things should be very similar, but I wasn't able to test it. Any help on this is appreciated.
+
+--------------------------------------------------------------------------------
+CLOCKING                                                        *orgmode-clocking*
+
+There is partial suport for Clocking work time (https://orgmode.org/manual/Clocking-Work-Time.html).
+Supported actions:
+
+CLOCK IN                                                        *orgmode-clock_in*
+
+Org file mapping: `<leader>oxi`
+Agenda view mapping: `I`
+Start the clock by adding or updating the `:LOGBOOK:` drawer. Note that this clocks out any currently active clock.
+Also, agenda/todo/search view highlight item that is clocked in.
+
+CLOCK OUT                                                      *orgmode-clock_out*
+
+Org file mapping: `<leader>oxi`
+Agenda view mapping: `O`
+Clock out the entry and update the `:LOGBOOK:` drawer, and also add a total tracked time.
+Note that in agenda view pressing `O` anywhere clocks the currently active entry, while in org file cursor must be in the headline subtree.
+
+CLOCK CANCEL                                                *orgmode-clock_cancel*
+
+Org file mapping: `<leader>oxq`
+Agenda view mapping: `X`
+Cancel the currently active clock. This just removes the entry added by clock in from `:LOGBOOK:` drawer.
+Note that in agenda view pressing `X` anywhere cancels clock on the currently active entry, while in org file cursor must be in the headline subtree.
+
+CLOCK GOTO                                                    *orgmode-clock_goto*
+
+Org file mapping: `<leader>oxj`
+Agenda view mapping: `<leader>oxj`
+Jump to currently clocked in headline in the current window
+
+SET EFFORT                                                    *orgmode-set_effort*
+
+Org file mapping: `<leader>oxe`
+Agenda view mapping: `<leader>oxe`
+Add/Update an Effort estimate property for the current headline
+
+CLOCK REPORT TABLE                                    *orgmode-clock_report_table*
+
+Agenda view mapping: `R`
+Show the clocking report for the current agenda time range. Headlines from table can be jumped to via `<TAB>/<CR>` (underlined)
+Note that this is visible only in Agenda view, since it's the only view that have a time range. Todo/Search views are not supported.
+
+STATUSLINE FUNCTION                                  *orgmode-statusline_function*
+
+Function: `v:lua.orgmode.statusline()`
+Show the currently clocked in headline (if any), with total clocked time / effort estimate (if set).
+>
+    set statusline=%{v:lua.orgmode.statusline()}
+<
 
 --------------------------------------------------------------------------------
 CHANGELOG                                                      *orgmode-changelog*
