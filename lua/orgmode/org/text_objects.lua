@@ -1,5 +1,5 @@
 local ts_utils = require('nvim-treesitter.ts_utils')
-local Motions = {}
+local TextObjects = {}
 
 local function get_current_section_range()
   local node = ts_utils.get_node_at_cursor()
@@ -15,12 +15,12 @@ local function get_current_section_range()
   local start_line, _, end_line, _ = node:range()
   local children = ts_utils.get_named_children(node)
   local start_range = start_line + 1
-  local end_range = end_line - 1
-  if children[#children]:type() ~= 'section' then
+  local end_range = end_line
+  if children[#children]:type() == 'section' then
     for _, child in ipairs(children) do
       if child:type() == 'section' then
-        local _, _, e, _ = child:range()
-        end_range = e
+        local s, _, _, _ = child:range()
+        end_range = s
         break
       end
     end
@@ -67,7 +67,7 @@ local function current_subtree(exclude_stars)
 end
 
 local function current_heading_from_root(exclude_stars)
-  local start_range, end_range = get_current_section_range()
+  local _, end_range = get_current_section_range()
   local node = ts_utils.get_node_at_cursor()
   if not node then
     return
@@ -79,9 +79,8 @@ local function current_heading_from_root(exclude_stars)
     end
     node = parent
   end
-  local start_line, _, _, _ = node:range()
-  start_range = start_line + 1
-  do_selection(start_range, end_range, exclude_stars)
+  local start_range, _, _, _ = node:range()
+  do_selection(start_range + 1, end_range, exclude_stars)
 end
 
 local function current_subtree_from_root(exclude_stars)
@@ -100,36 +99,36 @@ local function current_subtree_from_root(exclude_stars)
   do_selection(start_range + 1, end_range, exclude_stars)
 end
 
-function Motions.inner_heading()
+function TextObjects.inner_heading()
   current_heading(true)
 end
 
-function Motions.around_heading()
+function TextObjects.around_heading()
   current_heading(false)
 end
 
-function Motions.inner_subtree()
+function TextObjects.inner_subtree()
   current_subtree(true)
 end
 
-function Motions.around_subtree()
+function TextObjects.around_subtree()
   current_subtree(false)
 end
 
-function Motions.inner_heading_from_root()
+function TextObjects.inner_heading_from_root()
   current_heading_from_root(true)
 end
 
-function Motions.around_heading_from_root()
+function TextObjects.around_heading_from_root()
   current_heading_from_root(false)
 end
 
-function Motions.inner_subtree_from_root()
+function TextObjects.inner_subtree_from_root()
   current_subtree_from_root(true)
 end
 
-function Motions.around_subtree_from_root()
+function TextObjects.around_subtree_from_root()
   current_subtree_from_root(false)
 end
 
-return Motions
+return TextObjects

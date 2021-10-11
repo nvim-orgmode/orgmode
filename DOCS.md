@@ -9,6 +9,7 @@
    2. [Agenda mappings](#agenda-mappings)
    3. [Capture mappings](#capture-mappings)
    4. [Org mappings](#org-mappings)
+   4. [Text objects](#text-objects)
 3. [Autocompletion](#autocompletion)
 4. [Abbreviations](#abbreviations)
 5. [Colors](#colors)
@@ -647,7 +648,6 @@ See [Clocking](#clocking) for more details.
 *mapped to*: `<Leader>oxe`<br />
 Set effort estimate property on for current headline.<br />
 See [Clocking](#clocking) for more details.
-
 #### **org_show_help**
 *mapped to*: `?`<br />
 Show help popup with mappings
@@ -662,6 +662,61 @@ require('orgmode').setup({
     org = {
       org_timestamp_up = '+',
       org_timestamp_down = '-'
+    }
+  }
+})
+```
+
+### Text objects
+
+Operator mappings for `org` files.<br />
+Example: Pressing `vir` select everything from current heading and all child.<br />
+`inner` means that it doesn't select the stars, where `around` selects `inner` + `stars`.<br />
+See [this issue comment](https://github.com/kristijanhusak/orgmode.nvim/issues/48#issuecomment-884528170) for visual preview.<br />
+
+Note: Some mappings can clash with other plugin mappings, like [gitsigns.nvim](https://github.com/lewis6991/gitsigns.nvim) which also has `ih` operator mapping.
+
+#### **inner_heading**
+*mapped to*: `ih`<br />
+Select inner heading with content.
+
+#### **around_heading**
+*mapped to*: `ah`<br />
+Select around heading with content.
+
+#### **inner_subtree**
+*mapped to*: `ir`<br />
+Select whole inner subtree.
+
+#### **around_subtree**
+*mapped to*: `ar`<br />
+Select around whole subtree.
+
+#### **inner_heading_from_root**
+*mapped to*: `0h`<br />
+select everything from first level heading to the current heading.
+
+#### **around_heading_from_root**
+*mapped to*: `0H`<br />
+select around everything from first level heading to the current heading.
+
+#### **inner_subtree_from_root**
+*mapped to*: `0r`<br />
+select everything from first level subtree to the current subtree.
+
+#### **around_subtree_from_root**
+*mapped to*: `0R`<br />
+select around everything from first level subtree to the current subtree.<br />
+
+These mappings live under `mappings.text_objects`, and can be changed like this:
+
+```lua
+require('orgmode').setup({
+  org_agenda_file = {'~/Dropbox/org/*', '~/my-orgs/**/*'},
+  org_default_notes_file = '~/Dropbox/org/refile.org',
+  mappings = {
+    text_objects = {
+      inner_heading = 'ic',
     }
   }
 })

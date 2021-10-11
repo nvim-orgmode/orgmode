@@ -78,6 +78,16 @@ local helps = {
     { key = 'org_capture_refile', description = 'Save to specific destination' },
     { key = 'org_capture_kill', description = 'Close without saving' },
   },
+  text_objects = {
+    { key = 'inner_heading', description = 'Select inner heading' },
+    { key = 'around_heading', description = 'Select around heading' },
+    { key = 'inner_subtree', description = 'Select inner subtree' },
+    { key = 'around_subtree', description = 'Select around subtree' },
+    { key = 'inner_heading_from_root', description = 'Select inner heading from root heading' },
+    { key = 'around_heading_from_root', description = 'Select around heading from root heading' },
+    { key = 'inner_subtree_from_root', description = 'Select inner subtree from root subtree' },
+    { key = 'around_subtree_from_root', description = 'Select around subtree from root subtree' },
+  },
 }
 
 local Help = {
@@ -89,8 +99,13 @@ local Help = {
 function Help.prepare_content()
   local mappings = config.mappings
   local ft = vim.bo.filetype
+  local max_height = vim.o.lines - 2
+  local scroll_more_text = ''
   if ft == 'orgagenda' then
-    local content = { ' **Orgmode mappings - Agenda:**', '' }
+    if #helps.orgagenda > max_height then
+      scroll_more_text = ' (Scroll down for more)'
+    end
+    local content = { string.format(' **Orgmode mappings - Agenda%s:**', scroll_more_text), '' }
     for _, item in ipairs(helps.orgagenda) do
       local maps = mappings.agenda[item.key]
       if type(maps) == 'table' then
@@ -106,7 +121,10 @@ function Help.prepare_content()
   local has_capture, is_capture = pcall(vim.api.nvim_buf_get_var, 0, 'org_capture')
   local content = {}
   if has_capture and is_capture then
-    content = { ' **Orgmode mappings Capture + Org:**', '', '  __Capture__' }
+    if (#helps.capture + #helps.org) > max_height then
+      scroll_more_text = ' (Scroll down for more)'
+    end
+    content = { string.format(' **Orgmode mappings Capture + Org:%s**', scroll_more_text), '', '  __Capture__' }
     for _, item in ipairs(helps.capture) do
       local maps = mappings.capture[item.key]
       if type(maps) == 'table' then
@@ -116,7 +134,10 @@ function Help.prepare_content()
     end
     table.insert(content, '  __Org__')
   else
-    content = { ' **Orgmode mappings - Org:**', '' }
+    if #helps.org > max_height then
+      scroll_more_text = ' (Scroll down for more)'
+    end
+    content = { string.format(' **Orgmode mappings - Org:%s**', scroll_more_text), '' }
   end
 
   for _, item in ipairs(helps.org) do
@@ -124,6 +145,11 @@ function Help.prepare_content()
     if type(maps) == 'table' then
       maps = table.concat(maps, ', ')
     end
+    table.insert(content, string.format('  `%-12s` - %s', maps, item.description))
+  end
+
+  for _, item in ipairs(helps.text_objects) do
+    local maps = mappings.text_objects[item.key]
     table.insert(content, string.format('  `%-12s` - %s', maps, item.description))
   end
 

@@ -70,4 +70,14 @@ return {
     org_set_effort = { 'clock.org_set_effort' },
     org_show_help = { 'org_mappings.show_help' },
   },
+  text_objects = {
+    inner_heading = 'inner_heading',
+    around_heading = 'around_heading',
+    inner_subtree = 'inner_subtree',
+    around_subtree = 'around_subtree',
+    inner_heading_from_root = 'inner_heading_from_root',
+    around_heading_from_root = 'around_heading_from_root',
+    inner_subtree_from_root = 'inner_subtree_from_root',
+    around_subtree_from_root = 'around_subtree_from_root',
+  },
 }
