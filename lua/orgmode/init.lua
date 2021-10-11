@@ -32,7 +32,7 @@ function Org:init()
   self.clock = require('orgmode.clock'):new()
   require('orgmode.colors.todo_highlighter').add_todo_keyword_highlights()
   require('orgmode.org.autocompletion').register()
-  self.statusline_debounced = require('orgmode.utils').debounce(self.clock.get_statusline, 300)
+  self.statusline_debounced = require('orgmode.utils').debounce('statusline', self.clock.get_statusline, 300)
   self.initialized = true
 end
 

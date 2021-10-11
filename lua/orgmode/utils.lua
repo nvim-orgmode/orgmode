@@ -1,6 +1,7 @@
 local ts = require('vim.treesitter.query')
 local uv = vim.loop
 local utils = {}
+local debounce_timers = {}
 
 ---@param file string
 ---@param callback function
@@ -309,16 +310,21 @@ function utils.get_closest_parent_of_type(node, type)
   end
 end
 
-function utils.debounce(fn, ms)
-  local timer = vim.loop.new_timer()
+function utils.debounce(name, fn, ms)
   local result = nil
   return function(...)
     local argv = { ... }
+    if debounce_timers[name] then
+      debounce_timers[name]:stop()
+      debounce_timers[name]:close()
+      debounce_timers[name] = nil
+    end
+    local timer = vim.loop.new_timer()
+    debounce_timers[name] = timer
     timer:start(
       ms,
       0,
       vim.schedule_wrap(function()
-        timer:stop()
         result = fn(unpack(argv))
       end)
     )
