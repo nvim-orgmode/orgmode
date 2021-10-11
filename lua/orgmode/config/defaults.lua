@@ -115,5 +115,15 @@ return {
       org_set_effort = '<leader>oxe',
       org_show_help = '?',
     },
+    text_objects = {
+      inner_heading = 'ih',
+      around_heading = 'ah',
+      inner_subtree = 'ir',
+      around_subtree = 'ar',
+      inner_heading_from_root = '0h',
+      around_heading_from_root = '0H',
+      inner_subtree_from_root = '0r',
+      around_subtree_from_root = '0R',
+    },
   },
 }

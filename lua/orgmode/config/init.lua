@@ -199,6 +199,18 @@ function Config:setup_mappings(category)
   end
 end
 
+function Config:setup_text_object_mappings()
+  if self.opts.mappings.disable_all then
+    return
+  end
+  for name, key in pairs(self.opts.mappings.text_objects) do
+    if mappings.text_objects[name] then
+      utils.buf_keymap(0, 'x', key, string.format(':<C-U>lua require("orgmode.org.text_objects").%s()<CR>', name))
+      utils.buf_keymap(0, 'o', key, string.format(':normal v%s<CR>', key))
+    end
+  end
+end
+
 function Config:parse_archive_location(file, archive_loc)
   if self:is_archive_file(file) then
     return nil
