@@ -22,6 +22,7 @@ function Org:init()
   if self.initialized then
     return
   end
+  require('orgmode.colors.todo_highlighter').add_todo_keyword_highlights()
   self.files = require('orgmode.parser.files').new()
   self.agenda = require('orgmode.agenda'):new()
   self.capture = require('orgmode.capture'):new()
@@ -30,7 +31,6 @@ function Org:init()
     agenda = self.agenda,
   })
   self.clock = require('orgmode.clock'):new()
-  require('orgmode.colors.todo_highlighter').add_todo_keyword_highlights()
   require('orgmode.org.autocompletion').register()
   self.statusline_debounced = require('orgmode.utils').debounce('statusline', self.clock.get_statusline, 300)
   self.initialized = true
