@@ -212,12 +212,12 @@ function OrgMappings:_adjust_date_part(direction, fallback, vim_mapping)
   end
 
   if fallback ~= vim_mapping then
-    return vim.api.nvim_feedkeys(utils.esc(fallback), 'n', true)
+    return vim.api.nvim_feedkeys(utils.esc(fallback), 'm', true)
   end
 
   local num = vim.fn.search([[\d]], 'c', vim.fn.line('.'))
   if num == 0 then
-    return vim.api.nvim_feedkeys(utils.esc(fallback), 'n', true)
+    return vim.api.nvim_feedkeys(utils.esc(fallback), 'm', true)
   end
 
   date_on_cursor = self:_get_date_under_cursor()
@@ -228,7 +228,7 @@ function OrgMappings:_adjust_date_part(direction, fallback, vim_mapping)
     end
   end
 
-  return vim.api.nvim_feedkeys(utils.esc(fallback), 'n', true)
+  return vim.api.nvim_feedkeys(utils.esc(fallback), 'm', true)
 end
 
 function OrgMappings:change_date()
@@ -659,6 +659,7 @@ function OrgMappings:_replace_date(date)
     )
   )
   vim.fn.winrestview(view)
+  return true
 end
 
 ---@return Date|nil
@@ -690,12 +691,12 @@ function OrgMappings:_adjust_date(adjustment, fallback, vim_mapping)
   end
 
   if fallback ~= vim_mapping then
-    return vim.api.nvim_feedkeys(utils.esc(fallback), 'n', true)
+    return vim.api.nvim_feedkeys(utils.esc(fallback), 'm', true)
   end
 
   local num = vim.fn.search([[\d]], 'c', vim.fn.line('.'))
   if num == 0 then
-    return vim.api.nvim_feedkeys(utils.esc(fallback), 'n', true)
+    return vim.api.nvim_feedkeys(utils.esc(fallback), 'm', true)
   end
 
   date = self:_get_date_under_cursor()
@@ -704,7 +705,7 @@ function OrgMappings:_adjust_date(adjustment, fallback, vim_mapping)
     return self:_replace_date(new_date)
   end
 
-  return vim.api.nvim_feedkeys(utils.esc(fallback), 'n', true)
+  return vim.api.nvim_feedkeys(utils.esc(fallback), 'm', true)
 end
 
 function OrgMappings:_set_headline_tags(headline, tags_string)
