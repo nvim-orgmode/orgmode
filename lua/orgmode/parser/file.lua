@@ -1,7 +1,6 @@
 local Range = require('orgmode.parser.range')
 local Duration = require('orgmode.objects.duration')
 local Section = require('orgmode.parser.section')
-local ts_utils = require('nvim-treesitter.ts_utils')
 local LanguageTree = require('vim.treesitter.languagetree')
 local config = require('orgmode.config')
 local utils = require('orgmode.utils')
@@ -57,7 +56,7 @@ function File:convert_to_file_node(node)
 end
 
 function File:get_current_node()
-  local node = ts_utils.get_node_at_cursor()
+  local node = utils.get_node_at_cursor()
   return self:convert_to_file_node(node)
 end
 
@@ -248,7 +247,7 @@ end
 function File:get_closest_headline(id)
   local node = nil
   if not id then
-    node = ts_utils.get_node_at_cursor()
+    node = utils.get_node_at_cursor()
   else
     local cursor_range = { id - 1, vim.fn.col('$') - 2 }
     node = self.tree
