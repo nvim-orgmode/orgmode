@@ -1,7 +1,6 @@
 local ts_utils = require('nvim-treesitter.ts_utils')
 local Calendar = require('orgmode.objects.calendar')
 local Date = require('orgmode.objects.date')
-local Duration = require('orgmode.objects.duration')
 local TodoState = require('orgmode.objects.todo_state')
 local Hyperlinks = require('orgmode.org.hyperlinks')
 local utils = require('orgmode.utils')
@@ -151,7 +150,7 @@ function OrgMappings:_adjust_date_part(direction, fallback, vim_mapping)
       date.active = not date.active
       return self:_replace_date(date)
     end
-    local node = ts_utils.get_node_at_cursor()
+    local node = utils.get_node_at_cursor()
     local col_from_start = col - date.range.start_col
     local modify_end_time = false
     local adj = nil

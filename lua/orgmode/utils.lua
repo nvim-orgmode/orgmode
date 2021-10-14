@@ -1,3 +1,4 @@
+local ts_utils = require('nvim-treesitter.ts_utils')
 local ts = require('vim.treesitter.query')
 local uv = vim.loop
 local utils = {}
@@ -330,6 +331,14 @@ function utils.debounce(name, fn, ms)
     )
     return result
   end
+end
+
+function utils.get_node_at_cursor()
+  local parser = vim.treesitter.get_parser(0, 'org')
+  if parser then
+    parser:parse()
+  end
+  return ts_utils.get_node_at_cursor()
 end
 
 return utils
