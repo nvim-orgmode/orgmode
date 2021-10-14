@@ -60,10 +60,10 @@ function M.define_org_headline_colors(faces)
     table.insert(contains, face)
   end
   if config.org_hide_leading_stars then
-    vim.cmd([[
-         syn match OrgHideLeadingStars /^\*\{2,\}/me=e-1 contained
-         hi def link OrgHideLeadingStars org_hide_leading_stars
-      ]])
+    if not ts_highlights_enabled then
+      vim.cmd([[syn match OrgHideLeadingStars /^\*\{2,\}/me=e-1 contained]])
+    end
+    vim.cmd([[hi def link OrgHideLeadingStars org_hide_leading_stars]])
     table.insert(contains, 'OrgHideLeadingStars')
   end
   contains = table.concat(contains, ',')

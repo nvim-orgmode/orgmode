@@ -23,6 +23,7 @@ function Org:init()
     return
   end
   require('orgmode.colors.todo_highlighter').add_todo_keyword_highlights()
+  require('orgmode.colors.hide_leading_stars').setup()
   self.files = require('orgmode.parser.files').new()
   self.agenda = require('orgmode.agenda'):new()
   self.capture = require('orgmode.capture'):new()
