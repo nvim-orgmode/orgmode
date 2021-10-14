@@ -193,7 +193,6 @@ Highlights are partially supported.
 #### Known highlighting issues and limitations
 * Performance issues. This is generally an issue in Neovim that should be resolved before 0.6 release (https://github.com/neovim/neovim/issues/14762, https://github.com/neovim/neovim/issues/14762)
 * Anything that requires concealing ([org_hide_emphasis_markers](/DOCS.md#org_hide_emphasis_markers), links concealing) is not (yet) supported in TS highlighter
-* Option [org_hide_leading_stars](/DOCS.md#org_hide_leading_stars) does not work due to limitations with grammar and Neovim.
 * LaTex is still highlighted through syntax file
 
 #### Improvements over Vim's syntax highlighting
