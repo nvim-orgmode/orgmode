@@ -41,9 +41,9 @@ local function do_selection(start_range, end_range, exclude_stars)
   vim.fn.cursor({ start_range, col })
   local down_motion = ''
   if (end_range - start_range) > 0 then
-    down_motion = string.format('%dj', end_range - start_range)
+    down_motion = string.format('%dgg', end_range)
   end
-  vim.cmd(string.format('norm!v%s$h', down_motion))
+  vim.cmd(string.format('norm!v%s$', down_motion))
 end
 
 local function current_heading(exclude_stars)
