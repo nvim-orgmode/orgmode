@@ -983,22 +983,22 @@ Select around whole subtree.
 
 INNER_HEADING_FROM_ROOT                          *orgmode-inner_heading_from_root*
 
-mapped to: `0h`
+mapped to: `Oh` (big letter `o`)
 select everything from first level heading to the current heading.
 
 AROUND_HEADING_FROM_ROOT                        *orgmode-around_heading_from_root*
 
-mapped to: `0H`
+mapped to: `OH` (big letter `o`)
 select around everything from first level heading to the current heading.
 
 INNER_SUBTREE_FROM_ROOT                          *orgmode-inner_subtree_from_root*
 
-mapped to: `0r`
+mapped to: `Or` (big letter `o`)
 select everything from first level subtree to the current subtree.
 
 AROUND_SUBTREE_FROM_ROOT                        *orgmode-around_subtree_from_root*
 
-mapped to: `0R`
+mapped to: `OR` (big letter `o`)
 select around everything from first level subtree to the current subtree.
 
 These mappings live under `mappings.text_objects`, and can be changed like this:
