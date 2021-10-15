@@ -191,11 +191,14 @@ end
 
 ---@param term string
 ---@param no_escape boolean
+---@param search_extra_files boolean
 ---@return Section
-function Files.find_headlines_matching_search_term(term, no_escape)
+function Files.find_headlines_matching_search_term(term, no_escape, search_extra_files)
   local headlines = {}
+  local ignore_archive_flag = search_extra_files
+    and vim.tbl_contains(config.org_agenda_text_search_extra_files, 'agenda-archives')
   for _, orgfile in ipairs(Files.all()) do
-    for _, headline in ipairs(orgfile:find_headlines_matching_search_term(term, no_escape)) do
+    for _, headline in ipairs(orgfile:find_headlines_matching_search_term(term, no_escape, ignore_archive_flag)) do
       table.insert(headlines, headline)
     end
   end

@@ -32,6 +32,7 @@ CONTENTS                                                        *orgmode-content
             1.1.2.9. org_priority_lowest.............|orgmode-org_priority_lowest|
             1.1.2.10. org_agenda_skip_scheduled_if_done.|orgmode-org_agenda_skip_scheduled_if_done|
             1.1.2.11. org_agenda_skip_deadline_if_done.|orgmode-org_agenda_skip_deadline_if_done|
+            1.1.2.12. org_agenda_text_search_extra_files.|orgmode-org_agenda_text_search_extra_files|
         1.1.3. Tags settings...............................|orgmode-tags_settings|
             1.1.3.1. org_use_tag_inheritance.....|orgmode-org_use_tag_inheritance|
             1.1.3.2. org_tags_exclude_from_inheritance.|orgmode-org_tags_exclude_from_inheritance|
@@ -460,6 +461,14 @@ type: `boolean`
 default value: `false`
 
 Hide deadline entries from agenda if they are in a "DONE" state.
+
+ORG_AGENDA_TEXT_SEARCH_EXTRA_FILES    *orgmode-org_agenda_text_search_extra_files*
+
+type: `string[]`
+default value: `{}`
+Additional files to search from agenda search prompt.
+Currently it accepts only a single value: `agenda-archives`.
+Example value: `{'agenda-archives'}`
 
 TAGS SETTINGS                                              *orgmode-tags_settings*
 

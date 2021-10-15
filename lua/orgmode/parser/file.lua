@@ -209,9 +209,10 @@ end
 
 ---@param search_term string
 ---@param no_escape boolean
+---@param ignore_archive_flag boolean
 ---@return Section[]
-function File:find_headlines_matching_search_term(search_term, no_escape)
-  if self.is_archive_file then
+function File:find_headlines_matching_search_term(search_term, no_escape, ignore_archive_flag)
+  if self.is_archive_file and not ignore_archive_flag then
     return {}
   end
   local term = search_term:lower()
