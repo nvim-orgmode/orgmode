@@ -1,6 +1,5 @@
 local Date = require('orgmode.objects.date')
 local Range = require('orgmode.parser.range')
-local Table = require('orgmode.parser.table')
 local utils = require('orgmode.utils')
 local config = require('orgmode.config')
 local colors = require('orgmode.colors')
@@ -307,7 +306,7 @@ function Agenda:search(clear_search)
   end
   local search_term = vim.fn.input('Enter search term: ', self.last_search)
   self.last_search = search_term
-  self.items = Files.find_headlines_matching_search_term(search_term)
+  self.items = Files.find_headlines_matching_search_term(search_term, false, true)
 
   self.content = {
     { line_content = 'Search words: ' .. search_term },

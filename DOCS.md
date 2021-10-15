@@ -302,6 +302,13 @@ Hide scheduled entries from agenda if they are in a "DONE" state.
 
 Hide deadline entries from agenda if they are in a "DONE" state.
 
+#### **org_agenda_text_search_extra_files**
+*type*: `string[]`<br />
+*default value*: `{}`<br />
+Additional files to search from agenda search prompt.<br />
+Currently it accepts only a single value: `agenda-archives`.<br />
+Example value: `{'agenda-archives'}`
+
 ### Tags settings
 
 #### **org_use_tag_inheritance**

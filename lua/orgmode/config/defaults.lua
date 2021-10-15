@@ -16,6 +16,7 @@ return {
   },
   org_agenda_skip_scheduled_if_done = false,
   org_agenda_skip_deadline_if_done = false,
+  org_agenda_text_search_extra_files = {},
   org_priority_highest = 'A',
   org_priority_default = 'B',
   org_priority_lowest = 'C',
