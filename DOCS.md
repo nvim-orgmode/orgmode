@@ -693,19 +693,19 @@ Select whole inner subtree.
 Select around whole subtree.
 
 #### **inner_heading_from_root**
-*mapped to*: `0h`<br />
+*mapped to*: `Oh` (big letter `o`)<br />
 select everything from first level heading to the current heading.
 
 #### **around_heading_from_root**
-*mapped to*: `0H`<br />
+*mapped to*: `OH` (big letter `o`)<br />
 select around everything from first level heading to the current heading.
 
 #### **inner_subtree_from_root**
-*mapped to*: `0r`<br />
+*mapped to*: `Or` (big letter `o`)<br />
 select everything from first level subtree to the current subtree.
 
 #### **around_subtree_from_root**
-*mapped to*: `0R`<br />
+*mapped to*: `OR` (big letter `o`)<br />
 select around everything from first level subtree to the current subtree.<br />
 
 These mappings live under `mappings.text_objects`, and can be changed like this:
