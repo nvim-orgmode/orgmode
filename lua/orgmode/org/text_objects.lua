@@ -1,9 +1,10 @@
 local utils = require('orgmode.utils')
 local ts_utils = require('nvim-treesitter.ts_utils')
+local Files = require('orgmode.parser.files')
 local TextObjects = {}
 
 local function get_current_section_range()
-  local node = utils.get_node_at_cursor()
+  local node = Files.get_node_at_cursor()
   if not node then
     return
   end
@@ -53,7 +54,7 @@ local function current_heading(exclude_stars)
 end
 
 local function current_subtree(exclude_stars)
-  local node = utils.get_node_at_cursor()
+  local node = Files.get_node_at_cursor()
   if not node then
     return
   end
@@ -69,7 +70,7 @@ end
 
 local function current_heading_from_root(exclude_stars)
   local _, end_range = get_current_section_range()
-  local node = utils.get_node_at_cursor()
+  local node = Files.get_node_at_cursor()
   if not node then
     return
   end
@@ -85,7 +86,7 @@ local function current_heading_from_root(exclude_stars)
 end
 
 local function current_subtree_from_root(exclude_stars)
-  local node = utils.get_node_at_cursor()
+  local node = Files.get_node_at_cursor()
   if not node then
     return
   end

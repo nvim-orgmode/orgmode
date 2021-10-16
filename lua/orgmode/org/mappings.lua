@@ -150,7 +150,7 @@ function OrgMappings:_adjust_date_part(direction, fallback, vim_mapping)
       date.active = not date.active
       return self:_replace_date(date)
     end
-    local node = utils.get_node_at_cursor()
+    local node = Files.get_node_at_cursor()
     local col_from_start = col - date.range.start_col
     local modify_end_time = false
     local adj = nil
