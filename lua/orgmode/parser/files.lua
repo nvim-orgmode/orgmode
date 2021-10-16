@@ -117,10 +117,6 @@ end
 
 ---@return File
 function Files.get_current_file()
-  local parser = vim.treesitter.get_parser(0, 'org')
-  if parser then
-    parser:parse()
-  end
   local name = vim.api.nvim_buf_get_name(0)
   local has_capture_var, is_capture = pcall(vim.api.nvim_buf_get_var, 0, 'org_capture')
   if has_capture_var and is_capture then
@@ -209,6 +205,11 @@ end
 ---@return Section
 function Files.get_closest_headline(id)
   return Files.get_current_file():get_closest_headline(id)
+end
+
+---@return userdata
+function Files.get_node_at_cursor()
+  return Files.get_current_file():get_node_at_cursor()
 end
 
 ---@return Section

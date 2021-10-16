@@ -41,8 +41,7 @@ end
 
 function File:_parse()
   self:_parse_source_code_filetypes()
-  self:_parse_tags()
-  self:_parse_sections()
+  self:_parse_sections_and_root_directives()
 end
 
 function File:convert_to_file_node(node)
@@ -58,7 +57,7 @@ function File:convert_to_file_node(node)
 end
 
 function File:get_current_node()
-  local node = utils.get_node_at_cursor()
+  local node = self:get_node_at_cursor()
   return self:convert_to_file_node(node)
 end
 
@@ -242,18 +241,26 @@ function File:get_opened_unfinished_headlines()
   end, self.sections)
 end
 
+---@return userdata
+function File:get_node_at_cursor()
+  local cursor = vim.api.nvim_win_get_cursor(0)
+  local cursor_range = { cursor[1] - 1, cursor[2] }
+  return self.tree:root():named_descendant_for_range(cursor_range[1], cursor_range[2], cursor_range[1], cursor_range[2])
+end
+
 ---@param id? string
 ---@return Section
 function File:get_closest_headline(id)
   local node = nil
   if not id then
-    node = utils.get_node_at_cursor()
+    node = self:get_node_at_cursor()
   else
     local cursor_range = { id - 1, vim.fn.col('$') - 2 }
     node = self.tree
       :root()
       :named_descendant_for_range(cursor_range[1], cursor_range[2], cursor_range[1], cursor_range[2])
   end
+
   if not node then
     return nil
   end
@@ -317,8 +324,11 @@ function File:get_section(index)
 end
 
 ---@private
-function File:_parse_sections()
+function File:_parse_sections_and_root_directives()
   for child in self.tree:root():iter_children() do
+    if child:type() == 'directive' then
+      self:_parse_directive(child)
+    end
     if child:type() == 'section' then
       local section = Section.from_node(child, self)
       table.insert(self.sections, section)
@@ -360,10 +370,17 @@ function File:_parse_source_code_filetypes()
   self.source_code_filetypes = source_code_filetypes
 end
 
-function File:_parse_tags()
-  local matches = self:get_ts_matches('(document (directive (name) @name (value) @value (#eq? @name "FILETAGS")))')
-  if #matches > 0 then
-    self.tags = utils.parse_tags_string(matches[1].value.text)
+function File:_parse_directive(node)
+  local name = node:named_child(0)
+  local value = node:named_child(1)
+  if not name or not value then
+    return
+  end
+
+  local name_text = self:get_node_text(name)
+  if name_text:upper() == 'FILETAGS' then
+    local value_text = self:get_node_text(value)
+    self.tags = utils.parse_tags_string(value_text)
   end
 end
 
