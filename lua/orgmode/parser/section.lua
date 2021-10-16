@@ -143,18 +143,19 @@ function Section.from_node(section_node, file, parent)
     if child:type() == 'headline' then
       data.line = file:get_node_text(child)
       data.level = file:get_node_text(child:child(0)):len()
-      local item = child:child(1)
-      if item then
-        data.title = file:get_node_text(item)
-        data.todo_keyword_node = item:child(0)
-      end
-      local tags = file:get_ts_matches('(tag) @tag', child)
-      for _, match in ipairs(tags) do
-        if not vim.tbl_contains(data.tags, match.tag.text) then
-          table.insert(data.tags, match.tag.text)
+      for headline_node in child:iter_children() do
+        if headline_node:type() == 'item' then
+          data.title = file:get_node_text(headline_node)
+          data.todo_keyword_node = headline_node:child(0)
         end
-        if not vim.tbl_contains(data.own_tags, match.tag.text) then
-          table.insert(data.own_tags, match.tag.text)
+        if headline_node:type() == 'tag' then
+          local tag = file:get_node_text(headline_node)
+          if not vim.tbl_contains(data.tags, tag) then
+            table.insert(data.tags, tag)
+          end
+          if not vim.tbl_contains(data.own_tags, tag) then
+            table.insert(data.own_tags, tag)
+          end
         end
       end
     end

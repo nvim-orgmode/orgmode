@@ -7,7 +7,8 @@ local utils = require('orgmode.utils')
 
 ---@class File
 ---@field tree table
----@field file_content string
+---@field file_content string[]
+---@field file_content_str string
 ---@field category string
 ---@field filename string
 ---@field changedtick number
@@ -18,10 +19,11 @@ local utils = require('orgmode.utils')
 ---@field tags string[]
 local File = {}
 
-function File:new(tree, file_content, category, filename, is_archive_file)
+function File:new(tree, file_content, file_content_str, category, filename, is_archive_file)
   local data = {
     tree = tree,
     file_content = file_content,
+    file_content_str = file_content_str,
     category = category,
     filename = filename,
     changedtick = 0,
@@ -103,7 +105,7 @@ end
 ---@param node table|nil
 ---@return table[]
 function File:get_ts_matches(query, node)
-  return utils.get_ts_matches(query, node or self.tree:root(), self.file_content)
+  return utils.get_ts_matches(query, node or self.tree:root(), self.file_content, self.file_content_str)
 end
 
 ---@return Section[]
@@ -129,8 +131,7 @@ function File.load(path, callback)
         return callback(nil)
       end
       return callback(File.from_content(content, category, path, ext == 'org_archive'))
-    end),
-    true
+    end)
   )
 end
 
@@ -140,13 +141,11 @@ end
 ---@param is_archive_file boolean
 ---@return File|nil
 function File.from_content(content, category, filename, is_archive_file)
-  if type(content) == 'table' then
-    content = table.concat(content, '\n')
-  end
-  local trees = LanguageTree.new(content, 'org', {})
+  local str_content = table.concat(content, '\n')
+  local trees = LanguageTree.new(str_content, 'org', {})
   trees = trees:parse()
   if #trees > 0 then
-    return File:new(trees[1], content, category, filename, is_archive_file)
+    return File:new(trees[1], content, str_content, category, filename, is_archive_file)
   end
   return nil
 end
@@ -319,11 +318,12 @@ end
 
 ---@private
 function File:_parse_sections()
-  local sections = self:get_ts_matches('(document (section) @section)')
-  for _, section_item in ipairs(sections) do
-    local section = Section.from_node(section_item.section.node, self)
-    table.insert(self.sections, section)
-    self:_insert_child_sections(section)
+  for child in self.tree:root():iter_children() do
+    if child:type() == 'section' then
+      local section = Section.from_node(child, self)
+      table.insert(self.sections, section)
+      self:_insert_child_sections(section)
+    end
   end
 end
 

@@ -3,6 +3,7 @@ local ts = require('vim.treesitter.query')
 local uv = vim.loop
 local utils = {}
 local debounce_timers = {}
+local query_cache = {}
 
 ---@param file string
 ---@param callback function
@@ -251,12 +252,17 @@ end
 
 ---@param query string
 ---@param node table
----@param file_content string
+---@param file_content string[]
+---@param file_content_str string
 ---@return table[]
-function utils.get_ts_matches(query, node, file_content)
+function utils.get_ts_matches(query, node, file_content, file_content_str)
   local matches = {}
-  local ts_query = ts.parse_query('org', query)
-  for _, match, _ in ts_query:iter_matches(node, file_content) do
+  local ts_query = query_cache[query]
+  if not ts_query then
+    ts_query = ts.parse_query('org', query)
+    query_cache[query] = ts_query
+  end
+  for _, match, _ in ts_query:iter_matches(node, file_content_str) do
     local items = {}
     for id, matched_node in pairs(match) do
       local name = ts_query.captures[id]
@@ -272,11 +278,13 @@ function utils.get_ts_matches(query, node, file_content)
   return matches
 end
 
+---@param node userdata
+---@param content string[]
+---@return string[]
 function utils.get_node_text(node, content)
   if not node then
     return {}
   end
-  local all_lines = vim.split(content, '\n', true)
   local start_row, start_col, end_row, end_col = node:range()
 
   if start_row ~= end_row then
@@ -285,14 +293,14 @@ function utils.get_node_text(node, content)
     if end_col == 0 then
       end_line = end_row
     end
-    local lines = { unpack(all_lines, start_line, end_line) }
+    local lines = { unpack(content, start_line, end_line) }
     lines[1] = string.sub(lines[1], start_col + 1)
     if end_col > 0 then
       lines[#lines] = string.sub(lines[#lines], 1, end_col)
     end
     return lines
   else
-    local line = all_lines[start_row + 1]
+    local line = content[start_row + 1]
     -- If line is nil then the line is empty
     return line and { string.sub(line, start_col + 1, end_col) } or {}
   end
@@ -320,7 +328,7 @@ function utils.debounce(name, fn, ms)
       debounce_timers[name]:close()
       debounce_timers[name] = nil
     end
-    local timer = vim.loop.new_timer()
+    local timer = uv.new_timer()
     debounce_timers[name] = timer
     timer:start(
       ms,
