@@ -70,6 +70,10 @@ local helps = {
     { key = 'org_agenda_clock_goto', description = 'Jump to currently active clock item' },
     { key = 'org_agenda_set_effort', description = 'Set effort estimate for item under cursor' },
     { key = 'org_agenda_clockreport_mode', description = 'Toggle clock report for current agenda time range' },
+    {
+      key = 'org_agenda_filter',
+      description = 'Open prompt that allows filtering by category, tags and title(vim regex)',
+    },
     { key = 'org_agenda_quit', description = 'Close agenda' },
     { key = 'org_agenda_show_help', description = 'Show this help' },
   },

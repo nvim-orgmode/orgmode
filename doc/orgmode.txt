@@ -59,7 +59,8 @@ CONTENTS                                                        *orgmode-content
             1.2.2.16. org_agenda_clock_cancel....|orgmode-org_agenda_clock_cancel|
             1.2.2.17. org_agenda_clock_goto........|orgmode-org_agenda_clock_goto|
             1.2.2.18. org_agenda_clockreport_mode.|orgmode-org_agenda_clockreport_mode|
-            1.2.2.19. org_agenda_show_help..........|orgmode-org_agenda_show_help|
+            1.2.2.19. org_agenda_filter................|orgmode-org_agenda_filter|
+            1.2.2.20. org_agenda_show_help..........|orgmode-org_agenda_show_help|
         1.2.3. Capture mappings.........................|orgmode-capture_mappings|
             1.2.3.1. org_capture_finalize...........|orgmode-org_capture_finalize|
             1.2.3.2. org_capture_refile...............|orgmode-org_capture_refile|
@@ -654,6 +655,17 @@ ORG_AGENDA_CLOCKREPORT_MODE                  *orgmode-org_agenda_clockreport_mod
 mapped to: `R`
 Show clock report at the end of the agenda for current agenda time range
 See Clocking (#clocking) for more details.
+
+ORG_AGENDA_FILTER                                      *orgmode-org_agenda_filter*
+
+mapped to: `/`
+Open prompt that allows filtering current agenda view by category, tags and title (vim regex, see `:help vim.regex()`)
+Example:
+Having `todos.org` file with headlines that have tags `mytag` or `myothertag`, and some of them have `check` in content, this search:
+`todos+mytag/check/`
+Returns all headlines that are in `todos.org` file, that have `mytag` tag, and have `check` in headline title. Note that regex is case sensitive by default.
+Use vim regex flag `\c` to make it case insensitive. See `:help vim.regex()` and `:help /magic`.
+Pressing `<TAB>` in filter prompt autocompletes categories and tags.
 
 ORG_AGENDA_SHOW_HELP                                *orgmode-org_agenda_show_help*
 
