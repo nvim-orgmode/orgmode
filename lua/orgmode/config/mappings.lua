@@ -19,6 +19,7 @@ return {
     org_agenda_set_effort = { 'agenda.set_effort' },
     org_agenda_clock_goto = { 'clock.org_clock_goto' },
     org_agenda_clockreport_mode = { 'agenda.toggle_clock_report' },
+    org_agenda_filter = { 'agenda.filter' },
     org_agenda_show_help = { 'org_mappings.show_help' },
   },
   capture = {

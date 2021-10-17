@@ -65,6 +65,7 @@ return {
       org_agenda_clock_out = 'O',
       org_agenda_clock_cancel = 'X',
       org_agenda_clockreport_mode = 'R',
+      org_agenda_filter = '/',
       org_agenda_show_help = '?',
     },
     capture = {

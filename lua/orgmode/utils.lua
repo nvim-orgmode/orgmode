@@ -340,11 +340,34 @@ function utils.debounce(name, fn, ms)
   end
 end
 
+---@param name string
+---@return function
 function utils.profile(name)
   local start_time = os.clock()
   return function()
     return print(name, string.format('%.2f', os.clock() - start_time))
   end
+end
+
+---@param arg_lead string
+---@param list string[]
+---@param split_chars string[]
+---@return string[]
+function utils.prompt_autocomplete(arg_lead, list, split_chars)
+  split_chars = split_chars or { '+', '-', ':', '&', '|' }
+  local split_chars_str = vim.pesc(table.concat(split_chars, ''))
+  local split_rgx = string.format('[%s]', split_chars_str)
+  local match_rgx = string.format('[^%s]*$', split_chars_str)
+  local parts = vim.split(arg_lead, split_rgx)
+  local base = arg_lead:gsub(match_rgx, '')
+  local last = arg_lead:match(match_rgx)
+  local matches = vim.tbl_filter(function(tag)
+    return tag:match('^' .. vim.pesc(last)) and not vim.tbl_contains(parts, tag)
+  end, list)
+
+  return vim.tbl_map(function(tag)
+    return base .. tag
+  end, matches)
 end
 
 return utils

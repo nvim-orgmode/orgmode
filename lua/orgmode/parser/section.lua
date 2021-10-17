@@ -240,6 +240,23 @@ function Section:get_category()
   return self.category
 end
 
+---@param tag string
+---@return boolean
+function Section:has_tag(tag)
+  for _, tag_item in ipairs(self.tags) do
+    if tag_item:lower() == tag:lower() then
+      return true
+    end
+  end
+  return false
+end
+
+---@param category string
+---@return boolean
+function Section:matches_category(category)
+  return self:get_category():lower() == category:lower()
+end
+
 ---@param name string
 ---@return string|nil
 function Section:get_property(name)

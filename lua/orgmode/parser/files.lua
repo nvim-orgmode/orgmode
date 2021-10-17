@@ -1,5 +1,6 @@
 local config = require('orgmode.config')
 local File = require('orgmode.parser.file')
+local utils = require('orgmode.utils')
 
 ---@class Files
 ---@field loaded boolean
@@ -272,17 +273,7 @@ function Files._build_tags()
 end
 
 function Files.autocomplete_tags(arg_lead)
-  local join_char = '[%+%-:&|]'
-  local parts = vim.split(arg_lead, join_char)
-  local base = arg_lead:gsub('[^%+%-:&|]*$', '')
-  local last = arg_lead:match('[^%+%-:&|]*$')
-  local matches = vim.tbl_filter(function(tag)
-    return tag:match('^' .. vim.pesc(last)) and not vim.tbl_contains(parts, tag)
-  end, Files.get_tags())
-
-  return vim.tbl_map(function(tag)
-    return base .. tag
-  end, matches)
+  return utils.prompt_autocomplete(arg_lead, Files.get_tags())
 end
 
 ---@param old_file? File

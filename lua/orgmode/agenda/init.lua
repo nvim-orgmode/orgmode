@@ -9,6 +9,7 @@ local Calendar = require('orgmode.objects.calendar')
 local agenda_highlights = require('orgmode.colors.highlights')
 local Files = require('orgmode.parser.files')
 local Search = require('orgmode.parser.search')
+local AgendaFilter = require('orgmode.agenda.filter')
 local hl_map = agenda_highlights.get_agenda_hl_map()
 
 ---@param agenda_items AgendaItem[]
@@ -61,6 +62,7 @@ end
 ---@field clock_report ClockReport
 ---@field show_clock_report boolean
 ---@field last_search string
+---@field filters AgendaFilter
 local Agenda = {}
 
 ---@param opts table
@@ -72,6 +74,7 @@ function Agenda:new(opts)
     show_clock_report = false,
     clock_report = nil,
     last_search = '',
+    filters = AgendaFilter:new(),
     content = {},
     highlights = {},
     items = {},
@@ -186,6 +189,7 @@ function Agenda:render_agenda()
         file_position = headline.range.start_line,
         highlights = item_highlights,
         agenda_item = agenda_item,
+        headline = headline,
       })
     end
   end
@@ -207,7 +211,9 @@ function Agenda:render_todos(view)
   end, 0)
 
   for i, headline in ipairs(self.items) do
-    table.insert(self.content, self:_generate_todo_item(headline, longest_category, i + offset))
+    if self.filters:matches(headline) then
+      table.insert(self.content, self:_generate_todo_item(headline, longest_category, i + offset))
+    end
   end
 
   self.active_view = view
@@ -291,7 +297,9 @@ function Agenda:todos()
   self.items = {}
   for _, orgfile in ipairs(Files.all()) do
     for _, headline in ipairs(orgfile:get_unfinished_todo_entries()) do
-      table.insert(self.items, headline)
+      if self.filters:matches(headline) then
+        table.insert(self.items, headline)
+      end
     end
   end
 
@@ -304,9 +312,17 @@ function Agenda:search(clear_search)
   if clear_search then
     self.last_search = ''
   end
-  local search_term = vim.fn.input('Enter search term: ', self.last_search)
+  local search_term = self.last_search
+  if not self.filters.applying then
+    search_term = vim.fn.input('Enter search term: ', self.last_search)
+  end
   self.last_search = search_term
   self.items = Files.find_headlines_matching_search_term(search_term, false, true)
+  if self.filters:should_filter() then
+    self.items = vim.tbl_filter(function(item)
+      return self.filters:matches(item)
+    end, self.items)
+  end
 
   self.content = {
     { line_content = 'Search words: ' .. search_term },
@@ -349,7 +365,9 @@ function Agenda:_tags_view(opts, view)
   for _, orgfile in ipairs(Files.all()) do
     local headlines_filtered = orgfile:apply_search(search, opts.todo_only)
     for _, headline in ipairs(headlines_filtered) do
-      table.insert(self.items, headline)
+      if self.filters:matches(headline) then
+        table.insert(self.items, headline)
+      end
     end
   end
 
@@ -367,6 +385,7 @@ function Agenda:_tags_view(opts, view)
 end
 
 function Agenda:prompt()
+  self.filters:reset()
   return utils.menu('Press key for an agenda command', {
     { label = '', separator = '-', length = 34 },
     {
@@ -430,7 +449,7 @@ function Agenda:agenda()
 
     for _, item in ipairs(headline_dates) do
       local agenda_item = AgendaItem:new(item.headline_date, item.headline, day)
-      if agenda_item.is_valid then
+      if agenda_item.is_valid and self.filters:matches(item.headline) then
         table.insert(date.agenda_items, agenda_item)
       end
     end
@@ -460,6 +479,7 @@ function Agenda:redo(preserve_cursor_pos)
       view = vim.fn.winsaveview()
     end
     self[self.active_view](self)
+    self.filters.applying = false
     if preserve_cursor_pos then
       vim.fn.winrestview(view)
     end
@@ -641,6 +661,21 @@ function Agenda:goto_item()
   vim.fn.cursor(item.file_position, 0)
 end
 
+function Agenda:filter()
+  self.filters:parse_tags_and_categories(self.content)
+  local filter_term = vim.fn.input(
+    'Filter [+cat-tag/regexp/]: ',
+    self.filters.value,
+    'customlist,v:lua.orgmode.autocomplete_agenda_filter'
+  )
+  self.filters:parse(filter_term)
+  return self:redo()
+end
+
+function Agenda:autocomplete_agenda_filter(arg_lead)
+  return utils.prompt_autocomplete(arg_lead, self.filters:get_completion_list(), { '+', '-' })
+end
+
 ---@return table|nil
 function Agenda:_get_jumpable_item()
   local item = self.content[vim.fn.line('.')]
@@ -691,6 +726,10 @@ end
 
 function _G.orgmode.autocomplete_agenda_filter_tags(arg_lead)
   return Files.autocomplete_tags(arg_lead)
+end
+
+function _G.orgmode.autocomplete_agenda_filter(arg_lead)
+  return require('orgmode').action('agenda.autocomplete_agenda_filter', arg_lead)
 end
 
 return Agenda

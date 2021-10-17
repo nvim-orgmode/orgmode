@@ -454,6 +454,15 @@ See [Clocking](#clocking) for more details.
 *mapped to*: `R`<br />
 Show clock report at the end of the agenda for current agenda time range<br />
 See [Clocking](#clocking) for more details.
+#### **org_agenda_filter**
+*mapped to*: `/`<br />
+Open prompt that allows filtering current agenda view by category, tags and title (vim regex, see `:help vim.regex()`)<br />
+Example:<br />
+Having `todos.org` file with headlines that have tags `mytag` or `myothertag`, and some of them have `check` in content, this search:<br />
+`todos+mytag/check/`<br />
+Returns all headlines that are in `todos.org` file, that have `mytag` tag, and have `check` in headline title. Note that regex is case sensitive by default.<br />
+Use vim regex flag `\c` to make it case insensitive. See `:help vim.regex()` and `:help /magic`.<br />
+Pressing `<TAB>` in filter prompt autocompletes categories and tags.
 
 #### **org_agenda_show_help**
 *mapped to*: `?`<br />
