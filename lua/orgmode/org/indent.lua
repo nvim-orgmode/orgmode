@@ -9,6 +9,11 @@ local function foldexpr()
   local stars = line:match('^(%*+)%s+')
 
   if stars then
+    local next_line = vim.fn.getline(vim.v.lnum + 1)
+    local next_line_star = next_line:match('^(%*+)%s+')
+    if next_line_star and next_line_star:len() == stars:len() then
+      return -1
+    end
     return '>' .. stars:len()
   end
 
