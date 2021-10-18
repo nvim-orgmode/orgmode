@@ -251,6 +251,11 @@ function Section:has_tag(tag)
   return false
 end
 
+---@return boolean
+function Section:has_children()
+  return #self.sections > 0 or not self.range:is_same_line()
+end
+
 ---@param category string
 ---@return boolean
 function Section:matches_category(category)

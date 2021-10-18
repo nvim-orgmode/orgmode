@@ -76,38 +76,62 @@ function OrgMappings:toggle_archive_tag()
 end
 
 function OrgMappings:cycle()
-  local is_fold_closed = vim.fn.foldclosed('.') ~= -1
+  local file = Files.get_current_file()
+  local line = vim.fn.line('.')
+  if not vim.wo.foldenable then
+    vim.wo.foldenable = true
+    vim.cmd[[silent! norm!zx]]
+  end
+  local level = vim.fn.foldlevel(line)
+  if level == 0 then
+    return utils.echo_info('No fold')
+  end
+  local is_fold_closed = vim.fn.foldclosed(line) ~= -1
   if is_fold_closed then
-    return vim.cmd([[norm!zo]])
+    return vim.cmd([[silent! norm!zo]])
   end
-  vim.cmd([[norm!j]])
-  local is_next_item_closed = vim.fn.foldclosed('.') ~= -1
-  local is_headline = vim.fn.getline('.'):match('^%*+%s+')
-  vim.cmd([[norm!k]])
-  if is_next_item_closed and not is_headline then
-    return vim.cmd([[norm!zczO]])
+  local section = file.sections_by_line[line]
+  if section then
+    if not section:has_children() then
+      return
+    end
+    local close = #section.sections == 0
+    if not close then
+      for _, child in ipairs(section.sections) do
+        if child:has_children() and vim.fn.foldclosed(child.line_number) == -1 then
+          vim.cmd(string.format('silent! norm!%dggzc', child.line_number))
+          close = true
+        end
+      end
+      vim.cmd(string.format('silent! norm!%dgg', line))
+    end
+
+    if close then
+      return vim.cmd([[silent! norm!zc]])
+    end
+    return vim.cmd([[silent! norm!zczO]])
   end
-  if vim.fn.foldlevel('.') == 1 then
-    return vim.cmd([[norm!zCzxzc]])
+
+  if vim.fn.getline(line):match('^%s*:[^:]*:%s*$') then
+    return vim.cmd[[silent! norm!za]]
   end
-  return vim.cmd([[norm!zc]])
 end
 
 function OrgMappings:global_cycle()
   if not vim.wo.foldenable or self.global_cycle_mode == 'Show All' then
     self.global_cycle_mode = 'Overview'
     utils.echo_info(self.global_cycle_mode)
-    return vim.cmd([[norm!zM]])
+    return vim.cmd([[silent! norm!zMzX]])
   end
   if self.global_cycle_mode == 'Contents' then
     self.global_cycle_mode = 'Show All'
     utils.echo_info(self.global_cycle_mode)
-    return vim.cmd([[norm!zR]])
+    return vim.cmd([[silent! norm!zR]])
   end
   self.global_cycle_mode = 'Contents'
   utils.echo_info(self.global_cycle_mode)
   vim.wo.foldlevel = 1
-  return vim.cmd([[norm!zx]])
+  return vim.cmd([[silent! norm!zx]])
 end
 
 -- TODO: Add hierarchy
