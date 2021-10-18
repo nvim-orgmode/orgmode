@@ -13,6 +13,7 @@ local utils = require('orgmode.utils')
 ---@field filename string
 ---@field changedtick number
 ---@field sections Section[]
+---@field sections_by_line table<number, Section>
 ---@field source_code_filetypes string[]
 ---@field is_archive_file boolean
 ---@field clocked_headline Section
@@ -28,6 +29,7 @@ function File:new(tree, file_content, file_content_str, category, filename, is_a
     filename = filename,
     changedtick = 0,
     sections = {},
+    sections_by_line = {},
     source_code_filetypes = {},
     is_archive_file = is_archive_file or false,
     tags = {},
@@ -332,6 +334,7 @@ function File:_parse_sections_and_root_directives()
     if child:type() == 'section' then
       local section = Section.from_node(child, self)
       table.insert(self.sections, section)
+      self.sections_by_line[section.line_number] = section
       self:_insert_child_sections(section)
     end
   end
@@ -347,6 +350,7 @@ function File:_insert_child_sections(section)
   end
   for _, child_section in ipairs(section.sections) do
     table.insert(self.sections, child_section)
+    self.sections_by_line[child_section.line_number] = child_section
     self:_insert_child_sections(child_section)
   end
 end

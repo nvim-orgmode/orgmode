@@ -1,4 +1,5 @@
 local config = require('orgmode.config')
+local Files = require('orgmode.parser.files')
 
 local function foldexpr()
   local line = vim.fn.getline(vim.v.lnum)
@@ -9,12 +10,12 @@ local function foldexpr()
   local stars = line:match('^(%*+)%s+')
 
   if stars then
-    local next_line = vim.fn.getline(vim.v.lnum + 1)
-    local next_line_star = next_line:match('^(%*+)%s+')
-    if next_line_star and next_line_star:len() == stars:len() then
-      return -1
+    local file = Files.get(vim.fn.expand('%:p'))
+    local section = file.sections_by_line[vim.v.lnum]
+    if not section.parent and section.level > 1 then
+      return 0
     end
-    return '>' .. stars:len()
+    return '>' .. section.level
   end
 
   if line:match('^%s*:END:%s*$') then
@@ -23,6 +24,12 @@ local function foldexpr()
 
   if line:match('^%s*:[^:]*:%s*$') then
     return 'a1'
+  end
+
+  if vim.fn.getline(vim.v.lnum + 1):match('^(%*+)%s+') then
+    local file = Files.get(vim.fn.expand('%:p'))
+    local section = file.sections_by_line[vim.v.lnum + 1]
+    return '<' .. section.level
   end
 
   return '='
