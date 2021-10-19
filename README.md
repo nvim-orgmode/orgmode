@@ -15,7 +15,9 @@
 </div>
 
 ## Tree-sitter
-Experimental tree-sitter support branch: https://github.com/kristijanhusak/orgmode.nvim/tree/tree-sitter
+Tree-sitter support branch: https://github.com/kristijanhusak/orgmode.nvim/tree/tree-sitter
+#### NOTE: tree-sitter branch will become main very soon! 
+All new features and fixes are going to the `tree-sitter` branch.
 
 ## Installation
 
@@ -249,8 +251,8 @@ much experience with those. Any help on this topic is appreciated.
 * [X] Support searching by properties
 * [ ] Improve checkbox hierarchy
 * [X] Support todo keyword faces
-* [ ] Support clocking work time
-* [ ] Improve folding
+* [X] Support clocking work time (Added on tree-sitter branch)
+* [X] Improve folding (Added on tree-sitter branch)
 * [X] Support exporting (via existing emacs tools)
 * [ ] Support archiving to specific headline
 * [ ] Support tables
