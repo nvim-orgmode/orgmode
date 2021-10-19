@@ -14,7 +14,7 @@ local function foldexpr()
     local file = Files.get(vim.fn.expand('%:p'))
     local section = file.sections_by_line[vim.v.lnum]
     prev_section = section
-    if not section.parent and section.level > 1 then
+    if not section.parent and section.level > 1 and not section:has_children() then
       return 0
     end
     return '>' .. section.level
