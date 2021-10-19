@@ -80,7 +80,7 @@ function OrgMappings:cycle()
   local line = vim.fn.line('.')
   if not vim.wo.foldenable then
     vim.wo.foldenable = true
-    vim.cmd[[silent! norm!zx]]
+    vim.cmd([[silent! norm!zx]])
   end
   local level = vim.fn.foldlevel(line)
   if level == 0 then
@@ -113,7 +113,7 @@ function OrgMappings:cycle()
   end
 
   if vim.fn.getline(line):match('^%s*:[^:]*:%s*$') then
-    return vim.cmd[[silent! norm!za]]
+    return vim.cmd([[silent! norm!za]])
   end
 end
 
