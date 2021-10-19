@@ -97,13 +97,20 @@ function OrgMappings:cycle()
     end
     local close = #section.sections == 0
     if not close then
+      local has_nested_children = false
       for _, child in ipairs(section.sections) do
+        if not has_nested_children and child:has_children() then
+          has_nested_children = true
+        end
         if child:has_children() and vim.fn.foldclosed(child.line_number) == -1 then
           vim.cmd(string.format('silent! keepjumps norm!%dggzc', child.line_number))
           close = true
         end
       end
       vim.cmd(string.format('silent! keepjumps norm!%dgg', line))
+      if not close and not has_nested_children then
+        close = true
+      end
     end
 
     if close then
