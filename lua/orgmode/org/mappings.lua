@@ -99,11 +99,11 @@ function OrgMappings:cycle()
     if not close then
       for _, child in ipairs(section.sections) do
         if child:has_children() and vim.fn.foldclosed(child.line_number) == -1 then
-          vim.cmd(string.format('silent! norm!%dggzc', child.line_number))
+          vim.cmd(string.format('silent! keepjumps norm!%dggzc', child.line_number))
           close = true
         end
       end
-      vim.cmd(string.format('silent! norm!%dgg', line))
+      vim.cmd(string.format('silent! keepjumps norm!%dgg', line))
     end
 
     if close then
