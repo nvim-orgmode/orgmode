@@ -66,9 +66,14 @@ end
 
 ---@return string[]
 function Config:get_all_files()
+  local all_filenames = {}
+  if self.opts.org_default_notes_file and self.opts.org_default_notes_file ~= '' then
+    local default_full_path = vim.fn.expand(self.opts.org_default_notes_file, ':p')
+    table.insert(all_filenames, default_full_path)
+  end
   local files = self.opts.org_agenda_files
   if not files or files == '' or (type(files) == 'table' and vim.tbl_isempty(files)) then
-    return {}
+    return all_filenames
   end
   if type(files) ~= 'table' then
     files = { files }
@@ -78,7 +83,7 @@ function Config:get_all_files()
     return vim.fn.glob(vim.fn.fnamemodify(file, ':p'), 0, 1)
   end, files)
 
-  all_files = vim.tbl_flatten(all_files)
+  all_files = utils.concat(vim.tbl_flatten(all_files), all_filenames, true)
 
   return vim.tbl_filter(function(file)
     local ext = vim.fn.fnamemodify(file, ':e')
