@@ -66,13 +66,13 @@ return {
       org_agenda_clock_cancel = 'X',
       org_agenda_clockreport_mode = 'R',
       org_agenda_filter = '/',
-      org_agenda_show_help = '?',
+      org_agenda_show_help = 'g?',
     },
     capture = {
       org_capture_finalize = '<C-c>',
       org_capture_refile = '<Leader>or',
       org_capture_kill = '<Leader>ok',
-      org_capture_show_help = '?',
+      org_capture_show_help = 'g?',
     },
     org = {
       org_refile = '<Leader>or',
@@ -115,7 +115,7 @@ return {
       org_clock_cancel = '<leader>oxq',
       org_clock_goto = '<leader>oxj',
       org_set_effort = '<leader>oxe',
-      org_show_help = '?',
+      org_show_help = 'g?',
     },
     text_objects = {
       inner_heading = 'ih',

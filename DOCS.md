@@ -465,7 +465,7 @@ Use vim regex flag `\c` to make it case insensitive. See `:help vim.regex()` and
 Pressing `<TAB>` in filter prompt autocompletes categories and tags.
 
 #### **org_agenda_show_help**
-*mapped to*: `?`<br />
+*mapped to*: `g?`<br />
 Show help popup with mappings
 
 These mappings live under `mappings.agenda`, and can be changed like this:
@@ -498,7 +498,7 @@ Refile capture content to specific destination
 *mapped to*: `<Leader>ok`<br />
 Close capture window without saving anything
 #### **org_capture_show_help**
-*mapped to*: `?`<br />
+*mapped to*: `g?`<br />
 Show help popup with mappings
 
 These mappings live under `mappings.capture`, and can be changed like this:
@@ -665,7 +665,7 @@ See [Clocking](#clocking) for more details.
 Set effort estimate property on for current headline.<br />
 See [Clocking](#clocking) for more details.
 #### **org_show_help**
-*mapped to*: `?`<br />
+*mapped to*: `g?`<br />
 Show help popup with mappings
 
 These mappings live under `mappings.org`, and can be changed like this:
@@ -1036,7 +1036,11 @@ set statusline=%{v:lua.orgmode.statusline()}
 
 ## Changelog
 
-#### 10 October
+#### 24 October 2021
+* Help mapping was changed from `?` to `g?` to avoid conflict with built in backward search. See issue [#106](https://github.com/kristijanhusak/orgmode.nvim/issues/106).
+
+#### 10 October 2021
 * Mappings `org_increase_date` and `org_decrease_date` are deprecated in favor of [org_timestamp_up](#org_timestamp_up) and [org_timestamp_down](#org_timestamp_down).<br />
   If you have these mappings in your custom configuration, you will get a warning each time Orgmode is loaded. To remove the warning, rename the configuration properties accordingly.<br />
   To return the old functionality where mappings increase only the day, add `org_timestamp_up_day`/`org_timestamp_down_day` to your configuration.
+
