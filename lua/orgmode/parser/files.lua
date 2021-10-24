@@ -15,7 +15,7 @@ local Files = {
 }
 
 function Files.new()
-  Files.load()
+  Files.load(Files.on_init)
   return Files
 end
 
@@ -254,6 +254,12 @@ function Files.get_clock_report(from, to)
   end
 
   return report
+end
+
+function Files.on_init()
+  if vim.bo.filetype == 'org' then
+    vim.cmd([[setlocal foldexpr=OrgmodeFoldExpr()]])
+  end
 end
 
 function Files._build_tags()
