@@ -134,7 +134,8 @@ CONTENTS                                                        *orgmode-content
                 1.8.8. Recalculating totals.........|orgmode-recalculating_totals|
                 1.8.9. Statusline function...........|orgmode-statusline_function|
     1.9. Changelog.............................................|orgmode-changelog|
-            1.9.1. 10 October.................................|orgmode-10_october|
+            1.9.1. 24 October 2021.......................|orgmode-24_october_2021|
+            1.9.2. 10 October 2021.......................|orgmode-10_october_2021|
 
 ================================================================================
 TABLE OF CONTENT                                        *orgmode-table_of_content*
@@ -669,7 +670,7 @@ Pressing `<TAB>` in filter prompt autocompletes categories and tags.
 
 ORG_AGENDA_SHOW_HELP                                *orgmode-org_agenda_show_help*
 
-mapped to: `?`
+mapped to: `g?`
 Show help popup with mappings
 
 These mappings live under `mappings.agenda`, and can be changed like this:
@@ -708,7 +709,7 @@ Close capture window without saving anything
 
 ORG_CAPTURE_SHOW_HELP                              *orgmode-org_capture_show_help*
 
-mapped to: `?`
+mapped to: `g?`
 Show help popup with mappings
 
 These mappings live under `mappings.capture`, and can be changed like this:
@@ -956,7 +957,7 @@ See Clocking (#clocking) for more details.
 
 ORG_SHOW_HELP                                              *orgmode-org_show_help*
 
-mapped to: `?`
+mapped to: `g?`
 Show help popup with mappings
 
 These mappings live under `mappings.org`, and can be changed like this:
@@ -1356,7 +1357,11 @@ Show the currently clocked in headline (if any), with total clocked time / effor
 --------------------------------------------------------------------------------
 CHANGELOG                                                      *orgmode-changelog*
 
-10 OCTOBER                                                    *orgmode-10_october*
+24 OCTOBER 2021                                          *orgmode-24_october_2021*
+
+*   Help mapping was changed from `?` to `g?` to avoid conflict with built in backward search. See issue #106 (https://github.com/kristijanhusak/orgmode.nvim/issues/106).
+
+10 OCTOBER 2021                                          *orgmode-10_october_2021*
 
 *   Mappings `org_increase_date` and `org_decrease_date` are deprecated in favor of org_timestamp_up (#org_timestamp_up) and org_timestamp_down (#org_timestamp_down).
     If you have these mappings in your custom configuration, you will get a warning each time Orgmode is loaded. To remove the warning, rename the configuration properties accordingly.
