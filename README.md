@@ -131,7 +131,7 @@ EOF
 
 * **Open agenda prompt**: <kbd>\<Leader\>oa</kbd>
 * **Open capture prompt**: <kbd>\<Leader\>oc</kbd>
-* In any orgmode buffer press <kbd>?</kbd> for help
+* In any orgmode buffer press <kbd>g?</kbd> for help
 
 ### Completion
 If you use [nvim-compe](https://github.com/hrsh7th/nvim-compe) and want
