@@ -12,6 +12,9 @@ local function foldexpr()
 
   if stars then
     local file = Files.get(vim.fn.expand('%:p'))
+    if not file then
+      return 0
+    end
     local section = file.sections_by_line[vim.v.lnum]
     prev_section = section
     if not section.parent and section.level > 1 and not section:has_children() then
@@ -30,6 +33,9 @@ local function foldexpr()
 
   if vim.fn.getline(vim.v.lnum + 1):match('^(%*+)%s+') and prev_section then
     local file = Files.get(vim.fn.expand('%:p'))
+    if not file then
+      return 0
+    end
     local section = file.sections_by_line[vim.v.lnum + 1]
     if section.level <= prev_section.level then
       return '<' .. prev_section.level
