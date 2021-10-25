@@ -45,7 +45,9 @@ local function do_selection(start_range, end_range, exclude_stars)
   if (end_range - start_range) > 0 then
     down_motion = string.format('%dgg', end_range)
   end
-  vim.cmd(string.format('norm!v%s$', down_motion))
+  local visual_mode = exclude_stars and 'v' or 'V'
+  local goto_line_end = exclude_stars and '$' or ''
+  vim.cmd(string.format('norm!%s%s%s', visual_mode, down_motion, goto_line_end))
 end
 
 local function current_heading(exclude_stars)
