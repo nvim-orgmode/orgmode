@@ -649,7 +649,7 @@ Insert/Update inactive date under cursor.<br />
 Clock in headline under cursor.<br />
 See [Clocking](#clocking) for more details.
 #### **org_clock_out**
-*mapped to*: `<Leader>oxi`<br />
+*mapped to*: `<Leader>oxo`<br />
 Clock out headline under cursor.<br />
 See [Clocking](#clocking) for more details.
 #### **org_clock_cancel**
