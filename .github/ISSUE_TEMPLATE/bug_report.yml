@@ -32,6 +32,12 @@ body:
       label: Emacs functionality
       description: If this functionality exists in Emacs Orgmode, explain how it works there.
   - type: textarea
+    validations:
+      required: true
+    attributes:
+      label: Minimal init.lua
+      description: Please provide minimal init.lua to reproduce the issue. You can find the template here https://gist.github.com/kristijanhusak/a0cb5f4eb2bad3e732a1d18d311ebe2f. Once set up, you can run it with `nvim -u minimal_init.lua`.
+  - type: textarea
     attributes:
       label: Screenshots and recordings
       description: |
