@@ -933,7 +933,7 @@ See Clocking (#clocking) for more details.
 
 ORG_CLOCK_OUT                                              *orgmode-org_clock_out*
 
-mapped to: `<Leader>oxi`
+mapped to: `<Leader>oxo`
 Clock out headline under cursor.
 See Clocking (#clocking) for more details.
 
