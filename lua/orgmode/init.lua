@@ -47,9 +47,16 @@ end
 function Org:setup_autocmds()
   vim.cmd([[augroup orgmode_nvim]])
   vim.cmd([[autocmd!]])
-  vim.cmd([[autocmd BufWritePost *.org call luaeval('require("orgmode").reload(_A)', expand('<afile>:p'))]])
+  vim.cmd(
+    [[autocmd BufWritePost *.org,*.org_archive call luaeval('require("orgmode").reload(_A)', expand('<afile>:p'))]]
+  )
+  vim.cmd(
+    [[autocmd BufReadPost,BufWritePost *.org,*.org_archive lua require('orgmode.org.diagnostics').print_error_state()]]
+  )
   vim.cmd([[autocmd FileType org call luaeval('require("orgmode").reload(_A)', expand('<afile>:p'))]])
+  vim.cmd([[autocmd CursorHold,CursorHoldI *.org,*.org_archive lua require('orgmode.org.diagnostics').report()]])
   vim.cmd([[augroup END]])
+  vim.cmd([[command! OrgDiagnostics lua require('orgmode.org.diagnostics').print()]])
 end
 
 ---@param opts? table
@@ -87,7 +94,15 @@ local function action(cmd, opts)
   if instance[parts[1]] and instance[parts[1]][parts[2]] then
     local item = instance[parts[1]]
     local method = item[parts[2]]
-    return method(item, opts)
+    local success, result = pcall(method, item, opts)
+    if not success then
+      if result.message then
+        return require('orgmode.utils').echo_error(result.message)
+      end
+      if type(result) == 'string' then
+        return require('orgmode.utils').echo_error(result)
+      end
+    end
   end
 end
 
