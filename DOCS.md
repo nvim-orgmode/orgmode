@@ -10,13 +10,14 @@
    3. [Capture mappings](#capture-mappings)
    4. [Org mappings](#org-mappings)
    4. [Text objects](#text-objects)
-3. [Autocompletion](#autocompletion)
-4. [Abbreviations](#abbreviations)
-5. [Colors](#colors)
-6. [Advanced search](#advanced-search)
-7. [Notifications (experimental)](#notifications-experimental)
-8. [Clocking](#clocking)
-9. [Changelog](#changelog)
+3. [Diagnostics](#diagnostics)
+4. [Autocompletion](#autocompletion)
+5. [Abbreviations](#abbreviations)
+6. [Colors](#colors)
+7. [Advanced search](#advanced-search)
+8. [Notifications (experimental)](#notifications-experimental)
+9. [Clocking](#clocking)
+10. [Changelog](#changelog)
 
 ## Settings
 Variable names mostly follow the same naming as Orgmode mappings.
@@ -59,6 +60,12 @@ Examples (With fast access):
   * `{'TODO(t)', 'NEXT', '|', 'DONE'}` - will work same as above. Only one todo keyword needs to have fast access key, others will be parsed from first char.
 
 NOTE: Make sure fast access keys do not overlap. If that happens, first entry in list gets it.
+
+#### **diagnostics**
+*type*: `boolean`<br />
+*default value*: `true`<br />
+Should error diagnostics be shown. If you are using Neovim 0.6.0 or higher, these will be shown via `vim.diagnostic`.<br />
+If you are on 0.5.1 or lower, you need to use `:OrgDiagnostics` command to print the errors in the command line.
 
 #### **org_todo_keyword_faces**
 *type*: `table<string, string>`<br />
@@ -738,6 +745,12 @@ require('orgmode').setup({
 })
 ```
 
+## Diagnostics
+Since tree-sitter parser is being used to parse the file, if there are some syntax errors,
+it can potentially fail to parse specific parts of document when needed. If you are using Neovim v0.6.0 which has
+`vim.diagnostic` available (see `:help vim.diagnostic`), you will get diagnostic errors reported inline.<br />
+If you are using v0.5.1 or lower, you need to use `:OrgDiagnostics` command to view the error details.<br />
+When file is saved, if there are any errors, you will be notified in the command line (0.5.1 and lower).
 
 ## Autocompletion
 By default, `omnifunc` is provided in `org` files that autocompletes these types:

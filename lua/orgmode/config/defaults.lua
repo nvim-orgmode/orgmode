@@ -30,6 +30,7 @@ return {
   org_custom_exports = {},
   org_indent_mode = 'indent',
   org_time_stamp_rounding_minutes = 5,
+  diagnostics = true,
   notifications = {
     enabled = false,
     cron_enabled = true,

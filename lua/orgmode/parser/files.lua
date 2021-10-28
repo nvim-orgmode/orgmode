@@ -205,7 +205,19 @@ end
 ---@param id number
 ---@return Section
 function Files.get_closest_headline(id)
-  return Files.get_current_file():get_closest_headline(id)
+  local current_file = Files.get_current_file()
+  local msg = 'Make sure there are no errors in the document'
+  if not vim.diagnostic then
+    msg = string.format('%s by running :OrgDiagnostics command', msg)
+  end
+  if not current_file then
+    error({ message = string.format('Failed to parse current file. %s.', msg) })
+  end
+  local headline = current_file:get_closest_headline(id)
+  if not headline then
+    error({ message = string.format('Failed to parse current headline. %s.', msg) })
+  end
+  return headline
 end
 
 ---@return userdata
