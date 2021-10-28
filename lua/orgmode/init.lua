@@ -103,6 +103,7 @@ local function action(cmd, opts)
         return require('orgmode.utils').echo_error(result)
       end
     end
+    return result
   end
 end
 
