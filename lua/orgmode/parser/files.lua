@@ -270,7 +270,9 @@ end
 
 function Files.on_init()
   if vim.bo.filetype == 'org' then
-    vim.cmd([[setlocal foldexpr=OrgmodeFoldExpr()]])
+    vim.schedule(function()
+      vim.cmd([[setlocal foldexpr=OrgmodeFoldExpr()]])
+    end)
   end
 end
 
