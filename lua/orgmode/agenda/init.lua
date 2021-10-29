@@ -51,6 +51,16 @@ local function sort_agenda_items(agenda_items)
   return agenda_items
 end
 
+function sort_todos(todos)
+  table.sort(todos, function(a, b)
+    if a:get_priority_number() ~= b:get_priority_number() then
+      return a:get_priority_number() > b:get_priority_number()
+    end
+    return a.category < b.category
+  end)
+  return todos
+end
+
 ---@class Agenda
 ---@field span string|number
 ---@field from Date
@@ -205,6 +215,7 @@ function Agenda:render_agenda()
 end
 
 function Agenda:render_todos(view)
+  self.items = sort_todos(self.items)
   local offset = #self.content
   local longest_category = utils.reduce(self.items, function(acc, todo)
     return math.max(acc, todo:get_category():len())
