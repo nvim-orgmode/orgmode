@@ -93,9 +93,9 @@ end
 local function foldtext()
   local line = vim.fn.getline(vim.v.foldstart)
   if config.org_hide_leading_stars then
-    return vim.fn.substitute(line, '\\(^\\**\\)', '\\=repeat(" ", len(submatch(0))-1) . "*"', '')
+    return vim.fn.substitute(line, '\\(^\\**\\)', '\\=repeat(" ", len(submatch(0))-1) . "*"', '') .. '...'
   end
-  return line
+  return line .. '...'
 end
 
 return {
