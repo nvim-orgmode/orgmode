@@ -98,14 +98,11 @@ function Files.filenames()
 end
 
 ---@param file string
----@param refresh boolean
 ---@return File
-function Files.get(file, refresh)
+function Files.get(file)
   local f = Files.orgfiles[file]
   if f then
-    if refresh then
-      Files._set_loaded_file(file, f:refresh())
-    end
+    Files._set_loaded_file(file, f:refresh())
     return Files.orgfiles[file]
   end
   return nil
@@ -123,7 +120,7 @@ function Files.get_current_file()
   if has_capture_var and is_capture then
     return File.from_content(vim.api.nvim_buf_get_lines(0, 0, -1, false))
   end
-  return Files.get(name, true)
+  return Files.get(name)
 end
 
 ---@param title string
@@ -245,7 +242,7 @@ function Files.get_headline_by_id(id)
   if #parts ~= 2 then
     return nil
   end
-  local file = Files.get(parts[1], true)
+  local file = Files.get(parts[1])
   if file then
     return file:get_closest_headline(tonumber(parts[2]))
   end
