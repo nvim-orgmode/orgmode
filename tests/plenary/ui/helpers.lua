@@ -2,7 +2,7 @@ local Files = require('orgmode.parser.files')
 local function load_file(path)
   vim.cmd(string.format('e %s', path))
   vim.wait(5000, function()
-    return Files.get(path, true) ~= nil
+    return Files.get(path) ~= nil
   end, 5)
   vim.cmd(string.format('e %s', path))
   return path
