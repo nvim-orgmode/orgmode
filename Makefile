@@ -1,5 +1,7 @@
 test:
 	nvim --headless --noplugin -u tests/minimal_init.vim -c "PlenaryBustedDirectory tests/plenary/ {minimal_init = 'tests/minimal_init.vim'}"
+testfile:
+	nvim --headless --noplugin -u tests/minimal_init.vim -c "PlenaryBustedFile $(FILE)"
 ci:
 	nvim --noplugin -u tests/minimal_init.vim -c "TSUpdateSync org" -c "qa!" && make test
 docs:

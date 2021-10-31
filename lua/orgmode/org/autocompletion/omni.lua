@@ -9,23 +9,38 @@ local data = {
   metadata = { 'DEADLINE:', 'SCHEDULED:', 'CLOSED:' },
 }
 
-local directives = { rgx = vim.regex([[^\#+\?\w*$]]), line_rgx = vim.regex([[^\#\?+\?\w*$]]), list = data.directives }
+local directives = {
+  line_rgx = vim.regex([[^\#\?+\?\w*$]]),
+  rgx = vim.regex([[^\#+\?\w*$]]),
+  list = data.directives,
+}
+
 local begin_blocks = {
-  rgx = vim.regex([[\(^\s*\)\@<=\#+\?\w*$]]),
   line_rgx = vim.regex([[^\s*\#\?+\?\w*$]]),
+  rgx = vim.regex([[\(^\s*\)\@<=\#+\?\w*$]]),
   list = data.begin_blocks,
 }
+
 local properties = {
   line_rgx = vim.regex([[\(^\s\+\|^\s*:\?$\)]]),
   rgx = vim.regex([[\(^\|^\s\+\)\@<=:\w*$]]),
+  extra_cond = function(line, _)
+    return not string.find(line, 'file:.*$')
+  end,
   list = data.properties,
 }
+
 local links = {
-  line_rgx = vim.regex([[\(\(^\|\s\+\)\[\[\)\@<=\(\*\|\#\)\?\(\w\+\)\?]]),
-  rgx = vim.regex([[\(\*\|\#\)\?\(\w\+\)\?$]]),
+  line_rgx = vim.regex([[\(\(^\|\s\+\)\[\[\)\@<=\(\*\|\#\|file:\)\?\(\(\w\|\/\|\.\|\\\|-\|_\|\d\)\+\)\?]]),
+  rgx = vim.regex([[\(\*\|\#\|file:\)\?\(\(\w\|\/\|\.\|\\\|-\|_\|\d\)\+\)\?$]]),
   fetcher = Hyperlinks.find_matching_links,
 }
-local metadata = { rgx = vim.regex([[\(\s*\)\@<=\w\+$]]), list = data.metadata }
+
+local metadata = {
+  rgx = vim.regex([[\(\s*\)\@<=\w\+$]]),
+  list = data.metadata,
+}
+
 local tags = {
   rgx = vim.regex([[:\([0-9A-Za-z_%@\#]*\)$]]),
   fetcher = function()
@@ -38,6 +53,9 @@ local tags = {
 local filetags = {
   line_rgx = vim.regex([[\c^\#+FILETAGS:\s\+]]),
   rgx = vim.regex([[:\([0-9A-Za-z_%@\#]*\)$]]),
+  extra_cond = function(line, _)
+    return not string.find(line, 'file:.*$')
+  end,
   fetcher = function()
     return vim.tbl_map(function(tag)
       return ':' .. tag .. ':'
@@ -46,8 +64,8 @@ local filetags = {
 }
 
 local todo_keywords = {
-  rgx = vim.regex([[\(^\(\*\+\s\+\)\?\)\@<=\w*$]]),
   line_rgx = vim.regex([[^\*\+\s\+\w*$]]),
+  rgx = vim.regex([[\(^\(\*\+\s\+\)\?\)\@<=\w*$]]),
   fetcher = function()
     return config:get_todo_keywords().ALL
   end,
@@ -75,19 +93,25 @@ local function omni(findstart, base)
   if findstart == 1 then
     for _, context in ipairs(ctx) do
       local word = context.rgx:match_str(line)
-      if word then
+      if word and (not context.extra_cond or context.extra_cond(line, base)) then
         return word
       end
     end
     return -1
   end
 
+  local fetcher_ctx = { base = base, line = line }
   local results = {}
+
   for _, context in ipairs(ctx) do
-    if (not context.line_rgx or context.line_rgx:match_str(line)) and context.rgx:match_str(base) then
+    if
+      (not context.line_rgx or context.line_rgx:match_str(line))
+      and context.rgx:match_str(base)
+      and (not context.extra_cond or context.extra_cond(line, base))
+    then
       local items = {}
       if context.fetcher then
-        items = context.fetcher(base)
+        items = context.fetcher(fetcher_ctx)
       else
         items = { unpack(context.list) }
       end
