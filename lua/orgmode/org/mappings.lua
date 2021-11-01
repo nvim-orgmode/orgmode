@@ -488,14 +488,20 @@ function OrgMappings:open_at_point()
   end
   local parts = vim.split(link, '][', true)
   local url = parts[1]
+  local link_ctx = { base = url, skip_add_prefix = true }
   if url:find('^file:') then
-    if url:find(' +') then
+    if url:find(' +', 1, true) then
       parts = vim.split(url, ' +', true)
       url = parts[1]
       local line_number = parts[2]
       return vim.cmd(string.format('edit +%s %s', line_number, url:sub(6)))
     end
-    return vim.cmd(string.format('edit %s', url:sub(6)))
+
+    if url:find('^file:(.-)::') then
+      link_ctx.line = url
+    else
+      return vim.cmd(string.format('edit %s', url:sub(6)))
+    end
   end
   if url:find('^https?://') then
     if not vim.g.loaded_netrwPlugin then
@@ -507,12 +513,12 @@ function OrgMappings:open_at_point()
   if stat and stat.type == 'file' then
     return vim.cmd(string.format('edit %s', url))
   end
+
   local current_headline = Files.get_closest_headline()
   local headlines = vim.tbl_filter(function(headline)
     return headline.line ~= current_headline.line and headline.id ~= current_headline.id
   end, Hyperlinks.find_matching_links(
-    url,
-    true
+    link_ctx
   ))
   if #headlines == 0 then
     return
