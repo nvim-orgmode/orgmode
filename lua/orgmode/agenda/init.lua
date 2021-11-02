@@ -51,7 +51,7 @@ local function sort_agenda_items(agenda_items)
   return agenda_items
 end
 
-function sort_todos(todos)
+local function sort_todos(todos)
   table.sort(todos, function(a, b)
     if a:get_priority_number() ~= b:get_priority_number() then
       return a:get_priority_number() > b:get_priority_number()
