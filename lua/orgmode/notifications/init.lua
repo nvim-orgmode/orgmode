@@ -76,11 +76,11 @@ function Notifications:_cron_notifier(tasks)
     local subtitle = string.format('%s %s %s', string.rep('*', task.level), task.todo, task.title)
     local date = string.format('%s: %s', task.type, task.time:to_string())
 
-    if vim.fn.executable('notify-send') then
+    if vim.fn.executable('notify-send') == 1 then
       vim.loop.spawn('notify-send', { args = { string.format('%s\n%s\n%s', title, subtitle, date) } })
     end
 
-    if vim.fn.executable('terminal-notifier') then
+    if vim.fn.executable('terminal-notifier') == 1 then
       vim.loop.spawn('terminal-notifier', { args = { '-title', title, '-subtitle', subtitle, '-message', date } })
     end
   end
