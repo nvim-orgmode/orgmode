@@ -247,7 +247,7 @@ function OrgMappings:_adjust_date_part(direction, fallback, vim_mapping)
 
   local num = vim.fn.search([[\d]], 'c', vim.fn.line('.'))
   if num == 0 then
-    return vim.api.nvim_feedkeys(utils.esc(fallback), 'm', true)
+    return vim.api.nvim_feedkeys(utils.esc(fallback), 'n', true)
   end
 
   date_on_cursor = self:_get_date_under_cursor()
@@ -258,7 +258,7 @@ function OrgMappings:_adjust_date_part(direction, fallback, vim_mapping)
     end
   end
 
-  return vim.api.nvim_feedkeys(utils.esc(fallback), 'm', true)
+  return vim.api.nvim_feedkeys(utils.esc(fallback), 'n', true)
 end
 
 function OrgMappings:change_date()
@@ -732,7 +732,7 @@ function OrgMappings:_adjust_date(adjustment, fallback, vim_mapping)
 
   local num = vim.fn.search([[\d]], 'c', vim.fn.line('.'))
   if num == 0 then
-    return vim.api.nvim_feedkeys(utils.esc(fallback), 'm', true)
+    return vim.api.nvim_feedkeys(utils.esc(fallback), 'n', true)
   end
 
   date = self:_get_date_under_cursor()
@@ -741,7 +741,7 @@ function OrgMappings:_adjust_date(adjustment, fallback, vim_mapping)
     return self:_replace_date(new_date)
   end
 
-  return vim.api.nvim_feedkeys(utils.esc(fallback), 'm', true)
+  return vim.api.nvim_feedkeys(utils.esc(fallback), 'n', true)
 end
 
 function OrgMappings:_set_headline_tags(headline, tags_string)
