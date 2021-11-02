@@ -133,6 +133,7 @@ vim.cmd[[autocmd ColorScheme * hi link OrgHideLeadingStars MyCustomHlGroup]]
 *type*: `boolean`<br />
 *default value*: `false`<br />
 Conceal bold/italic/underline/code/verbatim markers.
+Ensure your `:h conceallevel` is set properly in order for this to function.
 
 #### **org_log_done**
 *type*: `string|nil`<br />
@@ -899,12 +900,12 @@ require('orgmode').setup({
         local date = string.format('%s: %s', task.type, task.time:to_string())
 
         -- Linux
-        if vim.fn.executable('notify-send') then
+        if vim.fn.executable('notify-send') == 1 then
           vim.loop.spawn('notify-send', { args = { string.format('%s\n%s\n%s', title, subtitle, date) }})
         end
 
         -- MacOS
-        if vim.fn.executable('terminal-notifier') then
+        if vim.fn.executable('terminal-notifier') == 1 then
           vim.loop.spawn('terminal-notifier', { args = { '-title', title, '-subtitle', subtitle, '-message', date }})
         end
       end
