@@ -83,7 +83,7 @@ describe('Agenda item', function()
           todo_keyword = 'TODO',
         },
       }, agenda_item.highlights)
-      assert.are.same('7 d. ago:', agenda_item.label)
+      assert.truthy(agenda_item.label:find('[78]%sd%.%sago:'), 'Relative days ago is invalid.')
 
       -- ignores past that are done
       headline = generate(string.format('DEADLINE: <%s>', today:subtract({ day = 7 }):to_string()), 'DONE')
