@@ -10,7 +10,7 @@
    3. [Capture mappings](#capture-mappings)
    4. [Org mappings](#org-mappings)
    4. [Text objects](#text-objects)
-3. [Diagnostics](#diagnostics)
+3. [Document Diagnostics](#document-diagnostics)
 4. [Autocompletion](#autocompletion)
 5. [Abbreviations](#abbreviations)
 6. [Colors](#colors)
@@ -746,7 +746,7 @@ require('orgmode').setup({
 })
 ```
 
-## Diagnostics
+## Document Diagnostics
 Since tree-sitter parser is being used to parse the file, if there are some syntax errors,
 it can potentially fail to parse specific parts of document when needed. If you are using Neovim v0.6.0 which has
 `vim.diagnostic` available (see `:help vim.diagnostic`), you will get diagnostic errors reported inline.<br />
