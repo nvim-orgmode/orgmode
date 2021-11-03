@@ -156,22 +156,22 @@ function OrgMappings:toggle_checkbox()
 end
 
 function OrgMappings:timestamp_up_day()
-  return self:_adjust_date('+1d', config.mappings.org.org_timestamp_up_day, '<S-UP>')
+  return self:_adjust_date('+1d', config.mappings.org.org_timestamp_up_day)
 end
 
 function OrgMappings:timestamp_down_day()
-  return self:_adjust_date('-1d', config.mappings.org.org_timestamp_down_day, '<S-DOWN>')
+  return self:_adjust_date('-1d', config.mappings.org.org_timestamp_down_day)
 end
 
 function OrgMappings:timestamp_up()
-  return self:_adjust_date_part('+', config.mappings.org.org_timestamp_up, '<C-a>')
+  return self:_adjust_date_part('+', config.mappings.org.org_timestamp_up)
 end
 
 function OrgMappings:timestamp_down()
-  return self:_adjust_date_part('-', config.mappings.org.org_timestamp_up, '<C-a>')
+  return self:_adjust_date_part('-', config.mappings.org.org_timestamp_down)
 end
 
-function OrgMappings:_adjust_date_part(direction, fallback, vim_mapping)
+function OrgMappings:_adjust_date_part(direction, fallback)
   local date_on_cursor = self:_get_date_under_cursor()
   local minute_adj = string.format('%dM', tonumber(config.org_time_stamp_rounding_minutes))
   local do_replacement = function(date)
@@ -234,23 +234,6 @@ function OrgMappings:_adjust_date_part(direction, fallback, vim_mapping)
     return true
   end
 
-  if date_on_cursor then
-    local replaced = do_replacement(date_on_cursor)
-    if replaced then
-      return true
-    end
-  end
-
-  if fallback ~= vim_mapping then
-    return vim.api.nvim_feedkeys(utils.esc(fallback), 'm', true)
-  end
-
-  local num = vim.fn.search([[\d]], 'c', vim.fn.line('.'))
-  if num == 0 then
-    return vim.api.nvim_feedkeys(utils.esc(fallback), 'n', true)
-  end
-
-  date_on_cursor = self:_get_date_under_cursor()
   if date_on_cursor then
     local replaced = do_replacement(date_on_cursor)
     if replaced then
@@ -717,17 +700,17 @@ end
 
 ---@param adjustment string
 ---@param fallback string
----@param vim_mapping string
 ---@return string
-function OrgMappings:_adjust_date(adjustment, fallback, vim_mapping)
+function OrgMappings:_adjust_date(adjustment, fallback)
   local date = self:_get_date_under_cursor()
   if date then
     local new_date = date:adjust(adjustment)
     return self:_replace_date(new_date)
   end
 
-  if fallback ~= vim_mapping then
-    return vim.api.nvim_feedkeys(utils.esc(fallback), 'm', true)
+  local is_count_mapping = vim.tbl_contains({ '<c-a>', '<c-x>' }, fallback:lower())
+  if not is_count_mapping then
+    return vim.api.nvim_feedkeys(utils.esc(fallback), 'n', true)
   end
 
   local num = vim.fn.search([[\d]], 'c', vim.fn.line('.'))
