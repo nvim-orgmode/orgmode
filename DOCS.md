@@ -135,6 +135,11 @@ vim.cmd[[autocmd ColorScheme * hi link OrgHideLeadingStars MyCustomHlGroup]]
 Conceal bold/italic/underline/code/verbatim markers.
 Ensure your `:h conceallevel` is set properly in order for this to function.
 
+#### **org_ellipsis**
+*type*: `string`<br />
+*default value*: `...`<br />
+Marker used to indicate a folded headline.
+
 #### **org_log_done**
 *type*: `string|nil`<br />
 *default value*: `time`<br />
