@@ -16,11 +16,12 @@ CONTENTS                                                        *orgmode-content
             1.1.1.6. org_archive_location...........|orgmode-org_archive_location|
             1.1.1.7. org_hide_leading_stars.......|orgmode-org_hide_leading_stars|
             1.1.1.8. org_hide_emphasis_markers.|orgmode-org_hide_emphasis_markers|
-            1.1.1.9. org_log_done...........................|orgmode-org_log_done|
-            1.1.1.10. org_highlight_latex_and_related.|orgmode-org_highlight_latex_and_related|
-            1.1.1.11. org_indent_mode....................|orgmode-org_indent_mode|
-            1.1.1.12. org_custom_exports..............|orgmode-org_custom_exports|
-            1.1.1.13. org_time_stamp_rounding_minutes.|orgmode-org_time_stamp_rounding_minutes|
+            1.1.1.9. org_ellipsis...........................|orgmode-org_ellipsis|
+            1.1.1.10. org_log_done...........................|orgmode-org_log_done|
+            1.1.1.11. org_highlight_latex_and_related.|orgmode-org_highlight_latex_and_related|
+            1.1.1.12. org_indent_mode....................|orgmode-org_indent_mode|
+            1.1.1.13. org_custom_exports..............|orgmode-org_custom_exports|
+            1.1.1.14. org_time_stamp_rounding_minutes.|orgmode-org_time_stamp_rounding_minutes|
         1.1.2. Agenda settings...........................|orgmode-agenda_settings|
             1.1.2.1. org_deadline_warning_days.|orgmode-org_deadline_warning_days|
             1.1.2.2. org_agenda_span.....................|orgmode-org_agenda_span|
@@ -284,6 +285,12 @@ type: `boolean`
 default value: `false`
 Conceal bold/italic/underline/code/verbatim markers.
 Ensure your `:h conceallevel` is set properly in order for this to function.
+
+ORG_ELLIPSIS                                                *orgmode-org_ellipsis*
+
+type: `string`
+default value: `...`
+Marker used to indicate folded a headline.
 
 ORG_LOG_DONE                                                *orgmode-org_log_done*
 
