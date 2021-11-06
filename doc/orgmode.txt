@@ -17,7 +17,7 @@ CONTENTS                                                        *orgmode-content
             1.1.1.7. org_hide_leading_stars.......|orgmode-org_hide_leading_stars|
             1.1.1.8. org_hide_emphasis_markers.|orgmode-org_hide_emphasis_markers|
             1.1.1.9. org_ellipsis...........................|orgmode-org_ellipsis|
-            1.1.1.10. org_log_done...........................|orgmode-org_log_done|
+            1.1.1.10. org_log_done..........................|orgmode-org_log_done|
             1.1.1.11. org_highlight_latex_and_related.|orgmode-org_highlight_latex_and_related|
             1.1.1.12. org_indent_mode....................|orgmode-org_indent_mode|
             1.1.1.13. org_custom_exports..............|orgmode-org_custom_exports|
@@ -290,7 +290,7 @@ ORG_ELLIPSIS                                                *orgmode-org_ellipsi
 
 type: `string`
 default value: `...`
-Marker used to indicate folded a headline.
+Marker used to indicate a folded headline.
 
 ORG_LOG_DONE                                                *orgmode-org_log_done*
 
@@ -757,7 +757,7 @@ Refile current headline to destination
 ORG_TIMESTAMP_UP                                        *orgmode-org_timestamp_up*
 
 mapped to: `<C-a>`
-Increase date part under under cursor.
+Increase date part under under cursor. Accepts count: (Example: `5<C-a>`)
 `|` in examples references cursor position.
 * Year - Example date: `<202|1-10-01 Fri 10:30>` becomes `<202|2-10-01 Sat 10:30>`
 * Month - Example date: `<2021-1|0-01 Fri 10:30>` becomes `<2022-1|1-01 Mon 10:30>`
@@ -776,12 +776,12 @@ Same as org_timestamp_up (#org_timestamp_up), just opposite direction.
 ORG_TIMESTAMP_UP_DAY                                *orgmode-org_timestamp_up_day*
 
 mapped to: `<S-UP>`
-Increase date under cursor by 1 day
+Increase date under cursor by 1 or "count" day(s) (Example count: `5<S-UP>`).
 
 ORG_TIMESTAMP_DOWN_DAY                            *orgmode-org_timestamp_down_day*
 
 mapped to: `<S-DOWN>`
-Decrease date under cursor by 1 day
+Decrease date under cursor by 1 or "count" day(s) (Example count: `5<S-UP>`).
 
 ORG_CHANGE_DATE                                          *orgmode-org_change_date*
 
