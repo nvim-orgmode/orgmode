@@ -156,24 +156,27 @@ function OrgMappings:toggle_checkbox()
 end
 
 function OrgMappings:timestamp_up_day()
-  return self:_adjust_date('+1d', config.mappings.org.org_timestamp_up_day)
+  return self:_adjust_date(vim.v.count1, 'd', config.mappings.org.org_timestamp_up_day)
 end
 
 function OrgMappings:timestamp_down_day()
-  return self:_adjust_date('-1d', config.mappings.org.org_timestamp_down_day)
+  return self:_adjust_date(-vim.v.count1, 'd', config.mappings.org.org_timestamp_down_day)
 end
 
 function OrgMappings:timestamp_up()
-  return self:_adjust_date_part('+', config.mappings.org.org_timestamp_up)
+  return self:_adjust_date_part('+', vim.v.count1, config.mappings.org.org_timestamp_up)
 end
 
 function OrgMappings:timestamp_down()
-  return self:_adjust_date_part('-', config.mappings.org.org_timestamp_down)
+  return self:_adjust_date_part('-', vim.v.count1, config.mappings.org.org_timestamp_down)
 end
 
-function OrgMappings:_adjust_date_part(direction, fallback)
+function OrgMappings:_adjust_date_part(direction, amount, fallback)
   local date_on_cursor = self:_get_date_under_cursor()
-  local minute_adj = string.format('%dM', tonumber(config.org_time_stamp_rounding_minutes))
+  local get_adj = function(span, count)
+    return string.format('%d%s', count or amount, span)
+  end
+  local minute_adj = get_adj('M', tonumber(config.org_time_stamp_rounding_minutes) * amount)
   local do_replacement = function(date)
     local col = vim.fn.col('.')
     local char = vim.fn.getline('.'):sub(col, col)
@@ -187,20 +190,20 @@ function OrgMappings:_adjust_date_part(direction, fallback)
     local adj = nil
     if node:type() == 'date' then
       if col_from_start <= 5 then
-        adj = '1y'
+        adj = get_adj('y')
       elseif col_from_start <= 8 then
-        adj = '1m'
+        adj = get_adj('m')
       elseif col_from_start <= 15 then
-        adj = '1d'
+        adj = get_adj('d')
       end
     elseif node:type() == 'time' then
       local has_end_time = node:parent() and node:parent():type() == 'timerange'
       if col_from_start <= 17 then
-        adj = '1h'
+        adj = get_adj('h')
       elseif col_from_start <= 20 then
         adj = minute_adj
       elseif has_end_time and col_from_start <= 23 then
-        adj = '1h'
+        adj = get_adj('h')
         modify_end_time = true
       elseif has_end_time and col_from_start <= 26 then
         adj = minute_adj
@@ -698,10 +701,12 @@ function OrgMappings:_get_date_under_cursor(col_offset)
   return dates[1]
 end
 
----@param adjustment string
+---@param amount number
+---@param span string
 ---@param fallback string
 ---@return string
-function OrgMappings:_adjust_date(adjustment, fallback)
+function OrgMappings:_adjust_date(amount, span, fallback)
+  local adjustment = string.format('%s%d%s', amount > 0 and '+' or '', amount, span)
   local date = self:_get_date_under_cursor()
   if date then
     local new_date = date:adjust(adjustment)

@@ -538,7 +538,7 @@ Mappings for `org` files.
 Refile current headline to destination
 #### **org_timestamp_up**
 *mapped to*: `<C-a>`<br />
-Increase date part under under cursor.<br />
+Increase date part under under cursor. Accepts count: (Example: `5<C-a>`)<br />
 `|` in examples references cursor position.<br />
 * Year - Example date: `<202|1-10-01 Fri 10:30>` becomes `<202|2-10-01 Sat 10:30>`
 * Month - Example date: `<2021-1|0-01 Fri 10:30>` becomes `<2022-1|1-01 Mon 10:30>`
@@ -553,10 +553,10 @@ Decrease date part under under cursor.<br />
 Same as [org_timestamp_up](#org_timestamp_up), just opposite direction.
 #### **org_timestamp_up_day**
 *mapped to*: `<S-UP>`<br />
-Increase date under cursor by 1 day
+Increase date under cursor by 1 or "count" day(s) (Example count: `5<S-UP>`).
 #### **org_timestamp_down_day**
 *mapped to*: `<S-DOWN>`<br />
-Decrease date under cursor by 1 day
+Decrease date under cursor by 1 or "count" day(s) (Example count: `5<S-UP>`).
 #### **org_change_date**
 *mapped to*: `cid`<br />
 Change date under cursor. Opens calendar to select new date
