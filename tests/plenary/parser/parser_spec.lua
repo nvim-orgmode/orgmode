@@ -1,8 +1,31 @@
-local Types = require('orgmode.parser.types')
-local parser = require('orgmode.parser')
+local File = require('orgmode.parser.file')
 local Range = require('orgmode.parser.range')
 local Date = require('orgmode.objects.date')
+local Duration = require('orgmode.objects.duration')
 local config = require('orgmode.config')
+local Logbook = require('orgmode.parser.logbook')
+
+local function assert_section(root, section, expect)
+  assert.are.same(expect.content or {}, section.content)
+  assert.are.same(expect.dates or {}, section.dates)
+  assert.are.same(expect.sections or {}, section.sections)
+  assert.are.same(expect.line or '', section.line)
+  assert.are.same(expect.line_number or 0, section.line_number)
+  assert.are.same(expect.level or 0, section.level)
+  assert.are.same(expect.title or '', section.title)
+  assert.are.same(expect.priority or '', section.priority)
+  assert.are.same(expect.properties_items or {}, section.properties.items)
+  assert.are.same(expect.properties_range, section.properties.range)
+  assert.are.same(expect.todo_keyword or { type = '', value = '' }, section.todo_keyword)
+  assert.are.same(expect.tags or {}, section.tags)
+  assert.are.same(expect.own_tags or {}, section:get_own_tags())
+  assert.are.same(expect.category or 'todos', section.category)
+  assert.are.same(expect.file or '', section.file)
+  assert.are.same(root, section.root)
+  assert.are.same(expect.parent, section.parent)
+  assert.are.same(expect.logbook, section.logbook)
+  assert.is.Not.Nil(section.node)
+end
 
 describe('Parser', function()
   it('should parse filetags headline', function()
@@ -11,23 +34,14 @@ describe('Parser', function()
       '* TODO Something with a lot of tags :WORK:',
     }
 
-    local parsed = parser.parse(lines, 'todos')
+    local parsed = File.from_content(lines, 'todos')
     assert.are.same(parsed.tags, { 'Tag1', 'Tag2' })
     assert.are.same(false, parsed.is_archive_file)
-    assert.are.same({
-      content = {},
-      dates = {},
-      headlines = {},
-      level = 1,
+    assert_section(parsed, parsed:get_section(1), {
       line = '* TODO Something with a lot of tags :WORK:',
-      id = 2,
-      range = Range.from_line(2),
-      parent = parsed,
-      type = 'HEADLINE',
-      archived = false,
       title = 'Something with a lot of tags',
-      priority = '',
-      properties = { items = {} },
+      line_number = 2,
+      level = 1,
       todo_keyword = {
         type = 'TODO',
         value = 'TODO',
@@ -39,11 +53,8 @@ describe('Parser', function()
         }),
       },
       tags = { 'Tag1', 'Tag2', 'WORK' },
-      category = 'todos',
-      file = '',
-    }, parsed:get_item(
-      2
-    ))
+      own_tags = { 'WORK' },
+    })
   end)
 
   it('should parse lines', function()
@@ -62,37 +73,18 @@ describe('Parser', function()
       '* NOKEYWORD Headline with wrong todo keyword and wrong tag format :WORK : OFFICE:',
     }
 
-    local parsed = parser.parse(lines, 'todos')
-    assert.are.same({
-      level = 0,
-      line = 'Top level content',
-      range = Range.from_line(1),
-      id = 1,
-      parent = parsed,
-      dates = {},
-      type = 'CONTENT',
-    }, parsed:get_item(
-      1
-    ))
-    assert.are.same({
-      content = {},
-      dates = {},
-      headlines = { parsed:get_item(3) },
-      level = 1,
+    local parsed = File.from_content(lines, 'todos')
+    local first_section = parsed:get_section(1)
+
+    assert_section(parsed, first_section, {
+      sections = { parsed:get_section(2) },
       line = '* TODO Test orgmode',
-      range = Range:new({ start_line = 2, end_line = 6 }),
-      id = 2,
-      parent = parsed,
-      priority = '',
-      properties = { items = {} },
+      line_number = 2,
+      level = 1,
       title = 'Test orgmode',
-      type = 'HEADLINE',
-      archived = false,
-      category = 'todos',
-      file = '',
       todo_keyword = {
-        value = 'TODO',
         type = 'TODO',
+        value = 'TODO',
         range = Range:new({
           start_line = 2,
           end_line = 2,
@@ -100,29 +92,21 @@ describe('Parser', function()
           end_col = 6,
         }),
       },
-      tags = {},
-    }, parsed:get_item(
-      2
-    ))
-    assert.are.same({
-      content = { parsed:get_item(4) },
-      dates = {},
-      headlines = { parsed:get_item(5) },
-      level = 2,
+    })
+
+    local second_section = parsed:get_section(2)
+
+    assert_section(parsed, second_section, {
+      content = { 'Some content for level 2' },
+      sections = { parsed:get_section(3) },
       line = '** TODO [#A] Test orgmode level 2 :PRIVATE:',
-      range = Range:new({ start_line = 3, end_line = 6 }),
-      id = 3,
-      parent = parsed:get_item(2),
-      priority = 'A',
-      properties = { items = {} },
+      line_number = 3,
+      level = 2,
       title = '[#A] Test orgmode level 2',
-      type = 'HEADLINE',
-      archived = false,
-      category = 'todos',
-      file = '',
+      priority = 'A',
       todo_keyword = {
-        value = 'TODO',
         type = 'TODO',
+        value = 'TODO',
         range = Range:new({
           start_line = 3,
           end_line = 3,
@@ -131,39 +115,22 @@ describe('Parser', function()
         }),
       },
       tags = { 'PRIVATE' },
-    }, parsed:get_item(
-      3
-    ))
-    assert.are.same({
-      level = 2,
-      line = 'Some content for level 2',
-      id = 4,
-      range = Range.from_line(4),
-      dates = {},
-      parent = parsed:get_item(3),
-      type = 'CONTENT',
-    }, parsed:get_item(
-      4
-    ))
-    assert.are.same({
-      content = { parsed:get_item(6) },
-      dates = {},
-      headlines = {},
-      level = 3,
+      own_tags = { 'PRIVATE' },
+      parent = first_section,
+    })
+
+    local third_section = parsed:get_section(3)
+
+    assert_section(parsed, third_section, {
+      content = { 'Content Level 3' },
       line = '*** TODO [#1] Level 3',
-      id = 5,
-      range = Range:new({ start_line = 5, end_line = 6 }),
-      parent = parsed:get_item(3),
-      priority = '1',
-      properties = { items = {} },
+      line_number = 5,
+      level = 3,
       title = '[#1] Level 3',
-      type = 'HEADLINE',
-      archived = false,
-      category = 'todos',
-      file = '',
+      priority = '1',
       todo_keyword = {
-        value = 'TODO',
         type = 'TODO',
+        value = 'TODO',
         range = Range:new({
           start_line = 5,
           end_line = 5,
@@ -172,39 +139,20 @@ describe('Parser', function()
         }),
       },
       tags = { 'PRIVATE' },
-    }, parsed:get_item(
-      5
-    ))
-    assert.are.same({
-      level = 3,
-      line = 'Content Level 3',
-      id = 6,
-      range = Range.from_line(6),
-      dates = {},
-      parent = parsed:get_item(5),
-      type = 'CONTENT',
-    }, parsed:get_item(
-      6
-    ))
-    assert.are.same({
-      content = { parsed:get_item(8) },
-      dates = {},
-      headlines = {},
-      level = 1,
+      parent = second_section,
+    })
+
+    local fourth_section = parsed:get_section(4)
+
+    assert_section(parsed, fourth_section, {
+      content = { 'content for top level todo' },
       line = '* DONE top level todo :WORK:',
-      id = 7,
-      priority = '',
-      properties = { items = {} },
-      range = Range:new({ start_line = 7, end_line = 8 }),
+      line_number = 7,
+      level = 1,
       title = 'top level todo',
-      parent = parsed,
-      type = 'HEADLINE',
-      archived = false,
-      category = 'todos',
-      file = '',
       todo_keyword = {
-        value = 'DONE',
         type = 'DONE',
+        value = 'DONE',
         range = Range:new({
           start_line = 7,
           end_line = 7,
@@ -213,39 +161,21 @@ describe('Parser', function()
         }),
       },
       tags = { 'WORK' },
-    }, parsed:get_item(
-      7
-    ))
-    assert.are.same({
-      level = 1,
-      line = 'content for top level todo',
-      id = 8,
-      range = Range.from_line(8),
-      parent = parsed:get_item(7),
-      dates = {},
-      type = 'CONTENT',
-    }, parsed:get_item(
-      8
-    ))
-    assert.are.same({
-      content = { parsed:get_item(10) },
-      dates = {},
-      headlines = { parsed:get_item(11) },
-      level = 1,
+      own_tags = { 'WORK' },
+    })
+
+    local fifth_section = parsed:get_section(5)
+
+    assert_section(parsed, fifth_section, {
+      content = { 'multiple tags content, tags not read from content :FROMCONTENT:' },
+      sections = { parsed:get_section(6) },
       line = '* TODO top level todo with multiple tags :OFFICE:PROJECT:',
-      id = 9,
-      range = Range:new({ start_line = 9, end_line = 11 }),
-      parent = parsed,
-      priority = '',
-      properties = { items = {} },
+      line_number = 9,
+      level = 1,
       title = 'top level todo with multiple tags',
-      type = 'HEADLINE',
-      archived = false,
-      category = 'todos',
-      file = '',
       todo_keyword = {
-        value = 'TODO',
         type = 'TODO',
+        value = 'TODO',
         range = Range:new({
           start_line = 9,
           end_line = 9,
@@ -254,39 +184,19 @@ describe('Parser', function()
         }),
       },
       tags = { 'OFFICE', 'PROJECT' },
-    }, parsed:get_item(
-      9
-    ))
-    assert.are.same({
-      level = 1,
-      line = 'multiple tags content, tags not read from content :FROMCONTENT:',
-      id = 10,
-      range = Range.from_line(10),
-      dates = {},
-      parent = parsed:get_item(9),
-      type = 'CONTENT',
-    }, parsed:get_item(
-      10
-    ))
-    assert.are.same({
-      content = {},
-      dates = {},
-      headlines = {},
-      level = 2,
+      own_tags = { 'OFFICE', 'PROJECT' },
+    })
+
+    local sixth_section = parsed:get_section(6)
+
+    assert_section(parsed, sixth_section, {
       line = '** TODO Working on this now :OFFICE:NESTED:',
-      id = 11,
-      range = Range.from_line(11),
-      parent = parsed:get_item(9),
-      type = 'HEADLINE',
-      archived = false,
-      category = 'todos',
-      file = '',
-      priority = '',
-      properties = { items = {} },
+      line_number = 11,
+      level = 2,
       title = 'Working on this now',
       todo_keyword = {
-        value = 'TODO',
         type = 'TODO',
+        value = 'TODO',
         range = Range:new({
           start_line = 11,
           end_line = 11,
@@ -295,120 +205,39 @@ describe('Parser', function()
         }),
       },
       tags = { 'OFFICE', 'PROJECT', 'NESTED' },
-    }, parsed:get_item(
-      11
-    ))
-    assert.are.same({
-      content = {},
-      dates = {},
-      headlines = {},
-      level = 1,
+      own_tags = { 'OFFICE', 'NESTED' },
+      parent = fifth_section,
+    })
+
+    local seventh_section = parsed:get_section(7)
+
+    assert_section(parsed, seventh_section, {
       line = '* NOKEYWORD Headline with wrong todo keyword and wrong tag format :WORK : OFFICE:',
-      id = 12,
-      range = Range.from_line(12),
-      parent = parsed,
-      priority = '',
-      properties = { items = {} },
+      line_number = 12,
+      level = 1,
       title = 'NOKEYWORD Headline with wrong todo keyword and wrong tag format :WORK : OFFICE:',
-      type = 'HEADLINE',
-      archived = false,
-      category = 'todos',
-      file = '',
-      todo_keyword = { value = '', type = '' },
-      tags = {},
-    }, parsed:get_item(
-      12
-    ))
-    assert.are.same(0, parsed.level)
-    assert.are.same(0, parsed.id)
-    assert.are.same(lines, parsed.lines)
-    assert.are.same(false, parsed.is_archive_file)
-    assert.are.same(
-      Range:new({
-        start_line = 1,
-        end_line = 12,
-      }),
-      parsed.range
-    )
-    assert.are.same(4, #parsed.headlines)
-    assert.are.same(parsed.headlines[1], parsed.items[2])
-    assert.are.same(parsed.headlines[2], parsed.items[7])
-    assert.are.same(parsed.headlines[3], parsed.items[9])
-    assert.are.same(parsed.headlines[4], parsed.items[12])
+    })
   end)
 
   it('should parse headline and its planning dates', function()
     local lines = {
       '* TODO Test orgmode <2021-05-15 Sat> :WORK:',
-      'DEADLINE: <2021-05-20 Thu> SCHEDULED: <2021-05-18> CLOSED: <2021-05-21 Fri>',
+      'DEADLINE: <2021-05-20 Thu> SCHEDULED: <2021-05-18> CLOSED: [2021-05-21 Fri]',
       '* TODO get deadline only if first line after headline',
       'Some content',
       'DEADLINE: <2021-05-22 Sat>',
     }
 
-    local parsed = parser.parse(lines, 'work')
-    assert.are.same({
-      content = { parsed:get_item(2) },
-      dates = {
-        Date.from_string('2021-05-15 Sat', {
-          active = true,
-          range = Range:new({
-            start_line = 1,
-            end_line = 1,
-            start_col = 21,
-            end_col = 36,
-          }),
-        }),
-        Date.from_string('2021-05-20 Thu', {
-          type = 'DEADLINE',
-          active = true,
-          range = Range:new({
-            start_line = 2,
-            end_line = 2,
-            start_col = 11,
-            end_col = 26,
-          }),
-        }),
-        Date.from_string('2021-05-18', {
-          type = 'SCHEDULED',
-          active = true,
-          range = Range:new({
-            start_line = 2,
-            end_line = 2,
-            start_col = 39,
-            end_col = 50,
-          }),
-        }),
-        Date.from_string('2021-05-21 Fri', {
-          type = 'CLOSED',
-          active = true,
-          range = Range:new({
-            start_line = 2,
-            end_line = 2,
-            start_col = 60,
-            end_col = 75,
-          }),
-        }),
-      },
-      headlines = {},
-      level = 1,
+    local parsed = File.from_content(lines, 'work')
+    local first_section = parsed:get_section(1)
+    assert_section(parsed, first_section, {
       line = '* TODO Test orgmode <2021-05-15 Sat> :WORK:',
-      id = 1,
-      range = Range:new({
-        start_line = 1,
-        end_line = 2,
-      }),
-      parent = parsed,
-      priority = '',
-      properties = { items = {} },
+      line_number = 1,
+      level = 1,
       title = 'Test orgmode <2021-05-15 Sat>',
-      type = 'HEADLINE',
-      archived = false,
-      category = 'work',
-      file = '',
       todo_keyword = {
-        value = 'TODO',
         type = 'TODO',
+        value = 'TODO',
         range = Range:new({
           start_line = 1,
           end_line = 1,
@@ -417,20 +246,19 @@ describe('Parser', function()
         }),
       },
       tags = { 'WORK' },
-    }, parsed:get_item(
-      1
-    ))
-    assert.are.same({
-      level = 1,
-      line = 'DEADLINE: <2021-05-20 Thu> SCHEDULED: <2021-05-18> CLOSED: <2021-05-21 Fri>',
-      id = 2,
-      range = Range:new({
-        start_line = 2,
-        end_line = 2,
-      }),
-      parent = parsed:get_item(1),
-      type = 'PLANNING',
+      own_tags = { 'WORK' },
+      category = 'work',
       dates = {
+        -- TODO: Uncomment this when support for headline dates is added
+        -- Date.from_string('2021-05-15 Sat', {
+        --   active = true,
+        --   range = Range:new({
+        --     start_line = 1,
+        --     end_line = 1,
+        --     start_col = 21,
+        --     end_col = 36,
+        --   }),
+        -- }),
         Date.from_string('2021-05-20 Thu', {
           type = 'DEADLINE',
           active = true,
@@ -453,7 +281,7 @@ describe('Parser', function()
         }),
         Date.from_string('2021-05-21 Fri', {
           type = 'CLOSED',
-          active = true,
+          active = false,
           range = Range:new({
             start_line = 2,
             end_line = 2,
@@ -462,92 +290,51 @@ describe('Parser', function()
           }),
         }),
       },
-    }, parsed:get_item(
-      2
-    ))
-    assert.are.same({
-      content = { parsed:get_item(4), parsed:get_item(5) },
-      dates = {
-        Date.from_string('2021-05-22 Sat', {
-          active = true,
-          type = 'NONE',
-          range = Range:new({
-            start_line = 5,
-            end_line = 5,
-            start_col = 11,
-            end_col = 26,
-          }),
-        }),
-      },
-      headlines = {},
+    })
+  end)
+
+  it('should properly parse non planning date from planning line', function()
+    local lines = {
+      '* TODO Test orgmode :WORK:',
+      '<2021-10-01 Fri>',
+      '* TODO get deadline only if first line after headline',
+      'Some content',
+      'DEADLINE: <2021-05-22 Sat>',
+    }
+
+    local parsed = File.from_content(lines, 'work')
+    local first_section = parsed:get_section(1)
+    assert_section(parsed, first_section, {
+      line = '* TODO Test orgmode :WORK:',
+      line_number = 1,
       level = 1,
-      line = '* TODO get deadline only if first line after headline',
-      id = 3,
-      range = Range:new({
-        start_line = 3,
-        end_line = 5,
-      }),
-      parent = parsed,
-      priority = '',
-      properties = { items = {} },
-      title = 'get deadline only if first line after headline',
-      type = 'HEADLINE',
-      archived = false,
-      category = 'work',
-      file = '',
+      title = 'Test orgmode',
       todo_keyword = {
-        value = 'TODO',
         type = 'TODO',
+        value = 'TODO',
         range = Range:new({
-          start_line = 3,
-          end_line = 3,
+          start_line = 1,
+          end_line = 1,
           start_col = 3,
           end_col = 6,
         }),
       },
-      tags = {},
-    }, parsed:get_item(
-      3
-    ))
-    assert.are.same({
-      level = 1,
-      line = 'Some content',
-      range = Range:new({
-        start_line = 4,
-        end_line = 4,
-      }),
-      id = 4,
-      dates = {},
-      parent = parsed:get_item(3),
-      type = 'CONTENT',
-    }, parsed:get_item(
-      4
-    ))
-    assert.are.same({
-      level = 1,
-      line = 'DEADLINE: <2021-05-22 Sat>',
+      tags = { 'WORK' },
+      own_tags = { 'WORK' },
+      category = 'work',
       dates = {
-        Date.from_string('2021-05-22 Sat', {
-          type = 'DEADLINE',
+        Date.from_string('2021-10-01 Fri', {
+          type = 'NONE',
           active = true,
           range = Range:new({
-            start_line = 5,
-            end_line = 5,
-            start_col = 11,
-            end_col = 26,
+            start_line = 2,
+            end_line = 2,
+            start_col = 1,
+            end_col = 16,
           }),
         }),
       },
-      range = Range:new({
-        start_line = 5,
-        end_line = 5,
-      }),
-      id = 5,
-      parent = parsed:get_item(3),
-      type = Types.PLANNING,
-    }, parsed:get_item(
-      5
-    ))
+    })
   end)
 
   it('should parse properties drawer', function()
@@ -560,52 +347,15 @@ describe('Parser', function()
       '* TODO Another todo',
     }
 
-    local parsed = parser.parse(lines, 'work')
-    assert.are.same({
-      content = {
-        parsed:get_item(2),
-        parsed:get_item(3),
-        parsed:get_item(4),
-        parsed:get_item(5),
-      },
-      dates = {
-        Date.from_string('2021-05-10 11:00', {
-          type = 'DEADLINE',
-          active = true,
-          range = Range:new({
-            start_line = 2,
-            end_line = 2,
-            start_col = 11,
-            end_col = 28,
-          }),
-        }),
-      },
-      headlines = {},
-      level = 1,
+    local parsed = File.from_content(lines, 'work')
+    assert_section(parsed, parsed:get_section(1), {
       line = '* TODO Test orgmode :WORK:',
-      id = 1,
-      range = Range:new({
-        start_line = 1,
-        end_line = 5,
-      }),
-      parent = parsed,
-      type = 'HEADLINE',
-      archived = false,
+      line_number = 1,
+      level = 1,
       title = 'Test orgmode',
-      priority = '',
-      properties = {
-        items = {
-          SOME_PROP = 'some value',
-        },
-        range = Range:new({
-          start_line = 3,
-          end_line = 5,
-        }),
-        valid = true,
-      },
       todo_keyword = {
-        value = 'TODO',
         type = 'TODO',
+        value = 'TODO',
         range = Range:new({
           start_line = 1,
           end_line = 1,
@@ -613,15 +363,6 @@ describe('Parser', function()
           end_col = 6,
         }),
       },
-      tags = { 'WORK' },
-      category = 'work',
-      file = '',
-    }, parsed:get_item(
-      1
-    ))
-    assert.are.same({
-      level = 1,
-      line = 'DEADLINE: <2021-05-10 11:00>',
       dates = {
         Date.from_string('2021-05-10 11:00', {
           type = 'DEADLINE',
@@ -634,69 +375,37 @@ describe('Parser', function()
           }),
         }),
       },
-      range = Range:new({
-        start_line = 2,
-        end_line = 2,
-      }),
-      id = 2,
-      parent = parsed:get_item(1),
-      type = Types.PLANNING,
-    }, parsed:get_item(
-      2
-    ))
-    assert.are.same({
-      level = 1,
-      line = ':PROPERTIES:',
-      dates = {},
-      range = Range:new({
+      tags = { 'WORK' },
+      own_tags = { 'WORK' },
+      category = 'work',
+      properties_items = {
+        some_prop = 'some value',
+      },
+      properties_range = Range:new({
         start_line = 3,
-        end_line = 3,
-      }),
-      id = 3,
-      parent = parsed:get_item(1),
-      type = Types.DRAWER,
-      drawer = {
-        name = 'PROPERTIES',
-      },
-    }, parsed:get_item(
-      3
-    ))
-    assert.are.same({
-      level = 1,
-      line = ':SOME_PROP: some value',
-      dates = {},
-      range = Range:new({
-        start_line = 4,
-        end_line = 4,
-      }),
-      id = 4,
-      parent = parsed:get_item(1),
-      type = Types.DRAWER,
-      drawer = {
-        properties = {
-          SOME_PROP = 'some value',
-        },
-      },
-    }, parsed:get_item(
-      4
-    ))
-    assert.are.same({
-      level = 1,
-      line = ':END:',
-      dates = {},
-      range = Range:new({
-        start_line = 5,
         end_line = 5,
+        start_col = 1,
+        end_col = 0,
       }),
-      id = 5,
-      parent = parsed:get_item(1),
-      type = Types.DRAWER,
-      drawer = {
-        ended = true,
+    })
+
+    assert_section(parsed, parsed:get_section(2), {
+      line = '* TODO Another todo',
+      line_number = 6,
+      level = 1,
+      title = 'Another todo',
+      todo_keyword = {
+        type = 'TODO',
+        value = 'TODO',
+        range = Range:new({
+          start_line = 6,
+          end_line = 6,
+          start_col = 3,
+          end_col = 6,
+        }),
       },
-    }, parsed:get_item(
-      5
-    ))
+      category = 'work',
+    })
   end)
 
   it('should not parse properties that are not in the :PROPERTIES: drawer', function()
@@ -707,8 +416,9 @@ describe('Parser', function()
       ':END:',
       '* TODO Another todo',
     }
-    local parsed = parser.parse(lines, 'work')
-    assert.are.same({ items = {} }, parsed:get_item(1).properties)
+    local parsed = File.from_content(lines, 'work')
+    local section = parsed:get_section(1)
+    assert.are.same({ items = {} }, section.properties)
   end)
 
   it('should parse properties only if its positioned after headline or planning date', function()
@@ -722,8 +432,8 @@ describe('Parser', function()
       '* TODO Another todo',
     }
 
-    local parsed = parser.parse(lines, 'work')
-    local headline = parsed:get_item(1)
+    local parsed = File.from_content(lines, 'work')
+    local headline = parsed:get_section(1)
     assert.are.same({}, headline.properties.items)
 
     lines = {
@@ -735,8 +445,8 @@ describe('Parser', function()
       '* TODO Another todo',
     }
 
-    parsed = parser.parse(lines, 'work')
-    headline = parsed:get_item(1)
+    parsed = File.from_content(lines, 'work')
+    headline = parsed:get_section(1)
     assert.are.same({}, headline.properties.items)
 
     lines = {
@@ -747,9 +457,9 @@ describe('Parser', function()
       '* TODO Another todo',
     }
 
-    parsed = parser.parse(lines, 'work')
-    headline = parsed:get_item(1)
-    assert.are.same({ SOME_PROP = 'some value' }, headline.properties.items)
+    parsed = File.from_content(lines, 'work')
+    headline = parsed:get_section(1)
+    assert.are.same({ some_prop = 'some value' }, headline.properties.items)
 
     lines = {
       '* TODO Test orgmode :WORK:',
@@ -760,9 +470,9 @@ describe('Parser', function()
       '* TODO Another todo',
     }
 
-    parsed = parser.parse(lines, 'work')
-    headline = parsed:get_item(1)
-    assert.are.same({ SOME_PROP = 'some value' }, headline.properties.items)
+    parsed = File.from_content(lines, 'work')
+    headline = parsed:get_section(1)
+    assert.are.same({ some_prop = 'some value' }, headline.properties.items)
   end)
 
   it('should override headline category from property', function()
@@ -774,8 +484,8 @@ describe('Parser', function()
       ':END:',
       '* TODO Another todo',
     }
-    local parsed = parser.parse(lines, 'work')
-    assert.are.same('work', parsed:get_item(1):get_category())
+    local parsed = File.from_content(lines, 'work')
+    assert.are.same('work', parsed:get_section(1):get_category())
     lines = {
       '* TODO Test orgmode :WORK:',
       'DEADLINE: <2021-05-10 11:00>',
@@ -785,8 +495,8 @@ describe('Parser', function()
       ':END:',
       '* TODO Another todo',
     }
-    parsed = parser.parse(lines, 'work')
-    assert.are.same('my-category', parsed:get_item(1):get_category())
+    parsed = File.from_content(lines, 'work')
+    assert.are.same('my-category', parsed:get_section(1):get_category())
   end)
 
   it('should parse source code #BEGIN_SRC filetype', function()
@@ -798,7 +508,7 @@ describe('Parser', function()
       '#+END_SRC',
       '* TODO Another todo',
     }
-    local parsed = parser.parse(lines, 'work')
+    local parsed = File.from_content(lines, 'work')
     assert.are.same({ 'javascript' }, parsed.source_code_filetypes)
   end)
 
@@ -811,7 +521,7 @@ describe('Parser', function()
       '#+END_SRC',
       '* TODO Another todo',
     }
-    local parsed = parser.parse(lines, 'work', '/tmp/my-work.org_archive', true)
+    local parsed = File.from_content(lines, 'work', '/tmp/my-work.org_archive', true)
     assert.are.same(parsed.is_archive_file, true)
   end)
 
@@ -825,21 +535,160 @@ describe('Parser', function()
       '   Second level content',
       '*** TODO Child todo',
     }
-    local parsed = parser.parse(lines, 'work', '')
-    assert.are.same({ 'TOPTAG', 'WORK', 'MYPROJECT' }, parsed:get_item(3).tags)
-    assert.are.same({ 'TOPTAG', 'WORK', 'MYPROJECT', 'CHILDPROJECT' }, parsed:get_item(5).tags)
-    assert.are.same({ 'TOPTAG', 'WORK', 'MYPROJECT', 'CHILDPROJECT' }, parsed:get_item(7).tags)
+    local parsed = File.from_content(lines, 'work', '')
+    assert.are.same({ 'TOPTAG', 'WORK', 'MYPROJECT' }, parsed:get_section(1).tags)
+    assert.are.same({ 'TOPTAG', 'WORK', 'MYPROJECT', 'CHILDPROJECT' }, parsed:get_section(2).tags)
+    assert.are.same({ 'TOPTAG', 'WORK', 'MYPROJECT', 'CHILDPROJECT' }, parsed:get_section(3).tags)
 
     config:extend({ org_use_tag_inheritance = false })
-    parsed = parser.parse(lines, 'work', '')
-    assert.are.same({ 'WORK', 'MYPROJECT' }, parsed:get_item(3).tags)
-    assert.are.same({ 'CHILDPROJECT' }, parsed:get_item(5).tags)
-    assert.are.same({}, parsed:get_item(7).tags)
+    parsed = File.from_content(lines, 'work', '')
+    assert.are.same({ 'WORK', 'MYPROJECT' }, parsed:get_section(1).tags)
+    assert.are.same({ 'CHILDPROJECT' }, parsed:get_section(2).tags)
+    assert.are.same({}, parsed:get_section(3).tags)
 
     config:extend({ org_use_tag_inheritance = true, org_tags_exclude_from_inheritance = { 'MYPROJECT' } })
-    parsed = parser.parse(lines, 'work', '')
-    assert.are.same({ 'TOPTAG', 'WORK', 'MYPROJECT' }, parsed:get_item(3).tags)
-    assert.are.same({ 'TOPTAG', 'WORK', 'CHILDPROJECT' }, parsed:get_item(5).tags)
-    assert.are.same({ 'TOPTAG', 'WORK', 'CHILDPROJECT' }, parsed:get_item(7).tags)
+    parsed = File.from_content(lines, 'work', '')
+    assert.are.same({ 'TOPTAG', 'WORK', 'MYPROJECT' }, parsed:get_section(1).tags)
+    assert.are.same({ 'TOPTAG', 'WORK', 'CHILDPROJECT' }, parsed:get_section(2).tags)
+    assert.are.same({ 'TOPTAG', 'WORK', 'CHILDPROJECT' }, parsed:get_section(3).tags)
+  end)
+
+  it('should parse logbook drawer', function()
+    local lines = {
+      '* TODO Test orgmode :WORK:',
+      'DEADLINE: <2021-05-10 11:00>',
+      ':PROPERTIES:',
+      ':SOME_PROP: some value',
+      ':END:',
+      ':LOGBOOK:',
+      ':CLOCK: [2021-09-23 Thu 10:00]--[2021-09-23 Thu 12:00] => 02:00',
+      ':CLOCK: [2021-09-25 Sat 10:00]',
+      ':END:',
+      '* TODO Another todo',
+    }
+
+    local parsed = File.from_content(lines, 'work')
+    local first_clock_start = Date.from_string('2021-09-23 10:00', {
+      type = 'LOGBOOK',
+      active = false,
+      is_date_range_start = true,
+      range = Range:new({
+        start_line = 7,
+        end_line = 7,
+        start_col = 9,
+        end_col = 30,
+      }),
+    })
+    local first_clock_end = Date.from_string('2021-09-23 12:00', {
+      type = 'LOGBOOK',
+      active = false,
+      is_date_range_end = true,
+      related_date_range = first_clock_start,
+      range = Range:new({
+        start_line = 7,
+        end_line = 7,
+        start_col = 33,
+        end_col = 54,
+      }),
+    })
+    first_clock_start.related_date_range = first_clock_end
+    assert_section(parsed, parsed:get_section(1), {
+      line = '* TODO Test orgmode :WORK:',
+      line_number = 1,
+      level = 1,
+      title = 'Test orgmode',
+      content = { unpack(lines, 6, 9) },
+      todo_keyword = {
+        type = 'TODO',
+        value = 'TODO',
+        range = Range:new({
+          start_line = 1,
+          end_line = 1,
+          start_col = 3,
+          end_col = 6,
+        }),
+      },
+      dates = {
+        Date.from_string('2021-05-10 11:00', {
+          type = 'DEADLINE',
+          active = true,
+          range = Range:new({
+            start_line = 2,
+            end_line = 2,
+            start_col = 11,
+            end_col = 28,
+          }),
+        }),
+        first_clock_start,
+        first_clock_end,
+        Date.from_string('2021-09-25 10:00', {
+          type = 'LOGBOOK',
+          active = false,
+          range = Range:new({
+            start_line = 8,
+            end_line = 8,
+            start_col = 9,
+            end_col = 30,
+          }),
+        }),
+      },
+      tags = { 'WORK' },
+      own_tags = { 'WORK' },
+      category = 'work',
+      properties_items = {
+        some_prop = 'some value',
+      },
+      properties_range = Range:new({
+        start_line = 3,
+        end_line = 5,
+        start_col = 1,
+        end_col = 0,
+      }),
+      logbook = Logbook:new({
+        range = Range:new({
+          start_line = 6,
+          end_line = 9,
+          start_col = 1,
+          end_col = 0,
+        }),
+        items = {
+          {
+            start_time = first_clock_start,
+            end_time = first_clock_end,
+            duration = Duration.from_seconds(first_clock_end.timestamp - first_clock_start.timestamp),
+          },
+          {
+            start_time = Date.from_string('2021-09-25 10:00', {
+              type = 'LOGBOOK',
+              active = false,
+              range = Range:new({
+                start_line = 8,
+                end_line = 8,
+                start_col = 9,
+                end_col = 30,
+              }),
+            }),
+          },
+        },
+      }),
+    })
+
+    assert_section(parsed, parsed:get_section(2), {
+      line = '* TODO Another todo',
+      line_number = 10,
+      level = 1,
+      title = 'Another todo',
+      todo_keyword = {
+        type = 'TODO',
+        value = 'TODO',
+        range = Range:new({
+          start_line = 10,
+          end_line = 10,
+          start_col = 3,
+          end_col = 6,
+        }),
+      },
+      category = 'work',
+    })
   end)
 end)

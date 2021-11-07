@@ -12,7 +12,7 @@ end
 ---@class AgendaItem
 ---@field date Date
 ---@field headline_date Date
----@field headline Headline
+---@field headline Section
 ---@field is_valid boolean
 ---@field is_today boolean
 ---@field is_same_day boolean
@@ -23,7 +23,7 @@ end
 local AgendaItem = {}
 
 ---@param headline_date Date single date in a headline
----@param headline Headline
+---@param headline Section
 ---@param date Date date for which item should be rendered
 function AgendaItem:new(headline_date, headline, date)
   local opts = {}
@@ -43,7 +43,7 @@ function AgendaItem:new(headline_date, headline, date)
   return opts
 end
 
----@param headline Headline
+---@param headline Section
 function AgendaItem:set_headline(headline)
   self.headline = headline
   if self.is_valid then

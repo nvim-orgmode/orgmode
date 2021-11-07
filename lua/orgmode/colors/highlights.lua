@@ -1,3 +1,5 @@
+-- TODO:
+-- Figure out how to hide leading stars with treesitter
 local config = require('orgmode.config')
 local colors = require('orgmode.colors')
 local M = {}
@@ -20,8 +22,9 @@ end
 
 function M.define_org_todo_keyword_colors(do_syn_match)
   local keyword_colors = colors.get_todo_keywords_colors()
-  local todo_keywords = config:get_todo_keywords()
-  if do_syn_match then
+  local ts_highlights_enabled = config:ts_highlights_enabled()
+  if not ts_highlights_enabled and do_syn_match then
+    local todo_keywords = config:get_todo_keywords()
     vim.cmd(string.format([[syn match OrgTODO "\<\(%s\)\>" contained]], table.concat(todo_keywords.TODO, [[\|]])))
     vim.cmd(string.format([[syn match OrgDONE "\<\(%s\)\>" contained]], table.concat(todo_keywords.DONE, [[\|]])))
   end
@@ -46,32 +49,38 @@ end
 
 function M.define_org_headline_colors(faces)
   local headline_colors = { 'Title', 'Constant', 'Identifier', 'Statement', 'PreProc', 'Type', 'Special', 'String' }
-  local todo_keywords = config:get_todo_keywords()
-  local all_keywords = table.concat(todo_keywords.ALL, [[\|]])
+  local ts_highlights_enabled = config:ts_highlights_enabled()
+  local all_keywords = {}
+  if not ts_highlights_enabled then
+    local todo_keywords = config:get_todo_keywords()
+    all_keywords = table.concat(todo_keywords.ALL, [[\|]])
+  end
   local contains = { 'OrgTODO', 'OrgDONE' }
   for _, face in pairs(faces) do
     table.insert(contains, face)
   end
   if config.org_hide_leading_stars then
-    vim.cmd([[
-         syntax match OrgHideLeadingStars /^\*\{2,\}/me=e-1 contained
-         hi def link OrgHideLeadingStars org_hide_leading_stars
-      ]])
+    if not ts_highlights_enabled then
+      vim.cmd([[syn match OrgHideLeadingStars /^\*\{2,\}/me=e-1 contained]])
+    end
+    vim.cmd([[hi def link OrgHideLeadingStars org_hide_leading_stars]])
     table.insert(contains, 'OrgHideLeadingStars')
   end
   contains = table.concat(contains, ',')
   for i, color in ipairs(headline_colors) do
     local j = i
     while j < 40 do
-      vim.cmd(
-        string.format(
-          [[syn match OrgHeadlineLevel%d "^\*\{%d}\s\+\(\<\(%s\)\>\)\?.*$" contains=%s]],
-          j,
-          j,
-          all_keywords,
-          contains
+      if not ts_highlights_enabled then
+        vim.cmd(
+          string.format(
+            [[syn match OrgHeadlineLevel%d "^\*\{%d}\s\+\(\<\(%s\)\>\)\?.*$" contains=%s]],
+            j,
+            j,
+            all_keywords,
+            contains
+          )
         )
-      )
+      end
       vim.cmd(string.format('hi default link OrgHeadlineLevel%d %s', j, color))
       j = j + 8
     end
@@ -84,6 +93,7 @@ function M.define_highlights()
 end
 
 function M.parse_todo_keyword_faces(do_syn_match)
+  local ts_highlights_enabled = config:ts_highlights_enabled()
   local opts = {
     underline = {
       type = vim.o.termguicolors and 'gui' or 'cterm',
@@ -132,7 +142,7 @@ function M.parse_todo_keyword_faces(do_syn_match)
       for hl_item, hl_values in pairs(hl_opts) do
         hl = hl .. ' ' .. hl_item .. '=' .. table.concat(hl_values, ',')
       end
-      if do_syn_match then
+      if not ts_highlights_enabled and do_syn_match then
         vim.cmd(string.format([[syn match %s "\<%s\>" contained]], hl_name, name))
       end
       vim.cmd(string.format('hi %s %s', hl_name, hl))
