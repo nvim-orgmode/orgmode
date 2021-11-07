@@ -16,10 +16,8 @@
 
 ## Tree-sitter
 Tree-sitter support branch: https://github.com/kristijanhusak/orgmode.nvim/tree/tree-sitter
-#### Tree-sitter branch will become main very soon!
-To remove warning message, you can do two things:
-1. Temporarily switch to the [tree-sitter](https://github.com/kristijanhusak/orgmode.nvim/tree/tree-sitter) branch
-2. Stay on master branch and install [nvim-treesitter](https://github.com/nvim-treesitter/nvim-treesitter) and [tree-sitter-org grammar](https://github.com/milisims/tree-sitter-org). More info here: https://github.com/kristijanhusak/orgmode.nvim/tree/tree-sitter#setup.
+#### NOTE: tree-sitter branch will become main very soon! 
+All new features and fixes are going to the `tree-sitter` branch.
 
 ## Installation
 

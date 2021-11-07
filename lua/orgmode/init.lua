@@ -14,7 +14,6 @@ function Org:new()
   setmetatable(data, self)
   self.__index = self
   data:setup_autocmds()
-  vim.defer_fn(data.notify_update, 200)
   return data
 end
 
@@ -46,18 +45,6 @@ function Org:setup_autocmds()
   vim.cmd([[autocmd BufWritePost *.org call luaeval('require("orgmode").reload(_A)', expand('<afile>:p'))]])
   vim.cmd([[autocmd FileType org call luaeval('require("orgmode").reload(_A)', expand('<afile>:p'))]])
   vim.cmd([[augroup END]])
-end
-
-function Org:notify_update()
-  local success, _ = pcall(vim.treesitter.inspect_language, 'org')
-  if success then
-    return
-  end
-  local msg = {
-    '[orgmode] Master branch will soon require tree-sitter support.',
-    'To remove this message, see https://github.com/kristijanhusak/orgmode.nvim/tree/master#tree-sitter.',
-  }
-  vim.notify(table.concat(msg, '\n'), vim.log.levels.WARN)
 end
 
 ---@param opts? table
