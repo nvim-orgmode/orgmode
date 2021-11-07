@@ -1,5 +1,7 @@
 local config = require('orgmode.config')
+local Files = require('orgmode.parser.files')
 
+local prev_section = nil
 local function foldexpr()
   local line = vim.fn.getline(vim.v.lnum)
   if line:find('^%s*#%+%S+:') then
@@ -9,7 +11,16 @@ local function foldexpr()
   local stars = line:match('^(%*+)%s+')
 
   if stars then
-    return '>' .. stars:len()
+    local file = Files.get(vim.fn.expand('%:p'))
+    if not file then
+      return 0
+    end
+    local section = file.sections_by_line[vim.v.lnum]
+    prev_section = section
+    if not section.parent and section.level > 1 and not section:has_children() then
+      return 0
+    end
+    return '>' .. section.level
   end
 
   if line:match('^%s*:END:%s*$') then
@@ -18,6 +29,17 @@ local function foldexpr()
 
   if line:match('^%s*:[^:]*:%s*$') then
     return 'a1'
+  end
+
+  if vim.fn.getline(vim.v.lnum + 1):match('^(%*+)%s+') and prev_section then
+    local file = Files.get(vim.fn.expand('%:p'))
+    if not file then
+      return 0
+    end
+    local section = file.sections_by_line[vim.v.lnum + 1]
+    if section.level <= prev_section.level then
+      return '<' .. prev_section.level
+    end
   end
 
   return '='
@@ -71,9 +93,9 @@ end
 local function foldtext()
   local line = vim.fn.getline(vim.v.foldstart)
   if config.org_hide_leading_stars then
-    return vim.fn.substitute(line, '\\(^\\**\\)', '\\=repeat(" ", len(submatch(0))-1) . "*"', '')
+    return vim.fn.substitute(line, '\\(^\\*+\\)', '\\=repeat(" ", len(submatch(0))-1) . "*"', '') .. config.org_ellipsis
   end
-  return line
+  return line .. config.org_ellipsis
 end
 
 return {

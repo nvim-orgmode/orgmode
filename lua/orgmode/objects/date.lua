@@ -1,6 +1,6 @@
 -- TODO
 -- Support diary format and format without short date name
-local spans = { d = 'day', m = 'month', y = 'year', h = 'hour', w = 'week' }
+local spans = { d = 'day', m = 'month', y = 'year', h = 'hour', w = 'week', M = 'min' }
 local config = require('orgmode.config')
 local utils = require('orgmode.utils')
 local Range = require('orgmode.parser.range')
@@ -158,16 +158,18 @@ local function parse_date(date, dayname, adjustments, data)
   return Date:new(opts)
 end
 
+---@param data table
 ---@return Date
-local function today()
-  local opts = os.date('*t', os.time())
+local function today(data)
+  local opts = vim.tbl_deep_extend('force', os.date('*t', os.time()), data or {})
   opts.date_only = true
   return Date:new(opts)
 end
 
+---@param data table
 ---@return Date
-local function now()
-  local opts = os.date('*t', os.time())
+local function now(data)
+  local opts = vim.tbl_deep_extend('force', os.date('*t', os.time()), data or {})
   return Date:new(opts)
 end
 
@@ -209,6 +211,50 @@ local function from_string(datestr, opts)
   end
 
   return parse_date(date, dayname, adjustments, opts)
+end
+
+local function from_org_date(datestr, opts)
+  local from_open, from, from_close, delimiter, to_open, to, to_close = datestr:match(pattern .. '(%-%-)' .. pattern)
+  if not delimiter then
+    if not is_valid_date(datestr:sub(2, -2)) then
+      return {}
+    end
+    local is_active = datestr:sub(1, 1) == '<' and datestr:sub(-1) == '>'
+    local dateval = datestr:gsub('^[%[<]', ''):gsub('[%]>]', '')
+    return { from_string(dateval, vim.tbl_extend('force', opts or {}, { active = is_active })) }
+  end
+  local line = opts.range.start_line
+  local start_date = from_string(
+    from,
+    vim.tbl_extend('force', opts or {}, {
+      active = from_open == '<' and from_close == '>',
+      is_date_range_start = true,
+      range = Range:new({
+        start_line = line,
+        end_line = line,
+        start_col = opts.range.start_col,
+        end_col = opts.range.start_col + (from_open .. from .. from_close):len() - 1,
+      }),
+    })
+  )
+
+  local end_date = from_string(
+    to,
+    vim.tbl_extend('force', opts or {}, {
+      active = to_open == '<' and to_close == '>',
+      is_date_range_end = true,
+      range = Range:new({
+        start_line = line,
+        end_line = line,
+        start_col = start_date.range.end_col + 3,
+        end_col = opts.range.end_col,
+      }),
+      related_date_range = start_date,
+    })
+  )
+  start_date.related_date_range = end_date
+
+  return { start_date, end_date }
 end
 
 ---@return string
@@ -271,9 +317,21 @@ function Date:adjust(value)
 end
 
 ---@param value string
+---@return Date
+function Date:adjust_end_time(value)
+  if not self.timestamp_end then
+    return self
+  end
+  local time_end = from_string(os.date(date_format .. ' ' .. time_format, self.timestamp_end))
+  time_end = time_end:adjust(value)
+  self.timestamp_end = time_end.timestamp
+  return self
+end
+
+---@param value string
 ---@return table
 function Date:_parse_adjustment(value)
-  local operation, amount, span = value:match('^([%+%-])(%d+)([hdwmy]?)')
+  local operation, amount, span = value:match('^([%+%-])(%d+)([hdwmyM]?)')
   if not operation or not amount then
     return { span = 'day', amount = 0 }
   end
@@ -585,6 +643,11 @@ function Date:is_none()
 end
 
 ---@return boolean
+function Date:is_logbook()
+  return self.type == 'LOGBOOK'
+end
+
+---@return boolean
 function Date:is_scheduled()
   return self.active and self.type == 'SCHEDULED'
 end
@@ -592,6 +655,10 @@ end
 ---@return boolean
 function Date:is_closed()
   return self.type == 'CLOSED'
+end
+
+function Date:is_planning_date()
+  return self:is_deadline() or self:is_scheduled() or self:is_closed()
 end
 
 ---@return boolean
@@ -791,6 +858,7 @@ local function parse_all_from_line(line, lnum)
 end
 
 return {
+  from_org_date = from_org_date,
   from_string = from_string,
   now = now,
   today = today,

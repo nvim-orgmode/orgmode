@@ -85,6 +85,10 @@ describe('Autocompletion', function()
     result = OrgmodeOmniCompletion(1, '')
     assert.are.same(4, result)
 
+    mock_line(api, '  [[file:')
+    result = OrgmodeOmniCompletion(1, '')
+    assert.are.same(4, result)
+
     mock.revert(api)
   end)
 
@@ -196,7 +200,30 @@ describe('Autocompletion', function()
       { menu = '[Org]', word = ':PRIVATE:' },
     }, result)
 
-    -- TODO: Add hyperlinks test
+    -- TODO: Add more hyperlink tests
+    local MockFiles = mock(Files, true)
+    local filename = 'work.org'
+    local headlines = {
+      { title = 'Item for work 1' },
+      { title = 'Item for work 2' },
+    }
+
+    MockFiles.filenames.returns({ filename })
+    MockFiles.get.returns({
+      filename = filename,
+      find_headlines_by_title = function()
+        return headlines
+      end,
+    })
+
+    mock_line(api, string.format('  [[file:%s::*', filename))
+    result = OrgmodeOmniCompletion(0, '*')
+    assert.are.same({
+      { menu = '[Org]', word = '*' .. headlines[1].title },
+      { menu = '[Org]', word = '*' .. headlines[2].title },
+    }, result)
+
+    mock.revert(MockFiles)
 
     mock.revert(api)
   end)
