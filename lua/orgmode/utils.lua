@@ -1,9 +1,13 @@
+local ts = require('vim.treesitter.query')
 local uv = vim.loop
 local utils = {}
+local debounce_timers = {}
+local query_cache = {}
 
 ---@param file string
 ---@param callback function
-function utils.readfile(file, callback)
+---@param as_string boolean
+function utils.readfile(file, callback, as_string)
   uv.fs_open(file, 'r', 438, function(err1, fd)
     if err1 then
       return callback(err1)
@@ -20,8 +24,11 @@ function utils.readfile(file, callback)
           if err4 then
             return callback(err4)
           end
-          local lines = vim.split(data, '\n')
-          table.remove(lines, #lines)
+          local lines = data
+          if not as_string then
+            lines = vim.split(data, '\n')
+            table.remove(lines, #lines)
+          end
           return callback(nil, lines)
         end)
       end)
@@ -67,6 +74,9 @@ end
 ---@private
 function utils._echo(msg, hl, additional_msg, store_in_history)
   vim.cmd([[redraw!]])
+  if type(msg) == 'table' then
+    msg = table.concat(msg, '\n')
+  end
   local msg_item = { string.format('[orgmode] %s', msg) }
   if hl then
     table.insert(msg_item, hl)
@@ -120,10 +130,13 @@ end
 --- Concat one table at the end of another table
 ---@param first table
 ---@param second table
+---@param unique boolean
 ---@return table
-function utils.concat(first, second)
+function utils.concat(first, second, unique)
   for _, v in ipairs(second) do
-    table.insert(first, v)
+    if not unique or not vim.tbl_contains(first, v) then
+      table.insert(first, v)
+    end
   end
   return first
 end
@@ -234,6 +247,127 @@ function utils.humanize_minutes(minutes)
     return string.format('%d hr and %d min ago', hours, remaining_minutes)
   end
   return string.format('in %d hr and %d min', hours, remaining_minutes)
+end
+
+---@param query string
+---@param node table
+---@param file_content string[]
+---@param file_content_str string
+---@return table[]
+function utils.get_ts_matches(query, node, file_content, file_content_str)
+  local matches = {}
+  local ts_query = query_cache[query]
+  if not ts_query then
+    ts_query = ts.parse_query('org', query)
+    query_cache[query] = ts_query
+  end
+  for _, match, _ in ts_query:iter_matches(node, file_content_str) do
+    local items = {}
+    for id, matched_node in pairs(match) do
+      local name = ts_query.captures[id]
+      local node_text = utils.get_node_text(matched_node, file_content)
+      items[name] = {
+        node = matched_node,
+        text_list = node_text,
+        text = node_text[1],
+      }
+    end
+    table.insert(matches, items)
+  end
+  return matches
+end
+
+---@param node userdata
+---@param content string[]
+---@return string[]
+function utils.get_node_text(node, content)
+  if not node then
+    return {}
+  end
+  local start_row, start_col, end_row, end_col = node:range()
+
+  if start_row ~= end_row then
+    local start_line = start_row + 1
+    local end_line = end_row + 1
+    if end_col == 0 then
+      end_line = end_row
+    end
+    local lines = { unpack(content, start_line, end_line) }
+    lines[1] = string.sub(lines[1], start_col + 1)
+    if end_col > 0 then
+      lines[#lines] = string.sub(lines[#lines], 1, end_col)
+    end
+    return lines
+  else
+    local line = content[start_row + 1]
+    -- If line is nil then the line is empty
+    return line and { string.sub(line, start_col + 1, end_col) } or {}
+  end
+end
+
+---@param node table
+---@param type string
+---@return table
+function utils.get_closest_parent_of_type(node, type)
+  local parent = node:parent()
+  while parent do
+    if parent:type() == type then
+      return parent
+    end
+    parent = parent:parent()
+  end
+end
+
+function utils.debounce(name, fn, ms)
+  local result = nil
+  return function(...)
+    local argv = { ... }
+    if debounce_timers[name] then
+      debounce_timers[name]:stop()
+      debounce_timers[name]:close()
+      debounce_timers[name] = nil
+    end
+    local timer = uv.new_timer()
+    debounce_timers[name] = timer
+    timer:start(
+      ms,
+      0,
+      vim.schedule_wrap(function()
+        result = fn(unpack(argv))
+      end)
+    )
+    return result
+  end
+end
+
+---@param name string
+---@return function
+function utils.profile(name)
+  local start_time = os.clock()
+  return function()
+    return print(name, string.format('%.2f', os.clock() - start_time))
+  end
+end
+
+---@param arg_lead string
+---@param list string[]
+---@param split_chars string[]
+---@return string[]
+function utils.prompt_autocomplete(arg_lead, list, split_chars)
+  split_chars = split_chars or { '+', '-', ':', '&', '|' }
+  local split_chars_str = vim.pesc(table.concat(split_chars, ''))
+  local split_rgx = string.format('[%s]', split_chars_str)
+  local match_rgx = string.format('[^%s]*$', split_chars_str)
+  local parts = vim.split(arg_lead, split_rgx)
+  local base = arg_lead:gsub(match_rgx, '')
+  local last = arg_lead:match(match_rgx)
+  local matches = vim.tbl_filter(function(tag)
+    return tag:match('^' .. vim.pesc(last)) and not vim.tbl_contains(parts, tag)
+  end, list)
+
+  return vim.tbl_map(function(tag)
+    return base .. tag
+  end, matches)
 end
 
 return utils

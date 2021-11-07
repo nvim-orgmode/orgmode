@@ -40,3 +40,4 @@ luac.out
 *.hex
 
 plenary.nvim/
+nvim-treesitter/
