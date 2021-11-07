@@ -14,11 +14,6 @@
 
 </div>
 
-## Tree-sitter
-Tree-sitter support branch: https://github.com/kristijanhusak/orgmode.nvim/tree/tree-sitter
-#### NOTE: tree-sitter branch will become main very soon! 
-All new features and fixes are going to the `tree-sitter` branch.
-
 ## Installation
 
 Use your favourite package manager:
@@ -27,7 +22,7 @@ Use your favourite package manager:
 
 ```lua
 packager.add('nvim-treesitter/nvim-treesitter')
-packager.add('kristijanhusak/orgmode.nvim', { branch = 'tree-sitter' })
+packager.add('kristijanhusak/orgmode.nvim')
 ```
 
 - [packer.nvim](https://github.com/wbthomason/packer.nvim)
@@ -36,7 +31,7 @@ packager.add('kristijanhusak/orgmode.nvim', { branch = 'tree-sitter' })
 
 ```lua
 use {'nvim-treesitter/nvim-treesitter'}
-use {'kristijanhusak/orgmode.nvim', branch = 'tree-sitter', config = function()
+use {'kristijanhusak/orgmode.nvim', config = function()
         require('orgmode').setup{}
 end
 }
@@ -50,7 +45,6 @@ If you want to do it anyway, here's the lazy load setup:
 ```lua
 use {'nvim-treesitter/nvim-treesitter'}
 use {'kristijanhusak/orgmode.nvim',
-    branch = 'tree-sitter',
     ft = {'org'},
     config = function()
             require('orgmode').setup{}
@@ -62,14 +56,14 @@ use {'kristijanhusak/orgmode.nvim',
 
 ```vim
 Plug 'nvim-treesitter/nvim-treesitter'
-Plug 'kristijanhusak/orgmode.nvim', { 'branch' : 'tree-sitter' }
+Plug 'kristijanhusak/orgmode.nvim'
 ```
 
 - [dein](https://github.com/Shougo/dein.vim)
 
 ```vim
 call dein#add('nvim-treesitter/nvim-treesitter')
-call dein#add('kristijanhusak/orgmode.nvim', { 'rev': 'tree-sitter' })
+call dein#add('kristijanhusak/orgmode.nvim')
 ```
 
 ## Setup
@@ -185,9 +179,8 @@ Or just use `omnifunc` via <kbd>\<C-x\>\<C-o\></kbd>
   ![autocomplete](https://user-images.githubusercontent.com/1782860/123550227-e8605800-d76c-11eb-96f6-c0a677d562d4.gif)
 
 ### Tree-sitter info
-Status: experimental
 Built in tree-sitter parser is used for parsing the org files.
-Highlights are partially supported.
+Highlights are experimental and partially supported.
 
 #### Advantages of tree-sitter over built in parsing/syntax:
 * More reliable, since parsing is done with proper parsing tool
