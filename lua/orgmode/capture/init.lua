@@ -9,7 +9,6 @@ vim.cmd([[augroup END]])
 
 ---@class Capture
 ---@field templates Templates
----@field files OrgFiles
 local Capture = {}
 
 function Capture:new()
@@ -103,7 +102,7 @@ end
 
 ---@param file string
 ---@param lines string[]
----@param item? Headline
+---@param item? Section
 ---@param message? string
 ---@return boolean
 function Capture:_refile_to_end(file, lines, item, message)
@@ -117,7 +116,7 @@ end
 
 ---@param lines string[]
 ---@param fallback_file string
----@param item? Headline
+---@param item? Section
 ---@return string
 function Capture:_refile_content_with_fallback(lines, fallback_file, item)
   local default_file = fallback_file and fallback_file ~= '' and vim.fn.fnamemodify(fallback_file, ':p') or nil
@@ -159,7 +158,7 @@ end
 
 ---@param file string
 ---@param lines string[]
----@param item? Headline
+---@param item? Section
 ---@param destination_line string|number
 ---@return boolean
 function Capture:_refile_to(file, lines, item, destination_line)

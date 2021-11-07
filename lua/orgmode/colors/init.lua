@@ -78,14 +78,22 @@ M.highlight = function(highlights, clear)
     vim.api.nvim_buf_clear_namespace(0, namespace, 0, -1)
   end
   for _, hl in ipairs(highlights) do
-    vim.api.nvim_buf_add_highlight(
-      0,
-      namespace,
-      hl.hlgroup,
-      hl.range.start_line - 1,
-      hl.range.start_col - 1,
-      hl.range.end_col - 1
-    )
+    if hl.whole_line then
+      vim.api.nvim_buf_set_extmark(0, namespace, hl.range.start_line - 1, hl.range.start_col - 1, {
+        hl_group = hl.hl_group,
+        end_line = hl.range.start_line,
+        hl_eol = true,
+      })
+    else
+      vim.api.nvim_buf_add_highlight(
+        0,
+        namespace,
+        hl.hlgroup,
+        hl.range.start_line - 1,
+        hl.range.start_col - 1,
+        hl.range.end_col - 1
+      )
+    end
   end
 end
 

@@ -13,6 +13,7 @@ function Config:new(opts)
   local data = {
     opts = vim.tbl_deep_extend('force', defaults, opts or {}),
     todo_keywords = nil,
+    ts_hl_enabled = nil,
   }
   setmetatable(data, self)
   return data
@@ -29,20 +30,51 @@ end
 ---@return Config
 function Config:extend(opts)
   self.todo_keywords = nil
-  self.opts = vim.tbl_deep_extend('force', self.opts, opts or {})
+  opts = opts or {}
+  self:_deprecation_notify(opts)
+  self.opts = vim.tbl_deep_extend('force', self.opts, opts)
   return self
+end
+
+function Config:_deprecation_notify(opts)
+  local messages = {}
+  if
+    opts.mappings
+    and opts.mappings.org
+    and (opts.mappings.org.org_increase_date or opts.mappings.org.org_decrease_date)
+  then
+    table.insert(
+      messages,
+      'org_increase_date/org_decrease_date mappings are deprecated in favor of org_timestamp_up/org_timestamp_down (More granular increase/decrease).'
+    )
+    table.insert(messages, 'See https://github.com/kristijanhusak/orgmode.nvim/blob/tree-sitter/DOCS.md#changelog')
+    if opts.mappings.org.org_increase_date then
+      opts.mappings.org.org_timestamp_up = opts.mappings.org.org_increase_date
+    end
+    if opts.mappings.org.org_decrease_date then
+      opts.mappings.org.org_timestamp_down = opts.mappings.org.org_decrease_date
+    end
+  end
+
+  if #messages > 0 then
+    -- Schedule so it gets printed out once whole init.vim is loaded
+    vim.schedule(function()
+      utils.echo_warning(table.concat(messages, '\n'))
+    end)
+  end
 end
 
 ---@return string[]
 function Config:get_all_files()
-  if
-    not self.org_agenda_files
-    or self.org_agenda_files == ''
-    or (type(self.org_agenda_files) == 'table' and vim.tbl_isempty(self.org_agenda_files))
-  then
-    return {}
+  local all_filenames = {}
+  if self.opts.org_default_notes_file and self.opts.org_default_notes_file ~= '' then
+    local default_full_path = vim.fn.expand(self.opts.org_default_notes_file, ':p')
+    table.insert(all_filenames, default_full_path)
   end
-  local files = self.org_agenda_files
+  local files = self.opts.org_agenda_files
+  if not files or files == '' or (type(files) == 'table' and vim.tbl_isempty(files)) then
+    return all_filenames
+  end
   if type(files) ~= 'table' then
     files = { files }
   end
@@ -51,7 +83,7 @@ function Config:get_all_files()
     return vim.fn.glob(vim.fn.fnamemodify(file, ':p'), 0, 1)
   end, files)
 
-  all_files = vim.tbl_flatten(all_files)
+  all_files = utils.concat(vim.tbl_flatten(all_files), all_filenames, true)
 
   return vim.tbl_filter(function(file)
     local ext = vim.fn.fnamemodify(file, ':e')
@@ -107,7 +139,7 @@ function Config:get_todo_keywords()
     end
     return { value = val, shortcut = val:sub(1, 1):lower(), custom_shortcut = false }
   end
-  local types = { TODO = {}, DONE = {}, ALL = {}, FAST_ACCESS = {}, has_fast_access = false }
+  local types = { TODO = {}, DONE = {}, ALL = {}, KEYS = {}, FAST_ACCESS = {}, has_fast_access = false }
   local type = 'TODO'
   for _, word in ipairs(self.opts.org_todo_keywords) do
     if word == '|' then
@@ -119,6 +151,11 @@ function Config:get_todo_keywords()
       end
       table.insert(types[type], data.value)
       table.insert(types.ALL, data.value)
+      types.KEYS[data.value] = {
+        type = type,
+        shortcut = data.shortcut,
+        len = data.value:len(),
+      }
       table.insert(types.FAST_ACCESS, {
         value = data.value,
         type = type,
@@ -167,6 +204,18 @@ function Config:setup_mappings(category)
   end
 end
 
+function Config:setup_text_object_mappings()
+  if self.opts.mappings.disable_all then
+    return
+  end
+  for name, key in pairs(self.opts.mappings.text_objects) do
+    if mappings.text_objects[name] then
+      utils.buf_keymap(0, 'x', key, string.format(':<C-U>lua require("orgmode.org.text_objects").%s()<CR>', name))
+      utils.buf_keymap(0, 'o', key, string.format(':normal v%s<CR>', key))
+    end
+  end
+end
+
 function Config:parse_archive_location(file, archive_loc)
   if self:is_archive_file(file) then
     return nil
@@ -197,6 +246,18 @@ function Config:get_inheritable_tags(headline)
   return vim.tbl_filter(function(tag)
     return not vim.tbl_contains(self.opts.org_tags_exclude_from_inheritance, tag)
   end, headline.tags)
+end
+
+function Config:ts_highlights_enabled()
+  if self.ts_hl_enabled ~= nil then
+    return self.ts_hl_enabled
+  end
+  self.ts_hl_enabled = false
+  local hl_module = require('nvim-treesitter.configs').get_module('highlight')
+  if hl_module and hl_module.enable and not vim.tbl_contains(hl_module.disable or {}, 'org') then
+    self.ts_hl_enabled = true
+  end
+  return self.ts_hl_enabled
 end
 
 instance = Config:new()
