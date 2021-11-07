@@ -2,14 +2,6 @@ name: Bug report
 description: Create a report to help us improve orgmode
 labels: bug
 body:
-  - type: dropdown
-    validations:
-      required: true
-    attributes:
-      label: Are you using "tree-sitter" branch?
-      options:
-        - 'Yes'
-        - 'No'
   - type: textarea
     validations:
       required: true
