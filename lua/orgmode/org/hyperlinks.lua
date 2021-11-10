@@ -61,7 +61,7 @@ function Hyperlinks.find_by_custom_id_property(ctx)
     return headlines
   end
   return vim.tbl_map(function(headline)
-    return '#' .. headline.properties.items.CUSTOM_ID
+    return '#' .. headline.properties.items.custom_id
   end, headlines)
 end
 

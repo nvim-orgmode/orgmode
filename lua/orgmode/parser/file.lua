@@ -211,8 +211,8 @@ end
 ---@return Section[]
 function File:find_headlines_with_property_matching(property_name, term)
   return vim.tbl_filter(function(item)
-    return item.properties.items[property_name]
-      and item.properties.items[property_name]:lower():match('^' .. vim.pesc(term:lower()))
+    return item.properties.items[property_name:lower()]
+      and item.properties.items[property_name:lower()]:lower():match('^' .. vim.pesc(term:lower()))
   end, self.sections)
 end
 
