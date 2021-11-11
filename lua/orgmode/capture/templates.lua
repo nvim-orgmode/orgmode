@@ -1,23 +1,32 @@
 local config = require('orgmode.config')
 local Date = require('orgmode.objects.date')
 local expansions = {
-  ['%x'] = function()
+  ['%%x'] = function()
     return vim.fn.getreg('+')
   end,
-  ['%t'] = function()
+  ['%%t'] = function()
     return string.format('<%s>', Date.today():to_string())
   end,
-  ['%T'] = function()
+  ['%%T'] = function()
     return string.format('<%s>', Date.now():to_string())
   end,
-  ['%u'] = function()
+  ['%%u'] = function()
     return string.format('[%s]', Date.today():to_string())
   end,
-  ['%U'] = function()
+  ['%%U'] = function()
     return string.format('[%s]', Date.now():to_string())
   end,
-  ['%a'] = function()
+  ['%%a'] = function()
     return string.format('[[file:%s +%s]]', vim.api.nvim_buf_get_name(0), vim.api.nvim_win_get_cursor(0)[1])
+  end,
+  ['%%%^%{.*%}'] = function(pattern, content)
+    local match = string.match(content, '%{(.*)%}')
+    if match then
+      local content = vim.fn.input(match..": ")
+      return content
+    else
+      return ""
+    end
   end,
 }
 
@@ -47,7 +56,7 @@ function Templates:compile(template)
   end
   content = self:_compile_dates(content)
   for expansion, compiler in pairs(expansions) do
-    content = content:gsub(vim.pesc(expansion), compiler())
+    content = content:gsub(expansion, compiler(expansion, content))
   end
   return vim.split(content, '\n', true)
 end
