@@ -1,32 +1,23 @@
 local config = require('orgmode.config')
 local Date = require('orgmode.objects.date')
 local expansions = {
-  ['%%x'] = function()
+  ['%x'] = function()
     return vim.fn.getreg('+')
   end,
-  ['%%t'] = function()
+  ['%t'] = function()
     return string.format('<%s>', Date.today():to_string())
   end,
-  ['%%T'] = function()
+  ['%T'] = function()
     return string.format('<%s>', Date.now():to_string())
   end,
-  ['%%u'] = function()
+  ['%u'] = function()
     return string.format('[%s]', Date.today():to_string())
   end,
-  ['%%U'] = function()
+  ['%U'] = function()
     return string.format('[%s]', Date.now():to_string())
   end,
-  ['%%a'] = function()
+  ['%a'] = function()
     return string.format('[[file:%s +%s]]', vim.api.nvim_buf_get_name(0), vim.api.nvim_win_get_cursor(0)[1])
-  end,
-  ['%%%^%{.*%}'] = function(pattern, content)
-    local match = string.match(content, '%{(.*)%}')
-    if match then
-      local content = vim.fn.input(match..": ")
-      return content
-    else
-      return ""
-    end
   end,
 }
 
@@ -55,8 +46,11 @@ function Templates:compile(template)
     content = table.concat(content, '\n')
   end
   content = self:_compile_dates(content)
+  content = self:_compile_prompts(content)
   for expansion, compiler in pairs(expansions) do
-    content = content:gsub(expansion, compiler(expansion, content))
+    if content:match(vim.pesc(expansion)) then
+      content = content:gsub(vim.pesc(expansion), compiler())
+    end
   end
   return vim.split(content, '\n', true)
 end
@@ -80,6 +74,21 @@ end
 function Templates:_compile_dates(content)
   for exp in content:gmatch('%%<[^>]*>') do
     content = content:gsub(vim.pesc(exp), os.date(exp:sub(3, -2)))
+  end
+  return content
+end
+
+---@param content string
+---@return string
+function Templates:_compile_prompts(content)
+  for exp in content:gmatch('%%%^%{[^%}]+%}') do
+    local details = exp:match('%{(.*)%}')
+    local parts = vim.split(details, '|')
+    local response = vim.trim(vim.fn.input({
+          prompt = parts[1]..': ',
+          default = parts[2] or '',
+      }))
+    content = content:gsub(vim.pesc(exp), response)
   end
   return content
 end
