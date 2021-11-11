@@ -266,7 +266,7 @@ Variables:
   * `%<FORMAT>`: Insert current date/time formatted according to [lua date](https://www.lua.org/pil/22.1.html) format (Example: `%<%Y-%m-%d %A>` produces '2021-07-02 Friday')
   * `%x`: Insert content of the clipboard via the "+" register (see :help clipboard)
   * `%?`: Default cursor position when template is opened
-  * %^{PROMPT|DEFAULT|COMPLETION...}: Prompt for input, if completion is provided an :h inputlist will be used
+  * `%^{PROMPT|DEFAULT|COMPLETION...}`: Prompt for input, if completion is provided an :h inputlist will be used
 
 Example:<br />
   `{ T = { description = 'Todo', template = '* TODO %?\n %u', target = '~/org/todo.org' } }`
