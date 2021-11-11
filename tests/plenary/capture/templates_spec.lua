@@ -20,6 +20,6 @@ describe('Capture template', function()
       'test',
     }, result)
 
-  vim.fn.setreg('+', clip_backup)
+    vim.fn.setreg('+', clip_backup)
   end)
 end)
