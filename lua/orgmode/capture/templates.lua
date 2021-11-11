@@ -84,10 +84,26 @@ function Templates:_compile_prompts(content)
   for exp in content:gmatch('%%%^%{[^%}]+%}') do
     local details = exp:match('%{(.*)%}')
     local parts = vim.split(details, '|')
-    local response = vim.trim(vim.fn.input({
-          prompt = parts[1]..': ',
-          default = parts[2] or '',
-      }))
+    local title, default = parts[1], parts[2]
+    local response
+    if #parts > 2 then
+      local completion_items = vim.list_slice(parts, 3, #parts)
+      local prompt = {string.format('%s [%s]:', title, default)}
+      for i, item in ipairs(completion_items) do
+        table.insert(prompt, i..". "..item)
+      end
+      local response_number = vim.fn.inputlist(prompt)
+      response = response_number == 0 and default or completion_items[response_number + 1]
+    else
+      local prompt = default and string.format('%s [%s]:', title, default) or default..': '
+      response = vim.trim(vim.fn.input({
+            prompt = prompt,
+            cancelreturn = default or '',
+        }))
+      if #response == 0 and default then
+        response = default
+      end
+    end
     content = content:gsub(vim.pesc(exp), response)
   end
   return content
