@@ -1,6 +1,9 @@
 local config = require('orgmode.config')
 local Date = require('orgmode.objects.date')
 local expansions = {
+  ['%x'] = function()
+    return vim.fn.getreg('+')
+  end,
   ['%t'] = function()
     return string.format('<%s>', Date.today():to_string())
   end,
