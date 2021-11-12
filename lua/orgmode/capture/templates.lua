@@ -81,7 +81,7 @@ end
 ---@param content string
 ---@return string
 function Templates:_compile_prompts(content)
-  for exp in content:gmatch('%%%^%{[^%}]+%}') do
+  for exp in content:gmatch('%%%^%b{}') do
     local details = exp:match('%{(.*)%}')
     local parts = vim.split(details, '|')
     local title, default = parts[1], parts[2]
