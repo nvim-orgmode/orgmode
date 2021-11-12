@@ -1,6 +1,15 @@
 local config = require('orgmode.config')
 local Date = require('orgmode.objects.date')
 local expansions = {
+  ['%f'] = function()
+    return vim.fn.expand('%')
+  end,
+  ['%F'] = function()
+    return vim.fn.expand('%:p')
+  end,
+  ['%n'] = function()
+    return os.getenv('USER')
+  end,
   ['%x'] = function()
     return vim.fn.getreg('+')
   end,

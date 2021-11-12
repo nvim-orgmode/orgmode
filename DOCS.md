@@ -258,6 +258,9 @@ Example:<br />
 default value: `{ t = { description = 'Task', template = '* TODO %?\n  %u' } }`<br />
 Templates for capture/refile prompt.<br />
 Variables:
+  - `%f`: Prints the file of the buffer capture was called from
+  - `%F`: Like `%f` but inserts the full path
+  - `%n`: Inserts the current `$USER`
   * `%t`: Prints current date (Example: `<2021-06-10 Thu>`)
   * `%T`: Prints current date and time (Example: `<2021-06-10 Thu 12:30>`)
   * `%u`: Prints current date in inactive format (Example: `[2021-06-10 Thu]`)
