@@ -267,6 +267,7 @@ Variables:
   * `%x`: Insert content of the clipboard via the "+" register (see :help clipboard)
   * `%?`: Default cursor position when template is opened
   * `%^{PROMPT|DEFAULT|COMPLETION...}`: Prompt for input, if completion is provided an :h inputlist will be used
+  - `%(EXP)`: Runs the given lua code and inserts the result
 
 Example:<br />
   `{ T = { description = 'Todo', template = '* TODO %?\n %u', target = '~/org/todo.org' } }`
