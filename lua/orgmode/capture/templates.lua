@@ -105,7 +105,7 @@ function Templates:_compile_prompts(content)
       local response_number = vim.fn.inputlist(prompt)
       response = response_number == 0 and default or completion_items[response_number + 1]
     else
-      local prompt = default and string.format('%s [%s]:', title, default) or default .. ': '
+      local prompt = default and string.format('%s [%s]:', title, default) or title .. ': '
       response = vim.trim(vim.fn.input({
         prompt = prompt,
         cancelreturn = default or '',
