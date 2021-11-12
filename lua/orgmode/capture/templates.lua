@@ -47,6 +47,7 @@ function Templates:compile(template)
   end
   content = self:_compile_dates(content)
   content = self:_compile_prompts(content)
+  content = self:_compile_expressions(content)
   for expansion, compiler in pairs(expansions) do
     if content:match(vim.pesc(expansion)) then
       content = content:gsub(vim.pesc(expansion), compiler())
@@ -105,6 +106,18 @@ function Templates:_compile_prompts(content)
       end
     end
     content = content:gsub(vim.pesc(exp), response)
+  end
+  return content
+end
+
+function Templates:_compile_expressions(content)
+  for exp in content:gmatch('%%%b()') do
+    local snippet = exp:match('%((.*)%)')
+    local func = load(snippet)
+    local ok, response = pcall(func)
+    if ok then
+      content = content:gsub(vim.pesc(exp), response)
+    end
   end
   return content
 end
