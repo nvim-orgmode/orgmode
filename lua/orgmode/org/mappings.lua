@@ -413,12 +413,6 @@ function OrgMappings:handle_return(suffix)
       vim.cmd([[startinsert!]])
     end
   end
-  local indent, number_in_list, closer = item:is_numbered_list()
-  if number_in_list then
-    vim.fn.append(vim.fn.line('.'), string.format('%s%d%s ', indent, tonumber(number_in_list) + 1, closer))
-    vim.fn.cursor(vim.fn.line('.') + 1, 0)
-    return vim.cmd([[startinsert!]])
-  end
 end
 
 function OrgMappings:insert_heading_respect_content(suffix)
