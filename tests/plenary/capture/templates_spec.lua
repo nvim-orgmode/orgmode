@@ -18,7 +18,7 @@ describe('Capture template', function()
       os.date('%H:%M'),
       os.date('%A'),
       'test',
-      'hello world'
+      'hello world',
     }, result)
 
     vim.fn.setreg('+', clip_backup)
