@@ -7,7 +7,7 @@ describe('Capture template', function()
     local clip_backup = vim.fn.getreg('+')
     vim.fn.setreg('+', 'test')
     local result = templates:compile({
-      template = '* TODO\n%<%Y-%m-%d>\n%t\n%T--%T\n%<%H:%M>\n%<%A>\n%x',
+      template = '* TODO\n%<%Y-%m-%d>\n%t\n%T--%T\n%<%H:%M>\n%<%A>\n%x\n%(return string.format("hello %s", "world"))',
     })
 
     assert.are.same({
@@ -18,6 +18,7 @@ describe('Capture template', function()
       os.date('%H:%M'),
       os.date('%A'),
       'test',
+      'hello world'
     }, result)
 
     vim.fn.setreg('+', clip_backup)
