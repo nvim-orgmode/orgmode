@@ -25,7 +25,6 @@ Biggest difference is that underscores are being used instead of hyphens.
 
 [Link to all settings file](lua/orgmode/config/defaults.lua)
 
-
 ### Global settings
 
 #### **org_agenda_files**
@@ -842,7 +841,7 @@ function! s:setup_org_colors() abort
 endfunction
 ```
 
-For adding/changing todo keyword colors see [org-todo-keyword-faces](#org_todo_keyword_faces)
+For adding/changing TODO keyword colors see [org-todo-keyword-faces](#org_todo_keyword_faces)
 
 ## Advanced search
 Part of [Advanced search](https://orgmode.org/worg/org-tutorials/advanced-searching.html) functionality
