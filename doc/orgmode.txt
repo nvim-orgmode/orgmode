@@ -1151,7 +1151,7 @@ or you can link it to another highlight group:
     endfunction
 <
 
-For adding/changing todo keyword colors see org-todo-keyword-faces (#org_todo_keyword_faces)
+For adding/changing TODO keyword colors see org-todo-keyword-faces (#org_todo_keyword_faces)
 
 --------------------------------------------------------------------------------
 ADVANCED SEARCH                                          *orgmode-advanced_search*
