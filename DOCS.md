@@ -257,13 +257,19 @@ Example:<br />
 default value: `{ t = { description = 'Task', template = '* TODO %?\n  %u' } }`<br />
 Templates for capture/refile prompt.<br />
 Variables:
+  - `%f`: Prints the file of the buffer capture was called from
+  - `%F`: Like `%f` but inserts the full path
+  - `%n`: Inserts the current `$USER`
   * `%t`: Prints current date (Example: `<2021-06-10 Thu>`)
   * `%T`: Prints current date and time (Example: `<2021-06-10 Thu 12:30>`)
   * `%u`: Prints current date in inactive format (Example: `[2021-06-10 Thu]`)
   * `%U`: Prints current date and time in inactive format (Example: `[2021-06-10 Thu 12:30]`)
   * `%a`: File and line number from where capture was initiated (Example: `[[file:/home/user/projects/myfile.txt +2]]`)
   * `%<FORMAT>`: Insert current date/time formatted according to [lua date](https://www.lua.org/pil/22.1.html) format (Example: `%<%Y-%m-%d %A>` produces '2021-07-02 Friday')
+  * `%x`: Insert content of the clipboard via the "+" register (see :help clipboard)
   * `%?`: Default cursor position when template is opened
+  * `%^{PROMPT|DEFAULT|COMPLETION...}`: Prompt for input, if completion is provided an :h inputlist will be used
+  - `%(EXP)`: Runs the given lua code and inserts the result
 
 Example:<br />
   `{ T = { description = 'Todo', template = '* TODO %?\n %u', target = '~/org/todo.org' } }`

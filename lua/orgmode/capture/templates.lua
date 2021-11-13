@@ -1,6 +1,18 @@
 local config = require('orgmode.config')
 local Date = require('orgmode.objects.date')
 local expansions = {
+  ['%f'] = function()
+    return vim.fn.expand('%')
+  end,
+  ['%F'] = function()
+    return vim.fn.expand('%:p')
+  end,
+  ['%n'] = function()
+    return os.getenv('USER')
+  end,
+  ['%x'] = function()
+    return vim.fn.getreg('+')
+  end,
   ['%t'] = function()
     return string.format('<%s>', Date.today():to_string())
   end,
@@ -43,8 +55,12 @@ function Templates:compile(template)
     content = table.concat(content, '\n')
   end
   content = self:_compile_dates(content)
+  content = self:_compile_prompts(content)
+  content = self:_compile_expressions(content)
   for expansion, compiler in pairs(expansions) do
-    content = content:gsub(vim.pesc(expansion), compiler())
+    if content:match(vim.pesc(expansion)) then
+      content = content:gsub(vim.pesc(expansion), compiler())
+    end
   end
   return vim.split(content, '\n', true)
 end
@@ -68,6 +84,49 @@ end
 function Templates:_compile_dates(content)
   for exp in content:gmatch('%%<[^>]*>') do
     content = content:gsub(vim.pesc(exp), os.date(exp:sub(3, -2)))
+  end
+  return content
+end
+
+---@param content string
+---@return string
+function Templates:_compile_prompts(content)
+  for exp in content:gmatch('%%%^%b{}') do
+    local details = exp:match('%{(.*)%}')
+    local parts = vim.split(details, '|')
+    local title, default = parts[1], parts[2]
+    local response
+    if #parts > 2 then
+      local completion_items = vim.list_slice(parts, 3, #parts)
+      local prompt = { string.format('%s [%s]:', title, default) }
+      for i, item in ipairs(completion_items) do
+        table.insert(prompt, i .. '. ' .. item)
+      end
+      local response_number = vim.fn.inputlist(prompt)
+      response = response_number == 0 and default or completion_items[response_number]
+    else
+      local prompt = default and string.format('%s [%s]:', title, default) or title .. ': '
+      response = vim.trim(vim.fn.input({
+        prompt = prompt,
+        cancelreturn = default or '',
+      }))
+      if #response == 0 and default then
+        response = default
+      end
+    end
+    content = content:gsub(vim.pesc(exp), response)
+  end
+  return content
+end
+
+function Templates:_compile_expressions(content)
+  for exp in content:gmatch('%%%b()') do
+    local snippet = exp:match('%((.*)%)')
+    local func = load(snippet)
+    local ok, response = pcall(func)
+    if ok then
+      content = content:gsub(vim.pesc(exp), response)
+    end
   end
   return content
 end
