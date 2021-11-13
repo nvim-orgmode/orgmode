@@ -25,7 +25,6 @@ Biggest difference is that underscores are being used instead of hyphens.
 
 [Link to all settings file](lua/orgmode/config/defaults.lua)
 
-
 ### Global settings
 
 #### **org_agenda_files**
