@@ -110,9 +110,9 @@ function Templates:_compile_prompts(content)
         prompt = prompt,
         cancelreturn = default or '',
       }))
-      if #response == 0 and default then
-        response = default
-      end
+    end
+    if #response == 0 and default then
+      response = default
     end
     content = content:gsub(vim.pesc(exp), response)
   end
