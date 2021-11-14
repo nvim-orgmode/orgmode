@@ -325,7 +325,7 @@ function Agenda:search(clear_search)
   end
   local search_term = self.last_search
   if not self.filters.applying then
-    search_term = vim.fn.input('Enter search term: ', self.last_search)
+    search_term = vim.fn.OrgmodeInput('Enter search term: ', self.last_search)
   end
   self.last_search = search_term
   self.items = Files.find_headlines_matching_search_term(search_term, false, true)
@@ -366,7 +366,7 @@ function Agenda:_tags_view(opts, view)
   end
 
   if not tags then
-    tags = vim.fn.input('Match: ', self.last_search, 'customlist,v:lua.orgmode.autocomplete_agenda_filter_tags')
+    tags = vim.fn.OrgmodeInput('Match: ', self.last_search, Files.autocomplete_tags)
   end
   if vim.trim(tags) == '' then
     return utils.echo_warning('Invalid tag.')
@@ -673,18 +673,13 @@ function Agenda:goto_item()
 end
 
 function Agenda:filter()
+  local this = self
   self.filters:parse_tags_and_categories(self.content)
-  local filter_term = vim.fn.input(
-    'Filter [+cat-tag/regexp/]: ',
-    self.filters.value,
-    'customlist,v:lua.orgmode.autocomplete_agenda_filter'
-  )
+  local filter_term = vim.fn.OrgmodeInput('Filter [+cat-tag/regexp/]: ', self.filters.value, function(arg_lead)
+    return utils.prompt_autocomplete(arg_lead, this.filters:get_completion_list(), { '+', '-' })
+  end)
   self.filters:parse(filter_term)
   return self:redo()
-end
-
-function Agenda:autocomplete_agenda_filter(arg_lead)
-  return utils.prompt_autocomplete(arg_lead, self.filters:get_completion_list(), { '+', '-' })
 end
 
 ---@return table|nil
@@ -733,14 +728,6 @@ end
 
 function Agenda:_format_day(day)
   return string.format('%-10s %s', day:format('%A'), day:format('%d %B %Y'))
-end
-
-function _G.orgmode.autocomplete_agenda_filter_tags(arg_lead)
-  return Files.autocomplete_tags(arg_lead)
-end
-
-function _G.orgmode.autocomplete_agenda_filter(arg_lead)
-  return require('orgmode').action('agenda.autocomplete_agenda_filter', arg_lead)
 end
 
 return Agenda
