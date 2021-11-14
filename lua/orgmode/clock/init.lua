@@ -76,7 +76,7 @@ function Clock:org_set_effort()
   end
   -- TODO: Add Effort_ALL property as autocompletion
   local current_effort = item:get_property('Effort')
-  local effort = vim.fn.input('Effort: ', current_effort or '')
+  local effort = vim.fn.OrgmodeInput('Effort: ', current_effort or '')
   local duration = Duration.parse(effort)
   if duration == nil then
     return utils.echo_error('Invalid duration format: ' .. effort)

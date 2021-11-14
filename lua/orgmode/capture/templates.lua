@@ -98,12 +98,12 @@ function Templates:_compile_prompts(content)
     local response
     if #parts > 2 then
       local completion_items = vim.list_slice(parts, 3, #parts)
-      local prompt = { string.format('%s [%s]:', title, default) }
-      for i, item in ipairs(completion_items) do
-        table.insert(prompt, i .. '. ' .. item)
-      end
-      local response_number = vim.fn.inputlist(prompt)
-      response = response_number == 0 and default or completion_items[response_number]
+      local prompt = string.format('%s [%s]: ', title, default)
+      response = vim.fn.OrgmodeInput(prompt, '', function(arg_lead)
+        return vim.tbl_filter(function(v)
+          return v:match('^' .. vim.pesc(arg_lead))
+        end, completion_items)
+      end)
     else
       local prompt = default and string.format('%s [%s]:', title, default) or title .. ': '
       response = vim.trim(vim.fn.input({
