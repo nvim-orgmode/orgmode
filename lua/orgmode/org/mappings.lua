@@ -503,9 +503,7 @@ function OrgMappings:open_at_point()
   local current_headline = Files.get_closest_headline()
   local headlines = vim.tbl_filter(function(headline)
     return headline.line ~= current_headline.line and headline.id ~= current_headline.id
-  end, Hyperlinks.find_matching_links(
-    link_ctx
-  ))
+  end, Hyperlinks.find_matching_links(link_ctx))
   if #headlines == 0 then
     return
   end
