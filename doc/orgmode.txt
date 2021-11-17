@@ -75,41 +75,44 @@ CONTENTS                                                        *orgmode-content
             1.2.4.4. org_timestamp_up_day...........|orgmode-org_timestamp_up_day|
             1.2.4.5. org_timestamp_down_day.......|orgmode-org_timestamp_down_day|
             1.2.4.6. org_change_date.....................|orgmode-org_change_date|
-            1.2.4.7. org_todo...................................|orgmode-org_todo|
-            1.2.4.8. org_todo_prev.........................|orgmode-org_todo_prev|
-            1.2.4.9. org_toggle_checkbox.............|orgmode-org_toggle_checkbox|
-            1.2.4.10. org_open_at_point................|orgmode-org_open_at_point|
-            1.2.4.11. org_cycle................................|orgmode-org_cycle|
-            1.2.4.12. org_global_cycle..................|orgmode-org_global_cycle|
-            1.2.4.13. org_archive_subtree............|orgmode-org_archive_subtree|
-            1.2.4.14. org_set_tags_command..........|orgmode-org_set_tags_command|
-            1.2.4.15. org_toggle_archive_tag......|orgmode-org_toggle_archive_tag|
-            1.2.4.16. org_do_promote......................|orgmode-org_do_promote|
-            1.2.4.17. org_do_demote........................|orgmode-org_do_demote|
-            1.2.4.18. org_promote_subtree............|orgmode-org_promote_subtree|
-            1.2.4.19. org_demote_subtree..............|orgmode-org_demote_subtree|
-            1.2.4.20. org_meta_return....................|orgmode-org_meta_return|
-            1.2.4.21. org_insert_heading_respect_content.|orgmode-org_insert_heading_respect_content|
-            1.2.4.22. org_insert_todo_heading....|orgmode-org_insert_todo_heading|
-            1.2.4.23. org_insert_todo_heading_respect_content.|orgmode-org_insert_todo_heading_respect_content|
-            1.2.4.24. org_move_subtree_up............|orgmode-org_move_subtree_up|
-            1.2.4.25. org_move_subtree_down........|orgmode-org_move_subtree_down|
-            1.2.4.26. org_export..............................|orgmode-org_export|
-            1.2.4.27. org_next_visible_heading..|orgmode-org_next_visible_heading|
-            1.2.4.28. org_previous_visible_heading.|orgmode-org_previous_visible_heading|
-            1.2.4.29. org_forward_heading_same_level.|orgmode-org_forward_heading_same_level|
-            1.2.4.30. org_backward_heading_same_level.|orgmode-org_backward_heading_same_level|
-            1.2.4.31. outline_up_heading..............|orgmode-outline_up_heading|
-            1.2.4.32. org_deadline..........................|orgmode-org_deadline|
-            1.2.4.33. org_schedule..........................|orgmode-org_schedule|
-            1.2.4.34. org_time_stamp......................|orgmode-org_time_stamp|
-            1.2.4.35. org_time_stamp_inactive....|orgmode-org_time_stamp_inactive|
-            1.2.4.36. org_clock_in..........................|orgmode-org_clock_in|
-            1.2.4.37. org_clock_out........................|orgmode-org_clock_out|
-            1.2.4.38. org_clock_cancel..................|orgmode-org_clock_cancel|
-            1.2.4.39. org_clock_goto......................|orgmode-org_clock_goto|
-            1.2.4.40. org_set_effort......................|orgmode-org_set_effort|
-            1.2.4.41. org_show_help........................|orgmode-org_show_help|
+            1.2.4.7. org_priority...........................|orgmode-org_priority|
+            1.2.4.8. org_priority_up.....................|orgmode-org_priority_up|
+            1.2.4.9. org_priority_down.................|orgmode-org_priority_down|
+            1.2.4.10. org_todo..................................|orgmode-org_todo|
+            1.2.4.11. org_todo_prev........................|orgmode-org_todo_prev|
+            1.2.4.12. org_toggle_checkbox............|orgmode-org_toggle_checkbox|
+            1.2.4.13. org_open_at_point................|orgmode-org_open_at_point|
+            1.2.4.14. org_cycle................................|orgmode-org_cycle|
+            1.2.4.15. org_global_cycle..................|orgmode-org_global_cycle|
+            1.2.4.16. org_archive_subtree............|orgmode-org_archive_subtree|
+            1.2.4.17. org_set_tags_command..........|orgmode-org_set_tags_command|
+            1.2.4.18. org_toggle_archive_tag......|orgmode-org_toggle_archive_tag|
+            1.2.4.19. org_do_promote......................|orgmode-org_do_promote|
+            1.2.4.20. org_do_demote........................|orgmode-org_do_demote|
+            1.2.4.21. org_promote_subtree............|orgmode-org_promote_subtree|
+            1.2.4.22. org_demote_subtree..............|orgmode-org_demote_subtree|
+            1.2.4.23. org_meta_return....................|orgmode-org_meta_return|
+            1.2.4.24. org_insert_heading_respect_content.|orgmode-org_insert_heading_respect_content|
+            1.2.4.25. org_insert_todo_heading....|orgmode-org_insert_todo_heading|
+            1.2.4.26. org_insert_todo_heading_respect_content.|orgmode-org_insert_todo_heading_respect_content|
+            1.2.4.27. org_move_subtree_up............|orgmode-org_move_subtree_up|
+            1.2.4.28. org_move_subtree_down........|orgmode-org_move_subtree_down|
+            1.2.4.29. org_export..............................|orgmode-org_export|
+            1.2.4.30. org_next_visible_heading..|orgmode-org_next_visible_heading|
+            1.2.4.31. org_previous_visible_heading.|orgmode-org_previous_visible_heading|
+            1.2.4.32. org_forward_heading_same_level.|orgmode-org_forward_heading_same_level|
+            1.2.4.33. org_backward_heading_same_level.|orgmode-org_backward_heading_same_level|
+            1.2.4.34. outline_up_heading..............|orgmode-outline_up_heading|
+            1.2.4.35. org_deadline..........................|orgmode-org_deadline|
+            1.2.4.36. org_schedule..........................|orgmode-org_schedule|
+            1.2.4.37. org_time_stamp......................|orgmode-org_time_stamp|
+            1.2.4.38. org_time_stamp_inactive....|orgmode-org_time_stamp_inactive|
+            1.2.4.39. org_clock_in..........................|orgmode-org_clock_in|
+            1.2.4.40. org_clock_out........................|orgmode-org_clock_out|
+            1.2.4.41. org_clock_cancel..................|orgmode-org_clock_cancel|
+            1.2.4.42. org_clock_goto......................|orgmode-org_clock_goto|
+            1.2.4.43. org_set_effort......................|orgmode-org_set_effort|
+            1.2.4.44. org_show_help........................|orgmode-org_show_help|
         1.2.5. Text objects.................................|orgmode-text_objects|
             1.2.5.1. inner_heading.........................|orgmode-inner_heading|
             1.2.5.2. around_heading.......................|orgmode-around_heading|
@@ -794,6 +797,21 @@ ORG_CHANGE_DATE                                          *orgmode-org_change_dat
 
 mapped to: `cid`
 Change date under cursor. Opens calendar to select new date
+
+ORG_PRIORITY                                                *orgmode-org_priority*
+
+mapped to: `<Leader>o,`
+Choose the priority of a headline item.
+
+ORG_PRIORITY_UP                                          *orgmode-org_priority_up*
+
+mapped to: `ciR`
+Increase the priority of a headline item.
+
+ORG_PRIORITY_DOWN                                      *orgmode-org_priority_down*
+
+mapped to: `cir`
+Decrease the priority of a headline item.
 
 ORG_TODO                                                        *orgmode-org_todo*
 
