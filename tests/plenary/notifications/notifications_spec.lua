@@ -66,9 +66,7 @@ describe('Notifications', function()
         type = 'SCHEDULED',
         reminder_type = 'time',
       },
-    }, notifications:get_tasks(
-      Date.from_string('2021-07-12 Mon 12:20')
-    ))
+    }, notifications:get_tasks(Date.from_string('2021-07-12 Mon 12:20')))
   end)
 
   it('should find repeatable and warning deadlines for notification', function()
