@@ -5,6 +5,7 @@
 local ts_utils = require('nvim-treesitter.ts_utils')
 local Range = require('orgmode.parser.range')
 local utils = require('orgmode.utils')
+local PriorityState = require('orgmode.objects.priority_state')
 local Date = require('orgmode.objects.date')
 local Logbook = require('orgmode.parser.logbook')
 local config = require('orgmode.config')
@@ -186,18 +187,50 @@ end
 
 ---@return boolean
 function Section:has_priority()
-  return self.priority ~= ''
+  return vim.trim(self.priority or '') ~= ''
+end
+
+---@param priority string
+function Section:set_priority(priority)
+  if not priority then
+    return
+  end
+
+  local linenr = self.range.start_line
+  local stars = string.rep('%*', self.level)
+  local static_state = self.todo_keyword.value
+
+  local changing_state = ''
+  if self.priority ~= '' then
+    changing_state = '%[#' .. self.priority .. '%]%s+'
+  end
+
+  local new_state = ''
+  if vim.trim(priority) ~= '' then
+    new_state = '%[#' .. priority .. '%] '
+  end
+
+  local existing_line = vim.api.nvim_call_function('getline', { linenr })
+  local new_line = existing_line:gsub(
+    '^' .. stars .. '%s+' .. static_state .. (static_state ~= '' and '%s+' or '') .. changing_state,
+    stars .. (static_state ~= '' and ' ' or '') .. static_state .. ' ' .. new_state
+  )
+
+  if existing_line == new_line then
+    return
+  end
+
+  vim.api.nvim_call_function('setline', {
+    linenr,
+    new_line,
+  })
+
+  self.priority = vim.trim(priority)
 end
 
 ---@return number
-function Section:get_priority_number()
-  if self.priority == config.org_priority_highest then
-    return 2000
-  end
-  if self.priority == config.org_priority_lowest then
-    return 0
-  end
-  return 1000
+function Section:get_priority_sort_value()
+  return PriorityState:new(self.priority):get_sort_value()
 end
 
 ---@return Date[]

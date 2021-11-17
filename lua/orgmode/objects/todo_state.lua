@@ -1,5 +1,6 @@
 local config = require('orgmode.config')
 local highlights = require('orgmode.colors.highlights')
+local utils = require('orgmode.utils')
 
 ---@class TodoState
 ---@field current_state string
@@ -31,28 +32,29 @@ function TodoState:has_fast_access()
 end
 
 function TodoState:open_fast_access()
-  local output = {}
+  local enumerated = {}
 
   for _, todo in ipairs(self.todos.FAST_ACCESS) do
-    table.insert(output, { string.format('[%s] ', todo.shortcut) })
-    table.insert(output, { todo.value, self.hl_map[todo.value] or self.hl_map[todo.type] })
-    table.insert(output, { '  ' })
+    table.insert(enumerated, {
+      choice_value = todo.shortcut,
+      choice_text = todo.shortcut,
+      choice_hl = 'Title',
+      desc_text = todo.value,
+      desc_hl = self.hl_map[todo.value] or self.hl_map[todo.type],
+      ctx = todo,
+    })
   end
 
-  table.insert(output, { '\n' })
-  vim.api.nvim_echo(output, true, {})
-  local char = vim.fn.nr2char(vim.fn.getchar())
-  vim.cmd([[redraw!]])
-  if char == ' ' then
-    self.current_state = ''
-    return { value = '', type = '' }
+  local choice = utils.choose(enumerated)
+  if not choice then
+    return
   end
-  for _, todo in ipairs(self.todos.FAST_ACCESS) do
-    if char == todo.shortcut then
-      self.current_state = todo.value
-      return { value = todo.value, type = todo.type, hl = self.hl_map[todo.value] or self.hl_map[todo.type] }
-    end
-  end
+
+  return {
+    value = choice.ctx.value,
+    type = choice.ctx.type,
+    hl = self.hl_map[choice.choice_value] or self.hl_map[choice.ctx.type],
+  }
 end
 
 ---@return table
