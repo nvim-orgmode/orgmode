@@ -123,6 +123,7 @@ CONTENTS                                                        *orgmode-content
     1.4. Autocompletion...................................|orgmode-autocompletion|
     1.5. Abbreviations.....................................|orgmode-abbreviations|
     1.6. Colors...................................................|orgmode-colors|
+        1.6.1. Highlight Groups.........................|orgmode-highlight_groups|
     1.7. Advanced search.................................|orgmode-advanced_search|
     1.8. Notifications (experimental).......|orgmode-notifications_(experimental)|
         1.8.1. Cron.................................................|orgmode-cron|
@@ -1158,6 +1159,39 @@ or you can link it to another highlight group:
 <
 
 For adding/changing TODO keyword colors see org-todo-keyword-faces (#org_todo_keyword_faces)
+
+HIGHLIGHT GROUPS                                        *orgmode-highlight_groups*
+
+*   The following highlight groups are based on Treesitter query results, hence when setting up Orgmode these
+    highlights must be enabled by removing `disable = {'org'}` from the default recommended Treesitter configuration.
+
+`OrgTSTimestampActive`: An active timestamp
+`OrgTSTimestampInactive`: An inactive timestamp
+`OrgTSBullet`: A normal bullet under a header item
+`OrgTSPropertyDrawer`: Property drawer start/end delimiters
+`OrgTSDrawer`: Drawer start/end delimiters
+`OrgTSTag`: A tag for a headline item, shown on the righthand side like `:foo:`
+`OrgTSPlan`: `SCHEDULED`, `DEADLINE`, `CLOSED`, etc. keywords
+`OrgTSComment`: A comment block
+`OrgTSDirective`: Blocks starting with `#+`
+`OrgTSCheckbox`: The default checkbox highlight, overridden if any of the below groups are specified
+`OrgTSCheckboxChecked`: A checkbox checked with either `[x]` or `[X]`
+`OrgTSCheckboxHalfChecked`: A checkbox checked with `[-]`
+`OrgTSCheckboxUnchecked`: A empty checkbox
+`OrgTSHeadlineLevel1`: Headline at level 1
+`OrgTSHeadlineLevel2`: Headline at level 2
+`OrgTSHeadlineLevel3`: Headline at level 3
+`OrgTSHeadlineLevel4`: Headline at level 4
+`OrgTSHeadlineLevel5`: Headline at level 5
+`OrgTSHeadlineLevel6`: Headline at level 6
+`OrgTSHeadlineLevel7`: Headline at level 7
+`OrgTSHeadlineLevel8`: Headline at level 8
+
+*   The following use vanilla Vim syntax matching, and will work without Treesitter highlighting enabled.
+
+`OrgAgendaDeadline`: A item deadline in the agenda view
+`OrgAgendaScheduled`: A scheduled item in the agenda view
+`OrgAgendaScheduledPast`: A item past its scheduled date in the agenda view
 
 --------------------------------------------------------------------------------
 ADVANCED SEARCH                                          *orgmode-advanced_search*
