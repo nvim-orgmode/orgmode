@@ -40,7 +40,7 @@ local function report_errors()
     return
   end
 
-  return vim.diagnostic.set(diagnostic_ns, 0, errors)
+  return vim.diagnostic.set(diagnostic_ns, vim.api.nvim_get_current_buf(), errors)
 end
 
 local function print_errors()
