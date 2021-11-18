@@ -4,6 +4,36 @@ local config = require('orgmode.config')
 local colors = require('orgmode.colors')
 local M = {}
 
+function M.link_ts_highlights()
+  local links = {
+    OrgTSTimestampActive = 'PreProc',
+    OrgTSTimestampInactive = 'Comment',
+    OrgTSHeadlineLevel1 = 'OrgHeadlineLevel1',
+    OrgTSHeadlineLevel2 = 'OrgHeadlineLevel2',
+    OrgTSHeadlineLevel3 = 'OrgHeadlineLevel3',
+    OrgTSHeadlineLevel4 = 'OrgHeadlineLevel4',
+    OrgTSHeadlineLevel5 = 'OrgHeadlineLevel5',
+    OrgTSHeadlineLevel6 = 'OrgHeadlineLevel6',
+    OrgTSHeadlineLevel7 = 'OrgHeadlineLevel7',
+    OrgTSHeadlineLevel8 = 'OrgHeadlineLevel8',
+    OrgTSBullet = 'Identifier',
+    OrgTSCheckbox = 'PreProc',
+    OrgTSCheckboxHalfChecked = 'OrgTSCheckbox',
+    OrgTSCheckboxUnchecked = 'OrgTSCheckbox',
+    OrgTSCheckboxChecked = 'OrgTSCheckbox',
+    OrgTSPropertyDrawer = 'Constant',
+    OrgTSDrawer = 'Constant',
+    OrgTSTag = 'Function',
+    OrgTSPlan = 'Constant',
+    OrgTSComment = 'Comment',
+    OrgTSDirective = 'Comment',
+  }
+
+  for src, def in pairs(links) do
+    vim.cmd(string.format([[hi def link %s %s]], src, def))
+  end
+end
+
 function M.define_agenda_colors()
   local keyword_colors = colors.get_todo_keywords_colors()
   local c = {
@@ -88,6 +118,10 @@ function M.define_org_headline_colors(faces)
 end
 
 function M.define_highlights()
+  if config:ts_highlights_enabled() then
+    M.link_ts_highlights()
+  end
+
   local faces = M.define_org_todo_keyword_colors(true)
   return M.define_org_headline_colors(faces)
 end
