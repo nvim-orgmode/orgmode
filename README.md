@@ -10,7 +10,7 @@
 
   Orgmode clone written in Lua for Neovim 0.5.
 
-  [Installation](#installation) | [Setup](#setup) | [Gifs](#gifs) | [Docs](/DOCS.md) | [Tree-sitter info](#tree-sitter-info) | [Plugins](#plugins) | [Development](#development) | [Kudos](#thanks-to)
+  [Installation](#installation) | [Setup](#setup) | [Troubleshoot](#troubleshoot) |  [Gifs](#gifs) | [Docs](/DOCS.md) | [Tree-sitter info](#tree-sitter-info) | [Plugins](#plugins) | [Development](#development) | [Kudos](#thanks-to)
 
 </div>
 
@@ -208,6 +208,19 @@ Make sure you are not overriding indentexpr in Org buffers with [nvim-treesitter
 **I get `treesitter/query.lua` errors when opening agenda/capture prompt or org files**<br />
 Make sure you are using latest changes from [tree-sitter-org](https://github.com/milisims/tree-sitter-org) grammar.<br />
 by running `:TSUpdate org` and restarting the editor.
+
+**Dates are not in English**<br />
+Dates are generated with Lua native date support, and it reads your current locale when creating them.<br />
+To use different locale you can add this to your `init.lua`:
+```lua
+vim.cmd('language en_US.utf8')
+```
+or `init.vim`
+```
+language en_US.utf8
+```
+Just make sure you have `en_US` locale installed on your system. To see what you have available on the system you can
+start the command `:language ` and press `<TAB>` to autocomplete possible options.
 
 ### Features (TL;DR):
 * Agenda view
