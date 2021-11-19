@@ -175,17 +175,29 @@ function Config:setup_mappings(category)
     return
   end
   if not category then
-    if type(self.opts.mappings.global.org_agenda) == "string" then
-        keys = { self.opts.mappings.global.org_agenda }
+
+    agenda_key = self.opts.mappings.global.org_agenda
+    if type(agenda_key) == "string" then
+        keys = { agenda_key }
     else
-        keys = self.opts.mappings.global.org_agenda
+        keys = agenda_key
     end
 
     for _, k in ipairs(keys) do
         utils.keymap('n', k, '<cmd>lua require("orgmode").action("agenda.prompt")<CR>')
     end
 
-    utils.keymap('n', self.opts.mappings.global.org_capture, '<cmd>lua require("orgmode").action("capture.prompt")<CR>')
+    capture_key = self.opts.mappings.global.org_capture
+    if type(capture_key) == "string" then
+        keys = { capture_key }
+    else
+        keys = capture_key
+    end
+
+    for _, k in ipairs(keys) do
+        utils.keymap('n', k, '<cmd>lua require("orgmode").action("capture.prompt")<CR>')
+    end
+
 
     return
   end
