@@ -715,7 +715,7 @@ require('orgmode').setup({
 Operator mappings for `org` files.<br />
 Example: Pressing `vir` select everything from current heading and all child.<br />
 `inner` means that it doesn't select the stars, where `around` selects `inner` + `stars`.<br />
-See [this issue comment](https://github.com/kristijanhusak/orgmode.nvim/issues/48#issuecomment-884528170) for visual preview.<br />
+See [this issue comment](https://github.com/nvim-orgmode/orgmode/issues/48#issuecomment-884528170) for visual preview.<br />
 
 Note: Some mappings can clash with other plugin mappings, like [gitsigns.nvim](https://github.com/lewis6991/gitsigns.nvim) which also has `ih` operator mapping.
 
@@ -912,7 +912,7 @@ Few examples:
 * Search all without keyword `DONE`, tag `URGENT` but without tag `COMPUTER` and property `CATEGORY` equal to `mywork`: `URGENT-COMPUTER+CATEGORY=mywork/-DONE`
 
 ## Notifications (experimental)
-There is an experimental support for agenda tasks notifications. Related [issue #49](https://github.com/kristijanhusak/orgmode.nvim/issues/49).
+There is an experimental support for agenda tasks notifications. Related [issue #49](https://github.com/nvim-orgmode/orgmode/issues/49).
 
 Linux/MacOS has support for notifications via:
 * System notification app (notify-send/terminal-notifier) (See below for setup)
@@ -1103,7 +1103,7 @@ set statusline=%{v:lua.orgmode.statusline()}
 ## Changelog
 
 #### 24 October 2021
-* Help mapping was changed from `?` to `g?` to avoid conflict with built in backward search. See issue [#106](https://github.com/kristijanhusak/orgmode.nvim/issues/106).
+* Help mapping was changed from `?` to `g?` to avoid conflict with built in backward search. See issue [#106](https://github.com/nvim-orgmode/orgmode/issues/106).
 
 #### 10 October 2021
 * Mappings `org_increase_date` and `org_decrease_date` are deprecated in favor of [org_timestamp_up](#org_timestamp_up) and [org_timestamp_down](#org_timestamp_down).<br />

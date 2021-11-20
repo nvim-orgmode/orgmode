@@ -47,7 +47,7 @@ function Config:_deprecation_notify(opts)
       messages,
       'org_increase_date/org_decrease_date mappings are deprecated in favor of org_timestamp_up/org_timestamp_down (More granular increase/decrease).'
     )
-    table.insert(messages, 'See https://github.com/kristijanhusak/orgmode.nvim/blob/tree-sitter/DOCS.md#changelog')
+    table.insert(messages, 'See https://github.com/nvim-orgmode/orgmode/blob/tree-sitter/DOCS.md#changelog')
     if opts.mappings.org.org_increase_date then
       opts.mappings.org.org_timestamp_up = opts.mappings.org.org_increase_date
     end
