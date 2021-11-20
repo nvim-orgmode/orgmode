@@ -370,10 +370,10 @@ function OrgMappings:handle_return(suffix)
   end
 
   if item.type == 'headline' then
-    local section = utils.get_closest_parent_of_type(item.node, 'section')
-    local end_row, _ = section:end_()
-    vim.api.nvim_buf_set_lines(0, end_row, end_row, false, { string.rep('*', item.level) .. ' ' .. suffix, '' })
-    vim.fn.cursor(end_row + 1, 0)
+    local linenr = vim.fn.line('.')
+    local content = config:respect_blank_before_new_entry({ string.rep('*', item.level) .. ' ' .. suffix })
+    vim.fn.append(linenr, content)
+    vim.fn.cursor(linenr + #content, 0)
     return vim.cmd([[startinsert!]])
   end
 
@@ -383,7 +383,6 @@ function OrgMappings:handle_return(suffix)
   end
 
   if item.type == 'itemtext' or item.type == 'bullet' or item.type == 'checkbox' or item.type == 'description' then
-    local text_edits = {}
     local list_item = item.node:parent()
     if list_item:type() ~= 'listitem' then
       return
@@ -398,6 +397,11 @@ function OrgMappings:handle_return(suffix)
     local checkbox = line:match('^(%s*[%+%-])%s*%[[%sXx%-]?%]')
     local plain_list = line:match('^%s*[%+%-]')
     local indent, number_in_list, closer = line:match('^(%s*)(%d+)([%)%.])%s?')
+    local text_edits = config:respect_blank_before_new_entry({}, 'plain_list_item', {
+      range = range,
+      newText = '\n',
+    })
+    local add_empty_line = #text_edits > 0
     if checkbox then
       table.insert(text_edits, {
         range = range,
@@ -436,7 +440,7 @@ function OrgMappings:handle_return(suffix)
     if #text_edits > 0 then
       vim.lsp.util.apply_text_edits(text_edits, 0)
 
-      vim.fn.cursor(end_row + 2, 0) -- +1 for 0 index and +1 for next line
+      vim.fn.cursor(end_row + 2 + (add_empty_line and 1 or 0), 0) -- +1 for 0 index and +1 for next line
       vim.cmd([[startinsert!]])
     end
   end
@@ -445,13 +449,9 @@ end
 function OrgMappings:insert_heading_respect_content(suffix)
   suffix = suffix or ''
   local item = Files.get_closest_headline()
-  local line = { string.rep('*', item.level) .. ' ' .. suffix, '' }
-  local last_line = vim.fn.getline(item.range.end_line)
-  if vim.trim(last_line) ~= '' then
-    table.insert(line, 1, '')
-  end
+  local line = config:respect_blank_before_new_entry({ string.rep('*', item.level) .. ' ' .. suffix })
   vim.fn.append(item.range.end_line, line)
-  vim.fn.cursor(item.range.end_line + #line - 1, 0)
+  vim.fn.cursor(item.range.end_line + #line, 0)
   return vim.cmd([[startinsert!]])
 end
 
@@ -530,7 +530,9 @@ function OrgMappings:open_at_point()
   local current_headline = Files.get_closest_headline()
   local headlines = vim.tbl_filter(function(headline)
     return headline.line ~= current_headline.line and headline.id ~= current_headline.id
-  end, Hyperlinks.find_matching_links(link_ctx))
+  end, Hyperlinks.find_matching_links(
+    link_ctx
+  ))
   if #headlines == 0 then
     return
   end
