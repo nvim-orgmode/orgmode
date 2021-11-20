@@ -22,7 +22,7 @@ Use your favourite package manager:
 
 ```lua
 packager.add('nvim-treesitter/nvim-treesitter')
-packager.add('kristijanhusak/orgmode.nvim')
+packager.add('nvim-orgmode/orgmode')
 ```
 
 - [packer.nvim](https://github.com/wbthomason/packer.nvim)
@@ -31,7 +31,7 @@ packager.add('kristijanhusak/orgmode.nvim')
 
 ```lua
 use {'nvim-treesitter/nvim-treesitter'}
-use {'kristijanhusak/orgmode.nvim', config = function()
+use {'nvim-orgmode/orgmode', config = function()
         require('orgmode').setup{}
 end
 }
@@ -44,7 +44,7 @@ Above setup has startup time of somewhere between 1 and 3 ms, so there are no ma
 If you want to do it anyway, here's the lazy load setup:
 ```lua
 use {'nvim-treesitter/nvim-treesitter'}
-use {'kristijanhusak/orgmode.nvim',
+use {'nvim-orgmode/orgmode',
     ft = {'org'},
     config = function()
             require('orgmode').setup{}
@@ -56,14 +56,14 @@ use {'kristijanhusak/orgmode.nvim',
 
 ```vim
 Plug 'nvim-treesitter/nvim-treesitter'
-Plug 'kristijanhusak/orgmode.nvim'
+Plug 'nvim-orgmode/orgmode'
 ```
 
 - [dein](https://github.com/Shougo/dein.vim)
 
 ```vim
 call dein#add('nvim-treesitter/nvim-treesitter')
-call dein#add('kristijanhusak/orgmode.nvim')
+call dein#add('nvim-orgmode/orgmode')
 ```
 
 ## Setup
@@ -196,7 +196,7 @@ Highlights are experimental and partially supported.
 #### Improvements over Vim's syntax highlighting
 * Better highlighting of certain parts (tags, deadline/schedule/closed dates)
 * [Tree-sitter highlight injections](https://github.com/nvim-treesitter/nvim-treesitter/blob/4f2265632becabcd2c5b1791fa31ef278f1e496c/CONTRIBUTING.md#injections) through `#BEGIN_SRC filetype` blocks
-* Headline markup highlighting (https://github.com/kristijanhusak/orgmode.nvim/issues/67)
+* Headline markup highlighting (https://github.com/nvim-orgmode/orgmode/issues/67)
 
 #### Troubleshoot
 **Folding is not working**<br />
@@ -230,7 +230,7 @@ start the command `:language ` and press `<TAB>` to autocomplete possible option
 * Capturing to default notes file/destination
 * Archiving (archive file or ARCHIVE tag)
 * Exporting (via `emacs`, `pandoc` and custom export options)
-* Notifications (experimental, see [Issue #49](https://github.com/kristijanhusak/orgmode.nvim/issues/49))
+* Notifications (experimental, see [Issue #49](https://github.com/nvim-orgmode/orgmode/issues/49))
 * Calendar popup for easier navigation and date updates
 * Various org file mappings:
   * Promote/Demote
@@ -261,7 +261,7 @@ start the command `:language ` and press `<TAB>` to autocomplete possible option
   * Find headlines matching tag(s) (<kbd>m</kbd>):
   * Search for headlines (and it's content) for a query (<kbd>s</kbd>):
   * [Advanced search](DOCS.md#advanced-search) for tags/todo kewords/properties
-  * Notifications (experimental, see [Issue #49](https://github.com/kristijanhusak/orgmode.nvim/issues/49))
+  * Notifications (experimental, see [Issue #49](https://github.com/nvim-orgmode/orgmode/issues/49))
   * Clocking time
 * Capture:
   * Define custom templates
@@ -310,7 +310,7 @@ See all available plugins on [orgmode-nvim](https://github.com/topics/orgmode-nv
 Anything that's a separate plugin in Emacs Orgmode should be a separate plugin in here.
 Point of this plugin is to provide functionality that's built into Emacs Orgmode core,
 and a good foundation for external plugins.<br />
-If you want to build a plugin, post suggestions and improvements on [Plugins infrastructure](https://github.com/kristijanhusak/orgmode.nvim/issues/26)
+If you want to build a plugin, post suggestions and improvements on [Plugins infrastructure](https://github.com/nvim-orgmode/orgmode/issues/26)
 issue.
 
 ## Development

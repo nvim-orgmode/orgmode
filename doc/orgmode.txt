@@ -1022,7 +1022,7 @@ TEXT OBJECTS                                                *orgmode-text_object
 Operator mappings for `org` files.
 Example: Pressing `vir` select everything from current heading and all child.
 `inner` means that it doesn't select the stars, where `around` selects `inner` + `stars`.
-See this issue comment (https://github.com/kristijanhusak/orgmode.nvim/issues/48#issuecomment-884528170) for visual preview.
+See this issue comment (https://github.com/nvim-orgmode/orgmode/issues/48#issuecomment-884528170) for visual preview.
 
 Note: Some mappings can clash with other plugin mappings, like gitsigns.nvim (https://github.com/lewis6991/gitsigns.nvim) which also has `ih` operator mapping.
 
@@ -1236,7 +1236,7 @@ Few examples:
 --------------------------------------------------------------------------------
 NOTIFICATIONS (EXPERIMENTAL)                *orgmode-notifications_(experimental)*
 
-There is an experimental support for agenda tasks notifications. Related issue #49 (https://github.com/kristijanhusak/orgmode.nvim/issues/49).
+There is an experimental support for agenda tasks notifications. Related issue #49 (https://github.com/nvim-orgmode/orgmode/issues/49).
 
 Linux/MacOS has support for notifications via:
 * System notification app (notify-send/terminal-notifier) (See below for setup)
@@ -1444,7 +1444,7 @@ CHANGELOG                                                      *orgmode-changelo
 
 24 OCTOBER 2021                                          *orgmode-24_october_2021*
 
-*   Help mapping was changed from `?` to `g?` to avoid conflict with built in backward search. See issue #106 (https://github.com/kristijanhusak/orgmode.nvim/issues/106).
+*   Help mapping was changed from `?` to `g?` to avoid conflict with built in backward search. See issue #106 (https://github.com/nvim-orgmode/orgmode/issues/106).
 
 10 OCTOBER 2021                                          *orgmode-10_october_2021*
 
