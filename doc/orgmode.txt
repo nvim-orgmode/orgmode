@@ -22,6 +22,7 @@ CONTENTS                                                        *orgmode-content
             1.1.1.12. org_indent_mode....................|orgmode-org_indent_mode|
             1.1.1.13. org_custom_exports..............|orgmode-org_custom_exports|
             1.1.1.14. org_time_stamp_rounding_minutes.|orgmode-org_time_stamp_rounding_minutes|
+            1.1.1.15. org_blank_before_new_entry.|orgmode-org_blank_before_new_entry|
         1.1.2. Agenda settings...........................|orgmode-agenda_settings|
             1.1.2.1. org_deadline_warning_days.|orgmode-org_deadline_warning_days|
             1.1.2.2. org_agenda_span.....................|orgmode-org_agenda_span|
@@ -378,6 +379,14 @@ ORG_TIME_STAMP_ROUNDING_MINUTES          *orgmode-org_time_stamp_rounding_minute
 type: `number`
 default value: `5`
 Number of minutes to increase/decrease when using org_timestamp_up (#org_timestamp_up)/org_timestamp_down (#org_timestamp_down)
+
+ORG_BLANK_BEFORE_NEW_ENTRY                    *orgmode-org_blank_before_new_entry*
+
+type: `table<string,boolean>`
+default value: `{ heading = true, plain_list_item = false }`
+Determine if blank line should be prepended when:
+* Adding heading via `org_meta_return` and `org_insert_*` mappings
+* Adding a list item via `org_meta_return`
 
 AGENDA SETTINGS                                          *orgmode-agenda_settings*
 
