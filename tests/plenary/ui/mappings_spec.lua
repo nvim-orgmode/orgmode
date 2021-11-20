@@ -213,12 +213,7 @@ describe('Mappings', function()
     assert.are.same({
       '* TODO Test orgmode',
       '  DEADLINE: <2021-07-21 Wed 22:02>',
-    }, vim.api.nvim_buf_get_lines(
-      0,
-      2,
-      4,
-      false
-    ))
+    }, vim.api.nvim_buf_get_lines(0, 2, 4, false))
     vim.fn.cursor(3, 1)
 
     -- Changing to DONE and adding closed date
@@ -226,36 +221,21 @@ describe('Mappings', function()
     assert.are.same({
       '* DONE Test orgmode',
       '  DEADLINE: <2021-07-21 Wed 22:02> CLOSED: [' .. Date.now():to_string() .. ']',
-    }, vim.api.nvim_buf_get_lines(
-      0,
-      2,
-      4,
-      false
-    ))
+    }, vim.api.nvim_buf_get_lines(0, 2, 4, false))
 
     -- Removing todo keyword and removing closed date
     vim.cmd([[norm cit]])
     assert.are.same({
       '* Test orgmode',
       '  DEADLINE: <2021-07-21 Wed 22:02>',
-    }, vim.api.nvim_buf_get_lines(
-      0,
-      2,
-      4,
-      false
-    ))
+    }, vim.api.nvim_buf_get_lines(0, 2, 4, false))
 
     -- Setting TODO keyword, initial state
     vim.cmd([[norm cit]])
     assert.are.same({
       '* TODO Test orgmode',
       '  DEADLINE: <2021-07-21 Wed 22:02>',
-    }, vim.api.nvim_buf_get_lines(
-      0,
-      2,
-      4,
-      false
-    ))
+    }, vim.api.nvim_buf_get_lines(0, 2, 4, false))
   end)
 
   it('should change todo state of a headline backward (org_todo_prev)', function()
@@ -269,12 +249,7 @@ describe('Mappings', function()
     assert.are.same({
       '* TODO Test orgmode',
       '  DEADLINE: <2021-07-21 Wed 22:02>',
-    }, vim.api.nvim_buf_get_lines(
-      0,
-      2,
-      4,
-      false
-    ))
+    }, vim.api.nvim_buf_get_lines(0, 2, 4, false))
     vim.fn.cursor(3, 1)
 
     -- Removing todo keyword
@@ -282,36 +257,21 @@ describe('Mappings', function()
     assert.are.same({
       '* Test orgmode',
       '  DEADLINE: <2021-07-21 Wed 22:02>',
-    }, vim.api.nvim_buf_get_lines(
-      0,
-      2,
-      4,
-      false
-    ))
+    }, vim.api.nvim_buf_get_lines(0, 2, 4, false))
 
     -- Changing to DONE and adding closed date
     vim.cmd([[norm ciT]])
     assert.are.same({
       '* DONE Test orgmode',
       '  DEADLINE: <2021-07-21 Wed 22:02> CLOSED: [' .. Date.now():to_string() .. ']',
-    }, vim.api.nvim_buf_get_lines(
-      0,
-      2,
-      4,
-      false
-    ))
+    }, vim.api.nvim_buf_get_lines(0, 2, 4, false))
 
     -- Setting TODO keyword, initial state
     vim.cmd([[norm ciT]])
     assert.are.same({
       '* TODO Test orgmode',
       '  DEADLINE: <2021-07-21 Wed 22:02>',
-    }, vim.api.nvim_buf_get_lines(
-      0,
-      2,
-      4,
-      false
-    ))
+    }, vim.api.nvim_buf_get_lines(0, 2, 4, false))
   end)
 
   it('should change todo state of repeatable task and add last repeat property and state change (org_todo)', function()
@@ -329,12 +289,7 @@ describe('Mappings', function()
       '  DEADLINE: <2021-09-07 Tue 12:00 +1w>',
       '',
       '* TODO Another task',
-    }, vim.api.nvim_buf_get_lines(
-      0,
-      2,
-      6,
-      false
-    ))
+    }, vim.api.nvim_buf_get_lines(0, 2, 6, false))
     vim.fn.cursor(3, 1)
     vim.cmd([[norm cit]])
     assert.are.same({
@@ -346,12 +301,7 @@ describe('Mappings', function()
       '  - State "DONE" from "TODO" [' .. Date.now():to_string() .. ']',
       '',
       '* TODO Another task',
-    }, vim.api.nvim_buf_get_lines(
-      0,
-      2,
-      10,
-      false
-    ))
+    }, vim.api.nvim_buf_get_lines(0, 2, 10, false))
   end)
 
   it('should toggle the checkbox state (org_toggle_checkbox)', function()
@@ -426,12 +376,7 @@ describe('Mappings', function()
       'Some content for level 2',
       '*** NEXT [#1] Level 3',
       'Content Level 3',
-    }, vim.api.nvim_buf_get_lines(
-      0,
-      2,
-      8,
-      false
-    ))
+    }, vim.api.nvim_buf_get_lines(0, 2, 8, false))
     vim.fn.cursor(3, 1)
     vim.cmd([[norm >s]])
     assert.are.same({
@@ -441,12 +386,7 @@ describe('Mappings', function()
       ' Some content for level 2',
       '**** NEXT [#1] Level 3',
       ' Content Level 3',
-    }, vim.api.nvim_buf_get_lines(
-      0,
-      2,
-      8,
-      false
-    ))
+    }, vim.api.nvim_buf_get_lines(0, 2, 8, false))
   end)
 
   it('should promote the heading (org_do_promote)', function()
@@ -488,12 +428,7 @@ describe('Mappings', function()
       'Some content for level 2',
       '*** NEXT [#1] Level 3',
       'Content Level 3',
-    }, vim.api.nvim_buf_get_lines(
-      0,
-      2,
-      8,
-      false
-    ))
+    }, vim.api.nvim_buf_get_lines(0, 2, 8, false))
     vim.fn.cursor(5, 1)
     vim.cmd([[norm <s]])
     assert.are.same({
@@ -503,12 +438,7 @@ describe('Mappings', function()
       'Some content for level 2',
       '** NEXT [#1] Level 3',
       'Content Level 3',
-    }, vim.api.nvim_buf_get_lines(
-      0,
-      2,
-      8,
-      false
-    ))
+    }, vim.api.nvim_buf_get_lines(0, 2, 8, false))
   end)
 
   it('should add list item with Enter (org_meta_return)', function()
@@ -525,12 +455,7 @@ describe('Mappings', function()
       '  - Regular item',
       '  - Second recular item',
       '    - Neste item',
-    }, vim.api.nvim_buf_get_lines(
-      0,
-      3,
-      6,
-      false
-    ))
+    }, vim.api.nvim_buf_get_lines(0, 3, 6, false))
     vim.fn.cursor(4, 1)
     vim.cmd([[exe "norm ,\<CR>"]])
     assert.are.same({
@@ -538,12 +463,7 @@ describe('Mappings', function()
       '  - ',
       '  - Second recular item',
       '    - Neste item',
-    }, vim.api.nvim_buf_get_lines(
-      0,
-      3,
-      7,
-      false
-    ))
+    }, vim.api.nvim_buf_get_lines(0, 3, 7, false))
   end)
 
   it('should add list item with blank line with Enter (org_meta_return)', function()
@@ -566,12 +486,7 @@ describe('Mappings', function()
       '  - Regular item',
       '  - Second recular item',
       '    - Neste item',
-    }, vim.api.nvim_buf_get_lines(
-      0,
-      3,
-      6,
-      false
-    ))
+    }, vim.api.nvim_buf_get_lines(0, 3, 6, false))
     vim.fn.cursor(4, 1)
     vim.cmd([[exe "norm ,\<CR>"]])
     assert.are.same({
@@ -580,12 +495,7 @@ describe('Mappings', function()
       '  - ',
       '  - Second recular item',
       '    - Neste item',
-    }, vim.api.nvim_buf_get_lines(
-      0,
-      3,
-      8,
-      false
-    ))
+    }, vim.api.nvim_buf_get_lines(0, 3, 8, false))
     config:extend({
       org_blank_before_new_entry = {
         heading = true,
@@ -609,12 +519,7 @@ describe('Mappings', function()
       'content for top level todo',
       '* TODO top level todo with multiple tags :OFFICE:PROJECT:',
       '  - [ ] The checkbox',
-    }, vim.api.nvim_buf_get_lines(
-      0,
-      2,
-      6,
-      false
-    ))
+    }, vim.api.nvim_buf_get_lines(0, 2, 6, false))
     vim.fn.cursor(3, 1)
     vim.cmd([[exe "norm ,\<CR>"]])
     assert.are.same({
@@ -624,12 +529,7 @@ describe('Mappings', function()
       'content for top level todo',
       '* TODO top level todo with multiple tags :OFFICE:PROJECT:',
       '  - [ ] The checkbox',
-    }, vim.api.nvim_buf_get_lines(
-      0,
-      2,
-      8,
-      false
-    ))
+    }, vim.api.nvim_buf_get_lines(0, 2, 8, false))
   end)
 
   it('should add headline with Enter without the blank line (org_meta_return)', function()
@@ -650,12 +550,7 @@ describe('Mappings', function()
       'content for top level todo',
       '* TODO top level todo with multiple tags :OFFICE:PROJECT:',
       '  - [ ] The checkbox',
-    }, vim.api.nvim_buf_get_lines(
-      0,
-      2,
-      6,
-      false
-    ))
+    }, vim.api.nvim_buf_get_lines(0, 2, 6, false))
     vim.fn.cursor(3, 1)
     vim.cmd([[exe "norm ,\<CR>"]])
     assert.are.same({
@@ -664,12 +559,7 @@ describe('Mappings', function()
       'content for top level todo',
       '* TODO top level todo with multiple tags :OFFICE:PROJECT:',
       '  - [ ] The checkbox',
-    }, vim.api.nvim_buf_get_lines(
-      0,
-      2,
-      7,
-      false
-    ))
+    }, vim.api.nvim_buf_get_lines(0, 2, 7, false))
     config:extend({
       org_blank_before_new_entry = { heading = true, plain_list_item = false },
     })
@@ -696,12 +586,7 @@ describe('Mappings', function()
       '*** NEXT [#1] Level 3',
       'Content Level 3',
       '* DONE top level todo :WORK:',
-    }, vim.api.nvim_buf_get_lines(
-      0,
-      2,
-      9,
-      false
-    ))
+    }, vim.api.nvim_buf_get_lines(0, 2, 9, false))
     vim.fn.cursor(3, 1)
     vim.cmd([[exe "norm ,\<CR>"]])
     assert.are.same({
@@ -714,12 +599,7 @@ describe('Mappings', function()
       '*** NEXT [#1] Level 3',
       'Content Level 3',
       '* DONE top level todo :WORK:',
-    }, vim.api.nvim_buf_get_lines(
-      0,
-      2,
-      11,
-      false
-    ))
+    }, vim.api.nvim_buf_get_lines(0, 2, 11, false))
   end)
 
   it('should add checkbox item with Enter (org_meta_return)', function()
@@ -736,12 +616,7 @@ describe('Mappings', function()
       '  - [ ] The checkbox',
       '  - [X] The checkbox 2',
       '    - [ ] Nested checkbox',
-    }, vim.api.nvim_buf_get_lines(
-      0,
-      3,
-      6,
-      false
-    ))
+    }, vim.api.nvim_buf_get_lines(0, 3, 6, false))
     vim.fn.cursor(4, 1)
     vim.cmd([[exe "norm ,\<CR>"]])
     assert.are.same({
@@ -749,12 +624,7 @@ describe('Mappings', function()
       '  - [ ] ',
       '  - [X] The checkbox 2',
       '    - [ ] Nested checkbox',
-    }, vim.api.nvim_buf_get_lines(
-      0,
-      3,
-      7,
-      false
-    ))
+    }, vim.api.nvim_buf_get_lines(0, 3, 7, false))
   end)
 
   it('should add a list item after a multiline list item with Enter (org_meta_return)', function()
@@ -771,12 +641,7 @@ describe('Mappings', function()
       '  - this list item',
       '    spans more than',
       '    one line',
-    }, vim.api.nvim_buf_get_lines(
-      0,
-      3,
-      6,
-      false
-    ))
+    }, vim.api.nvim_buf_get_lines(0, 3, 6, false))
     vim.fn.cursor(4, 1)
     vim.cmd([[exe "norm ,\<CR>"]])
     assert.are.same({
@@ -784,12 +649,7 @@ describe('Mappings', function()
       '    spans more than',
       '    one line',
       '  - ',
-    }, vim.api.nvim_buf_get_lines(
-      0,
-      3,
-      7,
-      false
-    ))
+    }, vim.api.nvim_buf_get_lines(0, 3, 7, false))
   end)
 
   it(
@@ -808,12 +668,7 @@ describe('Mappings', function()
         '  - this list item',
         '    spans more than',
         '    one line',
-      }, vim.api.nvim_buf_get_lines(
-        0,
-        3,
-        6,
-        false
-      ))
+      }, vim.api.nvim_buf_get_lines(0, 3, 6, false))
       vim.fn.cursor(6, 1)
       vim.cmd([[exe "norm ,\<CR>"]])
       assert.are.same({
@@ -821,12 +676,7 @@ describe('Mappings', function()
         '    spans more than',
         '    one line',
         '  - ',
-      }, vim.api.nvim_buf_get_lines(
-        0,
-        3,
-        7,
-        false
-      ))
+      }, vim.api.nvim_buf_get_lines(0, 3, 7, false))
     end
   )
 
@@ -886,12 +736,7 @@ describe('Mappings', function()
       '  - [X] The checkbox 2',
       '    - [ ] Nested checkbox',
       'multiple tags content, tags not read from content :FROMCONTENT:',
-    }, vim.api.nvim_buf_get_lines(
-      0,
-      4,
-      7,
-      false
-    ))
+    }, vim.api.nvim_buf_get_lines(0, 4, 7, false))
     vim.fn.cursor(5, 1)
     vim.cmd([[exe "norm ,\<CR>"]])
     assert.are.same({
@@ -899,12 +744,7 @@ describe('Mappings', function()
       '    - [ ] Nested checkbox',
       '  - [ ] ',
       'multiple tags content, tags not read from content :FROMCONTENT:',
-    }, vim.api.nvim_buf_get_lines(
-      0,
-      4,
-      8,
-      false
-    ))
+    }, vim.api.nvim_buf_get_lines(0, 4, 8, false))
   end)
 
   it('should add numbered list item', function()
@@ -927,12 +767,7 @@ describe('Mappings', function()
       '   1. First item',
       '   2. Second item',
       '* TODO Repeatable task',
-    }, vim.api.nvim_buf_get_lines(
-      0,
-      7,
-      11,
-      false
-    ))
+    }, vim.api.nvim_buf_get_lines(0, 7, 11, false))
     vim.fn.cursor(10, 1)
     vim.cmd([[exe "norm ,\<CR>"]])
     assert.are.same({
@@ -941,12 +776,7 @@ describe('Mappings', function()
       '   2. Second item',
       '   3. ',
       '* TODO Repeatable task',
-    }, vim.api.nvim_buf_get_lines(
-      0,
-      7,
-      12,
-      false
-    ))
+    }, vim.api.nvim_buf_get_lines(0, 7, 12, false))
   end)
 
   it('should add numbered list item in the middle of the list', function()
@@ -969,12 +799,7 @@ describe('Mappings', function()
       '   1. First item',
       '   2. Second item',
       '* TODO Repeatable task',
-    }, vim.api.nvim_buf_get_lines(
-      0,
-      7,
-      11,
-      false
-    ))
+    }, vim.api.nvim_buf_get_lines(0, 7, 11, false))
     vim.fn.cursor(9, 1)
     vim.cmd([[exe "norm ,\<CR>"]])
     assert.are.same({
@@ -983,12 +808,7 @@ describe('Mappings', function()
       '   2. ',
       '   3. Second item',
       '* TODO Repeatable task',
-    }, vim.api.nvim_buf_get_lines(
-      0,
-      7,
-      12,
-      false
-    ))
+    }, vim.api.nvim_buf_get_lines(0, 7, 12, false))
   end)
 
   it('should insert new heading after current subtree (org_insert_heading_respect_content)', function()
@@ -1011,12 +831,7 @@ describe('Mappings', function()
       '  - [X] The checkbox 2',
       '    - [ ] Nested checkbox',
       'multiple tags content, tags not read from content :FROMCONTENT:',
-    }, vim.api.nvim_buf_get_lines(
-      0,
-      2,
-      10,
-      false
-    ))
+    }, vim.api.nvim_buf_get_lines(0, 2, 10, false))
     vim.fn.cursor(3, 1)
     vim.cmd([[norm ,oih]])
     assert.are.same({
@@ -1027,12 +842,7 @@ describe('Mappings', function()
       '* TODO top level todo with multiple tags :OFFICE:PROJECT:',
       '  - [ ] The checkbox',
       '  - [X] The checkbox 2',
-    }, vim.api.nvim_buf_get_lines(
-      0,
-      2,
-      9,
-      false
-    ))
+    }, vim.api.nvim_buf_get_lines(0, 2, 9, false))
   end)
 
   it(
@@ -1060,12 +870,7 @@ describe('Mappings', function()
         '  - [X] The checkbox 2',
         '    - [ ] Nested checkbox',
         'multiple tags content, tags not read from content :FROMCONTENT:',
-      }, vim.api.nvim_buf_get_lines(
-        0,
-        2,
-        10,
-        false
-      ))
+      }, vim.api.nvim_buf_get_lines(0, 2, 10, false))
       vim.fn.cursor(3, 1)
       vim.cmd([[norm ,oih]])
       assert.are.same({
@@ -1075,12 +880,7 @@ describe('Mappings', function()
         '* TODO top level todo with multiple tags :OFFICE:PROJECT:',
         '  - [ ] The checkbox',
         '  - [X] The checkbox 2',
-      }, vim.api.nvim_buf_get_lines(
-        0,
-        2,
-        8,
-        false
-      ))
+      }, vim.api.nvim_buf_get_lines(0, 2, 8, false))
       config:extend({
         org_blank_before_new_entry = { heading = true, plain_list_item = false },
       })
@@ -1108,12 +908,7 @@ describe('Mappings', function()
       '  - [X] The checkbox 2',
       '    - [ ] Nested checkbox',
       'multiple tags content, tags not read from content :FROMCONTENT:',
-    }, vim.api.nvim_buf_get_lines(
-      0,
-      2,
-      10,
-      false
-    ))
+    }, vim.api.nvim_buf_get_lines(0, 2, 10, false))
     vim.fn.cursor(3, 1)
     vim.cmd([[norm ,oiT]])
     assert.are.same({
@@ -1125,12 +920,7 @@ describe('Mappings', function()
       '  - [ ] The checkbox',
       '  - [X] The checkbox 2',
       '    - [ ] Nested checkbox',
-    }, vim.api.nvim_buf_get_lines(
-      0,
-      2,
-      10,
-      false
-    ))
+    }, vim.api.nvim_buf_get_lines(0, 2, 10, false))
   end)
 
   it('should insert new todo heading after current one without the blank line (org_insert_todo_heading)', function()
@@ -1157,12 +947,7 @@ describe('Mappings', function()
       '  - [X] The checkbox 2',
       '    - [ ] Nested checkbox',
       'multiple tags content, tags not read from content :FROMCONTENT:',
-    }, vim.api.nvim_buf_get_lines(
-      0,
-      2,
-      10,
-      false
-    ))
+    }, vim.api.nvim_buf_get_lines(0, 2, 10, false))
     vim.fn.cursor(3, 1)
     vim.cmd([[norm ,oiT]])
     assert.are.same({
@@ -1173,12 +958,7 @@ describe('Mappings', function()
       '  - [ ] The checkbox',
       '  - [X] The checkbox 2',
       '    - [ ] Nested checkbox',
-    }, vim.api.nvim_buf_get_lines(
-      0,
-      2,
-      9,
-      false
-    ))
+    }, vim.api.nvim_buf_get_lines(0, 2, 9, false))
     config:extend({
       org_blank_before_new_entry = { heading = true, plain_list_item = false },
     })
@@ -1204,12 +984,7 @@ describe('Mappings', function()
       '  - [X] The checkbox 2',
       '    - [ ] Nested checkbox',
       'multiple tags content, tags not read from content :FROMCONTENT:',
-    }, vim.api.nvim_buf_get_lines(
-      0,
-      2,
-      10,
-      false
-    ))
+    }, vim.api.nvim_buf_get_lines(0, 2, 10, false))
     vim.fn.cursor(3, 1)
     vim.cmd([[norm ,oit]])
     assert.are.same({
@@ -1220,12 +995,7 @@ describe('Mappings', function()
       '* TODO top level todo with multiple tags :OFFICE:PROJECT:',
       '  - [ ] The checkbox',
       '  - [X] The checkbox 2',
-    }, vim.api.nvim_buf_get_lines(
-      0,
-      2,
-      9,
-      false
-    ))
+    }, vim.api.nvim_buf_get_lines(0, 2, 9, false))
   end)
 
   it(
@@ -1253,12 +1023,7 @@ describe('Mappings', function()
         '  - [X] The checkbox 2',
         '    - [ ] Nested checkbox',
         'multiple tags content, tags not read from content :FROMCONTENT:',
-      }, vim.api.nvim_buf_get_lines(
-        0,
-        2,
-        10,
-        false
-      ))
+      }, vim.api.nvim_buf_get_lines(0, 2, 10, false))
       vim.fn.cursor(3, 1)
       vim.cmd([[norm ,oit]])
       assert.are.same({
@@ -1268,12 +1033,7 @@ describe('Mappings', function()
         '* TODO top level todo with multiple tags :OFFICE:PROJECT:',
         '  - [ ] The checkbox',
         '  - [X] The checkbox 2',
-      }, vim.api.nvim_buf_get_lines(
-        0,
-        2,
-        8,
-        false
-      ))
+      }, vim.api.nvim_buf_get_lines(0, 2, 8, false))
       config:extend({
         org_blank_before_new_entry = { heading = true, plain_list_item = false },
       })
@@ -1305,12 +1065,7 @@ describe('Mappings', function()
       '* DONE top level todo :WORK:',
       'content for top level todo',
       '* TODO top level todo with multiple tags :OFFICE:PROJECT:',
-    }, vim.api.nvim_buf_get_lines(
-      0,
-      2,
-      11,
-      false
-    ))
+    }, vim.api.nvim_buf_get_lines(0, 2, 11, false))
     vim.fn.cursor(9, 1)
     vim.cmd([[norm ,oK]])
     assert.are.same({
@@ -1323,12 +1078,7 @@ describe('Mappings', function()
       '*** NEXT [#1] Level 3',
       'Content Level 3',
       '* TODO top level todo with multiple tags :OFFICE:PROJECT:',
-    }, vim.api.nvim_buf_get_lines(
-      0,
-      2,
-      11,
-      false
-    ))
+    }, vim.api.nvim_buf_get_lines(0, 2, 11, false))
   end)
 
   it('should move subtree down (org_move_subtree_down)', function()
@@ -1370,12 +1120,7 @@ describe('Mappings', function()
       '** NEXT Working on this now :OFFICE:NESTED:',
       '   1. First item',
       '   2. Second item',
-    }, vim.api.nvim_buf_get_lines(
-      0,
-      2,
-      18,
-      false
-    ))
+    }, vim.api.nvim_buf_get_lines(0, 2, 18, false))
     vim.fn.cursor(9, 1)
     vim.cmd([[norm ,oJ]])
     assert.are.same({
@@ -1395,12 +1140,7 @@ describe('Mappings', function()
       '   2. Second item',
       '* DONE top level todo :WORK:',
       'content for top level todo',
-    }, vim.api.nvim_buf_get_lines(
-      0,
-      2,
-      18,
-      false
-    ))
+    }, vim.api.nvim_buf_get_lines(0, 2, 18, false))
   end)
 
   it('should jump to next heading on any level (org_next_visible_heading)', function()
