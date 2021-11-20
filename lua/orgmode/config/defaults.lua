@@ -31,6 +31,10 @@ return {
   org_custom_exports = {},
   org_indent_mode = 'indent',
   org_time_stamp_rounding_minutes = 5,
+  org_blank_before_new_entry = {
+    heading = true,
+    plain_list_item = false,
+  },
   diagnostics = true,
   notifications = {
     enabled = false,

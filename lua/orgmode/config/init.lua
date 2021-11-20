@@ -260,5 +260,16 @@ function Config:ts_highlights_enabled()
   return self.ts_hl_enabled
 end
 
+---@param content table
+---@param option string
+---@param prepend_content any
+---@return table
+function Config:respect_blank_before_new_entry(content, option, prepend_content)
+  if self.opts.org_blank_before_new_entry[option or 'heading'] then
+    table.insert(content, 1, prepend_content or '')
+  end
+  return content
+end
+
 instance = Config:new()
 return instance

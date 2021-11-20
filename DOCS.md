@@ -217,6 +217,13 @@ require('orgmode').setup({
 *default value*: `5`<br />
 Number of minutes to increase/decrease when using [org_timestamp_up](#org_timestamp_up)/[org_timestamp_down](#org_timestamp_down)
 
+#### **org_blank_before_new_entry**
+*type*: `table<string,boolean>`<br />
+*default value*: `{ heading = true, plain_list_item = false }`<br />
+Determine if blank line should be prepended when:
+* Adding heading via `org_meta_return` and `org_insert_*` mappings
+* Adding a list item via `org_meta_return`
+
 ### Agenda settings
 
 #### **org_deadline_warning_days**
