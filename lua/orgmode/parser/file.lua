@@ -82,7 +82,7 @@ function File:get_opened_headlines()
   end, self.sections)
 
   table.sort(headlines, function(a, b)
-    return a:get_priority_number() > b:get_priority_number()
+    return a:get_priority_sort_value() > b:get_priority_sort_value()
   end)
 
   return headlines

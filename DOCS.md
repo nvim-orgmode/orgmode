@@ -565,6 +565,15 @@ Decrease date under cursor by 1 or "count" day(s) (Example count: `5<S-UP>`).
 #### **org_change_date**
 *mapped to*: `cid`<br />
 Change date under cursor. Opens calendar to select new date
+#### **org_priority**
+*mapped to*: `<Leader>o,`<br />
+Choose the priority of a headline item.
+#### **org_priority_up**
+*mapped to*: `ciR`<br />
+Increase the priority of a headline item.
+#### **org_priority_down**
+*mapped to*: `cir`<br />
+Decrease the priority of a headline item.
 #### **org_todo**
 *mapped to*: `cit`<br />
 Cycle todo keyword forward on current headline or open fast access to TODO states prompt (see [org_todo_keywords](#org_todo_keywords)) if it's enabled.

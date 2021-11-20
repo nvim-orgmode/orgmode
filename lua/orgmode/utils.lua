@@ -370,4 +370,36 @@ function utils.prompt_autocomplete(arg_lead, list, split_chars)
   end, matches)
 end
 
+---@param items table
+function utils.choose(items)
+  items = items or {}
+
+  local output = {}
+  for _, item in ipairs(items) do
+    table.insert(output, { '[' })
+    table.insert(output, { item.choice_text, item.choice_hl or 'Normal' })
+    table.insert(output, { ']' })
+
+    if item.desc_text then
+      table.insert(output, { ' ' })
+      table.insert(output, { item.desc_text, item.desc_hl or 'Normal' })
+    end
+
+    table.insert(output, { '  ' })
+  end
+
+  table.insert(output, { '\n' })
+  vim.api.nvim_echo(output, true, {})
+
+  local raw = vim.fn.nr2char(vim.fn.getchar())
+  local char = string.lower(raw)
+  vim.cmd('redraw!')
+
+  for _, item in ipairs(items) do
+    if char == string.lower(item.choice_value) then
+      return { choice_value = item.choice_value, choice_text = item.choice_text, raw = raw, ctx = item.ctx }
+    end
+  end
+end
+
 return utils
