@@ -2,6 +2,7 @@ local ts_utils = require('nvim-treesitter.ts_utils')
 local Calendar = require('orgmode.objects.calendar')
 local Date = require('orgmode.objects.date')
 local TodoState = require('orgmode.objects.todo_state')
+local PriorityState = require('orgmode.objects.priority_state')
 local Hyperlinks = require('orgmode.org.hyperlinks')
 local utils = require('orgmode.utils')
 local Files = require('orgmode.parser.files')
@@ -256,6 +257,32 @@ function OrgMappings:change_date()
     self:_replace_date(new_date)
   end
   Calendar.new({ callback = cb, date = date }).open()
+end
+
+function OrgMappings:priority_up()
+  self:set_priority('up')
+end
+
+function OrgMappings:priority_down()
+  self:set_priority('down')
+end
+
+function OrgMappings:set_priority(direction)
+  local item = Files.get_closest_headline()
+  local priority = PriorityState:new(item.priority)
+
+  local new_priority
+  if direction then
+    new_priority = direction == 'up' and priority:increase() or priority:decrease()
+  else
+    new_priority = priority:prompt_user()
+  end
+
+  if not new_priority then
+    return
+  end
+
+  item:set_priority(new_priority)
 end
 
 function OrgMappings:todo_next_state()

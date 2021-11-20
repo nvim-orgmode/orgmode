@@ -30,8 +30,8 @@ local function sort_agenda_items(agenda_items)
       return false
     end
 
-    if a.headline:get_priority_number() ~= b.headline:get_priority_number() then
-      return a.headline:get_priority_number() > b.headline:get_priority_number()
+    if a.headline:get_priority_sort_value() ~= b.headline:get_priority_sort_value() then
+      return a.headline:get_priority_sort_value() > b.headline:get_priority_sort_value()
     end
 
     if a.headline:has_priority() and b.headline:has_priority() then
@@ -53,8 +53,8 @@ end
 
 local function sort_todos(todos)
   table.sort(todos, function(a, b)
-    if a:get_priority_number() ~= b:get_priority_number() then
-      return a:get_priority_number() > b:get_priority_number()
+    if a:get_priority_sort_value() ~= b:get_priority_sort_value() then
+      return a:get_priority_sort_value() > b:get_priority_sort_value()
     end
     return a.category < b.category
   end)
