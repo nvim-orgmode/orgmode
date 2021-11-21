@@ -113,7 +113,12 @@ function Logbook:cancel_active_clock()
   if not active_item then
     return
   end
-  vim.fn.deletebufline(vim.api.nvim_get_current_buf(), self.range.start_line + index)
+  local buf = vim.api.nvim_get_current_buf()
+  -- Delete whole drawer if there are no any other entries
+  if #self.items == 1 then
+    return vim.fn.deletebufline(buf, self.range.start_line, self.range.end_line)
+  end
+  vim.fn.deletebufline(buf, self.range.start_line + index)
 end
 
 function Logbook:recalculate_estimate(line)

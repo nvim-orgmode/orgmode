@@ -123,4 +123,24 @@ describe('Clock', function()
     assert.are.same('  :END:', vim.fn.getline(7))
     assert.are.same('', require('orgmode').action('clock.get_statusline'))
   end)
+
+  it('should remove the whole logbook drawer when canceling single clock entry', function()
+    helpers.load_file_content({
+      '#TITLE: Clocked file',
+      '',
+      '* TODO Test orgmode',
+      '  DEADLINE: <2021-07-21 Wed 22:02>',
+    })
+    vim.fn.cursor(3, 1)
+    vim.cmd([[norm ,oxi]])
+    local now = Date.now({ active = false }):to_wrapped_string()
+    assert.are.same('  :LOGBOOK:', vim.fn.getline(5))
+    assert.are.same(string.format('  CLOCK: %s', now), vim.fn.getline(6))
+    assert.are.same('  :END:', vim.fn.getline(7))
+    vim.cmd([[norm ,oxq]])
+    assert.are.same(4, vim.fn.line('$'))
+    assert.are.same('', vim.fn.getline(5))
+    assert.are.same('', vim.fn.getline(6))
+    assert.are.same('', vim.fn.getline(7))
+  end)
 end)
