@@ -564,71 +564,68 @@ function Agenda:switch_to_item()
 end
 
 function Agenda:change_todo_state()
-  local line = vim.fn.line('.')
-  local item = self.content[line]
-  if not item or not item.jumpable then
-    return
-  end
-  local headline = nil
-  Files.update_file(item.file, function(_)
-    vim.fn.cursor(item.file_position, 0)
-    require('orgmode').action('org_mappings.todo_next_state')
-    headline = Files.get_closest_headline()
-  end)
-  if not headline then
-    return
-  end
-  if self.active_view == 'agenda' and item.agenda_item then
-    item.agenda_item:set_headline(headline)
-    return self:render_agenda()
-  end
-  self.content[line] = self:_generate_todo_item(headline, item.longest_category, item.line)
-  return self:_print_and_highlight()
+  return self:_remote_edit({
+    action = 'org_mappings.todo_next_state',
+    update_in_place = true,
+  })
 end
 
 function Agenda:clock_in()
-  local item = self.content[vim.fn.line('.')]
-  if not item or not item.jumpable then
-    return
-  end
-  Files.update_file(item.file, function(_)
-    vim.fn.cursor(item.file_position, 0)
-    require('orgmode').action('clock.org_clock_in')
-  end)
-  return self:redo(true)
+  return self:_remote_edit({
+    action = 'clock.org_clock_in',
+    redo = true,
+  })
 end
 
 function Agenda:clock_out()
-  local last_clocked = Files.get_clocked_headline()
-  if last_clocked and last_clocked:is_clocked_in() then
-    Files.update_file(last_clocked.file, function(_)
-      vim.fn.cursor(last_clocked.range.start_line, 0)
-      require('orgmode').action('clock.org_clock_out')
-    end)
-    return self:redo(true)
-  end
+  return self:_remote_edit({
+    action = 'clock.org_clock_out',
+    redo = true,
+    getter = function()
+      local last_clocked = Files.get_clocked_headline()
+      if last_clocked and last_clocked:is_clocked_in() then
+        return { file = last_clocked.file, file_position = last_clocked.range.start_line }
+      end
+    end,
+  })
 end
 
 function Agenda:clock_cancel()
-  local last_clocked = Files.get_clocked_headline()
-  if last_clocked and last_clocked:is_clocked_in() then
-    Files.update_file(last_clocked.file, function(_)
-      vim.fn.cursor(last_clocked.range.start_line, 0)
-      require('orgmode').action('clock.org_clock_cancel')
-    end)
-    return self:redo(true)
-  end
+  return self:_remote_edit({
+    action = 'clock.org_clock_cancel',
+    redo = true,
+    getter = function()
+      local last_clocked = Files.get_clocked_headline()
+      if last_clocked and last_clocked:is_clocked_in() then
+        return { file = last_clocked.file, file_position = last_clocked.range.start_line }
+      end
+    end,
+  })
 end
 
 function Agenda:set_effort()
-  local item = self.content[vim.fn.line('.')]
-  if not item or not item.jumpable then
-    return
-  end
-  Files.update_file(item.file, function(_)
-    vim.fn.cursor(item.file_position, 0)
-    require('orgmode').action('clock.org_set_effort')
-  end)
+  return self:_remote_edit({ action = 'clock.org_set_effort' })
+end
+
+function Agenda:set_priority()
+  return self:_remote_edit({
+    action = 'org_mappings.set_priority',
+    update_in_place = true,
+  })
+end
+
+function Agenda:priority_up()
+  return self:_remote_edit({
+    action = 'org_mappings.priority_up',
+    update_in_place = true,
+  })
+end
+
+function Agenda:priority_down()
+  return self:_remote_edit({
+    action = 'org_mappings.priority_down',
+    update_in_place = true,
+  })
 end
 
 function Agenda:toggle_clock_report()
@@ -680,6 +677,46 @@ function Agenda:filter()
   end)
   self.filters:parse(filter_term)
   return self:redo()
+end
+
+---@param opts table
+function Agenda:_remote_edit(opts)
+  opts = opts or {}
+  local line = vim.fn.line('.')
+  local action = opts.action
+  if not action then
+    return
+  end
+  local getter = opts.getter
+    or function()
+      local item = self.content[line]
+      if not item or not item.jumpable then
+        return
+      end
+      return item
+    end
+  local item = getter()
+  if not item then
+    return
+  end
+  local headline = nil
+  Files.update_file(item.file, function(_)
+    vim.fn.cursor(item.file_position, 0)
+    require('orgmode').action(action)
+    headline = Files.get_closest_headline()
+  end)
+  if opts.redo then
+    return self:redo(true)
+  end
+  if not opts.update_in_place or not headline then
+    return
+  end
+  if self.active_view == 'agenda' and item.agenda_item then
+    item.agenda_item:set_headline(headline)
+    return self:render_agenda()
+  end
+  self.content[line] = self:_generate_todo_item(headline, item.longest_category, item.line)
+  return self:_print_and_highlight()
 end
 
 ---@return table|nil

@@ -479,6 +479,15 @@ See [Clocking](#clocking) for more details.
 *mapped to*: `R`<br />
 Show clock report at the end of the agenda for current agenda time range<br />
 See [Clocking](#clocking) for more details.
+#### **org_agenda_priority**
+*mapped to*: `<Leader>o,`<br />
+Choose the priority of a headline item.
+#### **org_agenda_priority_up**
+*mapped to*: `+`<br />
+Increase the priority of a headline item.
+#### **org_agenda_priority_down**
+*mapped to*: `-`<br />
+Decrease the priority of a headline item.
 #### **org_agenda_filter**
 *mapped to*: `/`<br />
 Open prompt that allows filtering current agenda view by category, tags and title (vim regex, see `:help vim.regex()`)<br />
