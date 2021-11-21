@@ -22,6 +22,8 @@ return {
     org_agenda_priority = { 'agenda.set_priority' },
     org_agenda_priority_up = { 'agenda.priority_up' },
     org_agenda_priority_down = { 'agenda.priority_down' },
+    org_agenda_toggle_archive_tag = { 'agenda.toggle_archive_tag' },
+    org_agenda_set_tags = { 'agenda.set_tags' },
     org_agenda_filter = { 'agenda.filter' },
     org_agenda_show_help = { 'org_mappings.show_help' },
   },

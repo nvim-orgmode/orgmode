@@ -488,6 +488,12 @@ Increase the priority of a headline item.
 #### **org_agenda_priority_down**
 *mapped to*: `-`<br />
 Decrease the priority of a headline item.
+#### **org_agenda_toggle_archive_tag**
+*mapped to*: `<Leader>oA`<br />
+Toggle "ARCHIVE" tag of a headline item.
+#### **org_agenda_set_tags**
+*mapped to*: `<Leader>ot`<br />
+Set tags on current headline item.
 #### **org_agenda_filter**
 *mapped to*: `/`<br />
 Open prompt that allows filtering current agenda view by category, tags and title (vim regex, see `:help vim.regex()`)<br />
