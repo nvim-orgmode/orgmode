@@ -628,6 +628,20 @@ function Agenda:priority_down()
   })
 end
 
+function Agenda:toggle_archive_tag()
+  return self:_remote_edit({
+    action = 'org_mappings.toggle_archive_tag',
+    update_in_place = true,
+  })
+end
+
+function Agenda:set_tags()
+  return self:_remote_edit({
+    action = 'org_mappings.set_tags',
+    update_in_place = true,
+  })
+end
+
 function Agenda:toggle_clock_report()
   if self.active_view ~= 'agenda' then
     return utils.warning('Not possible to view clock report in non-agenda view.')
