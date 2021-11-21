@@ -62,8 +62,13 @@ CONTENTS                                                        *orgmode-content
             1.2.2.16. org_agenda_clock_cancel....|orgmode-org_agenda_clock_cancel|
             1.2.2.17. org_agenda_clock_goto........|orgmode-org_agenda_clock_goto|
             1.2.2.18. org_agenda_clockreport_mode.|orgmode-org_agenda_clockreport_mode|
-            1.2.2.19. org_agenda_filter................|orgmode-org_agenda_filter|
-            1.2.2.20. org_agenda_show_help..........|orgmode-org_agenda_show_help|
+            1.2.2.19. org_agenda_priority............|orgmode-org_agenda_priority|
+            1.2.2.20. org_agenda_priority_up......|orgmode-org_agenda_priority_up|
+            1.2.2.21. org_agenda_priority_down..|orgmode-org_agenda_priority_down|
+            1.2.2.22. org_agenda_toggle_archive_tag.|orgmode-org_agenda_toggle_archive_tag|
+            1.2.2.23. org_agenda_set_tags............|orgmode-org_agenda_set_tags|
+            1.2.2.24. org_agenda_filter................|orgmode-org_agenda_filter|
+            1.2.2.25. org_agenda_show_help..........|orgmode-org_agenda_show_help|
         1.2.3. Capture mappings.........................|orgmode-capture_mappings|
             1.2.3.1. org_capture_finalize...........|orgmode-org_capture_finalize|
             1.2.3.2. org_capture_refile...............|orgmode-org_capture_refile|
@@ -693,6 +698,31 @@ ORG_AGENDA_CLOCKREPORT_MODE                  *orgmode-org_agenda_clockreport_mod
 mapped to: `R`
 Show clock report at the end of the agenda for current agenda time range
 See Clocking (#clocking) for more details.
+
+ORG_AGENDA_PRIORITY                                  *orgmode-org_agenda_priority*
+
+mapped to: `<Leader>o,`
+Choose the priority of a headline item.
+
+ORG_AGENDA_PRIORITY_UP                            *orgmode-org_agenda_priority_up*
+
+mapped to: `+`
+Increase the priority of a headline item.
+
+ORG_AGENDA_PRIORITY_DOWN                        *orgmode-org_agenda_priority_down*
+
+mapped to: `-`
+Decrease the priority of a headline item.
+
+ORG_AGENDA_TOGGLE_ARCHIVE_TAG              *orgmode-org_agenda_toggle_archive_tag*
+
+mapped to: `<Leader>oA`
+Toggle "ARCHIVE" tag of a headline item.
+
+ORG_AGENDA_SET_TAGS                                  *orgmode-org_agenda_set_tags*
+
+mapped to: `<Leader>ot`
+Set tags on current headline item.
 
 ORG_AGENDA_FILTER                                      *orgmode-org_agenda_filter*
 
