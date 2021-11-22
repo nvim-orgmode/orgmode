@@ -1,6 +1,7 @@
 local Files = require('orgmode.parser.files')
 local Duration = require('orgmode.objects.duration')
 local utils = require('orgmode.utils')
+local Promise = require('orgmode.utils.promise')
 
 ---@class Clock
 local Clock = {}
@@ -19,8 +20,10 @@ function Clock:org_clock_in()
     return utils.echo_info(string.format('Clock continues in "%s"', item.title))
   end
 
+  local promise = Promise.resolve()
+
   if last_clocked_headline and last_clocked_headline:is_clocked_in() then
-    Files.update_file(last_clocked_headline.file, function(file)
+    promise = Files.update_file(last_clocked_headline.file, function(file)
       local clocked_item = file:get_closest_headline(last_clocked_headline.range.start_line)
       if not clocked_item then
         return
@@ -29,8 +32,10 @@ function Clock:org_clock_in()
     end)
   end
 
-  item:clock_in()
-  Files.set_clocked_headline(item)
+  return promise:next(function()
+    item:clock_in()
+    Files.set_clocked_headline(item)
+  end)
 end
 
 function Clock:org_clock_out()

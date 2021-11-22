@@ -82,6 +82,8 @@ local helps = {
     { key = 'org_agenda_priority_down', description = 'Decrease priority for current item' },
     { key = 'org_agenda_toggle_archive_tag', description = 'Toggle "ARCHIVE" tag on current headline' },
     { key = 'org_agenda_set_tags', description = 'Change tags of current headline' },
+    { key = 'org_agenda_deadline', description = 'Insert/Update deadline date on current headline' },
+    { key = 'org_agenda_schedule', description = 'Insert/Update scheduled date on current headline' },
     { key = 'org_agenda_quit', description = 'Close agenda' },
     { key = 'org_agenda_show_help', description = 'Show this help' },
   },

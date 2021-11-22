@@ -1,5 +1,6 @@
 local Date = require('orgmode.objects.date')
 local utils = require('orgmode.utils')
+local Promise = require('orgmode.utils.promise')
 ---@class Calendar
 ---@field win number
 ---@field buf number
@@ -11,7 +12,6 @@ local utils = require('orgmode.utils')
 local Calendar = {
   win = nil,
   buf = nil,
-  callback = nil,
   namespace = vim.api.nvim_create_namespace('org_calendar'),
   date = nil,
   month = Date.today():start_of('month'),
@@ -22,7 +22,6 @@ vim.cmd([[hi OrgCalendarToday gui=reverse cterm=reverse]])
 ---@param data table
 function Calendar.new(data)
   data = data or {}
-  Calendar.callback = data.callback
   if data.date then
     Calendar.date = data.date
     Calendar.month = data.date:set({ day = 1 })
@@ -68,6 +67,9 @@ function Calendar.open()
   end
   vim.fn.cursor(2, 0)
   vim.fn.search(search_day, 'W')
+  return Promise.new(function(resolve)
+    Calendar.callback = resolve
+  end)
 end
 
 function Calendar.render()
@@ -140,7 +142,7 @@ function Calendar.reset()
   vim.fn.search(today:format('%d'), 'W')
 end
 
-function Calendar:select()
+function Calendar.select()
   local col = vim.fn.col('.')
   local char = vim.fn.getline('.'):sub(col, col)
   local day = vim.trim(vim.fn.expand('<cword>'))
@@ -152,18 +154,20 @@ function Calendar:select()
   day = tonumber(day)
   local selected_date = Calendar.month:set({ day = day })
   local cb = Calendar.callback
+  Calendar.callback = nil
   vim.cmd([[echon]])
   vim.cmd([[bw!]])
-  if type(cb) == 'function' then
-    cb(selected_date)
-  end
+  return cb(selected_date)
 end
 
 function Calendar.dispose()
   Calendar.win = nil
   Calendar.buf = nil
-  Calendar.callback = nil
   Calendar.month = Date.today():start_of('month')
+  if Calendar.callback then
+    Calendar.callback(nil)
+    Calendar.callback = nil
+  end
 end
 
 return Calendar

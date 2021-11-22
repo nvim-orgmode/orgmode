@@ -494,6 +494,12 @@ Toggle "ARCHIVE" tag of a headline item.
 #### **org_agenda_set_tags**
 *mapped to*: `<Leader>ot`<br />
 Set tags on current headline item.
+#### **org_agenda_deadline**
+*mapped to*: `<Leader>oid`<br />
+Insert/Update deadline date on current headline item.<br />
+#### **org_agenda_schedule**
+*mapped to*: `<Leader>ois`<br />
+Insert/Update scheduled date on current headline item.<br />
 #### **org_agenda_filter**
 *mapped to*: `/`<br />
 Open prompt that allows filtering current agenda view by category, tags and title (vim regex, see `:help vim.regex()`)<br />

@@ -1,6 +1,7 @@
 local config = require('orgmode.config')
 local File = require('orgmode.parser.file')
 local utils = require('orgmode.utils')
+local Promise = require('orgmode.utils.promise')
 
 ---@class Files
 ---@field loaded boolean
@@ -150,21 +151,21 @@ end
 
 ---@param filename string
 ---@param action function
----@return boolean
+---@return Promise
 function Files.update_file(filename, action)
   local file = Files.get(filename)
   if not file then
-    return false
+    return Promise.resolve()
   end
   local is_same_file = filename == vim.api.nvim_buf_get_name(0)
   local cur_win = vim.api.nvim_get_current_win()
   if is_same_file then
-    if action then
-      action(file)
-    end
-    vim.cmd(':silent! w')
-    return true
+    return utils.promisify(action(file)):next(function(result)
+      vim.cmd(':silent! w')
+      return result
+    end)
   end
+
   local bufnr = vim.fn.bufadd(filename)
   vim.api.nvim_open_win(bufnr, true, {
     relative = 'editor',
@@ -175,12 +176,12 @@ function Files.update_file(filename, action)
     zindex = 1,
     style = 'minimal',
   })
-  if action then
-    action(file)
-  end
-  vim.cmd('silent! wq!')
-  vim.api.nvim_set_current_win(cur_win)
-  return true
+
+  return utils.promisify(action(file)):next(function(result)
+    vim.cmd('silent! wq!')
+    vim.api.nvim_set_current_win(cur_win)
+    return result
+  end)
 end
 
 ---@param term string

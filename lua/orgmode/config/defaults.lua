@@ -76,6 +76,8 @@ return {
       org_agenda_priority_down = '-',
       org_agenda_toggle_archive_tag = '<Leader>oA',
       org_agenda_set_tags = '<Leader>ot',
+      org_agenda_deadline = '<Leader>oid',
+      org_agenda_schedule = '<Leader>ois',
       org_agenda_filter = '/',
       org_agenda_show_help = 'g?',
     },
