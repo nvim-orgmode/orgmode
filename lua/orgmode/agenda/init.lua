@@ -32,6 +32,19 @@ local function sort_agenda_items(agenda_items)
       return true
     end
 
+    if a.is_same_day and b.is_same_day then
+      if a.headline_date.date_only and not b.headline_date.date_only then
+          return false
+      end
+      if not a.headline_date.date_only and b.headline_date.date_only then
+          return true
+      end
+      if a.headline_date.date_only and b.headline_date.date_only then
+          return false
+      end
+      return false
+    end
+
     if b.is_today and b.is_same_day then
       if a.is_today and a.is_same_day then
         -- isn't this covered above?
