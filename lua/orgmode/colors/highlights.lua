@@ -18,6 +18,8 @@ function M.link_ts_highlights()
     OrgTSHeadlineLevel8 = 'OrgHeadlineLevel8',
     OrgTSBullet = 'Identifier',
     OrgTSCheckbox = 'PreProc',
+    orgTSSubscript = 'Comment',
+    orgTSSuperscript = 'Comment',
     OrgTSCheckboxHalfChecked = 'OrgTSCheckbox',
     OrgTSCheckboxUnchecked = 'OrgTSCheckbox',
     OrgTSCheckboxChecked = 'OrgTSCheckbox',
