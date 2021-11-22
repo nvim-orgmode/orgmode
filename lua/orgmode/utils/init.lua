@@ -1,4 +1,5 @@
 local ts = require('vim.treesitter.query')
+local Promise = require('orgmode.utils.promise')
 local uv = vim.loop
 local utils = {}
 local debounce_timers = {}
@@ -400,6 +401,15 @@ function utils.choose(items)
       return { choice_value = item.choice_value, choice_text = item.choice_text, raw = raw, ctx = item.ctx }
     end
   end
+end
+
+---@param fn function
+---@return Promise
+function utils.promisify(fn)
+  if getmetatable(fn) ~= Promise then
+    return Promise.resolve(fn)
+  end
+  return fn
 end
 
 return utils

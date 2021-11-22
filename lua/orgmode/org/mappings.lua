@@ -253,10 +253,11 @@ function OrgMappings:change_date()
   if not date then
     return
   end
-  local cb = function(new_date)
-    self:_replace_date(new_date)
-  end
-  Calendar.new({ callback = cb, date = date }).open()
+  return Calendar.new({ date = date }).open():next(function(new_date)
+    if new_date then
+      self:_replace_date(new_date)
+    end
+  end)
 end
 
 function OrgMappings:priority_up()
@@ -604,46 +605,53 @@ end
 function OrgMappings:org_deadline()
   local item = Files.get_closest_headline()
   local deadline_date = item:get_deadline_date()
-  local cb = function(new_date)
+  return Calendar.new({ date = deadline_date or Date.today() }).open():next(function(new_date)
+    if not new_date then
+      return
+    end
     item:remove_closed_date()
     item = Files.get_closest_headline()
     item:add_deadline_date(new_date)
-  end
-  Calendar.new({ callback = cb, date = deadline_date or Date.today() }).open()
+  end)
 end
 
 function OrgMappings:org_schedule()
   local item = Files.get_closest_headline()
   local scheduled_date = item:get_scheduled_date()
-  local cb = function(new_date)
+  return Calendar.new({ date = scheduled_date or Date.today() }).open():next(function(new_date)
+    if not new_date then
+      return
+    end
     item:remove_closed_date()
     item = Files.get_closest_headline()
     item:add_scheduled_date(new_date)
-  end
-  Calendar.new({ callback = cb, date = scheduled_date or Date.today() }).open()
+  end)
 end
 
 ---@param inactive boolean
 function OrgMappings:org_time_stamp(inactive)
   local date = self:_get_date_under_cursor()
   if date then
-    local cb = function(new_date)
+    return Calendar.new({ date = date }).open():next(function(new_date)
+      if not new_date then
+        return
+      end
       self:_replace_date(new_date)
-    end
-    return Calendar.new({ callback = cb, date = date }).open()
+    end)
   end
 
   local date_start = self:_get_date_under_cursor(-1)
 
-  local new_cb = function(new_date)
+  return Calendar.new({ date = Date.today() }).open():next(function(new_date)
+    if not new_date then
+      return
+    end
     local date_string = new_date:to_wrapped_string(not inactive)
     if date_start then
       date_string = '--' .. date_string
     end
     vim.cmd(string.format('norm!i%s', date_string))
-  end
-
-  return Calendar.new({ callback = new_cb, date = Date.today() }).open()
+  end)
 end
 
 ---@param direction string

@@ -546,12 +546,14 @@ function Agenda:open_day(day)
 end
 
 function Agenda:goto_date()
-  local cb = function(date)
+  return Calendar.new({ date = Date.now() }).open():next(function(date)
+    if not date then
+      return
+    end
     self:_set_date_range(date)
     self:agenda()
     return vim.fn.search(self:_format_day(date))
-  end
-  Calendar.new({ callback = cb, date = Date.now() }).open()
+  end)
 end
 
 function Agenda:switch_to_item()
@@ -642,6 +644,20 @@ function Agenda:set_tags()
   })
 end
 
+function Agenda:set_deadline()
+  return self:_remote_edit({
+    action = 'org_mappings.org_deadline',
+    redo = true,
+  })
+end
+
+function Agenda:set_schedule()
+  return self:_remote_edit({
+    action = 'org_mappings.org_schedule',
+    redo = true,
+  })
+end
+
 function Agenda:toggle_clock_report()
   if self.active_view ~= 'agenda' then
     return utils.warning('Not possible to view clock report in non-agenda view.')
@@ -713,24 +729,27 @@ function Agenda:_remote_edit(opts)
   if not item then
     return
   end
-  local headline = nil
-  Files.update_file(item.file, function(_)
+  local update = Files.update_file(item.file, function(_)
     vim.fn.cursor(item.file_position, 0)
-    require('orgmode').action(action)
-    headline = Files.get_closest_headline()
+    return utils.promisify(require('orgmode').action(action)):next(function()
+      return Files.get_closest_headline()
+    end)
   end)
-  if opts.redo then
-    return self:redo(true)
-  end
-  if not opts.update_in_place or not headline then
-    return
-  end
-  if self.active_view == 'agenda' and item.agenda_item then
-    item.agenda_item:set_headline(headline)
-    return self:render_agenda()
-  end
-  self.content[line] = self:_generate_todo_item(headline, item.longest_category, item.line)
-  return self:_print_and_highlight()
+
+  update:next(function(headline)
+    if opts.redo then
+      return self:redo(true)
+    end
+    if not opts.update_in_place or not headline then
+      return
+    end
+    if self.active_view == 'agenda' and item.agenda_item then
+      item.agenda_item:set_headline(headline)
+      return self:render_agenda()
+    end
+    self.content[line] = self:_generate_todo_item(headline, item.longest_category, item.line)
+    return self:_print_and_highlight()
+  end)
 end
 
 ---@return table|nil
