@@ -524,15 +524,6 @@ function Date:is_same_or_after(date, span)
     d = date:start_of(span)
     s = self:start_of(span)
   end
-  if s.date_only and not d.date_only then
-      return false
-  end
-  if d.date_only and not s.date_only then
-      return true
-  end
-  if d.date_only and s.date_only then
-      return true
-  end
   return s.timestamp >= d.timestamp
 end
 
