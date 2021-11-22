@@ -11,12 +11,23 @@ let s:conceal = luaeval('require("orgmode.config").org_hide_emphasis_markers')
 if s:conceal
   let s:concealends = ' concealends'
 endif
-exe 'syntax region org_bold      matchgroup=org_bold_delimiter       start="[^\*]\zs\*\|\*[^\*]\@="  end="\S\zs\*\|\*\S\@="  keepend oneline contains=@Spell' . s:concealends
-exe 'syntax region org_italic    matchgroup=org_italic_delimiter     start="\S\zs\/\|\/\S\@="  end="\S\zs\/\|\/\S\@="  keepend oneline contains=@Spell' . s:concealends
-exe 'syntax region org_underline matchgroup=org_underline_delimiter  start="\S\zs_\|_\S\@="    end="\S\zs_\|_\S\@="    keepend oneline contains=@Spell' . s:concealends
-exe 'syntax region org_code      matchgroup=org_code_delimiter       start="\S\zs\~\|\~\S\@="  end="\S\zs\~\|\~\S\@="  keepend oneline contains=@Spell' . s:concealends
-exe 'syntax region org_verbatim  matchgroup=org_verbatim_delimiter   start="\S\zs=\|=\S\@="    end="\S\zs=\|=\S\@="    keepend oneline contains=@Spell' . s:concealends
-exe 'syntax region org_strike    matchgroup=org_strike_delimiter     start="\S\zs+\|+\S\@="    end="\S\zs+\|+\S\@="    keepend oneline contains=@Spell' . s:concealends
+
+function s:markup_start(marker) abort
+  let items = ['^', '\s', '(', '-', "'", '"', '{'] + [a:marker]
+  return '#\('.join(items, '\|').'\)\zs'.a:marker.'#'
+endfunction
+
+function s:markup_end(marker) abort
+  let items = ['$', '\s', ')', '-', '\}', "'", '"', ':', ';', '!', '\\', '\[', ',', '\.', '?'] + [a:marker]
+  return '#'.a:marker.'\ze\('.join(items, '\|').'\)#'
+endfunction
+
+exe 'syntax region org_bold      matchgroup=org_bold_delimiter       start='.s:markup_start('\*').' end='.s:markup_end('\*').' keepend oneline contains=@Spell' . s:concealends
+exe 'syntax region org_italic    matchgroup=org_italic_delimiter     start='.s:markup_start('\/').' end='.s:markup_end('\/').' keepend oneline contains=@Spell' . s:concealends
+exe 'syntax region org_underline matchgroup=org_underline_delimiter  start='.s:markup_start('_').'  end='.s:markup_end('_').'  keepend oneline contains=@Spell' . s:concealends
+exe 'syntax region org_code      matchgroup=org_code_delimiter       start='.s:markup_start('\~').' end='.s:markup_end('\~').' keepend oneline contains=@Spell' . s:concealends
+exe 'syntax region org_verbatim  matchgroup=org_verbatim_delimiter   start='.s:markup_start('=').'  end='.s:markup_end('=').'  keepend oneline contains=@Spell' . s:concealends
+exe 'syntax region org_strike    matchgroup=org_strike_delimiter     start='.s:markup_start('+').'  end='.s:markup_end('+').'  keepend oneline contains=@Spell' . s:concealends
 
 hi link org_bold_delimiter org_bold
 hi link org_italic_delimiter org_italic
