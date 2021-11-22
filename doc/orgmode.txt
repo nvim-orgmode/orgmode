@@ -67,8 +67,10 @@ CONTENTS                                                        *orgmode-content
             1.2.2.21. org_agenda_priority_down..|orgmode-org_agenda_priority_down|
             1.2.2.22. org_agenda_toggle_archive_tag.|orgmode-org_agenda_toggle_archive_tag|
             1.2.2.23. org_agenda_set_tags............|orgmode-org_agenda_set_tags|
-            1.2.2.24. org_agenda_filter................|orgmode-org_agenda_filter|
-            1.2.2.25. org_agenda_show_help..........|orgmode-org_agenda_show_help|
+            1.2.2.24. org_agenda_deadline............|orgmode-org_agenda_deadline|
+            1.2.2.25. org_agenda_schedule............|orgmode-org_agenda_schedule|
+            1.2.2.26. org_agenda_filter................|orgmode-org_agenda_filter|
+            1.2.2.27. org_agenda_show_help..........|orgmode-org_agenda_show_help|
         1.2.3. Capture mappings.........................|orgmode-capture_mappings|
             1.2.3.1. org_capture_finalize...........|orgmode-org_capture_finalize|
             1.2.3.2. org_capture_refile...............|orgmode-org_capture_refile|
@@ -723,6 +725,16 @@ ORG_AGENDA_SET_TAGS                                  *orgmode-org_agenda_set_tag
 
 mapped to: `<Leader>ot`
 Set tags on current headline item.
+
+ORG_AGENDA_DEADLINE                                  *orgmode-org_agenda_deadline*
+
+mapped to: `<Leader>oid`
+Insert/Update deadline date on current headline item.
+
+ORG_AGENDA_SCHEDULE                                  *orgmode-org_agenda_schedule*
+
+mapped to: `<Leader>ois`
+Insert/Update scheduled date on current headline item.
 
 ORG_AGENDA_FILTER                                      *orgmode-org_agenda_filter*
 
