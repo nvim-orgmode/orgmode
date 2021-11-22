@@ -293,7 +293,22 @@ function utils.get_node_text(node, content)
     if end_col == 0 then
       end_line = end_row
     end
-    local lines = { unpack(content, start_line, end_line) }
+    local range = end_line - start_line + 1
+    local lines = {}
+    if range < 5000 then
+      lines = { unpack(content, start_line, end_line) }
+    else
+      local chunks = math.floor(range / 5000)
+      local leftover = range % 5000
+      for i = 1, chunks do
+        lines = utils.concat(lines, { unpack(content, (i - 1) * 5000 + 1, i * 5000) })
+      end
+      if leftover > 0 then
+        local s = chunks * 5000
+        lines = utils.concat(lines, { unpack(content, s + 1, s + leftover) })
+      end
+    end
+
     lines[1] = string.sub(lines[1], start_col + 1)
     if end_col > 0 then
       lines[#lines] = string.sub(lines[#lines], 1, end_col)
