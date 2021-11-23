@@ -16,17 +16,18 @@ local hl_map = agenda_highlights.get_agenda_hl_map()
 ---@return AgendaItem[]
 local function sort_agenda_items(agenda_items)
   table.sort(agenda_items, function(a, b)
-    -- date only items get sorted last
-    if not a.headline_date.date_only and b.headline_date.date_only then
-      return true
-    end
-    if a.headline_date.date_only and not b.headline_date.date_only then
+    -- if both are date only don't change their order
+    if a.headline_date.date_only and b.headline_date.date_only then
       return false
     end
-    if a.headline_date.date_only and b.headline_date.date_only then
-      -- if both are date only don't change their order
+    -- date only items get sorted last
+    if not a.headline_date.date_only and b.headline_date.date_only then
+      return false
+    end
+    if a.headline_date.date_only and not b.headline_date.date_only then
       return true
     end
+
     if a.is_today and a.is_same_day then
       if b.is_today and b.is_same_day then
         return a.headline_date:is_before(b.headline_date)
