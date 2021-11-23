@@ -54,7 +54,7 @@ end
 
 local function sort_agenda_items_categories(agenda_items, category_inds)
   table.sort(agenda_items, function(a, b)
-    return category_inds[a.category] < category_inds[b.category]
+    return category_inds[a.headline:get_category()] < category_inds[b.headline:get_category()]
   end)
   return agenda_items
 end
