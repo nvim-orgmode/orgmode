@@ -489,7 +489,7 @@ function Agenda:agenda()
     end
     date.agenda_items = sort_agenda_items(date.agenda_items)
     date_not_same.agenda_items = sort_agenda_items(date_not_same.agenda_items)
-    date_only.agenda_items = sort_agenda_items_categories(date_not_same.agenda_items, category_inds)
+    date_only.agenda_items = sort_agenda_items_categories(date_only.agenda_items, category_inds)
 
     date.agenda_items = utils.concat(date.agenda_items, date_only.agenda_items, false)
     date.agenda_items = utils.concat(date.agenda_items, date_not_same.agenda_items, false)
