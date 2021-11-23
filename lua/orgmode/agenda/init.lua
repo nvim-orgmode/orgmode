@@ -16,17 +16,6 @@ local hl_map = agenda_highlights.get_agenda_hl_map()
 ---@return AgendaItem[]
 local function sort_agenda_items(agenda_items)
   table.sort(agenda_items, function(a, b)
-    -- -- if both are date only don't change their order
-    -- if a.headline_date.date_only and b.headline_date.date_only then
-    --   return false
-    -- end
-    -- -- date only items get sorted last
-    -- if not a.headline_date.date_only and b.headline_date.date_only then
-    --   return false
-    -- end
-    -- if a.headline_date.date_only and not b.headline_date.date_only then
-    --   return true
-    -- end
 
     if a.is_today and a.is_same_day then
       if b.is_today and b.is_same_day then
@@ -474,7 +463,7 @@ function Agenda:agenda()
     for _, item in ipairs(headline_dates) do
       local agenda_item = AgendaItem:new(item.headline_date, item.headline, day)
       if agenda_item.is_valid and self.filters:matches(item.headline) then
-        if item.headline_date.date_only then
+        if item.headline_date.date_only and not item.headline_date.is_same_day then
           table.insert(date_only.agenda_items, agenda_item)
         else
           table.insert(date.agenda_items, agenda_item)
