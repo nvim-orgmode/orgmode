@@ -483,7 +483,7 @@ function Agenda:agenda()
     end
     date.agenda_items = sort_agenda_items(date.agenda_items)
 
-    date = utils.concat(date, date_only, false)
+    date = utils.concat(date.agenda_items, date_only.agenda_items, false)
     table.insert(agenda_days, date)
   end
 
