@@ -464,7 +464,7 @@ function Agenda:agenda()
     for _, item in ipairs(headline_dates) do
       local agenda_item = AgendaItem:new(item.headline_date, item.headline, day)
       if agenda_item.is_valid and self.filters:matches(item.headline) then
-        if agenda_item.is_same_day then
+        if not agenda_item.is_same_day then
           table.insert(date_not_same.agenda_items, agenda_item)
         elseif item.headline_date.date_only then
           table.insert(date_only.agenda_items, agenda_item)
