@@ -481,11 +481,10 @@ function Agenda:agenda()
         end
       end
     end
-
     date.agenda_items = sort_agenda_items(date.agenda_items)
 
+    date = utils.concat(date, date_only, false)
     table.insert(agenda_days, date)
-    table.insert(agenda_days, date_only)
   end
 
   self.items = agenda_days
