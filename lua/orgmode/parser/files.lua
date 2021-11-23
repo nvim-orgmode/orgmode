@@ -85,9 +85,10 @@ end
 function Files.all()
   Files.ensure_loaded()
   local files = vim.tbl_values(Files.orgfiles)
-  table.sort(files, function(a, b)
-    return a.category < b.category
-  end)
+  -- this sorts files alphabetically, I'm not sure if it's useful
+  -- table.sort(files, function(a, b)
+  --   return a.category < b.category
+  -- end)
   return files
 end
 
