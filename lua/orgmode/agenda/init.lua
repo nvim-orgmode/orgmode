@@ -16,17 +16,17 @@ local hl_map = agenda_highlights.get_agenda_hl_map()
 ---@return AgendaItem[]
 local function sort_agenda_items(agenda_items)
   table.sort(agenda_items, function(a, b)
-    -- if both are date only don't change their order
-    if a.headline_date.date_only and b.headline_date.date_only then
-      return false
-    end
-    -- date only items get sorted last
-    if not a.headline_date.date_only and b.headline_date.date_only then
-      return false
-    end
-    if a.headline_date.date_only and not b.headline_date.date_only then
-      return true
-    end
+    -- -- if both are date only don't change their order
+    -- if a.headline_date.date_only and b.headline_date.date_only then
+    --   return false
+    -- end
+    -- -- date only items get sorted last
+    -- if not a.headline_date.date_only and b.headline_date.date_only then
+    --   return false
+    -- end
+    -- if a.headline_date.date_only and not b.headline_date.date_only then
+    --   return true
+    -- end
 
     if a.is_today and a.is_same_day then
       if b.is_today and b.is_same_day then
@@ -469,17 +469,23 @@ function Agenda:agenda()
 
   for _, day in ipairs(dates) do
     local date = { day = day, agenda_items = {} }
+    local date_only = { day = day, agenda_items = {} }
 
     for _, item in ipairs(headline_dates) do
       local agenda_item = AgendaItem:new(item.headline_date, item.headline, day)
       if agenda_item.is_valid and self.filters:matches(item.headline) then
-        table.insert(date.agenda_items, agenda_item)
+        if item.headline_date.date_only then
+          table.insert(date_only.agenda_items, agenda_item)
+        else
+          table.insert(date.agenda_items, agenda_item)
+        end
       end
     end
 
     date.agenda_items = sort_agenda_items(date.agenda_items)
 
     table.insert(agenda_days, date)
+    table.insert(agenda_days, date_only)
   end
 
   self.items = agenda_days
