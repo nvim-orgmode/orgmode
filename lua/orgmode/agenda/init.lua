@@ -52,6 +52,13 @@ local function sort_agenda_items(agenda_items)
   return agenda_items
 end
 
+local function sort_agenda_items_categories(agenda_items, category_inds)
+  table.sort(agenda_items, function(a, b)
+    return category_inds[a.category] < category_inds[b.category]
+  end)
+  return agenda_items
+end
+
 local function sort_todos(todos)
   table.sort(todos, function(a, b)
     if a:get_priority_sort_value() ~= b:get_priority_sort_value() then
@@ -441,6 +448,13 @@ function Agenda:prompt()
 end
 
 function Agenda:agenda()
+  local files = config:get_all_files()
+  local categories = config:get_categories(files)
+  local category_inds = {}
+  for i, category in ipairs(categories) do
+    category_inds[category] = i
+  end
+
   local dates = self.from:get_range_until(self.to)
   local agenda_days = {}
 
@@ -475,6 +489,7 @@ function Agenda:agenda()
     end
     date.agenda_items = sort_agenda_items(date.agenda_items)
     date_not_same.agenda_items = sort_agenda_items(date_not_same.agenda_items)
+    date_only.agenda_items = sort_agenda_items_categories(date_not_same.agenda_items, category_inds)
 
     date.agenda_items = utils.concat(date.agenda_items, date_only.agenda_items, false)
     date.agenda_items = utils.concat(date.agenda_items, date_not_same.agenda_items, false)
