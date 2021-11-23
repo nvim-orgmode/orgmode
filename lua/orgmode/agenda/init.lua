@@ -459,11 +459,14 @@ function Agenda:agenda()
   for _, day in ipairs(dates) do
     local date = { day = day, agenda_items = {} }
     local date_only = { day = day, agenda_items = {} }
+    local date_not_same = { day = day, agenda_items = {} }
 
     for _, item in ipairs(headline_dates) do
       local agenda_item = AgendaItem:new(item.headline_date, item.headline, day)
       if agenda_item.is_valid and self.filters:matches(item.headline) then
-        if item.headline_date.date_only and agenda_item.is_same_day then
+        if agenda_item.is_same_day then
+          table.insert(date_not_same.agenda_items, agenda_item)
+        elseif item.headline_date.date_only then
           table.insert(date_only.agenda_items, agenda_item)
         else
           table.insert(date.agenda_items, agenda_item)
@@ -471,8 +474,10 @@ function Agenda:agenda()
       end
     end
     date.agenda_items = sort_agenda_items(date.agenda_items)
+    date_not_same.agenda_items = sort_agenda_items(date_not_same.agenda_items)
 
     date.agenda_items = utils.concat(date.agenda_items, date_only.agenda_items, false)
+    date.agenda_items = utils.concat(date.agenda_items, date_not_same.agenda_items, false)
     table.insert(agenda_days, date)
   end
 
