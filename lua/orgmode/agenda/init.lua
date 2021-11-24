@@ -703,7 +703,7 @@ function Agenda:filter()
   local this = self
   self.filters:parse_tags_and_categories(self.content)
   local filter_term = vim.fn.OrgmodeInput('Filter [+cat-tag/regexp/]: ', self.filters.value, function(arg_lead)
-    return utils.prompt_autocomplete(arg_lead, this.filters:get_completion_list(), { '+', '-' })
+    return utils.prompt_autocomplete(arg_lead:lower(), this.filters:get_completion_list(), { '+', '-' })
   end)
   self.filters:parse(filter_term)
   return self:redo()
