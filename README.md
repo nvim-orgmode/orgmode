@@ -239,6 +239,9 @@ start the command `:language ` and press `<TAB>` to autocomplete possible option
   * Insert/Move/Refile headlines
   * Change tags
   * Toggle checkbox state
+* Clocking time
+* Remote editing from agenda view
+* Repeatable mapping via [vim-repeat](https://github.com/tpope/vim-repeat)
 
 ### Features (Detailed breakdown):
 * Agenda prompt:
@@ -338,7 +341,7 @@ Parsing is done via builtin tree-sitter parser and [tree-sitter-org](https://git
 * [ ] Improve checkbox hierarchy
 * [X] Support todo keyword faces
 * [X] Support clocking work time
-* [ ] Improve folding
+* [X] Improve folding
 * [X] Support exporting (via existing emacs tools)
 * [ ] Support archiving to specific headline
 * [ ] Support tables

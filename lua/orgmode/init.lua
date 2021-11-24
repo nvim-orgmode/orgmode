@@ -84,6 +84,21 @@ local function reload(file)
   return instance:reload(file)
 end
 
+---@param cmd string
+---@param opts string
+local function set_dot_repeat(cmd, opts)
+  local repeat_action = { string.format("'%s'", cmd) }
+  if opts then
+    table.insert(repeat_action, string.format("'%s'", opts))
+  end
+  vim.cmd(
+    string.format(
+      [[silent! call repeat#set("\<cmd>lua require('orgmode').action(%s)\<CR>")]],
+      table.concat(repeat_action, ',')
+    )
+  )
+end
+
 ---@param opts table
 local function action(cmd, opts)
   local parts = vim.split(cmd, '.', true)
@@ -103,6 +118,7 @@ local function action(cmd, opts)
         return require('orgmode.utils').echo_error(result)
       end
     end
+    set_dot_repeat(cmd, opts)
     return result
   end
 end

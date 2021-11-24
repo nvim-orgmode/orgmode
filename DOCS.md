@@ -9,7 +9,8 @@
    2. [Agenda mappings](#agenda-mappings)
    3. [Capture mappings](#capture-mappings)
    4. [Org mappings](#org-mappings)
-   4. [Text objects](#text-objects)
+   5. [Text objects](#text-objects)
+   6. [Dot repeat](#dot-repeat)
 3. [Document Diagnostics](#document-diagnostics)
 4. [Autocompletion](#autocompletion)
 5. [Abbreviations](#abbreviations)
@@ -792,6 +793,9 @@ require('orgmode').setup({
   }
 })
 ```
+
+### Dot repeat
+To make all mappings dot repeatable, install [vim-repeat](https://github.com/tpope/vim-repeat) plugin.
 
 ## Document Diagnostics
 Since tree-sitter parser is being used to parse the file, if there are some syntax errors,
