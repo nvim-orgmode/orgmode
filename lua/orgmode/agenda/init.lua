@@ -12,33 +12,68 @@ local Search = require('orgmode.parser.search')
 local AgendaFilter = require('orgmode.agenda.filter')
 local hl_map = agenda_highlights.get_agenda_hl_map()
 
+--@return table[]
+local function get_category_inds()
+  local files = config:get_all_files()
+  local categories = config:get_categories(files)
+  local category_inds = {}
+  for i, category in ipairs(categories) do
+    category_inds[category] = i
+  end
+  return category_inds
+end
+
 ---@param agenda_items AgendaItem[]
 ---@return AgendaItem[]
 local function sort_agenda_items(agenda_items)
-  table.sort(agenda_items, function(a, b)
+  local category_inds = get_category_inds()
 
-    if a.is_today and a.is_same_day then
-      if b.is_today and b.is_same_day then
-        return a.headline_date:is_before(b.headline_date)
+  table.sort(agenda_items, function(a, b)
+    -- sort items with a time of day in order of scheduling
+    if not a.headline_date.date_only and not b.headline_date.date_only then
+      if a.is_today and a.is_same_day then
+        if b.is_today and b.is_same_day then
+          return a.headline_date:is_before(b.headline_date)
+        end
+        return true
       end
+
+      if b.is_today and b.is_same_day then
+        if a.is_today and a.is_same_day then
+          return a.headline_date:is_before(b.headline_date)
+        end
+        return false
+      end
+    end
+
+    -- sort items with a time of day before ones that have a date only
+    if not a.headline_date.date_only and b.headline_date.date_only then
+      return false
+    end
+    if a.headline_date.date_only and not b.headline_date.date_only then
       return true
     end
 
-    if b.is_today and b.is_same_day then
-      if a.is_today and a.is_same_day then
-        return a.headline_date:is_before(b.headline_date)
-      end
-      return false
+    -- else both items are date only, sort in this order:
+    -- category > priority > overdue deadline > overdue schedule >
+    -- > today deadline > today schedule
+
+    -- if different categories sort by category
+    if a.headline:get_category() ~= b.headline:get_category() then
+      return category_inds[a.headline:get_category()] < category_inds[b.headline:get_category()]
     end
 
+    -- if different priorities sort by priority
     if a.headline:get_priority_sort_value() ~= b.headline:get_priority_sort_value() then
       return a.headline:get_priority_sort_value() > b.headline:get_priority_sort_value()
     end
 
+    -- if same priority sort by overdue
     if a.headline:has_priority() and b.headline:has_priority() then
       return a.headline_date:is_before(b.headline_date)
     end
 
+    -- I don't get these ones ...
     if a.is_in_date_range and not b.is_in_date_range then
       return false
     end
@@ -448,13 +483,6 @@ function Agenda:prompt()
 end
 
 function Agenda:agenda()
-  local files = config:get_all_files()
-  local categories = config:get_categories(files)
-  local category_inds = {}
-  for i, category in ipairs(categories) do
-    category_inds[category] = i
-  end
-
   local dates = self.from:get_range_until(self.to)
   local agenda_days = {}
 
@@ -472,27 +500,15 @@ function Agenda:agenda()
 
   for _, day in ipairs(dates) do
     local date = { day = day, agenda_items = {} }
-    local date_only = { day = day, agenda_items = {} }
-    local date_not_same = { day = day, agenda_items = {} }
 
     for _, item in ipairs(headline_dates) do
       local agenda_item = AgendaItem:new(item.headline_date, item.headline, day)
       if agenda_item.is_valid and self.filters:matches(item.headline) then
-        if not agenda_item.is_same_day then
-          table.insert(date_not_same.agenda_items, agenda_item)
-        elseif item.headline_date.date_only then
-          table.insert(date_only.agenda_items, agenda_item)
-        else
           table.insert(date.agenda_items, agenda_item)
-        end
       end
     end
     date.agenda_items = sort_agenda_items(date.agenda_items)
-    date_not_same.agenda_items = sort_agenda_items(date_not_same.agenda_items)
-    date_only.agenda_items = sort_agenda_items_categories(date_only.agenda_items, category_inds)
 
-    date.agenda_items = utils.concat(date.agenda_items, date_only.agenda_items, false)
-    date.agenda_items = utils.concat(date.agenda_items, date_not_same.agenda_items, false)
     table.insert(agenda_days, date)
   end
 
