@@ -48,10 +48,10 @@ local function sort_agenda_items(agenda_items)
 
     -- sort items with a time of day before ones that have a date only
     if not a.headline_date.date_only and b.headline_date.date_only then
-      return false
+      return true
     end
     if a.headline_date.date_only and not b.headline_date.date_only then
-      return true
+      return false
     end
 
     -- else both items are date only, sort in this order:
@@ -73,7 +73,7 @@ local function sort_agenda_items(agenda_items)
       return a.headline_date:is_before(b.headline_date)
     end
 
-    -- I don't get these ones ...
+    -- I don't get these ones - they feel reverse ...
     if a.is_in_date_range and not b.is_in_date_range then
       return false
     end
