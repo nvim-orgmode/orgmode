@@ -30,9 +30,9 @@ local function sort_agenda_items(agenda_items)
 
   table.sort(agenda_items, function(a, b)
     -- sort items with a time of day in order of scheduling
-    utils.tprint("headline date")
+    print("headline date")
     utils.tprint(a.headline_date)
-    utils.tprint("headline date.date_only")
+    print("headline date.date_only")
     utils.tprint(a.headline_date.date_only)
     if not a.headline_date.date_only and not b.headline_date.date_only then
       if a.is_today and a.is_same_day then
