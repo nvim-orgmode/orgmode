@@ -30,7 +30,6 @@ local function sort_agenda_items(agenda_items)
 
   table.sort(agenda_items, function(a, b)
     -- sort items with a time of day in order of scheduling
-    utils.tprint(a)
     utils.tprint("headline date")
     utils.tprint(a.headline_date)
     utils.tprint("headline date.date_only")
