@@ -429,7 +429,7 @@ end
 
 ---debug printing a table
 ---source https://stackoverflow.com/questions/41942289/display-contents-of-tables-in-lua
-function utils.tprint (tbl, indent)
+function utils.tprint(tbl, indent)
   if not indent then indent = 0 end
   local toprint = string.rep(" ", indent) .. "{\r\n"
   indent = indent + 2 
