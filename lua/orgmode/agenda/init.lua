@@ -33,7 +33,7 @@ local function sort_agenda_items(agenda_items)
     print("headline date")
     utils.tprint(a.headline_date)
     print("headline date.date_only")
-    utils.tprint(a.headline_date.date_only)
+    print(a.headline_date.date_only)
     if not a.headline_date.date_only and not b.headline_date.date_only then
       if a.is_today and a.is_same_day then
         if b.is_today and b.is_same_day then
