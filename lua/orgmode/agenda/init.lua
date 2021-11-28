@@ -30,6 +30,11 @@ local function sort_agenda_items(agenda_items)
 
   table.sort(agenda_items, function(a, b)
     -- sort items with a time of day in order of scheduling
+    print(a)
+    print("headline date")
+    print(a.headline_date)
+    print("headline date.date_only")
+    print(a.headline_date.date_only)
     if not a.headline_date.date_only and not b.headline_date.date_only then
       if a.is_today and a.is_same_day then
         if b.is_today and b.is_same_day then
@@ -47,6 +52,7 @@ local function sort_agenda_items(agenda_items)
     end
 
     -- sort items with a time of day before ones that have a date only
+    -- seems that the logic is reverse somehow ...
     if not a.headline_date.date_only and b.headline_date.date_only then
       return true
     end
