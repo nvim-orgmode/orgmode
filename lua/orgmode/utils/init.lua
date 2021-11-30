@@ -321,6 +321,13 @@ function utils.get_node_text(node, content)
   end
 end
 
+---@param node userdata
+---@param text string[]
+function utils.update_node_text(node, text)
+  local start_row, start_col, end_row, end_col = node:range()
+  vim.api.nvim_buf_set_text(0, start_row, start_col, end_row, end_col, text)
+end
+
 ---@param node table
 ---@param type string
 ---@return table

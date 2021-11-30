@@ -8,6 +8,7 @@ local utils = require('orgmode.utils')
 local Files = require('orgmode.parser.files')
 local config = require('orgmode.config')
 local Help = require('orgmode.objects.help')
+local syntax = require('orgmode.org.syntax')
 
 ---@class OrgMappings
 ---@field capture Capture
@@ -142,18 +143,8 @@ function OrgMappings:global_cycle()
   return vim.cmd([[silent! norm!zx]])
 end
 
--- TODO: Add hierarchy
 function OrgMappings:toggle_checkbox()
-  local line = vim.fn.getline('.')
-  local pattern = '^(%s*[%-%+]%s*%[([%sXx%-]?)%])'
-  local checkbox, state = line:match(pattern)
-  if not checkbox then
-    return
-  end
-  local new_val = vim.trim(state) == '' and '[X]' or '[ ]'
-  checkbox = checkbox:gsub('%[[%sXx%-]?%]$', new_val)
-  local new_line = line:gsub(pattern, checkbox)
-  vim.fn.setline('.', new_line)
+  syntax.update_checkbox()
 end
 
 function OrgMappings:timestamp_up_day()
@@ -378,12 +369,12 @@ function OrgMappings:handle_return(suffix)
     return vim.cmd([[startinsert!]])
   end
 
-  if item.type == 'list' or item.type == 'listitem' then
+  if vim.tbl_contains({ 'list', 'listitem', 'cookie' }, item.type) then
     vim.cmd([[normal! ^]])
     item = Files.get_current_file():get_current_node()
   end
 
-  if item.type == 'itemtext' or item.type == 'bullet' or item.type == 'checkbox' or item.type == 'description' then
+  if vim.tbl_contains({ 'itemtext', 'bullet', 'checkbox', 'description' }, item.type) then
     local list_item = item.node:parent()
     if list_item:type() ~= 'listitem' then
       return
@@ -406,7 +397,8 @@ function OrgMappings:handle_return(suffix)
     if checkbox then
       table.insert(text_edits, {
         range = range,
-        newText = checkbox .. ' [ ] \n',
+        -- we initialize the checkbox checked, then use update_checkbox to toggle it off and update the tree
+        newText = checkbox .. ' [X] \n',
       })
     elseif plain_list then
       table.insert(text_edits, {
@@ -442,6 +434,7 @@ function OrgMappings:handle_return(suffix)
       vim.lsp.util.apply_text_edits(text_edits, 0)
 
       vim.fn.cursor(end_row + 2 + (add_empty_line and 1 or 0), 0) -- +1 for 0 index and +1 for next line
+      syntax.update_checkbox(ts_utils.get_next_node(list_item))
       vim.cmd([[startinsert!]])
     end
   end
