@@ -22,16 +22,20 @@ local function _get_checked_and_total_checkboxes(parent)
   return checked, total
 end
 
-local function _update_checkbox_text(checkbox, checked_children, total_children)
+local function _update_checkbox_text(action, checkbox, checked_children, total_children)
   local checkbox_text
-  if total_children == nil then -- if the function is called without child information, we toggle the current value
+  if action == 'on' then
+    checkbox_text = '[X]'
+  elseif action == 'off' then
+    checkbox_text = '[ ]'
+  elseif action == 'toggle' then
     checkbox_text = vim.treesitter.get_node_text(checkbox, 0)
     if checkbox_text:match('%[[xX]%]') then
       checkbox_text = '[ ]'
     else
       checkbox_text = '[X]'
     end
-  else
+  elseif action == 'children' then
     checkbox_text = '[ ]'
     if checked_children == total_children then
       checkbox_text = '[x]'
@@ -40,7 +44,9 @@ local function _update_checkbox_text(checkbox, checked_children, total_children)
     end
   end
 
-  utils.update_node_text(checkbox, { checkbox_text })
+  if checkbox_text then
+    utils.update_node_text(checkbox, { checkbox_text })
+  end
 end
 
 local function _update_cookie_text(cookie, checked_children, total_children)
@@ -64,7 +70,11 @@ local function _update_cookie_text(cookie, checked_children, total_children)
   utils.update_node_text(cookie, { cookie_text })
 end
 
-function checkboxes.update_checkbox(node, checked_children, total_children)
+---@param action string [on|off|toggle|children]
+---@param node userdata
+---@param checked_children number
+---@param total_children number
+function checkboxes.update_checkbox(action, node, checked_children, total_children)
   if not node then
     node = utils.get_closest_parent_of_type(ts_utils.get_node_at_cursor(0), 'listitem')
     if not node then
@@ -86,7 +96,7 @@ function checkboxes.update_checkbox(node, checked_children, total_children)
   end
 
   if checkbox then
-    _update_checkbox_text(checkbox, checked_children, total_children)
+    _update_checkbox_text(action, checkbox, checked_children, total_children)
   end
 
   if cookie then
@@ -97,7 +107,7 @@ function checkboxes.update_checkbox(node, checked_children, total_children)
   if listitem_parent then
     local list_parent = utils.get_closest_parent_of_type(node, 'list')
     local checked, total = _get_checked_and_total_checkboxes(list_parent)
-    return checkboxes.update_checkbox(listitem_parent, checked, total)
+    return checkboxes.update_checkbox('children', listitem_parent, checked, total)
   end
 
   local section = utils.get_closest_parent_of_type(node:parent(), 'section')
