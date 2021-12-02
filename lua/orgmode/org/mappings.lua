@@ -8,7 +8,7 @@ local utils = require('orgmode.utils')
 local Files = require('orgmode.parser.files')
 local config = require('orgmode.config')
 local Help = require('orgmode.objects.help')
-local syntax = require('orgmode.org.syntax')
+local checkboxes = require('orgmode.org.checkboxes')
 
 ---@class OrgMappings
 ---@field capture Capture
@@ -144,7 +144,7 @@ function OrgMappings:global_cycle()
 end
 
 function OrgMappings:toggle_checkbox()
-  syntax.update_checkbox()
+  checkboxes.update_checkbox()
 end
 
 function OrgMappings:timestamp_up_day()
