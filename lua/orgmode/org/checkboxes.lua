@@ -4,6 +4,7 @@ local headline_cookie_query = vim.treesitter.parse_query('org', '(headline (cook
 
 local checkboxes = {}
 
+---@param parent userdata
 local function _get_checked_and_total_checkboxes(parent)
   local checked, total = 0, 0
   for child in parent:iter_children() do
@@ -22,6 +23,10 @@ local function _get_checked_and_total_checkboxes(parent)
   return checked, total
 end
 
+---@param action string [on|off|toggle|children]
+---@param checkbox userdata
+---@param checked_children number
+---@param total_children number
 local function _update_checkbox_text(action, checkbox, checked_children, total_children)
   local checkbox_text
   if action == 'on' then
@@ -49,6 +54,9 @@ local function _update_checkbox_text(action, checkbox, checked_children, total_c
   end
 end
 
+---@param cookie userdata
+---@param checked_children number
+---@param total_children number
 local function _update_cookie_text(cookie, checked_children, total_children)
   local cookie_text = vim.treesitter.get_node_text(cookie, 0)
 
