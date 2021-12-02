@@ -4,7 +4,7 @@ local headline_cookie_query = vim.treesitter.parse_query('org', '(headline (cook
 
 local checkboxes = {}
 
-local function _get_cookie_checked_and_total(parent)
+local function _get_checked_and_total_checkboxes(parent)
   local checked, total = 0, 0
   for child in parent:iter_children() do
     if child:type() == 'listitem' then
@@ -96,14 +96,14 @@ function checkboxes.update_checkbox(node, checked_children, total_children)
   local listitem_parent = utils.get_closest_parent_of_type(node:parent(), 'listitem')
   if listitem_parent then
     local list_parent = utils.get_closest_parent_of_type(node, 'list')
-    local checked, total = _get_cookie_checked_and_total(list_parent)
+    local checked, total = _get_checked_and_total_checkboxes(list_parent)
     return checkboxes.update_checkbox(listitem_parent, checked, total)
   end
 
   local section = utils.get_closest_parent_of_type(node:parent(), 'section')
   if section then
     local list_parent = utils.get_closest_parent_of_type(node, 'list')
-    local checked, total = _get_cookie_checked_and_total(list_parent)
+    local checked, total = _get_checked_and_total_checkboxes(list_parent)
     local start_row, _, end_row, _ = section:range()
     for _, headline_cookie in headline_cookie_query:iter_captures(section, 0, start_row, end_row + 1) do
       _update_cookie_text(headline_cookie, checked, total)
