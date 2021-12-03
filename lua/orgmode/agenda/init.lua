@@ -69,24 +69,33 @@ local function sort_agenda_items(agenda_items)
       return a.headline:get_priority_sort_value() > b.headline:get_priority_sort_value()
     end
 
-    -- if same priority sort by deadline
+    -- overdue > today > future
+    if a.is_today and a.is_same_day then
+      if b.is_today and not b.is_same_day then
+        return a.headline_date:is_before(b.headline_date)
+      end
+    end
+
+    if b.is_today and b.is_same_day then
+      if a.is_today and not a.is_same_day then
+        return a.headline_date:is_before(b.headline_date)
+      end
+    end
+
+    if a.is_in_date_range and not b.is_in_date_range then
+      return false
+    end
+    if not a.is_in_date_range and b.is_in_date_range then
+      return true
+    end
+
+    -- if same due sort by deadline
     if a.headline_date:is_deadline() and not b.headline_date:is_deadline() then
       return true
     elseif not a.headline_date:is_deadline() and b.headline_date:is_deadline() then
       return false
-    else
       -- either both are deadlines or both are not deadlines
       -- overdue deadline and overdue schedule > deadline today and schedule today
-        return a.headline_date:is_before(b.headline_date)
-    end
-
-    -- these are probably upcoming events ...
-    if a.is_in_date_range and not b.is_in_date_range then
-      return false
-    end
-
-    if not a.is_in_date_range and b.is_in_date_range then
-      return true
     end
 
     return a.headline_date:is_before(b.headline_date)
