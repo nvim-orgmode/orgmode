@@ -88,13 +88,29 @@ function Section.from_node(section_node, file, parent)
 
   for child in section_node:iter_children() do
     if child:type() == 'plan' then
-      for _, plan_date in ipairs(ts_utils.get_named_children(child)) do
-        local type = plan_date:type():upper()
-        local node = plan_date:child(0)
-        if type == 'TIMESTAMP' then
-          type = 'NONE'
-          node = plan_date
+      local plan_children = ts_utils.get_named_children(child)
+      local len = #plan_children
+      local i = 1
+      while i <= len do
+        local plan_item = plan_children[i]
+        if not plan_item then
+          break
         end
+        local next_item = plan_children[i + 1]
+
+        local type = 'NONE'
+        local node = plan_item
+        local item_type = plan_item:type():upper()
+
+        if item_type == 'NAME' and next_item and next_item:type():upper() == 'TIMESTAMP' then
+          local t = file:get_node_text(plan_item):upper()
+          if t == 'DEADLINE:' or t == 'SCHEDULED:' or t == 'CLOSED:' then
+            node = next_item
+            type = t:sub(1, t:len() - 1)
+            i = i + 1
+          end
+        end
+
         local date = file:get_node_text(node)
         utils.concat(
           data.dates,
@@ -103,6 +119,7 @@ function Section.from_node(section_node, file, parent)
             range = Range.from_node(node),
           })
         )
+        i = i + 1
       end
     end
     if child:type() == 'body' then
