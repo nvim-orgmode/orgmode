@@ -30,10 +30,6 @@ local function sort_agenda_items(agenda_items)
 
   table.sort(agenda_items, function(a, b)
     -- sort items with a time of day in order of scheduling
-    -- print("headline date")
-    -- utils.tprint(a.headline_date)
-    -- print("headline date.date_only")
-    -- print(a.headline_date.date_only)
     if not a.headline_date.date_only and not b.headline_date.date_only then
       if a.is_today and a.is_same_day then
         if b.is_today and b.is_same_day then
@@ -51,7 +47,7 @@ local function sort_agenda_items(agenda_items)
     end
 
     -- sort items with a time of day before ones that have a date only
-    -- seems that the logic is reverse somehow ...
+    -- true means sort a before b
     if not a.headline_date.date_only and b.headline_date.date_only then
       return true
     end
@@ -73,12 +69,18 @@ local function sort_agenda_items(agenda_items)
       return a.headline:get_priority_sort_value() > b.headline:get_priority_sort_value()
     end
 
-    -- if same priority sort by overdue
-    if a.headline:has_priority() and b.headline:has_priority() then
-      return a.headline_date:is_before(b.headline_date)
+    -- if same priority sort by deadline
+    if a.headline_date:is_deadline() and not b.headline_date:is_deadline() then
+      return true
+    elseif not a.headline_date:is_deadline() and b.headline_date:is_deadline() then
+      return false
+    else
+      -- either both are deadlines or both are not deadlines
+      -- overdue deadline and overdue schedule > deadline today and schedule today
+        return a.headline_date:is_before(b.headline_date)
     end
 
-    -- I don't get these ones - they feel reverse ...
+    -- these are probably upcoming events ...
     if a.is_in_date_range and not b.is_in_date_range then
       return false
     end
