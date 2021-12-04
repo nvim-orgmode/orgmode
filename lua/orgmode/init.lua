@@ -56,7 +56,6 @@ function Org:setup_autocmds()
   vim.cmd([[autocmd FileType org call luaeval('require("orgmode").reload(_A)', expand('<afile>:p'))]])
   vim.cmd([[autocmd CursorHold,CursorHoldI *.org,*.org_archive lua require('orgmode.org.diagnostics').report()]])
   vim.cmd([[augroup END]])
-  vim.cmd([[command! OrgDiagnostics lua require('orgmode.org.diagnostics').print()]])
 end
 
 ---@param opts? table
