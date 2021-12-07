@@ -35,6 +35,8 @@ return {
     heading = true,
     plain_list_item = false,
   },
+  org_src_window_setup = 'top 16new',
+  org_edit_src_content_indentation = 0,
   diagnostics = true,
   notifications = {
     enabled = false,
@@ -101,6 +103,7 @@ return {
       org_todo_prev = 'ciT',
       org_toggle_checkbox = '<C-Space>',
       org_open_at_point = '<Leader>oo',
+      org_edit_special = [[<Leader>o']],
       org_cycle = '<TAB>',
       org_global_cycle = '<S-TAB>',
       org_archive_subtree = '<Leader>o$',
@@ -132,6 +135,11 @@ return {
       org_clock_goto = '<leader>oxj',
       org_set_effort = '<leader>oxe',
       org_show_help = 'g?',
+    },
+    edit_src = {
+      org_edit_src_abort = '<Leader>ok',
+      org_edit_src_save = '<Leader>ow',
+      org_edit_src_show_help = 'g?',
     },
     text_objects = {
       inner_heading = 'ih',
