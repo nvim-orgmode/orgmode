@@ -36,6 +36,16 @@ function M.link_ts_highlights()
   end
 end
 
+function M.link_highlights()
+  local links = {
+    OrgEditSrcHighlight = 'Visual',
+  }
+
+  for src, def in pairs(links) do
+    vim.cmd(string.format([[hi def link %s %s]], src, def))
+  end
+end
+
 function M.define_agenda_colors()
   local keyword_colors = colors.get_todo_keywords_colors()
   local c = {
@@ -123,6 +133,8 @@ function M.define_highlights()
   if config:ts_highlights_enabled() then
     M.link_ts_highlights()
   end
+
+  M.link_highlights()
 
   local faces = M.define_org_todo_keyword_colors(true)
   return M.define_org_headline_colors(faces)

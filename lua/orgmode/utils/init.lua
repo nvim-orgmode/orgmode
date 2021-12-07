@@ -1,4 +1,5 @@
 local ts = require('vim.treesitter.query')
+local ts_utils = require('nvim-treesitter.ts_utils')
 local Promise = require('orgmode.utils.promise')
 local uv = vim.loop
 local utils = {}
@@ -324,8 +325,13 @@ end
 ---@param node table
 ---@param type string
 ---@return table
-function utils.get_closest_parent_of_type(node, type)
-  local parent = node:parent()
+function utils.get_closest_parent_of_type(node, type, accept_at_cursor)
+  local parent = node
+
+  if not accept_at_cursor then
+    parent = node:parent()
+  end
+
   while parent do
     if parent:type() == type then
       return parent
@@ -425,6 +431,87 @@ function utils.promisify(fn)
     return Promise.resolve(fn)
   end
   return fn
+end
+
+---@param file File
+---@param parent_node userdata
+---@param children_names string[]
+---@return table
+function utils.get_named_children_nodes(file, parent_node, children_names)
+  local child_node_info = {}
+
+  if children_names then
+    -- Only grab information for specific named children
+    for _, child_name in ipairs(children_names) do
+      children_names[child_name] = false
+    end
+  end
+
+  vim.tbl_map(function(node)
+    if not children_names or children_names[node:type()] ~= nil then
+      local text
+      local text_list = utils.get_node_text(node, file.file_content)
+
+      if #text_list == 0 then
+        text = ''
+      else
+        text = text_list[1]
+      end
+
+      child_node_info[node:type()] = {
+        node = node,
+        text = text,
+        text_list = text_list,
+      }
+    end
+  end, ts_utils.get_named_children(parent_node))
+
+  return child_node_info
+end
+
+---@param file File
+---@param block_type string
+---@param child_names string[]
+---@param cursor string[]
+---@param accept_at_cursor boolean
+---@return nil|table
+function utils.get_nearest_block_node(file, child_names, cursor, accept_at_cursor)
+  local current_node = file:get_node_at_cursor(cursor)
+  local block_node = utils.get_closest_parent_of_type(current_node, 'block', accept_at_cursor)
+  if not block_node then
+    return
+  end
+
+  -- Block might not have contents yet, which is fine
+  local children_nodes = utils.get_named_children_nodes(file, block_node, child_names)
+  if not next(children_nodes) or not children_nodes.name or not children_nodes.parameters then
+    return
+  end
+
+  return {
+    node = block_node,
+    children = children_nodes,
+  }
+end
+
+---@param file File
+---@param block_type string
+---@param child_names string[]
+---@param cursor string[]
+---@param accept_at_cursor boolean
+---@return nil|table
+function utils.get_nearest_block_node_with_name(file, block_type, child_names, cursor, accept_at_cursor)
+  local block_info = utils.get_nearest_block_node(file, child_names, cursor, accept_at_cursor)
+
+  if not block_info then
+    return
+  end
+
+  if block_info.children.name.text ~= block_type then
+    return
+  end
+
+  return block_info
 end
 
 return utils

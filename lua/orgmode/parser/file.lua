@@ -253,8 +253,8 @@ function File:get_opened_unfinished_headlines()
 end
 
 ---@return userdata
-function File:get_node_at_cursor()
-  local cursor = vim.api.nvim_win_get_cursor(0)
+function File:get_node_at_cursor(cursor)
+  cursor = cursor or vim.api.nvim_win_get_cursor(0)
   local cursor_range = { cursor[1] - 1, cursor[2] }
   return self.tree:root():named_descendant_for_range(cursor_range[1], cursor_range[2], cursor_range[1], cursor_range[2])
 end
