@@ -141,10 +141,14 @@ function Config:get_todo_keywords()
   end
   local types = { TODO = {}, DONE = {}, ALL = {}, KEYS = {}, FAST_ACCESS = {}, has_fast_access = false }
   local type = 'TODO'
-  for _, word in ipairs(self.opts.org_todo_keywords) do
+  local has_separator = vim.tbl_contains(self.opts.org_todo_keywords, '|')
+  for i, word in ipairs(self.opts.org_todo_keywords) do
     if word == '|' then
       type = 'DONE'
     else
+      if not has_separator and i == #self.opts.org_todo_keywords then
+        type = 'DONE'
+      end
       local data = parse_todo(word)
       if not types.has_fast_access and data.custom_shortcut then
         types.has_fast_access = true
@@ -162,9 +166,6 @@ function Config:get_todo_keywords()
         shortcut = data.shortcut,
       })
     end
-  end
-  if #types.DONE == 0 then
-    types.DONE = { table.remove(types.TODO, #types.TODO) }
   end
   self.todo_keywords = types
   return types
