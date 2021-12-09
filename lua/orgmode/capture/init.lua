@@ -40,7 +40,7 @@ function Capture:open_template(template)
   local content = self.templates:compile(template)
   vim.cmd('16split ' .. vim.fn.tempname())
   vim.cmd([[setf org]])
-  vim.cmd([[setlocal bufhidden=wipe nobuflisted nolist noswapfile nowrap nofoldenable]])
+  vim.cmd([[setlocal bufhidden=wipe nobuflisted nolist noswapfile nofoldenable]])
   vim.api.nvim_buf_set_lines(0, 0, -1, true, content)
   self.templates:setup()
   vim.api.nvim_buf_set_var(0, 'org_template', template)
@@ -220,7 +220,9 @@ function Capture.autocomplete_refile(arg_lead)
   if not selected_file then
     return vim.tbl_filter(function(file)
       return file:match('^' .. vim.pesc(parts[1]))
-    end, vim.tbl_keys(valid_filenames))
+    end, vim.tbl_keys(
+      valid_filenames
+    ))
   end
 
   local agenda_file = Files.get(selected_file)
