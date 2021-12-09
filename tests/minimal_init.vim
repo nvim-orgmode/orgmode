@@ -22,7 +22,7 @@ parser_config.org = {
 }
 
 require('orgmode').setup({
-  org_agenda_files = vim.fn.getcwd() .. '/tests/plenary/fixtures/*',
+  org_agenda_files = { vim.fn.getcwd() .. '/tests/plenary/fixtures/*' },
   org_default_notes_file = vim.fn.getcwd() .. '/tests/plenary/fixtures/refile.org',
 })
 EOF

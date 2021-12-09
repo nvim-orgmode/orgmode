@@ -11,18 +11,26 @@ local utils = require('orgmode.utils')
 ---@return AgendaItem[]
 local function sort_agenda_items(agenda_items)
   table.sort(agenda_items, function(a, b)
-    if a.is_today and a.is_same_day then
-      if b.is_today and b.is_same_day then
+    if a.is_same_day and b.is_same_day then
+      if not a.headline_date.date_only and not b.headline_date.date_only then
         return a.headline_date:is_before(b.headline_date)
+      end
+      if not b.headline_date.date_only then
+        return false
       end
       return true
     end
 
-    if b.is_today and b.is_same_day then
-      if a.is_today and a.is_same_day then
-        return a.headline_date:is_before(b.headline_date)
+    if a.is_same_day and not b.is_same_day then
+      if not a.headline_date.date_only or (b.headline_date:is_none() and not a.headline_date:is_none()) then
+        return true
       end
-      return false
+    end
+
+    if not a.is_same_day and b.is_same_day then
+      if not b.headline_date.date_only or (a.headline_date:is_none() and not b.headline_date:is_none()) then
+        return false
+      end
     end
 
     if a.headline:get_priority_sort_value() ~= b.headline:get_priority_sort_value() then
@@ -31,14 +39,6 @@ local function sort_agenda_items(agenda_items)
 
     if a.headline:has_priority() and b.headline:has_priority() then
       return a.headline_date:is_before(b.headline_date)
-    end
-
-    if a.is_in_date_range and not b.is_in_date_range then
-      return false
-    end
-
-    if not a.is_in_date_range and b.is_in_date_range then
-      return true
     end
 
     return a.headline_date:is_before(b.headline_date)

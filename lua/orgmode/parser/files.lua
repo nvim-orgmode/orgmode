@@ -84,11 +84,14 @@ end
 ---@return File[]
 function Files.all()
   Files.ensure_loaded()
-  local files = vim.tbl_values(Files.orgfiles)
-  table.sort(files, function(a, b)
-    return a.category < b.category
-  end)
-  return files
+  local valid_files = {}
+  local filenames = config:get_all_files()
+  for _, file in ipairs(filenames) do
+    if Files.orgfiles[file] then
+      table.insert(valid_files, Files.orgfiles[file])
+    end
+  end
+  return valid_files
 end
 
 ---@return string[]
