@@ -7,14 +7,17 @@ local config = require('orgmode.config')
 local last_filename = nil
 
 describe('Notifications', function()
+  local default_org_agenda_files = vim.deepcopy(config.org_agenda_files)
   before_each(function()
     Files.loaded = true
   end)
   after_each(function()
     Files.loaded = false
+    config.org_agenda_files = default_org_agenda_files
   end)
   it('should find headlines for notification', function()
-    local filename = vim.fn.tempname()
+    local filename = vim.fn.tempname() .. '.org'
+    vim.fn.writefile({}, filename) -- make sure glob() reads it
     last_filename = filename
     local lines = {
       '* TODO I am the deadline task :OFFICE:',
@@ -27,6 +30,7 @@ describe('Notifications', function()
       '  SCHEDULED: <2021-07-12 Mon 19:30>',
     }
     local orgfile = File.from_content(lines, 'work', filename)
+    table.insert(config.opts.org_agenda_files, filename)
     Files.orgfiles[filename] = orgfile
     local notifications = Notifications:new()
     assert.are.same({}, notifications:get_tasks(Date.from_string('2021-07-11 Sun 12:30')))
@@ -78,7 +82,8 @@ describe('Notifications', function()
       },
     })
 
-    local filename = vim.fn.tempname()
+    local filename = vim.fn.tempname() .. '.org' -- make sure glob() reads it
+    vim.fn.writefile({}, filename)
     last_filename = filename
     local lines = {
       '* TODO I am the deadline task :OFFICE:',
@@ -91,6 +96,7 @@ describe('Notifications', function()
       '  SCHEDULED: <2021-07-14 Wed 19:30>',
     }
     local orgfile = File.from_content(lines, 'work', filename)
+    table.insert(config.opts.org_agenda_files, filename)
     Files.orgfiles[filename] = orgfile
     local notifications = Notifications:new()
     assert.are.same({}, notifications:get_tasks(Date.from_string('2021-07-13 Sun 12:30')))
