@@ -15,10 +15,10 @@ local function sort_agenda_items(agenda_items)
       if not a.headline_date.date_only and not b.headline_date.date_only then
         return a.headline_date:is_before(b.headline_date)
       end
-      if not b.headline_date.date_only then
-        return false
+      if not a.headline_date.date_only then
+        return true
       end
-      return true
+      return false
     end
 
     if a.is_same_day and not b.is_same_day then
@@ -35,10 +35,6 @@ local function sort_agenda_items(agenda_items)
 
     if a.headline:get_priority_sort_value() ~= b.headline:get_priority_sort_value() then
       return a.headline:get_priority_sort_value() > b.headline:get_priority_sort_value()
-    end
-
-    if a.headline:has_priority() and b.headline:has_priority() then
-      return a.headline_date:is_before(b.headline_date)
     end
 
     return a.headline_date:is_before(b.headline_date)
