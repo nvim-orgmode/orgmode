@@ -66,7 +66,7 @@ hi def link org_list_unordered Identifier
 syntax match org_list_def /.*\s\+::/ contained
 hi def link org_list_def PreProc
 
-syntax match org_list_item /.*$/ contained contains=org_bold,org_italic,org_underline,org_code,org_verbatim,org_strike
+syntax match org_list_item /.*$/ contained contains=org_bold,org_italic,org_underline,org_code,org_verbatim,org_strike,@Spell
 
 " Block Delimiters: {{{1
 syntax case ignore
