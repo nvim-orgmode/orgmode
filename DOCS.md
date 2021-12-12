@@ -9,8 +9,9 @@
    2. [Agenda mappings](#agenda-mappings)
    3. [Capture mappings](#capture-mappings)
    4. [Org mappings](#org-mappings)
-   5. [Text objects](#text-objects)
-   6. [Dot repeat](#dot-repeat)
+   5. [Edit Src mappings](#edit-src)
+   6. [Text objects](#text-objects)
+   7. [Dot repeat](#dot-repeat)
 3. [Document Diagnostics](#document-diagnostics)
 4. [Autocompletion](#autocompletion)
 5. [Abbreviations](#abbreviations)
@@ -146,7 +147,6 @@ Marker used to indicate a folded headline.
 When set to `time`(default), adds `CLOSED` date when marking headline as done.<br />
 When set to `false`, it is disabled.
 
-
 #### **org_highlight_latex_and_related**
 *type*: `string|nil`<br />
 *default value*: `nil`<br />
@@ -165,6 +165,19 @@ Possible values:
 Possible values:
 * `indent` - Use default indentation that follows headlines/checkboxes/previous line indent
 * `noindent` - Disable indentation. All lines start from 1st column
+
+#### **org_src_window_setup**
+*type*: `string|function`<br />
+*default value*: "top 16new"<br />
+If the value is a string, it will be run directly as input to `:h vim.cmd`, otherwise if the value is a function it will be called. Both
+values have the responsibility of opening a buffer (within a window) to show the special edit buffer. The content of the buffer will be
+set automatically, so this option only needs to handle opening an empty buffer.
+
+#### **org_edit_src_content_indentation**
+*type*: `number`<br />
+*default value*: 0<br />
+The indent value for content within `SRC` block types beyond the existing indent of the block itself. Only applied when exiting from
+an `org_edit_special` action on a `SRC` block.
 
 #### **org_custom_exports**
 *type*: `table`<br />
@@ -623,6 +636,11 @@ using the '+' character. Example: `file:/home/user/.config/nvim/init.lua +10`
 * Headline with `CUSTOM_ID` property (starts with `#`)
 * Fallback: If file path, opens the file, otherwise, tries to find the Headline title.
 When date is under the cursor, open the agenda for that day.<br />
+#### **org_edit_special**
+*mapped to*: `<Leader>o'`<br />
+Open a source block for editing in a temporary buffer of the associated `filetype`.<br />
+This is useful for editing text with language servers attached, etc. When the buffer is closed, the text of the underlying source block in the original Org file is updated.
+*Note that if the Org file that the source block comes from is edited before the special edit buffer is closed, the edits will not be applied. The special edit buffer contents can be recovered from :messages output*
 #### **org_cycle**
 *mapped to*: `<TAB>`<br />
 Cycle folding for current headline
@@ -738,6 +756,22 @@ require('orgmode').setup({
   }
 })
 ```
+
+### Edit Src
+
+Mappings applied when editing a `SRC` block content via `org_edit_special`.
+
+#### **org_edit_src_abort**
+*mapped to*: `<Leader>ok`<br />
+Abort changes made to temporary buffer created from the content of a `SRC` block, see above.<br />
+
+#### **org_edit_src_save**
+*mapped to*: `<Leader>ow`<br />
+Apply changes from the special buffer to the source Org buffer<br />
+
+#### **org_edit_src_show_help**
+*mapped to*: `g?`<br />
+Show help within the temporary buffer used to edit the content of a `SRC` block.<br />
 
 ### Text objects
 
@@ -919,6 +953,7 @@ For adding/changing TODO keyword colors see [org-todo-keyword-faces](#org_todo_k
 
 * The following use vanilla _Vim_ syntax matching, and will work without _Treesitter_ highlighting enabled.
 
+`OrgEditSrcHighlight`: The highlight for the source content in an _Org_ buffer while it is being edited in an edit special buffer
 `OrgAgendaDeadline`: A item deadline in the agenda view
 `OrgAgendaScheduled`: A scheduled item in the agenda view
 `OrgAgendaScheduledPast`: A item past its scheduled date in the agenda view
