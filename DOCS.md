@@ -1,10 +1,11 @@
 # Table of content
 
-1. [Settings](#settings)
+1. [Getting started with Orgmode](#getting-started-with-orgmode)
+2. [Settings](#settings)
    1. [Global settings](#global-settings)
    2. [Agenda settings](#global-settings)
    3. [Tags settings](#global-settings)
-2. [Mappings](#mappings)
+3. [Mappings](#mappings)
    1. [Global mappings](#global-mappings)
    2. [Agenda mappings](#agenda-mappings)
    3. [Capture mappings](#capture-mappings)
@@ -12,14 +13,20 @@
    5. [Edit Src mappings](#edit-src)
    6. [Text objects](#text-objects)
    7. [Dot repeat](#dot-repeat)
-3. [Document Diagnostics](#document-diagnostics)
-4. [Autocompletion](#autocompletion)
-5. [Abbreviations](#abbreviations)
-6. [Colors](#colors)
-7. [Advanced search](#advanced-search)
-8. [Notifications (experimental)](#notifications-experimental)
-9. [Clocking](#clocking)
-10. [Changelog](#changelog)
+4. [Document Diagnostics](#document-diagnostics)
+5. [Autocompletion](#autocompletion)
+6. [Abbreviations](#abbreviations)
+7. [Colors](#colors)
+8. [Advanced search](#advanced-search)
+9. [Notifications (experimental)](#notifications-experimental)
+10. [Clocking](#clocking)
+11. [Changelog](#changelog)
+
+## Getting started with Orgmode
+To get a basic idea how Orgmode works, look at this screencast from [@dhruvasagar](https://github.com/dhruvasagar)
+that demonstrates how the similar Orgmode clone [vim-dotoo](https://github.com/dhruvasagar/vim-dotoo) works.
+
+[https://www.youtube.com/watch?v=nsv33iOnH34](https://www.youtube.com/watch?v=nsv33iOnH34)
 
 ## Settings
 Variable names mostly follow the same naming as Orgmode mappings.
