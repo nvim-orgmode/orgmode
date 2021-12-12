@@ -132,6 +132,8 @@ EOF
 * **Open capture prompt**: <kbd>\<Leader\>oc</kbd>
 * In any orgmode buffer press <kbd>g?</kbd> for help
 
+If you are new to Orgmode, see [Getting started](/DOCS.md#getting-started-with-orgmode) section in Docs.
+
 ### Completion
 If you use [nvim-compe](https://github.com/hrsh7th/nvim-compe) and want
 to enable autocompletion, add this to your compe config:
