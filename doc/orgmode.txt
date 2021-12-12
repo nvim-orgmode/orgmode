@@ -190,7 +190,7 @@ TABLE OF CONTENT                                        *orgmode-table_of_conten
 GETTING STARTED WITH ORGMODE                *orgmode-getting_started_with_orgmode*
 
 To get a basic idea how Orgmode works, look at this screencast from @dhruvasagar (https://github.com/dhruvasagar)
-that demonstrates how the similar Orgmode clone vim-dotto (https://github.com/dhruvasagar/vim-dotoo) works.
+that demonstrates how the similar Orgmode clone vim-dotoo (https://github.com/dhruvasagar/vim-dotoo) works.
 
 https://www.youtube.com/watch?v=nsv33iOnH34 (https://www.youtube.com/watch?v=nsv33iOnH34)
 
