@@ -1,13 +1,14 @@
-local ts_utils = require('nvim-treesitter.ts_utils')
 local Calendar = require('orgmode.objects.calendar')
 local Date = require('orgmode.objects.date')
-local TodoState = require('orgmode.objects.todo_state')
-local PriorityState = require('orgmode.objects.priority_state')
-local Hyperlinks = require('orgmode.org.hyperlinks')
-local utils = require('orgmode.utils')
+local EditSpecial = require('orgmode.objects.edit_special')
 local Files = require('orgmode.parser.files')
-local config = require('orgmode.config')
 local Help = require('orgmode.objects.help')
+local Hyperlinks = require('orgmode.org.hyperlinks')
+local PriorityState = require('orgmode.objects.priority_state')
+local TodoState = require('orgmode.objects.todo_state')
+local config = require('orgmode.config')
+local ts_utils = require('nvim-treesitter.ts_utils')
+local utils = require('orgmode.utils')
 
 ---@class OrgMappings
 ---@field capture Capture
@@ -488,6 +489,16 @@ end
 
 function OrgMappings:show_help()
   return Help.show()
+end
+
+function OrgMappings:edit_special()
+  local edit_special = EditSpecial:new()
+  edit_special:init_in_org_buffer()
+  edit_special:init()
+end
+
+function OrgMappings:_edit_special_callback()
+  EditSpecial:new():done()
 end
 
 function OrgMappings:open_at_point()

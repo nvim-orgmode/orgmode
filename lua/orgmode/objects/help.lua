@@ -22,6 +22,7 @@ local helps = {
     { key = 'org_todo_prev', description = 'Backward change TODO state of current headline' },
     { key = 'org_toggle_checkbox', description = 'Toggle checkbox state' },
     { key = 'org_open_at_point', description = 'Open hyperlink or date under cursor' },
+    { key = 'org_edit_special', description = 'Edit the source block under the cursor in another buffer' },
     { key = 'org_cycle', description = 'Toggle folding on current headline' },
     { key = 'org_global_cycle', description = 'Toggle folding in whole file' },
     { key = 'org_archive_subtree', description = 'Archive subtree to archive file' },
@@ -92,6 +93,10 @@ local helps = {
     { key = 'org_capture_refile', description = 'Save to specific destination' },
     { key = 'org_capture_kill', description = 'Close without saving' },
   },
+  edit_src = {
+    { key = 'org_edit_src_abort', description = 'Abort edit special buffer changes and discard content' },
+    { key = 'org_edit_src_save', description = 'Apply changes from the special buffer to the source Org buffer' },
+  },
   text_objects = {
     { key = 'inner_heading', description = 'Select inner heading' },
     { key = 'around_heading', description = 'Select around heading' },
@@ -109,49 +114,114 @@ local Help = {
   win = nil,
 }
 
----@return string[]
-function Help.prepare_content()
-  local mappings = config.mappings
-  local ft = vim.bo.filetype
-  local max_height = vim.o.lines - 2
-  local scroll_more_text = ''
-  if ft == 'orgagenda' then
-    if #helps.orgagenda > max_height then
-      scroll_more_text = ' (Scroll down for more)'
-    end
-    local content = { string.format(' **Orgmode mappings - Agenda%s:**', scroll_more_text), '' }
-    for _, item in ipairs(helps.orgagenda) do
-      local maps = mappings.agenda[item.key]
-      if type(maps) == 'table' then
-        maps = table.concat(maps, ', ')
-      end
-      table.insert(content, string.format('  `%-12s` - %s', maps, item.description))
-    end
-    table.insert(content, '')
-    table.insert(content, string.format('  `%-12s` - %s', '<Esc>, q', 'Close this help'))
-    return content
+function Help._get_content_type(opts)
+  if opts.type then
+    return opts.type
   end
 
   local has_capture, is_capture = pcall(vim.api.nvim_buf_get_var, 0, 'org_capture')
-  local content = {}
   if has_capture and is_capture then
-    if (#helps.capture + #helps.org) > max_height then
-      scroll_more_text = ' (Scroll down for more)'
+    return 'orgcapture'
+  end
+
+  local ft = vim.bo.filetype
+  local prepare_func = '_prepare_' .. ft
+  if Help[prepare_func] then
+    return ft
+  end
+
+  return 'org'
+end
+
+function Help._prepare_org(_, max_height)
+  local scroll_more_text = ''
+  if #helps.org > max_height then
+    scroll_more_text = ' (Scroll down for more)'
+  end
+
+  return { string.format(' **Orgmode mappings - Org:%s**', scroll_more_text), '' }, false
+end
+
+function Help._prepare_orgcapture(mappings, max_height)
+  local scroll_more_text = ''
+  if (#helps.capture + #helps.org) > max_height then
+    scroll_more_text = ' (Scroll down for more)'
+  end
+
+  local content = { string.format(' **Orgmode mappings Capture + Org:%s**', scroll_more_text), '', '  __Capture__' }
+  for _, item in ipairs(helps.capture) do
+    local maps = mappings.capture[item.key]
+    if type(maps) == 'table' then
+      maps = table.concat(maps, ', ')
     end
-    content = { string.format(' **Orgmode mappings Capture + Org:%s**', scroll_more_text), '', '  __Capture__' }
-    for _, item in ipairs(helps.capture) do
-      local maps = mappings.capture[item.key]
-      if type(maps) == 'table' then
-        maps = table.concat(maps, ', ')
-      end
-      table.insert(content, string.format('  `%-12s` - %s', maps, item.description))
+
+    table.insert(content, string.format('  `%-12s` - %s', maps, item.description))
+  end
+
+  table.insert(content, '  __Org__')
+
+  return content, false
+end
+
+function Help._prepare_orgagenda(mappings, max_height)
+  local scroll_more_text = ''
+  if #helps.orgagenda > max_height then
+    scroll_more_text = ' (Scroll down for more)'
+  end
+
+  local content = { string.format(' **Orgmode mappings - Agenda%s:**', scroll_more_text), '' }
+  for _, item in ipairs(helps.orgagenda) do
+    local maps = mappings.agenda[item.key]
+    if type(maps) == 'table' then
+      maps = table.concat(maps, ', ')
     end
-    table.insert(content, '  __Org__')
-  else
-    if #helps.org > max_height then
-      scroll_more_text = ' (Scroll down for more)'
+
+    table.insert(content, string.format('  `%-12s` - %s', maps, item.description))
+  end
+
+  table.insert(content, '')
+  table.insert(content, string.format('  `%-12s` - %s', '<Esc>, q', 'Close this help'))
+
+  return content, true
+end
+
+function Help._prepare_edit_src(mappings, max_height)
+  local scroll_more_text = ''
+  if #helps.edit_src > max_height then
+    scroll_more_text = ' (Scroll down for more)'
+  end
+
+  local content = { string.format(' **Orgmode mappings - Edit Src%s:**', scroll_more_text), '' }
+
+  for _, item in ipairs(helps.edit_src) do
+    local maps = mappings.edit_src[item.key]
+    if type(maps) == 'table' then
+      maps = table.concat(maps, ', ')
     end
-    content = { string.format(' **Orgmode mappings - Org:%s**', scroll_more_text), '' }
+
+    table.insert(content, string.format('  `%-12s` - %s', maps, item.description))
+  end
+
+  return content, true
+end
+
+---@return string[]
+function Help.prepare_content(opts)
+  opts = opts or {}
+
+  local mappings = config.mappings
+  local max_height = vim.o.lines - 2
+
+  local t = Help._get_content_type(opts)
+
+  local prepare_func = Help['_prepare_' .. t]
+  if not prepare_func then
+    return
+  end
+
+  local content, include_generic = prepare_func(mappings, max_height)
+  if include_generic then
+    return content
   end
 
   for _, item in ipairs(helps.org) do
@@ -159,6 +229,7 @@ function Help.prepare_content()
     if type(maps) == 'table' then
       maps = table.concat(maps, ', ')
     end
+
     table.insert(content, string.format('  `%-12s` - %s', maps, item.description))
   end
 
@@ -169,10 +240,13 @@ function Help.prepare_content()
 
   table.insert(content, '')
   table.insert(content, string.format('  `%-12s` - %s', '<Esc>, q', 'Close this help'))
+
   return content
 end
 
-function Help.show()
+function Help.show(o)
+  o = o or {}
+
   local opts = {
     relative = 'editor',
     width = vim.o.columns / 2,
@@ -184,7 +258,7 @@ function Help.show()
     col = vim.o.columns / 4,
   }
 
-  local content = Help.prepare_content()
+  local content = Help.prepare_content(o)
   local longest = utils.reduce(content, function(acc, item)
     return math.max(acc, item:len())
   end, 0)
