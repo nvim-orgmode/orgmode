@@ -213,6 +213,35 @@ local function from_string(datestr, opts)
   return parse_date(date, dayname, adjustments, opts)
 end
 
+--- @param datestr string
+--- @return table[]
+local function parse_parts(datestr)
+  local result = {}
+  local counter = 1
+  local patterns = {
+    { type = 'date', rgx = '^%d%d%d%d%-%d%d%-%d%d$' },
+    { type = 'dayname', rgx = '^%a%a%a$' },
+    { type = 'time', rgx = '^%d?%d:%d%d$' },
+    { type = 'time_range', rgx = '^%d?%d:%d%d%-%d?%d:%d%d$' },
+    { type = 'adjustment', rgx = '^[%.%+%-]+%d+[hdwmy]?$' },
+  }
+  for space, item in string.gmatch(datestr, '(%s*)(%S+)') do
+    local from = counter + space:len()
+    for _, dt_pattern in ipairs(patterns) do
+      if item:match(dt_pattern.rgx) then
+        table.insert(result, {
+          type = dt_pattern.type,
+          value = item,
+          from = from,
+          to = from + item:len() - 1,
+        })
+        counter = counter + item:len() + space:len()
+      end
+    end
+  end
+  return result
+end
+
 local function from_org_date(datestr, opts)
   local from_open, from, from_close, delimiter, to_open, to, to_close = datestr:match(pattern .. '(%-%-)' .. pattern)
   if not delimiter then
@@ -858,6 +887,7 @@ local function parse_all_from_line(line, lnum)
 end
 
 return {
+  parse_parts = parse_parts,
   from_org_date = from_org_date,
   from_string = from_string,
   now = now,

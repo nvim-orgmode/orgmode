@@ -21,12 +21,7 @@ function EditSpecial:new()
 end
 
 function EditSpecial:_parse_position()
-  local nearest_block_node_info = utils.get_nearest_block_node(
-    self.file,
-    { 'name', 'contents', 'parameters' },
-    self.org_pos,
-    true
-  )
+  local nearest_block_node_info = utils.get_nearest_block_node(self.file, self.org_pos, true)
 
   if not nearest_block_node_info then
     utils.echo_warning('No block node found near cursor')
