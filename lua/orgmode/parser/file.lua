@@ -43,7 +43,8 @@ end
 
 function File:_parse()
   self:_parse_source_code_filetypes()
-  self:_parse_sections_and_root_directives()
+  self:_parse_directives()
+  self:_parse_sections()
 end
 
 function File:get_errors()
@@ -335,11 +336,8 @@ function File:get_section(index)
 end
 
 ---@private
-function File:_parse_sections_and_root_directives()
+function File:_parse_sections()
   for child in self.tree:root():iter_children() do
-    if child:type() == 'directive' then
-      self:_parse_directive(child)
-    end
     if child:type() == 'section' then
       local section = Section.from_node(child, self)
       table.insert(self.sections, section)
@@ -366,11 +364,10 @@ end
 
 ---@private
 function File:_parse_source_code_filetypes()
-  local blocks = self:get_ts_matches('(block (name) @name (parameters) @parameters (#eq? @name "SRC"))')
+  local blocks = self:get_ts_matches('(block name: (expr) @name parameter: (expr) @parameters (#eq? @name "SRC"))')
   local source_code_filetypes = {}
   for _, item in ipairs(blocks) do
-    local params = vim.split(item.parameters.text, '%s+')
-    local ft = params[1]
+    local ft = item.parameters and item.parameters.text
     if
       ft
       and ft ~= ''
@@ -383,18 +380,15 @@ function File:_parse_source_code_filetypes()
   self.source_code_filetypes = source_code_filetypes
 end
 
-function File:_parse_directive(node)
-  local name = node:named_child(0)
-  local value = node:named_child(1)
-  if not name or not value then
-    return
+function File:_parse_directives()
+  local directives = self:get_ts_matches(
+    [[(directive name: (expr) @name value: (value) @value (#match? @name "\\cfiletags"))]]
+  )
+  local tags = {}
+  for _, directive in ipairs(directives) do
+    utils.concat(tags, utils.parse_tags_string(directive.value.text), true)
   end
-
-  local name_text = self:get_node_text(name)
-  if name_text:upper() == 'FILETAGS' then
-    local value_text = self:get_node_text(value)
-    self.tags = utils.parse_tags_string(value_text)
-  end
+  self.tags = tags
 end
 
 return File

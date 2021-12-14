@@ -183,38 +183,70 @@ function OrgMappings:_adjust_date_part(direction, amount, fallback)
   local do_replacement = function(date)
     local col = vim.fn.col('.')
     local char = vim.fn.getline('.'):sub(col, col)
+    local raw_date_value = vim.fn.getline('.'):sub(date.range.start_col + 1, date.range.end_col - 1)
     if col == date.range.start_col or col == date.range.end_col then
       date.active = not date.active
       return self:_replace_date(date)
     end
-    local node = Files.get_node_at_cursor()
     local col_from_start = col - date.range.start_col
-    local modify_end_time = false
+    local parts = Date.parse_parts(raw_date_value)
     local adj = nil
-    if node:type() == 'date' then
-      if col_from_start <= 5 then
+    local modify_end_time = false
+    local part = nil
+    for _, p in ipairs(parts) do
+      if col_from_start >= p.from and col_from_start <= p.to then
+        part = p
+        break
+      end
+    end
+
+    if not part then
+      return
+    end
+
+    local offset = col_from_start - part.from
+
+    if part.type == 'date' then
+      if offset <= 4 then
         adj = get_adj('y')
-      elseif col_from_start <= 8 then
+      elseif offset <= 7 then
         adj = get_adj('m')
-      elseif col_from_start <= 15 then
+      else
         adj = get_adj('d')
       end
-    elseif node:type() == 'time' then
-      local has_end_time = node:parent() and node:parent():type() == 'timerange'
-      if col_from_start <= 17 then
+    end
+
+    if part.type == 'dayname' then
+      adj = get_adj('d')
+    end
+
+    if part.type == 'time' then
+      if offset <= 2 then
         adj = get_adj('h')
-      elseif col_from_start <= 20 then
+      else
         adj = minute_adj
-      elseif has_end_time and col_from_start <= 23 then
+      end
+    end
+
+    if part.type == 'time_range' then
+      if offset <= 2 then
+        adj = get_adj('h')
+      elseif offset <= 5 then
+        adj = minute_adj
+      elseif offset <= 8 then
         adj = get_adj('h')
         modify_end_time = true
-      elseif has_end_time and col_from_start <= 26 then
+      else
         adj = minute_adj
         modify_end_time = true
       end
-    elseif (node:type() == 'repeater' or node:type() == 'delay') and char:match('[hdwmy]') ~= nil then
+    end
+
+    if part.type == 'adjustment' then
       local map = { h = 'd', d = 'w', w = 'm', m = 'y', y = 'h' }
-      vim.cmd(string.format('norm!r%s', map[char]))
+      if map[char] then
+        vim.cmd(string.format('norm!r%s', map[char]))
+      end
       return true
     end
 
@@ -397,6 +429,9 @@ function OrgMappings:handle_return(suffix)
   suffix = suffix or ''
   local current_file = Files.get_current_file()
   local item = current_file:get_current_node()
+  if item.type == 'expr' then
+    item = current_file:convert_to_file_node(item.node:parent())
+  end
 
   if item.node:parent() and item.node:parent():type() == 'headline' then
     item = current_file:convert_to_file_node(item.node:parent())
