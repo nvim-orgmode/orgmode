@@ -7,9 +7,21 @@ local AgendaItem = require('orgmode.agenda.agenda_item')
 local AgendaFilter = require('orgmode.agenda.filter')
 local utils = require('orgmode.utils')
 
+--@return table[]
+local function get_category_inds()
+  local files = config:get_all_files()
+  local categories = config:get_categories(files)
+  local category_inds = {}
+  for i, category in ipairs(categories) do
+    category_inds[category] = i
+  end
+  return category_inds
+end
+
 ---@param agenda_items AgendaItem[]
 ---@return AgendaItem[]
 local function sort_agenda_items(agenda_items)
+  local category_inds = get_category_inds()
   table.sort(agenda_items, function(a, b)
     if a.is_same_day and b.is_same_day then
       if not a.headline_date.date_only and not b.headline_date.date_only then
@@ -35,6 +47,13 @@ local function sort_agenda_items(agenda_items)
 
     if a.headline:get_priority_sort_value() ~= b.headline:get_priority_sort_value() then
       return a.headline:get_priority_sort_value() > b.headline:get_priority_sort_value()
+    end
+
+    if a.date:is_same(b.date) then
+      if a.headline:get_category() ~= b.headline:get_category() then
+        print(category_inds[a.headline:get_category()] < category_inds[b.headline:get_category()])
+        return category_inds[a.headline:get_category()] < category_inds[b.headline:get_category()]
+      end
     end
 
     return a.headline_date:is_before(b.headline_date)

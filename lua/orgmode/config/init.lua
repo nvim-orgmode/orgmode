@@ -65,6 +65,16 @@ function Config:_deprecation_notify(opts)
 end
 
 ---@return string[]
+function Config:get_categories(files)
+  local categories = {}
+  for _, item in ipairs(files) do
+    local category = vim.fn.fnamemodify(item, ':t:r')
+    table.insert(categories, category)
+  end
+  return categories
+end
+
+---@return string[]
 function Config:get_all_files()
   local all_filenames = {}
   if self.opts.org_default_notes_file and self.opts.org_default_notes_file ~= '' then
