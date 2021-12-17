@@ -49,6 +49,11 @@ local function sort_agenda_items(agenda_items)
       return a.headline:get_priority_sort_value() > b.headline:get_priority_sort_value()
     end
     
+    print("")
+    print("a date")
+    print(vim.inspect(a.date))
+    print("b date")
+    print(vim.inspect(b.date))
     if a.date:is_same(b.date) then
       print("")
       print("a table")
