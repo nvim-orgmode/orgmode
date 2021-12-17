@@ -48,8 +48,17 @@ local function sort_agenda_items(agenda_items)
     if a.headline:get_priority_sort_value() ~= b.headline:get_priority_sort_value() then
       return a.headline:get_priority_sort_value() > b.headline:get_priority_sort_value()
     end
-
+    
     if a.date:is_same(b.date) then
+      print("")
+      print("a table")
+      print(vim.inspect(a.headline))
+      print("")
+      print("b table")
+      print(vim.inspect(b.headline))
+      print("")
+      print("decision")
+      print(category_inds[a.headline:get_category()] < category_inds[b.headline:get_category()])
       -- if a.headline:get_category() ~= b.headline:get_category() then
       return category_inds[a.headline:get_category()] < category_inds[b.headline:get_category()]
       -- end
