@@ -30,8 +30,16 @@ local function sort_agenda_items(agenda_items)
       if not a.headline_date.date_only then
         return true
       end
+      if not b.headline_date.date_only then
+        return false
+      end
+      -- if both are date only check category
+      if a.headline:get_category() ~= b.headline:get_category() then
+        return category_inds[a.headline:get_category()] < category_inds[b.headline:get_category()]
+      end
       return false
     end
+
 
     if a.is_same_day and not b.is_same_day then
       if not a.headline_date.date_only or (b.headline_date:is_none() and not a.headline_date:is_none()) then
@@ -45,30 +53,8 @@ local function sort_agenda_items(agenda_items)
       end
     end
 
-    print("gets here")
-
     if a.headline:get_priority_sort_value() ~= b.headline:get_priority_sort_value() then
       return a.headline:get_priority_sort_value() > b.headline:get_priority_sort_value()
-    end
-    
-    print("")
-    print("a date")
-    print(vim.inspect(a.date))
-    print("b date")
-    print(vim.inspect(b.date))
-    if a.date:is_same(b.date) then
-      print("")
-      print("a table")
-      print(vim.inspect(a.headline))
-      print("")
-      print("b table")
-      print(vim.inspect(b.headline))
-      print("")
-      print("decision")
-      print(category_inds[a.headline:get_category()] < category_inds[b.headline:get_category()])
-      -- if a.headline:get_category() ~= b.headline:get_category() then
-      return category_inds[a.headline:get_category()] < category_inds[b.headline:get_category()]
-      -- end
     end
 
     return a.headline_date:is_before(b.headline_date)
