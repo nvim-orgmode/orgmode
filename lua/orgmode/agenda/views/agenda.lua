@@ -45,6 +45,8 @@ local function sort_agenda_items(agenda_items)
       end
     end
 
+    print("gets here")
+
     if a.headline:get_priority_sort_value() ~= b.headline:get_priority_sort_value() then
       return a.headline:get_priority_sort_value() > b.headline:get_priority_sort_value()
     end
