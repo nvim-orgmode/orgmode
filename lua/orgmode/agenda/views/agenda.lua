@@ -33,7 +33,14 @@ local function sort_agenda_items(agenda_items)
       if not b.headline_date.date_only then
         return false
       end
-      -- if both are date only check category
+      -- if both are date only check if one is a deadline
+      if a.headline_date:is_deadline() and not b.headline_date:is_deadline() then
+        return true
+      end
+      if not a.headline_date:is_deadline() and b.headline_date:is_deadline() then
+        return false
+      end
+      -- if both are the same check category
       if a.headline:get_category() ~= b.headline:get_category() then
         return category_inds[a.headline:get_category()] < category_inds[b.headline:get_category()]
       end
@@ -57,8 +64,16 @@ local function sort_agenda_items(agenda_items)
       return a.headline:get_priority_sort_value() > b.headline:get_priority_sort_value()
     end
 
-    -- if both are on the same day check category
+    -- if both are on the same day 
     if a.headline_date:is_same(b.headline_date) then
+      -- check deadline
+      if a.headline_date:is_deadline() and not b.headline_date:is_deadline() then
+        return true
+      end
+      if not a.headline_date:is_deadline() and b.headline_date:is_deadline() then
+        return false
+      end
+      -- check category
       if a.headline:get_category() ~= b.headline:get_category() then
         return category_inds[a.headline:get_category()] < category_inds[b.headline:get_category()]
       end
