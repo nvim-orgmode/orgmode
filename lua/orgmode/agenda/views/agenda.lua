@@ -7,6 +7,13 @@ local AgendaItem = require('orgmode.agenda.agenda_item')
 local AgendaFilter = require('orgmode.agenda.filter')
 local utils = require('orgmode.utils')
 
+local function sort_by_date_or_category(a, b)
+  if not a.headline_date:is_same(b.headline_date) then
+    return a.headline_date:is_before(b.headline_date)
+  end
+  return a.index < b.index
+end
+
 ---@param agenda_items AgendaItem[]
 ---@return AgendaItem[]
 local function sort_agenda_items(agenda_items)
@@ -18,7 +25,10 @@ local function sort_agenda_items(agenda_items)
       if not a.headline_date.date_only then
         return true
       end
-      return false
+      if not b.headline_date.date_only then
+        return false
+      end
+      return sort_by_date_or_category(a, b)
     end
 
     if a.is_same_day and not b.is_same_day then
@@ -37,7 +47,7 @@ local function sort_agenda_items(agenda_items)
       return a.headline:get_priority_sort_value() > b.headline:get_priority_sort_value()
     end
 
-    return a.headline_date:is_before(b.headline_date)
+    return sort_by_date_or_category(a, b)
   end)
   return agenda_items
 end
@@ -139,8 +149,8 @@ function AgendaView:_build_items()
   for _, day in ipairs(dates) do
     local date = { day = day, agenda_items = {} }
 
-    for _, item in ipairs(headline_dates) do
-      local agenda_item = AgendaItem:new(item.headline_date, item.headline, day)
+    for index, item in ipairs(headline_dates) do
+      local agenda_item = AgendaItem:new(item.headline_date, item.headline, day, index)
       if agenda_item.is_valid and self.filters:matches(item.headline) then
         table.insert(date.agenda_items, agenda_item)
       end
