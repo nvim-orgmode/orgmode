@@ -25,11 +25,13 @@ local AgendaItem = {}
 ---@param headline_date Date single date in a headline
 ---@param headline Section
 ---@param date Date date for which item should be rendered
-function AgendaItem:new(headline_date, headline, date)
+---@param index number
+function AgendaItem:new(headline_date, headline, date, index)
   local opts = {}
   opts.headline_date = headline_date
   opts.headline = headline
   opts.date = date
+  opts.index = index or 1
   opts.is_valid = false
   opts.is_today = date:is_today()
   opts.is_same_day = headline_date:is_same(date, 'day') or headline_date:repeats_on(date)

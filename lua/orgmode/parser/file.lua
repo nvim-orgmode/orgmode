@@ -81,10 +81,6 @@ function File:get_opened_headlines()
     return not item:is_archived()
   end, self.sections)
 
-  table.sort(headlines, function(a, b)
-    return a:get_priority_sort_value() > b:get_priority_sort_value()
-  end)
-
   return headlines
 end
 
