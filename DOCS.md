@@ -245,6 +245,11 @@ Determine if blank line should be prepended when:
 * Adding heading via `org_meta_return` and `org_insert_*` mappings
 * Adding a list item via `org_meta_return`
 
+#### **emacs_config**
+*type*: `table`<br />
+*default value*: `{ executable_path = 'emacs', configure_path='$HOME/.emacs.d/init.el' }`<br />
+Set configuration for your emacs. This is useful for having the emacs export properly pickup your emacs config and plugins.
+
 ### Agenda settings
 
 #### **org_deadline_warning_days**

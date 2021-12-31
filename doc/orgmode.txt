@@ -26,6 +26,7 @@ CONTENTS                                                        *orgmode-content
             1.2.1.15. org_custom_exports..............|orgmode-org_custom_exports|
             1.2.1.16. org_time_stamp_rounding_minutes.|orgmode-org_time_stamp_rounding_minutes|
             1.2.1.17. org_blank_before_new_entry.|orgmode-org_blank_before_new_entry|
+            1.2.1.18. emacs_config..........................|orgmode-emacs_config|
         1.2.2. Agenda settings...........................|orgmode-agenda_settings|
             1.2.2.1. org_deadline_warning_days.|orgmode-org_deadline_warning_days|
             1.2.2.2. org_agenda_span.....................|orgmode-org_agenda_span|
@@ -429,6 +430,12 @@ default value: `{ heading = true, plain_list_item = false }`
 Determine if blank line should be prepended when:
 * Adding heading via `org_meta_return` and `org_insert_*` mappings
 * Adding a list item via `org_meta_return`
+
+EMACS_CONFIG                                                *orgmode-emacs_config*
+
+type: `table`
+default value: `{ executable_path = 'emacs', configure_path='$HOME/.emacs.d/init.el' }`
+Set configuration for your emacs. This is useful for having the emacs export properly pickup your emacs config and plugins.
 
 AGENDA SETTINGS                                          *orgmode-agenda_settings*
 
