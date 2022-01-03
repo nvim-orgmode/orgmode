@@ -201,17 +201,17 @@ Highlights are experimental and partially supported.
 * Headline markup highlighting (https://github.com/nvim-orgmode/orgmode/issues/67)
 
 #### Troubleshoot
-**Folding is not working**<br />
+##### Folding is not working
 Make sure you are not overriding foldexpr in Org buffers with [nvim-treesitter folding](https://github.com/nvim-treesitter/nvim-treesitter#folding)
 
-**Indentation is not working**<br />
+##### Indentation is not working
 Make sure you are not overriding indentexpr in Org buffers with [nvim-treesitter indentation](https://github.com/nvim-treesitter/nvim-treesitter#indentation)
 
-**I get `treesitter/query.lua` errors when opening agenda/capture prompt or org files**<br />
+##### I get `treesitter/query.lua` errors when opening agenda/capture prompt or org files
 Make sure you are using latest changes from [tree-sitter-org](https://github.com/milisims/tree-sitter-org) grammar.<br />
 by running `:TSUpdate org` and restarting the editor.
 
-**Dates are not in English**<br />
+##### Dates are not in English
 Dates are generated with Lua native date support, and it reads your current locale when creating them.<br />
 To use different locale you can add this to your `init.lua`:
 ```lua
@@ -223,6 +223,20 @@ language en_US.utf8
 ```
 Just make sure you have `en_US` locale installed on your system. To see what you have available on the system you can
 start the command `:language ` and press `<TAB>` to autocomplete possible options.
+
+##### Links are not concealed
+Links are concealed with Vim's conceal feature (see `:help conceal`). To enable concealing, add this to your `init.lua`:
+```lua
+vim.opt.conceallevel = 2
+vim.opt.concealcursor = 'nc'
+```
+
+Or if you are using `init.vim`:
+
+```vim
+set conceallevel=2
+set concealcursor=nc
+```
 
 ### Features (TL;DR):
 * Agenda view
