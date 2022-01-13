@@ -56,6 +56,7 @@ function Capture:refile(confirm)
   local template = vim.api.nvim_buf_get_var(0, 'org_template') or {}
   local file = vim.fn.fnamemodify(template.target or config.org_default_notes_file, ':p')
   local lines = vim.api.nvim_buf_get_lines(0, 0, -1, true)
+  local headline_title = template.headline
   if confirm and is_modified then
     local choice = vim.fn.confirm(string.format('Do you want to refile this to %s?', file), '&Yes\n&No')
     vim.cmd([[redraw!]])
@@ -65,7 +66,12 @@ function Capture:refile(confirm)
   end
   vim.defer_fn(function()
     -- TODO: Parse refile content as org file and update refile destination to point to headline or root
+    if headline_title then
+      self:refile_to_headline(file, lines, nil, headline_title)
+      return
+    end
     self:_refile_to_end(file, lines)
+
   end, 0)
   vim.cmd([[autocmd! OrgCapture BufWipeout <buffer>]])
   vim.cmd([[silent! wq]])
@@ -133,13 +139,19 @@ function Capture:_refile_content_with_fallback(lines, fallback_file, item)
   end
 
   local destination_file = valid_destinations[destination[1]]
-
   if not destination[2] or destination[2] == '' then
     return self:_refile_to_end(destination_file, lines, item)
   end
+  return self:refile_to_headline(destination_file, lines, item, destination[2]);
+end
 
+function Capture:refile_to_headline(destination_file, lines, item, headline_title)
   local agenda_file = Files.get(destination_file)
-  local headline = agenda_file:find_headline_by_title(destination[2])
+  local headline
+  if headline_title then
+    headline = agenda_file:find_headline_by_title(headline_title)
+  end
+
   if not headline then
     return self._refile_to_end(destination_file, lines, item)
   end
