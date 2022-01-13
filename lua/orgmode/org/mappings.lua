@@ -7,6 +7,7 @@ local Hyperlinks = require('orgmode.org.hyperlinks')
 local PriorityState = require('orgmode.objects.priority_state')
 local TodoState = require('orgmode.objects.todo_state')
 local config = require('orgmode.config')
+local constants = require('orgmode.utils.constants')
 local ts_utils = require('nvim-treesitter.ts_utils')
 local utils = require('orgmode.utils')
 
@@ -440,7 +441,7 @@ function OrgMappings:handle_return(suffix)
     end
 
     if #text_edits > 0 then
-      vim.lsp.util.apply_text_edits(text_edits, 0)
+      vim.lsp.util.apply_text_edits(text_edits, 0, constants.default_offset_encoding)
 
       vim.fn.cursor(end_row + 2 + (add_empty_line and 1 or 0), 0) -- +1 for 0 index and +1 for next line
       vim.cmd([[startinsert!]])
