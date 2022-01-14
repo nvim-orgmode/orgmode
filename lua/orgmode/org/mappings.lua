@@ -440,7 +440,7 @@ function OrgMappings:handle_return(suffix)
     end
 
     if #text_edits > 0 then
-      vim.lsp.util.apply_text_edits(text_edits, 0)
+      vim.lsp.util.apply_text_edits(text_edits, 0, 'utf-16')
 
       vim.fn.cursor(end_row + 2 + (add_empty_line and 1 or 0), 0) -- +1 for 0 index and +1 for next line
       vim.cmd([[startinsert!]])
