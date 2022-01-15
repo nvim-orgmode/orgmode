@@ -71,7 +71,6 @@ function Capture:refile(confirm)
       return
     end
     self:_refile_to_end(file, lines)
-
   end, 0)
   vim.cmd([[autocmd! OrgCapture BufWipeout <buffer>]])
   vim.cmd([[silent! wq]])
@@ -142,7 +141,7 @@ function Capture:_refile_content_with_fallback(lines, fallback_file, item)
   if not destination[2] or destination[2] == '' then
     return self:_refile_to_end(destination_file, lines, item)
   end
-  return self:refile_to_headline(destination_file, lines, item, destination[2]);
+  return self:refile_to_headline(destination_file, lines, item, destination[2])
 end
 
 function Capture:refile_to_headline(destination_file, lines, item, headline_title)
