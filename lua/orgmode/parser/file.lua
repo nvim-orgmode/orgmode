@@ -47,12 +47,16 @@ function File:_parse()
 end
 
 function File:get_errors()
-  local has_error = self.tree:root():has_error()
-  if not has_error then
+  if not self:has_errors() then
     return nil
   end
 
   return self:get_ts_matches('(ERROR) @err')
+end
+
+---@return boolean
+function File:has_errors()
+  return self.tree:root():has_error()
 end
 
 function File:convert_to_file_node(node)

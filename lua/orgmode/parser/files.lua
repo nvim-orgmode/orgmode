@@ -215,7 +215,7 @@ function Files.get_closest_headline(id)
     error({ message = string.format('Failed to parse current file. %s.', msg) })
   end
   local headline = current_file:get_closest_headline(id)
-  if not headline then
+  if not headline and current_file:has_errors() then
     error({ message = string.format('Failed to parse current headline. %s.', msg) })
   end
   return headline
