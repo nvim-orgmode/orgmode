@@ -637,6 +637,9 @@ Cycle todo keyword backward on current headline.
 #### **org_toggle_checkbox**
 *mapped to*: `<C-Space>`<br />
 Toggle current line checkbox state
+#### **org_toggle_heading**
+*mapped to*: `<Leader>o*`<br />
+Toggle current line to headline and vice versa. Checkboxes will turn into TODO headlines.
 #### **org_open_at_point**
 *mapped to*: `<Leader>oo`<br />
 Open hyperlink or date under cursor.<br />

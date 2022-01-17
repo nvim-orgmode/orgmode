@@ -102,6 +102,7 @@ return {
       org_todo = 'cit',
       org_todo_prev = 'ciT',
       org_toggle_checkbox = '<C-Space>',
+      org_toggle_heading = '<Leader>o*',
       org_open_at_point = '<Leader>oo',
       org_edit_special = [[<Leader>o']],
       org_cycle = '<TAB>',
