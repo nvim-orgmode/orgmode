@@ -108,14 +108,18 @@ end
 function Export.emacs(format, extension)
   local file = vim.api.nvim_buf_get_name(0)
   local target = vim.fn.fnamemodify(file, ':p:r') .. '.' .. extension
-  if vim.fn.executable('emacs') ~= 1 then
+  local emacs = config.emacs_config.executable_path
+  local emacs_config_path = config.emacs_config.config_path
+  if vim.fn.executable(emacs) ~= 1 then
     return utils.echo_error('emacs executable not found. Make sure emacs is in $PATH.')
   end
 
   local cmd = {
-    'emacs',
+    emacs,
     '-nw',
     '--batch',
+    '--load',
+    emacs_config_path,
     string.format('--visit=%s', file),
     string.format('--funcall=%s', format),
   }

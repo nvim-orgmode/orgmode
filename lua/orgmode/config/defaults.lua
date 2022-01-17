@@ -152,4 +152,8 @@ return {
       around_subtree_from_root = 'OR',
     },
   },
+  emacs_config = {
+    executable_path = 'emacs',
+    config_path = '$HOME/.emacs.d/init.el',
+  },
 }
