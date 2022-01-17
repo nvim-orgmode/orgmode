@@ -295,6 +295,7 @@ set concealcursor=nc
   * Change headline TODO state: forward<kbd>cit</kbd> or backward<kbd>ciT</kbd>
   * Open hyperlink or date under cursor: <kbd>\<Leader\>oo</kbd>
   * Toggle checkbox: <kbd>\<C-space\></kbd>
+  * Toggle current line to headline and vice versa: <kbd>\<Leader\>o*</kbd>
   * Toggle folding of current headline: <kbd>\<TAB\></kbd>
   * Toggle folding in whole file: <kbd>\<S-TAB\></kbd>
   * Archive headline: <kbd>\<Leader\>o$</kbd>

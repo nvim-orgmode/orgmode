@@ -48,6 +48,7 @@ return {
     org_priority_down = { 'org_mappings.priority_down' },
     org_todo_prev = { 'org_mappings.todo_prev_state' },
     org_toggle_checkbox = { 'org_mappings.toggle_checkbox' },
+    org_toggle_heading = { 'org_mappings.toggle_heading' },
     org_open_at_point = { 'org_mappings.open_at_point' },
     org_edit_special = { 'org_mappings.edit_special' },
     org_cycle = { 'org_mappings.cycle' },

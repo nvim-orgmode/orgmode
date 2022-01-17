@@ -296,6 +296,36 @@ function OrgMappings:todo_prev_state()
   self:_todo_change_state('prev')
 end
 
+function OrgMappings:toggle_heading()
+  local line = vim.fn.getline('.')
+  local parent = Files.get_closest_headline()
+  if not parent then
+    line = '* ' .. line
+    vim.fn.setline('.', line)
+    return
+  end
+
+  if parent.line_number == vim.api.nvim_win_get_cursor(0)[1] then
+    line = line:gsub('^%*+%s', '')
+  else
+    line = line:gsub('^(%s*)', '')
+    if line:match('^[%*-]%s') then -- handle lists
+      line = line:gsub('^[%*-]%s', '') -- strip bullet
+      line = line:gsub('^%[([X%s])%]%s', function(checkbox_state)
+        if checkbox_state == 'X' then
+          return config:get_todo_keywords().DONE[1] .. ' '
+        else
+          return config:get_todo_keywords().TODO[1] .. ' '
+        end
+      end)
+    end
+
+    line = string.rep('*', parent.level + 1) .. ' ' .. line
+  end
+
+  vim.fn.setline('.', line)
+end
+
 function OrgMappings:_todo_change_state(direction)
   local item = Files.get_closest_headline()
   local was_done = item:is_done()
