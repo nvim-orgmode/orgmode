@@ -54,6 +54,7 @@ local helps = {
     { key = 'org_clock_goto', description = 'Jump to currently clocked in heading' },
     { key = 'org_set_effort', description = 'Set effort estimate on current heading' },
     { key = 'org_show_help', description = 'Show this help' },
+    { key = 'org_toggle_heading', description = 'Toggle current line to headline and vice versa' },
   },
   orgagenda = {
     { key = 'org_agenda_later', description = 'Go forward one span' },
