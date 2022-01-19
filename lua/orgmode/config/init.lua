@@ -271,9 +271,19 @@ function Config:ts_highlights_enabled()
   end
   self.ts_hl_enabled = false
   local hl_module = require('nvim-treesitter.configs').get_module('highlight')
-  if hl_module and hl_module.enable and not vim.tbl_contains(hl_module.disable or {}, 'org') then
-    self.ts_hl_enabled = true
+  if not hl_module or not hl_module.enable then
+    return false
   end
+  if hl_module.disable then
+    if type(hl_module.disable) == 'function' and hl_module.disable('org', vim.api.nvim_get_current_buf()) then
+      return false
+    end
+
+    if type(hl_module.disable) == 'table' and vim.tbl_contains(hl_module.disable, 'org') then
+      return false
+    end
+  end
+  self.ts_hl_enabled = true
   return self.ts_hl_enabled
 end
 
