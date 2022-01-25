@@ -98,7 +98,7 @@ local function foldtext()
   end
 
   if vim.opt.conceallevel:get() > 0 then
-    line = string.gsub(line, '%[%[(.-)%]%[?(.-)%]%]$', function(link, text)
+    line = string.gsub(line, '%[%[(.-)%]%[?(.-)%]?%]', function(link, text)
       if text == '' then
         return link
       else
