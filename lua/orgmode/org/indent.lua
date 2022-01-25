@@ -97,7 +97,7 @@ local function foldtext()
     line = vim.fn.substitute(line, '\\(^\\*\\+\\)', '\\=repeat(" ", len(submatch(0))-1) . "*"', '')
   end
 
-  if vim.opt.conceallevel:get() > 0 then
+  if vim.opt.conceallevel:get() > 0 and string.find(line, '[[', 1, true) then
     line = string.gsub(line, '%[%[(.-)%]%[?(.-)%]?%]', function(link, text)
       if text == '' then
         return link
