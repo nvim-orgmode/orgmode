@@ -242,6 +242,7 @@ function Config:parse_archive_location(file, archive_loc)
   -- TODO: Support archive to headline
   local parts = vim.split(archive_loc, '::')
   local archive_location = vim.trim(parts[1])
+  archive_location = archive_location:gsub('%%b', vim.fn.fnamemodify(file, ':t'))
   if archive_location:find('%%s') then
     return string.format(archive_location, file)
   end
