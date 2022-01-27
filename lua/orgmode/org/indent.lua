@@ -92,10 +92,21 @@ end
 
 local function foldtext()
   local line = vim.fn.getline(vim.v.foldstart)
+
   if config.org_hide_leading_stars then
-    return vim.fn.substitute(line, '\\(^\\*\\+\\)', '\\=repeat(" ", len(submatch(0))-1) . "*"', '')
-      .. config.org_ellipsis
+    line = vim.fn.substitute(line, '\\(^\\*\\+\\)', '\\=repeat(" ", len(submatch(0))-1) . "*"', '')
   end
+
+  if vim.opt.conceallevel:get() > 0 and string.find(line, '[[', 1, true) then
+    line = string.gsub(line, '%[%[(.-)%]%[?(.-)%]?%]', function(link, text)
+      if text == '' then
+        return link
+      else
+        return text
+      end
+    end)
+  end
+
   return line .. config.org_ellipsis
 end
 
