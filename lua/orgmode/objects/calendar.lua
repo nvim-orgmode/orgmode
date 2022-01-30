@@ -174,6 +174,7 @@ function Calendar.cursor_up()
       return
     end
 
+    local move_to
     if first_num > col then
       move_to = first_num
     else
@@ -197,6 +198,7 @@ function Calendar.cursor_down()
       return
     end
 
+    local move_to
     if last_num < col then
       move_to = last_num
     else
