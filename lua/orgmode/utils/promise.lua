@@ -1,5 +1,7 @@
 -- Taken from https://github.com/notomo/promise.nvim
 
+local vim = vim
+
 local PackedValue = {}
 PackedValue.__index = PackedValue
 
@@ -35,22 +37,17 @@ function PackedValue.first(self)
   return first
 end
 
-local vim = vim
-
----@class Promise
 local Promise = {}
 Promise.__index = Promise
 
-local PromiseStatus = { Pending = 'Pending', Fulfilled = 'Fulfilled', Rejected = 'Rejected' }
+local PromiseStatus = { Pending = 'pending', Fulfilled = 'fulfilled', Rejected = 'rejected' }
 
 local is_promise = function(v)
   return getmetatable(v) == Promise
 end
 
-local new_any_userdata = function()
-  local userdata = vim.loop.new_async(function() end)
-  userdata:close()
-  return userdata
+local new_empty_userdata = function()
+  return newproxy(true)
 end
 
 local new_pending = function(on_fullfilled, on_rejected)
@@ -65,27 +62,30 @@ local new_pending = function(on_fullfilled, on_rejected)
     _on_fullfilled = on_fullfilled,
     _on_rejected = on_rejected,
     _handled = false,
-    _unhandled_detector = new_any_userdata(),
   }
   local self = setmetatable(tbl, Promise)
 
-  getmetatable(tbl._unhandled_detector).__gc = function()
+  local userdata = new_empty_userdata()
+  self._unhandled_detector = setmetatable({ [self] = userdata }, { __mode = 'k' })
+  getmetatable(userdata).__gc = function()
     if self._status ~= PromiseStatus.Rejected or self._handled then
       return
     end
     self._handled = true
     vim.schedule(function()
-      error('unhandled promise rejection: ' .. vim.inspect({ self._value:unpack() }))
+      local values = vim.inspect({ self._value:unpack() }, { newline = '', indent = '' })
+      error('unhandled promise rejection: ' .. values, 0)
     end)
   end
 
   return self
 end
 
---- TODO doc
---- @param f function:
-function Promise.new(f)
-  vim.validate({ f = { f, 'function' } })
+--- Equivalents to JavaScript's Promise.new.
+--- @param executor function: `(resolve: function(...), reject: function(...))`
+--- @return table: Promise
+function Promise.new(executor)
+  vim.validate({ executor = { executor, 'function' } })
 
   local self = new_pending()
 
@@ -95,17 +95,19 @@ function Promise.new(f)
   local reject = function(...)
     self:_reject(...)
   end
-  f(resolve, reject)
+  executor(resolve, reject)
 
   return self
 end
 
---- TODO doc
---- @vararg any:
+--- Returns a fulfilled promise.
+--- But if the first argument is promise, returns the promise.
+--- @vararg any: one promise or non-promises
+--- @return table: Promise
 function Promise.resolve(...)
-  local v = ...
-  if is_promise(v) then
-    return v
+  local first = ...
+  if is_promise(first) then
+    return first
   end
   local value = PackedValue.new(...)
   return Promise.new(function(resolve, _)
@@ -113,12 +115,14 @@ function Promise.resolve(...)
   end)
 end
 
---- TODO doc
---- @vararg any:
+--- Returns a rejected promise.
+--- But if the first argument is promise, returns the promise.
+--- @vararg any: one promise or non-promises
+--- @return table: Promise
 function Promise.reject(...)
-  local v = ...
-  if is_promise(v) then
-    return v
+  local first = ...
+  if is_promise(first) then
+    return first
   end
   local value = PackedValue.new(...)
   return Promise.new(function(_, reject)
@@ -166,7 +170,7 @@ function Promise._start_resolve(self, value)
 end
 
 function Promise._reject(self, ...)
-  if self._status == PromiseStatus.Resolved then
+  if self._status == PromiseStatus.Fulfilled then
     return
   end
   self._status = PromiseStatus.Rejected
@@ -205,15 +209,17 @@ function Promise._start_reject(self, value)
     end)
 end
 
---- TODO doc
---- @param on_fullfilled function|nil:
---- @param on_rejected function|nil:
+--- Equivalents to JavaScript's Promise.then.
+--- @param on_fullfilled function|nil: A callback on fullfilled.
+--- @param on_rejected function|nil: A callback on rejected.
+--- @return table: Promise
 function Promise.next(self, on_fullfilled, on_rejected)
   vim.validate({
     on_fullfilled = { on_fullfilled, 'function', true },
     on_rejected = { on_rejected, 'function', true },
   })
   local promise = new_pending(on_fullfilled, on_rejected)
+  table.insert(self._queued, promise)
   vim.schedule(function()
     if self._status == PromiseStatus.Fulfilled then
       return self:_resolve(self._value:unpack())
@@ -222,18 +228,19 @@ function Promise.next(self, on_fullfilled, on_rejected)
       return self:_reject(self._value:unpack())
     end
   end)
-  table.insert(self._queued, promise)
   return promise
 end
 
---- TODO doc
---- @param on_rejected function|nil:
+--- Equivalents to JavaScript's Promise.catch.
+--- @param on_rejected function|nil: A callback on rejected.
+--- @return table: Promise
 function Promise.catch(self, on_rejected)
   return self:next(nil, on_rejected)
 end
 
---- TODO doc
---- @param on_finally function:
+--- Equivalents to JavaScript's Promise.finally.
+--- @param on_finally function
+--- @return table: Promise
 function Promise.finally(self, on_finally)
   vim.validate({ on_finally = { on_finally, 'function', true } })
   return self
@@ -243,29 +250,28 @@ function Promise.finally(self, on_finally)
     end)
     :catch(function(...)
       on_finally()
-      local value = PackedValue.new(...)
-      return Promise.new(function(_, reject)
-        reject(value:unpack())
-      end)
+      return Promise.reject(...)
     end)
 end
 
---- TODO doc
---- @param list table:
+--- Equivalents to JavaScript's Promise.all.
+--- Even if multiple value are resolved, results include only the first value.
+--- @param list table: promise or non-promise values
+--- @return table: Promise
 function Promise.all(list)
   vim.validate({ list = { list, 'table' } })
-  local remain = #list
-  local results = {}
   return Promise.new(function(resolve, reject)
+    local remain = #list
     if remain == 0 then
-      return resolve(results)
+      return resolve({})
     end
 
+    local results = {}
     for i, e in ipairs(list) do
       Promise.resolve(e)
         :next(function(...)
-          -- use only the first argument
-          results[i] = ...
+          local first = ...
+          results[i] = first
           if remain == 1 then
             return resolve(results)
           end
@@ -278,8 +284,9 @@ function Promise.all(list)
   end)
 end
 
---- TODO doc
---- @param list table:
+--- Equivalents to JavaScript's Promise.race.
+--- @param list table: promise or non-promise values
+--- @return table: Promise
 function Promise.race(list)
   vim.validate({ list = { list, 'table' } })
   return Promise.new(function(resolve, reject)
@@ -290,6 +297,69 @@ function Promise.race(list)
         end)
         :catch(function(...)
           reject(...)
+        end)
+    end
+  end)
+end
+
+--- Equivalents to JavaScript's Promise.any.
+--- Even if multiple value are rejected, errors include only the first value.
+--- @param list table: promise or non-promise values
+--- @return table: Promise
+function Promise.any(list)
+  vim.validate({ list = { list, 'table' } })
+  return Promise.new(function(resolve, reject)
+    local remain = #list
+    if remain == 0 then
+      return reject({})
+    end
+
+    local errs = {}
+    for i, e in ipairs(list) do
+      Promise.resolve(e)
+        :next(function(...)
+          resolve(...)
+        end)
+        :catch(function(...)
+          local first = ...
+          errs[i] = first
+          if remain == 1 then
+            return reject(errs)
+          end
+          remain = remain - 1
+        end)
+    end
+  end)
+end
+
+--- Equivalents to JavaScript's Promise.allSettled.
+--- Even if multiple value are resolved/rejected, value/reason is only the first value.
+--- @param list table: promise or non-promise values
+--- @return table: Promise
+function Promise.all_settled(list)
+  vim.validate({ list = { list, 'table' } })
+  return Promise.new(function(resolve)
+    local remain = #list
+    if remain == 0 then
+      return resolve({})
+    end
+
+    local results = {}
+    for i, e in ipairs(list) do
+      Promise.resolve(e)
+        :next(function(...)
+          local first = ...
+          results[i] = { status = PromiseStatus.Fulfilled, value = first }
+        end)
+        :catch(function(...)
+          local first = ...
+          results[i] = { status = PromiseStatus.Rejected, reason = first }
+        end)
+        :finally(function()
+          if remain == 1 then
+            return resolve(results)
+          end
+          remain = remain - 1
         end)
     end
   end)

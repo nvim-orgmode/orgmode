@@ -381,12 +381,12 @@ function File:_parse_source_code_filetypes()
 end
 
 function File:_parse_directives()
-  local directives = self:get_ts_matches(
-    [[(directive name: (expr) @name value: (value) @value (#match? @name "\\cfiletags"))]]
-  )
+  local directives = self:get_ts_matches([[(directive name: (expr) @name value: (value) @value)]])
   local tags = {}
   for _, directive in ipairs(directives) do
-    utils.concat(tags, utils.parse_tags_string(directive.value.text), true)
+    if directive.name.text:lower() == 'filetags' then
+      utils.concat(tags, utils.parse_tags_string(directive.value.text), true)
+    end
   end
   self.tags = tags
 end
