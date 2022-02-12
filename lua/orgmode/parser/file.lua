@@ -16,6 +16,7 @@ local utils = require('orgmode.utils')
 ---@field sections_by_line table<number, Section>
 ---@field source_code_filetypes string[]
 ---@field is_archive_file boolean
+---@field archive_location string
 ---@field clocked_headline Section
 ---@field tags string[]
 local File = {}
@@ -322,9 +323,8 @@ end
 
 ---@return string
 function File:get_archive_file_location()
-  local matches = self:get_ts_matches('(document (directive (name) @name (value) @value (#eq? @name "ARCHIVE")))')
-  if #matches > 0 then
-    return config:parse_archive_location(self.filename, matches[1].value.text)
+  if self.archive_location then
+    return self.archive_location
   end
   return config:parse_archive_location(self.filename)
 end
@@ -384,8 +384,12 @@ function File:_parse_directives()
   local directives = self:get_ts_matches([[(directive name: (expr) @name value: (value) @value)]])
   local tags = {}
   for _, directive in ipairs(directives) do
-    if directive.name.text:lower() == 'filetags' then
+    local directive_name = directive.name.text:lower()
+    if directive_name == 'filetags' then
       utils.concat(tags, utils.parse_tags_string(directive.value.text), true)
+    end
+    if directive_name == 'archive' then
+      self.archive_location = config:parse_archive_location(self.filename, directive.value.text)
     end
   end
   self.tags = tags
