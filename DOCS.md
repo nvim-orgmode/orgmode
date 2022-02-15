@@ -390,7 +390,7 @@ When possible, instead of `CTRL + C`, prefix `<Leader>o` is used.
 To disable all mappings, just pass `disable_all = true` to mappings settings:
 ```lua
 require('orgmode').setup({
-  org_agenda_file = {'~/Dropbox/org/*', '~/my-orgs/**/*'},
+  org_agenda_files = {'~/Dropbox/org/*', '~/my-orgs/**/*'},
   org_default_notes_file = '~/Dropbox/org/refile.org',
   mappings = {
     disable_all = true
@@ -416,7 +416,7 @@ These live under `mappings.global` and can be overridden like this:
 
 ```lua
 require('orgmode').setup({
-  org_agenda_file = {'~/Dropbox/org/*', '~/my-orgs/**/*'},
+  org_agenda_files = {'~/Dropbox/org/*', '~/my-orgs/**/*'},
   org_default_notes_file = '~/Dropbox/org/refile.org',
   mappings = {
     global = {
@@ -431,7 +431,7 @@ If you want to use multiple mappings for same thing, pass array of mappings:
 
 ```lua
 require('orgmode').setup({
-  org_agenda_file = {'~/Dropbox/org/*', '~/my-orgs/**/*'},
+  org_agenda_files = {'~/Dropbox/org/*', '~/my-orgs/**/*'},
   org_default_notes_file = '~/Dropbox/org/refile.org',
   mappings = {
     global = {
@@ -544,7 +544,7 @@ These mappings live under `mappings.agenda`, and can be changed like this:
 
 ```lua
 require('orgmode').setup({
-  org_agenda_file = {'~/Dropbox/org/*', '~/my-orgs/**/*'},
+  org_agenda_files = {'~/Dropbox/org/*', '~/my-orgs/**/*'},
   org_default_notes_file = '~/Dropbox/org/refile.org',
   mappings = {
     agenda = {
@@ -577,7 +577,7 @@ These mappings live under `mappings.capture`, and can be changed like this:
 
 ```lua
 require('orgmode').setup({
-  org_agenda_file = {'~/Dropbox/org/*', '~/my-orgs/**/*'},
+  org_agenda_files = {'~/Dropbox/org/*', '~/my-orgs/**/*'},
   org_default_notes_file = '~/Dropbox/org/refile.org',
   mappings = {
     capture = {
@@ -761,7 +761,7 @@ These mappings live under `mappings.org`, and can be changed like this:
 
 ```lua
 require('orgmode').setup({
-  org_agenda_file = {'~/Dropbox/org/*', '~/my-orgs/**/*'},
+  org_agenda_files = {'~/Dropbox/org/*', '~/my-orgs/**/*'},
   org_default_notes_file = '~/Dropbox/org/refile.org',
   mappings = {
     org = {
@@ -833,7 +833,7 @@ These mappings live under `mappings.text_objects`, and can be changed like this:
 
 ```lua
 require('orgmode').setup({
-  org_agenda_file = {'~/Dropbox/org/*', '~/my-orgs/**/*'},
+  org_agenda_files = {'~/Dropbox/org/*', '~/my-orgs/**/*'},
   org_default_notes_file = '~/Dropbox/org/refile.org',
   mappings = {
     text_objects = {
