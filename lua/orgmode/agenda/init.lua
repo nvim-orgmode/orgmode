@@ -121,10 +121,16 @@ function Agenda:_render(skip_rebuild)
     vim.cmd(string.format('%dsplit orgagenda', win_height))
     vim.cmd([[setf orgagenda]])
     vim.cmd([[setlocal buftype=nofile bufhidden=wipe nobuflisted nolist noswapfile nowrap nospell]])
+    vim.w.org_window_pos = vim.fn.win_screenpos(0)
     config:setup_mappings('agenda')
   else
-    vim.cmd(string.format('resize %d', win_height))
     vim.cmd(vim.fn.win_id2win(opened) .. 'wincmd w')
+    if vim.w.org_window_pos and vim.deep_equal(vim.fn.win_screenpos(0), vim.w.org_window_pos) then
+      vim.cmd(string.format('resize %d', win_height))
+      vim.w.org_window_pos = vim.fn.win_screenpos(0)
+    else
+      vim.w.org_window_pos = nil
+    end
   end
   local lines = vim.tbl_map(function(item)
     return item.line_content
