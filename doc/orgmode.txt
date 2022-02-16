@@ -593,7 +593,7 @@ When possible, instead of `CTRL + C`, prefix `<Leader>o` is used.
 To disable all mappings, just pass `disable_all = true` to mappings settings:
 >
     require('orgmode').setup({
-      org_agenda_file = {'~/Dropbox/org/*', '~/my-orgs/**/*'},
+      org_agenda_files = {'~/Dropbox/org/*', '~/my-orgs/**/*'},
       org_default_notes_file = '~/Dropbox/org/refile.org',
       mappings = {
         disable_all = true
@@ -620,7 +620,7 @@ Opens up capture prompt.
 These live under `mappings.global` and can be overridden like this:
 >
     require('orgmode').setup({
-      org_agenda_file = {'~/Dropbox/org/*', '~/my-orgs/**/*'},
+      org_agenda_files = {'~/Dropbox/org/*', '~/my-orgs/**/*'},
       org_default_notes_file = '~/Dropbox/org/refile.org',
       mappings = {
         global = {
@@ -634,7 +634,7 @@ These live under `mappings.global` and can be overridden like this:
 If you want to use multiple mappings for same thing, pass array of mappings:
 >
     require('orgmode').setup({
-      org_agenda_file = {'~/Dropbox/org/*', '~/my-orgs/**/*'},
+      org_agenda_files = {'~/Dropbox/org/*', '~/my-orgs/**/*'},
       org_default_notes_file = '~/Dropbox/org/refile.org',
       mappings = {
         global = {
@@ -798,7 +798,7 @@ Show help popup with mappings
 These mappings live under `mappings.agenda`, and can be changed like this:
 >
     require('orgmode').setup({
-      org_agenda_file = {'~/Dropbox/org/*', '~/my-orgs/**/*'},
+      org_agenda_files = {'~/Dropbox/org/*', '~/my-orgs/**/*'},
       org_default_notes_file = '~/Dropbox/org/refile.org',
       mappings = {
         agenda = {
@@ -837,7 +837,7 @@ Show help popup with mappings
 These mappings live under `mappings.capture`, and can be changed like this:
 >
     require('orgmode').setup({
-      org_agenda_file = {'~/Dropbox/org/*', '~/my-orgs/**/*'},
+      org_agenda_files = {'~/Dropbox/org/*', '~/my-orgs/**/*'},
       org_default_notes_file = '~/Dropbox/org/refile.org',
       mappings = {
         capture = {
@@ -1112,7 +1112,7 @@ Show help popup with mappings
 These mappings live under `mappings.org`, and can be changed like this:
 >
     require('orgmode').setup({
-      org_agenda_file = {'~/Dropbox/org/*', '~/my-orgs/**/*'},
+      org_agenda_files = {'~/Dropbox/org/*', '~/my-orgs/**/*'},
       org_default_notes_file = '~/Dropbox/org/refile.org',
       mappings = {
         org = {
@@ -1194,7 +1194,7 @@ select around everything from first level subtree to the current subtree.
 These mappings live under `mappings.text_objects`, and can be changed like this:
 >
     require('orgmode').setup({
-      org_agenda_file = {'~/Dropbox/org/*', '~/my-orgs/**/*'},
+      org_agenda_files = {'~/Dropbox/org/*', '~/my-orgs/**/*'},
       org_default_notes_file = '~/Dropbox/org/refile.org',
       mappings = {
         text_objects = {
