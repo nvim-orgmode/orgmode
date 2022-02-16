@@ -55,6 +55,10 @@ function Calendar.open()
   vim.api.nvim_buf_set_var(Calendar.buf, 'indent_blankline_enabled', false)
   vim.api.nvim_buf_set_option(Calendar.buf, 'bufhidden', 'wipe')
 
+  utils.buf_keymap(Calendar.buf, 'n', 'j', '<cmd>lua require("orgmode.objects.calendar").cursor_down()<cr>')
+  utils.buf_keymap(Calendar.buf, 'n', 'k', '<cmd>lua require("orgmode.objects.calendar").cursor_up()<cr>')
+  utils.buf_keymap(Calendar.buf, 'n', 'h', '<cmd>lua require("orgmode.objects.calendar").cursor_left()<cr>')
+  utils.buf_keymap(Calendar.buf, 'n', 'l', '<cmd>lua require("orgmode.objects.calendar").cursor_right()<cr>')
   utils.buf_keymap(Calendar.buf, 'n', '>', '<cmd>lua require("orgmode.objects.calendar").forward()<CR>')
   utils.buf_keymap(Calendar.buf, 'n', '<', '<cmd>lua require("orgmode.objects.calendar").backward()<CR>')
   utils.buf_keymap(Calendar.buf, 'n', '<CR>', '<cmd>lua require("orgmode.objects.calendar").select()<CR>')
@@ -132,6 +136,76 @@ function Calendar.backward()
   Calendar.render()
   vim.fn.cursor('$', 0)
   vim.fn.search([[\d\d]], 'b')
+end
+
+function Calendar.cursor_right()
+  for i = 1, vim.v.count1 do
+    local line, col = vim.fn.line('.'), vim.fn.col('.')
+    local curr_line = vim.fn.getline('.')
+    local offset = curr_line:sub(col + 1, #curr_line):find('%d%d')
+    if offset ~= nil then
+      vim.fn.cursor(line, col + offset)
+    end
+  end
+end
+
+function Calendar.cursor_left()
+  for i = 1, vim.v.count1 do
+    local line, col = vim.fn.line('.'), vim.fn.col('.')
+    local curr_line = vim.fn.getline('.')
+    local _, offset = curr_line:sub(1, col - 1):find('.*%d%d')
+    if offset ~= nil then
+      vim.fn.cursor(line, offset)
+    end
+  end
+end
+
+function Calendar.cursor_up()
+  for i = 1, vim.v.count1 do
+    local line, col = vim.fn.line('.'), vim.fn.col('.')
+    if line > 9 then
+      vim.fn.cursor(line - 1, col)
+      return
+    end
+
+    local prev_line = vim.fn.getline(line - 1)
+    local first_num = prev_line:find('%d%d')
+    if first_num == nil then
+      return
+    end
+
+    local move_to
+    if first_num > col then
+      move_to = first_num
+    else
+      move_to = col
+    end
+    vim.fn.cursor(line - 1, move_to)
+  end
+end
+
+function Calendar.cursor_down()
+  for i = 1, vim.v.count1 do
+    local line, col = vim.fn.line('.'), vim.fn.col('.')
+    if line <= 1 then
+      vim.fn.cursor(line + 1, col)
+      return
+    end
+
+    local next_line = vim.fn.getline(line + 1)
+    local _, last_num = next_line:find('.*%d%d')
+    if last_num == nil then
+      return
+    end
+
+    local move_to
+    if last_num < col then
+      move_to = last_num
+    else
+      move_to = col
+    end
+    vim.fn.cursor(line + 1, move_to)
+  end
 end
 
 function Calendar.reset()
