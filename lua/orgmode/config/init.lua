@@ -243,7 +243,10 @@ function Config:parse_archive_location(file, archive_loc)
   local parts = vim.split(archive_loc, '::')
   local archive_location = vim.trim(parts[1])
   if archive_location:find('%%s') then
-    return string.format(archive_location, file)
+    local file_path = vim.fn.fnamemodify(file, ':p:h')
+    local file_name = vim.fn.fnamemodify(file, ':t')
+    local archive_filename = string.format(archive_location, file_name)
+    return string.format('%s/%s', file_path, archive_filename)
   end
   return vim.fn.fnamemodify(archive_location, ':p')
 end
