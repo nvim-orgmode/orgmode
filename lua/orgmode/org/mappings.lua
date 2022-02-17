@@ -38,6 +38,10 @@ function OrgMappings:archive()
   file = Files.get_current_file()
   item = file:get_closest_headline()
   local archive_location = file:get_archive_file_location()
+  local archive_directory = vim.fn.fnamemodify(archive_location, ':p:h')
+  if vim.fn.isdirectory(archive_directory) == 0 then
+    vim.fn.mkdir(archive_directory, 'p')
+  end
   self.capture:refile_file_headline_to_archive(file, item, archive_location)
   Files.reload(
     archive_location,
