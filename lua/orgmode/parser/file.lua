@@ -16,6 +16,7 @@ local utils = require('orgmode.utils')
 ---@field sections_by_line table<number, Section>
 ---@field source_code_filetypes string[]
 ---@field is_archive_file boolean
+---@field archive_location string
 ---@field clocked_headline Section
 ---@field tags string[]
 local File = {}
@@ -43,7 +44,8 @@ end
 
 function File:_parse()
   self:_parse_source_code_filetypes()
-  self:_parse_sections_and_root_directives()
+  self:_parse_directives()
+  self:_parse_sections()
 end
 
 function File:get_errors()
@@ -321,9 +323,8 @@ end
 
 ---@return string
 function File:get_archive_file_location()
-  local matches = self:get_ts_matches('(document (directive (name) @name (value) @value (#eq? @name "ARCHIVE")))')
-  if #matches > 0 then
-    return config:parse_archive_location(self.filename, matches[1].value.text)
+  if self.archive_location then
+    return self.archive_location
   end
   return config:parse_archive_location(self.filename)
 end
@@ -335,11 +336,8 @@ function File:get_section(index)
 end
 
 ---@private
-function File:_parse_sections_and_root_directives()
+function File:_parse_sections()
   for child in self.tree:root():iter_children() do
-    if child:type() == 'directive' then
-      self:_parse_directive(child)
-    end
     if child:type() == 'section' then
       local section = Section.from_node(child, self)
       table.insert(self.sections, section)
@@ -366,11 +364,10 @@ end
 
 ---@private
 function File:_parse_source_code_filetypes()
-  local blocks = self:get_ts_matches('(block (name) @name (parameters) @parameters (#eq? @name "SRC"))')
+  local blocks = self:get_ts_matches('(block name: (expr) @name parameter: (expr) @parameters (#eq? @name "SRC"))')
   local source_code_filetypes = {}
   for _, item in ipairs(blocks) do
-    local params = vim.split(item.parameters.text, '%s+')
-    local ft = params[1]
+    local ft = item.parameters and item.parameters.text
     if
       ft
       and ft ~= ''
@@ -383,18 +380,19 @@ function File:_parse_source_code_filetypes()
   self.source_code_filetypes = source_code_filetypes
 end
 
-function File:_parse_directive(node)
-  local name = node:named_child(0)
-  local value = node:named_child(1)
-  if not name or not value then
-    return
+function File:_parse_directives()
+  local directives = self:get_ts_matches([[(directive name: (expr) @name value: (value) @value)]])
+  local tags = {}
+  for _, directive in ipairs(directives) do
+    local directive_name = directive.name.text:lower()
+    if directive_name == 'filetags' then
+      utils.concat(tags, utils.parse_tags_string(directive.value.text), true)
+    end
+    if directive_name == 'archive' then
+      self.archive_location = config:parse_archive_location(self.filename, directive.value.text)
+    end
   end
-
-  local name_text = self:get_node_text(name)
-  if name_text:upper() == 'FILETAGS' then
-    local value_text = self:get_node_text(value)
-    self.tags = utils.parse_tags_string(value_text)
-  end
+  self.tags = tags
 end
 
 return File

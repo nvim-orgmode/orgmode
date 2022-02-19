@@ -88,49 +88,41 @@ function Section.from_node(section_node, file, parent)
 
   for child in section_node:iter_children() do
     if child:type() == 'plan' then
-      local plan_children = ts_utils.get_named_children(child)
-      local len = #plan_children
-      local i = 1
-      while i <= len do
-        local plan_item = plan_children[i]
-        if not plan_item then
-          break
-        end
-        local next_item = plan_children[i + 1]
-
-        local type = 'NONE'
-        local node = plan_item
-        local item_type = plan_item:type():upper()
-
-        if item_type == 'NAME' and next_item and next_item:type():upper() == 'TIMESTAMP' then
-          local t = file:get_node_text(plan_item):upper()
-          if t == 'DEADLINE:' or t == 'SCHEDULED:' or t == 'CLOSED:' then
-            node = next_item
-            type = t:sub(1, t:len() - 1)
-            i = i + 1
+      for entry in child:iter_children() do
+        if entry:type() == 'entry' then
+          local first_node = entry:named_child(0)
+          local first_node_text = file:get_node_text(first_node)
+          if entry:named_child_count() == 1 and first_node:type() == 'timestamp' then
+            utils.concat(
+              data.dates,
+              Date.from_org_date(first_node_text, {
+                range = Range.from_node(first_node),
+              })
+            )
+          end
+          if entry:named_child_count() == 2 and first_node:type() == 'entry_name' then
+            local valid_plan_types = { 'SCHEDULED', 'DEADLINE', 'CLOSED' }
+            local type = 'NONE'
+            if vim.tbl_contains(valid_plan_types, first_node_text:upper()) then
+              type = first_node_text
+            end
+            local timestamp = file:get_node_text(entry:named_child(1))
+            utils.concat(
+              data.dates,
+              Date.from_org_date(timestamp, {
+                range = Range.from_node(entry:named_child(1)),
+                type = type,
+              })
+            )
           end
         end
-
-        local date = file:get_node_text(node)
-        utils.concat(
-          data.dates,
-          Date.from_org_date(date, {
-            type = type,
-            range = Range.from_node(node),
-          })
-        )
-        i = i + 1
       end
     end
     if child:type() == 'body' then
-      local dates = file:get_ts_matches('(timestamp) @timestamp', child)
-      for _, date in ipairs(dates) do
-        utils.concat(
-          data.dates,
-          Date.from_org_date(date.timestamp.text, {
-            range = Range.from_node(date.timestamp.node),
-          })
-        )
+      local start_line = child:range()
+      local lines = file:get_node_text_list(child)
+      for i, line in ipairs(lines) do
+        utils.concat(data.dates, Date.parse_all_from_line(line, start_line + i))
       end
       local drawers = file:get_ts_matches('(drawer) @drawer', child)
       for _, drawer_item in ipairs(drawers) do
@@ -166,13 +158,16 @@ function Section.from_node(section_node, file, parent)
           data.title = file:get_node_text(headline_node)
           data.todo_keyword_node = headline_node:child(0)
         end
-        if headline_node:type() == 'tag' then
-          local tag = file:get_node_text(headline_node)
-          if not vim.tbl_contains(data.tags, tag) then
-            table.insert(data.tags, tag)
-          end
-          if not vim.tbl_contains(data.own_tags, tag) then
-            table.insert(data.own_tags, tag)
+        if headline_node:type() == 'tag_list' then
+          local tags = ts_utils.get_named_children(headline_node)
+          for _, tag_node in ipairs(tags) do
+            local tag = file:get_node_text(tag_node)
+            if not vim.tbl_contains(data.tags, tag) then
+              table.insert(data.tags, tag)
+            end
+            if not vim.tbl_contains(data.own_tags, tag) then
+              table.insert(data.own_tags, tag)
+            end
           end
         end
       end

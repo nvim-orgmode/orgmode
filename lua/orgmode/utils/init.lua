@@ -470,12 +470,10 @@ function utils.get_named_children_nodes(file, parent_node, children_names)
 end
 
 ---@param file File
----@param block_type string
----@param child_names string[]
 ---@param cursor string[]
 ---@param accept_at_cursor boolean
 ---@return nil|table
-function utils.get_nearest_block_node(file, child_names, cursor, accept_at_cursor)
+function utils.get_nearest_block_node(file, cursor, accept_at_cursor)
   local current_node = file:get_node_at_cursor(cursor)
   local block_node = utils.get_closest_parent_of_type(current_node, 'block', accept_at_cursor)
   if not block_node then
@@ -483,8 +481,11 @@ function utils.get_nearest_block_node(file, child_names, cursor, accept_at_curso
   end
 
   -- Block might not have contents yet, which is fine
-  local children_nodes = utils.get_named_children_nodes(file, block_node, child_names)
-  if not next(children_nodes) or not children_nodes.name or not children_nodes.parameters then
+  local children_nodes = file:get_ts_matches(
+    '(block name: (expr) @name parameter: (expr) @parameters contents: (contents)? @contents)',
+    block_node
+  )[1]
+  if not children_nodes or not children_nodes.name or not children_nodes.parameters then
     return
   end
 
@@ -492,26 +493,6 @@ function utils.get_nearest_block_node(file, child_names, cursor, accept_at_curso
     node = block_node,
     children = children_nodes,
   }
-end
-
----@param file File
----@param block_type string
----@param child_names string[]
----@param cursor string[]
----@param accept_at_cursor boolean
----@return nil|table
-function utils.get_nearest_block_node_with_name(file, block_type, child_names, cursor, accept_at_cursor)
-  local block_info = utils.get_nearest_block_node(file, child_names, cursor, accept_at_cursor)
-
-  if not block_info then
-    return
-  end
-
-  if block_info.children.name.text ~= block_type then
-    return
-  end
-
-  return block_info
 end
 
 return utils

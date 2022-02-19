@@ -86,6 +86,8 @@ Available options:
 * underline - `:underline on`
 * italic - `:slant italic`
 
+---
+
 Full configuration example with additional todo keywords and their colors:
 ```lua
 require('orgmode').setup({
@@ -1183,6 +1185,7 @@ set statusline=%{v:lua.orgmode.statusline()}
 ```
 
 ## Changelog
+To track breaking changes, subscribe to [Notice of breaking changes](https://github.com/nvim-orgmode/orgmode/issues/217) issue where those are announced.
 
 #### 24 October 2021
 * Help mapping was changed from `?` to `g?` to avoid conflict with built in backward search. See issue [#106](https://github.com/nvim-orgmode/orgmode/issues/106).
