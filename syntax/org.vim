@@ -49,7 +49,11 @@ hi def link org_verbatim String
 
 let s:ts_highlight = luaeval('require("orgmode.config"):ts_highlights_enabled()')
 if !s:ts_highlight
-    runtime syntax/org_legacy.vim
+  runtime syntax/org_legacy.vim
+else
+  syntax match org_block_delimiter /^\s*#+BEGIN_.*/
+  syntax match org_block_delimiter /^\s*#+END_.*/
+  hi default link org_block_delimiter Comment
 endif
 
 " Hyperlinks: {{{1
