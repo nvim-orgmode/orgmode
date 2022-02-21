@@ -1,6 +1,5 @@
-_G.orgmode = _G.orgmode or {
-  ts_revision = '1c3eb533a9cf6800067357b59e03ac3f91fc3a54',
-}
+_G.orgmode = _G.orgmode or {}
+local ts_revision = '1c3eb533a9cf6800067357b59e03ac3f91fc3a54'
 local setup_ts_grammar_used = false
 local instance = nil
 
@@ -68,7 +67,7 @@ local function setup_ts_grammar(revision)
   parser_config.org = {
     install_info = {
       url = 'https://github.com/milisims/tree-sitter-org',
-      revision = revision or _G.orgmode.ts_revision,
+      revision = revision or ts_revision,
       files = { 'src/parser.c', 'src/scanner.cc' },
     },
     filetype = 'org',
@@ -81,7 +80,7 @@ local function check_ts_grammar()
   end
   vim.defer_fn(function()
     local parser_config = require('nvim-treesitter.parsers').get_parser_configs()
-    if parser_config and parser_config.org and parser_config.org.install_info.revision ~= _G.orgmode.ts_revision then
+    if parser_config and parser_config.org and parser_config.org.install_info.revision ~= ts_revision then
       require('orgmode.utils').echo_error({
         'You are using outdated version of tree-sitter grammar for Orgmode.',
         'To use latest version, replace current grammar installation with "require(\'orgmode\').setup_ts_grammar()" and run :TSUpdate org.',
