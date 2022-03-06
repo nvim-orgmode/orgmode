@@ -768,7 +768,7 @@ function OrgMappings:_change_todo_state(direction, use_fast_access)
 
   local linenr = item.range.start_line
   local stars = string.rep('%*', item.level)
-  local old_state = todo.value
+  local old_state = vim.pesc(todo.value)
   if old_state ~= '' then
     old_state = old_state .. '%s+'
   end
