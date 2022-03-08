@@ -49,6 +49,15 @@ function Capture:open_template(template)
   vim.cmd([[autocmd OrgCapture BufWipeout <buffer> ++once lua require('orgmode').action('capture.refile', true)]])
 end
 
+---@param shortcut string
+function Capture:open_template_by_shortcut(shortcut)
+  local template = self.templates[shortcut]
+  if not template then
+    return utils.echo_error('No capture template with shortcut ' .. shortcut)
+  end
+  return self:open_template(template)
+end
+
 ---Triggered when refiling from capture buffer
 ---@param confirm? boolean
 function Capture:refile(confirm)
