@@ -51,7 +51,7 @@ end
 
 ---@param shortcut string
 function Capture:open_template_by_shortcut(shortcut)
-  local template = self.templates[shortcut]
+  local template = self.templates:get_list()[shortcut]
   if not template then
     return utils.echo_error('No capture template with shortcut ' .. shortcut)
   end
