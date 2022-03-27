@@ -11,11 +11,6 @@ local function sort_by_date_or_priority_or_category(a, b)
   if not a.headline_date:is_same(b.headline_date) then
     return a.headline_date:is_before(b.headline_date)
   end
-  print(a.headline)
-  print(a.headline:get_priority_sort_value())
-  print(b.headline)
-  print(b.headline:get_priority_sort_value())
-  print("\n")
   if a.headline:get_priority_sort_value() ~= b.headline:get_priority_sort_value() then
     return a.headline:get_priority_sort_value() > b.headline:get_priority_sort_value()
   end
