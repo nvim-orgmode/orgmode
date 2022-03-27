@@ -7,9 +7,12 @@ local AgendaItem = require('orgmode.agenda.agenda_item')
 local AgendaFilter = require('orgmode.agenda.filter')
 local utils = require('orgmode.utils')
 
-local function sort_by_date_or_category(a, b)
+local function sort_by_date_or_priority_or_category(a, b)
   if not a.headline_date:is_same(b.headline_date) then
     return a.headline_date:is_before(b.headline_date)
+  end
+  if a.headline:get_priority_sort_value() ~= b.headline:get_priority_sort_value() then
+    return a.headline:get_priority_sort_value() > b.headline:get_priority_sort_value()
   end
   return a.index < b.index
 end
@@ -28,7 +31,7 @@ local function sort_agenda_items(agenda_items)
       if not b.headline_date.date_only then
         return false
       end
-      return sort_by_date_or_category(a, b)
+      return sort_by_date_or_priority_or_category(a, b)
     end
 
     if a.is_same_day and not b.is_same_day then
@@ -43,11 +46,7 @@ local function sort_agenda_items(agenda_items)
       end
     end
 
-    if a.headline:get_priority_sort_value() ~= b.headline:get_priority_sort_value() then
-      return a.headline:get_priority_sort_value() > b.headline:get_priority_sort_value()
-    end
-
-    return sort_by_date_or_category(a, b)
+    return sort_by_date_or_priority_or_category(a, b)
   end)
   return agenda_items
 end
