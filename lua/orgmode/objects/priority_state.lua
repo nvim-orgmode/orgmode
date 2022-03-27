@@ -49,9 +49,11 @@ end
 
 ---@return string
 function PriorityState:increase()
-  if self.priority == self.high_priority then
+  if self.priority == '' then
+    self.priority = self.high_priority
+  elseif self.priority == self.low_priority then
     self.priority = ''
-  elseif self.priority == '' then
+  elseif self.priority == self.high_priority then
     self.priority = self.low_priority
   else
     self.priority = self:_apply(-1)
@@ -62,9 +64,11 @@ end
 
 ---@return string
 function PriorityState:decrease()
-  if self.priority == self.low_priority then
+  if self.priority == self.high_priority then
     self.priority = ''
   elseif self.priority == '' then
+    self.priority = self.low_priority
+  elseif self.priority == self.low_priority then
     self.priority = self.high_priority
   else
     self.priority = self:_apply(1)
