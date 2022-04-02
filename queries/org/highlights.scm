@@ -9,10 +9,9 @@
 (headline (stars) @stars (#eq? @stars "*******")) @OrgTSHeadlineLevel7
 (headline (stars) @stars (#eq? @stars "********")) @OrgTSHeadlineLevel8
  (bullet) @OrgTSBullet
- (checkbox) @OrgTSCheckbox
- ((checkbox) @check (#eq? @check "\[-\]")) @OrgTSCheckboxHalfChecked
- ((checkbox) @check (#eq? @check "\[ \]")) @OrgTSCheckboxUnchecked
- ((checkbox) @check (#match? @check "\[[xX]\]")) @OrgTSCheckboxChecked
+(listitem . (bullet) . (paragraph . (expr "[" "str" @OrgCheckDone "]") @OrgTSCheckboxChecked (#match? @OrgTSCheckboxChecked "\[[xX]\]")))
+(listitem . (bullet) . (paragraph . (expr "[" "-" @OrgCheckInProgress "]") @OrgTSCheckboxHalfChecked (#eq? @OrgTSCheckboxHalfChecked "[-]")))
+(listitem . (bullet) . (paragraph . ((expr "[") @OrgTSCheckbox.left (#eq? @OrgTSCheckbox.left "[") . (expr "]") @OrgTSCheckbox.right (#eq? @OrgTSCheckbox.right "]"))))
  (property_drawer) @OrgTSPropertyDrawer
  (drawer) @OrgTSDrawer
  (tag) @OrgTSTag
