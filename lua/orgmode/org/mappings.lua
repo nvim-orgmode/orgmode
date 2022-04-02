@@ -454,16 +454,26 @@ function OrgMappings:handle_return(suffix)
     item = Files.get_current_file():get_current_node()
   end
 
-  if item.type == 'itemtext' or item.type == 'bullet' or item.type == 'checkbox' or item.type == 'description' then
+  if item.type == 'paragraph' or item.type == 'bullet' then
     local list_item = item.node:parent()
     if list_item:type() ~= 'listitem' then
       return
     end
     local line = vim.fn.getline(list_item:start() + 1)
     local end_row, _ = list_item:end_()
+    local next_line_node = current_file:get_node_at_cursor({ end_row + 1, 0 })
+    local second_line_node = current_file:get_node_at_cursor({ end_row + 2, 0 })
+    local is_end_of_file = next_line_node
+      and vim.tbl_contains({ 'paragraph', 'list' }, next_line_node:type())
+      and second_line_node
+      and second_line_node:type() == 'document'
+    -- Range for list items at the very end of the file are not calculated properly
+    if (end_row + 1) == vim.fn.line('$') and is_end_of_file then
+      end_row = end_row + 1
+    end
     local range = {
-      start = { line = end_row + 1, character = 0 },
-      ['end'] = { line = end_row + 1, character = 0 },
+      start = { line = end_row, character = 0 },
+      ['end'] = { line = end_row, character = 0 },
     }
 
     local checkbox = line:match('^(%s*[%+%-])%s*%[[%sXx%-]?%]')
@@ -512,7 +522,7 @@ function OrgMappings:handle_return(suffix)
     if #text_edits > 0 then
       vim.lsp.util.apply_text_edits(text_edits, 0, constants.default_offset_encoding)
 
-      vim.fn.cursor(end_row + 2 + (add_empty_line and 1 or 0), 0) -- +1 for 0 index and +1 for next line
+      vim.fn.cursor(end_row + 1 + (add_empty_line and 1 or 0), 0) -- +1 for next line
       vim.cmd([[startinsert!]])
     end
   end

@@ -1,5 +1,5 @@
 _G.orgmode = _G.orgmode or {}
-local ts_revision = '1c3eb533a9cf6800067357b59e03ac3f91fc3a54'
+local ts_revision = '9a595e51c1f69b9ac986f0e0b788804eda0e755d'
 local setup_ts_grammar_used = false
 local instance = nil
 
@@ -75,10 +75,10 @@ local function setup_ts_grammar(revision)
 end
 
 local function check_ts_grammar()
-  if setup_ts_grammar_used then
-    return
-  end
   vim.defer_fn(function()
+    if setup_ts_grammar_used then
+      return
+    end
     local parser_config = require('nvim-treesitter.parsers').get_parser_configs()
     if parser_config and parser_config.org and parser_config.org.install_info.revision ~= ts_revision then
       require('orgmode.utils').echo_error({
