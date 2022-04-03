@@ -431,7 +431,7 @@ function Agenda:_get_jumpable_item()
 end
 
 function Agenda:quit()
-  vim.cmd([[bw!]])
+  vim.api.nvim_win_close(0, true)
 end
 
 function Agenda:_call_view(method, ...)
