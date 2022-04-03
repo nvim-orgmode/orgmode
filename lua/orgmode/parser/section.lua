@@ -455,10 +455,16 @@ end
 
 ---@param amount number
 ---@param demote_child_sections boolean
-function Section:demote(amount, demote_child_sections)
+---@param dryRun boolean
+function Section:demote(amount, demote_child_sections, dryRun)
   amount = amount or 1
   demote_child_sections = demote_child_sections or false
-  vim.api.nvim_call_function('setline', { self.range.start_line, string.rep('*', amount) .. self.line })
+  local lines = {}
+  local headline_line = string.rep('*', amount) .. self.line
+  table.insert(lines, headline_line)
+  if not dryRun then
+    vim.api.nvim_call_function('setline', { self.range.start_line, headline_line })
+  end
   if config.org_indent_mode == 'indent' then
     local contents = self.root:get_node_text_list(self.node)
     for i, content in ipairs(contents) do
@@ -466,15 +472,19 @@ function Section:demote(amount, demote_child_sections)
         if content:match('^%*+') then
           break
         end
-        vim.api.nvim_call_function('setline', { self.range.start_line + i - 1, string.rep(' ', amount) .. content })
+        local content_line = string.rep(' ', amount) .. content
+        if not dryRun then
+          vim.api.nvim_call_function('setline', { self.range.start_line + i - 1, content_line })
+        end
       end
     end
   end
   if demote_child_sections then
     for _, section in ipairs(self.sections) do
-      section:demote(amount, true)
+      utils.concat(lines, section:demote(amount, true, dryRun))
     end
   end
+  return lines
 end
 
 ---@param amount number

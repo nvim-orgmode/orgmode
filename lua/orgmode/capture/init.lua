@@ -77,12 +77,12 @@ function Capture:refile(confirm)
     -- TODO: Parse refile content as org file and update refile destination to point to headline or root
     if headline_title then
       self:refile_to_headline(file, lines, nil, headline_title)
-      return
+    else
+      self:_refile_to_end(file, lines)
     end
-    self:_refile_to_end(file, lines)
+    vim.cmd([[autocmd! OrgCapture BufWipeout <buffer>]])
+    vim.cmd([[silent! wq]])
   end, 0)
-  vim.cmd([[autocmd! OrgCapture BufWipeout <buffer>]])
-  vim.cmd([[silent! wq]])
 end
 
 ---Triggered when refiling to destination from capture buffer
@@ -165,7 +165,10 @@ function Capture:refile_to_headline(destination_file, lines, item, headline_titl
   end
 
   if item and item.level <= headline.level then
-    item:demote(headline.level - item.level + 1, true)
+    -- Refiling in same file just moves the lines from one position
+    -- to another,so we need to apply demote instantly
+    local is_same_file = agenda_file.filename == item.root.filename
+    lines = item:demote(headline.level - item.level + 1, true, not is_same_file)
   end
   local refiled = self:_refile_to(destination_file, lines, item, headline.range.end_line)
   if not refiled then
