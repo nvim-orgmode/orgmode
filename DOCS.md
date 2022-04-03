@@ -287,7 +287,7 @@ Example:<br />
   If `org_agenda_start_on_weekday` is `false`, and `org_agenda_start_day` is `-2d`,<br />
   agenda will always show current week from today - 2 days
 
-#### **org_agenda_templates**
+#### **org_capture_templates**
 *type*: `table<string, table>`<br />
 default value: `{ t = { description = 'Task', template = '* TODO %?\n  %u' } }`<br />
 Templates for capture/refile prompt.<br />
