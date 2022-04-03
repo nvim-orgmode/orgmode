@@ -260,7 +260,7 @@ end
 
 function Capture:kill()
   vim.cmd([[autocmd! OrgCapture BufWipeout <buffer>]])
-  vim.cmd([[bw!]])
+  vim.api.nvim_win_close(0, true)
 end
 
 return Capture

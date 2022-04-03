@@ -284,8 +284,8 @@ function Help.show(o)
   vim.api.nvim_buf_set_option(Help.buf, 'modifiable', false)
   vim.api.nvim_buf_set_var(Help.buf, 'indent_blankline_enabled', false)
 
-  utils.buf_keymap(Help.buf, 'n', 'q', ':bw!<CR>')
-  utils.buf_keymap(Help.buf, 'n', '<Esc>', ':bw!<CR>')
+  utils.buf_keymap(Help.buf, 'n', 'q', ':call nvim_win_close(win_getid(), v:true)<CR>')
+  utils.buf_keymap(Help.buf, 'n', '<Esc>', ':call nvim_win_close(win_getid(), v:true)<CR>')
 
   vim.cmd([[autocmd BufWipeout <buffer> lua require('orgmode.objects.help').dispose()]])
 end

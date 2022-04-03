@@ -63,8 +63,8 @@ function Calendar.open()
   utils.buf_keymap(Calendar.buf, 'n', '<', '<cmd>lua require("orgmode.objects.calendar").backward()<CR>')
   utils.buf_keymap(Calendar.buf, 'n', '<CR>', '<cmd>lua require("orgmode.objects.calendar").select()<CR>')
   utils.buf_keymap(Calendar.buf, 'n', '.', '<cmd>lua require("orgmode.objects.calendar").reset()<CR>')
-  utils.buf_keymap(Calendar.buf, 'n', 'q', ':bw!<CR>')
-  utils.buf_keymap(Calendar.buf, 'n', '<Esc>', ':bw!<CR>')
+  utils.buf_keymap(Calendar.buf, 'n', 'q', ':call nvim_win_close(win_getid(), v:true)<CR>')
+  utils.buf_keymap(Calendar.buf, 'n', '<Esc>', ':call nvim_win_close(win_getid(), v:true)<CR>')
   local search_day = Date.today():format('%d')
   if Calendar.date then
     search_day = Calendar.date:format('%d')
@@ -230,7 +230,7 @@ function Calendar.select()
   local cb = Calendar.callback
   Calendar.callback = nil
   vim.cmd([[echon]])
-  vim.cmd([[bw!]])
+  vim.api.nvim_win_close(0, true)
   return cb(selected_date)
 end
 
