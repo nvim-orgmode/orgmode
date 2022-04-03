@@ -4,9 +4,9 @@ local Hyperlinks = {}
 
 local function get_file_from_context(ctx)
   return (
-      ctx.hyperlinks and ctx.hyperlinks.filepath and Files.get(ctx.hyperlinks.filepath, true)
-      or Files.get_current_file()
-    )
+    ctx.hyperlinks and ctx.hyperlinks.filepath and Files.get(ctx.hyperlinks.filepath, true)
+    or Files.get_current_file()
+  )
 end
 
 local function update_hyperlink_ctx(ctx)
