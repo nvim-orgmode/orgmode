@@ -39,7 +39,7 @@ local Templates = {}
 -- TODO Introduce type
 function Templates:new()
   local opts = {}
-  opts.templates = config.org_agenda_templates
+  opts.templates = config.org_agenda_templates or config.org_capture_templates
   setmetatable(opts, self)
   self.__index = self
   return opts

@@ -32,7 +32,7 @@ CONTENTS                                                        *orgmode-content
             1.2.2.2. org_agenda_span.....................|orgmode-org_agenda_span|
             1.2.2.3. org_agenda_start_on_weekday.|orgmode-org_agenda_start_on_weekday|
             1.2.2.4. org_agenda_start_day...........|orgmode-org_agenda_start_day|
-            1.2.2.5. org_agenda_templates...........|orgmode-org_agenda_templates|
+            1.2.2.5. org_capture_templates.........|orgmode-org_capture_templates|
             1.2.2.6. org_agenda_min_height.........|orgmode-org_agenda_min_height|
             1.2.2.7. org_priority_highest...........|orgmode-org_priority_highest|
             1.2.2.8. org_priority_default...........|orgmode-org_priority_default|
@@ -478,7 +478,7 @@ Example:
   If `org_agenda_start_on_weekday` is `false`, and `org_agenda_start_day` is `-2d`,
   agenda will always show current week from today - 2 days
 
-ORG_AGENDA_TEMPLATES                                *orgmode-org_agenda_templates*
+ORG_CAPTURE_TEMPLATES                              *orgmode-org_capture_templates*
 
 type: `table<string, table>`
 default value: `{ t = { description = 'Task', template = '* TODO %?\n  %u' } }`
