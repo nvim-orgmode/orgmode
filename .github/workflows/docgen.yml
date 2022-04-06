@@ -14,7 +14,7 @@ jobs:
         with:
           go-version: '^1.17.1'
       - name: Install md2vim
-        run: go get github.com/FooSoft/md2vim
+        run: go install github.com/FooSoft/md2vim@latest
       - name: Generate vim docs
         run: make docs
       - name: Commit changes
