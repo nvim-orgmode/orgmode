@@ -18,21 +18,49 @@ function Capture:new()
   return data
 end
 
-function Capture:prompt()
-  local templates = {}
-  for key, template in pairs(self.templates:get_list()) do
-    table.insert(templates, {
-      label = template.description,
-      key = key,
-      action = function()
-        return self:open_template(template)
-      end,
-    })
+function Capture:_get_subtemplates(base_key, templates)
+  local subtemplates = {}
+  for key, template in pairs(templates) do
+    if string.len(key) > 1 and string.sub(key, 1, 1) == base_key then
+      subtemplates[string.sub(key, 2, string.len(key))] = template
+    end
   end
-  table.insert(templates, { label = '', key = '', separator = '-' })
-  table.insert(templates, { label = 'Quit', key = 'q' })
+  return subtemplates
+end
 
-  return utils.menu('Select a capture template', templates, 'Template key')
+function Capture:_create_menu_items(templates)
+  local menu_items = {}
+  for key, template in pairs(templates) do
+    if string.len(key) == 1 then
+      local item = {
+        label = template.description,
+        key = key,
+      }
+      if type(template) == 'string' then
+        item['action'] = function()
+          self:_create_prompt(self:_get_subtemplates(key, templates))
+        end
+      else
+        item['action'] = function()
+          return self:open_template(template)
+        end
+      end
+      table.insert(menu_items, item)
+    end
+  end
+  return menu_items
+end
+
+function Capture:_create_prompt(templates)
+  local menu_items = self:_create_menu_items(templates)
+  table.insert(menu_items, { label = '', key = '', separator = '-' })
+  table.insert(menu_items, { label = 'Quit', key = 'q' })
+
+  return utils.menu('Select a capture template', menu_items, 'Template key')
+end
+
+function Capture:prompt()
+  self:_create_prompt(self.templates:get_list())
 end
 
 ---@param template table
@@ -243,7 +271,9 @@ function Capture.autocomplete_refile(arg_lead)
   if not selected_file then
     return vim.tbl_filter(function(file)
       return file:match('^' .. vim.pesc(parts[1]))
-    end, vim.tbl_keys(valid_filenames))
+    end, vim.tbl_keys(
+      valid_filenames
+    ))
   end
 
   local agenda_file = Files.get(selected_file)
