@@ -271,9 +271,7 @@ function Capture.autocomplete_refile(arg_lead)
   if not selected_file then
     return vim.tbl_filter(function(file)
       return file:match('^' .. vim.pesc(parts[1]))
-    end, vim.tbl_keys(
-      valid_filenames
-    ))
+    end, vim.tbl_keys(valid_filenames))
   end
 
   local agenda_file = Files.get(selected_file)
