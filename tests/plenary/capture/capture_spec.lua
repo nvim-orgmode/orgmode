@@ -75,4 +75,12 @@ describe('Menu Items', function()
       },
     }, sub_template_items)
   end)
+
+  it('adds an ellipses', function()
+    local template = {
+      k = "Multikey template"
+    }
+    menu_item = Capture:_create_menu_items(template)
+    assert.are.same("Multikey template...", menu_item[1].label)
+  end)
 end)

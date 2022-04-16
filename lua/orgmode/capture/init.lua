@@ -33,14 +33,15 @@ function Capture:_create_menu_items(templates)
   for key, template in pairs(templates) do
     if string.len(key) == 1 then
       local item = {
-        label = template.description,
         key = key,
       }
       if type(template) == 'string' then
+        item['label'] = template .. '...'
         item['action'] = function()
           self:_create_prompt(self:_get_subtemplates(key, templates))
         end
       else
+        item['label'] = template.description
         item['action'] = function()
           return self:open_template(template)
         end
