@@ -220,6 +220,7 @@ function Agenda:switch_to_item()
   end
   vim.cmd('edit ' .. vim.fn.fnameescape(item.file))
   vim.fn.cursor(item.file_position, 0)
+  vim.cmd([[normal! zv]])
 end
 
 function Agenda:change_todo_state()
@@ -349,6 +350,7 @@ function Agenda:goto_item()
 
   vim.cmd('edit ' .. vim.fn.fnameescape(item.file))
   vim.fn.cursor(item.file_position, 0)
+  vim.cmd([[normal! zv]])
 end
 
 function Agenda:filter()
