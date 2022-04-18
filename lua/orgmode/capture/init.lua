@@ -56,6 +56,7 @@ function Capture:_create_prompt(templates)
   local menu_items = self:_create_menu_items(templates)
   table.insert(menu_items, { label = '', key = '', separator = '-' })
   table.insert(menu_items, { label = 'Quit', key = 'q' })
+  table.insert(menu_items, { label = '', separator = ' ', length = 1 })
 
   return utils.menu('Select a capture template', menu_items, 'Template key')
 end

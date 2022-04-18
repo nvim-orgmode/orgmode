@@ -11,7 +11,6 @@ function Export.prompt()
       key = key,
       action = function()
         local opts = {
-          { label = '', separator = '-', length = 34 },
           {
             label = string.format('emacs (%s)', org_cmd),
             key = 'e',
@@ -38,7 +37,6 @@ function Export.prompt()
   end
 
   local opts = {
-    { label = '', separator = '-', length = 34 },
     submenu('h', 'Export to HTML file (emacs/pandoc)', 'org-html-export-to-html', 'html'),
     submenu('l', 'Export to LaTex file (emacs/pandoc)', 'org-latex-export-to-latex', 'tex', {
       {
