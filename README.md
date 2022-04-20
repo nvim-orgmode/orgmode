@@ -8,7 +8,7 @@
 
   <a href="/LICENSE">![License](https://img.shields.io/badge/license-MIT-brightgreen?style=flat-square)</a><a href="https://ko-fi.com/kristijanhusak"> ![Kofi](https://img.shields.io/badge/support-kofi-00b9fe?style=flat-square&logo=kofi)</a>
 
-  Orgmode clone written in Lua for Neovim 0.5.
+  Orgmode clone written in Lua for Neovim 0.7.
 
   [Installation](#installation) | [Setup](#setup) | [Troubleshoot](#troubleshoot) |  [Gifs](#gifs) | [Docs](/DOCS.md) | [Tree-sitter info](#tree-sitter-info) | [Plugins](#plugins) | [Development](#development) | [Kudos](#thanks-to)
 
