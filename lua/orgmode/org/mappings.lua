@@ -599,13 +599,17 @@ function OrgMappings:open_at_point()
       parts = vim.split(url, ' +', true)
       url = parts[1]
       local line_number = parts[2]
-      return vim.cmd(string.format('edit +%s %s', line_number, url:sub(6)))
+      vim.cmd(string.format('edit +%s %s', line_number, url:sub(6)))
+      vim.cmd([[normal! zv]])
+      return
     end
 
     if url:find('^file:(.-)::') then
       link_ctx.line = url
     else
-      return vim.cmd(string.format('edit %s', url:sub(6)))
+      vim.cmd(string.format('edit %s', url:sub(6)))
+      vim.cmd([[normal! zv]])
+      return
     end
   end
   if url:find('^https?://') then
