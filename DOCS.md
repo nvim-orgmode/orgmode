@@ -312,6 +312,11 @@ Example:<br />
 Journal example:<br />
   `{ j = { description = 'Journal', template = '\n*** %<%Y-%m-%d> %<%A>\n**** %U\n\n%?', target = '~/sync/org/journal.org' } }`
 
+Nested key example:<br />
+  `{ e =  'Event' }`
+  `{ er = { description = 'recurring', template = '** %?\n %T', target = '~/org/calendar.org', headline = 'recurring' } }`
+  `{ eo = { description = 'one-time', template = '** %?\n %T', target = '~/org/calendar.org', headline = 'one-time' } }`
+
 #### **org_agenda_min_height**
 *type*: `number`<br />
 *default value*: `16`<br />
