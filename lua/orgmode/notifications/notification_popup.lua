@@ -37,7 +37,13 @@ function NotificationPopup:show()
   vim.defer_fn(function()
     pcall(vim.api.nvim_win_close, self.win, true)
   end, self.hide_after)
-  vim.cmd(string.format('autocmd BufEnter <buffer=%d> ++once :bw!', self.buf))
+  local notifications_augroup = vim.api.nvim_create_augroup('org_notification', { clear = true })
+  vim.api.nvim_create_autocmd('BufEnter', {
+    buffer = self.buf,
+    group = notifications_augroup,
+    command = 'bw!',
+    once = true,
+  })
 end
 
 return NotificationPopup

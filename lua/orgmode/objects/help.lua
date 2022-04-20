@@ -287,7 +287,14 @@ function Help.show(o)
   utils.buf_keymap(Help.buf, 'n', 'q', ':call nvim_win_close(win_getid(), v:true)<CR>')
   utils.buf_keymap(Help.buf, 'n', '<Esc>', ':call nvim_win_close(win_getid(), v:true)<CR>')
 
-  vim.cmd([[autocmd BufWipeout <buffer> lua require('orgmode.objects.help').dispose()]])
+  local org_help_augroup = vim.api.nvim_create_augroup('org_help', { clear = true })
+  vim.api.nvim_create_autocmd('BufWipeout', {
+    buffer = Help.buf,
+    group = org_help_augroup,
+    callback = function()
+      require('orgmode.objects.help').dispose()
+    end,
+  })
 end
 
 function Help.dispose()

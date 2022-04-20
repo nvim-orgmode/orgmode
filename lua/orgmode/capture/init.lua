@@ -2,9 +2,8 @@ local utils = require('orgmode.utils')
 local config = require('orgmode.config')
 local Files = require('orgmode.parser.files')
 local Templates = require('orgmode.capture.templates')
-vim.cmd([[augroup OrgCapture]])
-vim.cmd([[autocmd!]])
-vim.cmd([[augroup END]])
+
+local capture_augroup = vim.api.nvim_create_augroup('OrgCapture', { clear = true })
 
 ---@class Capture
 ---@field templates Templates
@@ -76,7 +75,15 @@ function Capture:open_template(template)
   vim.api.nvim_buf_set_var(0, 'org_template', template)
   vim.api.nvim_buf_set_var(0, 'org_capture', true)
   config:setup_mappings('capture')
-  vim.cmd([[autocmd OrgCapture BufWipeout <buffer> ++once lua require('orgmode').action('capture.refile', true)]])
+
+  vim.api.nvim_create_autocmd('BufWipeout', {
+    buffer = 0,
+    group = capture_augroup,
+    callback = function()
+      require('orgmode').action('capture.refile', true)
+    end,
+    once = true,
+  })
 end
 
 ---@param shortcut string
@@ -110,8 +117,12 @@ function Capture:refile(confirm)
     else
       self:_refile_to_end(file, lines)
     end
-    vim.cmd([[autocmd! OrgCapture BufWipeout <buffer>]])
-    vim.cmd([[silent! wq]])
+
+    vim.api.nvim_create_autocmd('BufWipeout', {
+      buffer = 0,
+      group = capture_augroup,
+      command = 'silent! wq',
+    })
   end, 0)
 end
 
@@ -122,8 +133,12 @@ function Capture:refile_to_destination()
   local default_file = vim.fn.fnamemodify(template.target or config.org_default_notes_file, ':p')
   -- TODO: Parse refile content as org file and update refile destination to point to headline or root
   self:_refile_content_with_fallback(lines, default_file)
-  vim.cmd([[autocmd! OrgCapture BufWipeout <buffer>]])
-  vim.cmd([[silent! wq]])
+
+  vim.api.nvim_create_autocmd('BufWipeout', {
+    buffer = 0,
+    group = capture_augroup,
+    command = 'silent! wq',
+  })
 end
 
 ---Triggered from org file when we want to refile headline
@@ -292,8 +307,13 @@ function Capture.autocomplete_refile(arg_lead)
 end
 
 function Capture:kill()
-  vim.cmd([[autocmd! OrgCapture BufWipeout <buffer>]])
-  vim.api.nvim_win_close(0, true)
+  vim.api.nvim_create_autocmd('BufWipeout', {
+    buffer = 0,
+    group = capture_augroup,
+    callback = function()
+      return vim.api.nvim_win_close(0, true)
+    end,
+  })
 end
 
 return Capture
