@@ -144,7 +144,7 @@ function utils.concat(first, second, unique)
 end
 
 function utils.menu(title, items, prompt)
-  local content = { title .. ':' }
+  local content = { title .. '\\n' .. string.rep('-', #title) }
   local valid_keys = {}
   for _, item in ipairs(items) do
     if item.separator then
