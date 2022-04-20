@@ -247,7 +247,6 @@ DIAGNOSTICS                                                  *orgmode-diagnostic
 type: `boolean`
 default value: `true`
 Should error diagnostics be shown. If you are using Neovim 0.6.0 or higher, these will be shown via `vim.diagnostic`.
-If you are on 0.5.1 or lower, you need to use `:OrgDiagnostics` command to print the errors in the command line.
 
 ORG_TODO_KEYWORD_FACES                            *orgmode-org_todo_keyword_faces*
 
@@ -1213,10 +1212,7 @@ To make all mappings dot repeatable, install vim-repeat (https://github.com/tpop
 DOCUMENT DIAGNOSTICS                                *orgmode-document_diagnostics*
 
 Since tree-sitter parser is being used to parse the file, if there are some syntax errors,
-it can potentially fail to parse specific parts of document when needed. If you are using Neovim v0.6.0 which has
-`vim.diagnostic` available (see `:help vim.diagnostic`), you will get diagnostic errors reported inline.
-If you are using v0.5.1 or lower, you need to use `:OrgDiagnostics` command to view the error details.
-When file is saved, if there are any errors, you will be notified in the command line (0.5.1 and lower).
+it can potentially fail to parse specific parts of document when needed.
 
 --------------------------------------------------------------------------------
 AUTOCOMPLETION                                            *orgmode-autocompletion*
