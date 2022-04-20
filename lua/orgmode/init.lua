@@ -47,17 +47,35 @@ function Org:reload(file)
 end
 
 function Org:setup_autocmds()
-  vim.cmd([[augroup orgmode_nvim]])
-  vim.cmd([[autocmd!]])
-  vim.cmd(
-    [[autocmd BufWritePost *.org,*.org_archive call luaeval('require("orgmode").reload(_A)', expand('<afile>:p'))]]
-  )
-  vim.cmd(
-    [[autocmd BufReadPost,BufWritePost *.org,*.org_archive lua require('orgmode.org.diagnostics').print_error_state()]]
-  )
-  vim.cmd([[autocmd FileType org call luaeval('require("orgmode").reload(_A)', expand('<afile>:p'))]])
-  vim.cmd([[autocmd CursorHold,CursorHoldI *.org,*.org_archive lua require('orgmode.org.diagnostics').report()]])
-  vim.cmd([[augroup END]])
+  local org_augroup = vim.api.nvim_create_augroup('orgmode_nvim', { clear = true })
+  vim.api.nvim_create_autocmd('BufWritePost', {
+    pattern = { '*.org', '*.org_archive' },
+    group = org_augroup,
+    callback = function()
+      require('orgmode').reload(vim.fn.expand('<afile>:p'))
+    end,
+  })
+  vim.api.nvim_create_autocmd({ 'BufReadPost', 'BufWritePost' }, {
+    pattern = { '*.org', '*.org_archive' },
+    group = org_augroup,
+    callback = function()
+      require('orgmode.org.diagnostics').print_error_state()
+    end,
+  })
+  vim.api.nvim_create_autocmd('FileType', {
+    pattern = 'org',
+    group = org_augroup,
+    callback = function()
+      require('orgmode').reload(vim.fn.expand('<afile>:p'))
+    end,
+  })
+  vim.api.nvim_create_autocmd({ 'CursorHold', 'CursorHoldI' }, {
+    pattern = { '*.org', '*.org_archive' },
+    group = org_augroup,
+    callback = function()
+      require('orgmode.org.diagnostics').report()
+    end,
+  })
 end
 
 --- @param revision string?
