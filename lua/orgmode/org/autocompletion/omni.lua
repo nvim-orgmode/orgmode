@@ -51,7 +51,7 @@ local tags = {
 }
 
 local filetags = {
-  line_rgx = vim.regex([[\c^\#+FILETAGS:\s\+]]),
+  line_rgx = vim.regex([[\c^\#+filetags:\s\+]]),
   rgx = vim.regex([[:\([0-9A-Za-z_%@\#]*\)$]]),
   extra_cond = function(line, _)
     return not string.find(line, 'file:.*$')
