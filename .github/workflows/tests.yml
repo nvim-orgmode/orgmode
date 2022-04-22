@@ -40,5 +40,7 @@ jobs:
         with:
           neovim: true
           version: ${{ matrix.version }}
+      - name: install xclip
+        run: sudo apt-get install xclip
       - name: Run tests
         run: make ci
