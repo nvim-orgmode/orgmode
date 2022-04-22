@@ -65,7 +65,6 @@ end
 function Agenda:prompt()
   self.filters:reset()
   return utils.menu('Press key for an agenda command', {
-    { label = '', separator = '-', length = 34 },
     {
       label = 'Agenda for current week or day',
       key = 'a',

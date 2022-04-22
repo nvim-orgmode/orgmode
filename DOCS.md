@@ -73,7 +73,6 @@ NOTE: Make sure fast access keys do not overlap. If that happens, first entry in
 *type*: `boolean`<br />
 *default value*: `true`<br />
 Should error diagnostics be shown. If you are using Neovim 0.6.0 or higher, these will be shown via `vim.diagnostic`.<br />
-If you are on 0.5.1 or lower, you need to use `:OrgDiagnostics` command to print the errors in the command line.
 
 #### **org_todo_keyword_faces**
 *type*: `table<string, string>`<br />
@@ -311,6 +310,11 @@ Example:<br />
 
 Journal example:<br />
   `{ j = { description = 'Journal', template = '\n*** %<%Y-%m-%d> %<%A>\n**** %U\n\n%?', target = '~/sync/org/journal.org' } }`
+
+Nested key example:<br />
+  `{ e =  'Event' }`
+  `{ er = { description = 'recurring', template = '** %?\n %T', target = '~/org/calendar.org', headline = 'recurring' } }`
+  `{ eo = { description = 'one-time', template = '** %?\n %T', target = '~/org/calendar.org', headline = 'one-time' } }`
 
 #### **org_agenda_min_height**
 *type*: `number`<br />
@@ -850,10 +854,7 @@ To make all mappings dot repeatable, install [vim-repeat](https://github.com/tpo
 
 ## Document Diagnostics
 Since tree-sitter parser is being used to parse the file, if there are some syntax errors,
-it can potentially fail to parse specific parts of document when needed. If you are using Neovim v0.6.0 which has
-`vim.diagnostic` available (see `:help vim.diagnostic`), you will get diagnostic errors reported inline.<br />
-If you are using v0.5.1 or lower, you need to use `:OrgDiagnostics` command to view the error details.<br />
-When file is saved, if there are any errors, you will be notified in the command line (0.5.1 and lower).
+it can potentially fail to parse specific parts of document when needed.
 
 ## Autocompletion
 By default, `omnifunc` is provided in `org` files that autocompletes these types:
