@@ -166,6 +166,10 @@ local function cron(opts)
   end))
 end
 
+local function get_instance()
+  return instance
+end
+
 function _G.orgmode.statusline()
   if not instance or not instance.initialized then
     return ''
@@ -179,4 +183,5 @@ return {
   reload = reload,
   action = action,
   cron = cron,
+  instance = get_instance,
 }
