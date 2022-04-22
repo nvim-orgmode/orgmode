@@ -148,7 +148,7 @@ describe('Autocompletion', function()
     result = OrgmodeOmniCompletion(0, '#+')
     assert.are.same(directives, result)
 
-    result = OrgmodeOmniCompletion(0, '#+B')
+    result = OrgmodeOmniCompletion(0, '#+b')
     assert.are.same({
       { menu = '[Org]', word = '#+begin_src' },
       { menu = '[Org]', word = '#+begin_example' },
@@ -189,11 +189,11 @@ describe('Autocompletion', function()
       { menu = '[Org]', word = ':PRIVATE:' },
     }, result)
 
-    mock_line(api, '#+FILETAGS: ')
+    mock_line(api, '#+filetags: ')
     result = OrgmodeOmniCompletion(0, '')
     assert.are.same({}, result)
 
-    mock_line(api, '#+FILETAGS: :')
+    mock_line(api, '#+filetags: :')
     result = OrgmodeOmniCompletion(0, ':')
     assert.are.same({
       { menu = '[Org]', word = ':OFFICE:' },

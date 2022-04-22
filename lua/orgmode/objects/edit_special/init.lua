@@ -7,7 +7,7 @@ local EditSpecial = {
   context_var = '__org_edit_special_ctx',
   aborted_var = '__org_edit_special_aborted',
   block_types = {
-    SRC = require('orgmode.objects.edit_special.types.src'),
+    src = require('orgmode.objects.edit_special.types.src'),
   },
 }
 

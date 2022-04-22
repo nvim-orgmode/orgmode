@@ -87,7 +87,7 @@ hi def link org_title           Title
 syntax match  org_verbatim /^\s*>.*/
 syntax match  org_code     /^\s*:.*/
 
-syntax region org_verbatim start="^\s*#+\(BEGIN_\|begin_\).*"      end="^\s*#+\(END_\|end\).*"      keepend contains=org_block_delimiter
+syntax region org_verbatim start="^\s*#+\(BEGIN_\|begin_\).*"      end="^\s*#+\(END_\|end_\).*"      keepend contains=org_block_delimiter
 syntax region org_code     start="^\s*#+\(BEGIN_SRC\|begin_src\)"     end="^\s*#+\(END_SRC\|end_src\)"     keepend contains=org_block_delimiter
 syntax region org_code     start="^\s*#+\(BEGIN_EXAMPLE\|begin_example\)" end="^\s*#+\(END_EXAMPLE\|end_example\)" keepend contains=org_block_delimiter
 
