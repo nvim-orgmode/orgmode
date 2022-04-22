@@ -49,7 +49,7 @@ describe('Autocompletion', function()
     result = OrgmodeOmniCompletion(1, '')
     assert.are.same(0, result)
 
-    mock_line(api, '#+AR')
+    mock_line(api, '#+ar')
     result = OrgmodeOmniCompletion(1, '')
     assert.are.same(0, result)
 
