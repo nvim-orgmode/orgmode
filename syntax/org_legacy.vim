@@ -70,10 +70,10 @@ syntax match org_list_item /.*$/ contained contains=org_bold,org_italic,org_unde
 
 " Block Delimiters: {{{1
 syntax case ignore
-syntax match  org_block_delimiter /^\s*#+BEGIN_.*/
-syntax match  org_block_delimiter /^\s*#+END_.*/
+syntax match  org_block_delimiter /^\s*#+\(BEGIN_\|begin_\).*/
+syntax match  org_block_delimiter /^\s*#+\(END_\|end_\).*/
 syntax match  org_key_identifier  /^#+[^ ]*:/
-syntax match  org_title           /^#+TITLE:.*/  contains=org_key_identifier
+syntax match  org_title           /^#+\(TITLE\|title\):.*/  contains=org_key_identifier
 hi def link org_block_delimiter Comment
 hi def link org_key_identifier  Comment
 hi def link org_title           Title
@@ -87,9 +87,9 @@ hi def link org_title           Title
 syntax match  org_verbatim /^\s*>.*/
 syntax match  org_code     /^\s*:.*/
 
-syntax region org_verbatim start="^\s*#+BEGIN_.*"      end="^\s*#+END_.*"      keepend contains=org_block_delimiter
-syntax region org_code     start="^\s*#+BEGIN_SRC"     end="^\s*#+END_SRC"     keepend contains=org_block_delimiter
-syntax region org_code     start="^\s*#+BEGIN_EXAMPLE" end="^\s*#+END_EXAMPLE" keepend contains=org_block_delimiter
+syntax region org_verbatim start="^\s*#+\(BEGIN_\|begin_\).*"      end="^\s*#+\(END_\|end\).*"      keepend contains=org_block_delimiter
+syntax region org_code     start="^\s*#+\(BEGIN_SRC\|begin_src\)"     end="^\s*#+\(END_SRC\|end_src\)"     keepend contains=org_block_delimiter
+syntax region org_code     start="^\s*#+\(BEGIN_EXAMPLE\|begin_example\)" end="^\s*#+\(END_EXAMPLE\|end_example\)" keepend contains=org_block_delimiter
 
 " Properties: {{{1
 syn region Error matchgroup=org_properties_delimiter start=/^\s*:PROPERTIES:\s*$/ end=/^\s*:END:\s*$/ contains=org_property keepend
