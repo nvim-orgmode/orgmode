@@ -17,7 +17,7 @@
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Plugins" href="plugins.html" />
+    <link rel="next" title="Features" href="features.html" />
     <link rel="prev" title="Installation" href="installation.html" /> 
 </head>
 
@@ -41,13 +41,6 @@
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Setup</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#completion">Completion</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#gifs">Gifs</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#agenda">Agenda</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#org-file">Org file</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#capturing-and-refiling">Capturing and refiling</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#autocompletion">Autocompletion</a></li>
-</ul>
-</li>
 <li class="toctree-l2"><a class="reference internal" href="#tree-sitter-info">Tree-sitter info</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#advantages-of-tree-sitter-over-built-in-parsing-syntax">Advantages of tree-sitter over built in parsing/syntax:</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#known-highlighting-issues-and-limitations">Known highlighting issues and limitations</a></li>
@@ -55,10 +48,10 @@
 <li class="toctree-l3"><a class="reference internal" href="#troubleshoot">Troubleshoot</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#features-tl-dr">Features (TL;DR):</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#features-detailed-breakdown">Features (Detailed breakdown):</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="features.html">Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="demo.html">Demos</a></li>
 <li class="toctree-l1"><a class="reference internal" href="plugins.html">Plugins</a></li>
 <li class="toctree-l1"><a class="reference internal" href="development.html">Development</a></li>
 <li class="toctree-l1"><a class="reference internal" href="roadmap.html">Roadmap</a></li>
@@ -174,21 +167,6 @@ to enable autocompletion, add this to your compe config:</p>
 </div>
 <p>Or just use <code class="docutils literal notranslate"><span class="pre">omnifunc</span></code> via <code class="docutils literal notranslate"><span class="pre">&lt;C-x&gt;&lt;C-o&gt;</span></code></p>
 </div>
-<div class="section" id="gifs">
-<h2>Gifs<a class="headerlink" href="#gifs" title="Permalink to this headline"></a></h2>
-<div class="section" id="agenda">
-<h3>Agenda<a class="headerlink" href="#agenda" title="Permalink to this headline"></a></h3>
-<img alt="agenda" src="https://user-images.githubusercontent.com/1782860/123549968-8521f600-d76b-11eb-9a93-02bad08b37ce.gif" /></div>
-<div class="section" id="org-file">
-<h3>Org file<a class="headerlink" href="#org-file" title="Permalink to this headline"></a></h3>
-<img alt="orgfile" src="https://user-images.githubusercontent.com/1782860/123549982-90752180-d76b-11eb-8828-9edf9f76af08.gif" /></div>
-<div class="section" id="capturing-and-refiling">
-<h3>Capturing and refiling<a class="headerlink" href="#capturing-and-refiling" title="Permalink to this headline"></a></h3>
-<img alt="capture" src="https://user-images.githubusercontent.com/1782860/123549993-9a972000-d76b-11eb-814b-b348a93df08a.gif" /></div>
-<div class="section" id="autocompletion">
-<h3>Autocompletion<a class="headerlink" href="#autocompletion" title="Permalink to this headline"></a></h3>
-<img alt="autocomplete" src="https://user-images.githubusercontent.com/1782860/123550227-e8605800-d76c-11eb-96f6-c0a677d562d4.gif" /></div>
-</div>
 <div class="section" id="tree-sitter-info">
 <h2>Tree-sitter info<a class="headerlink" href="#tree-sitter-info" title="Permalink to this headline"></a></h2>
 <p>Built in tree-sitter parser is used for parsing the org files.
@@ -261,110 +239,6 @@ start the command <code class="docutils literal notranslate"><span class="pre">:
 </div>
 </div>
 </div>
-<div class="section" id="features-tl-dr">
-<h2>Features (TL;DR):<a class="headerlink" href="#features-tl-dr" title="Permalink to this headline"></a></h2>
-<ul class="simple">
-<li><p>Agenda view</p></li>
-<li><p>Search by tags/keyword</p></li>
-<li><p>Clocking time</p></li>
-<li><p>Repeatable dates, date and time ranges</p></li>
-<li><p>Capturing to default notes file/destination</p></li>
-<li><p>Archiving (archive file or ARCHIVE tag)</p></li>
-<li><p>Exporting (via <code class="docutils literal notranslate"><span class="pre">emacs</span></code>, <code class="docutils literal notranslate"><span class="pre">pandoc</span></code> and custom export options)</p></li>
-<li><p>Notifications (experimental, see <a class="reference external" href="https://github.com/nvim-orgmode/orgmode/issues/49">Issue #49</a>)</p></li>
-<li><p>Calendar popup for easier navigation and date updates</p></li>
-<li><p>Various org file mappings:</p>
-<ul>
-<li><p>Promote/Demote</p></li>
-<li><p>Change TODO state</p></li>
-<li><p>Change dates</p></li>
-<li><p>Insert/Move/Refile headlines</p></li>
-<li><p>Change tags</p></li>
-<li><p>Toggle checkbox state</p></li>
-</ul>
-</li>
-<li><p>Clocking time</p></li>
-<li><p>Remote editing from agenda view</p></li>
-<li><p>Repeatable mapping via <a class="reference external" href="https://github.com/tpope/vim-repeat">vim-repeat</a></p></li>
-</ul>
-</div>
-<div class="section" id="features-detailed-breakdown">
-<h2>Features (Detailed breakdown):<a class="headerlink" href="#features-detailed-breakdown" title="Permalink to this headline"></a></h2>
-<ul class="simple">
-<li><p>Agenda prompt:</p>
-<ul>
-<li><p>Agenda view (<code class="docutils literal notranslate"><span class="pre">a</span></code>):</p>
-<ul>
-<li><p>Ability to show daily(<code class="docutils literal notranslate"><span class="pre">vd</span></code>)/weekly(<code class="docutils literal notranslate"><span class="pre">vw</span></code>)/monthly(<code class="docutils literal notranslate"><span class="pre">vm</span></code>)/yearly(<code class="docutils literal notranslate"><span class="pre">vy</span></code>) agenda</p></li>
-<li><p>Support for various date settings:</p>
-<ul>
-<li><p>DEADLINE:  Warning settings - example:  <cite>&lt;2021-06-11 Fri 11:00 -1d&gt;</cite></p></li>
-<li><p>SCHEDULED: Delay setting - example: <cite>&lt;2021-06-11 Fri 11:00 -2d&gt;</cite></p></li>
-<li><p>All dates - Repeater settings:</p>
-<ul>
-<li><p>Cumulate type: <cite>&lt;2021-06-11 Fri 11:00 +1w&gt;</cite></p></li>
-<li><p>Catch-up type: <cite>&lt;2021-06-11 Fri 11:00 ++1w&gt;</cite></p></li>
-<li><p>Restart type: <cite>&lt;2021-06-11 Fri 11:00 .+1w&gt;</cite></p></li>
-</ul>
-</li>
-<li><p>Time ranges - example: <cite>&lt;2021-06-11 Fri 11:00-12:30&gt;</cite></p></li>
-<li><p>Date ranges - example: <cite>&lt;2021-06-11 Fri 11:00-12:30&gt;–&lt;2021-06-13 Sun 22:00&gt;</cite></p></li>
-</ul>
-</li>
-<li><p>Properly lists tasks according to defined dates (DEADLINE,SCHEDULED,Plain date)</p></li>
-<li><p>Navigate forward (<code class="docutils literal notranslate"><span class="pre">f</span></code>)/backward(<code class="docutils literal notranslate"><span class="pre">b</span></code>) or jump to specific date (<code class="docutils literal notranslate"><span class="pre">J</span></code>)</p></li>
-<li><p>Go to task under cursor in current window(<code class="docutils literal notranslate"><span class="pre">&lt;CR&gt;</span></code>) or other window(<code class="docutils literal notranslate"><span class="pre">&lt;TAB&gt;</span></code>)</p></li>
-<li><p>Print category from “:CATEGORY:” property if defined</p></li>
-</ul>
-</li>
-<li><p>List tasks that have “TODO” state (<code class="docutils literal notranslate"><span class="pre">t</span></code>):</p></li>
-<li><p>Find headlines matching tag(s) (<code class="docutils literal notranslate"><span class="pre">m</span></code>):</p></li>
-<li><p>Search for headlines (and it’s content) for a query (<code class="docutils literal notranslate"><span class="pre">s</span></code>):</p></li>
-<li><p><a class="reference external" href="DOCS.md#advanced-search">Advanced search</a> for tags/todo kewords/properties</p></li>
-<li><p>Notifications (experimental, see <a class="reference external" href="https://github.com/nvim-orgmode/orgmode/issues/49">Issue #49</a>)</p></li>
-<li><p>Clocking time</p></li>
-</ul>
-</li>
-<li><p>Capture:</p>
-<ul>
-<li><p>Define custom templates</p></li>
-<li><p>Fast capturing to default notes file via <code class="docutils literal notranslate"><span class="pre">&lt;C-c&gt;</span></code></p></li>
-<li><p>Capturing to specific destination <code class="docutils literal notranslate"><span class="pre">&lt;Leader&gt;or</span></code></p></li>
-<li><p>Abort capture with <code class="docutils literal notranslate"><span class="pre">&lt;Leader&gt;ok</span></code></p></li>
-</ul>
-</li>
-<li><p>Org files</p>
-<ul>
-<li><p>Clocking time</p></li>
-<li><p>Refile to destination/headline: <code class="docutils literal notranslate"><span class="pre">&lt;Leader&gt;or</span></code></p></li>
-<li><p>Increase/Decrease date under cursor: <code class="docutils literal notranslate"><span class="pre">&lt;C-a&gt;</span></code>/<code class="docutils literal notranslate"><span class="pre">&lt;C-x&gt;</span></code></p></li>
-<li><p>Change date under cursor via calendar popup: <code class="docutils literal notranslate"><span class="pre">cid</span></code></p></li>
-<li><p>Change headline TODO state: forward``cit`` or backward``ciT``</p></li>
-<li><p>Open hyperlink or date under cursor: <code class="docutils literal notranslate"><span class="pre">&lt;Leader&gt;oo</span></code></p></li>
-<li><p>Toggle checkbox: <code class="docutils literal notranslate"><span class="pre">&lt;C-space&gt;</span></code></p></li>
-<li><p>Toggle current line to headline and vice versa: <code class="docutils literal notranslate"><span class="pre">&lt;Leader&gt;o*</span></code></p></li>
-<li><p>Toggle folding of current headline: <code class="docutils literal notranslate"><span class="pre">&lt;TAB&gt;</span></code></p></li>
-<li><p>Toggle folding in whole file: <code class="docutils literal notranslate"><span class="pre">&lt;S-TAB&gt;</span></code></p></li>
-<li><p>Archive headline: <code class="docutils literal notranslate"><span class="pre">&lt;Leader&gt;o$</span></code></p></li>
-<li><p>Add archive tag: <code class="docutils literal notranslate"><span class="pre">&lt;Leader&gt;oA</span></code></p></li>
-<li><p>Change tags: <code class="docutils literal notranslate"><span class="pre">&lt;Leader&gt;ot</span></code></p></li>
-<li><p>Promote headline: <code class="docutils literal notranslate"><span class="pre">&lt;&lt;</span></code></p></li>
-<li><p>Demote headline: <code class="docutils literal notranslate"><span class="pre">&gt;&gt;</span></code></p></li>
-<li><p>Promote subtree: <code class="docutils literal notranslate"><span class="pre">&lt;s</span></code></p></li>
-<li><p>Demote subtree: <code class="docutils literal notranslate"><span class="pre">&gt;s</span></code></p></li>
-<li><p>Add headline/list item/checkbox: <code class="docutils literal notranslate"><span class="pre">&lt;Leader&gt;&lt;CR&gt;</span></code></p></li>
-<li><p>Insert heading after current heading and it’s content: <code class="docutils literal notranslate"><span class="pre">&lt;Leader&gt;oih</span></code></p></li>
-<li><p>Insert TODO heading after current line: <code class="docutils literal notranslate"><span class="pre">&lt;Leader&gt;oiT</span></code></p></li>
-<li><p>Insert TODO heading after current heading and it’s content: <code class="docutils literal notranslate"><span class="pre">&lt;Leader&gt;oit</span></code></p></li>
-<li><p>Move headline up: <code class="docutils literal notranslate"><span class="pre">&lt;Leader&gt;oK</span></code></p></li>
-<li><p>Move headline down: <code class="docutils literal notranslate"><span class="pre">&lt;Leader&gt;oJ</span></code></p></li>
-<li><p>Highlighted code blocks (<cite>#+BEGIN_SRC filetype</cite>)</p></li>
-<li><p>Exporting (via <code class="docutils literal notranslate"><span class="pre">emacs</span></code>, <code class="docutils literal notranslate"><span class="pre">pandoc</span></code> and custom export options)</p></li>
-</ul>
-</li>
-</ul>
-<p>Link to detailed documentation: <a class="reference external" href="DOCS.md">DOCS</a></p>
-</div>
 </div>
 
 
@@ -372,7 +246,7 @@ start the command <code class="docutils literal notranslate"><span class="pre">:
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="installation.html" class="btn btn-neutral float-left" title="Installation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="plugins.html" class="btn btn-neutral float-right" title="Plugins" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="features.html" class="btn btn-neutral float-right" title="Features" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

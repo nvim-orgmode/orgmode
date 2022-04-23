@@ -24,6 +24,8 @@ Orgmode clone written in Lua for Neovim 0.7.
    getting_started 
    installation
    setup
+   features
+   demo
    plugins
    development
    roadmap
