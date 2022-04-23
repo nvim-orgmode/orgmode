@@ -8,6 +8,7 @@ local EditSpecial = {
   aborted_var = '__org_edit_special_aborted',
   block_types = {
     SRC = require('orgmode.objects.edit_special.types.src'),
+    src = require('orgmode.objects.edit_special.types.src'),
   },
 }
 
@@ -33,7 +34,7 @@ function EditSpecial:_parse_position()
   self.block_type = nearest_block_node_info.children.name.text:upper()
 
   if not self.block_types[self.block_type] then
-    utils.echo_warning(string.format([[Edit special for block of type '%s' is not supported]]))
+    utils.echo_warning(string.format([[Edit special for block of type '%s' is not supported]], self.block_type))
 
     return
   end
