@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Orgmode.nvim &mdash; Orgmode.nvim 0.2.1 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="#" class="icon icon-home"> Orgmode.nvim
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <!-- Local TOC -->
+              <div class="local-toc"><ul>
+<li><a class="reference internal" href="#">Orgmode.nvim</a></li>
+<li><a class="reference internal" href="#installation">Installation</a></li>
+<li><a class="reference internal" href="#setup">Setup</a><ul>
+<li><a class="reference internal" href="#completion">Completion</a></li>
+<li><a class="reference internal" href="#gifs">Gifs</a><ul>
+<li><a class="reference internal" href="#agenda">Agenda</a></li>
+<li><a class="reference internal" href="#org-file">Org file</a></li>
+<li><a class="reference internal" href="#capturing-and-refiling">Capturing and refiling</a></li>
+<li><a class="reference internal" href="#autocompletion">Autocompletion</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#tree-sitter-info">Tree-sitter info</a><ul>
+<li><a class="reference internal" href="#advantages-of-tree-sitter-over-built-in-parsing-syntax">Advantages of tree-sitter over built in parsing/syntax:</a></li>
+<li><a class="reference internal" href="#known-highlighting-issues-and-limitations">Known highlighting issues and limitations</a></li>
+<li><a class="reference internal" href="#improvements-over-vim-s-syntax-highlighting">Improvements over Vim’s syntax highlighting</a></li>
+<li><a class="reference internal" href="#troubleshoot">Troubleshoot</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#features-tl-dr">Features (TL;DR):</a></li>
+<li><a class="reference internal" href="#features-detailed-breakdown">Features (Detailed breakdown):</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#plugins">Plugins</a></li>
+<li><a class="reference internal" href="#development">Development</a><ul>
+<li><a class="reference internal" href="#tests">Tests</a></li>
+<li><a class="reference internal" href="#documentation">Documentation</a></li>
+<li><a class="reference internal" href="#formatting">Formatting</a></li>
+<li><a class="reference internal" href="#parser">Parser</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#plans">Plans</a></li>
+<li><a class="reference internal" href="#thanks-to">Thanks to</a></li>
+</ul>
+</div>
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="#">Orgmode.nvim</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="#" class="icon icon-home"></a> &raquo;</li>
+      <li>Orgmode.nvim</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/index.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <div align="center">
+    <img alt="org-neovim-blend" src="https://user-images.githubusercontent.com/1782860/124820564-eddc5000-df6d-11eb-9016-d0c073a9575c.png" width="250" />
+</div><div class="section" id="orgmode-nvim">
+<h1>Orgmode.nvim<a class="headerlink" href="#orgmode-nvim" title="Permalink to this headline"></a></h1>
+<div align="left">
+    <a href="/LICENSE"><img alt="License" src="https://img.shields.io/badge/license-MIT-brightgreen?style=flat-square"</a><a href="https://ko-fi.com/kristijanhusak"> <img alt="Kofi" src="https://img.shields.io/badge/support-kofi-00b9fe?style=flat-square&logo=kofi"></a>
+    <p>
+</div><p>Orgmode clone written in Lua for Neovim 0.7.</p>
+<div class="toctree-wrapper compound">
+</div>
+</div>
+<div class="section" id="installation">
+<h1>Installation<a class="headerlink" href="#installation" title="Permalink to this headline"></a></h1>
+<p>Use your favourite package manager:</p>
+<ul class="simple">
+<li><p><a class="reference external" href="https://github.com/kristijanhusak/vim-packager">vim-packager</a>:</p></li>
+</ul>
+<div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="n">packager</span><span class="p">.</span><span class="n">add</span><span class="p">(</span><span class="s1">&#39;nvim-treesitter/nvim-treesitter&#39;</span><span class="p">)</span>
+<span class="n">packager</span><span class="p">.</span><span class="n">add</span><span class="p">(</span><span class="s1">&#39;nvim-orgmode/orgmode&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p><a class="reference external" href="https://github.com/wbthomason/packer.nvim">packer.nvim</a></p></li>
+</ul>
+<p><strong>Recommended</strong></p>
+<div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="n">use</span> <span class="p">{</span><span class="s1">&#39;nvim-treesitter/nvim-treesitter&#39;</span><span class="p">}</span>
+<span class="n">use</span> <span class="p">{</span><span class="s1">&#39;nvim-orgmode/orgmode&#39;</span><span class="p">,</span> <span class="n">config</span> <span class="o">=</span> <span class="kr">function</span><span class="p">()</span>
+        <span class="nb">require</span><span class="p">(</span><span class="s1">&#39;orgmode&#39;</span><span class="p">).</span><span class="n">setup</span><span class="p">{}</span>
+<span class="kr">end</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p><strong>Lazy loading (Not recommended)</strong></p>
+<p>Lazy loading via <code class="docutils literal notranslate"><span class="pre">ft</span></code> option works, but not completely. Global mappings are not set because plugin is not initialized on startup.
+Above setup has startup time of somewhere between 1 and 3 ms, so there are no many benefits in lazy loading.
+If you want to do it anyway, here’s the lazy load setup:</p>
+<div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="n">use</span> <span class="p">{</span><span class="s1">&#39;nvim-treesitter/nvim-treesitter&#39;</span><span class="p">}</span>
+<span class="n">use</span> <span class="p">{</span><span class="s1">&#39;nvim-orgmode/orgmode&#39;</span><span class="p">,</span>
+    <span class="n">ft</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;org&#39;</span><span class="p">},</span>
+    <span class="n">config</span> <span class="o">=</span> <span class="kr">function</span><span class="p">()</span>
+            <span class="nb">require</span><span class="p">(</span><span class="s1">&#39;orgmode&#39;</span><span class="p">).</span><span class="n">setup</span><span class="p">{}</span>
+    <span class="kr">end</span>
+    <span class="p">}</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p><a class="reference external" href="https://github.com/junegunn/vim-plug">vim-plug</a></p></li>
+</ul>
+<div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="n">Plug</span> <span class="s1">&#39;nvim-treesitter/nvim-treesitter&#39;</span>
+<span class="n">Plug</span> <span class="s1">&#39;nvim-orgmode/orgmode&#39;</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p><a class="reference external" href="https://github.com/Shougo/dein.vim">dein</a></p></li>
+</ul>
+<div class="highlight-vim notranslate"><div class="highlight"><pre><span></span><span class="k">call</span> dein#add<span class="p">(</span><span class="s1">&#39;nvim-treesitter/nvim-treesitter&#39;</span><span class="p">)</span>
+<span class="k">call</span> dein#add<span class="p">(</span><span class="s1">&#39;nvim-orgmode/orgmode&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="setup">
+<h1>Setup<a class="headerlink" href="#setup" title="Permalink to this headline"></a></h1>
+<div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="c1">-- init.lua</span>
+
+<span class="c1">-- Load custom tree-sitter grammar for org filetype</span>
+<span class="nb">require</span><span class="p">(</span><span class="s1">&#39;orgmode&#39;</span><span class="p">).</span><span class="n">setup_ts_grammar</span><span class="p">()</span>
+
+<span class="c1">-- Tree-sitter configuration</span>
+<span class="nb">require</span><span class="s1">&#39;nvim-treesitter.configs&#39;</span><span class="p">.</span><span class="n">setup</span> <span class="p">{</span>
+  <span class="c1">-- If TS highlights are not enabled at all, or disabled via ``disable`` prop, highlighting will fallback to default Vim syntax highlighting</span>
+  <span class="n">highlight</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="n">enable</span> <span class="o">=</span> <span class="kc">true</span><span class="p">,</span>
+    <span class="n">disable</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;org&#39;</span><span class="p">},</span> <span class="c1">-- Remove this to use TS highlighter for some of the highlights (Experimental)</span>
+    <span class="n">additional_vim_regex_highlighting</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;org&#39;</span><span class="p">},</span> <span class="c1">-- Required since TS highlighter doesn&#39;t support all syntax features (conceal)</span>
+  <span class="p">},</span>
+  <span class="n">ensure_installed</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;org&#39;</span><span class="p">},</span> <span class="c1">-- Or run :TSUpdate org</span>
+<span class="p">}</span>
+
+<span class="nb">require</span><span class="p">(</span><span class="s1">&#39;orgmode&#39;</span><span class="p">).</span><span class="n">setup</span><span class="p">({</span>
+  <span class="n">org_agenda_files</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;~/Dropbox/org/*&#39;</span><span class="p">,</span> <span class="s1">&#39;~/my-orgs/**/*&#39;</span><span class="p">},</span>
+  <span class="n">org_default_notes_file</span> <span class="o">=</span> <span class="s1">&#39;~/Dropbox/org/refile.org&#39;</span><span class="p">,</span>
+<span class="p">})</span>
+</pre></div>
+</div>
+<p>Or if you are using <code class="docutils literal notranslate"><span class="pre">init.vim</span></code>:</p>
+<div class="highlight-vim notranslate"><div class="highlight"><pre><span></span><span class="c">&quot; init.vim</span>
+<span class="k">lua</span> <span class="p">&lt;&lt;</span> EOF
+
+<span class="p">--</span> Load custom tree<span class="p">-</span>sitter grammar <span class="k">for</span> org <span class="k">filetype</span>
+require<span class="p">(</span><span class="s1">&#39;orgmode&#39;</span><span class="p">)</span>.setup_ts_grammar<span class="p">()</span>
+
+<span class="p">--</span> Tree<span class="p">-</span>sitter configuration
+require<span class="s1">&#39;nvim-treesitter.configs&#39;</span>.setup {
+  <span class="p">--</span> If TS highlights are not enabled at <span class="k">all</span><span class="p">,</span> or disabled via `disable` prop<span class="p">,</span> highlighting will fallback <span class="k">to</span> default Vim <span class="nb">syntax</span> highlighting
+  <span class="nb">highlight</span> <span class="p">=</span> {
+    enable <span class="p">=</span> true<span class="p">,</span>
+    disable <span class="p">=</span> {<span class="s1">&#39;org&#39;</span>}<span class="p">,</span> <span class="p">--</span> Remove this <span class="k">to</span> use TS highlighter <span class="k">for</span> some of the highlights <span class="p">(</span>Experimental<span class="p">)</span>
+    additional_vim_regex_highlighting <span class="p">=</span> {<span class="s1">&#39;org&#39;</span>}<span class="p">,</span> <span class="p">--</span> Required since TS highlighter doesn&#39;<span class="k">t</span> support <span class="k">all</span> <span class="nb">syntax</span> features <span class="p">(</span>conceal<span class="p">)</span>
+  }<span class="p">,</span>
+  ensure_installed <span class="p">=</span> {<span class="s1">&#39;org&#39;</span>}<span class="p">,</span> <span class="p">--</span> Or run :TSUpdate org
+}
+
+require<span class="p">(</span><span class="s1">&#39;orgmode&#39;</span><span class="p">)</span>.setup<span class="p">(</span>{
+  org_agenda_files <span class="p">=</span> {<span class="s1">&#39;~/Dropbox/org/*&#39;</span><span class="p">,</span> <span class="s1">&#39;~/my-orgs/**/*&#39;</span>}<span class="p">,</span>
+  org_default_notes_file <span class="p">=</span> <span class="s1">&#39;~/Dropbox/org/refile.org&#39;</span><span class="p">,</span>
+}<span class="p">)</span>
+EOF
+</pre></div>
+</div>
+<ul class="simple">
+<li><p><strong>Open agenda prompt</strong>: <code class="docutils literal notranslate"><span class="pre">&lt;Leader&gt;oa</span></code></p></li>
+<li><p><strong>Open capture prompt</strong>: <code class="docutils literal notranslate"><span class="pre">&lt;Leader&gt;oc</span></code></p></li>
+<li><p>In any orgmode buffer press <code class="docutils literal notranslate"><span class="pre">g?</span></code> for help</p></li>
+</ul>
+<p>If you are new to Orgmode, see <a class="reference external" href="/DOCS.md#getting-started-with-orgmode">Getting started</a> section in Docs.</p>
+<div class="section" id="completion">
+<h2>Completion<a class="headerlink" href="#completion" title="Permalink to this headline"></a></h2>
+<p>If you use <a class="reference external" href="https://github.com/hrsh7th/nvim-compe">nvim-compe</a> and want
+to enable autocompletion, add this to your compe config:</p>
+<div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="nb">require</span><span class="s1">&#39;compe&#39;</span><span class="p">.</span><span class="n">setup</span><span class="p">({</span>
+  <span class="n">source</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="n">orgmode</span> <span class="o">=</span> <span class="kc">true</span>
+  <span class="p">}</span>
+<span class="p">})</span>
+</pre></div>
+</div>
+<p>For <a class="reference external" href="https://github.com/hrsh7th/nvim-cmp">nvim-cmp</a>, add <code class="docutils literal notranslate"><span class="pre">orgmode</span></code> to list of sources:</p>
+<div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="nb">require</span><span class="s1">&#39;cmp&#39;</span><span class="p">.</span><span class="n">setup</span><span class="p">({</span>
+  <span class="n">sources</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="p">{</span> <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;orgmode&#39;</span> <span class="p">}</span>
+  <span class="p">}</span>
+<span class="p">})</span>
+</pre></div>
+</div>
+<p>For <a class="reference external" href="https://github.com/nvim-lua/completion-nvim">completion.nvim</a>, just add <code class="docutils literal notranslate"><span class="pre">omni</span></code> mode to chain complete list and add additional keyword chars:</p>
+<div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="n">vim</span><span class="p">.</span><span class="n">g</span><span class="p">.</span><span class="n">completion_chain_complete_list</span> <span class="o">=</span> <span class="p">{</span>
+  <span class="n">org</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="p">{</span> <span class="n">mode</span> <span class="o">=</span> <span class="s1">&#39;omni&#39;</span><span class="p">},</span>
+  <span class="p">},</span>
+<span class="p">}</span>
+<span class="n">vim</span><span class="p">.</span><span class="n">cmd</span><span class="s">[[autocmd FileType org setlocal iskeyword+=:,#,+]]</span>
+</pre></div>
+</div>
+<p>Or just use <code class="docutils literal notranslate"><span class="pre">omnifunc</span></code> via <code class="docutils literal notranslate"><span class="pre">&lt;C-x&gt;&lt;C-o&gt;</span></code></p>
+</div>
+<div class="section" id="gifs">
+<h2>Gifs<a class="headerlink" href="#gifs" title="Permalink to this headline"></a></h2>
+<div class="section" id="agenda">
+<h3>Agenda<a class="headerlink" href="#agenda" title="Permalink to this headline"></a></h3>
+<img alt="agenda" src="https://user-images.githubusercontent.com/1782860/123549968-8521f600-d76b-11eb-9a93-02bad08b37ce.gif" /></div>
+<div class="section" id="org-file">
+<h3>Org file<a class="headerlink" href="#org-file" title="Permalink to this headline"></a></h3>
+<img alt="orgfile" src="https://user-images.githubusercontent.com/1782860/123549982-90752180-d76b-11eb-8828-9edf9f76af08.gif" /></div>
+<div class="section" id="capturing-and-refiling">
+<h3>Capturing and refiling<a class="headerlink" href="#capturing-and-refiling" title="Permalink to this headline"></a></h3>
+<img alt="capture" src="https://user-images.githubusercontent.com/1782860/123549993-9a972000-d76b-11eb-814b-b348a93df08a.gif" /></div>
+<div class="section" id="autocompletion">
+<h3>Autocompletion<a class="headerlink" href="#autocompletion" title="Permalink to this headline"></a></h3>
+<img alt="autocomplete" src="https://user-images.githubusercontent.com/1782860/123550227-e8605800-d76c-11eb-96f6-c0a677d562d4.gif" /></div>
+</div>
+<div class="section" id="tree-sitter-info">
+<h2>Tree-sitter info<a class="headerlink" href="#tree-sitter-info" title="Permalink to this headline"></a></h2>
+<p>Built in tree-sitter parser is used for parsing the org files.
+Highlights are experimental and partially supported.</p>
+<div class="section" id="advantages-of-tree-sitter-over-built-in-parsing-syntax">
+<h3>Advantages of tree-sitter over built in parsing/syntax:<a class="headerlink" href="#advantages-of-tree-sitter-over-built-in-parsing-syntax" title="Permalink to this headline"></a></h3>
+<ul class="simple">
+<li><p>More reliable, since parsing is done with proper parsing tool</p></li>
+<li><p>Better highlighting (Experimental, still requires improvements)</p></li>
+<li><p>Future features will be easier to implement because grammar already parses some things that were not parsed before (tables, latex, etc.)</p></li>
+<li><p>Allows for easier hacking (custom motions that can work with TS nodes, etc.)</p></li>
+</ul>
+</div>
+<div class="section" id="known-highlighting-issues-and-limitations">
+<h3>Known highlighting issues and limitations<a class="headerlink" href="#known-highlighting-issues-and-limitations" title="Permalink to this headline"></a></h3>
+<ul class="simple">
+<li><p>Performance issues. This is generally an issue in Neovim that should be resolved before 0.6 release (<a class="reference external" href="https://github.com/neovim/neovim/issues/14762">neovim Issue #14762</a>, <a class="reference external" href="https://github.com/neovim/neovim/issues/14762">neovim Issue #14762</a>)</p></li>
+<li><p>Anything that requires concealing (<a class="reference external" href="/DOCS.md#org_hide_emphasis_markers">org_hide_emphasis_markers</a>, links concealing) is not (yet) supported in TS highlighter</p></li>
+<li><p>LaTex is still highlighted through syntax file</p></li>
+</ul>
+</div>
+<div class="section" id="improvements-over-vim-s-syntax-highlighting">
+<h3>Improvements over Vim’s syntax highlighting<a class="headerlink" href="#improvements-over-vim-s-syntax-highlighting" title="Permalink to this headline"></a></h3>
+<ul class="simple">
+<li><p>Better highlighting of certain parts (tags, deadline/schedule/closed dates)</p></li>
+<li><p><a class="reference external" href="https://github.com/nvim-treesitter/nvim-treesitter/blob/4f2265632becabcd2c5b1791fa31ef278f1e496c/CONTRIBUTING.md#injections">Tree-sitter highlight injections</a> through <code class="docutils literal notranslate"><span class="pre">#BEGIN_SRC</span> <span class="pre">filetype</span></code> blocks</p></li>
+<li><p>Headline markup highlighting (<a class="reference external" href="https://github.com/nvim-orgmode/orgmode/issues/67">Issue #67</a>)</p></li>
+</ul>
+</div>
+<div class="section" id="troubleshoot">
+<h3>Troubleshoot<a class="headerlink" href="#troubleshoot" title="Permalink to this headline"></a></h3>
+<ul class="simple">
+<li><p><strong>Folding is not working</strong></p></li>
+</ul>
+<p>Make sure you are not overriding foldexpr in Org buffers with <a class="reference external" href="https://github.com/nvim-treesitter/nvim-treesitter#folding">nvim-treesitter folding</a></p>
+<ul class="simple">
+<li><p><strong>Indentation is not working</strong></p></li>
+</ul>
+<p>Make sure you are not overriding indentexpr in Org buffers with <a class="reference external" href="https://github.com/nvim-treesitter/nvim-treesitter#indentation">nvim-treesitter indentation</a></p>
+<ul class="simple">
+<li><p><strong>I get</strong> <code class="docutils literal notranslate"><span class="pre">treesitter/query.lua</span></code> <strong>errors when opening agenda/capture prompt or org files</strong></p></li>
+</ul>
+<p>Make sure you are using latest changes from <a class="reference external" href="https://github.com/milisims/tree-sitter-org">tree-sitter-org</a> grammar by running <code class="docutils literal notranslate"><span class="pre">:TSUpdate</span> <span class="pre">org</span></code> and restarting the editor.</p>
+<ul class="simple">
+<li><p><strong>Dates are not in English</strong></p></li>
+</ul>
+<p>Dates are generated with Lua native date support, and it reads your current locale when creating them.</p>
+<p>To use different locale you can add this to your <code class="docutils literal notranslate"><span class="pre">init.lua</span></code>:</p>
+<div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="n">vim</span><span class="p">.</span><span class="n">cmd</span><span class="p">(</span><span class="s1">&#39;language en_US.utf8&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>or <code class="docutils literal notranslate"><span class="pre">init.vim</span></code>:</p>
+<div class="highlight-vim notranslate"><div class="highlight"><pre><span></span><span class="k">language</span> en_US.utf8
+</pre></div>
+</div>
+<p>Just make sure you have <code class="docutils literal notranslate"><span class="pre">en_US</span></code> locale installed on your system. To see what you have available on the system you can
+start the command <code class="docutils literal notranslate"><span class="pre">:language</span></code> and press <code class="docutils literal notranslate"><span class="pre">&lt;TAB&gt;</span></code> to autocomplete possible options.</p>
+<ul class="simple">
+<li><p><strong>Links are not concealed</strong></p></li>
+</ul>
+<p>Links are concealed with Vim’s conceal feature (see <code class="docutils literal notranslate"><span class="pre">:help</span> <span class="pre">conceal</span></code>). To enable concealing, add this to your <code class="docutils literal notranslate"><span class="pre">init.lua</span></code>:</p>
+<div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="n">vim</span><span class="p">.</span><span class="n">opt</span><span class="p">.</span><span class="n">conceallevel</span> <span class="o">=</span> <span class="mi">2</span>
+<span class="n">vim</span><span class="p">.</span><span class="n">opt</span><span class="p">.</span><span class="n">concealcursor</span> <span class="o">=</span> <span class="s1">&#39;nc&#39;</span>
+</pre></div>
+</div>
+<p>Or if you are using <code class="docutils literal notranslate"><span class="pre">init.vim</span></code>:</p>
+<div class="highlight-vim notranslate"><div class="highlight"><pre><span></span><span class="k">set</span> <span class="nb">conceallevel</span><span class="p">=</span><span class="m">2</span>
+<span class="k">set</span> <span class="nb">concealcursor</span><span class="p">=</span>nc
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="features-tl-dr">
+<h2>Features (TL;DR):<a class="headerlink" href="#features-tl-dr" title="Permalink to this headline"></a></h2>
+<ul class="simple">
+<li><p>Agenda view</p></li>
+<li><p>Search by tags/keyword</p></li>
+<li><p>Clocking time</p></li>
+<li><p>Repeatable dates, date and time ranges</p></li>
+<li><p>Capturing to default notes file/destination</p></li>
+<li><p>Archiving (archive file or ARCHIVE tag)</p></li>
+<li><p>Exporting (via <code class="docutils literal notranslate"><span class="pre">emacs</span></code>, <code class="docutils literal notranslate"><span class="pre">pandoc</span></code> and custom export options)</p></li>
+<li><p>Notifications (experimental, see <a class="reference external" href="https://github.com/nvim-orgmode/orgmode/issues/49">Issue #49</a>)</p></li>
+<li><p>Calendar popup for easier navigation and date updates</p></li>
+<li><p>Various org file mappings:</p>
+<ul>
+<li><p>Promote/Demote</p></li>
+<li><p>Change TODO state</p></li>
+<li><p>Change dates</p></li>
+<li><p>Insert/Move/Refile headlines</p></li>
+<li><p>Change tags</p></li>
+<li><p>Toggle checkbox state</p></li>
+</ul>
+</li>
+<li><p>Clocking time</p></li>
+<li><p>Remote editing from agenda view</p></li>
+<li><p>Repeatable mapping via <a class="reference external" href="https://github.com/tpope/vim-repeat">vim-repeat</a></p></li>
+</ul>
+</div>
+<div class="section" id="features-detailed-breakdown">
+<h2>Features (Detailed breakdown):<a class="headerlink" href="#features-detailed-breakdown" title="Permalink to this headline"></a></h2>
+<ul class="simple">
+<li><p>Agenda prompt:</p>
+<ul>
+<li><p>Agenda view (<code class="docutils literal notranslate"><span class="pre">a</span></code>):</p>
+<ul>
+<li><p>Ability to show daily(<code class="docutils literal notranslate"><span class="pre">vd</span></code>)/weekly(<code class="docutils literal notranslate"><span class="pre">vw</span></code>)/monthly(<code class="docutils literal notranslate"><span class="pre">vm</span></code>)/yearly(<code class="docutils literal notranslate"><span class="pre">vy</span></code>) agenda</p></li>
+<li><p>Support for various date settings:</p>
+<ul>
+<li><p>DEADLINE:  Warning settings - example:  <cite>&lt;2021-06-11 Fri 11:00 -1d&gt;</cite></p></li>
+<li><p>SCHEDULED: Delay setting - example: <cite>&lt;2021-06-11 Fri 11:00 -2d&gt;</cite></p></li>
+<li><p>All dates - Repeater settings:</p>
+<ul>
+<li><p>Cumulate type: <cite>&lt;2021-06-11 Fri 11:00 +1w&gt;</cite></p></li>
+<li><p>Catch-up type: <cite>&lt;2021-06-11 Fri 11:00 ++1w&gt;</cite></p></li>
+<li><p>Restart type: <cite>&lt;2021-06-11 Fri 11:00 .+1w&gt;</cite></p></li>
+</ul>
+</li>
+<li><p>Time ranges - example: <cite>&lt;2021-06-11 Fri 11:00-12:30&gt;</cite></p></li>
+<li><p>Date ranges - example: <cite>&lt;2021-06-11 Fri 11:00-12:30&gt;–&lt;2021-06-13 Sun 22:00&gt;</cite></p></li>
+</ul>
+</li>
+<li><p>Properly lists tasks according to defined dates (DEADLINE,SCHEDULED,Plain date)</p></li>
+<li><p>Navigate forward (<code class="docutils literal notranslate"><span class="pre">f</span></code>)/backward(<code class="docutils literal notranslate"><span class="pre">b</span></code>) or jump to specific date (<code class="docutils literal notranslate"><span class="pre">J</span></code>)</p></li>
+<li><p>Go to task under cursor in current window(<code class="docutils literal notranslate"><span class="pre">&lt;CR&gt;</span></code>) or other window(<code class="docutils literal notranslate"><span class="pre">&lt;TAB&gt;</span></code>)</p></li>
+<li><p>Print category from “:CATEGORY:” property if defined</p></li>
+</ul>
+</li>
+<li><p>List tasks that have “TODO” state (<code class="docutils literal notranslate"><span class="pre">t</span></code>):</p></li>
+<li><p>Find headlines matching tag(s) (<code class="docutils literal notranslate"><span class="pre">m</span></code>):</p></li>
+<li><p>Search for headlines (and it’s content) for a query (<code class="docutils literal notranslate"><span class="pre">s</span></code>):</p></li>
+<li><p><a class="reference external" href="DOCS.md#advanced-search">Advanced search</a> for tags/todo kewords/properties</p></li>
+<li><p>Notifications (experimental, see <a class="reference external" href="https://github.com/nvim-orgmode/orgmode/issues/49">Issue #49</a>)</p></li>
+<li><p>Clocking time</p></li>
+</ul>
+</li>
+<li><p>Capture:</p>
+<ul>
+<li><p>Define custom templates</p></li>
+<li><p>Fast capturing to default notes file via <code class="docutils literal notranslate"><span class="pre">&lt;C-c&gt;</span></code></p></li>
+<li><p>Capturing to specific destination <code class="docutils literal notranslate"><span class="pre">&lt;Leader&gt;or</span></code></p></li>
+<li><p>Abort capture with <code class="docutils literal notranslate"><span class="pre">&lt;Leader&gt;ok</span></code></p></li>
+</ul>
+</li>
+<li><p>Org files</p>
+<ul>
+<li><p>Clocking time</p></li>
+<li><p>Refile to destination/headline: <code class="docutils literal notranslate"><span class="pre">&lt;Leader&gt;or</span></code></p></li>
+<li><p>Increase/Decrease date under cursor: <code class="docutils literal notranslate"><span class="pre">&lt;C-a&gt;</span></code>/<code class="docutils literal notranslate"><span class="pre">&lt;C-x&gt;</span></code></p></li>
+<li><p>Change date under cursor via calendar popup: <code class="docutils literal notranslate"><span class="pre">cid</span></code></p></li>
+<li><p>Change headline TODO state: forward``cit`` or backward``ciT``</p></li>
+<li><p>Open hyperlink or date under cursor: <code class="docutils literal notranslate"><span class="pre">&lt;Leader&gt;oo</span></code></p></li>
+<li><p>Toggle checkbox: <code class="docutils literal notranslate"><span class="pre">&lt;C-space&gt;</span></code></p></li>
+<li><p>Toggle current line to headline and vice versa: <code class="docutils literal notranslate"><span class="pre">&lt;Leader&gt;o*</span></code></p></li>
+<li><p>Toggle folding of current headline: <code class="docutils literal notranslate"><span class="pre">&lt;TAB&gt;</span></code></p></li>
+<li><p>Toggle folding in whole file: <code class="docutils literal notranslate"><span class="pre">&lt;S-TAB&gt;</span></code></p></li>
+<li><p>Archive headline: <code class="docutils literal notranslate"><span class="pre">&lt;Leader&gt;o$</span></code></p></li>
+<li><p>Add archive tag: <code class="docutils literal notranslate"><span class="pre">&lt;Leader&gt;oA</span></code></p></li>
+<li><p>Change tags: <code class="docutils literal notranslate"><span class="pre">&lt;Leader&gt;ot</span></code></p></li>
+<li><p>Promote headline: <code class="docutils literal notranslate"><span class="pre">&lt;&lt;</span></code></p></li>
+<li><p>Demote headline: <code class="docutils literal notranslate"><span class="pre">&gt;&gt;</span></code></p></li>
+<li><p>Promote subtree: <code class="docutils literal notranslate"><span class="pre">&lt;s</span></code></p></li>
+<li><p>Demote subtree: <code class="docutils literal notranslate"><span class="pre">&gt;s</span></code></p></li>
+<li><p>Add headline/list item/checkbox: <code class="docutils literal notranslate"><span class="pre">&lt;Leader&gt;&lt;CR&gt;</span></code></p></li>
+<li><p>Insert heading after current heading and it’s content: <code class="docutils literal notranslate"><span class="pre">&lt;Leader&gt;oih</span></code></p></li>
+<li><p>Insert TODO heading after current line: <code class="docutils literal notranslate"><span class="pre">&lt;Leader&gt;oiT</span></code></p></li>
+<li><p>Insert TODO heading after current heading and it’s content: <code class="docutils literal notranslate"><span class="pre">&lt;Leader&gt;oit</span></code></p></li>
+<li><p>Move headline up: <code class="docutils literal notranslate"><span class="pre">&lt;Leader&gt;oK</span></code></p></li>
+<li><p>Move headline down: <code class="docutils literal notranslate"><span class="pre">&lt;Leader&gt;oJ</span></code></p></li>
+<li><p>Highlighted code blocks (<cite>#+BEGIN_SRC filetype</cite>)</p></li>
+<li><p>Exporting (via <code class="docutils literal notranslate"><span class="pre">emacs</span></code>, <code class="docutils literal notranslate"><span class="pre">pandoc</span></code> and custom export options)</p></li>
+</ul>
+</li>
+</ul>
+<p>Link to detailed documentation: <a class="reference external" href="DOCS.md">DOCS</a></p>
+</div>
+</div>
+<div class="section" id="plugins">
+<h1>Plugins<a class="headerlink" href="#plugins" title="Permalink to this headline"></a></h1>
+<ul class="simple">
+<li><p><a class="reference external" href="https://github.com/akinsho/org-bullets.nvim">org-bullets.nvim</a> - Show org mode bullets as UTF-8 characters</p></li>
+<li><p><a class="reference external" href="https://github.com/lukas-reineke/headlines.nvim">headlines.nvim</a> - Add few highlight options for code blocks and headlines</p></li>
+<li><p><a class="reference external" href="https://github.com/michaelb/sniprun">sniprun</a> - For code evaluation in blocks</p></li>
+<li><p><a class="reference external" href="https://github.com/dhruvasagar/vim-table-mode">vim-table-mode</a> - For table support</p></li>
+</ul>
+<p>See all available plugins on <a class="reference external" href="https://github.com/topics/orgmode-nvim">orgmode-nvim</a></p>
+<p><strong>If you built a plugin please add “orgmode-nvim” topic to it.</strong></p>
+<p><strong>NOTE</strong>: None of the Emacs Orgmode plugins will be built into orgmode.nvim.
+Anything that’s a separate plugin in Emacs Orgmode should be a separate plugin in here.
+Point of this plugin is to provide functionality that’s built into Emacs Orgmode core,
+and a good foundation for external plugins.</p>
+<p>If you want to build a plugin, post suggestions and improvements on <a class="reference external" href="https://github.com/nvim-orgmode/orgmode/issues/26">Plugins infrastructure</a>
+issue.</p>
+</div>
+<div class="section" id="development">
+<h1>Development<a class="headerlink" href="#development" title="Permalink to this headline"></a></h1>
+<div class="section" id="tests">
+<h2>Tests<a class="headerlink" href="#tests" title="Permalink to this headline"></a></h2>
+<p>To run tests, <a class="reference external" href="https://github.com/nvim-lua/plenary.nvim">plenary.nvim</a> is necessary. Once installed, run:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>make <span class="nb">test</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="documentation">
+<h2>Documentation<a class="headerlink" href="#documentation" title="Permalink to this headline"></a></h2>
+<p>Vim documentation is auto generated from <a class="reference external" href="DOCS.md">DOCS.md</a> file with <a class="reference external" href="https://github.com/FooSoft/md2vim">md2vim</a>.</p>
+</div>
+<div class="section" id="formatting">
+<h2>Formatting<a class="headerlink" href="#formatting" title="Permalink to this headline"></a></h2>
+<p>Formatting is done via <a class="reference external" href="https://github.com/JohnnyMorganz/StyLua">StyLua</a>. To format everything run:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>make format
+</pre></div>
+</div>
+</div>
+<div class="section" id="parser">
+<h2>Parser<a class="headerlink" href="#parser" title="Permalink to this headline"></a></h2>
+<p>Parsing is done via builtin tree-sitter parser and <a class="reference external" href="https://github.com/milisims/tree-sitter-org">tree-sitter-org</a> grammar.</p>
+</div>
+</div>
+<div class="section" id="plans">
+<h1>Plans<a class="headerlink" href="#plans" title="Permalink to this headline"></a></h1>
+<ul class="simple">
+<li><p>[X] Support searching by properties</p></li>
+<li><p>[ ] Improve checkbox hierarchy</p></li>
+<li><p>[X] Support todo keyword faces</p></li>
+<li><p>[X] Support clocking work time</p></li>
+<li><p>[X] Improve folding</p></li>
+<li><p>[X] Support exporting (via existing emacs tools)</p></li>
+<li><p>[ ] Support archiving to specific headline</p></li>
+<li><p>[ ] Support tables</p></li>
+<li><p>[ ] Support diary format dates</p></li>
+<li><p>[ ] Support evaluating code blocks</p></li>
+</ul>
+</div>
+<div class="section" id="thanks-to">
+<h1>Thanks to<a class="headerlink" href="#thanks-to" title="Permalink to this headline"></a></h1>
+<ul class="simple">
+<li><p><a class="reference external" href="https://github.com/dhruvasagar">&#64;dhruvasagar</a> and his <a class="reference external" href="https://github.com/dhruvasagar/vim-dotoo">vim-dotoo</a> plugin
+that got me started using orgmode. Without him this plugin would not happen.</p></li>
+<li><p><a class="reference external" href="https://github.com/milisims">&#64;milisims</a> for writing a tree-sitter parser for org</p></li>
+<li><p><a class="reference external" href="https://github.com/jceb/vim-orgmode">vim-orgmode</a> for some parts of the code (mostly syntax)</p></li>
+</ul>
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, nvim-orgmode.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
