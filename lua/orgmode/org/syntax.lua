@@ -26,7 +26,7 @@ local function load_code_blocks()
   for _, ft in ipairs(loaded_filetypes) do
     vim.cmd(
       string.format(
-        [[syntax region orgmodeBlockSrc%s matchgroup=comment start="^\s*#+BEGIN_SRC\ %s\s*.*$" end="^\s*#+END_SRC\s*$" keepend contains=@orgmodeBlockSrc%s,org_block_delimiter]],
+        [[syntax region orgmodeBlockSrc%s matchgroup=comment start="^\s*#+\(BEGIN_SRC\|begin_src\)\ %s\s*.*$" end="^\s*#+\(END_SRC\|end_src\)\s*$" keepend contains=@orgmodeBlockSrc%s,org_block_delimiter]],
         ft,
         ft,
         ft
