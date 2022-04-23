@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Installation &mdash; Orgmode.nvim 0.2.1 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Setup" href="setup.html" />
+    <link rel="prev" title="Getting started" href="getting_started.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="index.html" class="icon icon-home"> Orgmode.nvim
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting started</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="setup.html">Setup</a></li>
+<li class="toctree-l1"><a class="reference internal" href="features.html">Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="demo.html">Demos</a></li>
+<li class="toctree-l1"><a class="reference internal" href="plugins.html">Plugins</a></li>
+<li class="toctree-l1"><a class="reference internal" href="development.html">Development</a></li>
+<li class="toctree-l1"><a class="reference internal" href="roadmap.html">Roadmap</a></li>
+<li class="toctree-l1"><a class="reference internal" href="thanks.html">Thanks to</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Orgmode.nvim</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+      <li>Installation</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/installation.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <div class="section" id="installation">
+<h1>Installation<a class="headerlink" href="#installation" title="Permalink to this headline"></a></h1>
+<p>Use your favourite package manager:</p>
+<ul class="simple">
+<li><p><a class="reference external" href="https://github.com/kristijanhusak/vim-packager">vim-packager</a>:</p></li>
+</ul>
+<div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="n">packager</span><span class="p">.</span><span class="n">add</span><span class="p">(</span><span class="s1">&#39;nvim-treesitter/nvim-treesitter&#39;</span><span class="p">)</span>
+<span class="n">packager</span><span class="p">.</span><span class="n">add</span><span class="p">(</span><span class="s1">&#39;nvim-orgmode/orgmode&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p><a class="reference external" href="https://github.com/wbthomason/packer.nvim">packer.nvim</a></p></li>
+</ul>
+<p><strong>Recommended</strong></p>
+<div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="n">use</span> <span class="p">{</span><span class="s1">&#39;nvim-treesitter/nvim-treesitter&#39;</span><span class="p">}</span>
+<span class="n">use</span> <span class="p">{</span><span class="s1">&#39;nvim-orgmode/orgmode&#39;</span><span class="p">,</span> <span class="n">config</span> <span class="o">=</span> <span class="kr">function</span><span class="p">()</span>
+        <span class="nb">require</span><span class="p">(</span><span class="s1">&#39;orgmode&#39;</span><span class="p">).</span><span class="n">setup</span><span class="p">{}</span>
+<span class="kr">end</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p><strong>Lazy loading (Not recommended)</strong></p>
+<p>Lazy loading via <code class="docutils literal notranslate"><span class="pre">ft</span></code> option works, but not completely. Global mappings are not set because plugin is not initialized on startup.
+Above setup has startup time of somewhere between 1 and 3 ms, so there are no many benefits in lazy loading.
+If you want to do it anyway, here’s the lazy load setup:</p>
+<div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="n">use</span> <span class="p">{</span><span class="s1">&#39;nvim-treesitter/nvim-treesitter&#39;</span><span class="p">}</span>
+<span class="n">use</span> <span class="p">{</span><span class="s1">&#39;nvim-orgmode/orgmode&#39;</span><span class="p">,</span>
+    <span class="n">ft</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;org&#39;</span><span class="p">},</span>
+    <span class="n">config</span> <span class="o">=</span> <span class="kr">function</span><span class="p">()</span>
+            <span class="nb">require</span><span class="p">(</span><span class="s1">&#39;orgmode&#39;</span><span class="p">).</span><span class="n">setup</span><span class="p">{}</span>
+    <span class="kr">end</span>
+    <span class="p">}</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p><a class="reference external" href="https://github.com/junegunn/vim-plug">vim-plug</a></p></li>
+</ul>
+<div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="n">Plug</span> <span class="s1">&#39;nvim-treesitter/nvim-treesitter&#39;</span>
+<span class="n">Plug</span> <span class="s1">&#39;nvim-orgmode/orgmode&#39;</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p><a class="reference external" href="https://github.com/Shougo/dein.vim">dein</a></p></li>
+</ul>
+<div class="highlight-vim notranslate"><div class="highlight"><pre><span></span><span class="k">call</span> dein#add<span class="p">(</span><span class="s1">&#39;nvim-treesitter/nvim-treesitter&#39;</span><span class="p">)</span>
+<span class="k">call</span> dein#add<span class="p">(</span><span class="s1">&#39;nvim-orgmode/orgmode&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="getting_started.html" class="btn btn-neutral float-left" title="Getting started" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="setup.html" class="btn btn-neutral float-right" title="Setup" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, nvim-orgmode.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
