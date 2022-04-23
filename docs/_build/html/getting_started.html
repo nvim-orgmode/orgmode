@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Development &mdash; Orgmode.nvim 0.2.1 documentation</title>
+  <title>Getting started &mdash; Orgmode.nvim 0.2.1 documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -17,8 +17,8 @@
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Roadmap" href="roadmap.html" />
-    <link rel="prev" title="Plugins" href="plugins.html" /> 
+    <link rel="next" title="Installation" href="installation.html" />
+    <link rel="prev" title="Orgmode.nvim" href="index.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -37,17 +37,20 @@
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting started</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Getting started</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#creating-todo-items">Creating TODO items</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#defining-and-moving-todo-items-between-states">Defining and moving TODO items between states</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#adding-dates-to-todo-items">Adding dates to TODO items</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#viewing-scheduled-todo-items">Viewing scheduled TODO items</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#adding-a-priority-to-todo-items">Adding a priority to TODO items</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#capturing-a-todo-item">Capturing a TODO item</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#refiling-a-todo-item">Refiling a TODO item</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="setup.html">Setup</a></li>
 <li class="toctree-l1"><a class="reference internal" href="plugins.html">Plugins</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Development</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#tests">Tests</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#documentation">Documentation</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#formatting">Formatting</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#parser">Parser</a></li>
-</ul>
-</li>
+<li class="toctree-l1"><a class="reference internal" href="development.html">Development</a></li>
 <li class="toctree-l1"><a class="reference internal" href="roadmap.html">Roadmap</a></li>
 <li class="toctree-l1"><a class="reference internal" href="thanks.html">Thanks to</a></li>
 </ul>
@@ -66,9 +69,9 @@
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
       <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
-      <li>Development</li>
+      <li>Getting started</li>
       <li class="wy-breadcrumbs-aside">
-            <a href="_sources/development.rst.txt" rel="nofollow"> View page source</a>
+            <a href="_sources/getting_started.rst.txt" rel="nofollow"> View page source</a>
       </li>
   </ul>
   <hr/>
@@ -76,29 +79,29 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <div class="section" id="development">
-<h1>Development<a class="headerlink" href="#development" title="Permalink to this headline"></a></h1>
-<div class="section" id="tests">
-<h2>Tests<a class="headerlink" href="#tests" title="Permalink to this headline"></a></h2>
-<p>To run tests, <a class="reference external" href="https://github.com/nvim-lua/plenary.nvim">plenary.nvim</a> is necessary. Once installed, run:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>make <span class="nb">test</span>
-</pre></div>
+  <div class="section" id="getting-started">
+<h1>Getting started<a class="headerlink" href="#getting-started" title="Permalink to this headline"></a></h1>
+<p>This chapter will show you the basics of using orgmode to organise your tasks.</p>
+<div class="section" id="creating-todo-items">
+<h2>Creating TODO items<a class="headerlink" href="#creating-todo-items" title="Permalink to this headline"></a></h2>
 </div>
+<div class="section" id="defining-and-moving-todo-items-between-states">
+<h2>Defining and moving TODO items between states<a class="headerlink" href="#defining-and-moving-todo-items-between-states" title="Permalink to this headline"></a></h2>
 </div>
-<div class="section" id="documentation">
-<h2>Documentation<a class="headerlink" href="#documentation" title="Permalink to this headline"></a></h2>
-<p>Vim documentation is auto generated from <a class="reference external" href="DOCS.md">DOCS.md</a> file with <a class="reference external" href="https://github.com/FooSoft/md2vim">md2vim</a>.</p>
+<div class="section" id="adding-dates-to-todo-items">
+<h2>Adding dates to TODO items<a class="headerlink" href="#adding-dates-to-todo-items" title="Permalink to this headline"></a></h2>
 </div>
-<div class="section" id="formatting">
-<h2>Formatting<a class="headerlink" href="#formatting" title="Permalink to this headline"></a></h2>
-<p>Formatting is done via <a class="reference external" href="https://github.com/JohnnyMorganz/StyLua">StyLua</a>. To format everything run:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>make format
-</pre></div>
+<div class="section" id="viewing-scheduled-todo-items">
+<h2>Viewing scheduled TODO items<a class="headerlink" href="#viewing-scheduled-todo-items" title="Permalink to this headline"></a></h2>
 </div>
+<div class="section" id="adding-a-priority-to-todo-items">
+<h2>Adding a priority to TODO items<a class="headerlink" href="#adding-a-priority-to-todo-items" title="Permalink to this headline"></a></h2>
 </div>
-<div class="section" id="parser">
-<h2>Parser<a class="headerlink" href="#parser" title="Permalink to this headline"></a></h2>
-<p>Parsing is done via builtin tree-sitter parser and <a class="reference external" href="https://github.com/milisims/tree-sitter-org">tree-sitter-org</a> grammar.</p>
+<div class="section" id="capturing-a-todo-item">
+<h2>Capturing a TODO item<a class="headerlink" href="#capturing-a-todo-item" title="Permalink to this headline"></a></h2>
+</div>
+<div class="section" id="refiling-a-todo-item">
+<h2>Refiling a TODO item<a class="headerlink" href="#refiling-a-todo-item" title="Permalink to this headline"></a></h2>
 </div>
 </div>
 
@@ -106,8 +109,8 @@
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="plugins.html" class="btn btn-neutral float-left" title="Plugins" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="roadmap.html" class="btn btn-neutral float-right" title="Roadmap" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="index.html" class="btn btn-neutral float-left" title="Orgmode.nvim" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="installation.html" class="btn btn-neutral float-right" title="Installation" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

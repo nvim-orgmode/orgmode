@@ -1,8 +1,3 @@
-.. NVim Orgmode documentation master file, created by
-   sphinx-quickstart on Sat Apr 23 22:08:05 2022.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
-
 .. raw:: html
 
     <div align="center">
@@ -26,6 +21,7 @@ Orgmode clone written in Lua for Neovim 0.7.
 .. toctree::
    :maxdepth: 2
 
+   getting_started 
    installation
    setup
    plugins

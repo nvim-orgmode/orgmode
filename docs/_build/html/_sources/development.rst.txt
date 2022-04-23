@@ -11,7 +11,7 @@ To run tests, `plenary.nvim <https://github.com/nvim-lua/plenary.nvim>`_ is nece
     make test
 
 Documentation
-************
+*************
 
 Vim documentation is auto generated from `DOCS.md <DOCS.md>`_ file with `md2vim <https://github.com/FooSoft/md2vim>`_.
 
