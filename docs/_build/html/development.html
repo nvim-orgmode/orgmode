@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Orgmode.nvim &mdash; Orgmode.nvim 0.2.1 documentation</title>
+  <title>Development &mdash; Orgmode.nvim 0.2.1 documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -17,7 +17,8 @@
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Installation" href="installation.html" /> 
+    <link rel="next" title="Roadmap" href="roadmap.html" />
+    <link rel="prev" title="Plugins" href="plugins.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -25,7 +26,7 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-            <a href="#" class="icon icon-home"> Orgmode.nvim
+            <a href="index.html" class="icon icon-home"> Orgmode.nvim
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
@@ -35,11 +36,17 @@
   </form>
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
-              <ul>
+              <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="setup.html">Setup</a></li>
 <li class="toctree-l1"><a class="reference internal" href="plugins.html">Plugins</a></li>
-<li class="toctree-l1"><a class="reference internal" href="development.html">Development</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Development</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#tests">Tests</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#documentation">Documentation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#formatting">Formatting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#parser">Parser</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="roadmap.html">Roadmap</a></li>
 <li class="toctree-l1"><a class="reference internal" href="thanks.html">Thanks to</a></li>
 </ul>
@@ -50,17 +57,17 @@
 
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="#">Orgmode.nvim</a>
+          <a href="index.html">Orgmode.nvim</a>
       </nav>
 
       <div class="wy-nav-content">
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="#" class="icon icon-home"></a> &raquo;</li>
-      <li>Orgmode.nvim</li>
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+      <li>Development</li>
       <li class="wy-breadcrumbs-aside">
-            <a href="_sources/index.rst.txt" rel="nofollow"> View page source</a>
+            <a href="_sources/development.rst.txt" rel="nofollow"> View page source</a>
       </li>
   </ul>
   <hr/>
@@ -68,36 +75,29 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <div align="center">
-    <img alt="org-neovim-blend" src="https://user-images.githubusercontent.com/1782860/124820564-eddc5000-df6d-11eb-9016-d0c073a9575c.png" width="250" />
-</div><div class="section" id="orgmode-nvim">
-<h1>Orgmode.nvim<a class="headerlink" href="#orgmode-nvim" title="Permalink to this headline"></a></h1>
-<div align="left">
-    <a href="/LICENSE"><img alt="License" src="https://img.shields.io/badge/license-MIT-brightgreen?style=flat-square"</a><a href="https://ko-fi.com/kristijanhusak"> <img alt="Kofi" src="https://img.shields.io/badge/support-kofi-00b9fe?style=flat-square&logo=kofi"></a>
-    <p>
-</div><p>Orgmode clone written in Lua for Neovim 0.7.</p>
-<div class="toctree-wrapper compound">
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="setup.html">Setup</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="setup.html#completion">Completion</a></li>
-<li class="toctree-l2"><a class="reference internal" href="setup.html#gifs">Gifs</a></li>
-<li class="toctree-l2"><a class="reference internal" href="setup.html#tree-sitter-info">Tree-sitter info</a></li>
-<li class="toctree-l2"><a class="reference internal" href="setup.html#features-tl-dr">Features (TL;DR):</a></li>
-<li class="toctree-l2"><a class="reference internal" href="setup.html#features-detailed-breakdown">Features (Detailed breakdown):</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="plugins.html">Plugins</a></li>
-<li class="toctree-l1"><a class="reference internal" href="development.html">Development</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="development.html#tests">Tests</a></li>
-<li class="toctree-l2"><a class="reference internal" href="development.html#documentation">Documentation</a></li>
-<li class="toctree-l2"><a class="reference internal" href="development.html#formatting">Formatting</a></li>
-<li class="toctree-l2"><a class="reference internal" href="development.html#parser">Parser</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="roadmap.html">Roadmap</a></li>
-<li class="toctree-l1"><a class="reference internal" href="thanks.html">Thanks to</a></li>
-</ul>
+  <div class="section" id="development">
+<h1>Development<a class="headerlink" href="#development" title="Permalink to this headline"></a></h1>
+<div class="section" id="tests">
+<h2>Tests<a class="headerlink" href="#tests" title="Permalink to this headline"></a></h2>
+<p>To run tests, <a class="reference external" href="https://github.com/nvim-lua/plenary.nvim">plenary.nvim</a> is necessary. Once installed, run:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>make <span class="nb">test</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="documentation">
+<h2>Documentation<a class="headerlink" href="#documentation" title="Permalink to this headline"></a></h2>
+<p>Vim documentation is auto generated from <a class="reference external" href="DOCS.md">DOCS.md</a> file with <a class="reference external" href="https://github.com/FooSoft/md2vim">md2vim</a>.</p>
+</div>
+<div class="section" id="formatting">
+<h2>Formatting<a class="headerlink" href="#formatting" title="Permalink to this headline"></a></h2>
+<p>Formatting is done via <a class="reference external" href="https://github.com/JohnnyMorganz/StyLua">StyLua</a>. To format everything run:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>make format
+</pre></div>
+</div>
+</div>
+<div class="section" id="parser">
+<h2>Parser<a class="headerlink" href="#parser" title="Permalink to this headline"></a></h2>
+<p>Parsing is done via builtin tree-sitter parser and <a class="reference external" href="https://github.com/milisims/tree-sitter-org">tree-sitter-org</a> grammar.</p>
 </div>
 </div>
 
@@ -105,7 +105,8 @@
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="installation.html" class="btn btn-neutral float-right" title="Installation" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="plugins.html" class="btn btn-neutral float-left" title="Plugins" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="roadmap.html" class="btn btn-neutral float-right" title="Roadmap" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
