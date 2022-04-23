@@ -19,7 +19,7 @@ Orgmode clone written in Lua for Neovim 0.7.
 
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
 
    getting_started 
    installation
