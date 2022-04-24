@@ -90,7 +90,7 @@ local function apply_markup_to_line(namespace, bufnr, line_index, line)
   end
 
   for _, link_range in ipairs(link_ranges) do
-    local link = l:sub(link_range.from, link_range.to)
+    local link = line:sub(link_range.from, link_range.to)
     local alias = link:find('%]%[') or 1
     hl(link_range.from - 1, link_range.to, {
       hl_group = 'org_hyperlink',
