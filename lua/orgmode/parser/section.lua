@@ -625,7 +625,7 @@ function Section:_parse_todo_keyword()
   end
 
   local keyword_info = todo_keywords.KEYS[keyword]
-  self.title = self.title:gsub('^' .. keyword .. '%s*', '')
+  self.title = self.title:gsub('^' .. vim.pesc(keyword) .. '%s*', '')
   self.todo_keyword = {
     value = keyword,
     type = keyword_info.type,
