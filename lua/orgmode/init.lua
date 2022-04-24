@@ -24,8 +24,7 @@ function Org:init()
   if self.initialized then
     return
   end
-  require('orgmode.colors.todo_highlighter').add_todo_keyword_highlights()
-  require('orgmode.colors.hide_leading_stars').setup()
+  require('orgmode.colors.custom_highlighter').setup()
   self.files = require('orgmode.parser.files').new()
   self.agenda = require('orgmode.agenda'):new()
   self.capture = require('orgmode.capture'):new()
