@@ -3,10 +3,6 @@ local highlights = require('orgmode.colors.highlights')
 local utils = require('orgmode.utils')
 
 local function add_todo_keyword_highlights()
-  local ts_highlights_enabled = config:ts_highlights_enabled()
-  if not ts_highlights_enabled then
-    return
-  end
   local query_files = vim.treesitter.get_query_files('org', 'highlights')
   if not query_files or #query_files == 0 then
     return
