@@ -28,7 +28,7 @@ end
 -- returns the nearest headline
 function M.closest_headline()
   vim.treesitter.get_parser(0, 'org'):parse()
-  return M.find_headline(ts_utils.get_node_at_cursor (vim.api.nvim_get_current_win()))
+  return M.find_headline(ts_utils.get_node_at_cursor(vim.api.nvim_get_current_win()))
 end
 
 function M.get_priority(headline)
@@ -56,7 +56,7 @@ function M.set_node_text(node, text)
   if string.len(text) == 0 then
     ec = ec + 1
   end
-  vim.api.nvim_buf_set_text(0, sr, sc, er, ec, {text})
+  vim.api.nvim_buf_set_text(0, sr, sc, er, ec, { text })
 end
 
 function M.set_priority(headline, priority)
