@@ -10,6 +10,7 @@ local config = require('orgmode.config')
 local constants = require('orgmode.utils.constants')
 local ts_utils = require('nvim-treesitter.ts_utils')
 local utils = require('orgmode.utils')
+local tree_utils = require('orgmode.utils.treesitter')
 
 ---@class OrgMappings
 ---@field capture Capture
@@ -306,84 +307,12 @@ function OrgMappings:priority_down()
   self:set_priority('down')
 end
 
-function find_headline(node)
-  if node:type() == 'headline' then
-    return node
-  elseif node:type() == 'section' then
-    -- The headline is always the first child of a section
-    return ts_utils.get_named_children(node)[1]
-  elseif node:parent() then
-    return find_headline(node:parent())
-  else
-    return nil
-  end
-end
-
-function closest_headline()
-  vim.treesitter.get_parser(0, 'org'):parse()
-  return find_headline(ts_utils.get_node_at_cursor (vim.api.nvim_get_current_win()))
-end
-
-function parse_item(headline, pattern)
-  local matching_nodes = vim.tbl_filter(function(node)
-    local text = vim.treesitter.query.get_node_text(node, 0) or ''
-    return string.match(text, pattern)
-  end, ts_utils.get_named_children(headline:field('item')[1]))
-  return matching_nodes[1]
-end
-
-function set_text(node, text)
-  local sr, sc, er, ec = node:range()
-  if string.len(text) == 0 then
-    ec = ec + 1
-  end
-  vim.api.nvim_buf_set_text(0, sr, sc, er, ec, {text})
-end
-
-function get_priority(headline)
-  return parse_item(headline, '%[#%w+%]')
-end
-
-function get_todo(headline)
-  local keywords = config.todo_keywords.ALL
-  local todos = {}
-  for _, word in ipairs(keywords) do
-    local todo = parse_item(headline, string.gsub(word, '-', '%%-'))
-    if todo then
-      table.insert(todos, todo)
-    end
-  end
-  return todos[1]
-end
-
-function get_stars(headline)
-  return headline:field('stars')[1]
-end
-
-function set_priority(headline, priority)
-  local current_priority = get_priority(headline)
-  if current_priority then
-    local text = (vim.trim(priority) == '') and '' or string.format('[#%s]', priority)
-    set_text(current_priority, text)
-  else
-    local todo = get_todo(headline)
-    if todo then
-      local text = vim.treesitter.query.get_node_text(todo, 0)
-      set_text(todo, string.format('%s [#%s]', text, priority))
-    else
-      local stars = get_stars(headline)
-      local text = vim.treesitter.query.get_node_text(stars, 0)
-      set_text(stars, string.format('%s [#%s]', text, priority))
-    end
-  end
-end
-
 function OrgMappings:set_priority(direction)
   local extract_priority = function(node)
     return string.match(vim.treesitter.query.get_node_text(node, 0), '%[#(%w+)%]')
   end
-  local headline = closest_headline()
-  local priority_node = get_priority(headline)
+  local headline = tree_utils.closest_headline()
+  local priority_node = tree_utils.get_priority(headline)
   local current_priority = priority_node and extract_priority(priority_node) or ''
   local priority_state = PriorityState:new(current_priority)
 
@@ -396,7 +325,7 @@ function OrgMappings:set_priority(direction)
     new_priority = priority_state:prompt_user()
   end
 
-  set_priority(headline, new_priority)
+  tree_utils.set_priority(headline, new_priority)
 end
 
 function OrgMappings:todo_next_state()
