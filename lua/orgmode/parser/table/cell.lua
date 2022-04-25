@@ -1,9 +1,8 @@
-local Range = require('orgmode.parser.range')
-
 ---@class TableCell
 ---@field row TableRow
 ---@field value string
 ---@field len number
+---@field display_len number
 ---@field col number
 ---@field range Range
 ---@field content string
@@ -16,6 +15,7 @@ function TableCell:new(opts)
   data.row = opts.row
   data.value = opts.value
   data.len = opts.value:len()
+  data.display_len = vim.api.nvim_strwidth(opts.value)
   data.col = opts.col or 1
   data.reference = opts.reference
   data.range = data.row.range:clone()
