@@ -64,17 +64,31 @@ function M.set_priority(headline, priority)
   if current_priority then
     local text = (vim.trim(priority) == '') and '' or string.format('[#%s]', priority)
     M.set_node_text(current_priority, text)
-  else
-    local todo = M.get_todo(headline)
-    if todo then
-      local text = vim.treesitter.query.get_node_text(todo, 0)
-      M.set_node_text(todo, string.format('%s [#%s]', text, priority))
-    else
-      local stars = M.get_stars(headline)
-      local text = vim.treesitter.query.get_node_text(stars, 0)
-      M.set_node_text(stars, string.format('%s [#%s]', text, priority))
-    end
+    return
   end
+
+  local todo = M.get_todo(headline)
+  if todo then
+    local text = vim.treesitter.query.get_node_text(todo, 0)
+    M.set_node_text(todo, string.format('%s [#%s]', text, priority))
+    return
+  end
+
+  local stars = M.get_stars(headline)
+  local text = vim.treesitter.query.get_node_text(stars, 0)
+  M.set_node_text(stars, string.format('%s [#%s]', text, priority))
+end
+
+function M.set_todo(headline, keyword)
+  local current_todo = M.get_todo(headline)
+  if current_todo then
+    M.set_node_text(current_todo, keyword)
+    return
+  end
+
+  local stars = M.get_stars(headline)
+  local text = vim.treesitter.query.get_node_text(stars, 0)
+  M.set_node_text(stars, string.format("%s %s", text, keyword))
 end
 
 return M

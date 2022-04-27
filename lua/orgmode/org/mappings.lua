@@ -757,9 +757,10 @@ end
 ---@param use_fast_access boolean
 ---@return string
 function OrgMappings:_change_todo_state(direction, use_fast_access)
-  local item = Files.get_closest_headline()
-  local todo = item.todo_keyword
-  local todo_state = TodoState:new({ current_state = todo.value })
+  local headline = tree_utils.closest_headline()
+  local todo = tree_utils.get_todo(headline)
+  local current_keyword = todo and vim.treesitter.query.get_node_text(todo, 0) or ''
+  local todo_state = TodoState:new({ current_state = current_keyword })
   local next_state = nil
   if use_fast_access and todo_state:has_fast_access() then
     next_state = todo_state:open_fast_access()
@@ -777,25 +778,14 @@ function OrgMappings:_change_todo_state(direction, use_fast_access)
     return false
   end
 
-  if next_state.value == todo.value then
+  if next_state.value == current_keyword then
     if todo.value ~= '' then
       utils.echo_info('TODO state was already ', { { next_state.value, next_state.hl } })
     end
     return false
   end
 
-  local linenr = item.range.start_line
-  local stars = string.rep('%*', item.level)
-  local old_state = vim.pesc(todo.value)
-  if old_state ~= '' then
-    old_state = old_state .. '%s+'
-  end
-  local new_state = next_state.value
-  if new_state ~= '' then
-    new_state = new_state .. ' '
-  end
-  local new_line = vim.fn.getline(linenr):gsub('^' .. stars .. '%s+' .. old_state, stars .. ' ' .. new_state)
-  vim.fn.setline(linenr, new_line)
+  tree_utils.set_todo(headline, next_state.value)
   return true
 end
 
