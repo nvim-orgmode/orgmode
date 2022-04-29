@@ -312,8 +312,7 @@ function OrgMappings:set_priority(direction)
     return string.match(vim.treesitter.query.get_node_text(node, 0), '%[#(%w+)%]')
   end
   local headline = tree_utils.closest_headline()
-  local priority_node = tree_utils.get_priority(headline)
-  local current_priority = priority_node and extract_priority(priority_node) or ''
+  local priority_node, current_priority = tree_utils.get_priority(headline)
   local priority_state = PriorityState:new(current_priority)
 
   local new_priority
@@ -758,8 +757,7 @@ end
 ---@return string
 function OrgMappings:_change_todo_state(direction, use_fast_access)
   local headline = tree_utils.closest_headline()
-  local todo = tree_utils.get_todo(headline)
-  local current_keyword = todo and vim.treesitter.query.get_node_text(todo, 0) or ''
+  local todo, current_keyword = tree_utils.get_todo(headline)
   local todo_state = TodoState:new({ current_state = current_keyword })
   local next_state = nil
   if use_fast_access and todo_state:has_fast_access() then
