@@ -4,11 +4,16 @@ local M = {}
 
 -- Searches headline item nodes for a match
 local function parse_item(headline, pattern)
+  local match = ''
   local matching_nodes = vim.tbl_filter(function(node)
     local text = vim.treesitter.query.get_node_text(node, 0) or ''
-    return string.match(text, pattern)
+    local m = string.match(text, pattern)
+    if m then
+      match = string.match(text, pattern)
+      return true
+    end
   end, ts_utils.get_named_children(headline:field('item')[1]))
-  return matching_nodes[1]
+  return matching_nodes[1], match
 end
 
 -- walks the tree to find a headline
@@ -32,19 +37,28 @@ function M.closest_headline()
 end
 
 function M.get_priority(headline)
-  return parse_item(headline, '%[#%w+%]')
+  return parse_item(headline, '%[#(%w+)%]')
 end
 
+-- Returns the headlines todo node, it's keyword,
+-- and if it's in done state
+-- @return Node, string, boolean
 function M.get_todo(headline)
   local keywords = config.todo_keywords.ALL
-  local todos = {}
+  local done_keywords = config.todo_keywords.DONE
+  local todo_node = nil
+  local keyword = nil
+  local is_done = nil
   for _, word in ipairs(keywords) do
     local todo = parse_item(headline, string.gsub(word, '-', '%%-'))
     if todo then
-      table.insert(todos, todo)
+      todo_node = todo
+      keyword = word
+      is_done = vim.tbl_contains(done_keywords, word)
+      break
     end
   end
-  return todos[1]
+  return todo_node, keyword, is_done
 end
 
 function M.get_stars(headline)
@@ -88,7 +102,7 @@ function M.set_todo(headline, keyword)
 
   local stars = M.get_stars(headline)
   local text = vim.treesitter.query.get_node_text(stars, 0)
-  M.set_node_text(stars, string.format("%s %s", text, keyword))
+  M.set_node_text(stars, string.format('%s %s', text, keyword))
 end
 
 return M
