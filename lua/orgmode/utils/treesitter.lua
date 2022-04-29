@@ -46,29 +46,27 @@ end
 function M.get_todo(headline)
   local keywords = config.todo_keywords.ALL
   local done_keywords = config.todo_keywords.DONE
-  local todo_node = nil
-  local keyword = nil
-  local is_done = nil
   for _, word in ipairs(keywords) do
     local todo = parse_item(headline, string.gsub(word, '-', '%%-'))
     if todo then
-      todo_node = todo
-      keyword = word
-      is_done = vim.tbl_contains(done_keywords, word)
-      break
+      return todo, word, vim.tbl_contains(done_keywords, word)
     end
   end
-  return todo_node, keyword, is_done
 end
 
 function M.get_stars(headline)
   return headline:field('stars')[1]
 end
 
-function M.set_node_text(node, text)
+-- @param front_trim boolean
+function M.set_node_text(node, text, front_trim)
   local sr, sc, er, ec = node:range()
   if string.len(text) == 0 then
-    ec = ec + 1
+    if front_trim then
+      sc = sc - 1
+    else
+      ec = ec + 1
+    end
   end
   vim.api.nvim_buf_set_text(0, sr, sc, er, ec, { text })
 end
@@ -103,6 +101,55 @@ function M.set_todo(headline, keyword)
   local stars = M.get_stars(headline)
   local text = vim.treesitter.query.get_node_text(stars, 0)
   M.set_node_text(stars, string.format('%s %s', text, keyword))
+end
+
+function M.get_plan(headline)
+  local section = headline:parent()
+  for _, node in ipairs(ts_utils.get_named_children(section)) do
+    if node:type() == 'plan' then
+      return node
+    end
+  end
+end
+
+function M.get_dates(headline)
+  local plan = M.get_plan(headline)
+  local dates = {}
+  for _, node in ipairs(ts_utils.get_named_children(plan)) do
+    local name = vim.treesitter.query.get_node_text(node:named_child(0), 0)
+    dates[name] = node
+  end
+  return dates
+end
+
+function M.repeater_dates(headline)
+  return vim.tbl_filter(function(entry)
+    local timestamp = entry:field('timestamp')[1]
+    for _, node in ipairs(ts_utils.get_named_children(timestamp)) do
+      if node:type() == 'repeat' then
+        return true
+      end
+    end
+  end, M.get_dates(headline))
+end
+
+function M.add_closed_date(headline)
+  local dates = M.get_dates(headline)
+  if vim.tbl_count(dates) == 0 or dates['CLOSED'] then
+    return
+  end
+  local last_child = dates['DEADLINE'] or dates['SCHEDULED']
+  local ptext = vim.treesitter.query.get_node_text(last_child, 0)
+  local text = ptext .. ' CLOSED: [' .. vim.fn.strftime('%Y-%m-%d %a %H:%M') .. ']'
+  M.set_node_text(last_child, text)
+end
+
+function M.remove_closed_date(headline)
+  local dates = M.get_dates(headline)
+  if vim.tbl_count(dates) == 0 or not dates['CLOSED'] then
+    return
+  end
+  M.set_node_text(dates['CLOSED'], '', true)
 end
 
 return M
