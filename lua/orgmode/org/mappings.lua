@@ -366,9 +366,8 @@ function OrgMappings:toggle_heading()
 end
 
 function OrgMappings:_todo_change_state(direction)
-  local item = Files.get_closest_headline()
-  local was_done = item:is_done()
-  local old_state = item.todo_keyword.value
+  local headline = tree_utils.closest_headline()
+  local _, old_state, was_done = tree_utils.get_todo(headline)
   local changed = self:_change_todo_state(direction, true)
   if not changed then
     return
@@ -382,10 +381,10 @@ function OrgMappings:_todo_change_state(direction)
   if #repeater_dates == 0 then
     local log_time = config.org_log_done == 'time'
     if log_time and item:is_done() and not was_done then
-      item:add_closed_date()
+      tree_utils.add_closed_date(headline)
     end
     if log_time and not item:is_done() and was_done then
-      item:remove_closed_date()
+      tree_utils.remove_closed_date(headline)
     end
     return item
   end
