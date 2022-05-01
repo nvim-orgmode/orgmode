@@ -51,9 +51,6 @@ function Org:setup_autocmds()
   vim.cmd(
     [[autocmd BufWritePost *.org,*.org_archive call luaeval('require("orgmode").reload(_A)', expand('<afile>:p'))]]
   )
-  vim.cmd(
-    [[autocmd BufReadPost,BufWritePost *.org,*.org_archive lua require('orgmode.org.diagnostics').print_error_state()]]
-  )
   vim.cmd([[autocmd FileType org call luaeval('require("orgmode").reload(_A)', expand('<afile>:p'))]])
   vim.cmd([[autocmd CursorHold,CursorHoldI *.org,*.org_archive lua require('orgmode.org.diagnostics').report()]])
   vim.cmd([[augroup END]])
@@ -131,7 +128,8 @@ local function set_dot_repeat(cmd, opts)
   )
 end
 
----@param opts table
+---@param cmd string
+---@param opts? table
 local function action(cmd, opts)
   local parts = vim.split(cmd, '.', true)
   if not instance or #parts < 2 then

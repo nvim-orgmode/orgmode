@@ -6,7 +6,7 @@ local Promise = require('orgmode.utils.promise')
 ---@class Clock
 local Clock = {}
 
-function Clock:new(opts)
+function Clock:new()
   local data = {}
   setmetatable(data, self)
   self.__index = self
@@ -71,7 +71,7 @@ function Clock:org_clock_goto()
   if vim.api.nvim_buf_get_name(0) ~= active_headline.file then
     vim.cmd('edit ' .. vim.fn.fnameescape(active_headline.file))
   end
-  vim.fn.cursor(active_headline.range.start_line, 0)
+  vim.fn.cursor({ active_headline.range.start_line, 0 })
 end
 
 function Clock:org_set_effort()

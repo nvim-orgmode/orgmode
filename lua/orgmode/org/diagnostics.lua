@@ -27,7 +27,7 @@ local function get_errors()
       end_lnum = end_line,
       col = start_col,
       end_col = end_col,
-      severity = vim.diagnostic and vim.diagnostic.severity.ERROR or 'Error',
+      severity = vim.diagnostic.severity.ERROR or 'Error',
       source = 'always',
       message = string.format('Error on text "%s"', err.text),
     }
@@ -36,7 +36,7 @@ end
 
 local function report_errors()
   local errors = get_errors()
-  if errors == false or errors == nil or not vim.diagnostic then
+  if errors == false or errors == nil then
     return
   end
 
@@ -64,17 +64,7 @@ local function print_errors()
   return utils.echo_error(msg)
 end
 
-local function print_error_state()
-  local errors = get_errors()
-  if not errors or #errors == 0 or vim.diagnostic then
-    return
-  end
-
-  return utils.echo_error('There are some errors in the document. To view them, use :OrgDiagnostics command.')
-end
-
 return {
   report = report_errors,
   print = print_errors,
-  print_error_state = print_error_state,
 }

@@ -8,7 +8,7 @@ local query_cache = {}
 
 ---@param file string
 ---@param callback function
----@param as_string boolean
+---@param as_string? boolean
 function utils.readfile(file, callback, as_string)
   uv.fs_open(file, 'r', 438, function(err1, fd)
     if err1 then
@@ -53,22 +53,22 @@ function utils.open(target)
 end
 
 ---@param msg string
----@param additional_msg table
----@param store_in_history boolean
+---@param additional_msg? table
+---@param store_in_history? boolean
 function utils.echo_warning(msg, additional_msg, store_in_history)
   return utils._echo(msg, 'WarningMsg', additional_msg, store_in_history)
 end
 
 ---@param msg string
----@param additional_msg table
----@param store_in_history boolean
+---@param additional_msg? table
+---@param store_in_history? boolean
 function utils.echo_error(msg, additional_msg, store_in_history)
   return utils._echo(msg, 'ErrorMsg', additional_msg, store_in_history)
 end
 
 ---@param msg string
----@param additional_msg table
----@param store_in_history boolean
+---@param additional_msg? table
+---@param store_in_history? boolean
 function utils.echo_info(msg, additional_msg, store_in_history)
   return utils._echo(msg, nil, additional_msg, store_in_history)
 end
@@ -132,7 +132,7 @@ end
 --- Concat one table at the end of another table
 ---@param first table
 ---@param second table
----@param unique boolean
+---@param unique? boolean
 ---@return table
 function utils.concat(first, second, unique)
   for _, v in ipairs(second) do
