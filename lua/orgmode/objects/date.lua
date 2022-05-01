@@ -28,8 +28,8 @@ local time_format = '%H:%M'
 local Date = {}
 
 ---@param source table
----@param target table
----@param include_sec boolean
+---@param target? table
+---@param include_sec? boolean
 ---@return table
 local function set_date_opts(source, target, include_sec)
   target = target or {}
@@ -87,7 +87,7 @@ function Date:from_time_table(time)
   return Date:new(opts)
 end
 
----@param opts table
+---@param opts? table
 ---@return Date
 function Date:set(opts)
   opts = opts or {}
@@ -98,7 +98,7 @@ function Date:set(opts)
   return self:from_time_table(date)
 end
 
----@param opts table
+---@param opts? table
 ---@return Date
 function Date:clone(opts)
   local date = Date:new(self)
@@ -158,7 +158,7 @@ local function parse_date(date, dayname, adjustments, data)
   return Date:new(opts)
 end
 
----@param data table
+---@param data? table
 ---@return Date
 local function today(data)
   local opts = vim.tbl_deep_extend('force', os.date('*t', os.time()), data or {})
@@ -166,7 +166,7 @@ local function today(data)
   return Date:new(opts)
 end
 
----@param data table
+---@param data? table
 ---@return Date
 local function now(data)
   local opts = vim.tbl_deep_extend('force', os.date('*t', os.time()), data or {})
@@ -180,7 +180,7 @@ local function is_valid_date(datestr)
 end
 
 ---@param datestr string
----@param opts table
+---@param opts? table
 ---@return Date
 local function from_string(datestr, opts)
   if not is_valid_date(datestr) then
@@ -611,7 +611,7 @@ function Date:format(format)
 end
 
 ---@param from Date
----@param span string
+---@param span? string
 ---@return number
 function Date:diff(from, span)
   span = span or 'day'
@@ -856,7 +856,7 @@ end
 ---@param type? string
 ---@return Date
 local function from_match(line, lnum, open, datetime, close, last_match, type)
-  local search_from = last_match and last_match.range.end_col or 0
+  local search_from = last_match ~= nil and last_match.range.end_col or 0
   local from, to = line:find(vim.pesc(open .. datetime .. close), search_from)
   local is_date_range_end = last_match and last_match.is_date_range_start and line:sub(from - 2, from - 1) == '--'
   local opts = {

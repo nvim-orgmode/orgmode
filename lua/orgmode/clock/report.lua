@@ -1,6 +1,5 @@
 local Files = require('orgmode.parser.files')
 local Table = require('orgmode.parser.table')
-local Range = require('orgmode.parser.range')
 local Duration = require('orgmode.objects.duration')
 
 ---@class ClockReport

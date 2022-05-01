@@ -331,6 +331,8 @@ make test
 ```
 
 ### Documentation
+Hosted documentation is on: [https://nvim-orgmode.github.io/](https://nvim-orgmode.github.io/)
+
 Vim documentation is auto generated from [DOCS.md](DOCS.md) file with [md2vim](https://github.com/FooSoft/md2vim).
 
 ### Formatting
