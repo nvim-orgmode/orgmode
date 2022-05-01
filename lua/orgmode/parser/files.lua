@@ -203,14 +203,11 @@ function Files.find_headlines_matching_search_term(term, no_escape, search_extra
   return headlines
 end
 
----@param id number
+---@param id? number
 ---@return Section
 function Files.get_closest_headline(id)
   local current_file = Files.get_current_file()
   local msg = 'Make sure there are no errors in the document'
-  if not vim.diagnostic then
-    msg = string.format('%s by running :OrgDiagnostics command', msg)
-  end
   if not current_file then
     error({ message = string.format('Failed to parse current file. %s.', msg) })
   end

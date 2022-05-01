@@ -37,6 +37,7 @@ function PackedValue.first(self)
   return first
 end
 
+---@class Promise
 local Promise = {}
 Promise.__index = Promise
 
@@ -210,8 +211,8 @@ function Promise._start_reject(self, value)
 end
 
 --- Equivalents to JavaScript's Promise.then.
---- @param on_fullfilled function|nil: A callback on fullfilled.
---- @param on_rejected function|nil: A callback on rejected.
+--- @param on_fullfilled? function|nil: A callback on fullfilled.
+--- @param on_rejected? function|nil: A callback on rejected.
 --- @return table: Promise
 function Promise.next(self, on_fullfilled, on_rejected)
   vim.validate({

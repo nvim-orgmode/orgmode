@@ -17,7 +17,7 @@ local AgendaView = require('orgmode.agenda.views.agenda')
 ---@field filters AgendaFilter
 local Agenda = {}
 
----@param opts table
+---@param opts? table
 function Agenda:new(opts)
   opts = opts or {}
   local data = {
@@ -218,7 +218,7 @@ function Agenda:switch_to_item()
     return
   end
   vim.cmd('edit ' .. vim.fn.fnameescape(item.file))
-  vim.fn.cursor(item.file_position, 0)
+  vim.fn.cursor({ item.file_position, 0 })
   vim.cmd([[normal! zv]])
 end
 
@@ -348,7 +348,7 @@ function Agenda:goto_item()
   end
 
   vim.cmd('edit ' .. vim.fn.fnameescape(item.file))
-  vim.fn.cursor(item.file_position, 0)
+  vim.fn.cursor({ item.file_position, 0 })
   vim.cmd([[normal! zv]])
 end
 
@@ -383,7 +383,7 @@ function Agenda:_remote_edit(opts)
     return
   end
   local update = Files.update_file(item.file, function(_)
-    vim.fn.cursor(item.file_position, 0)
+    vim.fn.cursor({ item.file_position, 0 })
     return utils.promisify(require('orgmode').action(action)):next(function()
       return Files.get_closest_headline()
     end)

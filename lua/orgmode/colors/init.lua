@@ -71,7 +71,7 @@ M.get_todo_keywords_colors = function()
 end
 
 ---@param highlights table[]
----@param clear boolean
+---@param clear? boolean
 ---@return string
 M.highlight = function(highlights, clear)
   if clear then

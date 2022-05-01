@@ -31,8 +31,8 @@ end
 function Table:add_row(row)
   table.insert(self.rows, row)
   for col_nr, cell in ipairs(row.cells) do
-    if not self.cols_width[col_nr] or self.cols_width[col_nr] < cell.len then
-      self.cols_width[col_nr] = cell.len
+    if not self.cols_width[col_nr] or self.cols_width[col_nr] < cell.display_len then
+      self.cols_width[col_nr] = cell.display_len
     end
   end
   self.range.end_line = self.range.end_line + 1
