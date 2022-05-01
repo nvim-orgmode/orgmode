@@ -4,7 +4,7 @@ set rtp+=./nvim-treesitter
 set termguicolors
 set noswapfile
 runtime plugin/plenary.vim
-runtime plugin/nvim-treesitter.vim
+runtime plugin/nvim-treesitter.lua
 let mapleader = ','
 
 lua << EOF
