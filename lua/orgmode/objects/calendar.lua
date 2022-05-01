@@ -44,7 +44,15 @@ function Calendar.open()
   vim.api.nvim_buf_set_name(Calendar.buf, 'orgcalendar')
   Calendar.win = vim.api.nvim_open_win(Calendar.buf, true, opts)
 
-  vim.cmd([[autocmd BufWipeout <buffer> lua require('orgmode.objects.calendar').dispose()]])
+  local calendar_augroup = vim.api.nvim_create_augroup('org_calendar', { clear = true })
+  vim.api.nvim_create_autocmd('BufWipeout', {
+    buffer = Calendar.buf,
+    group = calendar_augroup,
+    callback = function()
+      require('orgmode.objects.calendar').dispose()
+    end,
+    once = true,
+  })
 
   Calendar.render()
 
