@@ -109,7 +109,15 @@ function EditSpecial:init()
     [[<Cmd>lua require('orgmode.objects.help').show({ type = 'edit_src' })<CR>]]
   )
 
-  vim.cmd([[autocmd BufWipeout <buffer> ++once lua require('orgmode').action('org_mappings._edit_special_callback')]])
+  local edit_special_augroup = vim.api.nvim_create_augroup('org_edit_special', { clear = true })
+  vim.api.nvim_create_autocmd('BufWipeout', {
+    buffer = bufnr,
+    group = edit_special_augroup,
+    callback = function()
+      require('orgmode').action('org_mappings._edit_special_callback')
+    end,
+    once = true,
+  })
 end
 
 function EditSpecial:write()
