@@ -130,8 +130,8 @@ function Export.emacs(format, extension)
 end
 
 ---@param cmd table
----@param on_success function
----@param on_error function
+---@param on_success? function
+---@param on_error? function
 function Export._exporter(cmd, target, on_success, on_error)
   utils.echo_info('Exporting...')
   local output = {}

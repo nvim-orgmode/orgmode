@@ -364,7 +364,9 @@ end
 
 ---@private
 function File:_parse_source_code_filetypes()
-  local blocks = self:get_ts_matches('(block name: (expr) @name parameter: (expr) @parameters (#eq? @name "SRC"))')
+  local blocks = self:get_ts_matches(
+    '(block name: (expr) @name parameter: (expr) @parameters (#match? @name "(src|SRC)"))'
+  )
   local source_code_filetypes = {}
   for _, item in ipairs(blocks) do
     local ft = item.parameters and item.parameters.text

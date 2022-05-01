@@ -149,7 +149,7 @@ function Capture:refile_headline_to_destination()
   return self:_refile_content_with_fallback(lines, nil, item)
 end
 
----@param file Root
+---@param file File
 ---@param item string
 ---@param archive_file string
 ---@return string

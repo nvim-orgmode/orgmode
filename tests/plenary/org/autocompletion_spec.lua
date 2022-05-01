@@ -49,7 +49,7 @@ describe('Autocompletion', function()
     result = OrgmodeOmniCompletion(1, '')
     assert.are.same(0, result)
 
-    mock_line(api, '#+AR')
+    mock_line(api, '#+ar')
     result = OrgmodeOmniCompletion(1, '')
     assert.are.same(0, result)
 
@@ -131,27 +131,27 @@ describe('Autocompletion', function()
     -- Directives
     result = OrgmodeOmniCompletion(0, '#')
     local directives = {
-      { menu = '[Org]', word = '#+TITLE' },
-      { menu = '[Org]', word = '#+AUTHOR' },
-      { menu = '[Org]', word = '#+EMAIL' },
-      { menu = '[Org]', word = '#+NAME' },
-      { menu = '[Org]', word = '#+FILETAGS' },
-      { menu = '[Org]', word = '#+ARCHIVE' },
-      { menu = '[Org]', word = '#+OPTIONS' },
-      { menu = '[Org]', word = '#+BEGIN_SRC' },
-      { menu = '[Org]', word = '#+END_SRC' },
-      { menu = '[Org]', word = '#+BEGIN_EXAMPLE' },
-      { menu = '[Org]', word = '#+END_EXAMPLE' },
+      { menu = '[Org]', word = '#+title' },
+      { menu = '[Org]', word = '#+author' },
+      { menu = '[Org]', word = '#+email' },
+      { menu = '[Org]', word = '#+name' },
+      { menu = '[Org]', word = '#+filetags' },
+      { menu = '[Org]', word = '#+archive' },
+      { menu = '[Org]', word = '#+options' },
+      { menu = '[Org]', word = '#+begin_src' },
+      { menu = '[Org]', word = '#+end_src' },
+      { menu = '[Org]', word = '#+begin_example' },
+      { menu = '[Org]', word = '#+end_example' },
     }
     assert.are.same(directives, result)
 
     result = OrgmodeOmniCompletion(0, '#+')
     assert.are.same(directives, result)
 
-    result = OrgmodeOmniCompletion(0, '#+B')
+    result = OrgmodeOmniCompletion(0, '#+b')
     assert.are.same({
-      { menu = '[Org]', word = '#+BEGIN_SRC' },
-      { menu = '[Org]', word = '#+BEGIN_EXAMPLE' },
+      { menu = '[Org]', word = '#+begin_src' },
+      { menu = '[Org]', word = '#+begin_example' },
     }, result)
 
     -- Headline
@@ -189,11 +189,11 @@ describe('Autocompletion', function()
       { menu = '[Org]', word = ':PRIVATE:' },
     }, result)
 
-    mock_line(api, '#+FILETAGS: ')
+    mock_line(api, '#+filetags: ')
     result = OrgmodeOmniCompletion(0, '')
     assert.are.same({}, result)
 
-    mock_line(api, '#+FILETAGS: :')
+    mock_line(api, '#+filetags: :')
     result = OrgmodeOmniCompletion(0, ':')
     assert.are.same({
       { menu = '[Org]', word = ':OFFICE:' },

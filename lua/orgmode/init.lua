@@ -24,8 +24,7 @@ function Org:init()
   if self.initialized then
     return
   end
-  require('orgmode.colors.todo_highlighter').add_todo_keyword_highlights()
-  require('orgmode.colors.hide_leading_stars').setup()
+  require('orgmode.colors.custom_highlighter').setup()
   self.files = require('orgmode.parser.files').new()
   self.agenda = require('orgmode.agenda'):new()
   self.capture = require('orgmode.capture'):new()
@@ -53,13 +52,6 @@ function Org:setup_autocmds()
     group = org_augroup,
     callback = function()
       require('orgmode').reload(vim.fn.expand('<afile>:p'))
-    end,
-  })
-  vim.api.nvim_create_autocmd({ 'BufReadPost', 'BufWritePost' }, {
-    pattern = { '*.org', '*.org_archive' },
-    group = org_augroup,
-    callback = function()
-      require('orgmode.org.diagnostics').print_error_state()
     end,
   })
   vim.api.nvim_create_autocmd('FileType', {
@@ -150,7 +142,8 @@ local function set_dot_repeat(cmd, opts)
   )
 end
 
----@param opts table
+---@param cmd string
+---@param opts? table
 local function action(cmd, opts)
   local parts = vim.split(cmd, '.', true)
   if not instance or #parts < 2 then
@@ -184,6 +177,10 @@ local function cron(opts)
   end))
 end
 
+local function get_instance()
+  return instance
+end
+
 function _G.orgmode.statusline()
   if not instance or not instance.initialized then
     return ''
@@ -197,4 +194,5 @@ return {
   reload = reload,
   action = action,
   cron = cron,
+  instance = get_instance,
 }

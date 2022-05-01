@@ -1,3 +1,51 @@
+let s:concealends = ''
+let s:conceal = luaeval('require("orgmode.config").org_hide_emphasis_markers')
+if s:conceal
+    let s:concealends = ' concealends'
+endif
+
+function s:markup_start(marker, ...) abort
+    let items = ['\s', '(', '-', "'", '"', '{']
+    let alternative = get(a:, 1, '')
+    if a:0 == 0
+        let items += [a:marker, '^']
+    endif
+    return '#\('.join(items, '\|').'\)\zs'.a:marker.alternative.'#'
+endfunction
+
+function s:markup_end(marker) abort
+    let items = ['$', '\s', ')', '-', '\}', "'", '"', ':', ';', '!', '\\', '\[', ',', '\.', '?'] + [a:marker]
+    return '#'.a:marker.'\ze\('.join(items, '\|').'\)#'
+endfunction
+
+exe 'syntax region org_bold      matchgroup=org_bold_delimiter       start='.s:markup_start('\*', '\|^\*\ze[^ \*]').' end='.s:markup_end('\*').' keepend oneline contains=@Spell' . s:concealends
+exe 'syntax region org_italic    matchgroup=org_italic_delimiter     start='.s:markup_start('\/').'    end='.s:markup_end('\/').' keepend oneline contains=@Spell' . s:concealends
+exe 'syntax region org_underline matchgroup=org_underline_delimiter  start='.s:markup_start('_').'     end='.s:markup_end('_').'  keepend oneline contains=@Spell' . s:concealends
+exe 'syntax region org_code      matchgroup=org_code_delimiter       start='.s:markup_start('\~').'    end='.s:markup_end('\~').' keepend oneline contains=@Spell' . s:concealends
+exe 'syntax region org_verbatim  matchgroup=org_verbatim_delimiter   start='.s:markup_start('=').'     end='.s:markup_end('=').'  keepend oneline contains=@Spell' . s:concealends
+exe 'syntax region org_strike    matchgroup=org_strike_delimiter     start='.s:markup_start('+').'     end='.s:markup_end('+').'  keepend oneline contains=@Spell' . s:concealends
+
+hi link org_bold_delimiter org_bold
+hi link org_italic_delimiter org_italic
+hi link org_underline_delimiter org_underline
+hi link org_code_delimiter org_code
+hi link org_verbatim_delimiter org_verbatim
+hi link org_strike_delimiter org_strike
+
+hi def org_bold      term=bold      cterm=bold      gui=bold
+hi def org_italic    term=italic    cterm=italic    gui=italic
+hi def org_underline term=underline cterm=underline gui=underline
+hi def org_strike    term=strikethrough cterm=strikethrough gui=strikethrough
+hi def link org_code     String
+hi def link org_verbatim String
+
+syntax match org_hyperlink	"\[\{2}[^][]*\(\]\[[^][]*\)\?\]\{2}" contains=org_hyperlinkBracketsLeft,org_hyperlinkURL,org_hyperlinkBracketsRight
+syntax match org_hyperlinkBracketsLeft	contained "\[\{2}"     conceal
+syntax match org_hyperlinkURL				    contained "[^][]*\]\[" conceal
+syntax match org_hyperlinkBracketsRight	contained "\]\{2}"     conceal
+hi def link org_hyperlink Underlined
+
+"
 " Timestamps: {{{1
 "<2003-09-16>
 syn match org_timestamp /\(<\d\d\d\d-\d\d-\d\d\(\s\+[+\-\.]\?[+\-]\d\+[hdmwy]\)\?\(\s\+[+\-\.]\?[+\-]\d\+[hdmwy]\)\?>\)/
@@ -70,10 +118,10 @@ syntax match org_list_item /.*$/ contained contains=org_bold,org_italic,org_unde
 
 " Block Delimiters: {{{1
 syntax case ignore
-syntax match  org_block_delimiter /^\s*#+BEGIN_.*/
-syntax match  org_block_delimiter /^\s*#+END_.*/
+syntax match  org_block_delimiter /^\s*#+\(BEGIN_\|begin_\).*/
+syntax match  org_block_delimiter /^\s*#+\(END_\|end_\).*/
 syntax match  org_key_identifier  /^#+[^ ]*:/
-syntax match  org_title           /^#+TITLE:.*/  contains=org_key_identifier
+syntax match  org_title           /^#+\(TITLE\|title\):.*/  contains=org_key_identifier
 hi def link org_block_delimiter Comment
 hi def link org_key_identifier  Comment
 hi def link org_title           Title
@@ -87,9 +135,9 @@ hi def link org_title           Title
 syntax match  org_verbatim /^\s*>.*/
 syntax match  org_code     /^\s*:.*/
 
-syntax region org_verbatim start="^\s*#+BEGIN_.*"      end="^\s*#+END_.*"      keepend contains=org_block_delimiter
-syntax region org_code     start="^\s*#+BEGIN_SRC"     end="^\s*#+END_SRC"     keepend contains=org_block_delimiter
-syntax region org_code     start="^\s*#+BEGIN_EXAMPLE" end="^\s*#+END_EXAMPLE" keepend contains=org_block_delimiter
+syntax region org_verbatim start="^\s*#+\(BEGIN_\|begin_\).*"      end="^\s*#+\(END_\|end_\).*"      keepend contains=org_block_delimiter
+syntax region org_code     start="^\s*#+\(BEGIN_SRC\|begin_src\)"     end="^\s*#+\(END_SRC\|end_src\)"     keepend contains=org_block_delimiter
+syntax region org_code     start="^\s*#+\(BEGIN_EXAMPLE\|begin_example\)" end="^\s*#+\(END_EXAMPLE\|end_example\)" keepend contains=org_block_delimiter
 
 " Properties: {{{1
 syn region Error matchgroup=org_properties_delimiter start=/^\s*:PROPERTIES:\s*$/ end=/^\s*:END:\s*$/ contains=org_property keepend
