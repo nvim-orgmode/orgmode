@@ -76,7 +76,7 @@ function Capture:open_template(template)
   vim.api.nvim_buf_set_var(0, 'org_capture', true)
   config:setup_mappings('capture')
 
-  vim.api.nvim_create_autocmd('BufWipeout', {
+  self.wipeout_autocmd_id = vim.api.nvim_create_autocmd('BufWipeout', {
     buffer = 0,
     group = capture_augroup,
     callback = function()
@@ -118,11 +118,11 @@ function Capture:refile(confirm)
       self:_refile_to_end(file, lines)
     end
 
-    vim.api.nvim_create_autocmd('BufWipeout', {
-      buffer = 0,
-      group = capture_augroup,
-      command = 'silent! wq',
-    })
+    if self.wipeout_autocmd_id then
+      vim.api.nvim_del_autocmd(self.wipeout_autocmd_id)
+      self.wipeout_autocmd_id = nil
+    end
+    vim.cmd('silent! wq')
   end, 0)
 end
 
@@ -307,13 +307,11 @@ function Capture.autocomplete_refile(arg_lead)
 end
 
 function Capture:kill()
-  vim.api.nvim_create_autocmd('BufWipeout', {
-    buffer = 0,
-    group = capture_augroup,
-    callback = function()
-      return vim.api.nvim_win_close(0, true)
-    end,
-  })
+  if self.wipeout_autocmd_id then
+    vim.api.nvim_del_autocmd(self.wipeout_autocmd_id)
+    self.wipeout_autocmd_id = nil
+  end
+  return vim.api.nvim_win_close(0, true)
 end
 
 return Capture
