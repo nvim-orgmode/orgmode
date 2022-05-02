@@ -474,6 +474,7 @@ function Section:demote(amount, demote_child_sections, dryRun)
           break
         end
         local content_line = string.rep(' ', amount) .. content
+        table.insert(lines, content_line)
         if not dryRun then
           vim.api.nvim_call_function('setline', { self.range.start_line + i - 1, content_line })
         end

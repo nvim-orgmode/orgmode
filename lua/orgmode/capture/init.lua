@@ -1,6 +1,7 @@
 local utils = require('orgmode.utils')
 local config = require('orgmode.config')
 local Files = require('orgmode.parser.files')
+local File = require('orgmode.parser.file')
 local Templates = require('orgmode.capture.templates')
 
 local capture_augroup = vim.api.nvim_create_augroup('OrgCapture', { clear = true })
@@ -99,9 +100,7 @@ end
 ---@param confirm? boolean
 function Capture:refile(confirm)
   local is_modified = vim.bo.modified
-  local template = vim.api.nvim_buf_get_var(0, 'org_template') or {}
-  local file = vim.fn.fnamemodify(template.target or config.org_default_notes_file, ':p')
-  local lines = vim.api.nvim_buf_get_lines(0, 0, -1, true)
+  local file, lines, item, template = self:_get_refile_vars()
   local headline_title = template.headline
   if confirm and is_modified then
     local choice = vim.fn.confirm(string.format('Do you want to refile this to %s?', file), '&Yes\n&No')
@@ -111,34 +110,37 @@ function Capture:refile(confirm)
     end
   end
   vim.defer_fn(function()
-    -- TODO: Parse refile content as org file and update refile destination to point to headline or root
     if headline_title then
-      self:refile_to_headline(file, lines, nil, headline_title)
+      self:refile_to_headline(file, lines, item, headline_title)
     else
-      self:_refile_to_end(file, lines)
+      self:_refile_to_end(file, lines, item)
     end
 
-    if self.wipeout_autocmd_id then
-      vim.api.nvim_del_autocmd(self.wipeout_autocmd_id)
-      self.wipeout_autocmd_id = nil
+    if not confirm then
+      self:kill()
     end
-    vim.cmd('silent! wq')
   end, 0)
 end
 
 ---Triggered when refiling to destination from capture buffer
 function Capture:refile_to_destination()
-  local template = vim.api.nvim_buf_get_var(0, 'org_template')
-  local lines = vim.api.nvim_buf_get_lines(0, 0, -1, true)
-  local default_file = vim.fn.fnamemodify(template.target or config.org_default_notes_file, ':p')
-  -- TODO: Parse refile content as org file and update refile destination to point to headline or root
-  self:_refile_content_with_fallback(lines, default_file)
+  local file, lines, item = self:_get_refile_vars()
+  self:_refile_content_with_fallback(lines, file, item)
+  self:kill()
+end
 
-  vim.api.nvim_create_autocmd('BufWipeout', {
-    buffer = 0,
-    group = capture_augroup,
-    command = 'silent! wq',
-  })
+---@private
+function Capture:_get_refile_vars()
+  local template = vim.api.nvim_buf_get_var(0, 'org_template') or {}
+  local file = vim.fn.fnamemodify(template.target or config.org_default_notes_file, ':p')
+  local lines = vim.api.nvim_buf_get_lines(0, 0, -1, true)
+  local org_file = File.from_content(lines, 'capture', vim.api.nvim_buf_get_name(0))
+  local item = nil
+  if org_file then
+    item = org_file:get_headlines()[1]
+  end
+
+  return file, lines, item, template
 end
 
 ---Triggered from org file when we want to refile headline
@@ -158,6 +160,7 @@ function Capture:refile_file_headline_to_archive(file, item, archive_file)
   return self:_refile_to_end(archive_file, lines, item, string.format('Archived to %s', archive_file))
 end
 
+---@private
 ---@param file string
 ---@param lines string[]
 ---@param item? Section
@@ -172,6 +175,7 @@ function Capture:_refile_to_end(file, lines, item, message)
   return true
 end
 
+---@private
 ---@param lines string[]
 ---@param fallback_file string
 ---@param item? Section
@@ -198,6 +202,10 @@ function Capture:_refile_content_with_fallback(lines, fallback_file, item)
   return self:refile_to_headline(destination_file, lines, item, destination[2])
 end
 
+---@param destination_file string
+---@param lines string[]
+---@param item? Section
+---@param headline_title? string
 function Capture:refile_to_headline(destination_file, lines, item, headline_title)
   local agenda_file = Files.get(destination_file)
   local headline
@@ -223,6 +231,7 @@ function Capture:refile_to_headline(destination_file, lines, item, headline_titl
   return true
 end
 
+---@private
 ---@param file string
 ---@param lines string[]
 ---@param item? Section
