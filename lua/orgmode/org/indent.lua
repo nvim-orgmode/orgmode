@@ -4,9 +4,6 @@ local Files = require('orgmode.parser.files')
 local prev_section = nil
 local function foldexpr()
   local line = vim.fn.getline(vim.v.lnum)
-  if line:find('^%s*#%+%S+:') then
-    return 0
-  end
 
   local stars = line:match('^(%*+)%s+')
 
