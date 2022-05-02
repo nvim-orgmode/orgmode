@@ -460,24 +460,26 @@ end
 function Section:demote(amount, demote_child_sections, dryRun)
   amount = amount or 1
   demote_child_sections = demote_child_sections or false
+  local should_indent = config.org_indent_mode == 'indent'
   local lines = {}
   local headline_line = string.rep('*', amount) .. self.line
   table.insert(lines, headline_line)
   if not dryRun then
     vim.api.nvim_call_function('setline', { self.range.start_line, headline_line })
   end
-  if config.org_indent_mode == 'indent' then
-    local contents = self.root:get_node_text_list(self.node)
-    for i, content in ipairs(contents) do
-      if i > 1 then
-        if content:match('^%*+') then
-          break
-        end
-        local content_line = string.rep(' ', amount) .. content
-        table.insert(lines, content_line)
-        if not dryRun then
-          vim.api.nvim_call_function('setline', { self.range.start_line + i - 1, content_line })
-        end
+  local contents = self.root:get_node_text_list(self.node)
+  for i, content in ipairs(contents) do
+    if i > 1 then
+      if content:match('^%*+') then
+        break
+      end
+      local content_line = content
+      if should_indent then
+        content_line = string.rep(' ', amount) .. content
+      end
+      table.insert(lines, content_line)
+      if not dryRun and should_indent then
+        vim.api.nvim_call_function('setline', { self.range.start_line + i - 1, content_line })
       end
     end
   end
@@ -659,7 +661,7 @@ end
 
 ---@param date Date
 ---@param type string
----@param active boolean
+---@param active? boolean
 ---@return string
 function Section:_add_planning_date(date, type, active)
   local date_string = date:to_wrapped_string(active)
