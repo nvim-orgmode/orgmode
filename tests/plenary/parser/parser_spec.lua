@@ -249,16 +249,15 @@ describe('Parser', function()
       own_tags = { 'WORK' },
       category = 'work',
       dates = {
-        -- TODO: Uncomment this when support for headline dates is added
-        -- Date.from_string('2021-05-15 Sat', {
-        --   active = true,
-        --   range = Range:new({
-        --     start_line = 1,
-        --     end_line = 1,
-        --     start_col = 21,
-        --     end_col = 36,
-        --   }),
-        -- }),
+        Date.from_string('2021-05-15 Sat', {
+          active = true,
+          range = Range:new({
+            start_line = 1,
+            end_line = 1,
+            start_col = 21,
+            end_col = 36,
+          }),
+        }),
         Date.from_string('2021-05-20 Thu', {
           type = 'DEADLINE',
           active = true,
@@ -689,6 +688,46 @@ describe('Parser', function()
         }),
       },
       category = 'work',
+    })
+  end)
+
+  it('should parse dates from headline', function()
+    local lines = {
+      '* TODO Test with date <2022-05-02 Mon 12:00>',
+    }
+
+    local parsed = File.from_content(lines, 'work', '')
+
+    assert_section(parsed, parsed:get_section(1), {
+      line = '* TODO Test with date <2022-05-02 Mon 12:00>',
+      line_number = 1,
+      level = 1,
+      title = 'Test with date <2022-05-02 Mon 12:00>',
+      todo_keyword = {
+        type = 'TODO',
+        value = 'TODO',
+        range = Range:new({
+          start_line = 1,
+          end_line = 1,
+          start_col = 3,
+          end_col = 6,
+        }),
+      },
+      tags = {},
+      own_tags = {},
+      category = 'work',
+      dates = {
+        Date.from_string('2022-05-02 Mon 12:00', {
+          type = 'NONE',
+          active = true,
+          range = Range:new({
+            start_line = 1,
+            end_line = 1,
+            start_col = 23,
+            end_col = 44,
+          }),
+        }),
+      },
     })
   end)
 end)
