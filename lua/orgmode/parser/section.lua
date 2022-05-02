@@ -152,6 +152,7 @@ function Section.from_node(section_node, file, parent)
 
     if child:type() == 'headline' then
       data.line = file:get_node_text(child)
+      utils.concat(data.dates, Date.parse_all_from_line(data.line, data.range.start_line))
       data.level = file:get_node_text(child:child(0)):len()
       for headline_node in child:iter_children() do
         if headline_node:type() == 'item' then
