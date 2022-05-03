@@ -2,7 +2,7 @@ local Files = require('orgmode.parser.files')
 local config = require('orgmode.config')
 
 local function load_code_blocks()
-  local file = vim.api.nvim_buf_get_name(0)
+  local file = vim.fn.bufname()
   if not file or file == '' then
     return
   end

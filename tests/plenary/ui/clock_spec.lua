@@ -103,9 +103,9 @@ describe('Clock', function()
 
   it('should jump to the clocked out headline from anywhere', function()
     helpers.load_file(files[1])
-    assert.are.same(files[1], vim.api.nvim_buf_get_name(0))
+    assert.are.same(files[1], vim.fn.bufname())
     vim.cmd([[norm ,oxj]])
-    assert.are.same(files[3], vim.api.nvim_buf_get_name(0))
+    assert.are.same(files[3], vim.fn.bufname())
     assert.are.same(3, vim.fn.line('.'))
   end)
 
