@@ -26,7 +26,7 @@ local expansions = {
     return string.format('[%s]', Date.now():to_string())
   end,
   ['%a'] = function()
-    return string.format('[[file:%s +%s]]', vim.api.nvim_buf_get_name(0), vim.api.nvim_win_get_cursor(0)[1])
+    return string.format('[[file:%s +%s]]', vim.fn.bufname(), vim.api.nvim_win_get_cursor(0)[1])
   end,
 }
 

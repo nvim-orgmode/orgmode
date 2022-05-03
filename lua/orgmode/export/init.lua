@@ -92,7 +92,7 @@ end
 
 ---@param extension string
 function Export.pandoc(extension)
-  local file = vim.api.nvim_buf_get_name(0)
+  local file = vim.fn.bufname()
   local target = vim.fn.fnamemodify(file, ':p:r') .. '.' .. extension
   if vim.fn.executable('pandoc') ~= 1 then
     return utils.echo_error('pandoc executable not found. Make sure pandoc is in $PATH.')
@@ -104,7 +104,7 @@ end
 ---@param format string
 ---@param extension string
 function Export.emacs(format, extension)
-  local file = vim.api.nvim_buf_get_name(0)
+  local file = vim.fn.bufname()
   local target = vim.fn.fnamemodify(file, ':p:r') .. '.' .. extension
   local emacs = config.emacs_config.executable_path
   local emacs_config_path = config.emacs_config.config_path
