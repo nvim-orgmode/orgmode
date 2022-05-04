@@ -373,7 +373,7 @@ end
 
 ---@param arg_lead string
 ---@param list string[]
----@param split_chars string[]
+---@param split_chars? string[]
 ---@return string[]
 function utils.prompt_autocomplete(arg_lead, list, split_chars)
   split_chars = split_chars or { '+', '-', ':', '&', '|' }
