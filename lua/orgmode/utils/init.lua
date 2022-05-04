@@ -495,4 +495,8 @@ function utils.get_nearest_block_node(file, cursor, accept_at_cursor)
   }
 end
 
+function utils.current_file_path()
+  return vim.fn.fnamemodify(vim.fn.bufname(), ':p')
+end
+
 return utils
