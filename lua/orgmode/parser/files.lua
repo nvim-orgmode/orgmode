@@ -119,7 +119,7 @@ end
 
 ---@return File
 function Files.get_current_file()
-  local name = vim.fn.bufname()
+  local name = utils.current_file_path()
   local has_capture_var, is_capture = pcall(vim.api.nvim_buf_get_var, 0, 'org_capture')
   if has_capture_var and is_capture then
     return File.from_content(vim.api.nvim_buf_get_lines(0, 0, -1, false))
@@ -160,7 +160,7 @@ function Files.update_file(filename, action)
   if not file then
     return Promise.resolve()
   end
-  local is_same_file = filename == vim.fn.bufname()
+  local is_same_file = filename == utils.current_file_path()
   local cur_win = vim.api.nvim_get_current_win()
   if is_same_file then
     return utils.promisify(action(file)):next(function(result)

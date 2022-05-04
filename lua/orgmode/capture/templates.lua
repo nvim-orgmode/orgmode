@@ -1,5 +1,6 @@
 local config = require('orgmode.config')
 local Date = require('orgmode.objects.date')
+local utils = require('orgmode.utils')
 local expansions = {
   ['%f'] = function()
     return vim.fn.expand('%')
@@ -26,7 +27,7 @@ local expansions = {
     return string.format('[%s]', Date.now():to_string())
   end,
   ['%a'] = function()
-    return string.format('[[file:%s +%s]]', vim.fn.bufname(), vim.api.nvim_win_get_cursor(0)[1])
+    return string.format('[[file:%s +%s]]', utils.current_file_path(), vim.api.nvim_win_get_cursor(0)[1])
   end,
 }
 
