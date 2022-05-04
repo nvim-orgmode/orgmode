@@ -216,7 +216,7 @@ require('orgmode').setup({
     f = {
       label = 'Export to RTF format',
       action = function(exporter)
-        local current_file = vim.fn.bufname()
+        local current_file = vim.api.nvim_buf_get_name(0)
         local target = vim.fn.fnamemodify(current_file, ':p:r')..'.rtf'
         local command = {'pandoc', current_file, '-o', target}
         local on_success = function(output)
