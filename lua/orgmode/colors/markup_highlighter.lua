@@ -57,7 +57,14 @@ local function apply_markup_to_line(namespace, bufnr, line_index, line)
       if seek[char] then
         local next_char = chars[i + 1]
         if next_char == nil or vim.tbl_contains(valid_post_marker_chars, next_char) then
-          table.insert(ranges, { type = char, from = seek[char], to = i + offset })
+          local to = i + offset
+          table.insert(ranges, { type = char, from = seek[char], to = to })
+          -- Cleanup all unclosed markers in between
+          for c, pos in pairs(seek) do
+            if c ~= char and pos < to and pos > seek[char] then
+              seek[c] = nil
+            end
+          end
           seek[char] = nil
         end
       else
