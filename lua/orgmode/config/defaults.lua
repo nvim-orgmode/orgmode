@@ -21,6 +21,7 @@ return {
   org_priority_default = 'B',
   org_priority_lowest = 'C',
   org_archive_location = '%s_archive::',
+  org_tags_column = 80,
   org_use_tag_inheritance = true,
   org_tags_exclude_from_inheritance = {},
   org_hide_leading_stars = false,
