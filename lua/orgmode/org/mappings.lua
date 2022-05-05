@@ -868,7 +868,16 @@ function OrgMappings:_set_headline_tags(headline, tags_string)
   local line_without_tags = headline.line
     :gsub(vim.pesc(utils.tags_to_string(headline:get_own_tags())) .. '%s*$', '')
     :gsub('%s*$', '')
-  local spaces = 80 - math.min(vim.api.nvim_strwidth(line_without_tags), 79)
+
+  local to_col = config.org_tags_column
+  if to_col < 0 then
+    local tags_width = vim.api.nvim_strwidth(tags)
+    to_col = math.abs(to_col) - tags_width
+  end
+
+  local line_width = vim.api.nvim_strwidth(line_without_tags)
+  spaces = math.max(to_col - line_width, 1)
+
   local new_line = string.format('%s%s%s', line_without_tags, string.rep(' ', spaces), tags):gsub('%s*$', '')
   return vim.fn.setline(headline.range.start_line, new_line)
 end
