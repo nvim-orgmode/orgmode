@@ -38,7 +38,7 @@ function Headline:set_priority(priority)
 
   local stars = self:stars()
   local text = query.get_node_text(stars, 0)
-  tree_utils.set_node_text(stars,('%s [#%s]'):format(text, priority))
+  tree_utils.set_node_text(stars, ('%s [#%s]'):format(text, priority))
 end
 
 function Headline:set_todo(keyword)
