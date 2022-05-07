@@ -10,6 +10,8 @@ local config = require('orgmode.config')
 local constants = require('orgmode.utils.constants')
 local ts_utils = require('nvim-treesitter.ts_utils')
 local utils = require('orgmode.utils')
+local tree_utils = require('orgmode.utils.treesitter')
+local Headline = require('orgmode.treesitter.headline')
 
 ---@class OrgMappings
 ---@field capture Capture
@@ -307,21 +309,20 @@ function OrgMappings:priority_down()
 end
 
 function OrgMappings:set_priority(direction)
-  local item = Files.get_closest_headline()
-  local priority = PriorityState:new(item.priority)
+  local headline = Headline:new(tree_utils.closest_headline())
+  local _, current_priority = headline:priority()
+  local priority_state = PriorityState:new(current_priority)
 
   local new_priority
-  if direction then
-    new_priority = direction == 'up' and priority:increase() or priority:decrease()
+  if direction == 'up' then
+    new_priority = priority_state:increase()
+  elseif direction == 'down' then
+    new_priority = priority_state:decrease()
   else
-    new_priority = priority:prompt_user()
+    new_priority = priority_state:prompt_user()
   end
 
-  if not new_priority then
-    return
-  end
-
-  item:set_priority(new_priority)
+  headline:set_priority(new_priority)
 end
 
 function OrgMappings:todo_next_state()
@@ -363,9 +364,8 @@ function OrgMappings:toggle_heading()
 end
 
 function OrgMappings:_todo_change_state(direction)
-  local item = Files.get_closest_headline()
-  local was_done = item:is_done()
-  local old_state = item.todo_keyword.value
+  local headline = Headline:new(tree_utils.closest_headline())
+  local _, old_state, was_done = headline:todo()
   local changed = self:_change_todo_state(direction, true)
   if not changed then
     return
@@ -379,10 +379,10 @@ function OrgMappings:_todo_change_state(direction)
   if #repeater_dates == 0 then
     local log_time = config.org_log_done == 'time'
     if log_time and item:is_done() and not was_done then
-      item:add_closed_date()
+      headline:add_closed_date()
     end
     if log_time and not item:is_done() and was_done then
-      item:remove_closed_date()
+      headline:remove_closed_date()
     end
     return item
   end
@@ -753,9 +753,9 @@ end
 ---@param use_fast_access boolean
 ---@return string
 function OrgMappings:_change_todo_state(direction, use_fast_access)
-  local item = Files.get_closest_headline()
-  local todo = item.todo_keyword
-  local todo_state = TodoState:new({ current_state = todo.value })
+  local headline = Headline:new(tree_utils.closest_headline())
+  local todo, current_keyword = headline:todo()
+  local todo_state = TodoState:new({ current_state = current_keyword })
   local next_state = nil
   if use_fast_access and todo_state:has_fast_access() then
     next_state = todo_state:open_fast_access()
@@ -773,25 +773,14 @@ function OrgMappings:_change_todo_state(direction, use_fast_access)
     return false
   end
 
-  if next_state.value == todo.value then
+  if next_state.value == current_keyword then
     if todo.value ~= '' then
       utils.echo_info('TODO state was already ', { { next_state.value, next_state.hl } })
     end
     return false
   end
 
-  local linenr = item.range.start_line
-  local stars = string.rep('%*', item.level)
-  local old_state = vim.pesc(todo.value)
-  if old_state ~= '' then
-    old_state = old_state .. '%s+'
-  end
-  local new_state = next_state.value
-  if new_state ~= '' then
-    new_state = new_state .. ' '
-  end
-  local new_line = vim.fn.getline(linenr):gsub('^' .. stars .. '%s+' .. old_state, stars .. ' ' .. new_state)
-  vim.fn.setline(linenr, new_line)
+  headline:set_todo(next_state.value)
   return true
 end
 
