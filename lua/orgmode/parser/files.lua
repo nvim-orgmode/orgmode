@@ -109,6 +109,11 @@ function Files.get(file)
     Files._set_loaded_file(file, f:refresh())
     return Files.orgfiles[file]
   end
+
+  if vim.bo.filetype == 'org' and vim.fn.filereadable(file) == 0 then
+    return File.from_content(vim.api.nvim_buf_get_lines(0, 0, -1, false))
+  end
+
   return nil
 end
 
