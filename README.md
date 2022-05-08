@@ -227,6 +227,22 @@ set conceallevel=2
 set concealcursor=nc
 ```
 
+##### Jumping to file path is not working for paths with forward slash
+If you are using Windows, paths are by default written with backslashes.
+To use forward slashes, you must enable `shellslash` option (see `:help 'shellslash'`).
+
+```lua
+vim.opt.shellslash = true
+```
+
+Or if you are using `init.vim`:
+
+```vim
+set shellslash
+```
+
+More info on issue [#281](https://github.com/nvim-orgmode/orgmode/issues/281#issuecomment-1120200775)
+
 ### Features (TL;DR):
 * Agenda view
 * Search by tags/keyword

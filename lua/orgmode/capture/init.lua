@@ -134,7 +134,7 @@ function Capture:_get_refile_vars()
   local template = vim.api.nvim_buf_get_var(0, 'org_template') or {}
   local file = vim.fn.fnamemodify(template.target or config.org_default_notes_file, ':p')
   local lines = vim.api.nvim_buf_get_lines(0, 0, -1, true)
-  local org_file = File.from_content(lines, 'capture', vim.fn.bufname())
+  local org_file = File.from_content(lines, 'capture', utils.current_file_path())
   local item = nil
   if org_file then
     item = org_file:get_headlines()[1]
@@ -242,7 +242,7 @@ function Capture:_refile_to(file, lines, item, destination_line)
     return false
   end
 
-  local is_same_file = file == vim.fn.bufname()
+  local is_same_file = file == utils.current_file_path()
   local cur_win = vim.api.nvim_get_current_win()
 
   if is_same_file and item then

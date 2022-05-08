@@ -1,5 +1,6 @@
 local config = require('orgmode.config')
-local buf_blocks = {}
+local ts_utils = require('nvim-treesitter.ts_utils')
+local query = nil
 
 local valid_pre_marker_chars = { ' ', '(', '-', "'", '"', '{' }
 local valid_post_marker_chars = { ' ', ')', '-', '}', '"', "'", ':', ';', '!', '\\', '[', ',', '.', '?' }
@@ -31,112 +32,258 @@ local markers = {
   },
 }
 
-local function apply_markup_to_line(namespace, bufnr, line_index, line)
-  local hl = function(from, to, opts)
-    local options = vim.tbl_extend('force', { ephemeral = true, end_col = to }, opts or {})
-    vim.api.nvim_buf_set_extmark(bufnr, namespace, line_index, from, options)
+local function get_node_text(node, source, offset_col_start, offset_col_end)
+  local start_row, start_col = node:start()
+  local end_row, end_col = node:end_()
+  start_col = start_col + (offset_col_start or 0)
+  end_col = end_col + (offset_col_end or 0)
+
+  local lines
+  local eof_row = vim.api.nvim_buf_line_count(source)
+  if start_row >= eof_row then
+    return nil
   end
 
-  local hide_markers = config.org_hide_emphasis_markers
-  local l = line
-  local stars = l:match('^%*+%s+')
-  local offset = 0
-  if stars then
-    l = l:sub(stars:len() + 1)
-    offset = stars:len()
+  if end_col == 0 then
+    lines = vim.api.nvim_buf_get_lines(source, start_row, end_row, true)
+    end_col = -1
+  else
+    lines = vim.api.nvim_buf_get_lines(source, start_row, end_row + 1, true)
   end
-  local chars = vim.split(l, '', true)
+
+  if #lines > 0 then
+    if #lines == 1 then
+      lines[1] = string.sub(lines[1], start_col + 1, end_col)
+    else
+      lines[1] = string.sub(lines[1], start_col + 1)
+      lines[#lines] = string.sub(lines[#lines], 1, end_col)
+    end
+  end
+
+  return table.concat(lines, '\n')
+end
+
+local get_tree = ts_utils.memoize_by_buf_tick(function(bufnr)
+  local tree = vim.treesitter.get_parser(bufnr, 'org'):parse()
+  if not tree or not #tree then
+    return nil
+  end
+  return tree[1]:root()
+end)
+
+local function get_predicate_nodes(match)
+  local counter = 1
+  local start_node = nil
+  local end_node = nil
+  for i, node in pairs(match) do
+    if counter == 1 then
+      start_node = node
+    end
+    if counter == 2 then
+      end_node = node
+    end
+    counter = counter + 1
+  end
+  if not start_node or not end_node then
+    return false
+  end
+  return start_node, end_node
+end
+
+local function is_valid_markup_range(match, _, source, _)
+  local start_node, end_node = get_predicate_nodes(match)
+  if not start_node or not end_node then
+    return
+  end
+
+  -- Ignore conflicts with hyperlink
+  if start_node:type() == '[' or end_node:type() == ']' then
+    return true
+  end
+
+  local start_line = start_node:range()
+  local end_line = start_node:range()
+
+  if start_line ~= end_line then
+    return false
+  end
+
+  local start_text = get_node_text(start_node, source, -1)
+  local end_text = get_node_text(end_node, source, 0, 1)
+
+  local is_valid_start = start_text:len() < 2 or vim.tbl_contains(valid_pre_marker_chars, start_text:sub(1, 1))
+  local is_valid_end = end_text:len() < 2 or vim.tbl_contains(valid_post_marker_chars, end_text:sub(2, 2))
+  return is_valid_start and is_valid_end
+end
+
+local function is_valid_hyperlink_range(match, _, source, _)
+  local start_node, end_node = get_predicate_nodes(match)
+  if not start_node or not end_node then
+    return
+  end
+  -- Ignore conflicts with markup
+  if start_node:type() ~= '[' or end_node:type() ~= ']' then
+    return true
+  end
+
+  local start_line = start_node:range()
+  local end_line = start_node:range()
+
+  if start_line ~= end_line then
+    return false
+  end
+
+  local start_text = get_node_text(start_node, source, 0, 1)
+  local end_text = get_node_text(end_node, source, -1)
+
+  local is_valid_start = start_text == '[['
+  local is_valid_end = end_text == ']]'
+  return is_valid_start and is_valid_end
+end
+
+local function load_deps()
+  -- Already defined
+  if query then
+    return
+  end
+  query = vim.treesitter.get_query('org', 'markup')
+  vim.treesitter.query.add_predicate('org-is-valid-markup-range?', is_valid_markup_range)
+  vim.treesitter.query.add_predicate('org-is-valid-hyperlink-range?', is_valid_hyperlink_range)
+end
+
+---@param bufnr? number
+---@param first_line? number
+---@param last_line? number
+---@return table[]
+local function get_matches(bufnr, first_line, last_line)
+  bufnr = bufnr or 0
+  local root = get_tree(bufnr)
+  if not root then
+    return
+  end
+
   local ranges = {}
+  local taken_locations = {}
+
+  for _, match, _ in query:iter_matches(root, bufnr, first_line, last_line) do
+    for _, node in pairs(match) do
+      local char = node:type()
+      local range = ts_utils.node_to_lsp_range(node)
+      local linenr = tostring(range.start.line)
+      taken_locations[linenr] = taken_locations[linenr] or {}
+      if not taken_locations[linenr][range.start.character] then
+        table.insert(ranges, {
+          type = char,
+          range = range,
+        })
+        taken_locations[linenr][range.start.character] = true
+      end
+    end
+  end
+
+  table.sort(ranges, function(a, b)
+    if a.range.start.line == b.range.start.line then
+      return a.range.start.character < b.range.start.character
+    end
+    return a.range.start.line < b.range.start.line
+  end)
+
   local seek = {}
   local seek_link = {}
-  local link_ranges = {}
+  local result = {}
+  local link_result = {}
 
-  for i, char in ipairs(chars) do
-    -- Markup parsing
-    if markers[char] then
-      if seek[char] then
-        local next_char = chars[i + 1]
-        if next_char == nil or vim.tbl_contains(valid_post_marker_chars, next_char) then
-          table.insert(ranges, { type = char, from = seek[char], to = i + offset })
-          seek[char] = nil
+  for _, item in ipairs(ranges) do
+    if markers[item.type] then
+      if seek[item.type] then
+        local from = seek[item.type]
+        table.insert(result, {
+          type = item.type,
+          from = from.range,
+          to = item.range,
+        })
+
+        seek[item.type] = nil
+
+        for t, pos in pairs(seek) do
+          if
+            pos.range.start.line == from.range.start.line
+            and pos.range.start.character > from.range['end'].character
+            and pos.range.start.character < item.range.start.character
+          then
+            seek[t] = nil
+          end
         end
       else
-        local prev_char = chars[i - 1]
-        if prev_char == nil or vim.tbl_contains(valid_pre_marker_chars, prev_char) then
-          seek[char] = i + offset
-        end
+        seek[item.type] = item
       end
     end
 
-    -- Links parsing
-    if char == '[' and chars[i - 1] == '[' then
-      seek_link[char] = i - 1 + offset
+    if item.type == '[' then
+      seek_link = item
     end
 
-    if char == ']' and chars[i + 1] == ']' and seek_link['['] then
-      table.insert(link_ranges, { from = seek_link['['], to = i + 1 + offset })
+    if item.type == ']' and seek_link then
+      table.insert(link_result, {
+        from = seek_link.range,
+        to = item.range,
+      })
+      seek_link = nil
     end
   end
 
+  return result, link_result
+end
+
+local function apply(namespace, bufnr, _, first_line, last_line, _)
+  local ranges, link_ranges = get_matches(bufnr, first_line, last_line)
+  local hide_markers = config.org_hide_emphasis_markers
+
   for _, range in ipairs(ranges) do
-    hl(range.from - 1, range.to, {
+    vim.api.nvim_buf_set_extmark(bufnr, namespace, range.from.start.line, range.from.start.character, {
+      ephemeral = true,
+      end_col = range.to['end'].character,
       hl_group = markers[range.type].hl_name,
-      priority = 110 + range.from,
+      priority = 110 + range.from.start.character,
     })
+
     if hide_markers then
-      hl(range.from - 1, range.from, { conceal = '' })
-      hl(range.to - 1, range.to, { conceal = '' })
+      vim.api.nvim_buf_set_extmark(bufnr, namespace, range.from.start.line, range.from.start.character, {
+        end_col = range.from['end'].character,
+        ephemeral = true,
+        conceal = '',
+      })
+      vim.api.nvim_buf_set_extmark(bufnr, namespace, range.to.start.line, range.to.start.character, {
+        end_col = range.to['end'].character,
+        ephemeral = true,
+        conceal = '',
+      })
     end
   end
 
   for _, link_range in ipairs(link_ranges) do
-    local link = line:sub(link_range.from, link_range.to)
+    local line = vim.api.nvim_buf_get_lines(bufnr, link_range.from.start.line, link_range.from.start.line + 1, false)[1]
+    local link = line:sub(link_range.from.start.character + 1, link_range.to['end'].character)
     local alias = link:find('%]%[') or 1
-    hl(link_range.from - 1, link_range.to, {
+
+    vim.api.nvim_buf_set_extmark(bufnr, namespace, link_range.from.start.line, link_range.from.start.character, {
+      ephemeral = true,
+      end_col = link_range.to['end'].character,
       hl_group = 'org_hyperlink',
-      priority = 200 + link_range.from,
+      priority = 110,
     })
-    hl(link_range.from - 1, link_range.from + alias, { conceal = '' })
-    hl(link_range.to - 2, link_range.to, { conceal = '' })
-  end
-end
 
-local function apply(namespace, bufnr, changed_lines, first_line, _, tick_changed)
-  if not buf_blocks[bufnr] or tick_changed then
-    buf_blocks = {}
-    local all_lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
-    local seek_blocks = {}
-    for i, line in ipairs(all_lines) do
-      local lower_line = line:lower()
-      if lower_line:match('^%s*#%+begin_') then
-        if not seek_blocks.from then
-          seek_blocks.from = i
-        end
-      end
-      if lower_line:match('^%s*#%+end_') then
-        if not seek_blocks.to then
-          seek_blocks.to = i
-        end
-        if seek_blocks.from and seek_blocks.to then
-          table.insert(buf_blocks, { seek_blocks.from, seek_blocks.to })
-          seek_blocks = {}
-        end
-      end
-    end
-  end
+    vim.api.nvim_buf_set_extmark(bufnr, namespace, link_range.from.start.line, link_range.from.start.character, {
+      ephemeral = true,
+      end_col = link_range.from.start.character + 1 + alias,
+      conceal = '',
+    })
 
-  for i, line in ipairs(changed_lines) do
-    local line_nr = first_line + i
-    local apply_to_line = true
-    for _, block in ipairs(buf_blocks) do
-      if line_nr >= block[1] and line_nr <= block[2] then
-        apply_to_line = false
-        break
-      end
-    end
-    if apply_to_line then
-      apply_markup_to_line(namespace, bufnr, line_nr - 1, line)
-    end
+    vim.api.nvim_buf_set_extmark(bufnr, namespace, link_range.from.start.line, link_range.to['end'].character - 2, {
+      ephemeral = true,
+      end_col = link_range.to['end'].character,
+      conceal = '',
+    })
   end
 end
 
@@ -145,6 +292,7 @@ local function setup()
     vim.cmd(marker.hl_cmd)
   end
   vim.cmd('hi def link org_hyperlink Underlined')
+  load_deps()
 end
 
 return {

@@ -148,8 +148,8 @@ function File.load(path, callback)
 end
 
 ---@param content string|table
----@param category string
----@param filename string
+---@param category? string
+---@param filename? string
 ---@param is_archive_file? boolean
 ---@return File|nil
 function File.from_content(content, category, filename, is_archive_file)

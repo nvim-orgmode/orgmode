@@ -373,7 +373,7 @@ end
 
 ---@param arg_lead string
 ---@param list string[]
----@param split_chars string[]
+---@param split_chars? string[]
 ---@return string[]
 function utils.prompt_autocomplete(arg_lead, list, split_chars)
   split_chars = split_chars or { '+', '-', ':', '&', '|' }
@@ -493,6 +493,10 @@ function utils.get_nearest_block_node(file, cursor, accept_at_cursor)
     node = block_node,
     children = children_nodes,
   }
+end
+
+function utils.current_file_path()
+  return vim.api.nvim_buf_get_name(0)
 end
 
 return utils
