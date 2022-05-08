@@ -65,23 +65,28 @@ function OrgMappings:archive()
 end
 
 function OrgMappings:set_tags()
-  local headline = Files.get_closest_headline()
-  local own_tags = headline:get_own_tags()
-  local tags = vim.fn.OrgmodeInput('Tags: ', utils.tags_to_string(own_tags), Files.autocomplete_tags)
-  return self:_set_headline_tags(headline, tags)
+  local headline = Headline:new(tree_utils.closest_headline())
+  local _, current_tags = headline:tags()
+
+  local tags = vim.fn.OrgmodeInput('Tags: ', current_tags, Files.autocomplete_tags)
+
+  return headline:set_tags(tags)
 end
 
 function OrgMappings:toggle_archive_tag()
-  local headline = Files.get_closest_headline()
-  local own_tags = headline:get_own_tags()
-  if vim.tbl_contains(own_tags, 'ARCHIVE') then
-    own_tags = vim.tbl_filter(function(tag)
+  local headline = Headline:new(tree_utils.closest_headline())
+  local _, current_tags = headline:tags()
+
+  local parsed = utils.parse_tags_string(current_tags)
+  if vim.tbl_contains(parsed, 'ARCHIVE') then
+    parsed = vim.tbl_filter(function(tag)
       return tag ~= 'ARCHIVE'
-    end, own_tags)
+    end, parsed)
   else
-    table.insert(own_tags, 'ARCHIVE')
+    table.insert(parsed, 'ARCHIVE')
   end
-  return self:_set_headline_tags(headline, utils.tags_to_string(own_tags))
+
+  return headline:set_tags(utils.tags_to_string(parsed))
 end
 
 function OrgMappings:cycle()
@@ -847,28 +852,6 @@ function OrgMappings:_adjust_date(amount, span, fallback)
   end
 
   return vim.api.nvim_feedkeys(utils.esc(fallback), 'n', true)
-end
-
-function OrgMappings:_set_headline_tags(headline, tags_string)
-  local tags = tags_string:gsub('^:+', ''):gsub(':+$', ''):gsub(':+', ':')
-  if tags ~= '' then
-    tags = ':' .. tags .. ':'
-  end
-  local line_without_tags = headline.line
-    :gsub(vim.pesc(utils.tags_to_string(headline:get_own_tags())) .. '%s*$', '')
-    :gsub('%s*$', '')
-
-  local to_col = config.org_tags_column
-  if to_col < 0 then
-    local tags_width = vim.api.nvim_strwidth(tags)
-    to_col = math.abs(to_col) - tags_width
-  end
-
-  local line_width = vim.api.nvim_strwidth(line_without_tags)
-  spaces = math.max(to_col - line_width, 1)
-
-  local new_line = string.format('%s%s%s', line_without_tags, string.rep(' ', spaces), tags):gsub('%s*$', '')
-  return vim.fn.setline(headline.range.start_line, new_line)
 end
 
 ---@return string|nil
