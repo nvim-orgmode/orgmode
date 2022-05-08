@@ -1,8 +1,9 @@
 local Files = require('orgmode.parser.files')
 local config = require('orgmode.config')
+local utils = require('orgmode.utils')
 
 local function load_code_blocks()
-  local file = vim.fn.bufname()
+  local file = utils.current_file_path()
   if not file or file == '' then
     return
   end
