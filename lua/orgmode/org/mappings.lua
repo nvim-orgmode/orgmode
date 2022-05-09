@@ -370,7 +370,7 @@ function OrgMappings:_todo_change_state(direction)
   if not changed then
     return
   end
-  item = Files.get_closest_headline()
+  local item = Files.get_closest_headline()
   if not item:is_done() and not was_done then
     return item
   end
@@ -750,7 +750,7 @@ function OrgMappings:org_time_stamp(inactive)
 end
 
 ---@param direction string
----@param use_fast_access boolean
+---@param use_fast_access? boolean
 ---@return string
 function OrgMappings:_change_todo_state(direction, use_fast_access)
   local headline = Headline:new(tree_utils.closest_headline())

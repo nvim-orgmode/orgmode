@@ -455,8 +455,8 @@ function Section:get_next_headline_same_level()
 end
 
 ---@param amount number
----@param demote_child_sections boolean
----@param dryRun boolean
+---@param demote_child_sections? boolean
+---@param dryRun? boolean
 function Section:demote(amount, demote_child_sections, dryRun)
   amount = amount or 1
   demote_child_sections = demote_child_sections or false
