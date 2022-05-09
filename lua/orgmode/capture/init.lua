@@ -187,7 +187,7 @@ function Capture:refile_to_headline(destination_file, lines, item, headline_titl
   local agenda_file = Files.get(destination_file)
   local headline
   if headline_title then
-    headline = agenda_file:find_headline_by_title(headline_title)
+    headline = agenda_file:find_headline_by_title(headline_title, true)
   end
 
   if not headline then

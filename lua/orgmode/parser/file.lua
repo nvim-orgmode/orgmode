@@ -202,9 +202,13 @@ end
 
 ---@param title string
 ---@return Section[]
-function File:find_headlines_by_title(title)
+function File:find_headlines_by_title(title, exact)
   return vim.tbl_filter(function(item)
-    return item.title:lower():match('^' .. vim.pesc(title:lower()))
+    local pattern = '^' .. vim.pesc(title:lower())
+    if exact then
+      pattern = pattern .. '$'
+    end
+    return item.title:lower():match(pattern)
   end, self.sections)
 end
 
@@ -238,8 +242,8 @@ end
 
 ---@param title string
 ---@return Section
-function File:find_headline_by_title(title)
-  local headlines = self:find_headlines_by_title(title)
+function File:find_headline_by_title(title, exact)
+  local headlines = self:find_headlines_by_title(title, exact)
   return headlines[1]
 end
 
