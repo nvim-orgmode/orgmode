@@ -9,17 +9,7 @@ lua require('orgmode.org.syntax').add_todo_keywords_to_spellgood()
 let s:ts_highlight = luaeval('require("orgmode.config"):ts_highlights_enabled()')
 if !s:ts_highlight
   runtime syntax/org_legacy.vim
-else
-  syntax match org_block_delimiter /^\s*#+\(BEGIN_\|begin_\).*/
-  syntax match org_block_delimiter /^\s*#+\(END_\|end_\).*/
-  hi default link org_block_delimiter Comment
 endif
-
-hi org_hide_leading_stars ctermfg=0 guifg=bg
-
-" Tables
-syntax match org_table_hrule /^\s*|[-+]*|\s*$/
-hi org_table_hrule gui=NONE cterm=NONE
 
 syntax spell toplevel
 

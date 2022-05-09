@@ -12,6 +12,9 @@
 (listitem . (bullet) . (paragraph . (expr "[" "str" @OrgCheckDone "]") @OrgTSCheckboxChecked (#match? @OrgTSCheckboxChecked "\[[xX]\]")))
 (listitem . (bullet) . (paragraph . (expr "[" "-" @OrgCheckInProgress "]") @OrgTSCheckboxHalfChecked (#eq? @OrgTSCheckboxHalfChecked "[-]")))
 (listitem . (bullet) . (paragraph . ((expr "[") @OrgTSCheckbox.left (#eq? @OrgTSCheckbox.left "[") . (expr "]") @OrgTSCheckbox.right (#eq? @OrgTSCheckbox.right "]"))))
+(block "#+begin_" @OrgTSBlock "#+end_" @OrgTSBlock "str" @OrgTSBlock)
+(block name: (expr) @OrgTSBlock)
+(block parameter: (expr) @OrgTSBlock)
  (property_drawer) @OrgTSPropertyDrawer
  (drawer) @OrgTSDrawer
  (tag) @OrgTSTag
