@@ -29,6 +29,7 @@ function M.link_ts_highlights()
     OrgTSPlan = 'Constant',
     OrgTSComment = 'Comment',
     OrgTSDirective = 'Comment',
+    OrgTSBlock = 'Comment',
   }
 
   for src, def in pairs(links) do
@@ -105,7 +106,7 @@ function M.define_org_headline_colors(faces)
     if not ts_highlights_enabled then
       vim.cmd([[syn match OrgHideLeadingStars /^\*\{2,\}/me=e-1 contained]])
     end
-    vim.cmd([[hi def link OrgHideLeadingStars org_hide_leading_stars]])
+    vim.cmd([[hi default OrgHideLeadingStars ctermfg=0 guifg=bg]])
     table.insert(contains, 'OrgHideLeadingStars')
   end
   contains = table.concat(contains, ',')
