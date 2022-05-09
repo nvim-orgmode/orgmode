@@ -129,10 +129,10 @@ end
 
 ---@param title string
 ---@return Section[]
-function Files.find_headlines_by_title(title)
+function Files.find_headlines_by_title(title, exact)
   local headlines = {}
   for _, orgfile in ipairs(Files.all()) do
-    for _, headline in ipairs(orgfile:find_headlines_by_title(title)) do
+    for _, headline in ipairs(orgfile:find_headlines_by_title(title, exact)) do
       table.insert(headlines, headline)
     end
   end

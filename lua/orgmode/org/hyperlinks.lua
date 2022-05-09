@@ -67,7 +67,7 @@ end
 
 function Hyperlinks.find_by_title_pointer(ctx)
   local file = get_file_from_context(ctx)
-  local headlines = file:find_headlines_by_title(ctx.base:sub(2))
+  local headlines = file:find_headlines_by_title(ctx.base:sub(2), false)
   if ctx.skip_add_prefix then
     return headlines
   end
@@ -103,7 +103,7 @@ function Hyperlinks.find_by_title(ctx)
   if not ctx.base or ctx.base == '' then
     return {}
   end
-  local headlines = Files.get_current_file():find_headlines_by_title(ctx.base)
+  local headlines = Files.get_current_file():find_headlines_by_title(ctx.base, false)
   if ctx.skip_add_prefix then
     return headlines
   end
