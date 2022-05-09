@@ -1,57 +1,9 @@
 local config = require('orgmode.config')
-local Files = require('orgmode.parser.files')
 local ts_utils = require('nvim-treesitter.ts_utils')
 local query = nil
 
-local prev_section = nil
-local function foldexpr()
-  local line = vim.fn.getline(vim.v.lnum)
-
-  local stars = line:match('^(%*+)%s+')
-
-  if stars then
-    local file = Files.get(vim.fn.expand('%:p'))
-    if not file then
-      return 0
-    end
-    local section = file.sections_by_line[vim.v.lnum]
-    prev_section = section
-    if not section.parent and section.level > 1 and not section:has_children() then
-      return 0
-    end
-    return '>' .. section.level
-  end
-
-  if line:match('^%s*:END:%s*$') then
-    return 's1'
-  end
-
-  if line:match('^%s*:[^:]*:%s*$') then
-    return 'a1'
-  end
-
-  if vim.fn.getline(vim.v.lnum + 1):match('^(%*+)%s+') and prev_section then
-    local file = Files.get(vim.fn.expand('%:p'))
-    if not file then
-      return 0
-    end
-    local section = file.sections_by_line[vim.v.lnum + 1]
-    if section.level <= prev_section.level then
-      return '<' .. prev_section.level
-    end
-  end
-
-  return '='
-end
-
-local function get_is_list_item(line)
-  local line_numbered_list_item = line:match('^%s*(%d+[%)%.]%s+)')
-  local line_unordered_list_item = line:match('^%s*([%+%-]%s+)')
-  return line_numbered_list_item or line_unordered_list_item
-end
-
-local get_indent_matches = ts_utils.memoize_by_buf_tick(function(bufnr)
-  local tree = vim.treesitter.get_parser(bufnr, 'org'):parse()
+local get_matches = ts_utils.memoize_by_buf_tick(function(bufnr)
+  local tree = vim.treesitter.get_parser(bufnr, 'org', {}):parse()
   if not tree or not #tree then
     return {}
   end
@@ -64,7 +16,10 @@ local get_indent_matches = ts_utils.memoize_by_buf_tick(function(bufnr)
 
       local opts = {
         type = type,
+        node = node,
+        parent = node:parent(),
         line_nr = range.start.line + 1,
+        line_end_nr = range['end'].line,
         name = query.captures[id],
         indent = vim.fn.indent(range.start.line + 1),
       }
@@ -87,7 +42,7 @@ local get_indent_matches = ts_utils.memoize_by_buf_tick(function(bufnr)
       end
 
       if type == 'paragraph' or type == 'drawer' or type == 'property_drawer' then
-        opts.type = 'other'
+        opts.indent_type = 'other'
         local parent = node:parent()
         while parent and parent:type() ~= 'section' do
           parent = parent:parent()
@@ -110,16 +65,60 @@ local get_indent_matches = ts_utils.memoize_by_buf_tick(function(bufnr)
   return matches
 end)
 
+local prev_section = nil
+local function foldexpr()
+  query = query or vim.treesitter.get_query('org', 'org_indent')
+  local matches = get_matches(0)
+  local match = matches[vim.v.lnum]
+  local next_match = matches[vim.v.lnum + 1]
+  if not match and not next_match then
+    return '='
+  end
+  match = match or {}
+
+  if match.type == 'headline' then
+    prev_section = match
+    if
+      match.parent:parent():type() ~= 'section'
+      and match.stars > 1
+      and match.parent:named_child_count('section') == 0
+    then
+      return 0
+    end
+    return '>' .. match.stars
+  end
+
+  if match.type == 'drawer' or match.type == 'property_drawer' then
+    if match.line_nr == vim.v.lnum then
+      return 'a1'
+    end
+    if match.line_end_nr == vim.v.lnum then
+      return 's1'
+    end
+  end
+
+  if next_match and next_match.type == 'headline' and prev_section then
+    if next_match.stars <= prev_section.stars then
+      return '<' .. prev_section.stars
+    end
+  end
+
+  return '='
+end
+
+local function get_is_list_item(line)
+  local line_numbered_list_item = line:match('^%s*(%d+[%)%.]%s+)')
+  local line_unordered_list_item = line:match('^%s*([%+%-]%s+)')
+  return line_numbered_list_item or line_unordered_list_item
+end
+
 local function indentexpr()
   local noindent_mode = config.org_indent_mode == 'noindent'
-
-  if not query then
-    query = vim.treesitter.get_query('org', 'org_indent')
-  end
+  query = query or vim.treesitter.get_query('org', 'org_indent')
 
   local prev_linenr = vim.fn.prevnonblank(vim.v.lnum - 1)
 
-  local matches = get_indent_matches(0)
+  local matches = get_matches(0)
   local match = matches[vim.v.lnum]
   local prev_line_match = matches[prev_linenr]
 
@@ -160,7 +159,7 @@ local function indentexpr()
     return 0
   end
 
-  if match.type == 'other' then
+  if match.indent_type == 'other' then
     return match.indent
   end
 
