@@ -1607,4 +1607,15 @@ describe('Mappings', function()
     vim.cmd([[exe "norm \<C-space>"]])
     assert.are.same('* Test orgmode [1/2]', vim.fn.getline(1))
   end)
+
+  it('should update the checklist cookies on a parent list', function()
+    helpers.load_file_content({
+      '- Test orgmode [/]',
+      '  - [ ] checkbox item',
+      '  - [ ] checkbox item',
+    })
+    vim.fn.cursor(2, 1)
+    vim.cmd([[exe "norm \<C-space>"]])
+    assert.are.same('- Test orgmode [1/2]', vim.fn.getline(1))
+  end)
 end)
