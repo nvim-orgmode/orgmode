@@ -1,11 +1,12 @@
 local ts_utils = require('nvim-treesitter.ts_utils')
 local tree_utils = require('orgmode.utils.treesitter')
+local Date = require('orgmode.objects.date')
 local config = require('orgmode.config')
 local query = vim.treesitter.query
 
 local Headline = {}
 
----@param headline userdata tree sitter headline node
+---@param headline_node userdata tree sitter headline node
 function Headline:new(headline_node)
   local data = { headline = headline_node }
   setmetatable(data, self)
@@ -15,6 +16,12 @@ end
 
 function Headline:stars()
   return self.headline:field('stars')[1]
+end
+
+---@return number
+function Headline:level()
+  local stars = self:stars()
+  return query.get_node_text(stars, 0):len()
 end
 
 function Headline:priority()
@@ -83,6 +90,11 @@ end
 function Headline:dates()
   local plan = self:plan()
   local dates = {}
+
+  if not plan then
+    return dates
+  end
+
   for _, node in ipairs(ts_utils.get_named_children(plan)) do
     local name = vim.treesitter.query.get_node_text(node:named_child(0), 0)
     dates[name] = node
@@ -103,12 +115,21 @@ end
 
 function Headline:add_closed_date()
   local dates = self:dates()
-  if vim.tbl_count(dates) == 0 or dates['CLOSED'] then
+  if dates['CLOSED'] then
     return
+  end
+  local closed_text = 'CLOSED: ' .. Date.now():to_wrapped_string(false)
+  if vim.tbl_isempty(dates) then
+    local indent = config:get_indent(self:level() + 1)
+    local start_line = self.headline:start()
+    return vim.api.nvim_call_function('append', {
+      start_line + 1,
+      string.format('%s%s', indent, closed_text),
+    })
   end
   local last_child = dates['DEADLINE'] or dates['SCHEDULED']
   local ptext = query.get_node_text(last_child, 0)
-  local text = ptext .. ' CLOSED: [' .. vim.fn.strftime('%Y-%m-%d %a %H:%M') .. ']'
+  local text = ptext .. ' ' .. closed_text
   tree_utils.set_node_text(last_child, text)
 end
 
@@ -117,7 +138,11 @@ function Headline:remove_closed_date()
   if vim.tbl_count(dates) == 0 or not dates['CLOSED'] then
     return
   end
+  local line_nr = dates['CLOSED']:start() + 1
   tree_utils.set_node_text(dates['CLOSED'], '', true)
+  if vim.trim(vim.fn.getline(line_nr)) == '' then
+    return vim.api.nvim_call_function('deletebufline', { vim.api.nvim_get_current_buf(), line_nr })
+  end
 end
 
 -- @return tsnode, string

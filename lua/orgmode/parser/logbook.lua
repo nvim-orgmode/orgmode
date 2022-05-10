@@ -154,10 +154,7 @@ function Logbook.new_from_section(section)
   else
     line = section:has_planning() and section.range.start_line + 1 or section.range.start_line
   end
-  local indent = ''
-  if config.org_indent_mode == 'indent' then
-    indent = string.rep(' ', section.level + 1)
-  end
+  local indent = config:get_indent(section.level + 1)
 
   local date = Date.now({ active = false })
   local content = {

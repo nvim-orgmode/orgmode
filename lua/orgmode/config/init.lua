@@ -303,5 +303,12 @@ function Config:respect_blank_before_new_entry(content, option, prepend_content)
   return content
 end
 
+function Config:get_indent(amount)
+  if self.opts.org_indent_mode == 'indent' then
+    return string.rep(' ', amount)
+  end
+  return ''
+end
+
 instance = Config:new()
 return instance

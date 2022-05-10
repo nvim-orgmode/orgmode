@@ -389,10 +389,7 @@ function Section:add_properties(properties)
   end
 
   local properties_line = self:has_planning() and self.range.start_line + 1 or self.range.start_line
-  local indent = ''
-  if config.org_indent_mode == 'indent' then
-    indent = string.rep(' ', self.level + 1)
-  end
+  local indent = config:get_indent(self.level + 1)
   local content = { string.format('%s:PROPERTIES:', indent) }
 
   for name, val in pairs(properties) do
@@ -673,10 +670,7 @@ function Section:_add_planning_date(date, type, active)
     })
   end
 
-  local indent = ''
-  if config.org_indent_mode == 'indent' then
-    indent = string.rep(' ', self.level + 1)
-  end
+  local indent = config:get_indent(self.level + 1)
   return vim.api.nvim_call_function('append', {
     self.range.start_line,
     string.format('%s%s: %s', indent, type, date_string),
