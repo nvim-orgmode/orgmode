@@ -12,6 +12,7 @@ local ts_utils = require('nvim-treesitter.ts_utils')
 local utils = require('orgmode.utils')
 local tree_utils = require('orgmode.utils.treesitter')
 local Headline = require('orgmode.treesitter.headline')
+local List = require('orgmode.treesitter.list')
 
 ---@class OrgMappings
 ---@field capture Capture
@@ -162,6 +163,9 @@ function OrgMappings:toggle_checkbox()
   checkbox = checkbox:gsub('%[[%sXx%-]?%]$', new_val)
   local new_line = line:gsub(pattern, checkbox)
   vim.fn.setline('.', new_line)
+  local headline = Headline:new(tree_utils.closest_headline())
+  local list = List:new(tree_utils.closest_list())
+  headline:update_checkbox_status(list)
 end
 
 function OrgMappings:timestamp_up_day()
