@@ -82,6 +82,9 @@ end
 
 function Headline:dates()
   local plan = self:plan()
+  if plan == nil then
+    return {}
+  end
   local dates = {}
   for _, node in ipairs(ts_utils.get_named_children(plan)) do
     local name = vim.treesitter.query.get_node_text(node:named_child(0), 0)
