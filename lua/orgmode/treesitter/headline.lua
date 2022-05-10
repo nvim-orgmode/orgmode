@@ -124,20 +124,6 @@ function Headline:cookie()
   return self:parse('%[%d?/%d?%]')
 end
 
-function Headline:update_cookie(list)
-  local checkbox_status = self:cookie()
-  if not checkbox_status then
-    return
-  end
-
-  local checkboxes = list:checkboxes()
-  local checked_boxes = vim.tbl_filter(function(box)
-    return box:match('%[%w%]')
-  end, checkboxes)
-  local new_status = ('[%d/%d]'):format(#checked_boxes, #checkboxes)
-  tree_utils.set_node_text(checkbox_status, new_status)
-end
-
 -- @return tsnode, string
 function Headline:parse(pattern)
   local match = ''

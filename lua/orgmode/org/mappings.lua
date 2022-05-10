@@ -165,7 +165,7 @@ function OrgMappings:toggle_checkbox()
   vim.fn.setline('.', new_line)
   local headline = Headline:new(tree_utils.closest_headline())
   local list = List:new(tree_utils.closest_list())
-  headline:update_cookie(list)
+  list:update_parent_cookie()
 end
 
 function OrgMappings:timestamp_up_day()
