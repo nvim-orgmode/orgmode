@@ -120,12 +120,12 @@ function Headline:remove_closed_date()
   tree_utils.set_node_text(dates['CLOSED'], '', true)
 end
 
-function Headline:checkbox_status()
+function Headline:cookie()
   return self:parse('%[%d?/%d?%]')
 end
 
-function Headline:update_checkbox_status(list)
-  local checkbox_status = self:checkbox_status()
+function Headline:update_cookie(list)
+  local checkbox_status = self:cookie()
   if not checkbox_status then
     return
   end

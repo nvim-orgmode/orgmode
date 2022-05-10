@@ -1597,7 +1597,7 @@ describe('Mappings', function()
     }, vim.api.nvim_buf_get_lines(0, 0, 5, false))
   end)
 
-  it('should update the checklist status on a headline', function()
+  it('should update the checklist cookies on a headline', function()
     helpers.load_file_content({
       '* Test orgmode [/]',
       '- [ ] checkbox item',
