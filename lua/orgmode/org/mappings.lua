@@ -163,7 +163,6 @@ function OrgMappings:toggle_checkbox()
   checkbox = checkbox:gsub('%[[%sXx%-]?%]$', new_val)
   local new_line = line:gsub(pattern, checkbox)
   vim.fn.setline('.', new_line)
-  local headline = Headline:new(tree_utils.closest_headline())
   local list = List:new(tree_utils.closest_list())
   list:update_parent_cookie()
 end
