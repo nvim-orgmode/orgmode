@@ -1,5 +1,6 @@
 local ts_utils = require('nvim-treesitter.ts_utils')
 local config = require('orgmode.config')
+local query = vim.treesitter.query
 local M = {}
 
 function M.current_node()

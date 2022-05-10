@@ -23,7 +23,9 @@ function List:parent_cookie()
     local content = top_item:field('contents')[1]
     -- The cookie should be the last thing on the line
     local cookie_node = content:named_child(content:named_child_count() - 1)
-    if query.get_node_text(cookie_node, 0):match('%[%d?/%d?%]') then
+
+    local text = query.get_node_text(cookie_node, 0)
+    if text:match('%[%d?/%d?%]') or text:match('%[%d?%d?%d?%%%]') then
       return cookie_node
     end
   end
@@ -42,7 +44,12 @@ function List:update_parent_cookie()
   local checked_boxes = vim.tbl_filter(function(box)
     return box:match('%[%w%]')
   end, checkboxes)
-  local new_status = ('[%d/%d]'):format(#checked_boxes, #checkboxes)
+  local new_status
+  if query.get_node_text(parent_cookie, 0):find('%%') then
+    new_status = ('[%d%%]'):format((#checked_boxes/#checkboxes) * 100)
+  else
+    new_status = ('[%d/%d]'):format(#checked_boxes, #checkboxes)
+  end
   tree_utils.set_node_text(parent_cookie, new_status)
 end
 
