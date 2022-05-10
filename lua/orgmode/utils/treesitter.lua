@@ -1,6 +1,12 @@
 local ts_utils = require('nvim-treesitter.ts_utils')
 local config = require('orgmode.config')
+local query = vim.treesitter.query
 local M = {}
+
+function M.current_node()
+  local window = vim.api.nvim_get_current_win()
+  return ts_utils.get_node_at_cursor(window)
+end
 
 -- walks the tree to find a headline
 function M.find_headline(node)
@@ -19,7 +25,22 @@ end
 -- returns the nearest headline
 function M.closest_headline()
   vim.treesitter.get_parser(0, 'org'):parse()
-  return M.find_headline(ts_utils.get_node_at_cursor(vim.api.nvim_get_current_win()))
+  return M.find_headline(M.current_node())
+end
+
+function M.find_list(node)
+  if node:type() == 'list' then
+    return node
+  end
+  if node:type() == 'body' then
+    return nil
+  end
+  return M.find_list(node:parent())
+end
+
+function M.closest_list()
+  vim.treesitter.get_parser(0, 'org'):parse()
+  return M.find_list(M.current_node())
 end
 
 -- @param front_trim boolean
