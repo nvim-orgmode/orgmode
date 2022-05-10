@@ -46,7 +46,7 @@ function List:update_parent_cookie()
   end, checkboxes)
   local new_status
   if query.get_node_text(parent_cookie, 0):find('%%') then
-    new_status = ('[%d%%]'):format((#checked_boxes/#checkboxes) * 100)
+    new_status = ('[%d%%]'):format((#checked_boxes / #checkboxes) * 100)
   else
     new_status = ('[%d/%d]'):format(#checked_boxes, #checkboxes)
   end
