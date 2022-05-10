@@ -1596,4 +1596,49 @@ describe('Mappings', function()
       '*** to be refiled',
     }, vim.api.nvim_buf_get_lines(0, 0, 5, false))
   end)
+
+  it('should update the checklist cookies on a headline', function()
+    helpers.load_file_content({
+      '* Test orgmode [/]',
+      '- [ ] checkbox item',
+      '- [ ] checkbox item',
+    })
+    vim.fn.cursor(2, 1)
+    vim.cmd([[exe "norm \<C-space>"]])
+    assert.are.same('* Test orgmode [1/2]', vim.fn.getline(1))
+  end)
+
+  it('should update the checklist cookies on a parent list', function()
+    helpers.load_file_content({
+      '- Test orgmode [/]',
+      '  - [ ] checkbox item',
+      '  - [ ] checkbox item',
+    })
+    vim.fn.cursor(2, 1)
+    vim.cmd([[exe "norm \<C-space>"]])
+    assert.are.same('- Test orgmode [1/2]', vim.fn.getline(1))
+  end)
+
+  it('should update the checklist cookies with a percentage within a headline', function()
+    helpers.load_file_content({
+      '* Test orgmode [%]',
+      '- [ ] checkbox item',
+      '- [ ] checkbox item',
+    })
+    vim.fn.cursor(2, 1)
+    vim.cmd([[exe "norm \<C-space>"]])
+    assert.are.same('* Test orgmode [50%]', vim.fn.getline(1))
+  end)
+
+  it('should update the checklist cookies with a percentage within a nested list', function()
+    helpers.load_file_content({
+      '- Test orgmode [%]',
+      '  - [ ] checkbox item',
+      '  - [ ] checkbox item',
+      '  - [ ] checkbox item',
+    })
+    vim.fn.cursor(2, 1)
+    vim.cmd([[exe "norm \<C-space>"]])
+    assert.are.same('- Test orgmode [33%]', vim.fn.getline(1))
+  end)
 end)

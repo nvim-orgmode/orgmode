@@ -145,6 +145,14 @@ function Headline:remove_closed_date()
   end
 end
 
+function Headline:cookie()
+  local cookie = self:parse('%[%d?/%d?%]')
+  if cookie then
+    return cookie
+  end
+  return self:parse('%[%d?%d?%d?%%%]')
+end
+
 -- @return tsnode, string
 function Headline:parse(pattern)
   local match = ''
