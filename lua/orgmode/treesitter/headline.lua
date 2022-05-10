@@ -120,6 +120,24 @@ function Headline:remove_closed_date()
   tree_utils.set_node_text(dates['CLOSED'], '', true)
 end
 
+function Headline:checkbox_status()
+  return self:parse('%[%d?/%d?%]')
+end
+
+function Headline:update_checkbox_status(list)
+  local checkbox_status = self:checkbox_status()
+  if not checkbox_status then
+    return
+  end
+
+  local checkboxes = list:checkboxes()
+  local checked_boxes = vim.tbl_filter(function(box)
+    return box:match('%[%w%]')
+  end, checkboxes)
+  local new_status = ('[%d/%d]'):format(#checked_boxes, #checkboxes)
+  tree_utils.set_node_text(checkbox_status, new_status)
+end
+
 -- @return tsnode, string
 function Headline:parse(pattern)
   local match = ''
