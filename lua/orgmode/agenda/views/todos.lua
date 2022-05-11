@@ -78,8 +78,12 @@ function AgendaTodosView.generate_todo_item(headline, longest_category, line_nr)
   local todo_keyword = headline.todo_keyword.value
   local todo_keyword_padding = todo_keyword ~= '' and ' ' or ''
   local line = string.format('  %s%s%s %s', category, todo_keyword_padding, todo_keyword, headline.title)
+  local winwidth = utils.winwidth()
   if #headline.tags > 0 then
-    line = string.format('%-99s %s', line, headline:tags_to_string())
+    local tags_string = headline:tags_to_string()
+    local padding_length = math.max(1, winwidth - vim.api.nvim_strwidth(line) - vim.api.nvim_strwidth(tags_string))
+    local indent = string.rep(' ', padding_length)
+    line = string.format('%s%s%s', line, indent, tags_string)
   end
   local todo_keyword_pos = category:len() + 4
   local highlights = {}

@@ -499,4 +499,41 @@ function utils.current_file_path()
   return vim.api.nvim_buf_get_name(0)
 end
 
+---@param winnr? number
+function utils.winwidth(winnr)
+  winnr = winnr or 0
+  local winwidth = vim.api.nvim_win_get_width(winnr)
+  local window_numbers = vim.api.nvim_win_get_option(winnr, 'number')
+  local window_relnumbers = vim.api.nvim_win_get_option(winnr, 'relativenumber')
+  if window_numbers or window_relnumbers then
+    winwidth = winwidth - vim.wo.numberwidth
+  end
+  return winwidth
+end
+
+---@param name string
+---@param height number
+function utils.open_window(name, height, split_mode)
+  local cmd_by_split_mode = {
+    horizontal = string.format('%dsplit %s', height, name),
+    vertical = string.format('vsplit %s', name),
+  }
+
+  if cmd_by_split_mode[split_mode] then
+    vim.cmd(cmd_by_split_mode[split_mode])
+    vim.w.org_window_split_mode = split_mode
+  elseif split_mode == 'auto' then
+    local winwidth = utils.winwidth()
+    if (winwidth / 2) >= 80 then
+      vim.cmd(cmd_by_split_mode.vertical)
+      vim.w.org_window_split_mode = 'vertical'
+    else
+      vim.cmd(cmd_by_split_mode.horizontal)
+      vim.w.org_window_split_mode = 'horizontal'
+    end
+  else
+    vim.cmd(string.format('%s %s', split_mode, name))
+  end
+end
+
 return utils
