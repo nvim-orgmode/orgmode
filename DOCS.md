@@ -368,6 +368,15 @@ Example value: `{'agenda-archives'}`
 
 ### Tags settings
 
+#### **org_tags_column**
+*type*: `number`
+*default value*: `80`
+The column to which tags should be indented in a headline.
+If this number is positive, it specifies the column.
+If it is negative, it means that the tags should be flushright to that column.
+For example, -80 works well for a normal 80 character screen.
+When 0, place tags directly after headline text, with only one space in between.
+
 #### **org_use_tag_inheritance**
 *type*: `boolean`
 *default value*: `true`
