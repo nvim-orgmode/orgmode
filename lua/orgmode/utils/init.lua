@@ -532,7 +532,11 @@ function utils.open_window(name, height, split_mode)
       vim.w.org_window_split_mode = 'horizontal'
     end
   else
-    vim.cmd(string.format('%s %s', split_mode, name))
+    if type(split_mode) == 'function' then
+      split_mode(name)
+    else
+      vim.cmd(string.format('%s %s', split_mode, name))
+    end
   end
 end
 

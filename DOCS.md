@@ -75,7 +75,7 @@ NOTE: Make sure fast access keys do not overlap. If that happens, first entry in
 Should error diagnostics be shown. If you are using Neovim 0.6.0 or higher, these will be shown via `vim.diagnostic`.<br />
 
 #### **win_split_mode**
-*type*: `string`<br />
+*type*: `string|function`<br />
 *default value*: `horizontal`<br />
 Available options:
 * horizontal - Always split horizontally
@@ -83,7 +83,33 @@ Available options:
 * auto - Determine between horizontal and vertical split depending on the current window size
 
 This option determines how to open agenda and capture window.<br />
-If none of the options above suit your needs, you can provide custom command (see `:help <mods>`). Here are few examples:<br />
+If none of the options above suit your needs, you can provide custom command string (see `:help <mods>`) or custom function:
+Here are few examples:<br />
+
+Open in float window:
+```lua
+win_split_mode = function(name)
+  local bufnr = vim.api.nvim_create_buf(false, true)
+  --- Setting buffer name is required
+  vim.api.nvim_buf_set_name(bufnr, name)
+
+  local fill = 0.8
+  local width = math.floor((vim.o.columns * fill))
+  local height = math.floor((vim.o.lines * fill))
+  local row = math.floor((((vim.o.lines - height) / 2) - 1))
+  local col = math.floor(((vim.o.columns - width) / 2))
+
+  vim.api.nvim_open_win(bufnr, true, {
+    relative = "editor",
+    width = width,
+    height = height,
+    row = row,
+    col = col,
+    style = "minimal",
+    border = "rounded"
+  })
+end
+```
 
 Always open in tab:
 ```
@@ -99,7 +125,6 @@ Always open horizontally with specific height of 20 lines:
 ```
 win_split_mode = '20split'
 ```
-
 
 #### **org_todo_keyword_faces**
 *type*: `table<string, string>`<br />
