@@ -115,10 +115,18 @@ end
 function Headline:todo()
   local keywords = config.todo_keywords.ALL
   local done_keywords = config.todo_keywords.DONE
+
+  -- A valid keyword can only be the first child
+  local todo_node = self:item():named_child(0)
+  if not todo_node then
+    return nil
+  end
+
+  local text = query.get_node_text(todo_node, 0)
   for _, word in ipairs(keywords) do
-    local todo = self:parse(word:gsub('-', '%%-'))
+    local todo = text:match(word:gsub('-', '%%-'))
     if todo then
-      return todo, word, vim.tbl_contains(done_keywords, word)
+      return todo_node, word, vim.tbl_contains(done_keywords, word)
     end
   end
 end
