@@ -107,7 +107,7 @@ describe('Todo mappings', function()
   end)
 
   it('Only modifies the actually todo keyword even when a match exists in the text', function()
-    helper.load_file_content({
+    helpers.load_file_content({
       '* TODO test TODO',
     })
     vim.fn.cursor(1, 1)
