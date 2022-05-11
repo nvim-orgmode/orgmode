@@ -68,7 +68,7 @@ end
 ---@param template table
 function Capture:open_template(template)
   local content = self.templates:compile(template)
-  vim.cmd('16split ' .. vim.fn.tempname())
+  utils.open_window(vim.fn.tempname(), 16, config.win_split_mode)
   vim.cmd([[setf org]])
   vim.cmd([[setlocal bufhidden=wipe nobuflisted nolist noswapfile nofoldenable]])
   vim.api.nvim_buf_set_lines(0, 0, -1, true, content)

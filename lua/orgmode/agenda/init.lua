@@ -32,6 +32,7 @@ function Agenda:new(opts)
 end
 
 function Agenda:agenda()
+  self:open_window()
   local view = AgendaView:new({ filters = self.filters }):build()
   self.views = { view }
   return self:_render()
@@ -39,27 +40,45 @@ end
 
 -- TODO: Introduce searching ALL/DONE
 function Agenda:todos()
+  self:open_window()
   local view = AgendaTodosView:new({ filters = self.filters }):build()
   self.views = { view }
   return self:_render()
 end
 
 function Agenda:search()
+  self:open_window()
   local view = AgendaSearchView:new({ filters = self.filters }):build()
   self.views = { view }
   return self:_render()
 end
 
 function Agenda:tags()
+  self:open_window()
   local view = AgendaTagsView:new({ filters = self.filters }):build()
   self.views = { view }
   return self:_render()
 end
 
 function Agenda:tags_todo()
+  self:open_window()
   local view = AgendaTagsView:new({ todo_only = true, filters = self.filters }):build()
   self.views = { view }
   return self:_render()
+end
+
+function Agenda:open_window()
+  local opened = self:is_opened()
+  if opened then
+    return
+  end
+
+  utils.open_window('orgagenda', math.max(34, config.org_agenda_min_height), config.win_split_mode)
+
+  vim.cmd([[setf orgagenda]])
+  vim.cmd([[setlocal buftype=nofile bufhidden=wipe nobuflisted nolist noswapfile nowrap nospell]])
+  vim.w.org_window_pos = vim.fn.win_screenpos(0)
+  config:setup_mappings('agenda')
 end
 
 function Agenda:prompt()
@@ -115,15 +134,12 @@ function Agenda:_render(skip_rebuild)
     end
   end
   local opened = self:is_opened()
-  local win_height = math.max(math.min(34, #self.content), config.org_agenda_min_height)
   if not opened then
-    vim.cmd(string.format('%dsplit orgagenda', win_height))
-    vim.cmd([[setf orgagenda]])
-    vim.cmd([[setlocal buftype=nofile bufhidden=wipe nobuflisted nolist noswapfile nowrap nospell]])
-    vim.w.org_window_pos = vim.fn.win_screenpos(0)
-    config:setup_mappings('agenda')
-  else
-    vim.cmd(vim.fn.win_id2win(opened) .. 'wincmd w')
+    self:open_window()
+  end
+  vim.cmd(vim.fn.win_id2win(opened) .. 'wincmd w')
+  if vim.w.org_window_split_mode == 'horizontal' then
+    local win_height = math.max(math.min(34, #self.content), config.org_agenda_min_height)
     if vim.w.org_window_pos and vim.deep_equal(vim.fn.win_screenpos(0), vim.w.org_window_pos) then
       vim.cmd(string.format('resize %d', win_height))
       vim.w.org_window_pos = vim.fn.win_screenpos(0)

@@ -74,6 +74,33 @@ NOTE: Make sure fast access keys do not overlap. If that happens, first entry in
 *default value*: `true`<br />
 Should error diagnostics be shown. If you are using Neovim 0.6.0 or higher, these will be shown via `vim.diagnostic`.<br />
 
+#### **win_split_mode**
+*type*: `string`<br />
+*default value*: `horizontal`<br />
+Available options:
+* horizontal - Always split horizontally
+* vertical - Always split vertically
+* auto - Determine between horizontal and vertical split depending on the current window size
+
+This option determines how to open agenda and capture window.<br />
+If none of the options above suit your needs, you can provide custom command (see `:help <mods>`). Here are few examples:<br />
+
+Always open in tab:
+```
+win_split_mode = 'tabnew'
+```
+
+Always open vertically:
+```
+win_split_mode = 'tabnew'
+```
+
+Always open horizontally with specific height of 20 lines:
+```
+win_split_mode = '20split'
+```
+
+
 #### **org_todo_keyword_faces**
 *type*: `table<string, string>`<br />
 *default value*: `{}`<br />
