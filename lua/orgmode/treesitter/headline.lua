@@ -28,6 +28,51 @@ function Headline:priority()
   return self:parse('%[#(%w+)%]')
 end
 
+function Headline:tags()
+  local node = self.headline:field('tags')[1]
+  local text = ''
+  if node then
+    text = query.get_node_text(node, 0)
+  end
+  return node, text
+end
+
+function Headline:set_tags(tags)
+  local predecessor = nil
+  for _, node in ipairs(ts_utils.get_named_children(self.headline)) do
+    if node:type() ~= 'tag_list' then
+      predecessor = node
+    end
+  end
+
+  local pred_end_row, pred_end_col, _ = predecessor:end_()
+  local end_col = vim.api.nvim_strwidth(vim.fn.getline(pred_end_row + 1))
+
+  local text = ''
+  tags = vim.trim(tags):gsub('^:', ''):gsub(':$', '')
+  if tags ~= '' then
+    tags = ':' .. tags .. ':'
+
+    local to_col = config.org_tags_column
+    if to_col < 0 then
+      local tags_width = vim.api.nvim_strwidth(tags)
+      to_col = math.abs(to_col) - tags_width
+    end
+
+    local spaces = math.max(to_col - pred_end_col, 1)
+    text = string.rep(' ', spaces) .. tags
+  end
+
+  vim.api.nvim_buf_set_text(0, pred_end_row, pred_end_col, pred_end_row, end_col, { text })
+end
+
+function Headline:align_tags()
+  local current_tags, current_text = self:tags()
+  if current_tags then
+    self:set_tags(current_text)
+  end
+end
+
 function Headline:set_priority(priority)
   local current_priority = self:priority()
   if current_priority then
@@ -96,7 +141,7 @@ function Headline:dates()
   end
 
   for _, node in ipairs(ts_utils.get_named_children(plan)) do
-    local name = vim.treesitter.query.get_node_text(node:named_child(0), 0)
+    local name = query.get_node_text(node:named_child(0), 0)
     dates[name] = node
   end
   return dates

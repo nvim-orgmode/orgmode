@@ -41,8 +41,9 @@ CONTENTS                                                        *orgmode-content
             1.2.2.11. org_agenda_skip_deadline_if_done.|orgmode-org_agenda_skip_deadline_if_done|
             1.2.2.12. org_agenda_text_search_extra_files.|orgmode-org_agenda_text_search_extra_files|
         1.2.3. Tags settings...............................|orgmode-tags_settings|
-            1.2.3.1. org_use_tag_inheritance.....|orgmode-org_use_tag_inheritance|
-            1.2.3.2. org_tags_exclude_from_inheritance.|orgmode-org_tags_exclude_from_inheritance|
+            1.2.3.1. org_tags_column.....................|orgmode-org_tags_column|
+            1.2.3.2. org_use_tag_inheritance.....|orgmode-org_use_tag_inheritance|
+            1.2.3.3. org_tags_exclude_from_inheritance.|orgmode-org_tags_exclude_from_inheritance|
     1.3. Mappings...............................................|orgmode-mappings|
         1.3.1. Global mappings...........................|orgmode-global_mappings|
             1.3.1.1. org_agenda...............................|orgmode-org_agenda|
@@ -565,6 +566,16 @@ Currently it accepts only a single value: `agenda-archives`.
 Example value: `{'agenda-archives'}`
 
 TAGS SETTINGS                                              *orgmode-tags_settings*
+
+ORG_TAGS_COLUMN                                          *orgmode-org_tags_column*
+
+type: `number`
+default value: `80`
+The column to which tags should be indented in a headline.
+If this number is positive, it specifies the column.
+If it is negative, it means that the tags should be flushright to that column.
+For example, -80 works well for a normal 80 character screen.
+When 0, place tags directly after headline text, with only one space in between.
 
 ORG_USE_TAG_INHERITANCE                          *orgmode-org_use_tag_inheritance*
 
