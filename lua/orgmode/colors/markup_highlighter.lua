@@ -236,7 +236,18 @@ local function get_matches(bufnr, first_line, last_line)
 end
 
 local function apply(namespace, bufnr, _, first_line, last_line, _)
-  local ranges, link_ranges = get_matches(bufnr, first_line, last_line)
+  local visible_lines = {}
+  -- Add some offset to make sure everything is covered
+  local start_line = math.max(0, first_line - 5)
+  for i = start_line, last_line do
+    if vim.fn.foldclosed(i + 1) == -1 then
+      table.insert(visible_lines, i)
+    end
+  end
+  if #visible_lines == 0 then
+    return
+  end
+  local ranges, link_ranges = get_matches(bufnr, visible_lines[1], visible_lines[#visible_lines])
   local hide_markers = config.org_hide_emphasis_markers
 
   for _, range in ipairs(ranges) do
