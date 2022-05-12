@@ -155,6 +155,13 @@ local function indentexpr()
     end
   end
 
+  if prev_line_match.type == 'list' and match.type ~= 'list' then
+    local prev_line_list_item = get_is_list_item(vim.fn.getline(prev_linenr))
+    if prev_line_list_item then
+      return vim.fn.indent(prev_linenr) + prev_line_list_item:len()
+    end
+  end
+
   if noindent_mode then
     return 0
   end
