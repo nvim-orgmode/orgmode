@@ -513,6 +513,7 @@ end
 
 ---@param name string
 ---@param height number
+---@param split_mode string|function|table
 function utils.open_window(name, height, split_mode)
   local cmd_by_split_mode = {
     horizontal = string.format('%dsplit %s', height, name),
@@ -522,7 +523,10 @@ function utils.open_window(name, height, split_mode)
   if cmd_by_split_mode[split_mode] then
     vim.cmd(cmd_by_split_mode[split_mode])
     vim.w.org_window_split_mode = split_mode
-  elseif split_mode == 'auto' then
+    return
+  end
+
+  if split_mode == 'auto' then
     local winwidth = utils.winwidth()
     if (winwidth / 2) >= 80 then
       vim.cmd(cmd_by_split_mode.vertical)
@@ -531,13 +535,47 @@ function utils.open_window(name, height, split_mode)
       vim.cmd(cmd_by_split_mode.horizontal)
       vim.w.org_window_split_mode = 'horizontal'
     end
-  else
-    if type(split_mode) == 'function' then
-      split_mode(name)
-    else
-      vim.cmd(string.format('%s %s', split_mode, name))
-    end
+    return
   end
+
+  if type(split_mode) == 'function' then
+    return split_mode(name)
+  end
+
+  if split_mode == 'float' then
+    return utils.open_float(name)
+  end
+
+  if type(split_mode) == 'table' and split_mode[1] == 'float' then
+    return utils.open_float(name, split_mode[2])
+  end
+
+  return vim.cmd(string.format('%s %s', split_mode, name))
+end
+
+---@param name string
+---@param scale? number
+function utils.open_float(name, scale)
+  scale = scale or 0.7
+  -- Make sure number is between 0 and 1
+  scale = math.min(math.max(0, scale), 1)
+  local bufnr = vim.api.nvim_create_buf(false, true)
+  vim.api.nvim_buf_set_name(bufnr, name)
+
+  local width = math.floor((vim.o.columns * scale))
+  local height = math.floor((vim.o.lines * scale))
+  local row = math.floor((((vim.o.lines - height) / 2) - 1))
+  local col = math.floor(((vim.o.columns - width) / 2))
+
+  vim.api.nvim_open_win(bufnr, true, {
+    relative = 'editor',
+    width = width,
+    height = height,
+    row = row,
+    col = col,
+    style = 'minimal',
+    border = 'rounded',
+  })
 end
 
 return utils

@@ -68,6 +68,7 @@ end
 ---@param template table
 function Capture:open_template(template)
   local content = self.templates:compile(template)
+  local winnr = vim.api.nvim_get_current_win()
   utils.open_window(vim.fn.tempname(), 16, config.win_split_mode)
   vim.cmd([[setf org]])
   vim.cmd([[setlocal bufhidden=wipe nobuflisted nolist noswapfile nofoldenable]])
@@ -75,6 +76,7 @@ function Capture:open_template(template)
   self.templates:setup()
   vim.api.nvim_buf_set_var(0, 'org_template', template)
   vim.api.nvim_buf_set_var(0, 'org_capture', true)
+  vim.api.nvim_buf_set_var(0, 'org_prev_window', winnr)
   config:setup_mappings('capture')
 
   self.wipeout_autocmd_id = vim.api.nvim_create_autocmd('BufWipeout', {
@@ -320,7 +322,11 @@ function Capture:kill()
     vim.api.nvim_del_autocmd(self.wipeout_autocmd_id)
     self.wipeout_autocmd_id = nil
   end
-  return vim.api.nvim_win_close(0, true)
+  local prev_winnr = vim.api.nvim_buf_get_var(0, 'org_prev_window')
+  vim.api.nvim_win_close(0, true)
+  if prev_winnr and vim.api.nvim_win_is_valid(prev_winnr) then
+    vim.api.nvim_set_current_win(prev_winnr)
+  end
 end
 
 return Capture
