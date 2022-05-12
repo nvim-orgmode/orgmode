@@ -75,12 +75,14 @@ NOTE: Make sure fast access keys do not overlap. If that happens, first entry in
 Should error diagnostics be shown. If you are using Neovim 0.6.0 or higher, these will be shown via `vim.diagnostic`.<br />
 
 #### **win_split_mode**
-*type*: `string|function`<br />
+*type*: `string|function|table`<br />
 *default value*: `horizontal`<br />
 Available options:
-* horizontal - Always split horizontally
-* vertical - Always split vertically
-* auto - Determine between horizontal and vertical split depending on the current window size
+* `horizontal` - Always split horizontally
+* `vertical` - Always split vertically
+* `auto` - Determine between horizontal and vertical split depending on the current window size
+* `float` - Open in float window that has width of 70% of the screen centered
+* `{'float', 0.9}` - Open in float window and provide custom scale (in this case it's 90% of screen size), must be value between `0` and `1`
 
 This option determines how to open agenda and capture window.<br />
 If none of the options above suit your needs, you can provide custom command string (see `:help <mods>`) or custom function:
