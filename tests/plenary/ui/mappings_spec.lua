@@ -1540,4 +1540,88 @@ describe('Mappings', function()
     vim.cmd([[exe "norm \<C-space>"]])
     assert.are.same('- Test orgmode [33%]', vim.fn.getline(1))
   end)
+
+  it('should update the checklist cookies with when the cookie is not the first entry', function()
+    helpers.load_file_content({
+      '- Test orgmode',
+      '- listitem with cookie [%]',
+      '  - [ ] checkbox item',
+      '  - [ ] checkbox item',
+      '  - [ ] checkbox item',
+    })
+    vim.fn.cursor(3, 1)
+    vim.cmd([[exe "norm \<C-space>"]])
+    assert.are.same('- listitem with cookie [33%]', vim.fn.getline(2))
+  end)
+
+  it('should update the checklist cookies with when there are more than 9 items', function()
+    helpers.load_file_content({
+      '- Test orgmode [0/10]',
+      '  - [ ] checkbox item',
+      '  - [ ] checkbox item',
+      '  - [ ] checkbox item',
+      '  - [ ] checkbox item',
+      '  - [ ] checkbox item',
+      '  - [ ] checkbox item',
+      '  - [ ] checkbox item',
+      '  - [ ] checkbox item',
+      '  - [ ] checkbox item',
+      '  - [ ] checkbox item',
+    })
+    vim.fn.cursor(3, 1)
+    vim.cmd([[exe "norm \<C-space>"]])
+    assert.are.same('- Test orgmode [1/10]', vim.fn.getline(1))
+  end)
+
+  it('should update nested cookies and checkboxes', function()
+    helpers.load_file_content({
+      '- [ ] Test orgmode [/]',
+      '  - [ ] checkbox item',
+      '  - [ ] checkbox item [/]',
+      '    - [ ] checkbox item',
+      '    - [ ] checkbox item',
+      '  - [ ] checkbox item',
+    })
+    vim.fn.cursor(4, 1)
+    vim.cmd([[exe "norm \<C-space>"]])
+    assert.are.same({
+      '- [ ] Test orgmode [0/3]',
+      '  - [ ] checkbox item',
+      '  - [-] checkbox item [1/2]',
+      '    - [X] checkbox item',
+      '    - [ ] checkbox item',
+      '  - [ ] checkbox item',
+    }, vim.api.nvim_buf_get_lines(0, 0, 6, false))
+    vim.fn.cursor(5, 1)
+    vim.cmd([[exe "norm \<C-space>"]])
+    assert.are.same({
+      '- [-] Test orgmode [1/3]',
+      '  - [ ] checkbox item',
+      '  - [X] checkbox item [2/2]',
+      '    - [X] checkbox item',
+      '    - [X] checkbox item',
+      '  - [ ] checkbox item',
+    }, vim.api.nvim_buf_get_lines(0, 0, 6, false))
+  end)
+
+  it('should update headline cookies when updaing checkboxes', function()
+    helpers.load_file_content({
+      '* Test orgmode [/]',
+      '- [ ] checkbox item',
+      '- [-] checkbox item [1/2]',
+      '  - [ ] checkbox item',
+      '  - [X] checkbox item',
+      '- [ ] checkbox item',
+    })
+    vim.fn.cursor(4, 1)
+    vim.cmd([[exe "norm \<C-space>"]])
+    assert.are.same({
+      '* Test orgmode [1/3]',
+      '- [ ] checkbox item',
+      '- [X] checkbox item [2/2]',
+      '  - [X] checkbox item',
+      '  - [X] checkbox item',
+      '- [ ] checkbox item',
+    }, vim.api.nvim_buf_get_lines(0, 0, 6, false))
+  end)
 end)

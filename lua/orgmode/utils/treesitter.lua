@@ -1,6 +1,4 @@
 local ts_utils = require('nvim-treesitter.ts_utils')
-local config = require('orgmode.config')
-local query = vim.treesitter.query
 local M = {}
 
 function M.current_node()
@@ -28,23 +26,19 @@ function M.closest_headline()
   return M.find_headline(M.current_node())
 end
 
-function M.find_list(node)
-  if node:type() == 'list' then
+function M.find_parent_type(node, type)
+  if node:type() == type then
     return node
   end
   if node:type() == 'body' then
     return nil
   end
-  return M.find_list(node:parent())
-end
-
-function M.closest_list()
-  vim.treesitter.get_parser(0, 'org'):parse()
-  return M.find_list(M.current_node())
+  return M.find_parent_type(node:parent(), type)
 end
 
 -- @param front_trim boolean
 function M.set_node_text(node, text, front_trim)
+  local lines = vim.split(text, '\n', true)
   local sr, sc, er, ec = node:range()
   if string.len(text) == 0 then
     if front_trim then
@@ -53,7 +47,7 @@ function M.set_node_text(node, text, front_trim)
       ec = ec + 1
     end
   end
-  vim.api.nvim_buf_set_text(0, sr, sc, er, ec, { text })
+  pcall(vim.api.nvim_buf_set_text, 0, sr, sc, er, ec, lines)
 end
 
 return M

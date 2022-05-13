@@ -12,7 +12,7 @@ local ts_utils = require('nvim-treesitter.ts_utils')
 local utils = require('orgmode.utils')
 local tree_utils = require('orgmode.utils.treesitter')
 local Headline = require('orgmode.treesitter.headline')
-local List = require('orgmode.treesitter.list')
+local Listitem = require('orgmode.treesitter.listitem')
 
 ---@class OrgMappings
 ---@field capture Capture
@@ -38,8 +38,6 @@ function OrgMappings:archive()
     return utils.echo_warning('This file is already an archive file.')
   end
   local item = file:get_closest_headline()
-  file = Files.get_current_file()
-  item = file:get_closest_headline()
   local archive_location = file:get_archive_file_location()
   local archive_directory = vim.fn.fnamemodify(archive_location, ':p:h')
   if vim.fn.isdirectory(archive_directory) == 0 then
@@ -156,20 +154,18 @@ function OrgMappings:global_cycle()
   return vim.cmd([[silent! norm!zx]])
 end
 
--- TODO: Add hierarchy
 function OrgMappings:toggle_checkbox()
-  local line = vim.fn.getline('.')
-  local pattern = '^(%s*[%-%+]%s*%[([%sXx%-]?)%])'
-  local checkbox, state = line:match(pattern)
-  if not checkbox then
-    return
+  local win_view = vim.fn.winsaveview()
+  -- move to the first non-blank character so the current treesitter node is the listitem
+  vim.cmd([[normal! _]])
+
+  vim.treesitter.get_parser(0, 'org'):parse()
+  local listitem = tree_utils.find_parent_type(tree_utils.current_node(), 'listitem')
+  if listitem then
+    Listitem:new(listitem):update_checkbox('toggle')
   end
-  local new_val = vim.trim(state) == '' and '[X]' or '[ ]'
-  checkbox = checkbox:gsub('%[[%sXx%-]?%]$', new_val)
-  local new_line = line:gsub(pattern, checkbox)
-  vim.fn.setline('.', new_line)
-  local list = List:new(tree_utils.closest_list())
-  list:update_parent_cookie()
+
+  vim.fn.winrestview(win_view)
 end
 
 function OrgMappings:timestamp_up_day()
@@ -463,12 +459,12 @@ function OrgMappings:handle_return(suffix)
   end
 
   if item.type == 'paragraph' or item.type == 'bullet' then
-    local list_item = item.node:parent()
-    if list_item:type() ~= 'listitem' then
+    local listitem = item.node:parent()
+    if listitem:type() ~= 'listitem' then
       return
     end
-    local line = vim.fn.getline(list_item:start() + 1)
-    local end_row, _ = list_item:end_()
+    local line = vim.fn.getline(listitem:start() + 1)
+    local end_row, _ = listitem:end_()
     local next_line_node = current_file:get_node_at_cursor({ end_row + 1, 0 })
     local second_line_node = current_file:get_node_at_cursor({ end_row + 2, 0 })
     local is_end_of_file = next_line_node
@@ -503,7 +499,7 @@ function OrgMappings:handle_return(suffix)
         newText = plain_list .. ' \n',
       })
     elseif number_in_list then
-      local next_sibling = list_item
+      local next_sibling = listitem
       local counter = 1
       while next_sibling do
         local bullet = next_sibling:child(0)
@@ -531,6 +527,13 @@ function OrgMappings:handle_return(suffix)
       vim.lsp.util.apply_text_edits(text_edits, 0, constants.default_offset_encoding)
 
       vim.fn.cursor(end_row + 1 + (add_empty_line and 1 or 0), 0) -- +1 for next line
+
+      -- update all parents when we insert a new checkbox
+      if checkbox then
+        local new_listitem = tree_utils.find_parent_type(tree_utils.current_node(), 'listitem')
+        Listitem:new(new_listitem):update_checkbox('off')
+      end
+
       vim.cmd([[startinsert!]])
     end
   end
