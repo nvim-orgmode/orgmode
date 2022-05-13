@@ -199,11 +199,36 @@ function Headline:remove_closed_date()
 end
 
 function Headline:cookie()
-  local cookie = self:parse('%[%d?/%d?%]')
+  local cookie = self:parse('%[%d*/%d*%]')
   if cookie then
     return cookie
   end
   return self:parse('%[%d?%d?%d?%%%]')
+end
+
+function Headline:update_cookie(list_node)
+  local total_boxes = self:child_checkboxes(list_node)
+  local checked_boxes = vim.tbl_filter(function(box)
+    return box:match('%[%w%]')
+  end, total_boxes)
+
+  local cookie = self:cookie()
+  if cookie then
+    local new_cookie_val
+    if query.get_node_text(cookie, 0):find('%%') then
+      new_cookie_val = ('[%d%%]'):format((#checked_boxes / #total_boxes) * 100)
+    else
+      new_cookie_val = ('[%d/%d]'):format(#checked_boxes, #total_boxes)
+    end
+    tree_utils.set_node_text(cookie, new_cookie_val)
+  end
+end
+
+function Headline:child_checkboxes(list_node)
+  return vim.tbl_map(function(node)
+    local text = query.get_node_text(node, 0)
+    return text:match('%[.%]')
+  end, ts_utils.get_named_children(list_node))
 end
 
 -- @return tsnode, string
