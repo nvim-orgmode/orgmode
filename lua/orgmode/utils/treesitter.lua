@@ -22,7 +22,7 @@ end
 
 -- returns the nearest headline
 function M.closest_headline()
-  vim.treesitter.get_parser(0, 'org'):parse()
+  vim.treesitter.get_parser(0, 'org', {}):parse()
   return M.find_headline(M.current_node())
 end
 
