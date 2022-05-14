@@ -184,7 +184,7 @@ end
 ---@return Date
 local function from_string(datestr, opts)
   if not is_valid_date(datestr) then
-    return now().clone(opts)
+    return nil
   end
   local parts = vim.split(datestr, '%s+')
   local date = table.remove(parts, 1)
@@ -881,7 +881,10 @@ end
 local function parse_all_from_line(line, lnum)
   local dates = {}
   for open, datetime, close in line:gmatch(pattern) do
-    table.insert(dates, from_match(line, lnum, open, datetime, close, dates[#dates]))
+    local parsed_date = from_match(line, lnum, open, datetime, close, dates[#dates])
+    if parsed_date then
+      table.insert(dates, parsed_date)
+    end
   end
   return dates
 end
