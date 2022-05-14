@@ -11,7 +11,7 @@ local constants = require('orgmode.utils.constants')
 local ts_utils = require('nvim-treesitter.ts_utils')
 local utils = require('orgmode.utils')
 local tree_utils = require('orgmode.utils.treesitter')
-local Headline = require('orgmode.treesitter.headline')
+local ts_org = require('orgmode.treesitter')
 local Listitem = require('orgmode.treesitter.listitem')
 
 ---@class OrgMappings
@@ -64,7 +64,7 @@ function OrgMappings:archive()
 end
 
 function OrgMappings:set_tags()
-  local headline = Headline:new(tree_utils.closest_headline())
+  local headline = ts_org.closest_headline()
   local _, current_tags = headline:tags()
 
   local tags = vim.fn.OrgmodeInput('Tags: ', current_tags, Files.autocomplete_tags)
@@ -73,7 +73,7 @@ function OrgMappings:set_tags()
 end
 
 function OrgMappings:toggle_archive_tag()
-  local headline = Headline:new(tree_utils.closest_headline())
+  local headline = ts_org.closest_headline()
   local _, current_tags = headline:tags()
 
   local parsed = utils.parse_tags_string(current_tags)
@@ -159,10 +159,9 @@ function OrgMappings:toggle_checkbox()
   -- move to the first non-blank character so the current treesitter node is the listitem
   vim.cmd([[normal! _]])
 
-  vim.treesitter.get_parser(0, 'org'):parse()
-  local listitem = tree_utils.find_parent_type(tree_utils.current_node(), 'listitem')
+  local listitem = ts_org.listitem()
   if listitem then
-    Listitem:new(listitem):update_checkbox('toggle')
+    listitem:update_checkbox('toggle')
   end
 
   vim.fn.winrestview(win_view)
@@ -313,7 +312,7 @@ function OrgMappings:priority_down()
 end
 
 function OrgMappings:set_priority(direction)
-  local headline = Headline:new(tree_utils.closest_headline())
+  local headline = ts_org.closest_headline()
   local _, current_priority = headline:priority()
   local priority_state = PriorityState:new(current_priority)
 
@@ -368,7 +367,7 @@ function OrgMappings:toggle_heading()
 end
 
 function OrgMappings:_todo_change_state(direction)
-  local headline = Headline:new(tree_utils.closest_headline())
+  local headline = ts_org.closest_headline()
   local _, old_state, was_done = headline:todo()
   local changed = self:_change_todo_state(direction, true)
   if not changed then
@@ -530,8 +529,10 @@ function OrgMappings:handle_return(suffix)
 
       -- update all parents when we insert a new checkbox
       if checkbox then
-        local new_listitem = tree_utils.find_parent_type(tree_utils.current_node(), 'listitem')
-        Listitem:new(new_listitem):update_checkbox('off')
+        local new_listitem = ts_org.listitem()
+        if new_listitem then
+          new_listitem:update_checkbox('off')
+        end
       end
 
       vim.cmd([[startinsert!]])
@@ -764,7 +765,7 @@ end
 ---@param use_fast_access? boolean
 ---@return string
 function OrgMappings:_change_todo_state(direction, use_fast_access)
-  local headline = Headline:new(tree_utils.closest_headline())
+  local headline = ts_org.closest_headline()
   local todo, current_keyword = headline:todo()
   local todo_state = TodoState:new({ current_state = current_keyword })
   local next_state = nil
