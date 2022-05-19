@@ -208,7 +208,7 @@ function File:find_headlines_by_title(title, exact)
     if exact then
       pattern = pattern .. '$'
     end
-    return item.title:lower():match(pattern)
+    return item:get_title():lower():match(pattern)
   end, self.sections)
 end
 
