@@ -607,8 +607,8 @@ end
 
 ---@private
 function Section:_parse()
-  self:_parse_todo_keyword()
   self.priority = self.line:match(self.todo_keyword.value .. '%s+%[#([A-Z0-9])%]') or ''
+  self:_parse_todo_keyword()
 end
 
 ---@private
@@ -632,6 +632,14 @@ function Section:_parse_todo_keyword()
     type = keyword_info.type,
     range = Range.from_node(self.todo_keyword.node),
   }
+end
+
+function Section:get_title()
+  if not self:has_priority() then
+    return self.title
+  end
+  local title = self.title:gsub('^%[#([A-Z0-9])%]%s*', '')
+  return title
 end
 
 function Section:_update_date(date, new_date)
