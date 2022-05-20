@@ -345,9 +345,9 @@ Example:<br />
 default value: `{ t = { description = 'Task', template = '* TODO %?\n  %u' } }`<br />
 Templates for capture/refile prompt.<br />
 Variables:
-  - `%f`: Prints the file of the buffer capture was called from
-  - `%F`: Like `%f` but inserts the full path
-  - `%n`: Inserts the current `$USER`
+  * `%f`: Prints the file of the buffer capture was called from
+  * `%F`: Like `%f` but inserts the full path
+  * `%n`: Inserts the current `$USER`
   * `%t`: Prints current date (Example: `<2021-06-10 Thu>`)
   * `%T`: Prints current date and time (Example: `<2021-06-10 Thu 12:30>`)
   * `%u`: Prints current date in inactive format (Example: `[2021-06-10 Thu]`)
@@ -357,7 +357,7 @@ Variables:
   * `%x`: Insert content of the clipboard via the "+" register (see :help clipboard)
   * `%?`: Default cursor position when template is opened
   * `%^{PROMPT|DEFAULT|COMPLETION...}`: Prompt for input, if completion is provided an :h inputlist will be used
-  - `%(EXP)`: Runs the given lua code and inserts the result
+  * `%(EXP)`: Runs the given lua code and inserts the result
 
 Example:<br />
   `{ T = { description = 'Todo', template = '* TODO %?\n %u', target = '~/org/todo.org' } }`
@@ -366,9 +366,9 @@ Journal example:<br />
   `{ j = { description = 'Journal', template = '\n*** %<%Y-%m-%d> %<%A>\n**** %U\n\n%?', target = '~/sync/org/journal.org' } }`
 
 Nested key example:<br />
-  `{ e =  'Event' }`
-  `{ er = { description = 'recurring', template = '** %?\n %T', target = '~/org/calendar.org', headline = 'recurring' } }`
-  `{ eo = { description = 'one-time', template = '** %?\n %T', target = '~/org/calendar.org', headline = 'one-time' } }`
+  - `{ e =  'Event' }`
+  - `{ er = { description = 'recurring', template = '** %?\n %T', target = '~/org/calendar.org', headline = 'recurring' } }`
+  - `{ eo = { description = 'one-time', template = '** %?\n %T', target = '~/org/calendar.org', headline = 'one-time' } }`
 
 #### **org_agenda_min_height**
 *type*: `number`<br />
@@ -423,8 +423,8 @@ Example value: `{'agenda-archives'}`
 ### Tags settings
 
 #### **org_tags_column**
-*type*: `number`
-*default value*: `80`
+*type*: `number`<br />
+*default value*: `80`<br />
 The column to which tags should be indented in a headline.
 If this number is positive, it specifies the column.
 If it is negative, it means that the tags should be flushright to that column.
@@ -474,7 +474,7 @@ require('orgmode').setup({
 There are only 2 global mappings that are accessible from everywhere.
 
 #### **org_agenda**
-*mapped to*:  <kbd>\<Leader\>oa</kbd><br />
+*mapped to*:  `<Leader\>oa`<br />
 Opens up agenda prompt.
 
 #### **org_capture**
@@ -1010,34 +1010,34 @@ For adding/changing TODO keyword colors see [org-todo-keyword-faces](#org_todo_k
 * The following highlight groups are based on _Treesitter_ query results, hence when setting up _Orgmode_ these
   highlights must be enabled by removing `disable = {'org'}` from the default recommended _Treesitter_ configuration.
 
-`OrgTSTimestampActive`: An active timestamp
-`OrgTSTimestampInactive`: An inactive timestamp
-`OrgTSBullet`: A normal bullet under a header item
-`OrgTSPropertyDrawer`: Property drawer start/end delimiters
-`OrgTSDrawer`: Drawer start/end delimiters
-`OrgTSTag`: A tag for a headline item, shown on the righthand side like `:foo:`
-`OrgTSPlan`: `SCHEDULED`, `DEADLINE`, `CLOSED`, etc. keywords
-`OrgTSComment`: A comment block
-`OrgTSDirective`: Blocks starting with `#+`
-`OrgTSCheckbox`: The default checkbox highlight, overridden if any of the below groups are specified
-`OrgTSCheckboxChecked`: A checkbox checked with either `[x]` or `[X]`
-`OrgTSCheckboxHalfChecked`: A checkbox checked with `[-]`
-`OrgTSCheckboxUnchecked`: A empty checkbox
-`OrgTSHeadlineLevel1`: Headline at level 1
-`OrgTSHeadlineLevel2`: Headline at level 2
-`OrgTSHeadlineLevel3`: Headline at level 3
-`OrgTSHeadlineLevel4`: Headline at level 4
-`OrgTSHeadlineLevel5`: Headline at level 5
-`OrgTSHeadlineLevel6`: Headline at level 6
-`OrgTSHeadlineLevel7`: Headline at level 7
-`OrgTSHeadlineLevel8`: Headline at level 8
+  * `OrgTSTimestampActive`: An active timestamp
+  * `OrgTSTimestampInactive`: An inactive timestamp
+  * `OrgTSBullet`: A normal bullet under a header item
+  * `OrgTSPropertyDrawer`: Property drawer start/end delimiters
+  * `OrgTSDrawer`: Drawer start/end delimiters
+  * `OrgTSTag`: A tag for a headline item, shown on the righthand side like `:foo:`
+  * `OrgTSPlan`: `SCHEDULED`, `DEADLINE`, `CLOSED`, etc. keywords
+  * `OrgTSComment`: A comment block
+  * `OrgTSDirective`: Blocks starting with `#+`
+  * `OrgTSCheckbox`: The default checkbox highlight, overridden if any of the below groups are specified
+  * `OrgTSCheckboxChecked`: A checkbox checked with either `[x]` or `[X]`
+  * `OrgTSCheckboxHalfChecked`: A checkbox checked with `[-]`
+  * `OrgTSCheckboxUnchecked`: A empty checkbox
+  * `OrgTSHeadlineLevel1`: Headline at level 1
+  * `OrgTSHeadlineLevel2`: Headline at level 2
+  * `OrgTSHeadlineLevel3`: Headline at level 3
+  * `OrgTSHeadlineLevel4`: Headline at level 4
+  * `OrgTSHeadlineLevel5`: Headline at level 5
+  * `OrgTSHeadlineLevel6`: Headline at level 6
+  * `OrgTSHeadlineLevel7`: Headline at level 7
+  * `OrgTSHeadlineLevel8`: Headline at level 8
 
 * The following use vanilla _Vim_ syntax matching, and will work without _Treesitter_ highlighting enabled.
 
-`OrgEditSrcHighlight`: The highlight for the source content in an _Org_ buffer while it is being edited in an edit special buffer
-`OrgAgendaDeadline`: A item deadline in the agenda view
-`OrgAgendaScheduled`: A scheduled item in the agenda view
-`OrgAgendaScheduledPast`: A item past its scheduled date in the agenda view
+  * `OrgEditSrcHighlight`: The highlight for the source content in an _Org_ buffer while it is being edited in an edit special buffer
+  * `OrgAgendaDeadline`: A item deadline in the agenda view
+  * `OrgAgendaScheduled`: A scheduled item in the agenda view
+  * `OrgAgendaScheduledPast`: A item past its scheduled date in the agenda view
 
 ## Advanced search
 Part of [Advanced search](https://orgmode.org/worg/org-tutorials/advanced-searching.html) functionality
