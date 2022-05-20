@@ -202,22 +202,56 @@ function Config:setup_mappings(category)
     return
   end
 
-  for name, key in pairs(self.opts.mappings[category]) do
+  for name, lhs in pairs(self.opts.mappings[category]) do
     if mappings[category] and mappings[category][name] then
-      local map = vim.tbl_map(function(i)
-        return string.format('"%s"', i)
-      end, mappings[category][name])
-      local keys = key
-      if type(keys) == 'string' then
-        keys = { keys }
+      local map = {}
+      if type(mappings[category][name]) == 'table' and not vim.tbl_islist(mappings[category][name]) then
+        -- multi-mode mapping
+        for mode, mapping in pairs(mappings[category][name]) do
+          map[mode] = {}
+          if type(mapping) == 'table' and not vim.tbl_islist(mapping) then
+            local action = {}
+            table.insert(action, mapping['callback'])
+            vim.list_extend(action, mapping['args'])
+            map[mode]['action'] = vim.tbl_map(function(i)
+              return string.format('"%s"', i)
+            end, action)
+            map[mode]['opts'] = mapping['opts']
+          else
+            map[mode]['action'] = vim.tbl_map(function(i)
+              return string.format('"%s"', i)
+            end, mapping)
+            map[mode]['opts'] = {}
+          end
+        end
+      else
+        -- single-mode defaults to normal-mode
+        map['n'] = {}
+        map['n']['action'] = vim.tbl_map(function(i)
+          return string.format('"%s"', i)
+        end, mappings[category][name])
+        map['n']['opts'] = {}
       end
-      for _, k in ipairs(keys) do
-        utils.buf_keymap(
-          0,
-          'n',
-          k,
-          string.format('<cmd>lua require("orgmode").action(%s)<CR>', table.concat(map, ', '))
-        )
+
+      local keys = {}
+      if type(lhs) == 'string' then
+        keys['n'] = lhs
+      else
+        keys = lhs
+      end
+
+      for mode, key in pairs(keys) do
+        local mapping = map[mode] or false
+        if mapping then
+          action = table.concat(mapping['action'], ', ')
+          utils.buf_keymap(
+            0,
+            mode,
+            key,
+            string.format('<cmd>lua require("orgmode").action(%s)<CR>', action),
+            mapping['opts']
+          )
+        end
       end
     end
   end
