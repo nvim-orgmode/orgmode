@@ -360,15 +360,41 @@ Variables:
   * `%(EXP)`: Runs the given lua code and inserts the result
 
 Example:<br />
-  `{ T = { description = 'Todo', template = '* TODO %?\n %u', target = '~/org/todo.org' } }`
+  ```lua
+  { T = {
+    description = 'Todo',
+    template = '* TODO %?\n %u',
+    target = '~/org/todo.org'
+  } }
+  ```
 
 Journal example:<br />
-  `{ j = { description = 'Journal', template = '\n*** %<%Y-%m-%d> %<%A>\n**** %U\n\n%?', target = '~/sync/org/journal.org' } }`
+  ```lua
+  { j = {
+    description = 'Journal',
+    template = '\n*** %<%Y-%m-%d> %<%A>\n**** %U\n\n%?',
+    target = '~/sync/org/journal.org'
+  } }
+  ```
 
 Nested key example:<br />
-  - `{ e =  'Event' }`
-  - `{ er = { description = 'recurring', template = '** %?\n %T', target = '~/org/calendar.org', headline = 'recurring' } }`
-  - `{ eo = { description = 'one-time', template = '** %?\n %T', target = '~/org/calendar.org', headline = 'one-time' } }`
+  ```lua
+  {
+    e =  'Event',
+    er = {
+      description = 'recurring',
+      template = '** %?\n %T',
+      target = '~/org/calendar.org',
+      headline = 'recurring'
+    },
+    eo = {
+      description = 'one-time',
+      template = '** %?\n %T',
+      target = '~/org/calendar.org',
+      headline = 'one-time'
+    }
+  }
+  ```
 
 #### **org_agenda_min_height**
 *type*: `number`<br />
