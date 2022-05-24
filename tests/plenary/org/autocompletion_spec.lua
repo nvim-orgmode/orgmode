@@ -138,6 +138,7 @@ describe('Autocompletion', function()
       { menu = '[Org]', word = '#+filetags' },
       { menu = '[Org]', word = '#+archive' },
       { menu = '[Org]', word = '#+options' },
+      { menu = '[Org]', word = '#+category' },
       { menu = '[Org]', word = '#+begin_src' },
       { menu = '[Org]', word = '#+end_src' },
       { menu = '[Org]', word = '#+begin_example' },
