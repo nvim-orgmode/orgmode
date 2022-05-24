@@ -397,6 +397,9 @@ function File:_parse_directives()
     if directive_name == 'archive' then
       self.archive_location = config:parse_archive_location(self.filename, directive.value.text)
     end
+    if directive_name == 'category' then
+      self.category = directive.value.text
+    end
   end
   self.tags = tags
 end
