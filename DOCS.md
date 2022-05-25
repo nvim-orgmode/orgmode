@@ -1018,6 +1018,7 @@ For adding/changing TODO keyword colors see [org-todo-keyword-faces](#org_todo_k
 `OrgTSTag`: A tag for a headline item, shown on the righthand side like `:foo:`
 `OrgTSPlan`: `SCHEDULED`, `DEADLINE`, `CLOSED`, etc. keywords
 `OrgTSComment`: A comment block
+`OrgTSLatex`: LaTeX block
 `OrgTSDirective`: Blocks starting with `#+`
 `OrgTSCheckbox`: The default checkbox highlight, overridden if any of the below groups are specified
 `OrgTSCheckboxChecked`: A checkbox checked with either `[x]` or `[X]`
