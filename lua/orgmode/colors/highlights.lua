@@ -30,6 +30,7 @@ function M.link_ts_highlights()
     OrgTSComment = 'Comment',
     OrgTSDirective = 'Comment',
     OrgTSBlock = 'Comment',
+    OrgTSLatex = 'Statement',
   }
 
   for src, def in pairs(links) do
