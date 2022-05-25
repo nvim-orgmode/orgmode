@@ -67,8 +67,14 @@ return {
     org_move_subtree_up = { 'org_mappings.move_subtree_up' },
     org_move_subtree_down = { 'org_mappings.move_subtree_down' },
     org_export = { 'org_mappings.export' },
-    org_next_visible_heading = { 'org_mappings.next_visible_heading' },
-    org_previous_visible_heading = { 'org_mappings.previous_visible_heading' },
+    org_next_visible_heading = {
+      n = { 'org_mappings.next_visible_heading' },
+      x = { 'org_mappings.next_visible_heading' },
+    },
+    org_previous_visible_heading = {
+      n = { 'org_mappings.previous_visible_heading' },
+      x = { 'org_mappings.previous_visible_heading' },
+    },
     org_forward_heading_same_level = { 'org_mappings.forward_heading_same_level' },
     org_backward_heading_same_level = { 'org_mappings.backward_heading_same_level' },
     outline_up_heading = { 'org_mappings.outline_up_heading' },
