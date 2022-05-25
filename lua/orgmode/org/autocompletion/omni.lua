@@ -3,7 +3,7 @@ local config = require('orgmode.config')
 local Hyperlinks = require('orgmode.org.hyperlinks')
 
 local data = {
-  directives = { '#+title', '#+author', '#+email', '#+name', '#+filetags', '#+archive', '#+options' },
+  directives = { '#+title', '#+author', '#+email', '#+name', '#+filetags', '#+archive', '#+options', '#+category' },
   begin_blocks = { '#+begin_src', '#+end_src', '#+begin_example', '#+end_example' },
   properties = { ':PROPERTIES:', ':END:', ':LOGBOOK:', ':STYLE:', ':REPEAT_TO_STATE:', ':CUSTOM_ID:', ':CATEGORY:' },
   metadata = { 'DEADLINE:', 'SCHEDULED:', 'CLOSED:' },
