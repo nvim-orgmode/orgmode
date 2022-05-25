@@ -395,7 +395,7 @@ default value: `nil`
 Possible values:
 * `native` - Includes whole latex syntax file into the org syntax. It can potentially cause some highlighting issues and slowness.
 * `entities` - Highlight latex only in these situations (see Orgmode latex fragments (https://orgmode.org/manual/LaTeX-fragments.html#LaTeX-fragments)):
-  * between `/begin` and `/end` delimiters
+  * between `\begin` and `\end` delimiters
   * between `$` and `$` delimiters - example: `$a^2=b$`
   * between `$$` and `$$` delimiters - example: `$$ a=+\sqrt{2} $$`
   * between `\[` and `\]` delimiters - example: `\[ a=-\sqrt{2} \]`
@@ -538,9 +538,9 @@ type: `table<string, table>`
 default value: `{ t = { description = 'Task', template = '* TODO %?\n  %u' } }`
 Templates for capture/refile prompt.
 Variables:
-  - `%f`: Prints the file of the buffer capture was called from
-  - `%F`: Like `%f` but inserts the full path
-  - `%n`: Inserts the current `$USER`
+  * `%f`: Prints the file of the buffer capture was called from
+  * `%F`: Like `%f` but inserts the full path
+  * `%n`: Inserts the current `$USER`
   * `%t`: Prints current date (Example: `<2021-06-10 Thu>`)
   * `%T`: Prints current date and time (Example: `<2021-06-10 Thu 12:30>`)
   * `%u`: Prints current date in inactive format (Example: `[2021-06-10 Thu]`)
@@ -550,18 +550,44 @@ Variables:
   * `%x`: Insert content of the clipboard via the "+" register (see :help clipboard)
   * `%?`: Default cursor position when template is opened
   * `%^{PROMPT|DEFAULT|COMPLETION...}`: Prompt for input, if completion is provided an :h inputlist will be used
-  - `%(EXP)`: Runs the given lua code and inserts the result
+  * `%(EXP)`: Runs the given lua code and inserts the result
 
 Example:
-  `{ T = { description = 'Todo', template = '* TODO %?\n %u', target = '~/org/todo.org' } }`
+>
+      { T = {
+        description = 'Todo',
+        template = '* TODO %?\n %u',
+        target = '~/org/todo.org'
+      } }
+<
 
 Journal example:
-  `{ j = { description = 'Journal', template = '\n*** %<%Y-%m-%d> %<%A>\n**** %U\n\n%?', target = '~/sync/org/journal.org' } }`
+>
+      { j = {
+        description = 'Journal',
+        template = '\n*** %<%Y-%m-%d> %<%A>\n**** %U\n\n%?',
+        target = '~/sync/org/journal.org'
+      } }
+<
 
 Nested key example:
-  `{ e =  'Event' }`
-  `{ er = { description = 'recurring', template = '** %?\n %T', target = '~/org/calendar.org', headline = 'recurring' } }`
-  `{ eo = { description = 'one-time', template = '** %?\n %T', target = '~/org/calendar.org', headline = 'one-time' } }`
+>
+      {
+        e =  'Event',
+        er = {
+          description = 'recurring',
+          template = '** %?\n %T',
+          target = '~/org/calendar.org',
+          headline = 'recurring'
+        },
+        eo = {
+          description = 'one-time',
+          template = '** %?\n %T',
+          target = '~/org/calendar.org',
+          headline = 'one-time'
+        }
+      }
+<
 
 ORG_AGENDA_MIN_HEIGHT                              *orgmode-org_agenda_min_height*
 
@@ -679,7 +705,7 @@ There are only 2 global mappings that are accessible from everywhere.
 
 ORG_AGENDA                                                    *orgmode-org_agenda*
 
-mapped to:  <Leader>oa
+mapped to:  `<Leader\>oa`
 Opens up agenda prompt.
 
 ORG_CAPTURE                                                  *orgmode-org_capture*
@@ -1378,36 +1404,33 @@ HIGHLIGHT GROUPS                                        *orgmode-highlight_group
 
 *   The following highlight groups are based on Treesitter query results, hence when setting up Orgmode these
     highlights must be enabled by removing `disable = {'org'}` from the default recommended Treesitter configuration.
-
-`OrgTSTimestampActive`: An active timestamp
-`OrgTSTimestampInactive`: An inactive timestamp
-`OrgTSBullet`: A normal bullet under a header item
-`OrgTSPropertyDrawer`: Property drawer start/end delimiters
-`OrgTSDrawer`: Drawer start/end delimiters
-`OrgTSTag`: A tag for a headline item, shown on the righthand side like `:foo:`
-`OrgTSPlan`: `SCHEDULED`, `DEADLINE`, `CLOSED`, etc. keywords
-`OrgTSComment`: A comment block
-`OrgTSLatex`: LaTeX block
-`OrgTSDirective`: Blocks starting with `#+`
-`OrgTSCheckbox`: The default checkbox highlight, overridden if any of the below groups are specified
-`OrgTSCheckboxChecked`: A checkbox checked with either `[x]` or `[X]`
-`OrgTSCheckboxHalfChecked`: A checkbox checked with `[-]`
-`OrgTSCheckboxUnchecked`: A empty checkbox
-`OrgTSHeadlineLevel1`: Headline at level 1
-`OrgTSHeadlineLevel2`: Headline at level 2
-`OrgTSHeadlineLevel3`: Headline at level 3
-`OrgTSHeadlineLevel4`: Headline at level 4
-`OrgTSHeadlineLevel5`: Headline at level 5
-`OrgTSHeadlineLevel6`: Headline at level 6
-`OrgTSHeadlineLevel7`: Headline at level 7
-`OrgTSHeadlineLevel8`: Headline at level 8
-
+    *   `OrgTSTimestampActive`: An active timestamp
+    *   `OrgTSTimestampInactive`: An inactive timestamp
+    *   `OrgTSBullet`: A normal bullet under a header item
+    *   `OrgTSPropertyDrawer`: Property drawer start/end delimiters
+    *   `OrgTSDrawer`: Drawer start/end delimiters
+    *   `OrgTSTag`: A tag for a headline item, shown on the righthand side like `:foo:`
+    *   `OrgTSPlan`: `SCHEDULED`, `DEADLINE`, `CLOSED`, etc. keywords
+    *   `OrgTSComment`: A comment block
+    *   `OrgTSLatex`: LaTeX block
+    *   `OrgTSDirective`: Blocks starting with `#+`
+    *   `OrgTSCheckbox`: The default checkbox highlight, overridden if any of the below groups are specified
+    *   `OrgTSCheckboxChecked`: A checkbox checked with either `[x]` or `[X]`
+    *   `OrgTSCheckboxHalfChecked`: A checkbox checked with `[-]`
+    *   `OrgTSCheckboxUnchecked`: A empty checkbox
+    *   `OrgTSHeadlineLevel1`: Headline at level 1
+    *   `OrgTSHeadlineLevel2`: Headline at level 2
+    *   `OrgTSHeadlineLevel3`: Headline at level 3
+    *   `OrgTSHeadlineLevel4`: Headline at level 4
+    *   `OrgTSHeadlineLevel5`: Headline at level 5
+    *   `OrgTSHeadlineLevel6`: Headline at level 6
+    *   `OrgTSHeadlineLevel7`: Headline at level 7
+    *   `OrgTSHeadlineLevel8`: Headline at level 8
 *   The following use vanilla Vim syntax matching, and will work without Treesitter highlighting enabled.
-
-`OrgEditSrcHighlight`: The highlight for the source content in an Org buffer while it is being edited in an edit special buffer
-`OrgAgendaDeadline`: A item deadline in the agenda view
-`OrgAgendaScheduled`: A scheduled item in the agenda view
-`OrgAgendaScheduledPast`: A item past its scheduled date in the agenda view
+    *   `OrgEditSrcHighlight`: The highlight for the source content in an Org buffer while it is being edited in an edit special buffer
+    *   `OrgAgendaDeadline`: A item deadline in the agenda view
+    *   `OrgAgendaScheduled`: A scheduled item in the agenda view
+    *   `OrgAgendaScheduledPast`: A item past its scheduled date in the agenda view
 
 --------------------------------------------------------------------------------
 ADVANCED SEARCH                                          *orgmode-advanced_search*
@@ -1588,7 +1611,7 @@ Also, agenda/todo/search view highlights item that is clocked in.
 
 CLOCK OUT                                                      *orgmode-clock_out*
 
-Org file mapping: `<leader>oxi`
+Org file mapping: `<leader>oxo`
 Agenda view mapping: `O`
 Clock out the entry and update the `:LOGBOOK:` drawer, and also add a total tracked time.
 Note that in agenda view pressing `O` anywhere clocks the currently active entry, while in org file cursor must be in the headline subtree.
