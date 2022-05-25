@@ -15,10 +15,11 @@
 (block "#+begin_" @OrgTSBlock "#+end_" @OrgTSBlock "str" @OrgTSBlock)
 (block name: (expr) @OrgTSBlock)
 (block parameter: (expr) @OrgTSBlock)
- (property_drawer) @OrgTSPropertyDrawer
- (drawer) @OrgTSDrawer
- (tag) @OrgTSTag
- (plan) @OrgTSPlan
- (comment) @OrgTSComment
- (directive) @OrgTSDirective
+(property_drawer) @OrgTSPropertyDrawer
+(latex_env) @OrgTSLatex
+(drawer) @OrgTSDrawer
+(tag) @OrgTSTag
+(plan) @OrgTSPlan
+(comment) @OrgTSComment
+(directive) @OrgTSDirective
 (ERROR) @LspDiagnosticsUnderlineError
