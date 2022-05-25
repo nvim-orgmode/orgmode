@@ -108,12 +108,17 @@ local function is_valid_markup_range(match, _, source, _)
     return false
   end
 
-  local start_text = get_node_text(start_node, source, -1)
-  local end_text = get_node_text(end_node, source, 0, 1)
+  local start_text = get_node_text(start_node, source, -1, 1)
+  local start_len = start_text:len()
 
-  local is_valid_start = start_text:len() < 2 or vim.tbl_contains(valid_pre_marker_chars, start_text:sub(1, 1))
-  local is_valid_end = end_text:len() < 2 or vim.tbl_contains(valid_post_marker_chars, end_text:sub(2, 2))
-  return is_valid_start and is_valid_end
+  local is_valid_start = (start_len < 3 or vim.tbl_contains(valid_pre_marker_chars, start_text:sub(1, 1)))
+    and start_text:sub(start_len, start_len) ~= ' '
+  if not is_valid_start then
+    return false
+  end
+  local end_text = get_node_text(end_node, source, -1, 1)
+  return (end_text:len() < 3 or vim.tbl_contains(valid_post_marker_chars, end_text:sub(3, 3)))
+    and end_text:sub(1, 1) ~= ' '
 end
 
 local function is_valid_hyperlink_range(match, _, source, _)
