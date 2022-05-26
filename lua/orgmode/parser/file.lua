@@ -262,6 +262,12 @@ end
 function File:get_node_at_cursor(cursor)
   cursor = cursor or vim.api.nvim_win_get_cursor(0)
   local cursor_range = { cursor[1] - 1, cursor[2] }
+  -- Parsing a node from the last empty line in a file causes failure with parsing
+  -- because the line doesn't properly belong to any node.
+  -- In that case we go only 1 line up to get the proper context
+  if (cursor_range[1] + 1) == vim.fn.line('$') and vim.trim(vim.fn.getline('$')) == '' then
+    cursor_range[1] = cursor_range[1] - 1
+  end
   return self.tree:root():named_descendant_for_range(cursor_range[1], cursor_range[2], cursor_range[1], cursor_range[2])
 end
 
