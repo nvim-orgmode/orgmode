@@ -129,15 +129,15 @@ local function indentexpr()
   match = match or {}
   prev_line_match = prev_line_match or {}
 
-  if match.type == 'headline' then
-    return 0
-  end
-
   if prev_line_match.type == 'headline' then
-    if noindent_mode then
+    if noindent_mode or (match.type == 'headline' and match.stars > 0) then
       return 0
     end
     return prev_line_match.indent
+  end
+
+  if match.type == 'headline' then
+    return 0
   end
 
   if match.type == 'list' and prev_line_match.type == 'list' then
