@@ -243,7 +243,7 @@ function Config:setup_mappings(category)
       for mode, key in pairs(keys) do
         local mapping = map[mode] or false
         if mapping then
-          action = table.concat(mapping['action'], ', ')
+          local action = table.concat(mapping['action'], ',')
           utils.buf_keymap(
             0,
             mode,
