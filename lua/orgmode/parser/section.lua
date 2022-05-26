@@ -48,7 +48,7 @@ function Section:new(data)
   section.todo_keyword = { value = '', type = '', node = data.todo_keyword_node }
   section.priority = data.priority
   section.title = data.title
-  section.category = data.properties.items.category or data.root.category
+  section.category = data.properties.items.category or (data.parent and data.parent.category) or data.root.category
   section.file = data.root.filename or ''
   section.dates = data.dates or {}
   section.properties = data.properties
