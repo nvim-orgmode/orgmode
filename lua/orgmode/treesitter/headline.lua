@@ -124,7 +124,9 @@ function Headline:todo()
 
   local text = query.get_node_text(todo_node, 0)
   for _, word in ipairs(keywords) do
-    local todo = text:match(word:gsub('-', '%%-'))
+    -- there may be multiple substitutions necessary
+    escaped_word = vim.pesc(word)
+    local todo = text:match(escaped_word)
     if todo then
       return todo_node, word, vim.tbl_contains(done_keywords, word)
     end
