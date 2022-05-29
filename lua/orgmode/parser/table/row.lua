@@ -61,7 +61,7 @@ function TableRow:to_string()
   return self.content
 end
 
----@param row table
+---@param row table | string
 ---@param line number
 ---@param parent_table Table
 ---@return TableRow
@@ -69,10 +69,14 @@ function TableRow.from_table_item(row, line, parent_table)
   local table_row = TableRow:new({
     table = parent_table,
     line = line,
-    is_separator = #row == 0,
+    is_separator = type(row) == 'string' and row == 'hr',
   })
-  for col_nr, cell_data in ipairs(row) do
-    table_row:add_cell(TableCell.from_row_item(cell_data, col_nr, table_row))
+  if type(row) == 'string' then
+    table_row:add_cell(TableCell.from_row_item('', 1, table_row))
+  else
+    for col_nr, cell_data in ipairs(row) do
+      table_row:add_cell(TableCell.from_row_item(cell_data, col_nr, table_row))
+    end
   end
   return table_row
 end

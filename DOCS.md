@@ -14,13 +14,14 @@
    6. [Text objects](#text-objects)
    7. [Dot repeat](#dot-repeat)
 4. [Document Diagnostics](#document-diagnostics)
-5. [Autocompletion](#autocompletion)
-6. [Abbreviations](#abbreviations)
-7. [Colors](#colors)
-8. [Advanced search](#advanced-search)
-9. [Notifications (experimental)](#notifications-experimental)
-10. [Clocking](#clocking)
-11. [Changelog](#changelog)
+5. [Tables](#tables)
+6. [Autocompletion](#autocompletion)
+7. [Abbreviations](#abbreviations)
+8. [Colors](#colors)
+9. [Advanced search](#advanced-search)
+10. [Notifications (experimental)](#notifications-experimental)
+11. [Clocking](#clocking)
+12. [Changelog](#changelog)
 
 ## Getting started with Orgmode
 To get a basic idea how Orgmode works, look at this screencast from [@dhruvasagar](https://github.com/dhruvasagar)
@@ -944,6 +945,29 @@ To make all mappings dot repeatable, install [vim-repeat](https://github.com/tpo
 ## Document Diagnostics
 Since tree-sitter parser is being used to parse the file, if there are some syntax errors,
 it can potentially fail to parse specific parts of document when needed.
+
+## Tables
+Tables can be formatted via built in `formatexpr` (see `:help gq`)
+
+For example, having this content:
+```
+* TODO My headline
+  DEADLINE: <2022-05-22 Sun>
+
+  |Header 1|Header 2
+  |-
+  | col 1| col 2|
+```
+
+And going to line `4` and pressing `gqgq`, it will format it to this:
+```
+* TODO My headline
+  DEADLINE: <2022-05-22 Sun>
+
+  | Header 1 | Header 2 |
+  |----------+----------|
+  | col 1    | col 2    |
+```
 
 ## Autocompletion
 By default, `omnifunc` is provided in `org` files that autocompletes these types:
