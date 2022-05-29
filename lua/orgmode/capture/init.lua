@@ -195,8 +195,10 @@ function Capture:_refile_content_with_fallback(lines, fallback_file, item)
 
   if not valid_destinations[destination[1]] then
     if not default_file then -- we know that this comes from org_refile and not org_capture_refile
-        utils.echo_error("'" .. destination[1] .. "' is not a file specified in the 'org_agenda_files' setting. Refiling cancelled.")
-        return
+      utils.echo_error(
+        "'" .. destination[1] .. "' is not a file specified in the 'org_agenda_files' setting. Refiling cancelled."
+      )
+      return
     end
     return self:_refile_to_end(default_file, lines, item)
   end
@@ -221,7 +223,13 @@ function Capture:refile_to_headline(destination_file, lines, item, headline_titl
   end
 
   if not headline then
-    utils.echo_info("headline '" .. headline_title .. "' does not exist in " .. destination_file .. ". Refiling to end of file instead.")
+    utils.echo_info(
+      "headline '"
+        .. headline_title
+        .. "' does not exist in "
+        .. destination_file
+        .. '. Refiling to end of file instead.'
+    )
     return self:_refile_to_end(destination_file, lines, item)
   end
 
