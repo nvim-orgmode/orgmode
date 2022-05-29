@@ -223,13 +223,15 @@ function Capture:refile_to_headline(destination_file, lines, item, headline_titl
   end
 
   if not headline then
-    utils.echo_info(
-      "headline '"
-        .. headline_title
-        .. "' does not exist in "
-        .. destination_file
-        .. '. Refiling to end of file instead.'
-    )
+    if headline_title then
+      utils.echo_info(
+        "headline '"
+          .. headline_title
+          .. "' does not exist in "
+          .. destination_file
+          .. '. Refiling to end of file instead.'
+      )
+    end
     return self:_refile_to_end(destination_file, lines, item)
   end
 
