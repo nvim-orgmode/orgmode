@@ -67,6 +67,9 @@ return {
     org_move_subtree_up = { 'org_mappings.move_subtree_up' },
     org_move_subtree_down = { 'org_mappings.move_subtree_down' },
     org_export = { 'org_mappings.export' },
+    org_return = {
+      i = { 'org_mappings.org_return' },
+    },
     org_next_visible_heading = {
       n = { 'org_mappings.next_visible_heading' },
       x = { 'org_mappings.next_visible_heading' },

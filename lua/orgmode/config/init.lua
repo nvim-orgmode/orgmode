@@ -14,6 +14,7 @@ function Config:new(opts)
     opts = vim.tbl_deep_extend('force', defaults, opts or {}),
     todo_keywords = nil,
     ts_hl_enabled = nil,
+    old_cr_mapping = nil,
   }
   setmetatable(data, self)
   return data
@@ -174,6 +175,9 @@ function Config:get_todo_keywords()
 end
 
 function Config:setup_mappings(category)
+  if not self.old_cr_mapping then
+    self.old_cr_mapping = vim.fn.maparg('<CR>', 'i')
+  end
   if self.opts.mappings.disable_all then
     return
   end
@@ -203,7 +207,7 @@ function Config:setup_mappings(category)
   end
 
   for name, lhs in pairs(self.opts.mappings[category]) do
-    if mappings[category] and mappings[category][name] then
+    if mappings[category] and mappings[category][name] and lhs then
       local map = {}
       if type(mappings[category][name]) == 'table' and not vim.tbl_islist(mappings[category][name]) then
         -- multi-mode mapping
