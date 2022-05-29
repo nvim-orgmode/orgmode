@@ -27,15 +27,20 @@ function Table:new(opts)
 end
 
 ---@param row TableRow
+---@param at_position number?
 ---@return Table
-function Table:add_row(row)
-  table.insert(self.rows, row)
+function Table:add_row(row, at_position)
+  if at_position then
+    table.insert(self.rows, at_position, row)
+  else
+    table.insert(self.rows, row)
+  end
   for col_nr, cell in ipairs(row.cells) do
     if not self.cols_width[col_nr] or self.cols_width[col_nr] < cell.display_len then
       self.cols_width[col_nr] = cell.display_len
     end
   end
-  self.range.end_line = self.range.end_line + 1
+  self.range.end_line = self.range.start_line + #self.rows - 1
   return self
 end
 
@@ -43,6 +48,7 @@ function Table:populate_missing_cells()
   for _, row in ipairs(self.rows) do
     row:populate_missing_cells()
   end
+  return self
 end
 
 ---@return Table

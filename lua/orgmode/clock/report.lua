@@ -42,7 +42,7 @@ function ClockReport:draw_for_agenda(start_line)
         headline.logbook:get_total(self.from, self.to):to_string(),
       })
     end
-    table.insert(data, {})
+    table.insert(data, 'hr')
   end
 
   local clock_table = Table.from_list(data, start_line):compile()

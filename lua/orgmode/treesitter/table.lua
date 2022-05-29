@@ -7,7 +7,25 @@ local query = vim.treesitter.query
 ---@class TsTable
 ---@field node userdata
 ---@field data table[]
+---@field tbl Table
 local TsTable = {}
+
+function TsTable.from_current_node()
+  vim.treesitter.get_parser(0, 'org', {}):parse()
+  local view = vim.fn.winsaveview()
+  -- Go to first non blank char
+  vim.cmd([[norm! _]])
+  local node = ts_utils.get_node_at_cursor()
+  vim.fn.winrestview(view)
+  if not node then
+    return false
+  end
+  local table_node = utils.get_closest_parent_of_type(node, 'table', true)
+  if not table_node then
+    return false
+  end
+  return TsTable:new({ node = table_node })
+end
 
 function TsTable:new(opts)
   local data = {}
@@ -43,32 +61,33 @@ function TsTable:_parse_data()
   end
 
   self.data = rows
+  local start_row, start_col = self.node:range()
+  self.tbl = Table.from_list(self.data, start_row + 1, start_col + 1)
 end
 
-function TsTable:rerender()
-  local start_row, start_col = self.node:range()
-  local tbl = Table.from_list(self.data, start_row + 1, start_col + 1)
+function TsTable:reformat()
+  local view = vim.fn.winsaveview()
+  vim.api.nvim_buf_set_lines(0, self.tbl.range.start_line - 1, self.tbl.range.end_line, false, self:_get_content())
+  vim.fn.winrestview(view)
+end
+
+---@private
+function TsTable:_get_content()
+  local start_row = self.node:range()
   local first_line = vim.api.nvim_buf_get_lines(0, start_row, start_row + 1, true)
   local indent = first_line and first_line[1]:match('^%s*') or ''
   indent = config:get_indent(indent:len())
 
-  local contents = tbl:draw()
+  local contents = self.tbl:draw()
   local indented = {}
   for _, content in ipairs(contents) do
     table.insert(indented, string.format('%s%s', indent, content))
   end
-  local view = vim.fn.winsaveview()
-  vim.api.nvim_buf_set_lines(0, tbl.range.start_line - 1, tbl.range.end_line - 1, false, indented)
-  vim.fn.winrestview(view)
+
+  return indented
 end
 
-local function format()
-  local view = vim.fn.winsaveview()
-  -- Go to first non blank char
-  vim.cmd([[norm! _]])
-  local node = ts_utils.get_node_at_cursor()
-  vim.fn.winrestview(view)
-
+local function get_table_from_node(node)
   if not node then
     return false
   end
@@ -76,10 +95,45 @@ local function format()
   if not table_node then
     return false
   end
-  TsTable:new({ node = table_node }):rerender()
+  return TsTable:new({ node = table_node })
+end
+
+function TsTable:add_row()
+  local line = vim.fn.line('.')
+  vim.api.nvim_buf_set_lines(0, line, line, true, { '|' })
+  return TsTable.from_current_node():reformat()
+end
+
+local function format()
+  local tbl = TsTable.from_current_node()
+
+  if not tbl then
+    return false
+  end
+
+  tbl:reformat()
+  return true
+end
+
+local function handle_cr()
+  if vim.fn.col('.') == vim.fn.col('$') then
+    return false
+  end
+  local tbl = TsTable.from_current_node()
+  if not tbl then
+    return false
+  end
+
+  tbl:add_row()
+  vim.api.nvim_feedkeys(utils.esc('<Down>'), 'n', true)
+  vim.schedule(function()
+    vim.cmd([[norm! F|]])
+    vim.api.nvim_feedkeys(utils.esc('<Right><Right>'), 'n', true)
+  end)
   return true
 end
 
 return {
   format = format,
+  handle_cr = handle_cr,
 }

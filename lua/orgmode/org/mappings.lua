@@ -11,6 +11,7 @@ local constants = require('orgmode.utils.constants')
 local ts_utils = require('nvim-treesitter.ts_utils')
 local utils = require('orgmode.utils')
 local ts_org = require('orgmode.treesitter')
+local ts_table = require('orgmode.treesitter.table')
 
 ---@class OrgMappings
 ---@field capture Capture
@@ -428,6 +429,21 @@ function OrgMappings:do_demote(whole_subtree)
   if foldclosed > -1 and vim.fn.foldclosed('.') == -1 then
     vim.cmd([[norm!zc]])
   end
+end
+
+function OrgMappings:org_return()
+  local actions = {
+    ts_table.handle_cr,
+  }
+
+  for _, action in ipairs(actions) do
+    local handled = action()
+    if handled then
+      return
+    end
+  end
+
+  return vim.api.nvim_feedkeys(utils.esc(config.old_cr_mapping or '<CR>'), 'n', true)
 end
 
 function OrgMappings:handle_return(suffix)

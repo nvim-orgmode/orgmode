@@ -119,6 +119,9 @@ return {
       org_promote_subtree = '<s',
       org_demote_subtree = '>s',
       org_meta_return = '<Leader><CR>', -- Add headling, item or row
+      org_return = {
+        i = '<CR>',
+      },
       org_insert_heading_respect_content = '<Leader>oih', -- Add new headling after current heading block with same level
       org_insert_todo_heading = '<Leader>oiT', -- Add new todo headling right after current heading with same level
       org_insert_todo_heading_respect_content = '<Leader>oit', -- Add new todo headling after current heading block on same level
