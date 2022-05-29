@@ -72,9 +72,6 @@ local function format()
   if not node then
     return false
   end
-  print(node:type())
-  print(node:type())
-  print(node:type())
   local table_node = utils.get_closest_parent_of_type(node, 'table', true)
   if not table_node then
     return false
