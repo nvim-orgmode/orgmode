@@ -10,9 +10,7 @@ local config = require('orgmode.config')
 local constants = require('orgmode.utils.constants')
 local ts_utils = require('nvim-treesitter.ts_utils')
 local utils = require('orgmode.utils')
-local tree_utils = require('orgmode.utils.treesitter')
 local ts_org = require('orgmode.treesitter')
-local Listitem = require('orgmode.treesitter.listitem')
 
 ---@class OrgMappings
 ---@field capture Capture

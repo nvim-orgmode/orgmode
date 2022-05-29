@@ -6,7 +6,7 @@ describe('Table', function()
     local data = {
       { 'one', 'two', 'three' },
       { 'four', 'five', 'six', 'seven' },
-      {},
+      'hr',
       { 'eight' },
       { 'nine', 'ten' },
     }
@@ -37,7 +37,7 @@ describe('Table', function()
 
     local data_with_long_names = {
       { 'one', 'two', 'three' },
-      {},
+      'hr',
       { 'four', 'five', 'six', 'seven longer long' },
       { 'eight', 'iamverylong' },
       { 'nine', 'ten', 'a' },

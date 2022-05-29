@@ -28,9 +28,9 @@ end
 function ClockReport:draw_for_agenda(start_line)
   local data = {
     { 'File', 'Headline', 'Time' },
-    {},
+    'hr',
     { '', 'ALL Total time', self.total_duration:to_string() },
-    {},
+    'hr',
   }
 
   for _, file in ipairs(self.files) do
