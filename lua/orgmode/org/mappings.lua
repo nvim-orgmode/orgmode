@@ -443,12 +443,22 @@ function OrgMappings:org_return()
     end
   end
 
-  local fallback_mapping = '<CR>'
-  if config.old_cr_mapping and config.old_cr_mapping ~= '' then
-    fallback_mapping = config.old_cr_mapping
+  if not config.old_cr_mapping or vim.tbl_isempty(config.old_cr_mapping) then
+    return vim.api.nvim_feedkeys(utils.esc('<CR>'), 'n', true)
   end
 
-  return vim.api.nvim_feedkeys(utils.esc(fallback_mapping), 'n', true)
+  local rhs = config.old_cr_mapping.rhs
+
+  if config.old_cr_mapping.expr > 0 then
+    vim.api.nvim_feedkeys(utils.esc(string.format('<C-r>=%s<CR>', rhs)), 'n', true)
+    -- Echo empty message to remove the register feedkeys output
+    vim.schedule(function()
+      vim.cmd([[echo '']])
+    end)
+    return
+  end
+
+  return vim.api.nvim_feedkeys(utils.esc(rhs), 'n', true)
 end
 
 function OrgMappings:handle_return(suffix)

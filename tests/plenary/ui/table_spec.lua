@@ -53,4 +53,28 @@ describe('Tables', function()
       '| fifth      | sixth       | seventh |',
     }, vim.api.nvim_buf_get_lines(0, 0, -1, false))
   end)
+
+  it('should add new row on enter', function()
+    helpers.load_file_content({
+      '| test |',
+    })
+    vim.fn.cursor({ 1, 6 })
+    vim.cmd([[exe "norm a\<CR>"]])
+    assert.are.same({
+      '| test |',
+      '|      |',
+    }, vim.api.nvim_buf_get_lines(0, 0, -1, false))
+
+    helpers.load_file_content({
+      '| test | col |',
+      '|      | value',
+    })
+    vim.fn.cursor({ 2, 13 })
+    vim.cmd([[exe "norm a\<CR>"]])
+    assert.are.same({
+      '| test | col   |',
+      '|      | value |',
+      '|      |       |',
+    }, vim.api.nvim_buf_get_lines(0, 0, -1, false))
+  end)
 end)
