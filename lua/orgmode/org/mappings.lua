@@ -443,7 +443,12 @@ function OrgMappings:org_return()
     end
   end
 
-  return vim.api.nvim_feedkeys(utils.esc(config.old_cr_mapping or '<CR>'), 'n', true)
+  local fallback_mapping = '<CR>'
+  if config.old_cr_mapping and config.old_cr_mapping ~= '' then
+    fallback_mapping = config.old_cr_mapping
+  end
+
+  return vim.api.nvim_feedkeys(utils.esc(fallback_mapping), 'n', true)
 end
 
 function OrgMappings:handle_return(suffix)
