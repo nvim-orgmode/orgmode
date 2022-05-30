@@ -176,7 +176,7 @@ end
 
 function Config:setup_mappings(category)
   if not self.old_cr_mapping then
-    self.old_cr_mapping = vim.fn.maparg('<CR>', 'i')
+    self.old_cr_mapping = vim.fn.maparg('<CR>', 'i', false, true)
   end
   if self.opts.mappings.disable_all then
     return
