@@ -450,12 +450,7 @@ function OrgMappings:org_return()
   local rhs = config.old_cr_mapping.rhs
 
   if config.old_cr_mapping.expr > 0 then
-    vim.api.nvim_feedkeys(utils.esc(string.format('<C-r>=%s<CR>', rhs)), 'n', true)
-    -- Echo empty message to remove the register feedkeys output
-    vim.schedule(function()
-      vim.cmd([[echo '']])
-    end)
-    return
+    rhs = vim.api.nvim_eval(rhs)
   end
 
   return vim.api.nvim_feedkeys(utils.esc(rhs), 'n', true)
