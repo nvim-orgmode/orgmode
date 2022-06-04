@@ -208,8 +208,24 @@ function Config:setup_mappings(category)
 
   for name, lhs in pairs(self.opts.mappings[category]) do
     if mappings[category] and mappings[category][name] and lhs then
+      -- lhs
+      local keys = {}
+      if type(lhs) == 'string' or vim.tbl_islist(lhs) then
+        -- no mode specified, default to normal-mode
+        keys['n'] = lhs
+      else
+        keys = lhs
+      end
+      -- rhs
       local map = {}
-      if type(mappings[category][name]) == 'table' and not vim.tbl_islist(mappings[category][name]) then
+      if not type(mappings[category][name]) == 'table' or vim.tbl_islist(mappings[category][name]) then
+        -- no mode specified, default to normal-mode
+        map['n'] = {}
+        map['n']['action'] = vim.tbl_map(function(i)
+          return string.format('"%s"', i)
+        end, mappings[category][name])
+        map['n']['opts'] = {}
+      else
         -- multi-mode mapping
         for mode, mapping in pairs(mappings[category][name]) do
           map[mode] = {}
@@ -228,33 +244,24 @@ function Config:setup_mappings(category)
             map[mode]['opts'] = {}
           end
         end
-      else
-        -- single-mode defaults to normal-mode
-        map['n'] = {}
-        map['n']['action'] = vim.tbl_map(function(i)
-          return string.format('"%s"', i)
-        end, mappings[category][name])
-        map['n']['opts'] = {}
       end
-
-      local keys = {}
-      if type(lhs) == 'string' then
-        keys['n'] = lhs
-      else
-        keys = lhs
-      end
-
+      -- register mappings
       for mode, key in pairs(keys) do
-        local mapping = map[mode] or false
-        if mapping then
-          local action = table.concat(mapping['action'], ',')
-          utils.buf_keymap(
-            0,
-            mode,
-            key,
-            string.format('<cmd>lua require("orgmode").action(%s)<CR>', action),
-            mapping['opts']
-          )
+        if type(key) == 'string' then
+          key = { key }
+        end
+        for _, k in pairs(key) do
+          local mapping = map[mode] or false
+          if mapping then
+            local action = table.concat(mapping['action'], ',')
+            utils.buf_keymap(
+              0,
+              mode,
+              k,
+              string.format('<cmd>lua require("orgmode").action(%s)<CR>', action),
+              mapping['opts']
+            )
+          end
         end
       end
     end
