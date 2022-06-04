@@ -339,8 +339,10 @@ issue.
 ## Development
 
 ### Tests
- To run tests, [plenary.nvim](https://github.com/nvim-lua/plenary.nvim) is necessary. Once installed, run:
+ To run tests, [plenary.nvim](https://github.com/nvim-lua/plenary.nvim) and [nvim-treesitter](https://github.com/nvim-treesitter/nvim-treesitter) must be present in the nvim-orgmode directory:
 ```
+git clone https://github.com/nvim-treesitter/nvim-treesitter
+git clone https://github.com/nvim-lua/plenary.nvim
 make test
 ```
 
