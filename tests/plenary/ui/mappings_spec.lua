@@ -284,7 +284,7 @@ describe('Mappings', function()
     vim.fn.cursor(3, 1)
     vim.cmd([[norm ,oA]])
     assert.are.same(
-      '* TODO Test orgmode                                                             :ARCHIVE:',
+      '* TODO Test orgmode                                                    :ARCHIVE:',
       vim.fn.getline(3)
     )
   end)

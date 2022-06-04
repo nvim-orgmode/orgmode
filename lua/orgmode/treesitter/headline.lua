@@ -45,8 +45,11 @@ function Headline:set_tags(tags)
     end
   end
 
+  local txt = query.get_node_text(predecessor, 0)
   local pred_end_row, pred_end_col, _ = predecessor:end_()
-  local end_col = vim.api.nvim_strwidth(vim.fn.getline(pred_end_row + 1))
+  local line = vim.fn.getline(pred_end_row + 1)
+  local stars = line:match('^%*+%s*')
+  local end_col = line:len()
 
   local text = ''
   tags = vim.trim(tags):gsub('^:', ''):gsub(':$', '')
@@ -54,12 +57,12 @@ function Headline:set_tags(tags)
     tags = ':' .. tags .. ':'
 
     local to_col = config.org_tags_column
+    local tags_width = vim.api.nvim_strwidth(tags)
     if to_col < 0 then
-      local tags_width = vim.api.nvim_strwidth(tags)
       to_col = math.abs(to_col) - tags_width
     end
 
-    local spaces = math.max(to_col - pred_end_col, 1)
+    local spaces = math.max(to_col - (vim.api.nvim_strwidth(txt) + stars:len()) - tags_width, 1)
     text = string.rep(' ', spaces) .. tags
   end
 
