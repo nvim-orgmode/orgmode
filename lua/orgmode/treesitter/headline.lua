@@ -185,7 +185,8 @@ function Headline:add_closed_date()
       string.format('%s%s', indent, closed_text),
     })
   end
-  local last_child = dates['DEADLINE'] or dates['SCHEDULED']
+  local keys = vim.tbl_keys(dates)
+  local last_child = dates['DEADLINE'] or dates['SCHEDULED'] or dates[keys[#keys]]
   local ptext = query.get_node_text(last_child, 0)
   local text = ptext .. ' ' .. closed_text
   tree_utils.set_node_text(last_child, text)
