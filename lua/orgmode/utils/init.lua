@@ -578,4 +578,14 @@ function utils.open_float(name, scale)
   })
 end
 
+---@param str string
+---@param amount number
+function utils.pad_right(str, amount)
+  local spaces = math.max(0, amount - vim.api.nvim_strwidth(str))
+  if spaces == 0 then
+    return str
+  end
+  return string.format('%s%s', str, string.rep(' ', spaces))
+end
+
 return utils

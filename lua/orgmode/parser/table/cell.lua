@@ -1,3 +1,5 @@
+local utils = require('orgmode.utils')
+
 ---@class TableCell
 ---@field row TableRow
 ---@field value string
@@ -32,7 +34,7 @@ function TableCell:compile()
   if self.row.is_separator then
     val = string.format('-%s-', string.rep('-', width))
   else
-    val = string.format(' %-' .. width .. 's ', self.value)
+    val = string.format(' %s ', utils.pad_right(self.value, width))
   end
   local start_col = self.row.table.start_col + 2
   if self.col > 1 then

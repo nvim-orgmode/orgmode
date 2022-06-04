@@ -61,7 +61,7 @@ function AgendaTodosView.generate_view(items, content, filters)
   items = sort_todos(items)
   local offset = #content
   local longest_category = utils.reduce(items, function(acc, todo)
-    return math.max(acc, todo:get_category():len())
+    return math.max(acc, vim.api.nvim_strwidth(todo:get_category()))
   end, 0)
 
   for i, headline in ipairs(items) do
@@ -74,7 +74,7 @@ function AgendaTodosView.generate_view(items, content, filters)
 end
 
 function AgendaTodosView.generate_todo_item(headline, longest_category, line_nr)
-  local category = string.format('  %-' .. (longest_category + 1) .. 's', headline:get_category() .. ':')
+  local category = '  ' .. utils.pad_right(string.format('%s:', headline:get_category()), longest_category + 1)
   local todo_keyword = headline.todo_keyword.value
   local todo_keyword_padding = todo_keyword ~= '' and ' ' or ''
   local line = string.format('  %s%s%s %s', category, todo_keyword_padding, todo_keyword, headline.title)

@@ -186,7 +186,7 @@ function AgendaView:build()
     table.insert(content, { line_content = self:_format_day(day) })
 
     local longest_items = utils.reduce(agenda_items, function(acc, agenda_item)
-      acc.category = math.max(acc.category, agenda_item.headline:get_category():len())
+      acc.category = math.max(acc.category, vim.api.nvim_strwidth(agenda_item.headline:get_category()))
       acc.label = math.max(acc.label, vim.api.nvim_strwidth(agenda_item.label))
       return acc
     end, {
@@ -264,10 +264,10 @@ end
 ---@return table
 function AgendaView.build_agenda_item_content(agenda_item, longest_category, longest_date, line_nr)
   local headline = agenda_item.headline
-  local category = string.format('  %-' .. longest_category .. 's', headline:get_category() .. ':')
+  local category = '  ' .. utils.pad_right(string.format('%s:', headline:get_category()), longest_category)
   local date = agenda_item.label
   if date ~= '' then
-    date = string.format(' %-' .. longest_date .. 's', agenda_item.label)
+    date = ' ' .. utils.pad_right(agenda_item.label, longest_date)
   end
   local todo_keyword = agenda_item.headline.todo_keyword.value
   local todo_padding = ''
