@@ -245,13 +245,18 @@ function Help.prepare_content(opts)
   return content
 end
 
-function Help.show(o)
-  o = o or {}
+function Help.show(opts)
+  opts = opts or {}
 
-  local opts = {
+  local content = Help.prepare_content(opts)
+  local longest = utils.reduce(content, function(acc, item)
+    return math.max(acc, item:len())
+  end, 0)
+
+  local window_opts = {
     relative = 'editor',
-    width = vim.o.columns / 2,
-    height = vim.o.lines - 10,
+    width = math.min(longest + 2, vim.o.columns - 2),
+    height = math.min(#content + 1, vim.o.lines - 2),
     anchor = 'NW',
     style = 'minimal',
     border = 'single',
@@ -259,21 +264,14 @@ function Help.show(o)
     col = vim.o.columns / 4,
   }
 
-  local content = Help.prepare_content(o)
-  local longest = utils.reduce(content, function(acc, item)
-    return math.max(acc, item:len())
-  end, 0)
-
-  opts.width = math.min(longest + 2, vim.o.columns - 2)
-  opts.height = math.min(#content + 1, vim.o.lines - 2)
-  opts.row = (vim.o.lines - opts.height) / 2
-  opts.col = (vim.o.columns - opts.width) / 2
+  window_opts.row = (vim.o.lines - window_opts.height) / 2
+  window_opts.col = (vim.o.columns - window_opts.width) / 2
 
   Help.buf = vim.api.nvim_create_buf(false, true)
   vim.api.nvim_buf_set_name(Help.buf, 'orghelp')
   vim.api.nvim_buf_set_option(Help.buf, 'filetype', 'orghelp')
   vim.api.nvim_buf_set_option(Help.buf, 'bufhidden', 'wipe')
-  Help.win = vim.api.nvim_open_win(Help.buf, true, opts)
+  Help.win = vim.api.nvim_open_win(Help.buf, true, window_opts)
 
   vim.api.nvim_buf_set_lines(Help.buf, 0, -1, true, content)
 
