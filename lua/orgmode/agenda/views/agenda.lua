@@ -28,6 +28,9 @@ local function sort_agenda_items(agenda_items)
       if not b.headline_date.date_only and a.headline_date.date_only then
         return false
       end
+      if not a.headline_date.date_only and not b.headline_date.date_only then
+        return a.headline_date:is_before(b.headline_date)
+      end
       return sort_by_date_or_priority_or_category(a, b)
     end
 
