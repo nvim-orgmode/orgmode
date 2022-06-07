@@ -954,7 +954,7 @@ Mappings for `org` files.
 ORG_REFILE                                                    *orgmode-org_refile*
 
 mapped to: `<Leader>or`
-Refile current headline to destination
+Refile current headline, including its subtree, to a destination org-file. This file must be one of the files specified for the `org_agenda_files` setting. A target headline in the destination file can be specified with `destination.org/<headline>`. If there are multiple headlines with the same name in the destination file, the first occurence will be used.
 
 ORG_TIMESTAMP_UP                                        *orgmode-org_timestamp_up*
 
