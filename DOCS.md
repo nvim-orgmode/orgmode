@@ -690,7 +690,7 @@ require('orgmode').setup({
 Mappings for `org` files.
 #### **org_refile**
 *mapped to*: `<Leader>or`<br />
-Refile current headline to destination
+Refile current headline, including its subtree, to a destination org-file. This file must be one of the files specified for the `org_agenda_files` setting. A target headline in the destination file can be specified with `destination.org/<headline>`. If there are multiple headlines with the same name in the destination file, the first occurence will be used.
 #### **org_timestamp_up**
 *mapped to*: `<C-a>`<br />
 Increase date part under under cursor. Accepts count: (Example: `5<C-a>`)<br />
