@@ -134,7 +134,7 @@ end
 ---@private
 function Capture:_get_refile_vars()
   local template = vim.api.nvim_buf_get_var(0, 'org_template') or {}
-  local file = vim.fn.fnamemodify(template.target or config.org_default_notes_file, ':p')
+  local file = vim.fn.resolve(vim.fn.fnamemodify(template.target or config.org_default_notes_file, ':p'))
   local lines = vim.api.nvim_buf_get_lines(0, 0, -1, true)
   local org_file = File.from_content(lines, 'capture', utils.current_file_path())
   local item = nil
