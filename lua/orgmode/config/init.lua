@@ -69,7 +69,7 @@ end
 function Config:get_all_files()
   local all_filenames = {}
   if self.opts.org_default_notes_file and self.opts.org_default_notes_file ~= '' then
-    local default_full_path = vim.fn.expand(self.opts.org_default_notes_file, ':p')
+    local default_full_path = vim.fn.resolve(vim.fn.expand(self.opts.org_default_notes_file, ':p'))
     table.insert(all_filenames, default_full_path)
   end
   local files = self.opts.org_agenda_files
