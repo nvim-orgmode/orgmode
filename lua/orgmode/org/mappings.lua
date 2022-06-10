@@ -449,6 +449,16 @@ function OrgMappings:org_return()
 
   local rhs = config.old_cr_mapping.rhs
 
+  if config.old_cr_mapping.script > 0 then
+    rhs = rhs:gsub('<SID>', string.format('<SNR>%d_', config.old_cr_mapping.sid))
+    if rhs:match('^<CR>') then
+      rhs = rhs:gsub('<CR>', '')
+      vim.api.nvim_feedkeys(utils.esc('<CR>'), 'n', true)
+    end
+
+    return vim.api.nvim_feedkeys(utils.esc(rhs), '', true)
+  end
+
   if config.old_cr_mapping.expr > 0 then
     rhs = vim.api.nvim_eval(rhs)
   end
