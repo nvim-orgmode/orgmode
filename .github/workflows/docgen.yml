@@ -21,10 +21,37 @@ jobs:
         env:
           COMMIT_MSG: |
             [docgen] Update doc/orgmode.txt
-            skip-checks: true
         run: |
           git config user.name github-actions
           git config user.email github-actions@github.com
           git add doc/orgmode.txt
+          # Only commit and push if we have changes
+          git diff --quiet && git diff --staged --quiet || (git commit -m "${COMMIT_MSG}"; git push)
+
+  api_docgen:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install Neovim
+        uses: rhysd/action-setup-vim@v1
+        id: neovim
+        with:
+          neovim: true
+          version: v0.7.0
+      - name: Install mini.nvim
+        uses: actions/checkout@v2
+        with:
+          repository: echasnovski/mini.nvim
+          path: mini.nvim
+      - name: Generate api docs
+        run: make api_docs
+      - name: Commit changes
+        env:
+          COMMIT_MSG: |
+            [docgen] Update doc/orgmode_api.txt
+        run: |
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git add doc/orgmode_api.txt
           # Only commit and push if we have changes
           git diff --quiet && git diff --staged --quiet || (git commit -m "${COMMIT_MSG}"; git push)

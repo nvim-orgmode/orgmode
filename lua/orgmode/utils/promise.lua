@@ -5,18 +5,8 @@ local vim = vim
 local PackedValue = {}
 PackedValue.__index = PackedValue
 
---- like {...} except preserve the lenght explicitly
-local function pack_len(...)
-  return { n = select('#', ...), ... }
-end
-
---- like unpack() but use the length set by pack_len if present
-local function unpack_len(t)
-  return unpack(t, 1, t.n)
-end
-
 function PackedValue.new(...)
-  local values = pack_len(...)
+  local values = vim.F.pack_len(...)
   local tbl = { _values = values }
   return setmetatable(tbl, PackedValue)
 end
@@ -29,7 +19,7 @@ function PackedValue.pcall(self, f)
 end
 
 function PackedValue.unpack(self)
-  return unpack_len(self._values)
+  return vim.F.unpack_len(self._values)
 end
 
 function PackedValue.first(self)
@@ -211,8 +201,8 @@ function Promise._start_reject(self, value)
 end
 
 --- Equivalents to JavaScript's Promise.then.
---- @param on_fullfilled? function|nil: A callback on fullfilled.
---- @param on_rejected? function|nil: A callback on rejected.
+--- @param on_fullfilled function|nil: A callback on fullfilled.
+--- @param on_rejected function|nil: A callback on rejected.
 --- @return table: Promise
 function Promise.next(self, on_fullfilled, on_rejected)
   vim.validate({
