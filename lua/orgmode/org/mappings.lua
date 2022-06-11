@@ -62,11 +62,16 @@ function OrgMappings:archive()
   )
 end
 
-function OrgMappings:set_tags()
+---@param tags? string|string[]
+function OrgMappings:set_tags(tags)
   local headline = ts_org.closest_headline()
   local _, current_tags = headline:tags()
 
-  local tags = vim.fn.OrgmodeInput('Tags: ', current_tags, Files.autocomplete_tags)
+  if not tags then
+    tags = vim.fn.OrgmodeInput('Tags: ', current_tags, Files.autocomplete_tags)
+  elseif type(tags) == 'table' then
+    tags = string.format(':%s:', table.concat(tags, ':'))
+  end
 
   return headline:set_tags(tags)
 end
@@ -315,12 +320,12 @@ function OrgMappings:set_priority(direction)
   local _, current_priority = headline:priority()
   local priority_state = PriorityState:new(current_priority)
 
-  local new_priority
+  local new_priority = direction
   if direction == 'up' then
     new_priority = priority_state:increase()
   elseif direction == 'down' then
     new_priority = priority_state:decrease()
-  else
+  elseif direction == nil then
     new_priority = priority_state:prompt_user()
   end
 

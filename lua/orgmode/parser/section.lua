@@ -203,44 +203,6 @@ function Section:has_priority()
   return vim.trim(self.priority or '') ~= ''
 end
 
----@param priority string
-function Section:set_priority(priority)
-  if not priority then
-    return
-  end
-
-  local linenr = self.range.start_line
-  local stars = string.rep('%*', self.level)
-  local static_state = self.todo_keyword.value
-
-  local changing_state = ''
-  if self.priority ~= '' then
-    changing_state = '%[#' .. self.priority .. '%]%s+'
-  end
-
-  local new_state = ''
-  if vim.trim(priority) ~= '' then
-    new_state = '%[#' .. priority .. '%] '
-  end
-
-  local existing_line = vim.api.nvim_call_function('getline', { linenr })
-  local new_line = existing_line:gsub(
-    '^' .. stars .. '%s+' .. static_state .. (static_state ~= '' and '%s+' or '') .. changing_state,
-    stars .. (static_state ~= '' and ' ' or '') .. static_state .. ' ' .. new_state
-  )
-
-  if existing_line == new_line then
-    return
-  end
-
-  vim.api.nvim_call_function('setline', {
-    linenr,
-    new_line,
-  })
-
-  self.priority = vim.trim(priority)
-end
-
 ---@return number
 function Section:get_priority_sort_value()
   return PriorityState:new(self.priority):get_sort_value()
@@ -518,7 +480,7 @@ function Section:promote(amount, promote_child_sections)
 end
 
 function Section:add_closed_date()
-  local closed_date = self:_get_closed_date()
+  local closed_date = self:get_closed_date()
   if closed_date then
     return nil
   end
@@ -544,7 +506,7 @@ function Section:add_deadline_date(date)
 end
 
 function Section:remove_closed_date()
-  local closed_date = self:_get_closed_date()
+  local closed_date = self:get_closed_date()
   if not closed_date then
     return nil
   end
@@ -599,7 +561,7 @@ function Section:cancel_active_clock()
 end
 
 ---@return Date
-function Section:_get_closed_date()
+function Section:get_closed_date()
   return vim.tbl_filter(function(date)
     return date:is_closed()
   end, self.dates)[1]
