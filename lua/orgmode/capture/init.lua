@@ -274,7 +274,7 @@ function Capture:_refile_to(file, lines, item, destination_line)
     vim.api.nvim_set_current_win(cur_win)
   end
 
-  if item then
+  if item and item.file == utils.current_file_path() then
     vim.cmd(string.format('silent! %d,%d delete', item.range.start_line, item.range.end_line))
   end
 
