@@ -3,6 +3,8 @@ local utils = require('orgmode.utils')
 local ts_org = require('orgmode.treesitter')
 local OrgPosition = require('orgmode.api.position')
 local PriorityState = require('orgmode.objects.priority_state')
+local Date = require('orgmode.objects.date')
+local Calendar = require('orgmode.objects.calendar')
 
 ---@class OrgHeadline
 ---@field title string headline title without todo keyword, tags and priority. Ex. `* TODO I am a headline  :SOMETAG:` returns `I am a headline`
@@ -119,6 +121,77 @@ function OrgHeadline:set_priority(priority)
   return self:_do_action(function()
     local headline = ts_org.closest_headline()
     return headline:set_priority(priority)
+  end)
+end
+
+--- Set deadline date
+---@param date? Date|string|nil If ommited, opens the datepicker. Empty string removes the date. String must follow org date convention (YYYY-MM-DD HH:mm...)
+---@return Promise
+function OrgHeadline:set_deadline(date)
+  return self:_do_action(function()
+    local headline = ts_org.closest_headline()
+    local deadline_date = headline:deadline()
+    if not date then
+      return Calendar.new({ date = deadline_date or Date.today() }).open():next(function(new_date)
+        if not new_date then
+          return
+        end
+        return headline:set_deadline_date(new_date)
+      end)
+    end
+
+    if type(date) == 'string' then
+      if date == '' then
+        return headline:remove_deadline_date()
+      end
+      local date_instance = Date.from_string(date)
+      if date_instance then
+        return headline:set_deadline_date(date_instance)
+      end
+      error('Invalid string format for deadline date')
+    end
+
+    if Date.is_date_instance(date) then
+      return headline:set_deadline_date(date)
+    end
+
+    error('Invalid argument to set_deadline')
+  end)
+end
+
+
+--- Set scheduled date
+---@param date? Date|string|nil If ommited, opens the datepicker. Empty string removes the date. String must follow org date convention (YYYY-MM-DD HH:mm...)
+---@return Promise
+function OrgHeadline:set_scheduled(date)
+  return self:_do_action(function()
+    local headline = ts_org.closest_headline()
+    local scheduled_date = headline:scheduled()
+    if not date then
+      return Calendar.new({ date = scheduled_date or Date.today() }).open():next(function(new_date)
+        if not new_date then
+          return
+        end
+        return headline:set_scheduled_date(new_date)
+      end)
+    end
+
+    if type(date) == 'string' then
+      if date == '' then
+        return headline:remove_scheduled_date()
+      end
+      local date_instance = Date.from_string(date)
+      if date_instance then
+        return headline:set_scheduled_date(date_instance)
+      end
+      error('Invalid string format for schedule date')
+    end
+
+    if Date.is_date_instance(date) then
+      return headline:set_scheduled_date(date)
+    end
+
+    error('Invalid argument to set_scheduled')
   end)
 end
 

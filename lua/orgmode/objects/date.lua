@@ -889,6 +889,11 @@ local function parse_all_from_line(line, lnum)
   return dates
 end
 
+---@param value any
+local function is_date_instance(value)
+  return getmetatable(value) == Date
+end
+
 return {
   parse_parts = parse_parts,
   from_org_date = from_org_date,
@@ -897,6 +902,7 @@ return {
   today = today,
   parse_all_from_line = parse_all_from_line,
   is_valid_date = is_valid_date,
+  is_date_instance = is_date_instance,
   from_match = from_match,
   pattern = pattern,
 }
