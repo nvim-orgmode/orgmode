@@ -749,28 +749,26 @@ function OrgMappings:outline_up_heading()
 end
 
 function OrgMappings:org_deadline()
-  local item = Files.get_closest_headline()
-  local deadline_date = item:get_deadline_date()
+  local headline = ts_org.closest_headline()
+  local deadline_date = headline:deadline()
   return Calendar.new({ date = deadline_date or Date.today() }).open():next(function(new_date)
     if not new_date then
       return
     end
-    item:remove_closed_date()
-    item = Files.get_closest_headline()
-    item:add_deadline_date(new_date)
+    headline:remove_closed_date()
+    headline:set_deadline_date(new_date)
   end)
 end
 
 function OrgMappings:org_schedule()
-  local item = Files.get_closest_headline()
-  local scheduled_date = item:get_scheduled_date()
+  local headline = ts_org.closest_headline()
+  local scheduled_date = headline:scheduled()
   return Calendar.new({ date = scheduled_date or Date.today() }).open():next(function(new_date)
     if not new_date then
       return
     end
-    item:remove_closed_date()
-    item = Files.get_closest_headline()
-    item:add_scheduled_date(new_date)
+    headline:remove_closed_date()
+    headline:set_scheduled_date(new_date)
   end)
 end
 

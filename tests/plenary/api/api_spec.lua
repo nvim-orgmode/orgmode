@@ -1,5 +1,6 @@
 local helpers = require('tests.plenary.ui.helpers')
 local api = require('orgmode.api')
+local Date = require('orgmode.objects.date')
 
 describe('Api', function()
   it('should parse current file through api', function()
@@ -136,5 +137,109 @@ describe('Api', function()
     assert.Is.True(vim.fn.getline(5):match('%[#A%]') ~= nil)
     api.current().headlines[2]:set_priority('')
     assert.Is.True(vim.fn.getline(5):match('%[.*%]') == nil)
+  end)
+
+  it('should manipulate deadline date', function()
+    helpers.load_file_content({
+      '* TODO Test orgmode :WORK:OFFICE:',
+      '  DEADLINE: <2021-07-21 Wed 22:02>',
+      '** TODO Second level :NESTEDTAG:',
+      '  SCHEDULED: <2021-07-21 Wed 22:02>',
+      '* TODO Some task',
+    })
+    assert.is.True(#api.load() > 1)
+    local current_file = api.current()
+    assert.are.same('2021-07-21 Wed 22:02', current_file.headlines[1].deadline:to_string())
+
+    -- Update in place
+    api.current().headlines[1]:set_deadline('2022-06-12 Sun 09:30')
+    assert.are.same('2022-06-12 Sun 09:30', api.current().headlines[1].deadline:to_string())
+    local expect = vim.pesc('  DEADLINE: <2022-06-12 Sun 09:30>')
+    assert.Is.True(vim.fn.getline(2):match(expect) ~= nil)
+
+    -- Update second headline with value from Date instance
+    local date_instance = Date.from_string('2022-06-15')
+    api.current().headlines[2]:set_deadline(date_instance)
+    assert.are.same('2022-06-15 Wed', api.current().headlines[2].deadline:to_string())
+    expect = vim.pesc('  SCHEDULED: <2021-07-21 Wed 22:02> DEADLINE: <2022-06-15 Wed>')
+    assert.Is.True(vim.fn.getline(4):match(expect) ~= nil)
+
+    -- Add to second headline after scheduled
+    api.current().headlines[2]:set_deadline('2022-06-12 Sun 11:30')
+    assert.are.same('2022-06-12 Sun 11:30', api.current().headlines[2].deadline:to_string())
+    expect = vim.pesc('  SCHEDULED: <2021-07-21 Wed 22:02> DEADLINE: <2022-06-12 Sun 11:30>')
+    assert.Is.True(vim.fn.getline(4):match(expect) ~= nil)
+
+    -- Add to third headline that doesn't have any plan
+    api.current().headlines[3]:set_deadline('2022-06-12 Sun 12:30')
+    assert.are.same('2022-06-12 Sun 12:30', api.current().headlines[3].deadline:to_string())
+    expect = vim.pesc('  DEADLINE: <2022-06-12 Sun 12:30>')
+    assert.Is.True(vim.fn.getline(6):match(expect) ~= nil)
+
+    -- Remove date
+    api.current().headlines[1]:set_deadline('')
+    assert.Is.Nil(api.current().headlines[1].deadline)
+    -- Completely removed the line
+    expect = vim.pesc('** TODO Second level :NESTEDTAG:')
+    assert.Is.True(vim.fn.getline(2):match(expect) ~= nil)
+
+    -- Remove only scheduled, leave deadline
+    api.current().headlines[2]:set_deadline('')
+    assert.Is.Nil(api.current().headlines[2].deadline)
+    -- Completely removed the line
+    expect = vim.pesc('  SCHEDULED: <2021-07-21 Wed 22:02>')
+    assert.Is.True(vim.fn.getline(3):match(expect) ~= nil)
+  end)
+
+  it('should manipulate schedule date', function()
+    helpers.load_file_content({
+      '* TODO Test orgmode :WORK:OFFICE:',
+      '  SCHEDULED: <2021-07-21 Wed 22:02>',
+      '** TODO Second level :NESTEDTAG:',
+      '  DEADLINE: <2021-07-21 Wed 22:02>',
+      '* TODO Some task',
+    })
+    assert.is.True(#api.load() > 1)
+    local current_file = api.current()
+    assert.are.same('2021-07-21 Wed 22:02', current_file.headlines[1].scheduled:to_string())
+
+    -- Update in place
+    api.current().headlines[1]:set_scheduled('2022-06-12 Sun 09:30')
+    assert.are.same('2022-06-12 Sun 09:30', api.current().headlines[1].scheduled:to_string())
+    local expect = vim.pesc('  SCHEDULED: <2022-06-12 Sun 09:30>')
+    assert.Is.True(vim.fn.getline(2):match(expect) ~= nil)
+
+    -- Add to second headline after sheduled
+    api.current().headlines[2]:set_scheduled('2022-06-12 Sun 11:30')
+    assert.are.same('2022-06-12 Sun 11:30', api.current().headlines[2].scheduled:to_string())
+    expect = vim.pesc('  DEADLINE: <2021-07-21 Wed 22:02> SCHEDULED: <2022-06-12 Sun 11:30>')
+    assert.Is.True(vim.fn.getline(4):match(expect) ~= nil)
+
+    -- Update second headline with value from Date instance
+    local date_instance = Date.from_string('2022-06-16')
+    api.current().headlines[2]:set_scheduled(date_instance)
+    assert.are.same('2022-06-16 Thu', api.current().headlines[2].scheduled:to_string())
+    expect = vim.pesc('  DEADLINE: <2021-07-21 Wed 22:02> SCHEDULED: <2022-06-16 Thu>')
+    assert.Is.True(vim.fn.getline(4):match(expect) ~= nil)
+
+    -- Add to third headline that doesn't have any plan
+    api.current().headlines[3]:set_scheduled('2022-06-12 Sun 12:30')
+    assert.are.same('2022-06-12 Sun 12:30', api.current().headlines[3].scheduled:to_string())
+    expect = vim.pesc('  SCHEDULED: <2022-06-12 Sun 12:30>')
+    assert.Is.True(vim.fn.getline(6):match(expect) ~= nil)
+
+    -- Remove date
+    api.current().headlines[1]:set_scheduled('')
+    assert.Is.Nil(api.current().headlines[1].scheduled)
+    -- Completely removed the line
+    expect = vim.pesc('** TODO Second level :NESTEDTAG:')
+    assert.Is.True(vim.fn.getline(2):match(expect) ~= nil)
+
+    -- Remove only scheduled, leave scheduled
+    api.current().headlines[2]:set_scheduled('')
+    assert.Is.Nil(api.current().headlines[2].scheduled)
+    -- Completely removed the line
+    expect = vim.pesc('  DEADLINE: <2021-07-21 Wed 22:02>')
+    assert.Is.True(vim.fn.getline(3):match(expect) ~= nil)
   end)
 end)

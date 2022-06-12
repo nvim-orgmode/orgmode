@@ -2,6 +2,7 @@ local tree_utils = require('orgmode.utils.treesitter')
 local Headline = require('orgmode.treesitter.headline')
 local Listitem = require('orgmode.treesitter.listitem')
 
+---@return Headline
 local function closest_headline()
   local ts_headline = tree_utils.closest_headline()
   if not ts_headline then
