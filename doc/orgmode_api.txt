@@ -97,6 +97,24 @@ Parameters~
 Return~
 Promise
 
+------------------------------------------------------------------------------
+                                                    *OrgHeadline:set_deadline()*
+                       `OrgHeadline:set_deadline`({date})
+Set deadline date
+Parameters~
+{date} `(optional)` `(Date|string|nil)` If ommited, opens the datepicker. Empty string removes the date. String must follow org date convention (YYYY-MM-DD HH:mm...)
+Return~
+Promise
+
+------------------------------------------------------------------------------
+                                                   *OrgHeadline:set_scheduled()*
+                      `OrgHeadline:set_scheduled`({date})
+Set scheduled date
+Parameters~
+{date} `(optional)` `(Date|string|nil)` If ommited, opens the datepicker. Empty string removes the date. String must follow org date convention (YYYY-MM-DD HH:mm...)
+Return~
+Promise
+
 
 ==============================================================================
 ------------------------------------------------------------------------------
