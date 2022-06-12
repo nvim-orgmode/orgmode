@@ -159,7 +159,6 @@ function OrgHeadline:set_deadline(date)
   end)
 end
 
-
 --- Set scheduled date
 ---@param date? Date|string|nil If ommited, opens the datepicker. Empty string removes the date. String must follow org date convention (YYYY-MM-DD HH:mm...)
 ---@return Promise
