@@ -36,7 +36,7 @@ body:
       required: true
     attributes:
       label: Minimal init.lua
-      description: Please provide minimal init.lua to reproduce the issue. You can find the template here https://gist.github.com/kristijanhusak/a0cb5f4eb2bad3e732a1d18d311ebe2f. Once set up, you can run it with `nvim -u minimal_init.lua`.
+      description: Please provide minimal init.lua to reproduce the issue. You can find the template here https://github.com/nvim-orgmode/orgmode/blob/master/scripts/minimal_init.lua. Once set up, you can run it with `nvim -u minimal_init.lua`.
   - type: textarea
     attributes:
       label: Screenshots and recordings
