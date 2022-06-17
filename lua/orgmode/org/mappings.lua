@@ -448,24 +448,36 @@ function OrgMappings:org_return()
     end
   end
 
-  if not config.old_cr_mapping or vim.tbl_isempty(config.old_cr_mapping) then
+  local old_mapping = config.old_cr_mapping
+
+  if not old_mapping or vim.tbl_isempty(old_mapping) then
     return vim.api.nvim_feedkeys(utils.esc('<CR>'), 'n', true)
   end
 
-  local rhs = config.old_cr_mapping.rhs
+  local rhs = old_mapping.rhs
 
-  if config.old_cr_mapping.script > 0 then
-    rhs = rhs:gsub('<SID>', string.format('<SNR>%d_', config.old_cr_mapping.sid))
+  if old_mapping.expr > 0 then
+    rhs = vim.api.nvim_eval(rhs)
+  end
+
+  if old_mapping.script > 0 then
+    rhs = rhs:gsub('<SID>', string.format('<SNR>%d_', old_mapping.sid))
     if rhs:match('^<CR>') then
       rhs = rhs:gsub('<CR>', '')
       vim.api.nvim_feedkeys(utils.esc('<CR>'), 'n', true)
     end
 
-    return vim.api.nvim_feedkeys(utils.esc(rhs), '', true)
-  end
+    if rhs:match('^' .. utils.esc('<CR>')) then
+      rhs = rhs:gsub('^' .. utils.esc('<CR>'), '')
+      vim.api.nvim_feedkeys(utils.esc('<CR>'), 'n', true)
+    end
 
-  if config.old_cr_mapping.expr > 0 then
-    rhs = vim.api.nvim_eval(rhs)
+    if old_mapping.expr > 0 and rhs:match('^' .. utils.esc('<c-r>') .. '=') then
+      rhs = rhs:gsub('^' .. utils.esc('<c-r>') .. '=', ''):gsub(utils.esc('<CR>') .. '$', '')
+      rhs = vim.api.nvim_eval(rhs)
+    end
+
+    return vim.api.nvim_feedkeys(utils.esc(rhs), '', true)
   end
 
   return vim.api.nvim_feedkeys(utils.esc(rhs), 'n', true)
