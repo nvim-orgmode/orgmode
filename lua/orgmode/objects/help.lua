@@ -152,7 +152,9 @@ function Help._prepare_orgcapture(mappings, max_height)
   local content = { string.format(' **Orgmode mappings Capture + Org:%s**', scroll_more_text), '', '  __Capture__' }
   for _, item in ipairs(helps.capture) do
     local maps = mappings.capture[item.key]
-    if type(maps) == 'table' then
+    maps = maps.n or maps
+    maps = maps.keys or maps
+    if vim.tbl_islist(maps) then
       maps = table.concat(maps, ', ')
     end
 
@@ -173,7 +175,9 @@ function Help._prepare_orgagenda(mappings, max_height)
   local content = { string.format(' **Orgmode mappings - Agenda%s:**', scroll_more_text), '' }
   for _, item in ipairs(helps.orgagenda) do
     local maps = mappings.agenda[item.key]
-    if type(maps) == 'table' then
+    maps = maps.n or maps
+    maps = maps.keys or maps
+    if vim.tbl_islist(maps) then
       maps = table.concat(maps, ', ')
     end
 
@@ -196,7 +200,9 @@ function Help._prepare_edit_src(mappings, max_height)
 
   for _, item in ipairs(helps.edit_src) do
     local maps = mappings.edit_src[item.key]
-    if type(maps) == 'table' then
+    maps = maps.n or maps
+    maps = maps.keys or maps
+    if vim.tbl_islist(maps) then
       maps = table.concat(maps, ', ')
     end
 
@@ -227,7 +233,9 @@ function Help.prepare_content(opts)
 
   for _, item in ipairs(helps.org) do
     local maps = mappings.org[item.key]
-    if type(maps) == 'table' then
+    maps = maps.n or maps
+    maps = maps.keys or maps
+    if vim.tbl_islist(maps) then
       maps = table.concat(maps, ', ')
     end
 
@@ -236,6 +244,11 @@ function Help.prepare_content(opts)
 
   for _, item in ipairs(helps.text_objects) do
     local maps = mappings.text_objects[item.key]
+    maps = maps.n or maps
+    maps = maps.keys or maps
+    if vim.tbl_islist(maps) then
+      maps = table.concat(maps, ', ')
+    end
     table.insert(content, string.format('  `%-12s` - %s', maps, item.description))
   end
 
