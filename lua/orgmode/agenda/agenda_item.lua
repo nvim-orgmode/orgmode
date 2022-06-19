@@ -28,13 +28,13 @@ local AgendaItem = {}
 ---@param index number
 function AgendaItem:new(headline_date, headline, date, index)
   local opts = {}
-  opts.headline_date = headline_date
+  opts.headline_date = headline_date:apply_repeater_until(date)
   opts.headline = headline
   opts.date = date
   opts.index = index or 1
   opts.is_valid = false
   opts.is_today = date:is_today()
-  opts.is_same_day = headline_date:is_same(date, 'day') or headline_date:repeats_on(date)
+  opts.is_same_day = opts.headline_date:is_same(date, 'day')
   opts.is_in_date_range = headline_date:is_none() and headline_date:is_in_date_range(date)
   opts.date_range_days = headline_date:get_date_range_days()
   opts.label = ''
