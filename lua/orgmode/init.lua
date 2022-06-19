@@ -113,7 +113,7 @@ local function setup(opts)
         instance.notifications = require('orgmode.notifications'):new():start_timer()
       end))
     end
-    config:setup_mappings()
+    config:setup_mappings('global')
   end, 1)
   return instance
 end

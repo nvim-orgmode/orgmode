@@ -4,7 +4,7 @@ endif
 let b:did_ftplugin = 1
 
 lua require('orgmode.config'):setup_mappings('org')
-lua require('orgmode.config'):setup_text_object_mappings()
+lua require('orgmode.config'):setup_mappings('text_objects')
 
 function! OrgmodeFoldExpr()
   return luaeval('require("orgmode.org.indent").foldexpr()')
