@@ -90,24 +90,7 @@ function EditSpecial:init()
 
   self:_set_context(bufnr, ctx)
 
-  utils.buf_keymap(
-    bufnr,
-    'n',
-    config.mappings.edit_src.org_edit_src_abort,
-    string.format([[<Cmd>let b:%s = v:true | q!<CR>]], self.aborted_var)
-  )
-  utils.buf_keymap(
-    bufnr,
-    'n',
-    config.mappings.edit_src.org_edit_src_save,
-    [[<Cmd>lua require('orgmode.objects.edit_special'):new():write()<CR>]]
-  )
-  utils.buf_keymap(
-    bufnr,
-    'n',
-    config.mappings.edit_src.org_edit_src_show_help,
-    [[<Cmd>lua require('orgmode.objects.help').show({ type = 'edit_src' })<CR>]]
-  )
+  config:setup_mappings('edit_src', bufnr)
 
   local edit_special_augroup = vim.api.nvim_create_augroup('org_edit_special', { clear = true })
   vim.api.nvim_create_autocmd('BufWipeout', {
@@ -169,6 +152,11 @@ end
 
 EditSpecial.show_help = function()
   Help.show_help()
+end
+
+EditSpecial.abort = function()
+  vim.b[EditSpecial.aborted_var] = true
+  vim.cmd([[q!]])
 end
 
 return EditSpecial

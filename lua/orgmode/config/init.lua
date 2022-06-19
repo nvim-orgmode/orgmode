@@ -1,6 +1,7 @@
 local instance = {}
 local utils = require('orgmode.utils')
 local defaults = require('orgmode.config.defaults')
+---@type table<string, MapEntry>
 local mappings = require('orgmode.config.mappings')
 
 ---@class Config
@@ -174,109 +175,24 @@ function Config:get_todo_keywords()
   return types
 end
 
-function Config:setup_mappings(category)
+function Config:setup_mappings(category, bufnr)
   if not self.old_cr_mapping then
     self.old_cr_mapping = vim.fn.maparg('<CR>', 'i', false, true)
   end
   if self.opts.mappings.disable_all then
     return
   end
-  if not category then
-    local agenda_keys = self.opts.mappings.global.org_agenda
-    if type(agenda_keys) == 'string' then
-      agenda_keys = { agenda_keys }
-    end
 
-    for _, k in ipairs(agenda_keys) do
-      utils.keymap('n', k, '<cmd>lua require("orgmode").action("agenda.prompt")<CR>')
-    end
-
-    local capture_keys = self.opts.mappings.global.org_capture
-    if type(capture_keys) == 'string' then
-      capture_keys = { capture_keys }
-    end
-
-    for _, k in ipairs(capture_keys) do
-      utils.keymap('n', k, '<cmd>lua require("orgmode").action("capture.prompt")<CR>')
-    end
-
-    return
-  end
-  if not self.opts.mappings[category] then
-    return
+  local map_entries = mappings[category]
+  local default_mappings = defaults.mappings[category] or {}
+  local user_mappings = vim.tbl_get(self.opts.mappings, category) or {}
+  local opts = {}
+  if bufnr then
+    opts.buffer = bufnr
   end
 
-  for name, lhs in pairs(self.opts.mappings[category]) do
-    if mappings[category] and mappings[category][name] and lhs then
-      -- lhs
-      local keys = {}
-      if type(lhs) == 'string' or vim.tbl_islist(lhs) then
-        -- no mode specified, default to normal-mode
-        keys['n'] = lhs
-      else
-        keys = lhs
-      end
-      -- rhs
-      local map = {}
-      if not type(mappings[category][name]) == 'table' or vim.tbl_islist(mappings[category][name]) then
-        -- no mode specified, default to normal-mode
-        map['n'] = {}
-        map['n']['action'] = vim.tbl_map(function(i)
-          return string.format('"%s"', i)
-        end, mappings[category][name])
-        map['n']['opts'] = {}
-      else
-        -- multi-mode mapping
-        for mode, mapping in pairs(mappings[category][name]) do
-          map[mode] = {}
-          if type(mapping) == 'table' and not vim.tbl_islist(mapping) then
-            local action = {}
-            table.insert(action, mapping['callback'])
-            vim.list_extend(action, mapping['args'])
-            map[mode]['action'] = vim.tbl_map(function(i)
-              return string.format('"%s"', i)
-            end, action)
-            map[mode]['opts'] = mapping['opts']
-          else
-            map[mode]['action'] = vim.tbl_map(function(i)
-              return string.format('"%s"', i)
-            end, mapping)
-            map[mode]['opts'] = {}
-          end
-        end
-      end
-      -- register mappings
-      for mode, key in pairs(keys) do
-        if type(key) == 'string' then
-          key = { key }
-        end
-        for _, k in pairs(key) do
-          local mapping = map[mode] or false
-          if mapping then
-            local action = table.concat(mapping['action'], ',')
-            utils.buf_keymap(
-              0,
-              mode,
-              k,
-              string.format('<cmd>lua require("orgmode").action(%s)<CR>', action),
-              mapping['opts']
-            )
-          end
-        end
-      end
-    end
-  end
-end
-
-function Config:setup_text_object_mappings()
-  if self.opts.mappings.disable_all then
-    return
-  end
-  for name, key in pairs(self.opts.mappings.text_objects) do
-    if mappings.text_objects[name] then
-      utils.buf_keymap(0, 'x', key, string.format(':<C-U>lua require("orgmode.org.text_objects").%s()<CR>', name))
-      utils.buf_keymap(0, 'o', key, string.format(':normal v%s<CR>', key))
-    end
+  for name, map_entry in pairs(map_entries) do
+    map_entry:attach(default_mappings[name], user_mappings[name], opts)
   end
 end
 
