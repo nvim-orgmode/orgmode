@@ -565,6 +565,12 @@ describe('Date object', function()
     assert.is.True(closest_friday:diff(Date.now()) < 8)
   end)
 
+  it('should apply repeater date until provided date', function()
+    local sunday = Date.from_string('2022-06-19 Sun 12:30 +1w')
+    local inTwoWeeks = Date.from_string('2022-06-26 Sun 12:30 +1w')
+    assert.are.same(inTwoWeeks:to_string(), sunday:apply_repeater_until(inTwoWeeks):to_string())
+  end)
+
   it('should cache check for today', function()
     local today = Date.today()
     assert.is.Nil(today.is_today_date)
