@@ -65,9 +65,7 @@ return {
       org_agenda_year_view = 'vy',
       org_agenda_quit = 'q',
       org_agenda_switch_to = '<CR>',
-      org_agenda_goto = {
-        n = '<TAB>',
-      },
+      org_agenda_goto = '<TAB>',
       org_agenda_goto_date = 'J',
       org_agenda_redo = 'r',
       org_agenda_todo = 't',
@@ -119,23 +117,15 @@ return {
       org_promote_subtree = '<s',
       org_demote_subtree = '>s',
       org_meta_return = '<Leader><CR>', -- Add headling, item or row
-      org_return = {
-        i = '<CR>',
-      },
+      org_return = '<CR>',
       org_insert_heading_respect_content = '<Leader>oih', -- Add new headling after current heading block with same level
       org_insert_todo_heading = '<Leader>oiT', -- Add new todo headling right after current heading with same level
       org_insert_todo_heading_respect_content = '<Leader>oit', -- Add new todo headling after current heading block on same level
       org_move_subtree_up = '<Leader>oK',
       org_move_subtree_down = '<Leader>oJ',
       org_export = '<Leader>oe',
-      org_next_visible_heading = {
-        n = '}',
-        x = '}',
-      },
-      org_previous_visible_heading = {
-        n = '{',
-        x = '{',
-      },
+      org_next_visible_heading = '}',
+      org_previous_visible_heading = '{',
       org_forward_heading_same_level = ']]',
       org_backward_heading_same_level = '[[',
       outline_up_heading = 'g{',
