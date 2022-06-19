@@ -10,7 +10,7 @@ local helps = {
     },
     {
       key = 'org_timestamp_down',
-      description = 'Decerase date part under cursor (year/month/day/hour/minute/repeater/active|inactive)',
+      description = 'Decrease date part under cursor (year/month/day/hour/minute/repeater/active|inactive)',
     },
     { key = 'org_timestamp_up_day', description = 'Increase date under cursor by 1 day' },
     { key = 'org_timestamp_down_day', description = 'Decrease date under cursor by 1 day' },
