@@ -32,20 +32,15 @@ function AgendaTagsView:new(opts)
   return data
 end
 
-function AgendaTagsView:build(opts)
-  opts = opts or {}
-  local tags = opts.tags
-
-  if not tags then
-    tags = vim.fn.OrgmodeInput('Match: ', self.search, Files.autocomplete_tags)
-  end
+function AgendaTagsView:build()
+  local tags = vim.fn.OrgmodeInput('Match: ', self.search, Files.autocomplete_tags)
   if vim.trim(tags) == '' then
     return utils.echo_warning('Invalid tag.')
   end
   local search = Search:new(tags)
   self.items = {}
   for _, orgfile in ipairs(Files.all()) do
-    local headlines_filtered = orgfile:apply_search(search, opts.todo_only)
+    local headlines_filtered = orgfile:apply_search(search, self.todo_only)
     for _, headline in ipairs(headlines_filtered) do
       if self.filters:matches(headline) then
         table.insert(self.items, headline)

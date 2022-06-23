@@ -15,19 +15,19 @@ describe('Colors', function()
   it('should get appropriate fg color from hl group', function()
     vim.cmd([[hi OrgTestParse guifg=#FF0000]])
     local parsed_color = colors.parse_hl_fg_color('OrgTestParse')
-    assert.are.same('#FF0000', parsed_color)
+    assert.are.same('#FF0000', parsed_color:upper())
 
     vim.cmd([[hi OrgTestParse guibg=#FF8888]])
     parsed_color = colors.parse_hl_fg_color('OrgTestParse')
-    assert.are.same('#FF8888', parsed_color)
+    assert.are.same('#FF8888', parsed_color:upper())
 
     vim.cmd([[hi OrgTestParse guifg=#FFFFFF guibg=#00FF00]])
     parsed_color = colors.parse_hl_fg_color('OrgTestParse')
-    assert.are.same('#00FF00', parsed_color)
+    assert.are.same('#00FF00', parsed_color:upper())
 
     vim.cmd([[hi OrgTestParse guifg=#FFFFFF guibg=#00FF00 gui=reverse]])
     parsed_color = colors.parse_hl_fg_color('OrgTestParse')
-    assert.are.same('#FFFFFF', parsed_color)
+    assert.are.same('#FFFFFF', parsed_color:upper())
 
     vim.cmd([[hi clear OrgTestParse]])
   end)
@@ -52,7 +52,7 @@ describe('Colors', function()
 
   it('should parse todo keyword faces', function()
     local get_color_opt = function(hlgroup, name, type)
-      return vim.fn.synIDattr(vim.fn.synIDtrans(vim.fn.hlID(hlgroup)), name, type)
+      return vim.fn.synIDattr(vim.fn.synIDtrans(vim.fn.hlID(hlgroup)), name, type):lower()
     end
     config:extend({
       org_todo_keyword_faces = {
