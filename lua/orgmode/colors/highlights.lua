@@ -187,7 +187,7 @@ function M.parse_todo_keyword_faces(do_syn_match)
       end
     end
     if not vim.tbl_isempty(hl_opts) then
-      local hl_name = 'OrgKeywordFace' .. name
+      local hl_name = 'OrgKeywordFace' .. name:gsub('%-', '')
       local hl = ''
       for hl_item, hl_values in pairs(hl_opts) do
         hl = hl .. ' ' .. hl_item .. '=' .. table.concat(hl_values, ',')

@@ -58,6 +58,7 @@ describe('Colors', function()
       org_todo_keyword_faces = {
         NEXT = ':foreground "blue" :underline on :weight bold :background red :slant italic',
         CANCELED = ':foreground green :slant italic',
+        ['IN-PROGRESS'] = ':foreground red :weight bold',
       },
     })
 
@@ -66,6 +67,7 @@ describe('Colors', function()
     assert.are.same({
       NEXT = 'OrgKeywordFaceNEXT',
       CANCELED = 'OrgKeywordFaceCANCELED',
+      ['IN-PROGRESS'] = 'OrgKeywordFaceINPROGRESS',
     }, result)
 
     assert.are.same('red', get_color_opt('OrgKeywordFaceNEXT', 'bg', 'gui'))
@@ -90,9 +92,21 @@ describe('Colors', function()
     assert.are.same('', get_color_opt('OrgKeywordFaceCANCELED', 'underline', 'gui'))
     assert.are.same('', get_color_opt('OrgKeywordFaceCANCELED', 'underline', 'cterm'))
 
+    assert.are.same('', get_color_opt('OrgKeywordFaceINPROGRESS', 'bg', 'gui'))
+    assert.are.same('', get_color_opt('OrgKeywordFaceINPROGRESS', 'bg', 'cterm'))
+    assert.are.same('red', get_color_opt('OrgKeywordFaceINPROGRESS', 'fg', 'gui'))
+    assert.are.same('', get_color_opt('OrgKeywordFaceINPROGRESS', 'fg', 'cterm'))
+    assert.are.same('1', get_color_opt('OrgKeywordFaceINPROGRESS', 'bold', 'gui'))
+    assert.are.same('', get_color_opt('OrgKeywordFaceINPROGRESS', 'bold', 'cterm'))
+    assert.are.same('', get_color_opt('OrgKeywordFaceINPROGRESS', 'italic', 'gui'))
+    assert.are.same('', get_color_opt('OrgKeywordFaceINPROGRESS', 'italic', 'cterm'))
+    assert.are.same('', get_color_opt('OrgKeywordFaceINPROGRESS', 'underline', 'gui'))
+    assert.are.same('', get_color_opt('OrgKeywordFaceINPROGRESS', 'underline', 'cterm'))
+
     vim.cmd([[
       hi clear OrgKeywordFaceNEXT
       hi clear OrgKeywordFaceCANCELED
+      hi clear OrgKeywordFaceINPROGRESS
     ]])
 
     vim.o.termguicolors = false
@@ -101,6 +115,7 @@ describe('Colors', function()
     assert.are.same({
       NEXT = 'OrgKeywordFaceNEXT',
       CANCELED = 'OrgKeywordFaceCANCELED',
+      ['IN-PROGRESS'] = 'OrgKeywordFaceINPROGRESS',
     }, result)
 
     assert.are.same('9', get_color_opt('OrgKeywordFaceNEXT', 'bg', 'cterm'))
@@ -124,5 +139,16 @@ describe('Colors', function()
     assert.are.same('', get_color_opt('OrgKeywordFaceCANCELED', 'bold', 'cterm'))
     assert.are.same('', get_color_opt('OrgKeywordFaceCANCELED', 'underline', 'gui'))
     assert.are.same('', get_color_opt('OrgKeywordFaceCANCELED', 'underline', 'cterm'))
+
+    assert.are.same('', get_color_opt('OrgKeywordFaceINPROGRESS', 'bg', 'cterm'))
+    assert.are.same('', get_color_opt('OrgKeywordFaceINPROGRESS', 'bg', 'gui'))
+    assert.are.same('9', get_color_opt('OrgKeywordFaceINPROGRESS', 'fg', 'cterm'))
+    assert.are.same('', get_color_opt('OrgKeywordFaceINPROGRESS', 'fg', 'gui'))
+    assert.are.same('1', get_color_opt('OrgKeywordFaceINPROGRESS', 'bold', 'cterm'))
+    assert.are.same('', get_color_opt('OrgKeywordFaceINPROGRESS', 'bold', 'gui'))
+    assert.are.same('', get_color_opt('OrgKeywordFaceINPROGRESS', 'italic', 'cterm'))
+    assert.are.same('', get_color_opt('OrgKeywordFaceINPROGRESS', 'italic', 'gui'))
+    assert.are.same('', get_color_opt('OrgKeywordFaceINPROGRESS', 'underline', 'cterm'))
+    assert.are.same('', get_color_opt('OrgKeywordFaceINPROGRESS', 'underline', 'gui'))
   end)
 end)
