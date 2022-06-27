@@ -191,6 +191,10 @@ function Config:setup_mappings(category, bufnr)
     opts.buffer = bufnr
   end
 
+  if self.opts.mappings.prefix then
+    opts.prefix = self.opts.mappings.prefix
+  end
+
   for name, map_entry in pairs(map_entries) do
     map_entry:attach(default_mappings[name], user_mappings[name], opts)
   end
