@@ -481,7 +481,7 @@ Using the example above, setting this variable to `{'MYTAG'}`, second and third 
 ## Mappings
 
 Mappings try to mimic some of the Orgmode mappings, but since Orgmode uses `CTRL + c` as a modifier most of the time, we have to take a different route.
-When possible, instead of `CTRL + C`, prefix `<Leader>o` is used.
+When possible, instead of `CTRL + C`, prefix `<Leader>o` is used. This is customizable via the `mappings.prefix` setting.
 
 To disable all mappings, just pass `disable_all = true` to mappings settings:
 ```lua
