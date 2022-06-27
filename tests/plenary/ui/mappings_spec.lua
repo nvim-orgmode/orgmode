@@ -1624,4 +1624,29 @@ describe('Mappings', function()
       '- [ ] checkbox item',
     }, vim.api.nvim_buf_get_lines(0, 0, 6, false))
   end)
+
+  it('should respect custom  mapping prefix', function()
+    config:extend({
+      mappings = {
+        prefix = '<Leader>f',
+      },
+    })
+
+    helpers.load_file_content({
+      '* DONE top level todo :WORK:',
+      'content for top level todo',
+    })
+    assert.are.same({
+      '* DONE top level todo :WORK:',
+      'content for top level todo',
+    }, vim.api.nvim_buf_get_lines(0, 0, 2, false))
+    vim.fn.cursor(3, 1)
+    vim.cmd([[norm ,fit]])
+    assert.are.same({
+      '* DONE top level todo :WORK:',
+      'content for top level todo',
+      '',
+      '* TODO ',
+    }, vim.api.nvim_buf_get_lines(0, 0, 4, false))
+  end)
 end)

@@ -85,7 +85,16 @@ function MapEntry:attach(default_mapping, user_mapping, opts)
 
   local map_opts = vim.tbl_extend('force', self.opts, opts or {})
 
+  local prefix = ''
+  if map_opts.prefix then
+    prefix = map_opts.prefix
+    map_opts.prefix = nil
+  end
+
   for _, map in ipairs(mapping) do
+    if prefix ~= '' then
+      map = map:gsub('<prefix>', prefix)
+    end
     vim.keymap.set(self.modes, map, self.handler, map_opts)
     if self.type == 'operator' then
       vim.keymap.set('o', map, (':normal v%s<CR>'):format(map), map_opts)
