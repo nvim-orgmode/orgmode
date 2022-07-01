@@ -87,20 +87,10 @@ function TsTable:_get_content()
   return indented
 end
 
-local function get_table_from_node(node)
-  if not node then
-    return false
-  end
-  local table_node = utils.get_closest_parent_of_type(node, 'table', true)
-  if not table_node then
-    return false
-  end
-  return TsTable:new({ node = table_node })
-end
-
 function TsTable:add_row()
   local line = vim.fn.line('.')
-  vim.api.nvim_buf_set_lines(0, line, line, true, { '|' })
+  local indent = config:get_indent(vim.fn.indent(line))
+  vim.api.nvim_buf_set_lines(0, line, line, true, { ('%s|'):format(indent) })
   return TsTable.from_current_node():reformat()
 end
 
