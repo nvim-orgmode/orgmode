@@ -77,4 +77,22 @@ describe('Tables', function()
       '|      |       |',
     }, vim.api.nvim_buf_get_lines(0, 0, -1, false))
   end)
+
+  it('should add new row on enter in list item', function()
+    helpers.load_file_content({
+      '* TODO Test',
+      '  DEADLINE: <2021-07-21 Wed 22:02>',
+      '  - Some list item',
+      '    | test |',
+    })
+    vim.fn.cursor({ 4, 10 })
+    vim.cmd([[exe "norm a\<CR>"]])
+    assert.are.same({
+      '* TODO Test',
+      '  DEADLINE: <2021-07-21 Wed 22:02>',
+      '  - Some list item',
+      '    | test |',
+      '    |      |',
+    }, vim.api.nvim_buf_get_lines(0, 0, -1, false))
+  end)
 end)
