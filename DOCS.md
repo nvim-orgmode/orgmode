@@ -572,6 +572,14 @@ Open selected agenda item in the same buffer
 #### **org_agenda_goto**
 *mapped to*: `{'<TAB>'}`<br />
 Open selected agenda item in split window
+#### **org_agenda_open_link**
+*mapped to*: `<Leader>oo`<br />
+Open hyperlink under cursor.<br />
+Hyperlink types supported:
+* URL (http://, https://)
+* File (starts with `file:`. Example: `file:/home/user/.config/nvim/init.lua`) Optionally, a line number can be specified
+using the '+' character. Example: `file:/home/user/.config/nvim/init.lua +10`
+* Fallback: If file path, opens the file.<br />
 #### **org_agenda_goto_date**
 *mapped to*: `J`<br />
 Open calendar that allows selecting date to jump to

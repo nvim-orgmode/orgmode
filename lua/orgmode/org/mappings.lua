@@ -650,7 +650,7 @@ function OrgMappings:open_at_point()
     return self.agenda:open_day(date)
   end
 
-  local link = self:_get_link_under_cursor()
+  local link = Hyperlinks.get_link_under_cursor()
   if not link then
     return
   end
@@ -908,24 +908,6 @@ function OrgMappings:_adjust_date(amount, span, fallback)
   end
 
   return vim.api.nvim_feedkeys(utils.esc(fallback), 'n', true)
-end
-
----@return string|nil
-function OrgMappings:_get_link_under_cursor()
-  local found_link = nil
-  local links = {}
-  local line = vim.fn.getline('.')
-  local col = vim.fn.col('.')
-  for link in line:gmatch('%[%[(.-)%]%]') do
-    local start_from = #links > 0 and links[#links].to or nil
-    local from, to = line:find('%[%[(.-)%]%]', start_from)
-    if col >= from and col <= to then
-      found_link = link
-      break
-    end
-    table.insert(links, { link = link, from = from, to = to })
-  end
-  return found_link
 end
 
 return OrgMappings

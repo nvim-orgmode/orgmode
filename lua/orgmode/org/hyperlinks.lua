@@ -2,6 +2,24 @@ local Files = require('orgmode.parser.files')
 local utils = require('orgmode.utils')
 local Hyperlinks = {}
 
+---@return string|nil
+function Hyperlinks.get_link_under_cursor()
+  local found_link = nil
+  local links = {}
+  local line = vim.fn.getline('.')
+  local col = vim.fn.col('.')
+  for link in line:gmatch('%[%[(.-)%]%]') do
+    local start_from = #links > 0 and links[#links].to or nil
+    local from, to = line:find('%[%[(.-)%]%]', start_from)
+    if col >= from and col <= to then
+      found_link = link
+      break
+    end
+    table.insert(links, { link = link, from = from, to = to })
+  end
+  return found_link
+end
+
 local function get_file_from_context(ctx)
   return (
     ctx.hyperlinks and ctx.hyperlinks.filepath and Files.get(ctx.hyperlinks.filepath, true)
