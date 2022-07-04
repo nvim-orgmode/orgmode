@@ -122,7 +122,7 @@ win_split_mode = 'tabnew'
 
 Always open vertically:
 ```
-win_split_mode = 'tabnew'
+win_split_mode = 'vsplit'
 ```
 
 Always open horizontally with specific height of 20 lines:
