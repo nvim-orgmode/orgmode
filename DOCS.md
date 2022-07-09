@@ -15,13 +15,14 @@
    7. [Dot repeat](#dot-repeat)
 4. [Document Diagnostics](#document-diagnostics)
 5. [Tables](#tables)
-6. [Autocompletion](#autocompletion)
-7. [Abbreviations](#abbreviations)
-8. [Colors](#colors)
-9. [Advanced search](#advanced-search)
-10. [Notifications (experimental)](#notifications-experimental)
-11. [Clocking](#clocking)
-12. [Changelog](#changelog)
+6. [Hyperlinks](#hyperlinks)
+7. [Autocompletion](#autocompletion)
+8. [Abbreviations](#abbreviations)
+9. [Colors](#colors)
+10. [Advanced search](#advanced-search)
+11. [Notifications (experimental)](#notifications-experimental)
+12. [Clocking](#clocking)
+13. [Changelog](#changelog)
 
 ## Getting started with Orgmode
 To get a basic idea how Orgmode works, look at this screencast from [@dhruvasagar](https://github.com/dhruvasagar)
@@ -121,7 +122,7 @@ win_split_mode = 'tabnew'
 
 Always open vertically:
 ```
-win_split_mode = 'tabnew'
+win_split_mode = 'vsplit'
 ```
 
 Always open horizontally with specific height of 20 lines:
@@ -738,15 +739,7 @@ Toggle current line checkbox state
 Toggle current line to headline and vice versa. Checkboxes will turn into TODO headlines.
 #### **org_open_at_point**
 *mapped to*: `<Leader>oo`<br />
-Open hyperlink or date under cursor.<br />
-Hyperlink types supported:
-* URL (http://, https://)
-* File (starts with `file:`. Example: `file:/home/user/.config/nvim/init.lua`) Optionally, a line number can be specified
-using the '+' character. Example: `file:/home/user/.config/nvim/init.lua +10`
-* Headline title target (starts with `*`)
-* Headline with `CUSTOM_ID` property (starts with `#`)
-* Fallback: If file path, opens the file, otherwise, tries to find the Headline title.
-When date is under the cursor, open the agenda for that day.<br />
+Open hyperlink or date under cursor. When date is under the cursor, open the agenda for that day.<br />
 #### **org_edit_special**
 *mapped to*: `<Leader>o'`<br />
 Open a source block for editing in a temporary buffer of the associated `filetype`.<br />
@@ -968,6 +961,18 @@ And going to line `4` and pressing `gqgq`, it will format it to this:
   |----------+----------|
   | col 1    | col 2    |
 ```
+
+## Hyperlinks
+
+The format for links is either `[[LINK]]` or `[[LINK][DESCRIPTION]]`. If a description is provided, the actual link is concealed in favor of the description.
+
+Hyperlink types supported:
+* URL (http://, https://)
+* File (starts with `file:`. Example: `file:/home/user/.config/nvim/init.lua`) Optionally, a line number can be specified
+using the '+' character (Example: `file:/home/user/.config/nvim/init.lua +10`) or a headline within the specified file using '::' (Example: `file:/home/user/org/file.org::*Specific Headline`)
+* Headline title target within the same file (starts with `*`)
+* Headline with `CUSTOM_ID` property within the same file (starts with `#`)
+* Fallback: If file path, opens the file, otherwise, tries to find the headline title.
 
 ## Autocompletion
 By default, `omnifunc` is provided in `org` files that autocompletes these types:
