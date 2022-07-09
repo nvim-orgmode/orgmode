@@ -31,6 +31,7 @@ return {
     org_agenda_priority = m.action('agenda.set_priority', { opts = { desc = 'org set priority' } }),
     org_agenda_priority_up = m.action('agenda.priority_up', { opts = { desc = 'org increase priority' } }),
     org_agenda_priority_down = m.action('agenda.priority_down', { opts = { desc = 'org decrease priority' } }),
+    org_agenda_archive = m.action('agenda.archive', { opts = { desc = 'org archive subtree' } }),
     org_agenda_toggle_archive_tag = m.action(
       'agenda.toggle_archive_tag',
       { opts = { desc = 'org toggle archive tag' } }

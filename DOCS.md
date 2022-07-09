@@ -610,6 +610,9 @@ Increase the priority of a headline item.
 #### **org_agenda_priority_down**
 *mapped to*: `-`<br />
 Decrease the priority of a headline item.
+#### **org_agenda_archive**
+mapped to: `<Leader>o$`<br />
+Archive headline item to archive location.
 #### **org_agenda_toggle_archive_tag**
 *mapped to*: `<Leader>oA`<br />
 Toggle "ARCHIVE" tag of a headline item.
