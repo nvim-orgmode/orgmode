@@ -145,26 +145,27 @@ CONTENTS                                                        *orgmode-content
         1.3.7. Dot repeat.....................................|orgmode-dot_repeat|
     1.4. Document Diagnostics.......................|orgmode-document_diagnostics|
     1.5. Tables...................................................|orgmode-tables|
-    1.6. Autocompletion...................................|orgmode-autocompletion|
-    1.7. Abbreviations.....................................|orgmode-abbreviations|
-    1.8. Colors...................................................|orgmode-colors|
-        1.8.1. Highlight Groups.........................|orgmode-highlight_groups|
-    1.9. Advanced search.................................|orgmode-advanced_search|
-    1.10. Notifications (experimental)......|orgmode-notifications_(experimental)|
-        1.10.1. Cron................................................|orgmode-cron|
-    1.11. Clocking..............................................|orgmode-clocking|
-                1.11.1. Clock in................................|orgmode-clock_in|
-                1.11.2. Clock out..............................|orgmode-clock_out|
-                1.11.3. Clock cancel........................|orgmode-clock_cancel|
-                1.11.4. Clock goto............................|orgmode-clock_goto|
-                1.11.5. Set effort............................|orgmode-set_effort|
-                1.11.6. Clock report table............|orgmode-clock_report_table|
-                1.11.7. Automatic updates of totals.|orgmode-automatic_updates_of_totals|
-                1.11.8. Recalculating totals........|orgmode-recalculating_totals|
-                1.11.9. Statusline function..........|orgmode-statusline_function|
-    1.12. Changelog............................................|orgmode-changelog|
-            1.12.1. 24 October 2021......................|orgmode-24_october_2021|
-            1.12.2. 10 October 2021......................|orgmode-10_october_2021|
+    1.6. Hyperlinks...........................................|orgmode-hyperlinks|
+    1.7. Autocompletion...................................|orgmode-autocompletion|
+    1.8. Abbreviations.....................................|orgmode-abbreviations|
+    1.9. Colors...................................................|orgmode-colors|
+        1.9.1. Highlight Groups.........................|orgmode-highlight_groups|
+    1.10. Advanced search................................|orgmode-advanced_search|
+    1.11. Notifications (experimental)......|orgmode-notifications_(experimental)|
+        1.11.1. Cron................................................|orgmode-cron|
+    1.12. Clocking..............................................|orgmode-clocking|
+                1.12.1. Clock in................................|orgmode-clock_in|
+                1.12.2. Clock out..............................|orgmode-clock_out|
+                1.12.3. Clock cancel........................|orgmode-clock_cancel|
+                1.12.4. Clock goto............................|orgmode-clock_goto|
+                1.12.5. Set effort............................|orgmode-set_effort|
+                1.12.6. Clock report table............|orgmode-clock_report_table|
+                1.12.7. Automatic updates of totals.|orgmode-automatic_updates_of_totals|
+                1.12.8. Recalculating totals........|orgmode-recalculating_totals|
+                1.12.9. Statusline function..........|orgmode-statusline_function|
+    1.13. Changelog............................................|orgmode-changelog|
+            1.13.1. 24 October 2021......................|orgmode-24_october_2021|
+            1.13.2. 10 October 2021......................|orgmode-10_october_2021|
 
 ================================================================================
 TABLE OF CONTENT                                        *orgmode-table_of_content*
@@ -184,13 +185,14 @@ TABLE OF CONTENT                                        *orgmode-table_of_conten
     7.  Dot repeat (#dot-repeat)
 4.  Document Diagnostics (#document-diagnostics)
 5.  Tables (#tables)
-6.  Autocompletion (#autocompletion)
-7.  Abbreviations (#abbreviations)
-8.  Colors (#colors)
-9.  Advanced search (#advanced-search)
-10. Notifications (experimental) (#notifications-experimental)
-11. Clocking (#clocking)
-12. Changelog (#changelog)
+6.  Hyperlinks (#hyperlinks)
+7.  Autocompletion (#autocompletion)
+8.  Abbreviations (#abbreviations)
+9.  Colors (#colors)
+10. Advanced search (#advanced-search)
+11. Notifications (experimental) (#notifications-experimental)
+12. Clocking (#clocking)
+13. Changelog (#changelog)
 
 --------------------------------------------------------------------------------
 GETTING STARTED WITH ORGMODE                *orgmode-getting_started_with_orgmode*
@@ -297,7 +299,7 @@ Always open in tab:
 
 Always open vertically:
 >
-    win_split_mode = 'tabnew'
+    win_split_mode = 'vsplit'
 <
 
 Always open horizontally with specific height of 20 lines:
@@ -1028,15 +1030,7 @@ Toggle current line to headline and vice versa. Checkboxes will turn into TODO h
 ORG_OPEN_AT_POINT                                      *orgmode-org_open_at_point*
 
 mapped to: `<Leader>oo`
-Open hyperlink or date under cursor.
-Hyperlink types supported:
-* URL (http://, https://)
-* File (starts with `file:`. Example: `file:/home/user/.config/nvim/init.lua`) Optionally, a line number can be specified
-using the '+' character. Example: `file:/home/user/.config/nvim/init.lua +10`
-* Headline title target (starts with `*`)
-* Headline with `CUSTOM_ID` property (starts with `#`)
-* Fallback: If file path, opens the file, otherwise, tries to find the Headline title.
-When date is under the cursor, open the agenda for that day.
+Open hyperlink or date under cursor. When date is under the cursor, open the agenda for that day.
 
 ORG_EDIT_SPECIAL                                        *orgmode-org_edit_special*
 
@@ -1334,6 +1328,19 @@ And going to line `4` and pressing `gqgq`, it will format it to this:
       |----------+----------|
       | col 1    | col 2    |
 <
+
+--------------------------------------------------------------------------------
+HYPERLINKS                                                    *orgmode-hyperlinks*
+
+The format for links is either `[[LINK]]` or `[[LINK][DESCRIPTION]]`. If a description is provided, the actual link is concealed in favor of the description.
+
+Hyperlink types supported:
+* URL (http://, https://)
+* File (starts with `file:`. Example: `file:/home/user/.config/nvim/init.lua`) Optionally, a line number can be specified
+using the '+' character (Example: `file:/home/user/.config/nvim/init.lua +10`) or a headline within the specified file using '::' (Example: `file:/home/user/org/file.org::*Specific Headline`)
+* Headline title target within the same file (starts with `*`)
+* Headline with `CUSTOM_ID` property within the same file (starts with `#`)
+* Fallback: If file path, opens the file, otherwise, tries to find the headline title.
 
 --------------------------------------------------------------------------------
 AUTOCOMPLETION                                            *orgmode-autocompletion*
