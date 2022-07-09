@@ -612,12 +612,8 @@ function Section:_update_date(date, new_date)
   })
   local line = vim.api.nvim_call_function('getline', { date.range.start_line })
   local view = vim.fn.winsaveview()
-  local new_line = string.format(
-    '%s%s%s',
-    line:sub(1, date.range.start_col),
-    date:to_string(),
-    line:sub(date.range.end_col)
-  )
+  local new_line =
+    string.format('%s%s%s', line:sub(1, date.range.start_col), date:to_string(), line:sub(date.range.end_col))
   vim.api.nvim_call_function('setline', {
     date.range.start_line,
     new_line,

@@ -279,9 +279,8 @@ function File:get_closest_headline(id)
     node = self:get_node_at_cursor()
   else
     local cursor_range = { id - 1, vim.fn.col('$') - 2 }
-    node = self.tree
-      :root()
-      :named_descendant_for_range(cursor_range[1], cursor_range[2], cursor_range[1], cursor_range[2])
+    node =
+      self.tree:root():named_descendant_for_range(cursor_range[1], cursor_range[2], cursor_range[1], cursor_range[2])
   end
 
   if not node then
@@ -374,9 +373,8 @@ end
 
 ---@private
 function File:_parse_source_code_filetypes()
-  local blocks = self:get_ts_matches(
-    '(block name: (expr) @name parameter: (expr) @parameters (#match? @name "(src|SRC)"))'
-  )
+  local blocks =
+    self:get_ts_matches('(block name: (expr) @name parameter: (expr) @parameters (#match? @name "(src|SRC)"))')
   local source_code_filetypes = {}
   for _, item in ipairs(blocks) do
     local ft = item.parameters and item.parameters.text
