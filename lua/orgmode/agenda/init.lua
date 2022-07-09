@@ -414,12 +414,8 @@ function Agenda:_remote_edit(opts)
     end
     if item.agenda_item then
       item.agenda_item:set_headline(headline)
-      self.content[line] = AgendaView.build_agenda_item_content(
-        item.agenda_item,
-        item.longest_category,
-        item.longest_date,
-        item.line
-      )
+      self.content[line] =
+        AgendaView.build_agenda_item_content(item.agenda_item, item.longest_category, item.longest_date, item.line)
     else
       self.content[line] = AgendaTodosView.generate_todo_item(headline, item.longest_category, item.line)
     end

@@ -29,12 +29,8 @@ function EditSpecialSrc:_update_content(action, block_start_line, content)
   -- will have its column reported as 0)
   --
   -- Grab the line itself in order to circumvent this
-  local block_start_line_text = vim.api.nvim_buf_get_lines(
-    self.org_bufnr,
-    block_start_line,
-    block_start_line + 1,
-    false
-  )[1]
+  local block_start_line_text =
+    vim.api.nvim_buf_get_lines(self.org_bufnr, block_start_line, block_start_line + 1, false)[1]
 
   -- Not quite what Emacs does, but assume that the leading space of the entire block is consistent
   -- and strip that off

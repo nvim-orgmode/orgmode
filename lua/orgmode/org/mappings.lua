@@ -399,12 +399,8 @@ function OrgMappings:_todo_change_state(direction)
   end
 
   self:_change_todo_state('reset')
-  local state_change = string.format(
-    '- State "%s" from "%s" [%s]',
-    item.todo_keyword.value,
-    old_state,
-    Date.now():to_string()
-  )
+  local state_change =
+    string.format('- State "%s" from "%s" [%s]', item.todo_keyword.value, old_state, Date.now():to_string())
 
   local data = item:add_properties({ LAST_REPEAT = '[' .. Date.now():to_string() .. ']' })
   if data.is_new then
