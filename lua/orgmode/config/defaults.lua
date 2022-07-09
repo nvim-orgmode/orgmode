@@ -79,6 +79,7 @@ return {
       org_agenda_priority = '<prefix>,',
       org_agenda_priority_up = '+',
       org_agenda_priority_down = '-',
+      org_agenda_archive = '<prefix>$',
       org_agenda_toggle_archive_tag = '<prefix>A',
       org_agenda_set_tags = '<prefix>t',
       org_agenda_deadline = '<prefix>id',

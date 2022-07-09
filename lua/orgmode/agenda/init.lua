@@ -303,6 +303,13 @@ function Agenda:priority_down()
   })
 end
 
+function Agenda:archive()
+  return self:_remote_edit({
+    action = 'org_mappings.archive',
+    redo = true,
+  })
+end
+
 function Agenda:toggle_archive_tag()
   return self:_remote_edit({
     action = 'org_mappings.toggle_archive_tag',
