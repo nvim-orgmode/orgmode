@@ -67,6 +67,7 @@ return {
       org_agenda_quit = 'q',
       org_agenda_switch_to = '<CR>',
       org_agenda_goto = '<TAB>',
+      org_agenda_open_link = '<prefix>o',
       org_agenda_goto_date = 'J',
       org_agenda_redo = 'r',
       org_agenda_todo = 't',

@@ -9,6 +9,7 @@ local AgendaSearchView = require('orgmode.agenda.views.search')
 local AgendaTodosView = require('orgmode.agenda.views.todos')
 local AgendaTagsView = require('orgmode.agenda.views.tags')
 local AgendaView = require('orgmode.agenda.views.agenda')
+local Hyperlinks = require('orgmode.org.hyperlinks')
 
 ---@class Agenda
 ---@field content table[]
@@ -243,6 +244,71 @@ function Agenda:change_todo_state()
     action = 'org_mappings.todo_next_state',
     update_in_place = true,
   })
+end
+
+function Agenda:open_link()
+  local link = Hyperlinks.get_link_under_cursor()
+  if not link then
+    return
+  end
+  local parts = vim.split(link, '][', true)
+  local url = parts[1]
+  local link_ctx = { base = url, skip_add_prefix = true }
+  -- file links
+  if url:find('^file:') then
+    if url:find(' +', 1, true) then
+      parts = vim.split(url, ' +', true)
+      url = parts[1]
+      local line_number = parts[2]
+      vim.cmd(string.format('edit +%s %s', line_number, url:sub(6)))
+      vim.cmd([[normal! zv]])
+      return
+    end
+
+    if url:find('^file:(.-)::') then
+      link_ctx.line = url
+    else
+      vim.cmd(string.format('edit %s', url:sub(6)))
+      vim.cmd([[normal! zv]])
+      return
+    end
+  end
+  -- web links
+  if url:find('^https?://') then
+    if not vim.g.loaded_netrwPlugin then
+      return utils.echo_warning('Netrw plugin must be loaded in order to open urls.')
+    end
+    return vim.fn['netrw#BrowseX'](url, vim.fn['netrw#CheckIfRemote']())
+  end
+  -- fallback: filepath
+  local stat = vim.loop.fs_stat(url)
+  if stat and stat.type == 'file' then
+    return vim.cmd(string.format('edit %s', url))
+  end
+  -- headline link
+  local headlines = Hyperlinks.find_matching_links(link_ctx)
+  if #headlines == 0 then
+    utils.echo_warning('foobar')
+    return
+  end
+  local headline = headlines[1]
+  if #headlines > 1 then
+    local longest_headline = utils.reduce(headlines, function(acc, h)
+      return math.max(acc, h.line:len())
+    end, 0)
+    local options = {}
+    for i, h in ipairs(headlines) do
+      table.insert(options, string.format('%d) %-' .. longest_headline .. 's (%s)', i, h.line, h.file))
+    end
+    vim.cmd([[echo "Multiple targets found. Select target:"]])
+    local choice = vim.fn.inputlist(options)
+    if choice < 1 or choice > #headlines then
+      return
+    end
+    headline = headlines[choice]
+  end
+  vim.cmd(string.format('edit %s', headline.file))
+  vim.fn.cursor(headline.range.start_line, 0)
 end
 
 function Agenda:clock_in()

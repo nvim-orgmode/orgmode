@@ -19,6 +19,7 @@ return {
       { opts = { desc = 'org open agenda item (same buffer)' } }
     ),
     org_agenda_goto = m.action('agenda.goto_item', { opts = { desc = 'org open agenda item (split buffer)' } }),
+    org_agenda_open_link = m.action('agenda.open_link', { opts = { desc = 'org open hyperlink' } }),
     org_agenda_goto_date = m.action('agenda.goto_date', { opts = { desc = 'org goto date' } }),
     org_agenda_redo = m.action('agenda.redo', { opts = { desc = 'org redo' } }),
     org_agenda_todo = m.action('agenda.change_todo_state', { opts = { desc = 'org cycle todo state' } }),
