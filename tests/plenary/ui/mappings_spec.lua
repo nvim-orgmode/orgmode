@@ -284,7 +284,7 @@ describe('Mappings', function()
     vim.fn.cursor(3, 1)
     vim.cmd([[norm ,oA]])
     assert.are.same(
-      '* TODO Test orgmode                                                    :ARCHIVE:',
+      '* TODO Test orgmode                                                             :ARCHIVE:',
       vim.fn.getline(3)
     )
   end)
@@ -1604,7 +1604,7 @@ describe('Mappings', function()
     }, vim.api.nvim_buf_get_lines(0, 0, 6, false))
   end)
 
-  it('should update headline cookies when updaing checkboxes', function()
+  it('should update headline cookies when updating checkboxes', function()
     helpers.load_file_content({
       '* Test orgmode [/]',
       '- [ ] checkbox item',
