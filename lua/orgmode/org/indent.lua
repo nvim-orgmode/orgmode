@@ -41,7 +41,7 @@ local get_matches = ts_utils.memoize_by_buf_tick(function(bufnr)
         end
       end
 
-      if type == 'paragraph' or type == 'drawer' or type == 'property_drawer' then
+      if type == 'paragraph' or type == 'drawer' or type == 'property_drawer' or type == 'block' then
         opts.indent_type = 'other'
         local parent = node:parent()
         while parent and parent:type() ~= 'section' do
@@ -88,7 +88,7 @@ local function foldexpr()
     return '>' .. match.stars
   end
 
-  if match.type == 'drawer' or match.type == 'property_drawer' then
+  if match.type == 'drawer' or match.type == 'property_drawer' or match.type == 'block' then
     if match.line_nr == vim.v.lnum then
       return 'a1'
     end
