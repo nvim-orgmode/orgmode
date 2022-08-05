@@ -8,13 +8,17 @@
 (headline (stars) @stars (#eq? @stars "******")) @OrgTSHeadlineLevel6
 (headline (stars) @stars (#eq? @stars "*******")) @OrgTSHeadlineLevel7
 (headline (stars) @stars (#eq? @stars "********")) @OrgTSHeadlineLevel8
- (bullet) @OrgTSBullet
-(listitem . (bullet) . (paragraph . (expr "[" "str" @OrgCheckDone "]") @OrgTSCheckboxChecked (#match? @OrgTSCheckboxChecked "\[[xX]\]")))
-(listitem . (bullet) . (paragraph . (expr "[" "-" @OrgCheckInProgress "]") @OrgTSCheckboxHalfChecked (#eq? @OrgTSCheckboxHalfChecked "[-]")))
-(listitem . (bullet) . (paragraph . ((expr "[") @OrgTSCheckbox.left (#eq? @OrgTSCheckbox.left "[") . (expr "]") @OrgTSCheckbox.right (#eq? @OrgTSCheckbox.right "]"))))
-(block "#+begin_" @OrgTSBlock "#+end_" @OrgTSBlock "str" @OrgTSBlock)
+(bullet) @OrgTSBullet
+(checkbox) @OrgTSCheckbox
+(checkbox status: (expr "-") @OrgTSCheckboxHalfChecked)
+(checkbox status: (expr "str") @OrgTSCheckboxChecked (#any-of? @OrgTSCheckboxChecked "x" "X"))
+(block "#+begin_" @OrgTSBlock "#+end_" @OrgTSBlock)
 (block name: (expr) @OrgTSBlock)
+(block end_name: (expr) @OrgTSBlock)
 (block parameter: (expr) @OrgTSBlock)
+(dynamic_block name: (expr) @OrgTSBlock)
+(dynamic_block end_name: (expr) @OrgTSBlock)
+(dynamic_block parameter: (expr) @OrgTSBlock)
 (property_drawer) @OrgTSPropertyDrawer
 (latex_env) @OrgTSLatex
 (drawer) @OrgTSDrawer
