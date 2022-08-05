@@ -30,24 +30,12 @@ function Listitem:get_new_checkbox_value(action, current_value, total_child_chec
 end
 
 function Listitem:checkbox()
-  local contents = self.listitem:field('contents')
-  for _, content in ipairs(contents) do
-    if content:type() == 'paragraph' then
-      for child in content:iter_children() do
-        local text = query.get_node_text(child, 0)
-        if text:match('%[[Xx-]%]') then
-          return { text = text, range = { child:range() } }
-        end
-
-        -- empty checkboxes are split into two nodes, so we need to hack this together
-        local next_sibling = child:next_sibling()
-        if next_sibling and text == '[' and query.get_node_text(next_sibling, 0) == ']' then
-          local sr, sc, er, ec = child:range()
-          return { text = '[ ]', range = { sr, sc, er, ec + 2 } }
-        end
-      end
-    end
+  local checkbox = self.listitem:field('checkbox')[1]
+  if not checkbox then
+    return nil
   end
+  local text = query.get_node_text(checkbox, 0)
+  return { text = text, range = { checkbox:range() } }
 end
 
 function Listitem:update_checkbox(action)
