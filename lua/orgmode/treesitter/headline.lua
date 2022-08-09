@@ -68,7 +68,7 @@ function Headline:set_tags(tags)
       to_col = math.abs(to_col) - tags_width
     end
 
-    local spaces = math.max(to_col - (vim.api.nvim_strwidth(txt) + stars:len()) - tags_width, 1)
+    local spaces = math.max(to_col - (vim.api.nvim_strwidth(txt) + stars:len()), 1)
     text = string.rep(' ', spaces) .. tags
   end
 
