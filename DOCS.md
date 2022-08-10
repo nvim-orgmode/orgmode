@@ -302,6 +302,15 @@ Determine if blank line should be prepended when:
 * Adding heading via `org_meta_return` and `org_insert_*` mappings
 * Adding a list item via `org_meta_return`
 
+#### **calendar_week_start_day**
+*type*: `number`<br />
+*default value*: `1`<br />
+Available options:
+* `0` - start week on Sunday
+* `1` - start week on Monday
+
+Determine on which day the week will start in calendar modal (ex: [changing the date under cursor](#org_change_date))
+
 #### **emacs_config**
 *type*: `table`<br />
 *default value*: `{ executable_path = 'emacs', configure_path='$HOME/.emacs.d/init.el' }`<br />
