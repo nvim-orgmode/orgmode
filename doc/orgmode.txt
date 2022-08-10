@@ -27,7 +27,8 @@ CONTENTS                                                        *orgmode-content
             1.2.1.16. org_custom_exports..............|orgmode-org_custom_exports|
             1.2.1.17. org_time_stamp_rounding_minutes.|orgmode-org_time_stamp_rounding_minutes|
             1.2.1.18. org_blank_before_new_entry.|orgmode-org_blank_before_new_entry|
-            1.2.1.19. emacs_config..........................|orgmode-emacs_config|
+            1.2.1.19. calendar_week_start_day....|orgmode-calendar_week_start_day|
+            1.2.1.20. emacs_config..........................|orgmode-emacs_config|
         1.2.2. Agenda settings...........................|orgmode-agenda_settings|
             1.2.2.1. org_deadline_warning_days.|orgmode-org_deadline_warning_days|
             1.2.2.2. org_agenda_span.....................|orgmode-org_agenda_span|
@@ -491,6 +492,16 @@ default value: `{ heading = true, plain_list_item = false }`
 Determine if blank line should be prepended when:
 * Adding heading via `org_meta_return` and `org_insert_*` mappings
 * Adding a list item via `org_meta_return`
+
+CALENDAR_WEEK_START_DAY                          *orgmode-calendar_week_start_day*
+
+type: `number`
+default value: `1`
+Available options:
+* `0` - start week on Sunday
+* `1` - start week on Monday
+
+Determine on which day the week will start in calendar modal (ex: changing the date under cursor (#org_change_date))
 
 EMACS_CONFIG                                                *orgmode-emacs_config*
 
