@@ -8,6 +8,7 @@ return {
   org_agenda_span = 'week', -- day/week/month/year/number of days
   org_agenda_start_on_weekday = 1,
   org_agenda_start_day = nil, -- start from today + this modifier
+  calendar_week_start_day = 1,
   org_capture_templates = {
     t = {
       description = 'Task',

@@ -1,6 +1,7 @@
 local Date = require('orgmode.objects.date')
 local utils = require('orgmode.utils')
 local Promise = require('orgmode.utils.promise')
+local config = require('orgmode.config')
 ---@class Calendar
 ---@field win number
 ---@field buf number
@@ -88,10 +89,17 @@ end
 
 function Calendar.render()
   vim.api.nvim_buf_set_option(Calendar.buf, 'modifiable', true)
+  local start_from_sunday = config.calendar_week_start_day == 0
 
   local first_row = { 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun' }
+  if start_from_sunday then
+    first_row = { 'Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat' }
+  end
   local content = { {}, {}, {}, {}, {}, {} }
   local start_weekday = Calendar.month:get_isoweekday()
+  if start_from_sunday then
+    start_weekday = Calendar.month:get_weekday()
+  end
   while start_weekday > 1 do
     table.insert(content[1], '  ')
     start_weekday = start_weekday - 1
