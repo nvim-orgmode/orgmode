@@ -88,6 +88,9 @@ function Listitem:cookie()
   local content = self.listitem:field('contents')[1]
   -- The cookie should be the last thing on the line
   local cookie_node = content:named_child(content:named_child_count() - 1)
+  if not cookie_node then
+    return nil
+  end
 
   local text = query.get_node_text(cookie_node, 0)
   if text:match('%[%d*/%d*%]') or text:match('%[%d?%d?%d?%%%]') then
