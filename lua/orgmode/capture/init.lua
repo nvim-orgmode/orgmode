@@ -147,9 +147,9 @@ end
 
 ---Triggered from org file when we want to refile headline
 function Capture:refile_headline_to_destination()
-  local agenda_file = Files.get_current_file()
-  local item = agenda_file:get_closest_headline()
-  local lines = agenda_file:get_headline_lines(item)
+  local destination_file = Files.get_current_file()
+  local item = destination_file:get_closest_headline()
+  local lines = destination_file:get_headline_lines(item)
   return self:_refile_content_with_fallback(lines, nil, item)
 end
 
@@ -194,42 +194,52 @@ function Capture:_refile_content_with_fallback(lines, fallback_file, item)
   destination = vim.split(destination, '/', true)
 
   if not valid_destinations[destination[1]] then
+    if not default_file then -- we know that this comes from org_refile and not org_capture_refile
+      utils.echo_error(
+        "'" .. destination[1] .. "' is not a file specified in the 'org_agenda_files' setting. Refiling cancelled."
+      )
+      return
+    end
     return self:_refile_to_end(default_file, lines, item)
   end
 
   local destination_file = valid_destinations[destination[1]]
-  if not destination[2] or destination[2] == '' then
+  local destination_headline = destination[2]
+  if not destination_headline or destination_headline == '' then
     return self:_refile_to_end(destination_file, lines, item)
   end
-  return self:refile_to_headline(destination_file, lines, item, destination[2])
+  return self:refile_to_headline(destination_file, lines, item, destination_headline)
 end
 
----@param destination_file string
+---@param destination_filename string
 ---@param lines string[]
 ---@param item? Section
 ---@param headline_title? string
-function Capture:refile_to_headline(destination_file, lines, item, headline_title)
-  local agenda_file = Files.get(destination_file)
+function Capture:refile_to_headline(destination_filename, lines, item, headline_title)
+  local destination_file = Files.get(destination_filename)
   local headline
   if headline_title then
-    headline = agenda_file:find_headline_by_title(headline_title, true)
-  end
+    headline = destination_file:find_headline_by_title(headline_title, true)
 
-  if not headline then
-    return self._refile_to_end(destination_file, lines, item)
+    if not headline then
+      utils.echo_error(
+        "headline '" .. headline_title .. "' does not exist in '" .. destination_filename .. "'. Aborted refiling."
+      )
+      return false
+    end
   end
 
   if item and item.level <= headline.level then
     -- Refiling in same file just moves the lines from one position
     -- to another,so we need to apply demote instantly
-    local is_same_file = agenda_file.filename == item.root.filename
+    local is_same_file = destination_file.filename == item.root.filename
     lines = item:demote(headline.level - item.level + 1, true, not is_same_file)
   end
-  local refiled = self:_refile_to(destination_file, lines, item, headline.range.end_line)
+  local refiled = self:_refile_to(destination_filename, lines, item, headline.range.end_line)
   if not refiled then
     return false
   end
-  utils.echo_info(string.format('Wrote %s', destination_file))
+  utils.echo_info(string.format('Wrote %s', destination_filename))
   return true
 end
 
