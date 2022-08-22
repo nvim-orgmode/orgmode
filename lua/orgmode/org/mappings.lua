@@ -327,6 +327,9 @@ function OrgMappings:set_priority(direction)
     new_priority = priority_state:decrease()
   elseif direction == nil then
     new_priority = priority_state:prompt_user()
+    if new_priority == nil then
+      return
+    end
   end
 
   headline:set_priority(new_priority)
