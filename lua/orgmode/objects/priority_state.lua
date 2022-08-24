@@ -29,13 +29,18 @@ function PriorityState:prompt_user()
   local choice = vim.fn.input(prompt)
 
   if choice == '' then
+    utils.echo_warning(string.format("Priority must be between '%s' and '%s'", self.high_priority, self.low_priority))
     return nil
   end
 
   choice = string.upper(choice)
+  if #choice > 1 and tonumber(choice) == nil then
+    utils.echo_warning(string.format('Only numeric priorities can be multiple characters long'))
+    return nil
+  end
   local choicenum = string.byte(choice)
   if choice ~= ' ' and (choicenum < string.byte(self.high_priority) or choicenum > string.byte(self.low_priority)) then
-    utils.echo_warning(string.format("Priority must be between '%s' and '%s'", self.low_priority, self.high_priority))
+    utils.echo_warning(string.format("Priority must be between '%s' and '%s'", self.high_priority, self.low_priority))
     return nil
   end
 
