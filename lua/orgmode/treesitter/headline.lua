@@ -91,6 +91,12 @@ function Headline:set_priority(priority)
     return
   end
 
+  -- TODO: input validation is split between here and priority_state.lua:prompt_user().
+  --       should be unified
+  if vim.trim(priority) == '' then
+    return
+  end
+
   local todo = self:todo()
   if todo then
     local text = query.get_node_text(todo, 0)
