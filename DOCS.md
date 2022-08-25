@@ -313,7 +313,7 @@ Determine on which day the week will start in calendar modal (ex: [changing the 
 
 #### **emacs_config**
 *type*: `table`<br />
-*default value*: `{ executable_path = 'emacs', configure_path='$HOME/.emacs.d/init.el' }`<br />
+*default value*: `{ executable_path = 'emacs', config_path='$HOME/.emacs.d/init.el' }`<br />
 Set configuration for your emacs. This is useful for having the emacs export properly pickup your emacs config and plugins.
 
 ### Agenda settings
