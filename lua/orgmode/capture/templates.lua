@@ -70,7 +70,7 @@ function Templates:setup()
   local initial_position = vim.fn.search('%?')
   local is_at_end_of_line = vim.fn.search('%?$') > 0
   if initial_position > 0 then
-    vim.cmd([[norm!c2l]])
+    vim.cmd([[norm!"_c2l]])
     if is_at_end_of_line then
       vim.cmd([[startinsert!]])
     else
