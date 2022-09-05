@@ -864,12 +864,17 @@ end
 ---@return Date|nil
 function OrgMappings:_get_date_under_cursor(col_offset)
   col_offset = col_offset or 0
-  local item = Files.get_closest_headline()
   local col = vim.fn.col('.') + col_offset
   local line = vim.fn.line('.')
-  local dates = vim.tbl_filter(function(date)
-    return date.range:is_in_range(line, col)
-  end, item.dates)
+  local item = Files.get_closest_headline()
+  local dates = {}
+  if item then
+    dates = vim.tbl_filter(function(date)
+      return date.range:is_in_range(line, col)
+    end, item.dates)
+  else
+    dates = Date.parse_all_from_line(vim.fn.getline('.'), line)
+  end
 
   if #dates == 0 then
     return nil
