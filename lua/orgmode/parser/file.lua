@@ -164,7 +164,7 @@ end
 
 function File:refresh()
   local bufnr = vim.fn.bufnr(self.filename)
-  if bufnr < 0 then
+  if bufnr < 0 or vim.fn.buflisted(bufnr) == 0 then
     return self
   end
   local changed = self.changedtick ~= vim.api.nvim_buf_get_var(bufnr, 'changedtick')
