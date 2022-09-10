@@ -22,6 +22,7 @@ function OrgmodeFormatExpr()
   return luaeval('require("orgmode.org.format")()')
 endfunction
 
+setlocal nomodeline
 setlocal fillchars+=fold:\ 
 setlocal foldmethod=expr
 setlocal foldexpr=OrgmodeFoldExpr()
