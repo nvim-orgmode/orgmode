@@ -18,8 +18,6 @@ function M.link_ts_highlights()
     OrgTSHeadlineLevel8 = 'OrgHeadlineLevel8',
     OrgTSBullet = 'Identifier',
     OrgTSCheckbox = 'PreProc',
-    orgTSSubscript = 'Comment',
-    orgTSSuperscript = 'Comment',
     OrgTSCheckboxHalfChecked = 'OrgTSCheckbox',
     OrgTSCheckboxUnchecked = 'OrgTSCheckbox',
     OrgTSCheckboxChecked = 'OrgTSCheckbox',
@@ -34,6 +32,9 @@ function M.link_ts_highlights()
   }
 
   for src, def in pairs(links) do
+    if vim.fn.has('nvim-0.8') > 0 then
+      vim.cmd(string.format([[hi link @%s %s]], src, src))
+    end
     vim.cmd(string.format([[hi def link %s %s]], src, def))
   end
 end
@@ -80,6 +81,9 @@ function M.define_org_todo_keyword_colors(do_syn_match)
     )
   )
   vim.cmd('hi default link OrgTODO OrgTODO_builtin')
+  if vim.fn.has('nvim-0.8') > 0 then
+    vim.cmd('hi link @OrgTODO OrgTODO')
+  end
   vim.cmd(
     string.format(
       'hi OrgDONE_builtin guifg=%s ctermfg=%s gui=bold cterm=bold',
@@ -88,6 +92,9 @@ function M.define_org_todo_keyword_colors(do_syn_match)
     )
   )
   vim.cmd('hi default link OrgDONE OrgDONE_builtin')
+  if vim.fn.has('nvim-0.8') > 0 then
+    vim.cmd('hi link @OrgDONE OrgDONE')
+  end
   return M.parse_todo_keyword_faces(do_syn_match)
 end
 
