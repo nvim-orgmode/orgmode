@@ -21,7 +21,7 @@ function Source:is_available()
 end
 
 function Source:get_trigger_characters(_)
-  return { '#', '+', ':', '*' }
+  return { '#', '+', ':', '*', '.', '/' }
 end
 
 function Source:complete(params, callback)

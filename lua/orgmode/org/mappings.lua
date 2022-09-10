@@ -653,6 +653,7 @@ function OrgMappings:open_at_point()
   if not link then
     return
   end
+
   local parts = vim.split(link, '][', true)
   local url = parts[1]
   local link_ctx = { base = url, skip_add_prefix = true }
@@ -661,7 +662,7 @@ function OrgMappings:open_at_point()
       parts = vim.split(url, ' +', true)
       url = parts[1]
       local line_number = parts[2]
-      vim.cmd(string.format('edit +%s %s', line_number, url:sub(6)))
+      vim.cmd(string.format('edit +%s %s', line_number, Hyperlinks.get_file_real_path(url)))
       vim.cmd([[normal! zv]])
       return
     end
@@ -669,7 +670,7 @@ function OrgMappings:open_at_point()
     if url:find('^file:(.-)::') then
       link_ctx.line = url
     else
-      vim.cmd(string.format('edit %s', url:sub(6)))
+      vim.cmd(string.format('edit %s', Hyperlinks.get_file_real_path(url)))
       vim.cmd([[normal! zv]])
       return
     end
