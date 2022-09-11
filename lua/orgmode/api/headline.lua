@@ -132,12 +132,17 @@ function OrgHeadline:set_deadline(date)
     local headline = ts_org.closest_headline()
     local deadline_date = headline:deadline()
     if not date then
-      return Calendar.new({ date = deadline_date or Date.today() }).open():next(function(new_date)
-        if not new_date then
-          return
-        end
-        return headline:set_deadline_date(new_date)
-      end)
+      return Calendar.new({ date = deadline_date or Date.today(), clearable = true })
+        .open()
+        :next(function(new_date, cleared)
+          if cleared then
+            return headline:remove_deadline_date()
+          end
+          if not new_date then
+            return
+          end
+          return headline:set_deadline_date(new_date)
+        end)
     end
 
     if type(date) == 'string' then
@@ -167,12 +172,17 @@ function OrgHeadline:set_scheduled(date)
     local headline = ts_org.closest_headline()
     local scheduled_date = headline:scheduled()
     if not date then
-      return Calendar.new({ date = scheduled_date or Date.today() }).open():next(function(new_date)
-        if not new_date then
-          return
-        end
-        return headline:set_scheduled_date(new_date)
-      end)
+      return Calendar.new({ date = scheduled_date or Date.today(), clearable = true })
+        .open()
+        :next(function(new_date, cleared)
+          if cleared then
+            return headline:remove_scheduled_date()
+          end
+          if not new_date then
+            return
+          end
+          return headline:set_scheduled_date(new_date)
+        end)
     end
 
     if type(date) == 'string' then
