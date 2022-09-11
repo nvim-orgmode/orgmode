@@ -16,6 +16,7 @@ local Calendar = {
   namespace = vim.api.nvim_create_namespace('org_calendar'),
   date = nil,
   month = Date.today():start_of('month'),
+  clearable = false,
 }
 
 vim.cmd([[hi OrgCalendarToday gui=reverse cterm=reverse]])
@@ -27,6 +28,7 @@ function Calendar.new(data)
     Calendar.date = data.date
     Calendar.month = data.date:set({ day = 1 })
   end
+  Calendar.clearable = data.clearable
   return Calendar
 end
 
@@ -34,7 +36,7 @@ function Calendar.open()
   local opts = {
     relative = 'editor',
     width = 36,
-    height = 10,
+    height = Calendar.clearable and 11 or 10,
     style = 'minimal',
     border = 'single',
     row = vim.o.lines / 2 - 4,
@@ -76,6 +78,9 @@ function Calendar.open()
   vim.keymap.set('n', '.', '<cmd>lua require("orgmode.objects.calendar").reset()<CR>', map_opts)
   vim.keymap.set('n', 'q', ':call nvim_win_close(win_getid(), v:true)<CR>', map_opts)
   vim.keymap.set('n', '<Esc>', ':call nvim_win_close(win_getid(), v:true)<CR>', map_opts)
+  if Calendar.clearable then
+    vim.keymap.set('n', 'r', '<cmd>lua require("orgmode.objects.calendar").clear_date()<CR>', map_opts)
+  end
   local search_day = Date.today():format('%d')
   if Calendar.date then
     search_day = Calendar.date:format('%d')
@@ -124,9 +129,15 @@ function Calendar.render()
   table.insert(value, 1, month)
   table.insert(value, ' [<] - prev month  [>] - next month')
   table.insert(value, ' [.] - today   [Enter] - select day')
+  if Calendar.clearable then
+    table.insert(value, ' [r] Clear date')
+  end
 
   vim.api.nvim_buf_set_lines(Calendar.buf, 0, -1, true, value)
   vim.api.nvim_buf_clear_namespace(Calendar.buf, Calendar.namespace, 0, -1)
+  if Calendar.clearable then
+    vim.api.nvim_buf_add_highlight(Calendar.buf, Calendar.namespace, 'Comment', #value - 3, 0, -1)
+  end
   vim.api.nvim_buf_add_highlight(Calendar.buf, Calendar.namespace, 'Comment', #value - 2, 0, -1)
   vim.api.nvim_buf_add_highlight(Calendar.buf, Calendar.namespace, 'Comment', #value - 1, 0, -1)
   if is_today_month then
@@ -260,6 +271,14 @@ function Calendar.dispose()
     Calendar.callback(nil)
     Calendar.callback = nil
   end
+end
+
+function Calendar.clear_date()
+  local cb = Calendar.callback
+  Calendar.callback = nil
+  vim.cmd([[echon]])
+  vim.api.nvim_win_close(0, true)
+  cb(nil, true)
 end
 
 return Calendar

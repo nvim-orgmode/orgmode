@@ -763,25 +763,35 @@ end
 function OrgMappings:org_deadline()
   local headline = ts_org.closest_headline()
   local deadline_date = headline:deadline()
-  return Calendar.new({ date = deadline_date or Date.today() }).open():next(function(new_date)
-    if not new_date then
-      return
-    end
-    headline:remove_closed_date()
-    headline:set_deadline_date(new_date)
-  end)
+  return Calendar.new({ date = deadline_date or Date.today(), clearable = true })
+    .open()
+    :next(function(new_date, cleared)
+      if cleared then
+        return headline:remove_deadline_date()
+      end
+      if not new_date then
+        return
+      end
+      headline:remove_closed_date()
+      headline:set_deadline_date(new_date)
+    end)
 end
 
 function OrgMappings:org_schedule()
   local headline = ts_org.closest_headline()
   local scheduled_date = headline:scheduled()
-  return Calendar.new({ date = scheduled_date or Date.today() }).open():next(function(new_date)
-    if not new_date then
-      return
-    end
-    headline:remove_closed_date()
-    headline:set_scheduled_date(new_date)
-  end)
+  return Calendar.new({ date = scheduled_date or Date.today(), clearable = true })
+    .open()
+    :next(function(new_date, cleared)
+      if cleared then
+        return headline:remove_scheduled_date()
+      end
+      if not new_date then
+        return
+      end
+      headline:remove_closed_date()
+      headline:set_scheduled_date(new_date)
+    end)
 end
 
 ---@param inactive boolean
