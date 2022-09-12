@@ -31,46 +31,43 @@ function Agenda:new(opts)
   return data
 end
 
-function Agenda:agenda()
-  self:open_window()
-  local view = AgendaView:new({ filters = self.filters }):build()
+function Agenda:agenda(opts)
+  local view = AgendaView:new(vim.tbl_deep_extend('force', opts or {}, {
+    filters = self.filters,
+  })):build()
   self.views = { view }
   return self:_render()
 end
 
 -- TODO: Introduce searching ALL/DONE
 function Agenda:todos()
-  self:open_window()
   local view = AgendaTodosView:new({ filters = self.filters }):build()
   self.views = { view }
   return self:_render()
 end
 
 function Agenda:search()
-  self:open_window()
   local view = AgendaSearchView:new({ filters = self.filters }):build()
   self.views = { view }
   return self:_render()
 end
 
-function Agenda:tags()
-  self:open_window()
-  local view = AgendaTagsView:new({ filters = self.filters }):build()
+function Agenda:tags(opts)
+  local view = AgendaTagsView:new(vim.tbl_deep_extend('force', opts or {}, {
+    filters = self.filters,
+  })):build()
   self.views = { view }
   return self:_render()
 end
 
 function Agenda:tags_todo()
-  self:open_window()
-  local view = AgendaTagsView:new({ todo_only = true, filters = self.filters }):build()
-  self.views = { view }
-  return self:_render()
+  return self:tags({ todo_only = true })
 end
 
 function Agenda:open_window()
   local opened = self:is_opened()
   if opened then
-    return
+    return opened
   end
 
   utils.open_window('orgagenda', math.max(34, config.org_agenda_min_height), config.win_split_mode)
@@ -79,6 +76,7 @@ function Agenda:open_window()
   vim.cmd([[setlocal buftype=nofile bufhidden=wipe nobuflisted nolist noswapfile nowrap nospell]])
   vim.w.org_window_pos = vim.fn.win_screenpos(0)
   config:setup_mappings('agenda')
+  return vim.fn.win_getid()
 end
 
 function Agenda:prompt()
@@ -109,7 +107,7 @@ function Agenda:prompt()
       label = 'Like m, but only TODO entries',
       key = 'M',
       action = function()
-        return self:tags_todo()
+        return self:tags({ todo_only = true })
       end,
     },
     {
@@ -135,7 +133,7 @@ function Agenda:_render(skip_rebuild)
   end
   local opened = self:is_opened()
   if not opened then
-    self:open_window()
+    opened = self:open_window()
   end
   vim.cmd(vim.fn.win_id2win(opened) .. 'wincmd w')
   if vim.w.org_window_split_mode == 'horizontal' then
