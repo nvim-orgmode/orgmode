@@ -644,13 +644,12 @@ function OrgMappings:_edit_special_callback()
 end
 
 function OrgMappings:open_at_point()
-  local date = self:_get_date_under_cursor()
-  if date then
-    return self.agenda:open_day(date)
-  end
-
   local link = self:_get_link_under_cursor()
   if not link then
+    local date = self:_get_date_under_cursor()
+    if date then
+      return self.agenda:open_day(date)
+    end
     return
   end
 
