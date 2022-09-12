@@ -309,7 +309,6 @@ function Files.ensure_loaded()
   if Files.loaded then
     return true
   end
-  Files.load()
   vim.wait(5000, function()
     return Files.loaded
   end, 5)
