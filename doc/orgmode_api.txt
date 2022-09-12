@@ -118,6 +118,53 @@ Promise
 
 ==============================================================================
 ------------------------------------------------------------------------------
+                                                                     *OrgAgenda*
+                                  `OrgAgenda`
+Class~
+{OrgAgenda}
+
+------------------------------------------------------------------------------
+Class~
+{OrgAgendaOptions}
+Fields~
+{filters} `(optional)` `(string)` see Filters to apply to the current view. See `:help orgmode-org_agenda_filter` for more information
+{from} `(optional)` `(string)` | Date
+{span} `(optional)` `(number)` | 'day' | 'week' | 'month' | 'year'
+
+------------------------------------------------------------------------------
+                                                            *OrgAgenda.agenda()*
+                         `OrgAgenda.agenda`({options})
+Parameters~
+{options} `(optional)` OrgAgendaOptions
+
+------------------------------------------------------------------------------
+Class~
+{OrgAgendaTodosOptions}
+Fields~
+{filters} `(optional)` `(string)` see Filters to apply to the current view. See `:help orgmode-org_agenda_filter` for more information
+
+------------------------------------------------------------------------------
+                                                             *OrgAgenda.todos()*
+                          `OrgAgenda.todos`({options})
+Parameters~
+{options} `(optional)` OrgAgendaTodosOptions
+
+------------------------------------------------------------------------------
+Class~
+{OrgAgendaTagsOptions}
+Fields~
+{filters} `(optional)` `(string)` see Filters to apply to the current view. See `:help orgmode-org_agenda_filter` for more information
+{todo_only} `(optional)` `(boolean)`
+
+------------------------------------------------------------------------------
+                                                              *OrgAgenda.tags()*
+                          `OrgAgenda.tags`({options})
+Parameters~
+{options} `(optional)` OrgAgendaTagsOptions
+
+
+==============================================================================
+------------------------------------------------------------------------------
                                                                    *OrgPosition*
                                  `OrgPosition`
 Class~
