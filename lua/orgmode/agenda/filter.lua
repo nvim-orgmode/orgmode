@@ -127,7 +127,8 @@ function AgendaFilter:_matches_include(headline)
 end
 
 ---@param filter string
-function AgendaFilter:parse(filter)
+---@param skip_check? boolean do not check if given values exist in the current view
+function AgendaFilter:parse(filter, skip_check)
   filter = filter or ''
   self.value = filter
   self.tags = {}
@@ -144,15 +145,18 @@ function AgendaFilter:parse(filter)
     end
     local val = vim.trim(tag_cat)
     if val ~= '' then
-      if self.available_tags[val] then
+      if self.available_tags[val] or skip_check then
         table.insert(self.tags, { operator = operator, value = val })
-      elseif self.available_categories[val] then
+      elseif self.available_categories[val] or skip_check then
         table.insert(self.categories, { operator = operator, value = val })
       end
     end
   end
   self.term = search_term or ''
   self.applying = true
+  if skip_check then
+    self.parsed = true
+  end
 end
 
 function AgendaFilter:reset()

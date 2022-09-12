@@ -10,6 +10,7 @@ minidoc.generate(
     'lua/orgmode/api/init.lua',
     'lua/orgmode/api/file.lua',
     'lua/orgmode/api/headline.lua',
+    'lua/orgmode/api/agenda.lua',
     'lua/orgmode/api/position.lua',
   },
   'doc/orgmode_api.txt'
