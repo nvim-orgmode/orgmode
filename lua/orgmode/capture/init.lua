@@ -204,7 +204,7 @@ function Capture:_refile_content_with_fallback(lines, fallback_file, item)
   end
 
   local destination_file = valid_destinations[destination[1]]
-  local destination_headline = destination[2]
+  local destination_headline = table.concat({ unpack(destination, 2) }, '/')
   if not destination_headline or destination_headline == '' then
     return self:_refile_to_end(destination_file, lines, item)
   end
