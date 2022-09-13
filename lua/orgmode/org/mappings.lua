@@ -529,8 +529,8 @@ function OrgMappings:handle_return(suffix)
       ['end'] = { line = end_row, character = 0 },
     }
 
-    local checkbox = line:match('^(%s*[%+%-])%s*%[[%sXx%-]?%]')
-    local plain_list = line:match('^%s*[%+%-]')
+    local checkbox = line:match('^(%s*[%+%-%*])%s*%[[%sXx%-]?%]')
+    local plain_list = line:match('^%s*[%+%-%*]')
     local indent, number_in_list, closer = line:match('^(%s*)(%d+)([%)%.])%s?')
     local text_edits = config:respect_blank_before_new_entry({}, 'plain_list_item', {
       range = range,
