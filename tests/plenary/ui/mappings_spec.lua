@@ -397,13 +397,13 @@ describe('Mappings', function()
       '* TODO Test orgmode',
       '  - Regular item',
       '  - Second recular item',
-      '    - Neste item',
+      '    - Nested item',
     })
 
     assert.are.same({
       '  - Regular item',
       '  - Second recular item',
-      '    - Neste item',
+      '    - Nested item',
     }, vim.api.nvim_buf_get_lines(0, 3, 6, false))
     vim.fn.cursor(4, 1)
     vim.cmd([[exe "norm ,\<CR>"]])
@@ -411,7 +411,7 @@ describe('Mappings', function()
       '  - Regular item',
       '  - ',
       '  - Second recular item',
-      '    - Neste item',
+      '    - Nested item',
     }, vim.api.nvim_buf_get_lines(0, 3, 7, false))
   end)
 
@@ -428,13 +428,13 @@ describe('Mappings', function()
       '* TODO Test orgmode',
       '  - Regular item',
       '  - Second recular item',
-      '    - Neste item',
+      '    - Nested item',
     })
 
     assert.are.same({
       '  - Regular item',
       '  - Second recular item',
-      '    - Neste item',
+      '    - Nested item',
     }, vim.api.nvim_buf_get_lines(0, 3, 6, false))
     vim.fn.cursor(4, 1)
     vim.cmd([[exe "norm ,\<CR>"]])
@@ -443,7 +443,7 @@ describe('Mappings', function()
       '',
       '  - ',
       '  - Second recular item',
-      '    - Neste item',
+      '    - Nested item',
     }, vim.api.nvim_buf_get_lines(0, 3, 8, false))
     config:extend({
       org_blank_before_new_entry = {
@@ -655,17 +655,17 @@ describe('Mappings', function()
         '#TITLE: Test',
         '',
         '* TODO Test orgmode',
-        '  - item',
+        '  * item',
       })
 
       assert.are.same({
-        '  - item',
+        '  * item',
       }, vim.api.nvim_buf_get_lines(0, 3, 4, false))
       vim.fn.cursor(4, 4)
       vim.cmd([[exe "norm ,\<CR>"]])
       assert.are.same({
-        '  - item',
-        '  - ',
+        '  * item',
+        '  * ',
       }, vim.api.nvim_buf_get_lines(0, 3, 5, false))
     end
   )
@@ -675,23 +675,23 @@ describe('Mappings', function()
       '#TITLE: Test',
       '',
       '* TODO Test orgmode',
-      '  - [ ] The checkbox',
-      '  - [X] The checkbox 2',
-      '    - [ ] Nested checkbox',
+      '  * [ ] The checkbox',
+      '  * [X] The checkbox 2',
+      '    * [ ] Nested checkbox',
       'multiple tags content, tags not read from content :FROMCONTENT:',
     })
 
     assert.are.same({
-      '  - [X] The checkbox 2',
-      '    - [ ] Nested checkbox',
+      '  * [X] The checkbox 2',
+      '    * [ ] Nested checkbox',
       'multiple tags content, tags not read from content :FROMCONTENT:',
     }, vim.api.nvim_buf_get_lines(0, 4, 7, false))
     vim.fn.cursor(5, 1)
     vim.cmd([[exe "norm ,\<CR>"]])
     assert.are.same({
-      '  - [X] The checkbox 2',
-      '    - [ ] Nested checkbox',
-      '  - [ ] ',
+      '  * [X] The checkbox 2',
+      '    * [ ] Nested checkbox',
+      '  * [ ] ',
       'multiple tags content, tags not read from content :FROMCONTENT:',
     }, vim.api.nvim_buf_get_lines(0, 4, 8, false))
   end)
