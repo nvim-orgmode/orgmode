@@ -353,7 +353,10 @@ describe('Mappings', function()
     vim.fn.cursor(5, 1)
     assert.are.same('** TODO [#A] Test orgmode level 2 :PRIVATE:', vim.fn.getline('.'))
     vim.cmd([[norm <<]])
-    assert.are.same('* TODO [#A] Test orgmode level 2 :PRIVATE:', vim.fn.getline('.'))
+    assert.are.same(
+      '* TODO [#A] Test orgmode level 2                                       :PRIVATE:',
+      vim.fn.getline('.')
+    )
   end)
 
   it('should promote the heading and its subtree (org_promote_subtree)', function()
@@ -383,7 +386,7 @@ describe('Mappings', function()
     assert.are.same({
       '* TODO Test orgmode',
       '  DEADLINE: <2021-07-21 Wed 22:02>',
-      '* TODO [#A] Test orgmode level 2 :PRIVATE:',
+      '* TODO [#A] Test orgmode level 2                                       :PRIVATE:',
       'Some content for level 2',
       '** NEXT [#1] Level 3',
       'Content Level 3',
