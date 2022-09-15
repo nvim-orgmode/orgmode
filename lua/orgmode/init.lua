@@ -25,6 +25,7 @@ function Org:init()
     return
   end
   require('orgmode.colors.custom_highlighter').setup()
+  require('orgmode.events').init()
   self.files = require('orgmode.parser.files').new()
   self.agenda = require('orgmode.agenda'):new()
   self.capture = require('orgmode.capture'):new()

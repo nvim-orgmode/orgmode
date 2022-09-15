@@ -12,6 +12,8 @@ local ts_utils = require('nvim-treesitter.ts_utils')
 local utils = require('orgmode.utils')
 local ts_org = require('orgmode.treesitter')
 local ts_table = require('orgmode.treesitter.table')
+local EventManager = require('orgmode.events')
+local events = EventManager.event
 
 ---@class OrgMappings
 ---@field capture Capture
@@ -381,8 +383,16 @@ function OrgMappings:_todo_change_state(direction)
     return
   end
   local item = Files.get_closest_headline()
-  if not item:is_done() and not was_done then
+
+  local dispatchEvent = function()
+    EventManager.dispatch(
+      events.TodoChanged:new(Files.get_closest_headline(), ts_org.closest_headline(), old_state, was_done)
+    )
     return item
+  end
+
+  if not item:is_done() and not was_done then
+    return dispatchEvent()
   end
 
   local repeater_dates = item:get_repeater_dates()
@@ -394,7 +404,7 @@ function OrgMappings:_todo_change_state(direction)
     if log_time and not item:is_done() and was_done then
       headline:remove_closed_date()
     end
-    return item
+    return dispatchEvent()
   end
 
   for _, date in ipairs(repeater_dates) do
@@ -408,31 +418,36 @@ function OrgMappings:_todo_change_state(direction)
   local data = item:add_properties({ LAST_REPEAT = '[' .. Date.now():to_string() .. ']' })
   if data.is_new then
     vim.fn.append(data.end_line, data.indent .. state_change)
-    return item
+    return dispatchEvent()
   end
   item = Files.get_closest_headline()
 
   if item.properties.valid then
     vim.fn.append(item.properties.range.end_line, data.indent .. state_change)
   end
+  dispatchEvent()
 end
 
 function OrgMappings:do_promote(whole_subtree)
   local item = Files.get_closest_headline()
+  local old_level = item.level
   local foldclosed = vim.fn.foldclosed('.')
   item:promote(1, whole_subtree)
   if foldclosed > -1 and vim.fn.foldclosed('.') == -1 then
     vim.cmd([[norm!zc]])
   end
+  EventManager.dispatch(events.HeadlinePromoted:new(Files.get_closest_headline(), ts_org.closest_headline(), old_level))
 end
 
 function OrgMappings:do_demote(whole_subtree)
   local item = Files.get_closest_headline()
+  local old_level = item.level
   local foldclosed = vim.fn.foldclosed('.')
   item:demote(1, whole_subtree)
   if foldclosed > -1 and vim.fn.foldclosed('.') == -1 then
     vim.cmd([[norm!zc]])
   end
+  EventManager.dispatch(events.HeadlineDemoted:new(Files.get_closest_headline(), ts_org.closest_headline(), old_level))
 end
 
 function OrgMappings:org_return()
