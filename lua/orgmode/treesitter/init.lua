@@ -2,9 +2,10 @@ local tree_utils = require('orgmode.utils.treesitter')
 local Headline = require('orgmode.treesitter.headline')
 local Listitem = require('orgmode.treesitter.listitem')
 
+---@param cursor? Table Cursor position tuple {row, col}
 ---@return Headline
-local function closest_headline()
-  local ts_headline = tree_utils.closest_headline()
+local function closest_headline(cursor)
+  local ts_headline = tree_utils.closest_headline(cursor)
   if not ts_headline then
     error('Unable to locate closest headline')
   end
