@@ -1,4 +1,5 @@
 local Files = require('orgmode.parser.files')
+local ts_org = require('orgmode.treesitter')
 local Table = require('orgmode.treesitter.table')
 
 local function format()
@@ -18,6 +19,11 @@ local function format()
   local ok, item = pcall(Files.get_closest_headline, line)
   if ok and item and item.logbook and item.logbook.range:is_in_line_range(line) then
     return item.logbook:recalculate_estimate(line)
+  end
+
+  if vim.fn.getline(line):match('^%*') then
+    ts_org.closest_headline():align_tags()
+    return 0
   end
 
   return 1
