@@ -150,24 +150,25 @@ CONTENTS                                                        *orgmode-content
     1.6. Hyperlinks...........................................|orgmode-hyperlinks|
     1.7. Autocompletion...................................|orgmode-autocompletion|
     1.8. Abbreviations.....................................|orgmode-abbreviations|
-    1.9. Colors...................................................|orgmode-colors|
-        1.9.1. Highlight Groups.........................|orgmode-highlight_groups|
-    1.10. Advanced search................................|orgmode-advanced_search|
-    1.11. Notifications (experimental)......|orgmode-notifications_(experimental)|
-        1.11.1. Cron................................................|orgmode-cron|
-    1.12. Clocking..............................................|orgmode-clocking|
-                1.12.1. Clock in................................|orgmode-clock_in|
-                1.12.2. Clock out..............................|orgmode-clock_out|
-                1.12.3. Clock cancel........................|orgmode-clock_cancel|
-                1.12.4. Clock goto............................|orgmode-clock_goto|
-                1.12.5. Set effort............................|orgmode-set_effort|
-                1.12.6. Clock report table............|orgmode-clock_report_table|
-                1.12.7. Automatic updates of totals.|orgmode-automatic_updates_of_totals|
-                1.12.8. Recalculating totals........|orgmode-recalculating_totals|
-                1.12.9. Statusline function..........|orgmode-statusline_function|
-    1.13. Changelog............................................|orgmode-changelog|
-            1.13.1. 24 October 2021......................|orgmode-24_october_2021|
-            1.13.2. 10 October 2021......................|orgmode-10_october_2021|
+    1.9. Formatting...........................................|orgmode-formatting|
+    1.10. Colors..................................................|orgmode-colors|
+        1.10.1. Highlight Groups........................|orgmode-highlight_groups|
+    1.11. Advanced search................................|orgmode-advanced_search|
+    1.12. Notifications (experimental)......|orgmode-notifications_(experimental)|
+        1.12.1. Cron................................................|orgmode-cron|
+    1.13. Clocking..............................................|orgmode-clocking|
+                1.13.1. Clock in................................|orgmode-clock_in|
+                1.13.2. Clock out..............................|orgmode-clock_out|
+                1.13.3. Clock cancel........................|orgmode-clock_cancel|
+                1.13.4. Clock goto............................|orgmode-clock_goto|
+                1.13.5. Set effort............................|orgmode-set_effort|
+                1.13.6. Clock report table............|orgmode-clock_report_table|
+                1.13.7. Automatic updates of totals.|orgmode-automatic_updates_of_totals|
+                1.13.8. Recalculating totals........|orgmode-recalculating_totals|
+                1.13.9. Statusline function..........|orgmode-statusline_function|
+    1.14. Changelog............................................|orgmode-changelog|
+            1.14.1. 24 October 2021......................|orgmode-24_october_2021|
+            1.14.2. 10 October 2021......................|orgmode-10_october_2021|
 
 ================================================================================
 TABLE OF CONTENT                                        *orgmode-table_of_content*
@@ -190,11 +191,12 @@ TABLE OF CONTENT                                        *orgmode-table_of_conten
 6.  Hyperlinks (#hyperlinks)
 7.  Autocompletion (#autocompletion)
 8.  Abbreviations (#abbreviations)
-9.  Colors (#colors)
-10. Advanced search (#advanced-search)
-11. Notifications (experimental) (#notifications-experimental)
-12. Clocking (#clocking)
-13. Changelog (#changelog)
+9.  Formatting (#formatting)
+10. Colors (#colors)
+11. Advanced search (#advanced-search)
+12. Notifications (experimental) (#notifications-experimental)
+13. Clocking (#clocking)
+14. Changelog (#changelog)
 
 --------------------------------------------------------------------------------
 GETTING STARTED WITH ORGMODE                *orgmode-getting_started_with_orgmode*
@@ -1422,6 +1424,20 @@ ABBREVIATIONS                                              *orgmode-abbreviation
 
 *   `:today:` - expands to today's date (example: `<2021-06-29 Tue>`)
 *   `:now:` - expands to today's date and current time (example: `<2021-06-29 Tue 15:32>`)
+
+--------------------------------------------------------------------------------
+FORMATTING                                                    *orgmode-formatting*
+
+Formatting is done via `gq` mapping, which uses `formatexpr` under the hood (see `:help formatexpr` for more info).
+For example, to re-format whole document, you can do `gggqG`. `gg` goes to first line in current file, `gq` starts the format motion,
+and `G` goes to last line in file to make it format the whole thing. To format a single line, do `gqgq`, or to format selection,
+select the lines you want to format and just do `gq`.
+
+Currently, these things are formatted:
+
+*   Tags are aligned according to the `org_tags_column` setting
+*   Tables are formatted (see Tables (#Tables) for more info)
+*   Clock entries total time is recalculated (see Recalculating totals (#recalculating-totals) in Clocking (#Clocking) section)
 
 --------------------------------------------------------------------------------
 COLORS                                                            *orgmode-colors*
