@@ -1,4 +1,4 @@
-local ts_utils = require('nvim-treesitter.ts_utils')
+local ts_utils = require('orgmode.utils.treesitter')
 local Table = require('orgmode.parser.table')
 local utils = require('orgmode.utils')
 local config = require('orgmode.config')
@@ -10,13 +10,16 @@ local query = vim.treesitter.query
 ---@field tbl Table
 local TsTable = {}
 
-function TsTable.from_current_node()
+function TsTable.from_current_node(linenr)
   vim.treesitter.get_parser(0, 'org', {}):parse()
-  local view = vim.fn.winsaveview()
-  -- Go to first non blank char
-  vim.cmd([[norm! _]])
-  local node = ts_utils.get_node_at_cursor()
-  vim.fn.winrestview(view)
+  local cursor = vim.api.nvim_win_get_cursor(0)
+  if linenr then
+    local line = vim.fn.getline(linenr)
+    local spaces = line:match('^%s*')
+    local col = spaces and spaces:len() or 0
+    cursor = { linenr, col }
+  end
+  local node = ts_utils.get_node_at_cursor(cursor)
   if not node then
     return false
   end
@@ -94,8 +97,8 @@ function TsTable:add_row()
   return TsTable.from_current_node():reformat()
 end
 
-local function format()
-  local tbl = TsTable.from_current_node()
+local function format(linenr)
+  local tbl = TsTable.from_current_node(linenr)
 
   if not tbl then
     return false
