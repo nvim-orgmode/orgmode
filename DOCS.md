@@ -18,11 +18,12 @@
 6. [Hyperlinks](#hyperlinks)
 7. [Autocompletion](#autocompletion)
 8. [Abbreviations](#abbreviations)
-9. [Colors](#colors)
-10. [Advanced search](#advanced-search)
-11. [Notifications (experimental)](#notifications-experimental)
-12. [Clocking](#clocking)
-13. [Changelog](#changelog)
+9. [Formatting](#formatting)
+10. [Colors](#colors)
+11. [Advanced search](#advanced-search)
+12. [Notifications (experimental)](#notifications-experimental)
+13. [Clocking](#clocking)
+14. [Changelog](#changelog)
 
 ## Getting started with Orgmode
 To get a basic idea how Orgmode works, look at this screencast from [@dhruvasagar](https://github.com/dhruvasagar)
@@ -1044,6 +1045,18 @@ Some content [[|
 
 * `:today:` - expands to today's date (example: `<2021-06-29 Tue>`)
 * `:now:` - expands to today's date and current time (example: `<2021-06-29 Tue 15:32>`)
+
+## Formatting
+Formatting is done via `gq` mapping, which uses `formatexpr` under the hood (see `:help formatexpr` for more info).
+For example, to re-format whole document, you can do `gggqG`. `gg` goes to first line in current file, `gq` starts the format motion,
+and `G` goes to last line in file to make it format the whole thing. To format a single line, do `gqgq`, or to format selection,
+select the lines you want to format and just do `gq`.
+
+Currently, these things are formatted:
+
+* Tags are aligned according to the `org_tags_column` setting
+* Tables are formatted (see [Tables](#Tables) for more info)
+* Clock entries total time is recalculated (see [Recalculating totals](#recalculating-totals) in [Clocking](#Clocking) section)
 
 ## Colors
 Colors used for todo keywords and agenda states (deadline, schedule ok, schedule warning)
