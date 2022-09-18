@@ -101,12 +101,7 @@ function Export.prompt()
   }
 
   local submenu = function(key, label, extension, exporters)
-    local commands = {
-      {
-        label = 'quit',
-        key = 'q',
-      },
-    }
+    local commands = {}
 
     local exporters_names = {}
 
@@ -139,12 +134,24 @@ function Export.prompt()
       return lhs < rhs
     end)
 
+    local action
+    if #commands > 1 then
+      action = function()
+        utils.menu(label .. ' via', commands, label .. ' via')
+      end
+
+      table.insert(commands, {
+        label = 'quit',
+        key = 'q',
+      })
+    else
+      action = commands[1].action
+    end
+
     return {
       label = string.format('%s (%s)', label, table.concat(exporters_names, '/')),
       key = key,
-      action = function()
-        return utils.menu(label .. ' via', commands, label .. ' via')
-      end,
+      action = action,
     }
   end
 
