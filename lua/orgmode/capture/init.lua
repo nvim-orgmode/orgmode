@@ -79,7 +79,15 @@ function Capture:open_template(template)
   vim.api.nvim_buf_set_var(0, 'org_prev_window', winnr)
   config:setup_mappings('capture')
 
-  self.wipeout_autocmd_id = vim.api.nvim_create_autocmd('BufWipeout', {
+  vim.api.nvim_create_autocmd('BufWipeout', {
+    buffer = 0,
+    group = capture_augroup,
+    callback = function()
+      require('orgmode').action('capture.refile', true)
+    end,
+    once = true,
+  })
+  vim.api.nvim_create_autocmd('VimLeavePre', {
     buffer = 0,
     group = capture_augroup,
     callback = function()
@@ -285,7 +293,7 @@ function Capture:_refile_to(file, lines, item, destination_line)
   end
 
   if item and item.file == utils.current_file_path() then
-    vim.api.nvim_buf_set_lines(0, item.range.start_line - 1, item.range.end_line, false, {})
+    pcall(vim.api.nvim_buf_set_lines, 0, item.range.start_line - 1, item.range.end_line, false, {})
   end
 
   return true
@@ -328,10 +336,8 @@ function Capture.autocomplete_refile(arg_lead)
 end
 
 function Capture:kill()
-  if self.wipeout_autocmd_id then
-    vim.api.nvim_del_autocmd(self.wipeout_autocmd_id)
-    self.wipeout_autocmd_id = nil
-  end
+  -- Clear all autocmds
+  vim.api.nvim_create_augroup('OrgCapture', { clear = true })
   local prev_winnr = vim.api.nvim_buf_get_var(0, 'org_prev_window')
   vim.api.nvim_win_close(0, true)
   if prev_winnr and vim.api.nvim_win_is_valid(prev_winnr) then
