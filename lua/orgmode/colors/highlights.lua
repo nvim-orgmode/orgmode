@@ -203,7 +203,7 @@ function M.parse_todo_keyword_faces(do_syn_match)
         vim.cmd(string.format([[syn match %s "\<%s\>" contained]], hl_name, name))
       end
       vim.cmd(string.format('hi %s %s', hl_name, hl))
-      if vim.fn.has('nvim-0.8') then
+      if vim.fn.has('nvim-0.8') > 0 then
         vim.cmd(string.format([[hi link @%s %s]], hl_name, hl_name))
       end
       result[name] = hl_name
