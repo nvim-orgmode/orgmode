@@ -19,8 +19,8 @@ function M.get_node_at_cursor(cursor, winnr, ignore_injected_langs)
   winnr = winnr or 0
   local buf = vim.api.nvim_win_get_buf(winnr)
   -- TODO: Use only this function when 0.8 is released
-  if vim.treesitter.get_node_at_position then
-    return vim.treesitter.get_node_at_position(buf, cursor[1] - 1, cursor[2], {
+  if vim.treesitter.get_node_at_pos then
+    return vim.treesitter.get_node_at_pos(buf, cursor[1] - 1, cursor[2], {
       ignore_injections = ignore_injected_langs,
     })
   end
