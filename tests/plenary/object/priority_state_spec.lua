@@ -12,9 +12,9 @@ describe('Priority state', function()
 
   local numeric_config = function()
     config:extend({
-      org_priority_highest = 10,
+      org_priority_highest = 1,
       org_priority_default = 5,
-      org_priority_lowest = 1,
+      org_priority_lowest = 10,
     })
   end
 
@@ -44,13 +44,13 @@ describe('Priority state', function()
 
   it('should change to empty priority when numeric increased beyond highest', function()
     numeric_config()
-    local priority = PriorityState:new('10')
+    local priority = PriorityState:new('1')
     assert.are.same('', priority:increase())
   end)
 
   it('should change to empty priority when numeric decreased beyond lowest', function()
     numeric_config()
-    local priority = PriorityState:new('1')
+    local priority = PriorityState:new('10')
     assert.are.same('', priority:decrease())
   end)
 
