@@ -56,13 +56,9 @@ function Templates:compile(template)
     content = table.concat(content, '\n')
   end
   content = self:_compile_dates(content)
-  content = self:_compile_prompts(content)
+  content = self:_compile_expansions(content)
   content = self:_compile_expressions(content)
-  for expansion, compiler in pairs(expansions) do
-    if content:match(vim.pesc(expansion)) then
-      content = content:gsub(vim.pesc(expansion), compiler())
-    end
-  end
+  content = self:_compile_prompts(content)
   return vim.split(content, '\n', true)
 end
 
@@ -78,6 +74,18 @@ function Templates:setup()
       vim.cmd([[startinsert]])
     end
   end
+end
+
+---@param content string
+---@return string
+function Templates:_compile_expansions(content, found_expansions)
+  found_expansions = found_expansions or expansions
+  for expansion, compiler in pairs(found_expansions) do
+    if content:match(vim.pesc(expansion)) then
+      content = content:gsub(vim.pesc(expansion), compiler())
+    end
+  end
+  return content
 end
 
 ---@param content string
