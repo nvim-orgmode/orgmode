@@ -214,7 +214,9 @@ function AgendaView:build()
   return self
 end
 
-function AgendaView:advance_span(direction)
+function AgendaView:advance_span(direction, count)
+  count = count or 1
+  direction = direction * count
   local action = { [self.span] = direction }
   if type(self.span) == 'number' then
     action = { day = self.span * direction }
