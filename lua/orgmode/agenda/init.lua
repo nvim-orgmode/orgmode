@@ -190,7 +190,7 @@ function Agenda:is_opened()
 end
 
 function Agenda:advance_span(direction)
-  return self:_call_view_and_render('advance_span', direction)
+  return self:_call_view_and_render('advance_span', direction, vim.v.count1)
 end
 
 function Agenda:change_span(span)
