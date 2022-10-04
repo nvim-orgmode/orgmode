@@ -468,7 +468,7 @@ function OrgMappings:org_return()
     return vim.api.nvim_feedkeys(utils.esc('<CR>'), 'n', true)
   end
 
-  local rhs = old_mapping.rhs
+  local rhs = utils.esc(old_mapping.rhs)
 
   if old_mapping.expr > 0 then
     rhs = vim.api.nvim_eval(rhs)
