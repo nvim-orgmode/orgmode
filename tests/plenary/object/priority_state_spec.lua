@@ -14,20 +14,20 @@ describe('Priority state', function()
     config:extend({
       org_priority_highest = 1,
       org_priority_default = 5,
-      org_priority_lowest = 10,
+      org_priority_lowest = 15,
     })
   end
 
   it('should increase single numeric priority', function()
     numeric_config()
-    local priority = PriorityState:new(3)
-    assert.are.same('2', priority:increase())
+    local priority = PriorityState:new(10)
+    assert.are.same('9', priority:increase())
   end)
 
   it('should decrease single numeric priority', function()
     numeric_config()
-    local priority = PriorityState:new(3)
-    assert.are.same('4', priority:decrease())
+    local priority = PriorityState:new(9)
+    assert.are.same('10', priority:decrease())
   end)
 
   it('should increase single alpha priority', function()
@@ -50,7 +50,7 @@ describe('Priority state', function()
 
   it('should change to empty priority when numeric decreased beyond lowest', function()
     numeric_config()
-    local priority = PriorityState:new('10')
+    local priority = PriorityState:new('15')
     assert.are.same('', priority:decrease())
   end)
 
