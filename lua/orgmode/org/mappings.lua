@@ -494,7 +494,7 @@ function OrgMappings:org_return()
     return vim.api.nvim_feedkeys(utils.esc(rhs), '', true)
   end
 
-  return vim.api.nvim_feedkeys(utils.esc(rhs), 'n', true)
+  return vim.api.nvim_feedkeys(rhs, 'n', true)
 end
 
 function OrgMappings:handle_return(suffix)
