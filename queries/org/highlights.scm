@@ -22,7 +22,7 @@
 (property_drawer) @OrgTSPropertyDrawer
 (latex_env) @OrgTSLatex
 (drawer) @OrgTSDrawer
-(tag) @OrgTSTag
+(tag_list) @OrgTSTag
 (plan) @OrgTSPlan
 (comment) @OrgTSComment
 (directive) @OrgTSDirective
