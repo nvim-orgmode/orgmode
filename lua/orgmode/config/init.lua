@@ -34,8 +34,93 @@ function Config:extend(opts)
   self.todo_keywords = nil
   opts = opts or {}
   self:_deprecation_notify(opts)
+  if not self:_are_priorities_valid(opts) then
+    opts.org_priority_highest = self.opts.org_priority_highest
+    opts.org_priority_lowest = self.opts.org_priority_lowest
+    opts.org_priority_default = self.opts.org_priority_default
+  end
   self.opts = vim.tbl_deep_extend('force', self.opts, opts)
   return self
+end
+
+function Config:_are_priorities_valid(opts)
+  local high = opts.org_priority_highest
+  local low = opts.org_priority_lowest
+  local default = opts.org_priority_default
+
+  if high or low or default then
+    -- assert that all three options are set
+    if not (high and low and default) then
+      utils.echo_warning(
+        'org_priority_highest, org_priority_lowest and org_priority_default can only be set together.'
+          .. 'Falling back to default priorities'
+      )
+      return false
+    end
+
+    -- numbers
+    if type(high) == 'number' and type(low) == 'number' and type(default) == 'number' then
+      if high < 0 or low < 0 or default < 0 then
+        utils.echo_warning(
+          'org_priority_highest, org_priority_lowest and org_priority_default cannot be negative.'
+            .. 'Falling back to default priorities'
+        )
+        return false
+      end
+      if high > low then
+        utils.echo_warning(
+          'org_priority_highest cannot be bigger than org_priority_lowest. Falling back to default priorities'
+        )
+        return false
+      end
+      if default < high or default > low then
+        utils.echo_warning(
+          'org_priority_default must be bigger than org_priority_highest and smaller than org_priority_lowest.'
+            .. 'Falling back to default priorities'
+        )
+        return false
+      end
+    -- one-char strings
+    elseif
+      (type(high) == 'string' and #high == 1)
+      and (type(low) == 'string' and #low == 1)
+      and (type(default) == 'string' and #default == 1)
+    then
+      if not high:match('%a') or not low:match('%a') or not default:match('%a') then
+        utils.echo_warning(
+          'org_priority_highest, org_priority_lowest and org_priority_default must be letters.'
+            .. 'Falling back to default priorities'
+        )
+        return false
+      end
+
+      high = string.byte(high)
+      low = string.byte(low)
+      default = string.byte(default)
+      if high > low then
+        utils.echo_warning(
+          'org_priority_highest cannot be bigger than org_priority_lowest. Falling back to default priorities'
+        )
+        return false
+      end
+      if default < high or default > low then
+        utils.echo_warning(
+          'org_priority_default must be bigger than org_priority_highest and smaller than org_priority_lowest.'
+            .. 'Falling back to default priorities'
+        )
+        return false
+      end
+    else
+      utils.echo_warning(
+        'org_priority_highest, org_priority_lowest and org_priority_default must be either of type'
+          .. "'number' or of type 'string' of length one. All three options need to agree on this type."
+          .. 'Falling back to default priorities'
+      )
+      return false
+    end
+  end
+
+  return true
 end
 
 function Config:_deprecation_notify(opts)
