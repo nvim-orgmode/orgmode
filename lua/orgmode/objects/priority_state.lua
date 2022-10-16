@@ -81,6 +81,9 @@ end
 ---@param direction number
 ---@return string
 function PriorityState:_apply(direction)
+  if type(tonumber(self.priority)) == 'number' then
+    return tostring(tonumber(self.priority) + direction)
+  end
   return string.char(string.byte(self.priority) + direction)
 end
 
