@@ -1,4 +1,3 @@
-local org = require'orgmode' -- TODO remove
 local config = require('orgmode.config')
 local ts_utils = require('nvim-treesitter.ts_utils')
 local query = nil
@@ -68,7 +67,6 @@ local function get_node_text(node, source, offset_col_start, offset_col_end)
   return table.concat(lines, '\n')
 end
 
-
 local get_tree = ts_utils.memoize_by_buf_tick(function(bufnr)
   local tree = vim.treesitter.get_parser(bufnr, 'org'):parse()
   if not tree or not #tree then
@@ -127,7 +125,7 @@ local function is_valid_markup_range(match, _, source, _)
     end
     if start_text:sub(1,2) == "\\(" then
       is_valid_start = true
-    elseif start_len == 3 and start_text:sub(start_len, start_len) ~= ' ' then
+    elseif start_len == 3 and start_text:sub(start_len-1, start_len-1) ~= ' ' then
       is_valid_start = true
     end
   end
@@ -147,11 +145,11 @@ local function is_valid_markup_range(match, _, source, _)
       if end_text:sub(end_len-1, end_len) == "\\)" then
         is_valid_end = true
       else
-        end_text = end_text:sub(1, end_len)
-        if end_text:sub(end_len-1, end_len) == "\\)" then
+        end_text = end_text:sub(1, end_len-1)
+        if end_text:sub(end_len-2, end_len-1) == "\\)" then
           is_valid_end = true
         elseif end_len == 3 and end_text:sub(1, 1) ~= ' ' then
-          is_valid_end = false
+          is_valid_end = true
         end
       end
     end
@@ -215,16 +213,14 @@ local function get_matches(bufnr, first_line, last_line)
   for _, match, _ in query:iter_matches(root, bufnr, first_line, last_line) do
     for _, node in pairs(match) do
       local char = node:type()
-      if char == "expr" then
-        char = get_node_text(node, bufnr, 0, 0)
-        if char:sub(1,1) == "\\" then
-          char = char:sub(1,2)
-        else
-          char = char:sub(char:len()-1, char:len())
-        end
+      if char == "\\" then
+        char = get_node_text(node, bufnr, 0, 1)
         if char == "\\)" then char = "\\(" end
       end
       local range = ts_utils.node_to_lsp_range(node)
+      if char == "\\(" then 
+        range["end"].character = range["end"].character + 1
+      end
       local linenr = tostring(range.start.line)
       taken_locations[linenr] = taken_locations[linenr] or {}
       if not taken_locations[linenr][range.start.character] then

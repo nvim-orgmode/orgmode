@@ -13,7 +13,7 @@
  (expr "+" @strikethrough.start "+" @strikethrough.end (#org-is-valid-markup-range? @strikethrough.start @strikethrough.end))
  ((expr "[" @hyperlink.start) (expr "]" @hyperlink.end) (#org-is-valid-hyperlink-range? @hyperlink.start @hyperlink.end))
  (expr "[" @hyperlink.start "]" @hyperlink.end (#org-is-valid-hyperlink-range? @hyperlink.start @hyperlink.end))
- ((expr (("\\") ("("))) @text.math.start (expr (("\\") (")"))) @text.math.end (#org-is-valid-markup-range? @text.math.start @text.math.end))
+ ((expr (("\\") ("(")) @text.math.start) (expr (("\\") (")")) @text.math.end) (#org-is-valid-markup-range? @text.math.start @text.math.end))
  (expr (("\\") ("(")) @text.math.start (("\\") (")")) @text.math.end (#org-is-valid-markup-range? @text.math.start @text.math.end))
 ])
 
@@ -32,7 +32,7 @@
  (expr "+" @strikethrough.start "+" @strikethrough.end (#org-is-valid-markup-range? @strikethrough.start @strikethrough.end))
  ((expr "[" @hyperlink.start) (expr "]" @hyperlink.end) (#org-is-valid-hyperlink-range? @hyperlink.start @hyperlink.end))
  (expr "[" @hyperlink.start "]" @hyperlink.end (#org-is-valid-hyperlink-range? @hyperlink.start @hyperlink.end))
- ((expr (("\\") ("("))) @text.math.start (expr (("\\") (")"))) @text.math.end (#org-is-valid-markup-range? @text.math.start @text.math.end))
+ ((expr (("\\") ("(")) @text.math.start) (expr (("\\") (")")) @text.math.end) (#org-is-valid-markup-range? @text.math.start @text.math.end))
  (expr (("\\") ("(")) @text.math.start (("\\") (")")) @text.math.end (#org-is-valid-markup-range? @text.math.start @text.math.end))
 ])
 
@@ -51,7 +51,7 @@
  (expr "+" @strikethrough.start "+" @strikethrough.end (#org-is-valid-markup-range? @strikethrough.start @strikethrough.end))
  ((expr "[" @hyperlink.start) (expr "]" @hyperlink.end) (#org-is-valid-hyperlink-range? @hyperlink.start @hyperlink.end))
  (expr "[" @hyperlink.start "]" @hyperlink.end (#org-is-valid-hyperlink-range? @hyperlink.start @hyperlink.end))
- ((expr (("\\") ("("))) @text.math.start (expr (("\\") (")"))) @text.math.end (#org-is-valid-markup-range? @text.math.start @text.math.end))
+ ((expr (("\\") ("(")) @text.math.start) (expr (("\\") (")")) @text.math.end) (#org-is-valid-markup-range? @text.math.start @text.math.end))
  (expr (("\\") ("(")) @text.math.start (("\\") (")")) @text.math.end (#org-is-valid-markup-range? @text.math.start @text.math.end))
 ]))
 
@@ -70,6 +70,6 @@
  (expr "+" @strikethrough.start "+" @strikethrough.end (#org-is-valid-markup-range? @strikethrough.start @strikethrough.end))
  ((expr "[" @hyperlink.start) (expr "]" @hyperlink.end) (#org-is-valid-hyperlink-range? @hyperlink.start @hyperlink.end))
  (expr "[" @hyperlink.start "]" @hyperlink.end (#org-is-valid-hyperlink-range? @hyperlink.start @hyperlink.end))
- ((expr (("\\") ("("))) @text.math.start (expr (("\\") (")"))) @text.math.end (#org-is-valid-markup-range? @text.math.start @text.math.end))
+ ((expr (("\\") ("(")) @text.math.start) (expr (("\\") (")")) @text.math.end) (#org-is-valid-markup-range? @text.math.start @text.math.end))
  (expr (("\\") ("(")) @text.math.start (("\\") (")")) @text.math.end (#org-is-valid-markup-range? @text.math.start @text.math.end))
 ]))
