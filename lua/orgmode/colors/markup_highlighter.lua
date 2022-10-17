@@ -1,3 +1,4 @@
+local org = require'orgmode' -- TODO remove
 local config = require('orgmode.config')
 local ts_utils = require('nvim-treesitter.ts_utils')
 local query = nil
@@ -29,6 +30,10 @@ local markers = {
   ['='] = {
     hl_name = 'org_verbatim',
     hl_cmd = 'hi def link org_verbatim String',
+  },
+  ['\\('] = {
+    hl_name = 'org_math',
+    hl_cmd = 'hi def link org_math OrgTSLatex',
   },
 }
 
@@ -62,6 +67,7 @@ local function get_node_text(node, source, offset_col_start, offset_col_end)
 
   return table.concat(lines, '\n')
 end
+
 
 local get_tree = ts_utils.memoize_by_buf_tick(function(bufnr)
   local tree = vim.treesitter.get_parser(bufnr, 'org'):parse()
@@ -110,15 +116,51 @@ local function is_valid_markup_range(match, _, source, _)
 
   local start_text = get_node_text(start_node, source, -1, 1)
   local start_len = start_text:len()
-
-  local is_valid_start = (start_len < 3 or vim.tbl_contains(valid_pre_marker_chars, start_text:sub(1, 1)))
-    and start_text:sub(start_len, start_len) ~= ' '
+  is_valid_start = false
+  if start_len < 3 then
+    if start_text:sub(start_len, start_len) ~= ' ' then
+      is_valid_start= true
+    end
+  else
+    if vim.tbl_contains(valid_pre_marker_chars, start_text:sub(1, 1)) then
+      start_text = start_text:sub(2, start_len-1)
+    end
+    if start_text:sub(1,2) == "\\(" then
+      is_valid_start = true
+    elseif start_len == 3 and start_text:sub(start_len, start_len) ~= ' ' then
+      is_valid_start = true
+    end
+  end
   if not is_valid_start then
     return false
   end
+
   local end_text = get_node_text(end_node, source, -1, 1)
-  return (end_text:len() < 3 or vim.tbl_contains(valid_post_marker_chars, end_text:sub(3, 3)))
-    and end_text:sub(1, 1) ~= ' '
+  local end_len = end_text:len()
+  is_valid_end = false
+  if end_len < 3 then
+    if end_text:sub(1, 1) ~= ' ' then
+      is_valid_end = true
+    end
+  else
+    if vim.tbl_contains(valid_post_marker_chars, end_text:sub(end_len, end_len)) then
+      if end_text:sub(end_len-1, end_len) == "\\)" then
+        is_valid_end = true
+      else
+        end_text = end_text:sub(1, end_len)
+        if end_text:sub(end_len-1, end_len) == "\\)" then
+          is_valid_end = true
+        elseif end_len == 3 and end_text:sub(1, 1) ~= ' ' then
+          is_valid_end = false
+        end
+      end
+    end
+  end
+  if not is_valid_end then
+    return false
+  end
+
+  return true
 end
 
 local function is_valid_hyperlink_range(match, _, source, _)
@@ -173,6 +215,15 @@ local function get_matches(bufnr, first_line, last_line)
   for _, match, _ in query:iter_matches(root, bufnr, first_line, last_line) do
     for _, node in pairs(match) do
       local char = node:type()
+      if char == "expr" then
+        char = get_node_text(node, bufnr, 0, 0)
+        if char:sub(1,1) == "\\" then
+          char = char:sub(1,2)
+        else
+          char = char:sub(char:len()-1, char:len())
+        end
+        if char == "\\)" then char = "\\(" end
+      end
       local range = ts_utils.node_to_lsp_range(node)
       local linenr = tostring(range.start.line)
       taken_locations[linenr] = taken_locations[linenr] or {}
