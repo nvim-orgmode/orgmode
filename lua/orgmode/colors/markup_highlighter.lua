@@ -100,9 +100,11 @@ local function is_valid_markup_range(match, _, source, _)
     return
   end
 
-  -- Ignore conflicts with hyperlink
-  if start_node:type() == '[' or end_node:type() == ']' then
-    return true
+  -- Ignore conflicts with hyperlink or math
+  for _, char in ipairs({ '[', '\\' }) do
+    if start_node:type() == char or end_node:type() == char then
+      return true
+    end
   end
 
   local start_line = start_node:range()
@@ -114,51 +116,15 @@ local function is_valid_markup_range(match, _, source, _)
 
   local start_text = get_node_text(start_node, source, -1, 1)
   local start_len = start_text:len()
-  is_valid_start = false
-  if start_len < 3 then
-    if start_text:sub(start_len, start_len) ~= ' ' then
-      is_valid_start= true
-    end
-  else
-    if vim.tbl_contains(valid_pre_marker_chars, start_text:sub(1, 1)) then
-      start_text = start_text:sub(2, start_len-1)
-    end
-    if start_text:sub(1,2) == "\\(" then
-      is_valid_start = true
-    elseif start_len == 3 and start_text:sub(start_len-1, start_len-1) ~= ' ' then
-      is_valid_start = true
-    end
-  end
+
+  local is_valid_start = (start_len < 3 or vim.tbl_contains(valid_pre_marker_chars, start_text:sub(1, 1)))
+    and start_text:sub(start_len, start_len) ~= ' '
   if not is_valid_start then
     return false
   end
-
   local end_text = get_node_text(end_node, source, -1, 1)
-  local end_len = end_text:len()
-  is_valid_end = false
-  if end_len < 3 then
-    if end_text:sub(1, 1) ~= ' ' then
-      is_valid_end = true
-    end
-  else
-    if vim.tbl_contains(valid_post_marker_chars, end_text:sub(end_len, end_len)) then
-      if end_text:sub(end_len-1, end_len) == "\\)" then
-        is_valid_end = true
-      else
-        end_text = end_text:sub(1, end_len-1)
-        if end_text:sub(end_len-2, end_len-1) == "\\)" then
-          is_valid_end = true
-        elseif end_len == 3 and end_text:sub(1, 1) ~= ' ' then
-          is_valid_end = true
-        end
-      end
-    end
-  end
-  if not is_valid_end then
-    return false
-  end
-
-  return true
+  return (end_text:len() < 3 or vim.tbl_contains(valid_post_marker_chars, end_text:sub(3, 3)))
+    and end_text:sub(1, 1) ~= ' '
 end
 
 local function is_valid_hyperlink_range(match, _, source, _)
@@ -186,6 +152,31 @@ local function is_valid_hyperlink_range(match, _, source, _)
   return is_valid_start and is_valid_end
 end
 
+local function is_valid_math_range(match, _, source, _)
+  local start_node, end_node = get_predicate_nodes(match)
+  if not start_node or not end_node then
+    return
+  end
+  -- Ignore conflicts with markup
+  if start_node:type() ~= '\\' or end_node:type() ~= '\\' then
+    return true
+  end
+
+  local start_line = start_node:range()
+  local end_line = start_node:range()
+
+  if start_line ~= end_line then
+    return false
+  end
+
+  local start_text = get_node_text(start_node, source, 0, 1)
+  local end_text = get_node_text(end_node, source, 0, 1)
+
+  local is_valid_start = start_text == '\\('
+  local is_valid_end = end_text == '\\)'
+  return is_valid_start and is_valid_end
+end
+
 local function load_deps()
   -- Already defined
   if query then
@@ -194,6 +185,7 @@ local function load_deps()
   query = vim.treesitter.get_query('org', 'markup')
   vim.treesitter.query.add_predicate('org-is-valid-markup-range?', is_valid_markup_range)
   vim.treesitter.query.add_predicate('org-is-valid-hyperlink-range?', is_valid_hyperlink_range)
+  vim.treesitter.query.add_predicate('org-is-valid-math-range?', is_valid_math_range)
 end
 
 ---@param bufnr? number
@@ -213,13 +205,15 @@ local function get_matches(bufnr, first_line, last_line)
   for _, match, _ in query:iter_matches(root, bufnr, first_line, last_line) do
     for _, node in pairs(match) do
       local char = node:type()
-      if char == "\\" then
+      if char == '\\' then
         char = get_node_text(node, bufnr, 0, 1)
-        if char == "\\)" then char = "\\(" end
+        if char == '\\)' then
+          char = '\\('
+        end
       end
       local range = ts_utils.node_to_lsp_range(node)
-      if char == "\\(" then 
-        range["end"].character = range["end"].character + 1
+      if char == '\\(' then
+        range['end'].character = range['end'].character + 1
       end
       local linenr = tostring(range.start.line)
       taken_locations[linenr] = taken_locations[linenr] or {}
