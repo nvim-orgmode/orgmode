@@ -30,6 +30,10 @@ local markers = {
     hl_name = 'org_verbatim',
     hl_cmd = 'hi def link org_verbatim String',
   },
+  ['\\('] = {
+    hl_name = 'org_math',
+    hl_cmd = 'hi def link org_math OrgTSLatex',
+  },
 }
 
 local function get_node_text(node, source, offset_col_start, offset_col_end)
@@ -96,9 +100,11 @@ local function is_valid_markup_range(match, _, source, _)
     return
   end
 
-  -- Ignore conflicts with hyperlink
-  if start_node:type() == '[' or end_node:type() == ']' then
-    return true
+  -- Ignore conflicts with hyperlink or math
+  for _, char in ipairs({ '[', '\\' }) do
+    if start_node:type() == char or end_node:type() == char then
+      return true
+    end
   end
 
   local start_line = start_node:range()
@@ -146,6 +152,31 @@ local function is_valid_hyperlink_range(match, _, source, _)
   return is_valid_start and is_valid_end
 end
 
+local function is_valid_math_range(match, _, source, _)
+  local start_node, end_node = get_predicate_nodes(match)
+  if not start_node or not end_node then
+    return
+  end
+  -- Ignore conflicts with markup
+  if start_node:type() ~= '\\' or end_node:type() ~= '\\' then
+    return true
+  end
+
+  local start_line = start_node:range()
+  local end_line = start_node:range()
+
+  if start_line ~= end_line then
+    return false
+  end
+
+  local start_text = get_node_text(start_node, source, 0, 1)
+  local end_text = get_node_text(end_node, source, 0, 1)
+
+  local is_valid_start = start_text == '\\('
+  local is_valid_end = end_text == '\\)'
+  return is_valid_start and is_valid_end
+end
+
 local function load_deps()
   -- Already defined
   if query then
@@ -154,6 +185,7 @@ local function load_deps()
   query = vim.treesitter.get_query('org', 'markup')
   vim.treesitter.query.add_predicate('org-is-valid-markup-range?', is_valid_markup_range)
   vim.treesitter.query.add_predicate('org-is-valid-hyperlink-range?', is_valid_hyperlink_range)
+  vim.treesitter.query.add_predicate('org-is-valid-math-range?', is_valid_math_range)
 end
 
 ---@param bufnr? number
@@ -173,7 +205,16 @@ local function get_matches(bufnr, first_line, last_line)
   for _, match, _ in query:iter_matches(root, bufnr, first_line, last_line) do
     for _, node in pairs(match) do
       local char = node:type()
+      if char == '\\' then
+        char = get_node_text(node, bufnr, 0, 1)
+        if char == '\\)' then
+          char = '\\('
+        end
+      end
       local range = ts_utils.node_to_lsp_range(node)
+      if char == '\\(' then
+        range['end'].character = range['end'].character + 1
+      end
       local linenr = tostring(range.start.line)
       taken_locations[linenr] = taken_locations[linenr] or {}
       if not taken_locations[linenr][range.start.character] then
