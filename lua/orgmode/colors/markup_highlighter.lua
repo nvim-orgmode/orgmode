@@ -30,9 +30,13 @@ local markers = {
     hl_name = 'org_verbatim',
     hl_cmd = 'hi def link org_verbatim String',
   },
-  ['\\'] = {
-    hl_name = 'org_math',
-    hl_cmd = 'hi def link org_math OrgTSLatex',
+  ['\\('] = {
+    hl_name = 'org_latex',
+    hl_cmd = 'hi def link org_latex OrgTSLatex',
+  },
+  ['\\{'] = {
+    hl_name = 'org_latex',
+    hl_cmd = 'hi def link org_latex OrgTSLatex',
   },
 }
 
@@ -75,23 +79,16 @@ local get_tree = ts_utils.memoize_by_buf_tick(function(bufnr)
   return tree[1]:root()
 end)
 
-local function get_predicate_nodes(match)
+local function get_predicate_nodes(match, n)
+  local total = n or 2
   local counter = 1
-  local start_node = nil
-  local end_node = nil
+  local nodes = {}
   for i, node in pairs(match) do
-    if counter == 1 then
-      start_node = node
-    end
-    if counter == 2 then
-      end_node = node
-    end
+    nodes[counter] = node
     counter = counter + 1
+    if counter > total then break end
   end
-  if not start_node or not end_node then
-    return false
-  end
-  return start_node, end_node
+  return unpack(nodes)
 end
 
 local function is_valid_markup_range(match, _, source, _)
@@ -152,29 +149,37 @@ local function is_valid_hyperlink_range(match, _, source, _)
   return is_valid_start and is_valid_end
 end
 
-local function is_valid_math_range(match, _, source, _)
-  local start_node, end_node = get_predicate_nodes(match)
-  if not start_node or not end_node then
-    return
-  end
+local function is_valid_latex_range(match, _, source, _)
+  local start_node_left, start_node_right, end_node = get_predicate_nodes(match, 3)
   -- Ignore conflicts with markup
-  if start_node:type() ~= '\\' or end_node:type() ~= '\\' then
+  if start_node_left:type() ~= '\\' then
     return true
   end
+  if not start_node_right or not end_node then
+    return
+  end
 
-  local start_line = start_node:range()
-  local end_line = start_node:range()
+  local start_line = start_node_left:range()
+  local end_line = start_node_left:range()
 
   if start_line ~= end_line then
     return false
   end
 
-  local start_text = get_node_text(start_node, source, 0, 1)
-  local end_text = get_node_text(end_node, source, 0, 1)
+  local start_text = get_node_text(start_node_left, source, 0, 0) .. get_node_text(start_node_right, source, 0, 0)
 
-  local is_valid_start = start_text == '\\('
-  local is_valid_end = end_text == '\\)'
-  return is_valid_start and is_valid_end
+  if start_text == '\\(' then
+    local end_text = get_node_text(end_node, source, -1, 0)
+    if end_text == '\\)' then
+      return true
+    end
+  elseif start_text == '\\{' then
+    local end_text = get_node_text(end_node, source, 0, 0)
+    if end_text == '}' then
+      return true
+    end
+  end
+  return false
 end
 
 local function load_deps()
@@ -185,7 +190,7 @@ local function load_deps()
   query = vim.treesitter.get_query('org', 'markup')
   vim.treesitter.query.add_predicate('org-is-valid-markup-range?', is_valid_markup_range)
   vim.treesitter.query.add_predicate('org-is-valid-hyperlink-range?', is_valid_hyperlink_range)
-  vim.treesitter.query.add_predicate('org-is-valid-math-range?', is_valid_math_range)
+  vim.treesitter.query.add_predicate('org-is-valid-latex-range?', is_valid_latex_range)
 end
 
 ---@param bufnr? number
@@ -205,18 +210,30 @@ local function get_matches(bufnr, first_line, last_line)
   for _, match, _ in query:iter_matches(root, bufnr, first_line, last_line) do
     for _, node in pairs(match) do
       local char = node:type()
-      local range = ts_utils.node_to_lsp_range(node)
-      if char == '\\' then
-        range['end'].character = range['end'].character + 1
-      end
-      local linenr = tostring(range.start.line)
-      taken_locations[linenr] = taken_locations[linenr] or {}
-      if not taken_locations[linenr][range.start.character] then
-        table.insert(ranges, {
-          type = char,
-          range = range,
-        })
-        taken_locations[linenr][range.start.character] = true
+      if char ~= '{' and char ~= '(' then
+        local range = ts_utils.node_to_lsp_range(node)
+        if char == '}' then
+          char = '\\{'
+        elseif char == ')' then
+          char = '\\('
+        end
+        if char == '\\' then
+          local text = get_node_text(node, bufnr, 0, 1)
+          if text == '\\(' then
+            char = '\\('
+          else
+            char = '\\{'
+          end
+        end
+        local linenr = tostring(range.start.line)
+        taken_locations[linenr] = taken_locations[linenr] or {}
+        if not taken_locations[linenr][range.start.character] then
+          table.insert(ranges, {
+            type = char,
+            range = range,
+          })
+          taken_locations[linenr][range.start.character] = true
+        end
       end
     end
   end

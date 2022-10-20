@@ -13,8 +13,11 @@
  (expr "+" @strikethrough.start "+" @strikethrough.end (#org-is-valid-markup-range? @strikethrough.start @strikethrough.end))
  ((expr "[" @hyperlink.start) (expr "]" @hyperlink.end) (#org-is-valid-hyperlink-range? @hyperlink.start @hyperlink.end))
  (expr "[" @hyperlink.start "]" @hyperlink.end (#org-is-valid-hyperlink-range? @hyperlink.start @hyperlink.end))
- ((expr (("\\") ("(")) @text.math.start) (expr (("\\") (")")) @text.math.end) (#org-is-valid-math-range? @text.math.start @text.math.end))
- (expr (("\\") ("(")) @text.math.start (("\\") (")")) @text.math.end (#org-is-valid-math-range? @text.math.start @text.math.end))
+ (expr . ("\\") @text.math.start.left . ("str") . ("{") @text.math.start.right ("}") @text.math.end . (#org-is-valid-latex-range? @text.math.start.left @text.math.start.right @text.math.end))
+ ((expr . (("\\") @text.math.start.left ("(") @text.math.start.right)) (expr (("\\") (")") @text.math.end) .) (#org-is-valid-latex-range? @text.math.start.left @text.math.start.right @text.math.end))
+ (expr . ("\\") @text.math.start.left . ("(") @text.math.start.right ("\\") . (")") @text.math.end . (#org-is-valid-latex-range? @text.math.start.left @text.math.start.right @text.math.end))
+ ((expr . (("\\") @text.math.start.left ("str") ("{") @text.math.start.right)) (expr ("}") @text.math.end .) (#org-is-valid-latex-range? @text.math.start.left @text.math.start.right @text.math.end))
+ (expr . ("\\") @text.math.start.left . ("str") . ("{") @text.math.start.right ("}") @text.math.end . (#org-is-valid-latex-range? @text.math.start.left @text.math.start.right @text.math.end))
 ])
 
 (item [
@@ -32,8 +35,10 @@
  (expr "+" @strikethrough.start "+" @strikethrough.end (#org-is-valid-markup-range? @strikethrough.start @strikethrough.end))
  ((expr "[" @hyperlink.start) (expr "]" @hyperlink.end) (#org-is-valid-hyperlink-range? @hyperlink.start @hyperlink.end))
  (expr "[" @hyperlink.start "]" @hyperlink.end (#org-is-valid-hyperlink-range? @hyperlink.start @hyperlink.end))
- ((expr (("\\") ("(")) @text.math.start) (expr (("\\") (")")) @text.math.end) (#org-is-valid-math-range? @text.math.start @text.math.end))
- (expr (("\\") ("(")) @text.math.start (("\\") (")")) @text.math.end (#org-is-valid-math-range? @text.math.start @text.math.end))
+ ((expr . (("\\") @text.math.start.left ("(") @text.math.start.right)) (expr (("\\") (")") @text.math.end) .) (#org-is-valid-latex-range? @text.math.start.left @text.math.start.right @text.math.end))
+ (expr . ("\\") @text.math.start.left . ("(") @text.math.start.right ("\\") . (")") @text.math.end . (#org-is-valid-latex-range? @text.math.start.left @text.math.start.right @text.math.end))
+ ((expr . (("\\") @text.math.start.left ("str") ("{") @text.math.start.right)) (expr ("}") @text.math.end .) (#org-is-valid-latex-range? @text.math.start.left @text.math.start.right @text.math.end))
+ (expr . ("\\") @text.math.start.left . ("str") . ("{") @text.math.start.right ("}") @text.math.end . (#org-is-valid-latex-range? @text.math.start.left @text.math.start.right @text.math.end))
 ])
 
 (cell (contents [
@@ -51,8 +56,10 @@
  (expr "+" @strikethrough.start "+" @strikethrough.end (#org-is-valid-markup-range? @strikethrough.start @strikethrough.end))
  ((expr "[" @hyperlink.start) (expr "]" @hyperlink.end) (#org-is-valid-hyperlink-range? @hyperlink.start @hyperlink.end))
  (expr "[" @hyperlink.start "]" @hyperlink.end (#org-is-valid-hyperlink-range? @hyperlink.start @hyperlink.end))
- ((expr (("\\") ("(")) @text.math.start) (expr (("\\") (")")) @text.math.end) (#org-is-valid-math-range? @text.math.start @text.math.end))
- (expr (("\\") ("(")) @text.math.start (("\\") (")")) @text.math.end (#org-is-valid-math-range? @text.math.start @text.math.end))
+ ((expr . (("\\") @text.math.start.left ("(") @text.math.start.right)) (expr (("\\") (")") @text.math.end) .) (#org-is-valid-latex-range? @text.math.start.left @text.math.start.right @text.math.end))
+ (expr . ("\\") @text.math.start.left . ("(") @text.math.start.right ("\\") . (")") @text.math.end . (#org-is-valid-latex-range? @text.math.start.left @text.math.start.right @text.math.end))
+ ((expr . (("\\") @text.math.start.left ("str") ("{") @text.math.start.right)) (expr ("}") @text.math.end .) (#org-is-valid-latex-range? @text.math.start.left @text.math.start.right @text.math.end))
+ (expr . ("\\") @text.math.start.left . ("str") . ("{") @text.math.start.right ("}") @text.math.end . (#org-is-valid-latex-range? @text.math.start.left @text.math.start.right @text.math.end))
 ]))
 
 (drawer (contents [
@@ -70,6 +77,8 @@
  (expr "+" @strikethrough.start "+" @strikethrough.end (#org-is-valid-markup-range? @strikethrough.start @strikethrough.end))
  ((expr "[" @hyperlink.start) (expr "]" @hyperlink.end) (#org-is-valid-hyperlink-range? @hyperlink.start @hyperlink.end))
  (expr "[" @hyperlink.start "]" @hyperlink.end (#org-is-valid-hyperlink-range? @hyperlink.start @hyperlink.end))
- ((expr (("\\") ("(")) @text.math.start) (expr (("\\") (")")) @text.math.end) (#org-is-valid-math-range? @text.math.start @text.math.end))
- (expr (("\\") ("(")) @text.math.start (("\\") (")")) @text.math.end (#org-is-valid-math-range? @text.math.start @text.math.end))
+ ((expr . (("\\") @text.math.start.left ("(") @text.math.start.right)) (expr (("\\") (")") @text.math.end) .) (#org-is-valid-latex-range? @text.math.start.left @text.math.start.right @text.math.end))
+ (expr . ("\\") @text.math.start.left . ("(") @text.math.start.right ("\\") . (")") @text.math.end . (#org-is-valid-latex-range? @text.math.start.left @text.math.start.right @text.math.end))
+ ((expr . (("\\") @text.math.start.left ("str") ("{") @text.math.start.right)) (expr ("}") @text.math.end .) (#org-is-valid-latex-range? @text.math.start.left @text.math.start.right @text.math.end))
+ (expr . ("\\") @text.math.start.left . ("str") . ("{") @text.math.start.right ("}") @text.math.end . (#org-is-valid-latex-range? @text.math.start.left @text.math.start.right @text.math.end))
 ]))
