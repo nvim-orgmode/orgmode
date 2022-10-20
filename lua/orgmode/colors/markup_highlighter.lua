@@ -199,7 +199,7 @@ local function is_valid_latex_range(match, _, source, _)
       return true
     end
     -- elseif \bar
-    if not start_text:sub(2):match("%A") and end_text ~= '}' then
+    if not start_text:sub(2):match('%A') and end_text ~= '}' then
       return true
     end
   end
@@ -318,7 +318,7 @@ local function get_matches(bufnr, first_line, last_line)
         else
           seek[item.type] = item
           nested = true
-          can_nest =  markers[item.type].nestable
+          can_nest = markers[item.type].nestable
         end
       end
     end
