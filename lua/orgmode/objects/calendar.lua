@@ -32,15 +32,20 @@ function Calendar.new(data)
   return Calendar
 end
 
+local width = 36
+local height = 10
+local x_offset = 1 -- one border cell
+local y_offset = 2 -- one border cell and one padding cell
+
 function Calendar.open()
   local opts = {
     relative = 'editor',
-    width = 36,
-    height = Calendar.clearable and 11 or 10,
+    width = width,
+    height = Calendar.clearable and height + 1 or height,
     style = 'minimal',
     border = 'single',
-    row = vim.o.lines / 2 - 4,
-    col = vim.o.columns / 2 - 20,
+    row = vim.o.lines / 2 - (y_offset + height) / 2,
+    col = vim.o.columns / 2 - (x_offset + width) / 2,
   }
 
   Calendar.buf = vim.api.nvim_create_buf(false, true)
