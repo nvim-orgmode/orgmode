@@ -90,7 +90,7 @@ function Calendar.open()
   if Calendar.date then
     search_day = Calendar.date:format('%d')
   end
-  vim.fn.cursor({ 2, 0 })
+  vim.fn.cursor(2, 0)
   vim.fn.search(search_day, 'W')
   return Promise.new(function(resolve)
     Calendar.callback = resolve
@@ -192,7 +192,7 @@ function Calendar.cursor_right()
     local curr_line = vim.fn.getline('.')
     local offset = curr_line:sub(col + 1, #curr_line):find('%d%d')
     if offset ~= nil then
-      vim.fn.cursor({ line, col + offset })
+      vim.fn.cursor(line, col + offset)
     end
   end
 end
