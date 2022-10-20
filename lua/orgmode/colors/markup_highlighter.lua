@@ -38,6 +38,10 @@ local markers = {
     hl_name = 'org_latex',
     hl_cmd = 'hi def link org_latex OrgTSLatex',
   },
+  ['\\s'] = {
+    hl_name = 'org_latex',
+    hl_cmd = 'hi def link org_latex OrgTSLatex',
+  },
 }
 
 local function get_node_text(node, source, offset_col_start, offset_col_end)
@@ -86,7 +90,9 @@ local function get_predicate_nodes(match, n)
   for i, node in pairs(match) do
     nodes[counter] = node
     counter = counter + 1
-    if counter > total then break end
+    if counter > total then
+      break
+    end
   end
   return unpack(nodes)
 end
@@ -166,16 +172,21 @@ local function is_valid_latex_range(match, _, source, _)
     return false
   end
 
-  local start_text = get_node_text(start_node_left, source, 0, 0) .. get_node_text(start_node_right, source, 0, 0)
+  local start_text = get_node_text(start_node_left, source, 0, 0) .. get_node_text(start_node_right, source, 0, 1)
 
-  if start_text == '\\(' then
+  if start_text:sub(1, 2) == '\\(' then
     local end_text = get_node_text(end_node, source, -1, 0)
     if end_text == '\\)' then
       return true
     end
-  elseif start_text == '\\{' then
+  else
+    -- we have to deal with two cases here either \foo{bar} or \bar
     local end_text = get_node_text(end_node, source, 0, 0)
-    if end_text == '}' then
+    -- if \foo{bar}
+    if start_text:sub(-1) == '{' and end_text == '}' then
+      return true
+    -- elseif \bar
+    elseif start_text:sub(-1) ~= '{' and start_text:sub(-1) ~= '}' then
       return true
     end
   end
@@ -210,20 +221,28 @@ local function get_matches(bufnr, first_line, last_line)
   for _, match, _ in query:iter_matches(root, bufnr, first_line, last_line) do
     for _, node in pairs(match) do
       local char = node:type()
-      if char ~= '{' and char ~= '(' then
+      -- markups that start with a backslash \\ will be followed by another
+      -- query, thus we can safely skip this node
+      if char ~= '\\' then
         local range = ts_utils.node_to_lsp_range(node)
-        if char == '}' then
+        -- the following characters come from queries that start with \\ which
+        -- might involve an asymmetrical pair
+        -- we need to make adjustments
+        if char == '(' then
+          range['start']['character'] = range['start']['character'] - 1
+          char = '\\('
+        elseif char == 'str' then
+          range['start']['character'] = range['start']['character'] - 1
+          local text = get_node_text(node, bufnr, 0, 1)
+          if text:sub(-1) == '{' then
+            char = '\\{'
+          else
+            char = '\\s'
+          end
+        elseif char == '}' then
           char = '\\{'
         elseif char == ')' then
           char = '\\('
-        end
-        if char == '\\' then
-          local text = get_node_text(node, bufnr, 0, 1)
-          if text == '\\(' then
-            char = '\\('
-          else
-            char = '\\{'
-          end
         end
         local linenr = tostring(range.start.line)
         taken_locations[linenr] = taken_locations[linenr] or {}
@@ -252,7 +271,14 @@ local function get_matches(bufnr, first_line, last_line)
 
   for _, item in ipairs(ranges) do
     if markers[item.type] then
-      if seek[item.type] then
+      -- escaped strings have no pairs, their markup info is self-contained
+      if item.type == '\\s' then
+        table.insert(result, {
+          type = item.type,
+          from = item.range,
+          to = item.range,
+        })
+      elseif seek[item.type] then
         local from = seek[item.type]
         table.insert(result, {
           type = item.type,
