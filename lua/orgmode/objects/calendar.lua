@@ -154,14 +154,14 @@ function Calendar.render()
 end
 
 function Calendar.forward()
-  Calendar.month = Calendar.month:add({ month = 1 })
+  Calendar.month = Calendar.month:add({ month = vim.v.count1 })
   Calendar.render()
-  vim.fn.cursor({ 2, 0 })
+  vim.fn.cursor(2, 0)
   vim.fn.search('01')
 end
 
 function Calendar.backward()
-  Calendar.month = Calendar.month:subtract({ month = 1 })
+  Calendar.month = Calendar.month:subtract({ month = vim.v.count1 })
   Calendar.render()
   vim.fn.cursor('$', 0)
   vim.fn.search([[\d\d]], 'b')
