@@ -30,7 +30,7 @@ local markers = {
     hl_name = 'org_verbatim',
     hl_cmd = 'hi def link org_verbatim String',
   },
-  ['\\('] = {
+  ['\\'] = {
     hl_name = 'org_math',
     hl_cmd = 'hi def link org_math OrgTSLatex',
   },
@@ -205,14 +205,8 @@ local function get_matches(bufnr, first_line, last_line)
   for _, match, _ in query:iter_matches(root, bufnr, first_line, last_line) do
     for _, node in pairs(match) do
       local char = node:type()
-      if char == '\\' then
-        char = get_node_text(node, bufnr, 0, 1)
-        if char == '\\)' then
-          char = '\\('
-        end
-      end
       local range = ts_utils.node_to_lsp_range(node)
-      if char == '\\(' then
+      if char == '\\' then
         range['end'].character = range['end'].character + 1
       end
       local linenr = tostring(range.start.line)
