@@ -9,38 +9,47 @@ local markers = {
   ['*'] = {
     hl_name = 'org_bold',
     hl_cmd = 'hi def org_bold term=bold cterm=bold gui=bold',
+    nestable = true,
   },
   ['/'] = {
     hl_name = 'org_italic',
     hl_cmd = 'hi def org_italic term=italic cterm=italic gui=italic',
+    nestable = true,
   },
   ['_'] = {
     hl_name = 'org_underline',
     hl_cmd = 'hi def org_underline term=underline cterm=underline gui=underline',
+    nestable = true,
   },
   ['+'] = {
     hl_name = 'org_strikethrough',
     hl_cmd = 'hi def org_strikethrough term=strikethrough cterm=strikethrough gui=strikethrough',
+    nestable = true,
   },
   ['~'] = {
     hl_name = 'org_code',
     hl_cmd = 'hi def link org_code String',
+    nestable = false,
   },
   ['='] = {
     hl_name = 'org_verbatim',
     hl_cmd = 'hi def link org_verbatim String',
+    nestable = false,
   },
   ['\\('] = {
     hl_name = 'org_latex',
     hl_cmd = 'hi def link org_latex OrgTSLatex',
+    nestable = false,
   },
   ['\\{'] = {
     hl_name = 'org_latex',
     hl_cmd = 'hi def link org_latex OrgTSLatex',
+    nestable = false,
   },
   ['\\s'] = {
     hl_name = 'org_latex',
     hl_cmd = 'hi def link org_latex OrgTSLatex',
+    nestable = false,
   },
 }
 
@@ -172,21 +181,25 @@ local function is_valid_latex_range(match, _, source, _)
     return false
   end
 
-  local start_text = get_node_text(start_node_left, source, 0, 0) .. get_node_text(start_node_right, source, 0, 1)
+  local _, start_left_col_end = start_node_left:end_()
+  local _, start_right_col_end = start_node_right:end_()
+  local start_text = get_node_text(start_node_left, source, 0, start_right_col_end - start_left_col_end)
 
-  if start_text:sub(1, 2) == '\\(' then
+  if start_text == '\\(' then
     local end_text = get_node_text(end_node, source, -1, 0)
     if end_text == '\\)' then
       return true
     end
   else
     -- we have to deal with two cases here either \foo{bar} or \bar
+    local char_after_start = get_node_text(start_node_right, source, 0, 1):sub(-1)
     local end_text = get_node_text(end_node, source, 0, 0)
     -- if \foo{bar}
-    if start_text:sub(-1) == '{' and end_text == '}' then
+    if char_after_start == '{' and end_text == '}' then
       return true
+    end
     -- elseif \bar
-    elseif start_text:sub(-1) ~= '{' and start_text:sub(-1) ~= '}' then
+    if not start_text:sub(2):match("%A") and end_text ~= '}' then
       return true
     end
   end
@@ -269,16 +282,12 @@ local function get_matches(bufnr, first_line, last_line)
   local result = {}
   local link_result = {}
 
+  local nested = false
+  local can_nest = true
   for _, item in ipairs(ranges) do
     if markers[item.type] then
       -- escaped strings have no pairs, their markup info is self-contained
-      if item.type == '\\s' then
-        table.insert(result, {
-          type = item.type,
-          from = item.range,
-          to = item.range,
-        })
-      elseif seek[item.type] then
+      if seek[item.type] then
         local from = seek[item.type]
         table.insert(result, {
           type = item.type,
@@ -287,6 +296,8 @@ local function get_matches(bufnr, first_line, last_line)
         })
 
         seek[item.type] = nil
+        nested = false
+        can_nest = true
 
         for t, pos in pairs(seek) do
           if
@@ -297,8 +308,18 @@ local function get_matches(bufnr, first_line, last_line)
             seek[t] = nil
           end
         end
-      else
-        seek[item.type] = item
+      elseif can_nest then
+        if item.type == '\\s' then
+          table.insert(result, {
+            type = item.type,
+            from = item.range,
+            to = item.range,
+          })
+        else
+          seek[item.type] = item
+          nested = true
+          can_nest =  markers[item.type].nestable
+        end
       end
     end
 
