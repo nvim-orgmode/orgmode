@@ -3,62 +3,63 @@ local ts_utils = require('nvim-treesitter.ts_utils')
 local query = nil
 
 local valid_pre_marker_chars = { ' ', '(', '-', "'", '"', '{', '*', '/', '_', '+' }
-local valid_post_marker_chars = { ' ', ')', '-', '}', '"', "'", ':', ';', '!', '\\', '[', ',', '.', '?', '*', '/', '_', '+' }
+local valid_post_marker_chars =
+  { ' ', ')', '-', '}', '"', "'", ':', ';', '!', '\\', '[', ',', '.', '?', '*', '/', '_', '+' }
 
 local markers = {
   ['*'] = {
     hl_name = 'org_bold',
     hl_cmd = 'hi def org_bold term=bold cterm=bold gui=bold',
     nestable = true,
-    type = "text",
+    type = 'text',
   },
   ['/'] = {
     hl_name = 'org_italic',
     hl_cmd = 'hi def org_italic term=italic cterm=italic gui=italic',
     nestable = true,
-    type = "text",
+    type = 'text',
   },
   ['_'] = {
     hl_name = 'org_underline',
     hl_cmd = 'hi def org_underline term=underline cterm=underline gui=underline',
     nestable = true,
-    type = "text",
+    type = 'text',
   },
   ['+'] = {
     hl_name = 'org_strikethrough',
     hl_cmd = 'hi def org_strikethrough term=strikethrough cterm=strikethrough gui=strikethrough',
     nestable = true,
-    type = "text",
+    type = 'text',
   },
   ['~'] = {
     hl_name = 'org_code',
     hl_cmd = 'hi def link org_code String',
     nestable = false,
-    type = "text",
+    type = 'text',
   },
   ['='] = {
     hl_name = 'org_verbatim',
     hl_cmd = 'hi def link org_verbatim String',
     nestable = false,
-    type = "text",
+    type = 'text',
   },
   ['\\('] = {
     hl_name = 'org_latex',
     hl_cmd = 'hi def link org_latex OrgTSLatex',
     nestable = false,
-    type = "latex",
+    type = 'latex',
   },
   ['\\{'] = {
     hl_name = 'org_latex',
     hl_cmd = 'hi def link org_latex OrgTSLatex',
     nestable = false,
-    type = "latex",
+    type = 'latex',
   },
   ['\\s'] = {
     hl_name = 'org_latex',
     hl_cmd = 'hi def link org_latex OrgTSLatex',
     nestable = false,
-    type = "latex",
+    type = 'latex',
   },
 }
 
@@ -244,7 +245,7 @@ local function get_matches(bufnr, first_line, last_line)
     for _, node in pairs(match) do
       local char = node:type()
       -- saves unnecessary parsing, since \\ is not used below
-      if char ~= '\\'then
+      if char ~= '\\' then
         local range = ts_utils.node_to_lsp_range(node)
         local linenr = tostring(range.start.line)
         taken_locations[linenr] = taken_locations[linenr] or {}
@@ -275,29 +276,36 @@ local function get_matches(bufnr, first_line, last_line)
   local nested = {}
   local can_nest = true
   for _, item in ipairs(ranges) do
-      if item.type == '(' then
-          item.range.start.character = item.range.start.character - 1
-          item.type = '\\('
-      elseif item.type == 'str' then
-          item.range.start.character = item.range.start.character - 1
-          local char = vim.api.nvim_buf_get_text(bufnr, item.range["end"].line, item.range["end"].character, item.range["end"].line, item.range["end"].character+1, {})[1]
-          if char == '{' then
-            item.type = '\\{'
-          else
-            item.type = '\\s'
-          end
-      elseif item.type == ')' then
-          item.type = '\\('
-      elseif item.type == '}' then
-            item.type = '\\{'
+    if item.type == '(' then
+      item.range.start.character = item.range.start.character - 1
+      item.type = '\\('
+    elseif item.type == 'str' then
+      item.range.start.character = item.range.start.character - 1
+      local char = vim.api.nvim_buf_get_text(
+        bufnr,
+        item.range['end'].line,
+        item.range['end'].character,
+        item.range['end'].line,
+        item.range['end'].character + 1,
+        {}
+      )[1]
+      if char == '{' then
+        item.type = '\\{'
+      else
+        item.type = '\\s'
       end
+    elseif item.type == ')' then
+      item.type = '\\('
+    elseif item.type == '}' then
+      item.type = '\\{'
+    end
 
     if markers[item.type] then
       if seek[item.type] then
         local from = seek[item.type]
         if nested[#nested] == nil or nested[#nested] == from.type then
           local target_result = result
-          if markers[item.type] == "latex" then
+          if markers[item.type] == 'latex' then
             target_result = latex_result
           end
 
@@ -331,7 +339,7 @@ local function get_matches(bufnr, first_line, last_line)
           })
         else
           seek[item.type] = item
-          nested[#nested+1] = item.type
+          nested[#nested + 1] = item.type
           can_nest = markers[item.type].nestable
         end
       end
