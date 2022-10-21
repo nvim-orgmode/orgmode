@@ -10,46 +10,55 @@ local markers = {
     hl_name = 'org_bold',
     hl_cmd = 'hi def org_bold term=bold cterm=bold gui=bold',
     nestable = true,
+    type = "text",
   },
   ['/'] = {
     hl_name = 'org_italic',
     hl_cmd = 'hi def org_italic term=italic cterm=italic gui=italic',
     nestable = true,
+    type = "text",
   },
   ['_'] = {
     hl_name = 'org_underline',
     hl_cmd = 'hi def org_underline term=underline cterm=underline gui=underline',
     nestable = true,
+    type = "text",
   },
   ['+'] = {
     hl_name = 'org_strikethrough',
     hl_cmd = 'hi def org_strikethrough term=strikethrough cterm=strikethrough gui=strikethrough',
     nestable = true,
+    type = "text",
   },
   ['~'] = {
     hl_name = 'org_code',
     hl_cmd = 'hi def link org_code String',
     nestable = false,
+    type = "text",
   },
   ['='] = {
     hl_name = 'org_verbatim',
     hl_cmd = 'hi def link org_verbatim String',
     nestable = false,
+    type = "text",
   },
   ['\\('] = {
     hl_name = 'org_latex',
     hl_cmd = 'hi def link org_latex OrgTSLatex',
     nestable = false,
+    type = "latex",
   },
   ['\\{'] = {
     hl_name = 'org_latex',
     hl_cmd = 'hi def link org_latex OrgTSLatex',
     nestable = false,
+    type = "latex",
   },
   ['\\s'] = {
     hl_name = 'org_latex',
     hl_cmd = 'hi def link org_latex OrgTSLatex',
     nestable = false,
+    type = "latex",
   },
 }
 
@@ -234,29 +243,9 @@ local function get_matches(bufnr, first_line, last_line)
   for _, match, _ in query:iter_matches(root, bufnr, first_line, last_line) do
     for _, node in pairs(match) do
       local char = node:type()
-      -- markups that start with a backslash \\ will be followed by another
-      -- query, thus we can safely skip this node
-      if char ~= '\\' then
+      -- saves unnecessary parsing, since \\ is not used below
+      if char ~= '\\'then
         local range = ts_utils.node_to_lsp_range(node)
-        -- the following characters come from queries that start with \\ which
-        -- might involve an asymmetrical pair
-        -- we need to make adjustments
-        if char == '(' then
-          range['start']['character'] = range['start']['character'] - 1
-          char = '\\('
-        elseif char == 'str' then
-          range['start']['character'] = range['start']['character'] - 1
-          local text = get_node_text(node, bufnr, 0, 1)
-          if text:sub(-1) == '{' then
-            char = '\\{'
-          else
-            char = '\\s'
-          end
-        elseif char == '}' then
-          char = '\\{'
-        elseif char == ')' then
-          char = '\\('
-        end
         local linenr = tostring(range.start.line)
         taken_locations[linenr] = taken_locations[linenr] or {}
         if not taken_locations[linenr][range.start.character] then
@@ -281,15 +270,38 @@ local function get_matches(bufnr, first_line, last_line)
   local seek_link = {}
   local result = {}
   local link_result = {}
+  local latex_result = {}
 
   local nested = {}
   local can_nest = true
   for _, item in ipairs(ranges) do
+      if item.type == '(' then
+          item.range.start.character = item.range.start.character - 1
+          item.type = '\\('
+      elseif item.type == 'str' then
+          item.range.start.character = item.range.start.character - 1
+          local char = vim.api.nvim_buf_get_text(bufnr, item.range["end"].line, item.range["end"].character, item.range["end"].line, item.range["end"].character+1, {})[1]
+          if char == '{' then
+            item.type = '\\{'
+          else
+            item.type = '\\s'
+          end
+      elseif item.type == ')' then
+          item.type = '\\('
+      elseif item.type == '}' then
+            item.type = '\\{'
+      end
+
     if markers[item.type] then
       if seek[item.type] then
         local from = seek[item.type]
         if nested[#nested] == nil or nested[#nested] == from.type then
-          table.insert(result, {
+          local target_result = result
+          if markers[item.type] == "latex" then
+            target_result = latex_result
+          end
+
+          table.insert(target_result, {
             type = item.type,
             from = from.range,
             to = item.range,
@@ -338,7 +350,7 @@ local function get_matches(bufnr, first_line, last_line)
     end
   end
 
-  return result, link_result
+  return result, link_result, latex_result
 end
 
 local function apply(namespace, bufnr, _, first_line, last_line, _)
@@ -353,7 +365,7 @@ local function apply(namespace, bufnr, _, first_line, last_line, _)
   if #visible_lines == 0 then
     return
   end
-  local ranges, link_ranges = get_matches(bufnr, visible_lines[1], visible_lines[#visible_lines])
+  local ranges, link_ranges, latex_ranges = get_matches(bufnr, visible_lines[1], visible_lines[#visible_lines])
   local hide_markers = config.org_hide_emphasis_markers
 
   for _, range in ipairs(ranges) do
@@ -400,6 +412,15 @@ local function apply(namespace, bufnr, _, first_line, last_line, _)
       ephemeral = true,
       end_col = link_range.to['end'].character,
       conceal = '',
+    })
+  end
+
+  for _, latex_range in ipairs(latex_ranges) do
+    vim.api.nvim_buf_set_extmark(bufnr, namespace, latex_range.from.start.line, latex_range.from.start.character, {
+      ephemeral = true,
+      end_col = latex_range.to['end'].character,
+      hl_group = markers[latex_range.type].hl_name,
+      priority = 110 + latex_range.from.start.character,
     })
   end
 end
