@@ -282,33 +282,35 @@ local function get_matches(bufnr, first_line, last_line)
   local result = {}
   local link_result = {}
 
-  local nested = false
+  local nested = {}
   local can_nest = true
   for _, item in ipairs(ranges) do
     if markers[item.type] then
-      -- escaped strings have no pairs, their markup info is self-contained
       if seek[item.type] then
         local from = seek[item.type]
-        table.insert(result, {
-          type = item.type,
-          from = from.range,
-          to = item.range,
-        })
+        if nested[#nested] == nil or nested[#nested] == from.type then
+          table.insert(result, {
+            type = item.type,
+            from = from.range,
+            to = item.range,
+          })
 
-        seek[item.type] = nil
-        nested = false
-        can_nest = true
+          seek[item.type] = nil
+          nested[#nested] = nil
+          can_nest = true
 
-        for t, pos in pairs(seek) do
-          if
-            pos.range.start.line == from.range.start.line
-            and pos.range.start.character > from.range['end'].character
-            and pos.range.start.character < item.range.start.character
-          then
-            seek[t] = nil
+          for t, pos in pairs(seek) do
+            if
+              pos.range.start.line == from.range.start.line
+              and pos.range.start.character > from.range['end'].character
+              and pos.range.start.character < item.range.start.character
+            then
+              seek[t] = nil
+            end
           end
         end
       elseif can_nest then
+        -- escaped strings have no pairs, their markup info is self-contained
         if item.type == '\\s' then
           table.insert(result, {
             type = item.type,
@@ -317,7 +319,7 @@ local function get_matches(bufnr, first_line, last_line)
           })
         else
           seek[item.type] = item
-          nested = true
+          nested[#nested+1] = item.type
           can_nest = markers[item.type].nestable
         end
       end
