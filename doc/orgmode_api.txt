@@ -17,7 +17,7 @@ OrgApi.current()                                                *OrgApi.current*
 OrgFile                                                                *OrgFile*
 
     Fields: ~
-        {category}         (string)         current file category name. By default only filename without extension unless defined via #+CATEGORY directive
+        {category}         (string)         current file category name. By default it's only filename without extension unless defined differently via #+CATEGORY directive
         {filename}         (string)         absolute path of the current file
         {headlines}        (OrgHeadline[])
         {is_archive_file}  (boolean)
