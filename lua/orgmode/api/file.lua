@@ -1,23 +1,23 @@
 local OrgHeadline = require('orgmode.api.headline')
 
 ---@class OrgFile
----@field category string current file category name. By default only filename without extension unless defined via #+CATEGORY directive
+---@field category string current file category name. By default it's only filename without extension unless defined differently via #+CATEGORY directive
 ---@field filename string absolute path of the current file
 ---@field headlines OrgHeadline[]
 ---@field is_archive_file boolean
----@field private file File
+---@field private _file File
 local OrgFile = {}
 
 ---@param headline OrgHeadline
 ---@param headlines_by_id table<string, OrgHeadline>
 ---@private
 local function map_child_headlines(headline, headlines_by_id)
-  if #headline.section.sections == 0 then
+  if #headline._section.sections == 0 then
     return headline
   end
 
   local child_headlines = {}
-  for _, child_section in ipairs(headline.section.sections) do
+  for _, child_section in ipairs(headline._section.sections) do
     local child_headline = headlines_by_id[child_section.id]
     child_headline.parent = headline
     table.insert(child_headlines, child_headline)
@@ -34,7 +34,7 @@ function OrgFile:_new(opts)
   data.filename = opts.filename
   data.headlines = opts.headlines
   data.is_archive_file = opts.is_archive_file or false
-  data.file = opts.file
+  data._file = opts._file
   setmetatable(data, self)
   self.__index = self
   return data
@@ -52,7 +52,7 @@ function OrgFile._build_from_internal_file(file)
   end
 
   local instance = OrgFile:_new({
-    file = file,
+    _file = file,
     category = file.category,
     filename = file.filename,
     headlines = headlines,
@@ -70,7 +70,7 @@ end
 --- Return refreshed instance of the file
 ---@return OrgFile
 function OrgFile:reload()
-  return OrgFile._build_from_internal_file(self.file:refresh())
+  return OrgFile._build_from_internal_file(self._file:refresh())
 end
 
 return OrgFile

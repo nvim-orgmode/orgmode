@@ -34,6 +34,7 @@ function OrgApi.load(name)
 
     return list
   end
+  error('Invalid argument to OrgApi.load')
 end
 
 --- Get current org buffer file
