@@ -22,6 +22,8 @@ local Calendar = require('orgmode.objects.calendar')
 ---@field parent OrgHeadline|nil
 ---@field priority string|nil
 ---@field headlines OrgHeadline[]
+---@field private section Section
+---@field private index number
 local OrgHeadline = {}
 
 ---@private
@@ -43,8 +45,8 @@ function OrgHeadline:_new(opts)
   data.dates = opts.dates
   data.parent = opts.parent
   data.headlines = opts.headlines or {}
-  data._section = opts._section
-  data._index = opts._index
+  data.section = opts.section
+  data.index = opts.index
 
   setmetatable(data, self)
   self.__index = self
@@ -70,8 +72,8 @@ function OrgHeadline._build_from_internal_section(section, index)
       return date:is_none()
     end, section.dates),
     priority = section.priority,
-    _section = section,
-    _index = index,
+    section = section,
+    index = index,
   })
 end
 
@@ -79,7 +81,7 @@ end
 ---@return OrgHeadline
 function OrgHeadline:reload()
   local file = self.file:reload()
-  return file.headlines[self._index]
+  return file.headlines[self.index]
 end
 
 --- Set tags on the headline. This replaces all current tags with provided ones

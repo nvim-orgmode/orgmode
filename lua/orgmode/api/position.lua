@@ -5,6 +5,7 @@
 ---@field end_col number end column number
 local OrgPosition = {}
 
+---@private
 function OrgPosition:_new(opts)
   local data = {}
   data.start_line = opts.start_line or 1

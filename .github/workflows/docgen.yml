@@ -38,11 +38,10 @@ jobs:
         with:
           neovim: true
           version: v0.7.0
-      - name: Install mini.nvim
-        uses: actions/checkout@v2
-        with:
-          repository: echasnovski/mini.nvim
-          path: mini.nvim
+      - name: Install lemmy-help
+        run: |
+          curl -Lq https://github.com/numToStr/lemmy-help/releases/latest/download/lemmy-help-x86_64-unknown-linux-gnu.tar.gz | tar xz
+          echo "$PWD" >> $GITHUB_PATH
       - name: Generate api docs
         run: make api_docs
       - name: Commit changes
