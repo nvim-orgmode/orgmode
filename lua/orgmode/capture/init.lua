@@ -111,6 +111,9 @@ end
 function Capture:refile(confirm)
   local is_modified = vim.bo.modified
   local file, lines, item, template = self:_get_refile_vars()
+  if not file then
+    return
+  end
   local headline_title = template.headline
   if confirm and is_modified then
     local choice = vim.fn.confirm(string.format('Do you want to refile this to %s?', file), '&Yes\n&No')
@@ -135,6 +138,9 @@ end
 ---Triggered when refiling to destination from capture buffer
 function Capture:refile_to_destination()
   local file, lines, item = self:_get_refile_vars()
+  if not file then
+    return
+  end
   self:_refile_content_with_fallback(lines, file, item)
   self:kill()
 end
@@ -143,6 +149,15 @@ end
 function Capture:_get_refile_vars()
   local template = vim.api.nvim_buf_get_var(0, 'org_template') or {}
   local file = vim.fn.resolve(vim.fn.fnamemodify(template.target or config.org_default_notes_file, ':p'))
+  if vim.fn.filereadable(file) == 0 then
+    local choice = vim.fn.confirm(('Refile destination %s does not exist. Create now?'):format(file), '&Yes\n&No')
+    if choice ~= 1 then
+      utils.echo_error('Cannot proceed without a valid refile destination')
+      return
+    end
+    vim.fn.mkdir(vim.fn.fnamemodify(file, ':h'), 'p')
+    vim.fn.writefile({}, file)
+  end
   local lines = vim.api.nvim_buf_get_lines(0, 0, -1, true)
   local org_file = File.from_content(lines, 'capture', utils.current_file_path())
   local item = nil
