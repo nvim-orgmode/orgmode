@@ -521,22 +521,18 @@ function OrgMappings:handle_return(suffix)
     vim.cmd([[normal! ^]])
     item = Files.get_current_file():get_current_node()
   end
-
   if item.type == 'paragraph' or item.type == 'bullet' then
     local listitem = item.node:parent()
     if listitem:type() ~= 'listitem' then
       return
     end
     local line = vim.fn.getline(listitem:start() + 1)
-    local end_row, _ = listitem:end_()
-    local next_line_node = current_file:get_node_at_cursor({ end_row + 1, 0 })
-    local second_line_node = current_file:get_node_at_cursor({ end_row + 2, 0 })
-    local is_end_of_file = next_line_node
-      and vim.tbl_contains({ 'paragraph', 'list' }, next_line_node:type())
-      and second_line_node
-      and second_line_node:type() == 'document'
-    -- Range for list items at the very end of the file are not calculated properly
-    if (end_row + 1) == vim.fn.line('$') and is_end_of_file then
+    local srow, _, end_row, end_col = listitem:range()
+    local is_multiline = (end_row - srow) > 1 or end_col == 0
+    -- For last item in file, ts grammar is not parsing the end column as 0
+    -- while in other cases end column is always 0
+    local is_last_item_in_file = end_col ~= 0
+    if not is_multiline or is_last_item_in_file then
       end_row = end_row + 1
     end
     local range = {

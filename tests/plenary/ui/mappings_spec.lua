@@ -763,6 +763,23 @@ describe('Mappings', function()
     }, vim.api.nvim_buf_get_lines(0, 7, 12, false))
   end)
 
+  it('should add numbered list at the end of the file', function()
+    helpers.load_file_content({
+      '* TODO Working on this now :OFFICE:NESTED:',
+      '   1. First item',
+      '   2. Second item',
+    })
+
+    vim.fn.cursor(2, 1)
+    vim.cmd([[exe "norm ,\<CR>"]])
+    assert.are.same({
+      '* TODO Working on this now :OFFICE:NESTED:',
+      '   1. First item',
+      '   2. ',
+      '   3. Second item',
+    }, vim.api.nvim_buf_get_lines(0, 0, -1, false))
+  end)
+
   it('should insert new heading after current subtree (org_insert_heading_respect_content)', function()
     helpers.load_file_content({
       '#TITLE: Test',
