@@ -1,5 +1,5 @@
 _G.orgmode = _G.orgmode or {}
-local ts_revision = 'eb1e080361ad885e3885d1037d9b57f81b579de8'
+local ts_revision = '081179c52b3e8175af62b9b91dc099d010c38770'
 local setup_ts_grammar_used = false
 local instance = nil
 
