@@ -253,6 +253,7 @@ local function get_matches(bufnr, first_line, last_line)
           table.insert(ranges, {
             type = char,
             range = range,
+            node = node,
           })
           taken_locations[linenr][range.start.character] = true
         end
@@ -275,30 +276,27 @@ local function get_matches(bufnr, first_line, last_line)
 
   local nested = {}
   local can_nest = true
+
+  local type_map = {
+    ['('] = '\\(',
+    [')'] = '\\(',
+    ['}'] = '\\{',
+  }
+
   for _, item in ipairs(ranges) do
     if item.type == '(' then
       item.range.start.character = item.range.start.character - 1
-      item.type = '\\('
     elseif item.type == 'str' then
       item.range.start.character = item.range.start.character - 1
-      local char = vim.api.nvim_buf_get_text(
-        bufnr,
-        item.range['end'].line,
-        item.range['end'].character,
-        item.range['end'].line,
-        item.range['end'].character + 1,
-        {}
-      )[1]
+      local char = get_node_text(item.node, bufnr, 0, 1):sub(-1)
       if char == '{' then
         item.type = '\\{'
       else
         item.type = '\\s'
       end
-    elseif item.type == ')' then
-      item.type = '\\('
-    elseif item.type == '}' then
-      item.type = '\\{'
     end
+
+    item.type = type_map[item.type] or item.type
 
     if markers[item.type] then
       if seek[item.type] then
