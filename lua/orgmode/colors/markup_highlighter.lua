@@ -305,7 +305,7 @@ local function get_matches(bufnr, first_line, last_line)
         local from = seek[item.type]
         if nested[#nested] == nil or nested[#nested] == from.type then
           local target_result = result
-          if markers[item.type] == 'latex' then
+          if markers[item.type].type == 'latex' then
             target_result = latex_result
           end
 
