@@ -269,7 +269,7 @@ local function get_matches(bufnr, first_line, last_line)
   end)
 
   local seek = {}
-  local seek_link = {}
+  local seek_link = nil
   local result = {}
   local link_result = {}
   local latex_result = {}
@@ -343,8 +343,10 @@ local function get_matches(bufnr, first_line, last_line)
       end
     end
 
-    if item.type == '[' then
-      seek_link = item
+    if item.type == '[' and can_nest then
+        seek_link = item
+        nested[#nested + 1] = item.type
+        can_nest = false
     end
 
     if item.type == ']' and seek_link then
@@ -352,7 +354,9 @@ local function get_matches(bufnr, first_line, last_line)
         from = seek_link.range,
         to = item.range,
       })
+      nested[#nested] = nil
       seek_link = nil
+      can_nest = true
     end
   end
 
