@@ -344,7 +344,11 @@ local function get_matches(bufnr, first_line, last_line)
           can_nest = markers[item.type].nestable
         end
       else
-        orphans[item.type] = item
+        if orphans[item.type] then
+          orphans[item.type] = nil
+        else
+          orphans[item.type] = item
+        end
       end
     end
 
