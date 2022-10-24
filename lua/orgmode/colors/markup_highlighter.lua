@@ -349,9 +349,9 @@ local function get_matches(bufnr, first_line, last_line)
     end
 
     if item.type == '[' and can_nest then
-        seek_link = item
-        nested[#nested + 1] = item.type
-        can_nest = false
+      seek_link = item
+      nested[#nested + 1] = item.type
+      can_nest = false
     end
 
     if item.type == ']' and seek_link then
