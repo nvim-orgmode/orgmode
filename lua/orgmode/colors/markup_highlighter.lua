@@ -227,6 +227,15 @@ local function load_deps()
   vim.treesitter.query.add_predicate('org-is-valid-latex-range?', is_valid_latex_range)
 end
 
+-- a function that splits a string on '.'
+local function split(string)
+  local t = {}
+  for str in string.gmatch(string, '([^.]+)') do
+    table.insert(t, str)
+  end
+  return t
+end
+
 ---@param bufnr? number
 ---@param first_line? number
 ---@param last_line? number
@@ -242,18 +251,20 @@ local function get_matches(bufnr, first_line, last_line)
   local taken_locations = {}
 
   for _, match, _ in query:iter_matches(root, bufnr, first_line, last_line) do
-    for _, node in pairs(match) do
+    for id, node in pairs(match) do
       local char = node:type()
       -- saves unnecessary parsing, since \\ is not used below
       if char ~= '\\' then
         local range = ts_utils.node_to_lsp_range(node)
         local linenr = tostring(range.start.line)
         taken_locations[linenr] = taken_locations[linenr] or {}
+        local capture = split(query.captures[id])[2]
         if not taken_locations[linenr][range.start.character] then
           table.insert(ranges, {
             type = char,
             range = range,
             node = node,
+            capture = capture,
           })
           taken_locations[linenr][range.start.character] = true
         end
@@ -270,10 +281,10 @@ local function get_matches(bufnr, first_line, last_line)
 
   local seek = {}
   local seek_link = nil
+  local orphans = {}
   local result = {}
   local link_result = {}
   local latex_result = {}
-  local orphans = {}
 
   local nested = {}
   local can_nest = true
@@ -336,19 +347,17 @@ local function get_matches(bufnr, first_line, last_line)
             from = item.range,
             to = item.range,
           })
-        elseif orphans[item.type] then
-          orphans[item.type] = nil
         else
-          seek[item.type] = item
-          nested[#nested + 1] = item.type
-          can_nest = markers[item.type].nestable
+          if not (orphans[item.type] and item.capture == 'end') then
+            seek[item.type] = item
+            nested[#nested + 1] = item.type
+            can_nest = markers[item.type].nestable
+            orphans[item.type] = nil
+          end
+          orphans[item.type] = nil
         end
       else
-        if orphans[item.type] then
-          orphans[item.type] = nil
-        else
-          orphans[item.type] = item
-        end
+        orphans[item.type] = item.capture
       end
     end
 
