@@ -273,6 +273,7 @@ local function get_matches(bufnr, first_line, last_line)
   local result = {}
   local link_result = {}
   local latex_result = {}
+  local orphans = {}
 
   local nested = {}
   local can_nest = true
@@ -335,11 +336,15 @@ local function get_matches(bufnr, first_line, last_line)
             from = item.range,
             to = item.range,
           })
+        elseif orphans[item.type] then
+          orphans[item.type] = nil
         else
           seek[item.type] = item
           nested[#nested + 1] = item.type
           can_nest = markers[item.type].nestable
         end
+      else
+        orphans[item.type] = item
       end
     end
 
