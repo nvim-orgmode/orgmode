@@ -31,26 +31,31 @@ local markers = {
     hl_name = 'org_code',
     hl_cmd = 'hi def link org_code String',
     type = 'text',
+    cannot_nest = true,
   },
   ['='] = {
     hl_name = 'org_verbatim',
     hl_cmd = 'hi def link org_verbatim String',
     type = 'text',
+    cannot_nest = true,
   },
   ['\\('] = {
     hl_name = 'org_latex',
     hl_cmd = 'hi def link org_latex OrgTSLatex',
     type = 'latex',
+    cannot_nest = true,
   },
   ['\\{'] = {
     hl_name = 'org_latex',
     hl_cmd = 'hi def link org_latex OrgTSLatex',
     type = 'latex',
+    cannot_nest = true,
   },
   ['\\s'] = {
     hl_name = 'org_latex',
     hl_cmd = 'hi def link org_latex OrgTSLatex',
     type = 'latex',
+    cannot_nest = true,
   },
 }
 
@@ -263,7 +268,6 @@ local function get_matches(bufnr, first_line, last_line)
   local seek_link = {}
   local result = {}
   local link_result = {}
-  local latex_result = {}
 
   local type_map = {
     ['('] = '\\(',
@@ -289,12 +293,8 @@ local function get_matches(bufnr, first_line, last_line)
     if markers[item.type] then
       if seek[item.type] then
         local from = seek[item.type]
-        local target_result = result
-        if markers[item.type].type == 'latex' then
-          target_result = latex_result
-        end
 
-        table.insert(target_result, {
+        table.insert(result, {
           type = item.type,
           from = from.range,
           to = item.range,
@@ -302,14 +302,29 @@ local function get_matches(bufnr, first_line, last_line)
 
         seek[item.type] = nil
 
+        -- Remove all "opened" markers once we close a single result
         for t, pos in pairs(seek) do
           if
             pos.range.start.line == from.range.start.line
             and pos.range.start.character > from.range['end'].character
             and pos.range.start.character < item.range.start.character
+            and (t == item.type or (markers[t].cannot_nest and markers[item.type].cannot_nest))
             and t == item.type
           then
             seek[t] = nil
+          end
+        end
+
+        if markers[item.type].cannot_nest then
+          for i, entry in ipairs(result) do
+            if
+              entry.from.start.line == from.range.start.line
+              and markers[entry.type].cannot_nest
+              and entry.from.start.character > from.range.start.character
+              and entry.to['end'].character < item.range['end'].character
+            then
+              table.remove(result, i)
+            end
           end
         end
       else
@@ -348,7 +363,7 @@ local function get_matches(bufnr, first_line, last_line)
     end
   end
 
-  return result, link_result, latex_result
+  return result, link_result
 end
 
 local function apply(namespace, bufnr, _, first_line, last_line, _)
@@ -363,7 +378,7 @@ local function apply(namespace, bufnr, _, first_line, last_line, _)
   if #visible_lines == 0 then
     return
   end
-  local ranges, link_ranges, latex_ranges = get_matches(bufnr, visible_lines[1], visible_lines[#visible_lines])
+  local ranges, link_ranges = get_matches(bufnr, visible_lines[1], visible_lines[#visible_lines])
   local hide_markers = config.org_hide_emphasis_markers
 
   for _, range in ipairs(ranges) do
@@ -374,7 +389,7 @@ local function apply(namespace, bufnr, _, first_line, last_line, _)
       priority = 110 + range.from.start.character,
     })
 
-    if hide_markers then
+    if hide_markers and markers[range.type] ~= 'latex' then
       vim.api.nvim_buf_set_extmark(bufnr, namespace, range.from.start.line, range.from.start.character, {
         end_col = range.from['end'].character,
         ephemeral = true,
@@ -410,15 +425,6 @@ local function apply(namespace, bufnr, _, first_line, last_line, _)
       ephemeral = true,
       end_col = link_range.to['end'].character,
       conceal = '',
-    })
-  end
-
-  for _, latex_range in ipairs(latex_ranges) do
-    vim.api.nvim_buf_set_extmark(bufnr, namespace, latex_range.from.start.line, latex_range.from.start.character, {
-      ephemeral = true,
-      end_col = latex_range.to['end'].character,
-      hl_group = markers[latex_range.type].hl_name,
-      priority = 110 + latex_range.from.start.character,
     })
   end
 end
