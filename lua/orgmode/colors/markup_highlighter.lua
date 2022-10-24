@@ -331,6 +331,15 @@ local function get_matches(bufnr, first_line, last_line)
     end
 
     if item.type == ']' and seek_link then
+      for t, pos in pairs(seek) do
+        if
+          pos.range.start.line == seek_link.range.start.line
+          and pos.range.start.character > seek_link.range['end'].character
+          and pos.range.start.character < item.range.start.character
+        then
+          seek[t] = nil
+        end
+      end
       table.insert(link_result, {
         from = seek_link.range,
         to = item.range,
