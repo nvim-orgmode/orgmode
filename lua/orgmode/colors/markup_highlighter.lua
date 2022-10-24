@@ -10,55 +10,46 @@ local markers = {
   ['*'] = {
     hl_name = 'org_bold',
     hl_cmd = 'hi def org_bold term=bold cterm=bold gui=bold',
-    nestable = true,
     type = 'text',
   },
   ['/'] = {
     hl_name = 'org_italic',
     hl_cmd = 'hi def org_italic term=italic cterm=italic gui=italic',
-    nestable = true,
     type = 'text',
   },
   ['_'] = {
     hl_name = 'org_underline',
     hl_cmd = 'hi def org_underline term=underline cterm=underline gui=underline',
-    nestable = true,
     type = 'text',
   },
   ['+'] = {
     hl_name = 'org_strikethrough',
     hl_cmd = 'hi def org_strikethrough term=strikethrough cterm=strikethrough gui=strikethrough',
-    nestable = true,
     type = 'text',
   },
   ['~'] = {
     hl_name = 'org_code',
     hl_cmd = 'hi def link org_code String',
-    nestable = false,
     type = 'text',
   },
   ['='] = {
     hl_name = 'org_verbatim',
     hl_cmd = 'hi def link org_verbatim String',
-    nestable = false,
     type = 'text',
   },
   ['\\('] = {
     hl_name = 'org_latex',
     hl_cmd = 'hi def link org_latex OrgTSLatex',
-    nestable = false,
     type = 'latex',
   },
   ['\\{'] = {
     hl_name = 'org_latex',
     hl_cmd = 'hi def link org_latex OrgTSLatex',
-    nestable = false,
     type = 'latex',
   },
   ['\\s'] = {
     hl_name = 'org_latex',
     hl_cmd = 'hi def link org_latex OrgTSLatex',
-    nestable = false,
     type = 'latex',
   },
 }
@@ -274,9 +265,6 @@ local function get_matches(bufnr, first_line, last_line)
   local link_result = {}
   local latex_result = {}
 
-  local nested = {}
-  local can_nest = true
-
   local type_map = {
     ['('] = '\\(',
     [')'] = '\\(',
@@ -301,33 +289,30 @@ local function get_matches(bufnr, first_line, last_line)
     if markers[item.type] then
       if seek[item.type] then
         local from = seek[item.type]
-        if nested[#nested] == nil or nested[#nested] == from.type then
-          local target_result = result
-          if markers[item.type].type == 'latex' then
-            target_result = latex_result
-          end
+        local target_result = result
+        if markers[item.type].type == 'latex' then
+          target_result = latex_result
+        end
 
-          table.insert(target_result, {
-            type = item.type,
-            from = from.range,
-            to = item.range,
-          })
+        table.insert(target_result, {
+          type = item.type,
+          from = from.range,
+          to = item.range,
+        })
 
-          seek[item.type] = nil
-          nested[#nested] = nil
-          can_nest = true
+        seek[item.type] = nil
 
-          for t, pos in pairs(seek) do
-            if
-              pos.range.start.line == from.range.start.line
-              and pos.range.start.character > from.range['end'].character
-              and pos.range.start.character < item.range.start.character
-            then
-              seek[t] = nil
-            end
+        for t, pos in pairs(seek) do
+          if
+            pos.range.start.line == from.range.start.line
+            and pos.range.start.character > from.range['end'].character
+            and pos.range.start.character < item.range.start.character
+            and t == item.type
+          then
+            seek[t] = nil
           end
         end
-      elseif can_nest then
+      else
         -- escaped strings have no pairs, their markup info is self-contained
         if item.type == '\\s' then
           table.insert(result, {
@@ -337,8 +322,6 @@ local function get_matches(bufnr, first_line, last_line)
           })
         else
           seek[item.type] = item
-          nested[#nested + 1] = item.type
-          can_nest = markers[item.type].nestable
         end
       end
     end
