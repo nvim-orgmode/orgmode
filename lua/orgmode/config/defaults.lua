@@ -120,7 +120,7 @@ return {
       org_promote_subtree = '<s',
       org_demote_subtree = '>s',
       org_meta_return = '<Leader><CR>', -- Add heading, item or row
-      org_return = '<CR>',
+      -- org_return = '<CR>',
       org_insert_heading_respect_content = '<prefix>ih', -- Add new headling after current heading block with same level
       org_insert_todo_heading = '<prefix>iT', -- Add new todo headling right after current heading with same level
       org_insert_todo_heading_respect_content = '<prefix>it', -- Add new todo headling after current heading block on same level
@@ -142,6 +142,7 @@ return {
       org_clock_goto = '<prefix>xj',
       org_set_effort = '<prefix>xe',
       org_show_help = 'g?',
+      org_multipurpose_action = '<CR>',
     },
     edit_src = {
       org_edit_src_abort = '<prefix>k',

@@ -953,4 +953,55 @@ function OrgMappings:_get_link_under_cursor()
   return found_link
 end
 
+function OrgMappings:multipurpose_action()
+
+  local is_link = function ()
+    return self:_get_link_under_cursor() ~= nil
+  end
+
+  local type_to_action = {
+    [is_link] = OrgMappings.open_at_point,
+    timestamp = OrgMappings.change_date,
+    headline = OrgMappings.todo_next_state,
+    listitem = OrgMappings.toggle_checkbox,
+    list = OrgMappings.toggle_checkbox,
+    _default = OrgMappings.org_return
+  }
+
+  local function get_action_from_type()
+    local cur_node = ts_utils.get_node_at_cursor()
+    local cur_row = cur_node:range()
+
+
+    while cur_node ~= nil do
+      local nodetype = cur_node:type()
+
+      for identifier, action in pairs(type_to_action) do
+        if type(identifier) == "function" then
+          if identifier() then
+            return action
+          end
+        elseif nodetype == identifier and identifier ~= "_default" then
+          return action
+        end
+      end
+
+      cur_node = cur_node:parent()
+      if cur_node == nil then
+        break
+      elseif cur_node:range() ~= cur_row then
+        break
+      end
+    end
+
+    return type_to_action._default
+  end
+
+  local action = get_action_from_type()
+
+  if action ~= nil then
+    action(OrgMappings)
+  end
+end
+
 return OrgMappings

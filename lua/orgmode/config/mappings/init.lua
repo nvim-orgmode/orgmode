@@ -132,6 +132,7 @@ return {
     org_clock_goto = m.action('clock.org_clock_goto', { opts = { desc = 'org clock goto' } }),
     org_set_effort = m.action('clock.org_set_effort', { opts = { desc = 'org set effort' } }),
     org_show_help = m.action('org_mappings.show_help', { opts = { desc = 'org show help' } }),
+    org_multipurpose_action = m.action('org_mappings.multipurpose_action', { opts = { desc = 'org multipurpose action' } }),
   },
   edit_src = {
     org_edit_src_abort = m.custom(
