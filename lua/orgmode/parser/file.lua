@@ -4,6 +4,7 @@ local Section = require('orgmode.parser.section')
 local LanguageTree = require('vim.treesitter.languagetree')
 local config = require('orgmode.config')
 local utils = require('orgmode.utils')
+local tangle = require('orgmode.tangle')
 
 ---@class File
 ---@field tree table
@@ -407,5 +408,10 @@ function File:_parse_directives()
   end
   self.tags = tags
 end
+
+function File:tangle()
+    tangle.tangle_file(self)
+end
+
 
 return File
