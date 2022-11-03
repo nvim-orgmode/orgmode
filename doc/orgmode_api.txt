@@ -33,19 +33,11 @@ OrgFile:reload()                                                *OrgFile:reload*
 OrgHeadline                                                        *OrgHeadline*
 
     Fields: ~
-        {title}      (string)           headline title without todo keyword, tags and priority. Ex. `* TODO I am a headline  :SOMETAG:` returns `I am a headline`
-        {line}       (string)           full headline line
-        {tags}       (string[])         List of own tags
-        {deadline}   (Date|nil)
-        {scheduled}  (Date|nil)
-        {closed}     (Date|nil)
-        {dates}      (Date[])           List of all dates that are not "plan" dates
-        {position}   (Range)
-        {all_tags}   (string[])         List of all tags (own + inherited)
-        {file}       (OrgFile)
-        {parent}     (OrgHeadline|nil)
-        {priority}   (string|nil)
-        {headlines}  (OrgHeadline[])
+        {title}        (string)   headline title without todo keyword, tags and priority. Ex. `* TODO I am a headline  :SOMETAG:` returns `I am a headline`
+        {line}         (string)   full headline line
+        {level}        (number)   headline level (number of asterisks). Example: 1
+        {todo_value?}  (string)   todo keyword of the headline (Example: TODO, DONE)
+        {todo_type?}   (string|)
 
 
 OrgHeadline:reload()                                        *OrgHeadline:reload*
@@ -120,11 +112,13 @@ OrgAgendaFilter                                                *OrgAgendaFilter*
 
 OrgAgendaOptions                                              *OrgAgendaOptions*
 
+    Fields: ~
+        {filters?}  (OrgAgendaFilter)
+        {from?}     (string|Date)
+        {span?}     (number|day|week|month|year)
+
 
 OrgAgenda.agenda({options?})                                  *OrgAgenda.agenda*
-    @field filters? OrgAgendaFilter
-    @field from? string | Date
-    @field span? number | 'day' | 'week' | 'month' | 'year'
 
     Parameters: ~
         {options?}  (OrgAgendaOptions)
@@ -132,9 +126,11 @@ OrgAgenda.agenda({options?})                                  *OrgAgenda.agenda*
 
 OrgAgendaTodosOptions                                    *OrgAgendaTodosOptions*
 
+    Fields: ~
+        {filters?}  (OrgAgendaFilter)
+
 
 OrgAgenda.todos({options?})                                    *OrgAgenda.todos*
-    @field filters? OrgAgendaFilter
 
     Parameters: ~
         {options?}  (OrgAgendaTodosOptions)
@@ -142,10 +138,12 @@ OrgAgenda.todos({options?})                                    *OrgAgenda.todos*
 
 OrgAgendaTagsOptions                                      *OrgAgendaTagsOptions*
 
+    Fields: ~
+        {filters?}    (OrgAgendaFilter)
+        {todo_only?}  (boolean)
+
 
 OrgAgenda.tags({options?})                                      *OrgAgenda.tags*
-    @field filters? OrgAgendaFilter
-    @field todo_only? boolean
 
     Parameters: ~
         {options?}  (OrgAgendaTagsOptions)
