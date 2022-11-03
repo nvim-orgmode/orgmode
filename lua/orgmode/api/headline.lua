@@ -9,6 +9,7 @@ local Calendar = require('orgmode.objects.calendar')
 ---@class OrgHeadline
 ---@field title string headline title without todo keyword, tags and priority. Ex. `* TODO I am a headline  :SOMETAG:` returns `I am a headline`
 ---@field line string full headline line
+---@field level number headline level (number of asterisks). Example: 1
 ---@field todo_value? string todo keyword of the headline (Example: TODO, DONE)
 ---@field todo_type? string | "'TODO'" | "'DONE'" | "''"
 ---@field tags string[] List of own tags
@@ -21,6 +22,7 @@ local Calendar = require('orgmode.objects.calendar')
 ---@field file OrgFile
 ---@field parent OrgHeadline|nil
 ---@field priority string|nil
+---@field is_archived boolean headline marked with the `:ARCHIVE:` tag
 ---@field headlines OrgHeadline[]
 ---@field private _section Section
 ---@field private _index number
@@ -34,6 +36,7 @@ function OrgHeadline:_new(opts)
   data.todo_value = opts.todo_value
   data.title = opts.title
   data.line = opts.line
+  data.level = opts.level
   data.category = opts.category
   data.position = opts.position
   data.tags = opts.tags
@@ -43,6 +46,7 @@ function OrgHeadline:_new(opts)
   data.scheduled = opts.scheduled
   data.closed = opts.closed
   data.dates = opts.dates
+  data.is_archived = opts.is_archived
   data.parent = opts.parent
   data.headlines = opts.headlines or {}
   data._section = opts._section
@@ -60,6 +64,7 @@ function OrgHeadline._build_from_internal_section(section, index)
   return OrgHeadline:_new({
     title = section.title,
     line = section.line,
+    level = section.level,
     todo_type = section.todo_keyword.type,
     todo_value = section.todo_keyword.value,
     all_tags = { unpack(section.tags) },
@@ -72,6 +77,7 @@ function OrgHeadline._build_from_internal_section(section, index)
       return date:is_none()
     end, section.dates),
     priority = section.priority,
+    is_archived = section:is_archived(),
     _section = section,
     _index = index,
   })
