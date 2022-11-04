@@ -954,8 +954,7 @@ function OrgMappings:_get_link_under_cursor()
 end
 
 function OrgMappings:multipurpose_action()
-
-  local is_link = function ()
+  local is_link = function()
     return self:_get_link_under_cursor() ~= nil
   end
 
@@ -965,23 +964,22 @@ function OrgMappings:multipurpose_action()
     headline = OrgMappings.todo_next_state,
     listitem = OrgMappings.toggle_checkbox,
     list = OrgMappings.toggle_checkbox,
-    _default = OrgMappings.org_return
+    _default = OrgMappings.org_return,
   }
 
   local function get_action_from_type()
     local cur_node = ts_utils.get_node_at_cursor()
     local cur_row = cur_node:range()
 
-
     while cur_node ~= nil do
       local nodetype = cur_node:type()
 
       for identifier, action in pairs(type_to_action) do
-        if type(identifier) == "function" then
+        if type(identifier) == 'function' then
           if identifier() then
             return action
           end
-        elseif nodetype == identifier and identifier ~= "_default" then
+        elseif nodetype == identifier and identifier ~= '_default' then
           return action
         end
       end
