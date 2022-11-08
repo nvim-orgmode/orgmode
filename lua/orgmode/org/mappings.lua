@@ -954,9 +954,9 @@ function OrgMappings:_get_link_under_cursor()
 end
 
 function OrgMappings:tangle_file()
-    local file = Files.get_current_file()
+  local file = Files.get_current_file()
 
-    file:tangle()
+  file:tangle()
 end
 
 return OrgMappings

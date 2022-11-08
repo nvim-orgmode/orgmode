@@ -410,8 +410,7 @@ function File:_parse_directives()
 end
 
 function File:tangle()
-    tangle.tangle_file(self)
+  tangle.tangle_file(self)
 end
-
 
 return File
