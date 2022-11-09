@@ -12,6 +12,7 @@ end
 ---@class AgendaItem
 ---@field date Date
 ---@field headline_date Date
+---@field real_date Date
 ---@field headline Section
 ---@field is_valid boolean
 ---@field is_today boolean
@@ -29,6 +30,7 @@ local AgendaItem = {}
 function AgendaItem:new(headline_date, headline, date, index)
   local opts = {}
   opts.headline_date = headline_date
+  opts.real_date = headline_date:apply_repeater_until(date)
   opts.headline = headline
   opts.date = date
   opts.index = index or 1
