@@ -53,6 +53,7 @@ function Org:setup_autocmds()
     group = org_augroup,
     callback = function()
       require('orgmode').reload(vim.fn.expand('<afile>:p'))
+      require('orgmode.org.diagnostics').report()
     end,
   })
   vim.api.nvim_create_autocmd('FileType', {
@@ -60,13 +61,6 @@ function Org:setup_autocmds()
     group = org_augroup,
     callback = function()
       require('orgmode').reload(vim.fn.expand('<afile>:p'))
-    end,
-  })
-  vim.api.nvim_create_autocmd({ 'CursorHold', 'CursorHoldI' }, {
-    pattern = { '*.org', '*.org_archive' },
-    group = org_augroup,
-    callback = function()
-      require('orgmode.org.diagnostics').report()
     end,
   })
 end
