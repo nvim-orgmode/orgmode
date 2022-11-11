@@ -66,14 +66,19 @@ function Files.reload(file, callback)
     return Files.load(callback)
   end
 
+  local onfinish = function()
+    if callback then
+      callback()
+    end
+    Files._build_tags()
+  end
+
   local old_file = Files.orgfiles[file]
   local new_file = Files.get(file)
 
   if old_file then
     Files._check_source_blocks(old_file, new_file)
-    if callback then
-      callback()
-    end
+    onfinish()
     return new_file
   end
 
@@ -83,10 +88,7 @@ function Files.reload(file, callback)
       Files._check_source_blocks(old_file, orgfile)
     end
     Files.loaded = true
-    if callback then
-      callback()
-    end
-    Files._build_tags()
+    onfinish()
     return orgfile
   end)
 end
