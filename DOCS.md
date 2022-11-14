@@ -369,7 +369,8 @@ Variables:
   * `%x`: Insert content of the clipboard via the "+" register (see :help clipboard)
   * `%?`: Default cursor position when template is opened
   * `%^{PROMPT|DEFAULT|COMPLETION...}`: Prompt for input, if completion is provided an :h inputlist will be used
-  * `%(EXP)`: Runs the given lua code and inserts the result
+  * `%(EXP)`: Runs the given lua code and inserts the result. NOTE: this will internally pass the content to the lua `load()` function. So the body inside `%()`
+  should be body of a function that returns a string.
 
 Example:<br />
   ```lua
