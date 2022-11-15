@@ -13,6 +13,7 @@ local utils = require('orgmode.utils')
 ---@field search string
 ---@field filters AgendaFilter
 ---@field todo_only boolean
+---@field win_width number
 local AgendaTagsView = {}
 
 function AgendaTagsView:new(opts)
@@ -25,6 +26,7 @@ function AgendaTagsView:new(opts)
     todo_only = opts.todo_only or false,
     filters = opts.filters or AgendaFilter:new(),
     header = opts.org_agenda_overriding_header,
+    win_width = opts.win_width or utils.winwidth(),
   }
 
   setmetatable(data, self)
@@ -59,7 +61,7 @@ function AgendaTagsView:build()
   }
 
   self.active_view = self.todo_only and 'tags_todo' or 'tags'
-  AgendaTodosView.generate_view(self.items, self.content, self.filters)
+  AgendaTodosView.generate_view(self.items, self.content, self.filters, self.win_width)
 
   return self
 end
