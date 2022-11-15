@@ -2,6 +2,7 @@ local AgendaFilter = require('orgmode.agenda.filter')
 local AgendaTodosView = require('orgmode.agenda.views.todos')
 local Files = require('orgmode.parser.files')
 local Range = require('orgmode.parser.range')
+local utils = require('orgmode.utils')
 
 ---@class AgendaSearchView
 ---@field items table[]
@@ -10,6 +11,7 @@ local Range = require('orgmode.parser.range')
 ---@field header string
 ---@field search string
 ---@field filters AgendaFilter
+---@field win_width number
 local AgendaSearchView = {}
 
 function AgendaSearchView:new(opts)
@@ -21,6 +23,7 @@ function AgendaSearchView:new(opts)
     search = opts.search or '',
     filters = opts.filters or AgendaFilter:new(),
     header = opts.org_agenda_overriding_header,
+    win_width = opts.win_width or utils.winwidth(),
   }
 
   setmetatable(data, self)
@@ -51,7 +54,7 @@ function AgendaSearchView:build()
   }
 
   self.active_view = 'search'
-  AgendaTodosView.generate_view(self.items, self.content, self.filters)
+  AgendaTodosView.generate_view(self.items, self.content, self.filters, self.win_width)
   return self
 end
 

@@ -369,7 +369,7 @@ Variables:
   * `%x`: Insert content of the clipboard via the "+" register (see :help clipboard)
   * `%?`: Default cursor position when template is opened
   * `%^{PROMPT|DEFAULT|COMPLETION...}`: Prompt for input, if completion is provided an :h inputlist will be used
-  * `%(EXP)`: Runs the given lua code and inserts the result
+  * `%(EXP)`: Runs the given lua code and inserts the result. NOTE: this will internally pass the content to the lua `load()` function. So the body inside `%()` should be the body of a function that returns a string.
 
 Example:<br />
   ```lua
@@ -406,6 +406,16 @@ Nested key example:<br />
       headline = 'one-time'
     }
   }
+  ```
+
+Lua expression example:<br />
+  ```lua
+  { j = {
+    description = 'Journal',
+    template = '* %(return vim.fn.getreg "w")',
+    -- get the content of register "w"
+    target = '~/sync/org/journal.org'
+  } }
   ```
 
 #### **org_agenda_min_height**

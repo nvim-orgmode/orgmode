@@ -476,12 +476,19 @@ end
 function utils.winwidth(winnr)
   winnr = winnr or 0
   local winwidth = vim.api.nvim_win_get_width(winnr)
-  local window_numbers = vim.api.nvim_win_get_option(winnr, 'number')
-  local window_relnumbers = vim.api.nvim_win_get_option(winnr, 'relativenumber')
-  if window_numbers or window_relnumbers then
-    winwidth = winwidth - vim.wo.numberwidth
+
+  local win_id
+  if winnr == 0 then -- use current window
+    win_id = vim.fn.win_getid()
+  else
+    win_id = vim.fn.win_getid(winnr)
   end
-  return winwidth
+
+  local wininfo = vim.fn.getwininfo(win_id)[1]
+  -- this encapsulates both signcolumn & numbercolumn (:h wininfo)
+  local gutter_width = wininfo and wininfo.textoff or 0
+
+  return winwidth - gutter_width
 end
 
 ---@param name string

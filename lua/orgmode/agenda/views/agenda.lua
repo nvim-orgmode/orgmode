@@ -64,6 +64,7 @@ end
 ---@field start_day string
 ---@field header string
 ---@field filters AgendaFilter
+---@field win_width number
 local AgendaView = {}
 
 function AgendaView:new(opts)
@@ -81,7 +82,9 @@ function AgendaView:new(opts)
     start_on_weekday = opts.org_agenda_start_on_weekday or config.org_agenda_start_on_weekday,
     start_day = opts.org_agenda_start_day or config.org_agenda_start_day,
     header = opts.org_agenda_overriding_header,
+    win_width = opts.win_width or utils.winwidth(),
   }
+
   setmetatable(data, self)
   self.__index = self
   data:_set_date_range()
@@ -199,8 +202,13 @@ function AgendaView:build()
     local category_len = math.max(11, (longest_items.category + 1))
     local date_len = math.min(11, longest_items.label)
 
+    -- print(win_width)
+
     for _, agenda_item in ipairs(agenda_items) do
-      table.insert(content, AgendaView.build_agenda_item_content(agenda_item, category_len, date_len, #content))
+      table.insert(
+        content,
+        AgendaView.build_agenda_item_content(agenda_item, category_len, date_len, #content, self.win_width)
+      )
     end
   end
 
@@ -267,7 +275,7 @@ end
 
 ---@param agenda_item AgendaItem
 ---@return table
-function AgendaView.build_agenda_item_content(agenda_item, longest_category, longest_date, line_nr)
+function AgendaView.build_agenda_item_content(agenda_item, longest_category, longest_date, line_nr, win_width)
   local headline = agenda_item.headline
   local category = '  ' .. utils.pad_right(string.format('%s:', headline:get_category()), longest_category)
   local date = agenda_item.label
@@ -282,10 +290,9 @@ function AgendaView.build_agenda_item_content(agenda_item, longest_category, lon
   todo_keyword = todo_padding .. todo_keyword
   local line = string.format('%s%s%s %s', category, date, todo_keyword, headline.title)
   local todo_keyword_pos = string.format('%s%s%s', category, date, todo_padding):len()
-  local winwidth = utils.winwidth()
   if #headline.tags > 0 then
     local tags_string = headline:tags_to_string()
-    local padding_length = math.max(1, winwidth - vim.api.nvim_strwidth(line) - vim.api.nvim_strwidth(tags_string))
+    local padding_length = math.max(1, win_width - vim.api.nvim_strwidth(line) - vim.api.nvim_strwidth(tags_string))
     local indent = string.rep(' ', padding_length)
     line = string.format('%s%s%s', line, indent, tags_string)
   end
