@@ -1,8 +1,3 @@
-if exists('b:did_ftplugin')
-  finish
-endif
-let b:did_ftplugin = 1
-
 lua require('orgmode.config'):setup_mappings('org')
 lua require('orgmode.config'):setup_mappings('text_objects')
 
@@ -14,11 +9,11 @@ function! OrgmodeFoldText()
   return luaeval('require("orgmode.org.indent").foldtext()')
 endfunction
 
-function OrgmodeOmni(findstart, base)
+function! OrgmodeOmni(findstart, base)
   return luaeval('require("orgmode.org.autocompletion.omni")(_A[1], _A[2])', [a:findstart, a:base])
 endfunction
 
-function OrgmodeFormatExpr()
+function! OrgmodeFormatExpr()
   return luaeval('require("orgmode.org.format")()')
 endfunction
 
