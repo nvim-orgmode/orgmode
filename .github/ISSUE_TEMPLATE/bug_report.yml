@@ -1,0 +1,61 @@
+name: Bug report
+description: Create a report to help us improve orgmode
+labels: bug
+body:
+  - type: textarea
+    validations:
+      required: true
+    attributes:
+      label: Describe the bug
+      description: A clear description of what the bug is.
+  - type: textarea
+    validations:
+      required: true
+    attributes:
+      label: Steps to reproduce
+      description: |
+        Steps to reproduce the problem.
+      placeholder: |
+        For example:
+        1. Go to '...'
+        2. Click on '....'
+        3. Scroll down to '....'
+        4. See error
+  - type: textarea
+    validations:
+      required: true
+    attributes:
+      label: Expected behavior
+      description: A brief description of what should happen.
+  - type: textarea
+    attributes:
+      label: Emacs functionality
+      description: If this functionality exists in Emacs Orgmode, explain how it works there.
+  - type: textarea
+    validations:
+      required: true
+    attributes:
+      label: Minimal init.lua
+      description: Please provide minimal init.lua to reproduce the issue. You can find the template here https://github.com/nvim-orgmode/orgmode/blob/master/scripts/minimal_init.lua. Once set up, you can run it with `nvim -u minimal_init.lua`.
+  - type: textarea
+    attributes:
+      label: Screenshots and recordings
+      description: |
+        If applicable, add screenshots to help explain your problem. You can also record an asciinema session: https://asciinema.org/
+  - type: input
+    validations:
+      required: true
+    attributes:
+      label: OS / Distro
+      placeholder: e.g. Windows 10, Ubuntu 20.04, Arch Linux, macOS 10.15...
+  - type: input
+    validations:
+      required: true
+    attributes:
+      label: Neovim version/commit
+      description: Run `nvim --version` to check.
+      placeholder: e.g. 0.5
+  - type: textarea
+    attributes:
+      label: Additional context
+      description: Add any other context about the problem here.

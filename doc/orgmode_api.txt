@@ -1,0 +1,161 @@
+OrgApi.load({name?})                                               *OrgApi.load*
+
+    Parameters: ~
+        {name?}  (string|string[])  specific file names to return (absolute path). If ommitted, returns all loaded files
+
+    Returns: ~
+        {OrgFile|OrgFile[]}
+
+
+OrgApi.current()                                                *OrgApi.current*
+     Get current org buffer file
+
+    Returns: ~
+        {OrgFile}
+
+
+OrgFile                                                                *OrgFile*
+
+    Fields: ~
+        {category}         (string)         current file category name. By default it's only filename without extension unless defined differently via #+CATEGORY directive
+        {filename}         (string)         absolute path of the current file
+        {headlines}        (OrgHeadline[])
+        {is_archive_file}  (boolean)
+
+
+OrgFile:reload()                                                *OrgFile:reload*
+     Return refreshed instance of the file
+
+    Returns: ~
+        {OrgFile}
+
+
+OrgHeadline                                                        *OrgHeadline*
+
+    Fields: ~
+        {title}        (string)   headline title without todo keyword, tags and priority. Ex. `* TODO I am a headline  :SOMETAG:` returns `I am a headline`
+        {line}         (string)   full headline line
+        {level}        (number)   headline level (number of asterisks). Example: 1
+        {todo_value?}  (string)   todo keyword of the headline (Example: TODO, DONE)
+        {todo_type?}   (string|)
+
+
+OrgHeadline:reload()                                        *OrgHeadline:reload*
+     Return updated version of headline
+
+    Returns: ~
+        {OrgHeadline}
+
+
+OrgHeadline:set_tags({tags})                              *OrgHeadline:set_tags*
+     Set tags on the headline. This replaces all current tags with provided ones
+
+    Parameters: ~
+        {tags}  (string[])
+
+    Returns: ~
+        {Promise}
+
+
+OrgHeadline:priority_up()                              *OrgHeadline:priority_up*
+     Increase priority on a headline
+
+    Returns: ~
+        {Promise}
+
+
+OrgHeadline:priority_down()                          *OrgHeadline:priority_down*
+     Decrease priority on a headline
+
+    Returns: ~
+        {Promise}
+
+
+OrgHeadline:set_priority({priority})                  *OrgHeadline:set_priority*
+     Set specific priority on a headline. Empty string clears the priority
+
+    Parameters: ~
+        {priority}  (string)
+
+    Returns: ~
+        {Promise}
+
+
+OrgHeadline:set_deadline({date?})                     *OrgHeadline:set_deadline*
+     Set deadline date
+
+    Parameters: ~
+        {date?}  (Date|string|nil)  If ommited, opens the datepicker. Empty string removes the date. String must follow org date convention (YYYY-MM-DD HH:mm...)
+
+    Returns: ~
+        {Promise}
+
+
+OrgHeadline:set_scheduled({date?})                   *OrgHeadline:set_scheduled*
+     Set scheduled date
+
+    Parameters: ~
+        {date?}  (Date|string|nil)  If ommited, opens the datepicker. Empty string removes the date. String must follow org date convention (YYYY-MM-DD HH:mm...)
+
+    Returns: ~
+        {Promise}
+
+
+OrgAgenda                                                            *OrgAgenda*
+
+
+OrgAgendaFilter                                                *OrgAgendaFilter*
+
+    Type: ~
+        string
+
+
+OrgAgendaOptions                                              *OrgAgendaOptions*
+
+    Fields: ~
+        {filters?}  (OrgAgendaFilter)
+        {from?}     (string|Date)
+        {span?}     (number|day|week|month|year)
+
+
+OrgAgenda.agenda({options?})                                  *OrgAgenda.agenda*
+
+    Parameters: ~
+        {options?}  (OrgAgendaOptions)
+
+
+OrgAgendaTodosOptions                                    *OrgAgendaTodosOptions*
+
+    Fields: ~
+        {filters?}  (OrgAgendaFilter)
+
+
+OrgAgenda.todos({options?})                                    *OrgAgenda.todos*
+
+    Parameters: ~
+        {options?}  (OrgAgendaTodosOptions)
+
+
+OrgAgendaTagsOptions                                      *OrgAgendaTagsOptions*
+
+    Fields: ~
+        {filters?}    (OrgAgendaFilter)
+        {todo_only?}  (boolean)
+
+
+OrgAgenda.tags({options?})                                      *OrgAgenda.tags*
+
+    Parameters: ~
+        {options?}  (OrgAgendaTagsOptions)
+
+
+OrgPosition                                                        *OrgPosition*
+
+    Fields: ~
+        {start_line}  (number)  start line number
+        {end_line}    (number)  end line number
+        {start_col}   (number)  start column number
+        {end_col}     (number)  end column number
+
+
+vim:tw=78:ts=8:noet:ft=help:norl:
