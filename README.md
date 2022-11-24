@@ -185,7 +185,7 @@ Or just use `omnifunc` via <kbd>\<C-x\>\<C-o\></kbd>
 * In any orgmode buffer press <kbd>g?</kbd> for help
 
 If you are new to Orgmode, see [Getting started](/DOCS.md#getting-started-with-orgmode) section in the Docs
-or a hands-on [[https://github.com/nvim-orgmode/orgmode/wiki/Getting-Started][tutorial]] in our wiki.
+or a hands-on [tutorial](https://github.com/nvim-orgmode/orgmode/wiki/Getting-Started) in our wiki.
 
 
 ## Showcase
