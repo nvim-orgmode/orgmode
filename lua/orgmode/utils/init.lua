@@ -5,6 +5,7 @@ local uv = vim.loop
 local utils = {}
 local debounce_timers = {}
 local query_cache = {}
+local tmp_window_augroup = vim.api.nvim_create_augroup('OrgTmpWindow', { clear = true })
 
 ---@param file string
 ---@param callback function
@@ -531,6 +532,38 @@ function utils.open_window(name, height, split_mode)
   end
 
   return vim.cmd(string.format('%s %s', split_mode, name))
+end
+
+function utils.open_tmp_org_window(height, split_mode, on_close)
+  local winnr = vim.api.nvim_get_current_win()
+  utils.open_window(vim.fn.tempname(), height or 16, split_mode)
+  vim.cmd([[setf org]])
+  vim.cmd([[setlocal bufhidden=wipe nobuflisted nolist noswapfile nofoldenable]])
+  vim.api.nvim_buf_set_var(0, 'org_prev_window', winnr)
+
+  if on_close then
+    vim.api.nvim_create_autocmd('BufWipeout', {
+      buffer = 0,
+      group = tmp_window_augroup,
+      callback = on_close,
+      once = true,
+    })
+    vim.api.nvim_create_autocmd('VimLeavePre', {
+      buffer = 0,
+      group = tmp_window_augroup,
+      callback = on_close,
+      once = true,
+    })
+  end
+
+  return function()
+    vim.api.nvim_create_augroup('OrgTmpWindow', { clear = true })
+    local prev_winnr = vim.api.nvim_buf_get_var(0, 'org_prev_window')
+    vim.api.nvim_win_close(0, true)
+    if prev_winnr and vim.api.nvim_win_is_valid(prev_winnr) then
+      vim.api.nvim_set_current_win(prev_winnr)
+    end
+  end
 end
 
 ---@param name string

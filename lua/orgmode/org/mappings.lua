@@ -13,6 +13,7 @@ local utils = require('orgmode.utils')
 local ts_org = require('orgmode.treesitter')
 local ts_table = require('orgmode.treesitter.table')
 local EventManager = require('orgmode.events')
+local Promise = require('orgmode.utils.promise')
 local events = EventManager.event
 
 ---@class OrgMappings
@@ -395,13 +396,41 @@ function OrgMappings:_todo_change_state(direction)
     return dispatchEvent()
   end
 
+  local log_note = config.org_log_done == 'note'
+  local log_time = config.org_log_done == 'time'
+  local should_log_time = log_note or log_time
+  local indent = config:get_indent(item.level + 1)
+
+  local get_note = function(note)
+    if note == nil then
+      return
+    end
+
+    for i, line in ipairs(note) do
+      note[i] = indent .. '  ' .. line
+    end
+
+    table.insert(note, 1, ('%s- CLOSING NOTE %s \\\\'):format(indent, Date.now():to_wrapped_string(false)))
+    return note
+  end
+
   local repeater_dates = item:get_repeater_dates()
   if #repeater_dates == 0 then
-    local log_time = config.org_log_done == 'time'
-    if log_time and item:is_done() and not was_done then
+    if should_log_time and item:is_done() and not was_done then
       headline:add_closed_date()
+      item = Files.get_closest_headline()
+
+      if log_note then
+        dispatchEvent()
+        return self.capture.closing_note:open():next(function(note)
+          local valid_note = get_note(note)
+          if valid_note then
+            vim.fn.append(item:get_todo_note_line_number(), valid_note)
+          end
+        end)
+      end
     end
-    if log_time and not item:is_done() and was_done then
+    if should_log_time and not item:is_done() and was_done then
       headline:remove_closed_date()
     end
     return dispatchEvent()
@@ -413,19 +442,35 @@ function OrgMappings:_todo_change_state(direction)
 
   self:_change_todo_state('reset')
   local state_change =
-    string.format('- State "%s" from "%s" [%s]', item.todo_keyword.value, old_state, Date.now():to_string())
+    string.format('%s- State "%s" from "%s" [%s]', indent, item.todo_keyword.value, old_state, Date.now():to_string())
 
-  local data = item:add_properties({ LAST_REPEAT = '[' .. Date.now():to_string() .. ']' })
-  if data.is_new then
-    vim.fn.append(data.end_line, data.indent .. state_change)
-    return dispatchEvent()
-  end
-  item = Files.get_closest_headline()
-
-  if item.properties.valid then
-    vim.fn.append(item.properties.range.end_line, data.indent .. state_change)
-  end
   dispatchEvent()
+  return Promise.resolve()
+    :next(function()
+      if not log_note then
+        return state_change
+      end
+
+      return self.capture.closing_note:open():next(function(closing_note)
+        return get_note(closing_note)
+      end)
+    end)
+    :next(function(note)
+      local data = item:add_properties({ LAST_REPEAT = '[' .. Date.now():to_string() .. ']' })
+      if not note then
+        return
+      end
+
+      if data.is_new then
+        vim.fn.append(data.end_line, note)
+        return
+      end
+      item = Files.get_closest_headline()
+
+      if item.properties.valid then
+        vim.fn.append(item.properties.range.end_line, note)
+      end
+    end)
 end
 
 function OrgMappings:do_promote(whole_subtree)

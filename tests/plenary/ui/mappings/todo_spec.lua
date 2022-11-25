@@ -59,6 +59,7 @@ describe('Todo mappings', function()
     }, vim.api.nvim_buf_get_lines(0, 2, 6, false))
     vim.fn.cursor(3, 1)
     vim.cmd([[norm cit]])
+    vim.wait(50)
     assert.are.same({
       '* TODO Test orgmode',
       '  DEADLINE: <2021-09-14 Tue 12:00 +1w>',

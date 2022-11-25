@@ -94,6 +94,10 @@ local helps = {
     { key = 'org_capture_refile', description = 'Save to specific destination' },
     { key = 'org_capture_kill', description = 'Close without saving' },
   },
+  note = {
+    { key = 'org_note_finalize', description = 'Save note and close the window' },
+    { key = 'org_note_kill', description = 'Close without saving' },
+  },
   edit_src = {
     { key = 'org_edit_src_abort', description = 'Abort edit special buffer changes and discard content' },
     { key = 'org_edit_src_save', description = 'Apply changes from the special buffer to the source Org buffer' },
@@ -125,6 +129,11 @@ function Help._get_content_type(opts)
     return 'orgcapture'
   end
 
+  local has_note, is_note = pcall(vim.api.nvim_buf_get_var, 0, 'org_note')
+  if has_note and is_note then
+    return 'orgnote'
+  end
+
   local ft = vim.bo.filetype
   local prepare_func = '_prepare_' .. ft
   if Help[prepare_func] then
@@ -152,6 +161,27 @@ function Help._prepare_orgcapture(mappings, max_height)
   local content = { string.format(' **Orgmode mappings Capture + Org:%s**', scroll_more_text), '', '  __Capture__' }
   for _, item in ipairs(helps.capture) do
     local maps = mappings.capture[item.key]
+    if type(maps) == 'table' then
+      maps = table.concat(maps, ', ')
+    end
+
+    table.insert(content, string.format('  `%-12s` - %s', maps, item.description))
+  end
+
+  table.insert(content, '  __Org__')
+
+  return content, false
+end
+
+function Help._prepare_orgnote(mappings, max_height)
+  local scroll_more_text = ''
+  if (#helps.note + #helps.org) > max_height then
+    scroll_more_text = ' (Scroll down for more)'
+  end
+
+  local content = { string.format(' **Orgmode mappings Note + Org:%s**', scroll_more_text), '', '  __Note__' }
+  for _, item in ipairs(helps.note) do
+    local maps = mappings.note[item.key]
     if type(maps) == 'table' then
       maps = table.concat(maps, ', ')
     end

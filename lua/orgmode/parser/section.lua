@@ -350,7 +350,7 @@ function Section:add_properties(properties)
     }
   end
 
-  local properties_line = self:has_planning() and self.range.start_line + 1 or self.range.start_line
+  local properties_line = self:get_content_start_line_number()
   local indent = config:get_indent(self.level + 1)
   local content = { string.format('%s:PROPERTIES:', indent) }
 
@@ -365,6 +365,20 @@ function Section:add_properties(properties)
     end_line = properties_line + #content,
     indent = indent,
   }
+end
+
+function Section:get_content_start_line_number()
+  if self:has_planning() then
+    return self.range.start_line + 1
+  end
+  return self.range.start_line
+end
+
+function Section:get_todo_note_line_number()
+  if self.properties.valid then
+    return self.properties.range.end_line
+  end
+  return self:get_content_start_line_number()
 end
 
 ---@return boolean
