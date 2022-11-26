@@ -50,7 +50,10 @@ function OrgMappings:archive()
     archive_location,
     vim.schedule_wrap(function()
       Files.update_file(archive_location, function(archive_file)
-        local last_item = archive_file:get_closest_headline(vim.fn.line('$'))
+        -- Jump to last headline in archive file
+        vim.cmd('normal! G')
+        vim.fn.search([[^\*\+\s\+]], 'b')
+        local last_item = archive_file:get_closest_headline()
         if not last_item then
           return
         end
