@@ -353,11 +353,27 @@ function Config:respect_blank_before_new_entry(content, option, prepend_content)
   return content
 end
 
+---@param amount number
+---@return string
 function Config:get_indent(amount)
   if self.opts.org_indent_mode == 'indent' then
     return string.rep(' ', amount)
   end
   return ''
+end
+
+---@param content table|string
+---@param amount number
+function Config:apply_indent(content, amount)
+  local indent = self:get_indent(amount)
+  if type(content) ~= 'table' then
+    return indent .. content
+  end
+
+  for i, line in ipairs(content) do
+    content[i] = indent .. line
+  end
+  return content
 end
 
 instance = Config:new()

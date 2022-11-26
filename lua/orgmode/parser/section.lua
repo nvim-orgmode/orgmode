@@ -321,6 +321,7 @@ function Section:get_repeater_dates()
   end, self.dates)
 end
 
+---@deprecated use treesitter.headline.set_property
 ---@param properties table
 ---@return table
 function Section:add_properties(properties)

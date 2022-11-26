@@ -1,10 +1,24 @@
 local ts_utils = require('nvim-treesitter.ts_utils')
 local parsers = require('nvim-treesitter.parsers')
 local M = {}
+local query_cache = {}
 
 function M.current_node()
   local window = vim.api.nvim_get_current_win()
   return ts_utils.get_node_at_cursor(window)
+end
+
+function M.parse(bufnr)
+  return vim.treesitter.get_parser(bufnr or 0, 'org', {}):parse()
+end
+
+function M.parse_query(query)
+  local ts_query = query_cache[query]
+  if not ts_query then
+    ts_query = vim.treesitter.query.parse_query('org', query)
+    query_cache[query] = ts_query
+  end
+  return query_cache[query]
 end
 
 ---This is a full copy of nvim_treesiter get_node_at_cursor with support for custom cursor position

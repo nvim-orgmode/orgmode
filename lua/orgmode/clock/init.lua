@@ -1,4 +1,5 @@
 local Files = require('orgmode.parser.files')
+local tree_utils = require('orgmode.treesitter')
 local Duration = require('orgmode.objects.duration')
 local utils = require('orgmode.utils')
 local Promise = require('orgmode.utils.promise')
@@ -75,18 +76,15 @@ function Clock:org_clock_goto()
 end
 
 function Clock:org_set_effort()
-  local item = Files.get_closest_headline()
-  if not item then
-    return
-  end
+  local item = tree_utils.closest_headline()
   -- TODO: Add Effort_ALL property as autocompletion
   local current_effort = item:get_property('Effort')
-  local effort = vim.fn.OrgmodeInput('Effort: ', current_effort or '')
+  local effort = vim.fn.OrgmodeInput('Effort: ', current_effort and current_effort.value or '')
   local duration = Duration.parse(effort)
   if duration == nil then
     return utils.echo_error('Invalid duration format: ' .. effort)
   end
-  item:add_properties({ Effort = effort })
+  item:set_property('Effort', effort)
 end
 
 function Clock:get_statusline()

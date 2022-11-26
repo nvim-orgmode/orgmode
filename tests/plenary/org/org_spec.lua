@@ -1,64 +1,78 @@
+local helpers = require('tests.plenary.ui.helpers')
+local ts_org = require('orgmode.treesitter')
 local mock = require('luassert.mock')
 local File = require('orgmode.parser.file')
 local Date = require('orgmode.objects.date')
 
 describe('Org file', function()
   it('should properly add new properties to a section', function()
-    local lines = {
+    helpers.load_file_content({
       '* TODO Test orgmode :WORK:',
       'DEADLINE: <2021-05-10 11:00 +1w>',
       '* TODO Another todo',
-    }
-    local parsed = File.from_content(lines, 'work')
-    local api = mock(vim.api, true)
-    api.nvim_call_function.returns(true)
-    local section = parsed:get_section(1)
-    section:add_properties({ CATEGORY = 'testing' })
-    assert.stub(api.nvim_call_function).was_called_with(
-      'append',
-      { 2, {
-        '  :PROPERTIES:',
-        '  :CATEGORY: testing',
-        '  :END:',
-      } }
-    )
-    mock.revert(api)
+    })
+
+    local headline = ts_org.find_headline('test orgmode')
+    assert.are.same('Test orgmode', headline:title())
+    headline:set_property('CATEGORY', 'testing')
+
+    assert.are.same({
+      '* TODO Test orgmode :WORK:',
+      'DEADLINE: <2021-05-10 11:00 +1w>',
+      '  :PROPERTIES:',
+      '  :CATEGORY: testing',
+      '  :END:',
+      '* TODO Another todo',
+    }, vim.api.nvim_buf_get_lines(0, 0, 8, false))
   end)
 
   it('should properly append to existing properties', function()
-    local lines = {
+    helpers.load_file_content({
       '* TODO Test orgmode :WORK:',
       'DEADLINE: <2021-05-10 11:00 +1w>',
       '  :PROPERTIES:',
       '  :CATEGORY: Testing',
       '  :END:',
       '* TODO Another todo',
-    }
-    local parsed = File.from_content(lines, 'work')
-    local api = mock(vim.api, true)
-    api.nvim_call_function.returns(lines[3])
-    local section = parsed:get_section(1)
-    section:add_properties({ CUSTOM_ID = '1' })
-    assert.stub(api.nvim_call_function).was.called_with('append', { 3, '  :CUSTOM_ID: 1' })
-    mock.revert(api)
-  end)
+    })
+    local headline = ts_org.find_headline('test orgmode')
+    assert.are.same('Test orgmode', headline:title())
+    headline:set_property('CUSTOM_ID', '1')
 
-  it('should properly update existing property', function()
-    local lines = {
+    assert.are.same({
       '* TODO Test orgmode :WORK:',
       'DEADLINE: <2021-05-10 11:00 +1w>',
       '  :PROPERTIES:',
       '  :CATEGORY: Testing',
+      '  :CUSTOM_ID: 1',
       '  :END:',
       '* TODO Another todo',
-    }
-    local parsed = File.from_content(lines, 'work')
-    local api = mock(vim.api, true)
-    api.nvim_call_function.returns(lines[3])
-    local section = parsed:get_section(1)
-    section:add_properties({ CATEGORY = 'Newvalue' })
-    assert.stub(api.nvim_call_function).was.called_with('setline', { 4, '  :CATEGORY: Newvalue' })
-    mock.revert(api)
+    }, vim.api.nvim_buf_get_lines(0, 0, 8, false))
+  end)
+  --
+  it('should properly update existing property', function()
+    helpers.load_file_content({
+      '* TODO Test orgmode :WORK:',
+      'DEADLINE: <2021-05-10 11:00 +1w>',
+      '  :PROPERTIES:',
+      '  :CATEGORY: Testing',
+      '  :CUSTOM_ID: 1',
+      '  :END:',
+      '* TODO Another todo',
+    })
+    local headline = ts_org.find_headline('test orgmode')
+    assert.are.same('Test orgmode', headline:title())
+    headline:set_property('CATEGORY', 'Updated')
+
+    assert.are.same({
+      '* TODO Test orgmode :WORK:',
+      'DEADLINE: <2021-05-10 11:00 +1w>',
+      '  :PROPERTIES:',
+      '  :CATEGORY: Updated',
+      '  :CUSTOM_ID: 1',
+      '  :END:',
+      '* TODO Another todo',
+    }, vim.api.nvim_buf_get_lines(0, 0, 8, false))
   end)
 
   it('should add closed date to section if it does not exist', function()

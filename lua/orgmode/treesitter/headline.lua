@@ -17,9 +17,29 @@ function Headline:new(headline_node)
   return data
 end
 
+---@param cursor? Table Cursor position tuple {row, col}
+---@return Headline|nil
+function Headline.from_cursor(cursor)
+  local ts_headline = tree_utils.closest_headline(cursor)
+  if not ts_headline then
+    return nil
+  end
+  return Headline:new(ts_headline)
+end
+
 ---@return userdata stars node
 function Headline:stars()
   return self.headline:field('stars')[1]
+end
+
+function Headline:refresh()
+  tree_utils.parse()
+  local start_row, start_col = self.headline:start()
+  local updated_headline = Headline.from_cursor({ start_row + 1, start_col })
+  if updated_headline then
+    self.headline = updated_headline.headline
+  end
+  return self
 end
 
 ---@return number
@@ -150,6 +170,15 @@ function Headline:todo()
   end
 end
 
+function Headline:title()
+  local title = query.get_node_text(self:item(), 0) or ''
+  local todo, word = self:todo()
+  if todo then
+    title = title:gsub('^' .. vim.pesc(word) .. '%s*', '')
+  end
+  return title
+end
+
 ---@return userdata
 function Headline:plan()
   local section = self.headline:parent()
@@ -158,6 +187,75 @@ function Headline:plan()
       return node
     end
   end
+end
+
+---@return userdata
+function Headline:properties()
+  local section = self.headline:parent()
+  for _, node in ipairs(ts_utils.get_named_children(section)) do
+    if node:type() == 'property_drawer' then
+      return node
+    end
+  end
+end
+
+---@param name string
+---@param value string
+function Headline:set_property(name, value)
+  local properties = self:properties()
+  if not properties then
+    local append_line = self:get_append_line()
+    local property_drawer = self:_apply_indent({ ':PROPERTIES:', ':END:' })
+    vim.api.nvim_buf_set_lines(0, append_line, append_line, false, property_drawer)
+    tree_utils.parse()
+    properties = self:refresh():properties()
+  end
+
+  local property = (':%s: %s'):format(name, value)
+  local existing_property = self:get_property(name)
+  if existing_property then
+    tree_utils.set_node_text(existing_property.node, property)
+    return self:refresh()
+  end
+  local property_end = properties:end_()
+  vim.api.nvim_buf_set_lines(0, property_end - 1, property_end - 1, false, { self:_apply_indent(property) })
+  return self:refresh()
+end
+
+---@param property_name string
+---@return table|nil
+function Headline:get_property(property_name)
+  local properties = self:properties()
+  if not properties then
+    return nil
+  end
+
+  for _, node in ipairs(ts_utils.get_named_children(properties)) do
+    local name = node:field('name')[1]
+    local value = node:field('value')[1]
+    if name and query.get_node_text(name, 0):lower() == property_name:lower() then
+      return {
+        node = node,
+        name = name,
+        value = value and query.get_node_text(value, 0),
+      }
+    end
+  end
+end
+
+---Return the line number where content can be appended
+---
+---@return number
+function Headline:get_append_line()
+  local properties = self:properties()
+  if properties then
+    return properties:end_()
+  end
+  local plan = self:plan()
+  if plan then
+    return plan:end_()
+  end
+  return self.headline:end_()
 end
 
 ---@return Table<string, userdata>
@@ -339,6 +437,11 @@ function Headline:_remove_date(type)
   if vim.trim(vim.fn.getline(line_nr)) == '' then
     return vim.api.nvim_call_function('deletebufline', { vim.api.nvim_get_current_buf(), line_nr })
   end
+end
+
+---@param text table|string
+function Headline:_apply_indent(text)
+  return config:apply_indent(text, self:level() + 1)
 end
 
 return Headline
