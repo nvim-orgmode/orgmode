@@ -1,5 +1,7 @@
+---@diagnostic disable: need-check-nil
 local helpers = require('tests.plenary.ui.helpers')
 local ts_org = require('orgmode.treesitter')
+local tree_utils = require('orgmode.utils.treesitter')
 local mock = require('luassert.mock')
 local File = require('orgmode.parser.file')
 local Date = require('orgmode.objects.date')
@@ -12,7 +14,7 @@ describe('Org file', function()
       '* TODO Another todo',
     })
 
-    local headline = ts_org.find_headline('test orgmode')
+    local headline = ts_org.headline_at(1)
     assert.are.same('Test orgmode', headline:title())
     headline:set_property('CATEGORY', 'testing')
 
@@ -35,7 +37,7 @@ describe('Org file', function()
       '  :END:',
       '* TODO Another todo',
     })
-    local headline = ts_org.find_headline('test orgmode')
+    local headline = ts_org.headline_at(1)
     assert.are.same('Test orgmode', headline:title())
     headline:set_property('CUSTOM_ID', '1')
 
@@ -60,7 +62,7 @@ describe('Org file', function()
       '  :END:',
       '* TODO Another todo',
     })
-    local headline = ts_org.find_headline('test orgmode')
+    local headline = ts_org.headline_at(1)
     assert.are.same('Test orgmode', headline:title())
     headline:set_property('CATEGORY', 'Updated')
 
@@ -76,163 +78,130 @@ describe('Org file', function()
   end)
 
   it('should add closed date to section if it does not exist', function()
-    local now = Date.now():to_string()
-    local lines = {
+    local now = Date.now()
+    local lines = helpers.load_file_content({
       '* TODO Test orgmode :WORK:',
       'DEADLINE: <2021-05-10 11:00>',
       '* TODO Another todo',
-    }
-    local parsed = File.from_content(lines, 'work')
-    local api = mock(vim.api, true)
-    api.nvim_call_function.returns(lines[2])
-    local section = parsed:get_section(1)
-    section:add_closed_date()
-    assert.stub(api.nvim_call_function).was.called_with('setline', {
-      2,
-      'DEADLINE: <2021-05-10 11:00> CLOSED: [' .. now .. ']',
     })
-    mock.revert(api)
 
-    lines = {
+    local headline = ts_org.headline_at(1)
+    headline:set_closed_date()
+
+    assert.are.same({
       '* TODO Test orgmode :WORK:',
-      'DEADLINE: <2021-05-10 11:00> CLOSED: [' .. now .. ']',
+      'DEADLINE: <2021-05-10 11:00> CLOSED: ' .. now:to_wrapped_string(false),
       '* TODO Another todo',
-    }
-    parsed = File.from_content(lines, 'work')
-    api = mock(vim.api, true)
-    section = parsed:get_section(1)
-    local no_result = section:add_closed_date()
-    assert.are.same(nil, no_result)
-    mock.revert(api)
+    }, vim.api.nvim_buf_get_lines(0, 0, 3, false))
+
+    headline:set_closed_date()
+    -- unchanged
+    assert.are.same({
+      '* TODO Test orgmode :WORK:',
+      'DEADLINE: <2021-05-10 11:00> CLOSED: ' .. now:to_wrapped_string(false),
+      '* TODO Another todo',
+    }, vim.api.nvim_buf_get_lines(0, 0, 3, false))
   end)
 
   it('should remove closed date from section if it exists', function()
-    local now = Date.now():to_string()
-    local lines = {
+    local now = Date.now()
+    helpers.load_file_content({
       '* TODO Test orgmode :WORK:',
-      'DEADLINE: <2021-05-10 11:00> CLOSED: [' .. now .. ']',
+      'DEADLINE: <2021-05-10 11:00> CLOSED: ' .. now:to_wrapped_string(false),
       '* TODO Another todo',
-    }
-    local parsed = File.from_content(lines, 'work')
-    local api = mock(vim.api, true)
-    api.nvim_call_function.returns(lines[2])
-    local section = parsed:get_section(1)
-    local result = section:remove_closed_date()
-    assert.stub(api.nvim_call_function).was.called_with('setline', {
-      2,
-      'DEADLINE: <2021-05-10 11:00>',
     })
-    mock.revert(api)
+    local headline = ts_org.headline_at(1)
+    headline:remove_closed_date()
 
-    lines = {
+    assert.are.same({
       '* TODO Test orgmode :WORK:',
       'DEADLINE: <2021-05-10 11:00>',
       '* TODO Another todo',
-    }
-    parsed = File.from_content(lines, 'work')
-    section = parsed:get_section(1)
-    result = section:remove_closed_date()
-    assert.are.same(nil, result)
+    }, vim.api.nvim_buf_get_lines(0, 0, 3, false))
 
-    lines = {
-      '* TODO Test orgmode :WORK:',
-      'CLOSED: [' .. now .. ']',
+    helpers.load_file_content({
+      '* TODO Test orgmode only closed :WORK:',
+      'CLOSED: ' .. now:to_wrapped_string(false),
       '* TODO Another todo',
-    }
-    parsed = File.from_content(lines, 'work')
-    api = mock(vim.api, true)
-    api.nvim_call_function.returns(lines[2])
-    section = parsed:get_section(1)
-    api.nvim_get_current_buf.returns(4)
-    section:remove_closed_date()
-    assert.stub(api.nvim_call_function).was.called_with('deletebufline', { 4, 2 })
-    mock.revert(api)
+    })
+
+    headline = ts_org.headline_at(1)
+    assert.are.same('Test orgmode only closed', headline:title())
+    headline:remove_closed_date()
+    assert.are.same({
+      '* TODO Test orgmode only closed :WORK:',
+      '* TODO Another todo',
+    }, vim.api.nvim_buf_get_lines(0, 0, 3, false))
   end)
 
   it('should add and update deadline date', function()
     local deadline_date = Date.from_string('2021-08-18 Wed')
-    local lines = {
+    helpers.load_file_content({
       '* TODO Test orgmode :WORK:',
       '* TODO Another todo',
-    }
-    local parsed = File.from_content(lines, 'work')
-    local api = mock(vim.api, true)
-    api.nvim_call_function.returns(true)
-    local section = parsed:get_section(1)
-    local result = section:add_deadline_date(deadline_date)
-    assert.are.same(true, result)
-    assert.stub(api.nvim_call_function).was.called_with('append', {
-      1,
-      '  DEADLINE: <2021-08-18 Wed>',
     })
-    mock.revert(api)
+    local headline = ts_org.headline_at(1)
+    headline:set_deadline_date(deadline_date)
 
-    lines = {
+    assert.are.same({
       '* TODO Test orgmode :WORK:',
       '  DEADLINE: <2021-08-18 Wed>',
       '* TODO Another todo',
-    }
-    parsed = File.from_content(lines, 'work')
-    api = mock(vim.api, true)
-    section = parsed:get_section(1)
-    api.nvim_call_function.returns('  DEADLINE: <2021-08-18 Wed>')
-    result = section:add_deadline_date(deadline_date:add({ day = 2 }))
-    assert.stub(api.nvim_call_function).was.called_with('setline', {
-      2,
+    }, vim.api.nvim_buf_get_lines(0, 0, 3, false))
+
+    headline:set_deadline_date(deadline_date:add({ day = 2 }))
+
+    assert.are.same({
+      '* TODO Test orgmode :WORK:',
       '  DEADLINE: <2021-08-20 Fri>',
-    })
-    mock.revert(api)
+      '* TODO Another todo',
+    }, vim.api.nvim_buf_get_lines(0, 0, 3, false))
   end)
 
-  it('should add and update scheduled date', function()
+  it('should add, update and remove scheduled date', function()
     local scheduled_date = Date.from_string('2021-08-18 Wed')
-    local lines = {
+    helpers.load_file_content({
       '* TODO Test orgmode :WORK:',
       '* TODO Another todo',
-    }
-    local parsed = File.from_content(lines, 'work')
-    local api = mock(vim.api, true)
-    api.nvim_call_function.returns(true)
-    local section = parsed:get_section(1)
-    local result = section:add_scheduled_date(scheduled_date)
-    assert.are.same(true, result)
-    assert.stub(api.nvim_call_function).was.called_with('append', {
-      1,
-      '  SCHEDULED: <2021-08-18 Wed>',
     })
-    mock.revert(api)
+    local headline = ts_org.headline_at(1)
+    headline:set_scheduled_date(scheduled_date)
 
-    lines = {
+    assert.are.same({
+      '* TODO Test orgmode :WORK:',
+      '  SCHEDULED: <2021-08-18 Wed>',
+      '* TODO Another todo',
+    }, vim.api.nvim_buf_get_lines(0, 0, 3, false))
+
+    helpers.load_file_content({
       '* TODO Test orgmode :WORK:',
       '  DEADLINE: <2021-08-18 Wed>',
       '* TODO Another todo',
-    }
-    parsed = File.from_content(lines, 'work')
-    api = mock(vim.api, true)
-    api.nvim_call_function.returns(lines[2])
-    section = parsed:get_section(1)
-    result = section:add_scheduled_date(scheduled_date:add({ day = 2 }))
-    assert.stub(api.nvim_call_function).was.called_with('setline', {
-      2,
-      '  DEADLINE: <2021-08-18 Wed> SCHEDULED: <2021-08-20 Fri>',
     })
-    mock.revert(api)
 
-    lines = {
+    headline = ts_org.headline_at(1)
+    headline:set_scheduled_date(scheduled_date)
+
+    assert.are.same({
       '* TODO Test orgmode :WORK:',
       '  DEADLINE: <2021-08-18 Wed> SCHEDULED: <2021-08-18 Wed>',
       '* TODO Another todo',
-    }
-    parsed = File.from_content(lines, 'work')
-    api = mock(vim.api, true)
-    api.nvim_call_function.returns(lines[2])
-    section = parsed:get_section(1)
-    api.nvim_call_function.returns('  DEADLINE: <2021-08-18 Wed> SCHEDULED: <2021-08-18 Wed>')
-    result = section:add_scheduled_date(scheduled_date:add({ day = 4 }))
-    assert.stub(api.nvim_call_function).was.called_with('setline', {
-      2,
+    }, vim.api.nvim_buf_get_lines(0, 0, 3, false))
+
+    headline:set_scheduled_date(scheduled_date:add({ day = 4 }))
+
+    assert.are.same({
+      '* TODO Test orgmode :WORK:',
       '  DEADLINE: <2021-08-18 Wed> SCHEDULED: <2021-08-22 Sun>',
-    })
-    mock.revert(api)
+      '* TODO Another todo',
+    }, vim.api.nvim_buf_get_lines(0, 0, 3, false))
+
+    headline:remove_scheduled_date()
+
+    assert.are.same({
+      '* TODO Test orgmode :WORK:',
+      '  DEADLINE: <2021-08-18 Wed>',
+      '* TODO Another todo',
+    }, vim.api.nvim_buf_get_lines(0, 0, 3, false))
   end)
 end)

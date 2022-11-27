@@ -102,7 +102,7 @@ function M.set_node_text(node, text, front_trim)
   local sr, sc, er, ec = node:range()
   if string.len(text) == 0 then
     if front_trim then
-      sc = sc - 1
+      sc = math.max(sc - 1, 0)
     else
       ec = ec + 1
     end

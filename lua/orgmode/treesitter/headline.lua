@@ -150,8 +150,9 @@ end
 -- and if it's in done state
 -- @return Node, string, boolean
 function Headline:todo()
-  local keywords = config.todo_keywords.ALL
-  local done_keywords = config.todo_keywords.DONE
+  local todo_keywords = config:get_todo_keywords()
+  local keywords = todo_keywords.ALL
+  local done_keywords = todo_keywords.DONE
 
   -- A valid keyword can only be the first child
   local todo_node = self:item():named_child(0)
@@ -170,6 +171,35 @@ function Headline:todo()
   end
 end
 
+function Headline:todo_keyword()
+  local node, word = self:todo()
+  if not node then
+    return {
+      value = '',
+      type = '',
+      node = nil,
+    }
+  end
+
+  local todo_keywords = config:get_todo_keywords()
+  return {
+    value = word,
+    type = todo_keywords.KEYS[word].type,
+    node = node,
+  }
+end
+
+---@return boolean
+function Headline:is_todo()
+  local _, _, is_done = self:todo()
+  return not is_done
+end
+
+---@return boolean
+function Headline:is_done()
+  return not self:is_todo()
+end
+
 function Headline:title()
   local title = query.get_node_text(self:item(), 0) or ''
   local todo, word = self:todo()
@@ -179,7 +209,7 @@ function Headline:title()
   return title
 end
 
----@return userdata
+---@return userdata|nil
 function Headline:plan()
   local section = self.headline:parent()
   for _, node in ipairs(ts_utils.get_named_children(section)) do
@@ -189,7 +219,7 @@ function Headline:plan()
   end
 end
 
----@return userdata
+---@return userdata|nil
 function Headline:properties()
   local section = self.headline:parent()
   for _, node in ipairs(ts_utils.get_named_children(section)) do
@@ -306,12 +336,13 @@ function Headline:set_scheduled_date(date)
   return self:_add_date('SCHEDULED', date, true)
 end
 
-function Headline:add_closed_date()
+---@param date? Date
+function Headline:set_closed_date(date)
   local dates = self:dates()
   if dates['CLOSED'] then
     return
   end
-  return self:_add_date('CLOSED', Date.now(), false)
+  return self:_add_date('CLOSED', date or Date.now(), false)
 end
 
 function Headline:remove_closed_date()
@@ -401,13 +432,12 @@ function Headline:_add_date(type, date, active)
   if vim.tbl_isempty(dates) then
     local indent = config:get_indent(self:level() + 1)
     local start_line = self.headline:start()
-    return vim.api.nvim_call_function('append', {
-      start_line + 1,
-      string.format('%s%s', indent, text),
-    })
+    vim.fn.append(start_line + 1, ('%s%s'):format(indent, text))
+    return self:refresh()
   end
   if dates[type] then
-    return tree_utils.set_node_text(dates[type], text, true)
+    tree_utils.set_node_text(dates[type], text, true)
+    return self:refresh()
   end
 
   local keys = vim.tbl_keys(dates)
@@ -423,6 +453,7 @@ function Headline:_add_date(type, date, active)
   end
   local ptext = query.get_node_text(last_child, 0)
   tree_utils.set_node_text(last_child, ptext .. ' ' .. text)
+  return self:refresh()
 end
 
 ---@param type string | "DEADLINE" | "SCHEDULED" | "CLOSED"
@@ -435,8 +466,9 @@ function Headline:_remove_date(type)
   local line_nr = dates[type]:start() + 1
   tree_utils.set_node_text(dates[type], '', true)
   if vim.trim(vim.fn.getline(line_nr)) == '' then
-    return vim.api.nvim_call_function('deletebufline', { vim.api.nvim_get_current_buf(), line_nr })
+    vim.fn.deletebufline(vim.api.nvim_get_current_buf(), line_nr)
   end
+  return self:refresh()
 end
 
 ---@param text table|string

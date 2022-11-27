@@ -50,7 +50,7 @@ function OrgMappings:archive()
     archive_location,
     vim.schedule_wrap(function()
       Files.update_file(archive_location, function()
-        local archived_headline = ts_org.find_headline(item.title, true)
+        local archived_headline = ts_org.find_headline_by_title(item.title, true)
         if archived_headline then
           archived_headline:set_property('ARCHIVE_TIME', Date.now():to_string())
           archived_headline:set_property('ARCHIVE_FILE', file.filename)
@@ -396,7 +396,7 @@ function OrgMappings:_todo_change_state(direction)
   local log_note = config.org_log_done == 'note'
   local log_time = config.org_log_done == 'time'
   local should_log_time = log_note or log_time
-  local indent = config:get_indent(item.level + 1)
+  local indent = config:get_indent(headline:level() + 1)
 
   local get_note = function(note)
     if note == nil then
@@ -414,7 +414,7 @@ function OrgMappings:_todo_change_state(direction)
   local repeater_dates = item:get_repeater_dates()
   if #repeater_dates == 0 then
     if should_log_time and item:is_done() and not was_done then
-      headline:add_closed_date()
+      headline:set_closed_date()
       item = Files.get_closest_headline()
 
       if log_note then
@@ -422,7 +422,8 @@ function OrgMappings:_todo_change_state(direction)
         return self.capture.closing_note:open():next(function(note)
           local valid_note = get_note(note)
           if valid_note then
-            vim.fn.append(item:get_todo_note_line_number(), valid_note)
+            local append_line = headline:get_append_line()
+            vim.api.nvim_buf_set_lines(0, append_line, append_line, false, valid_note)
           end
         end)
       end
@@ -458,8 +459,8 @@ function OrgMappings:_todo_change_state(direction)
       if not note then
         return
       end
-      local properties_end_line = headline:properties():end_()
-      vim.api.nvim_buf_set_lines(0, properties_end_line, properties_end_line, false, note)
+      local append_line = headline:get_append_line()
+      vim.api.nvim_buf_set_lines(0, append_line, append_line, false, note)
     end)
 end
 
