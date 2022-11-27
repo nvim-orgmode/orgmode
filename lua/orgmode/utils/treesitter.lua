@@ -110,4 +110,11 @@ function M.set_node_text(node, text, front_trim)
   pcall(vim.api.nvim_buf_set_text, 0, sr, sc, er, ec, lines)
 end
 
+---@param node userdata
+---@param lines string[]
+function M.set_node_lines(node, lines)
+  local start_row, _, end_row, _ = node:range()
+  vim.api.nvim_buf_set_lines(0, start_row, end_row, false, lines)
+end
+
 return M

@@ -96,8 +96,7 @@ function Headline:_handle_promote_demote(recursive, modifier)
   local whole_subtree = function()
     local text = query.get_node_text(self.headline:parent(), 0)
     local lines = modifier(vim.split(text, '\n', true))
-    local start_line, _, end_line, _ = self.headline:parent():range()
-    vim.api.nvim_buf_set_lines(0, start_line, end_line, false, lines)
+    tree_utils.set_node_lines(self.headline:parent(), lines)
     return self:refresh()
   end
 
@@ -319,7 +318,7 @@ function Headline:set_property(name, value)
     tree_utils.set_node_text(existing_property.node, property)
     return self:refresh()
   end
-  local property_end = properties:end_()
+  local property_end = properties and properties:end_()
   vim.api.nvim_buf_set_lines(0, property_end - 1, property_end - 1, false, { self:_apply_indent(property) })
   return self:refresh()
 end
