@@ -366,6 +366,11 @@ end
 ---@param amount number
 function Config:apply_indent(content, amount)
   local indent = self:get_indent(amount)
+
+  if indent == '' then
+    return content
+  end
+
   if type(content) ~= 'table' then
     return indent .. content
   end
@@ -376,5 +381,6 @@ function Config:apply_indent(content, amount)
   return content
 end
 
+---@type Config
 instance = Config:new()
 return instance

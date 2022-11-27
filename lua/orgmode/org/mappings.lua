@@ -465,10 +465,10 @@ function OrgMappings:_todo_change_state(direction)
 end
 
 function OrgMappings:do_promote(whole_subtree)
-  local item = Files.get_closest_headline()
-  local old_level = item.level
+  local headline = ts_org.closest_headline()
+  local old_level = headline:level()
   local foldclosed = vim.fn.foldclosed('.')
-  item:promote(1, whole_subtree)
+  headline:promote(1, whole_subtree)
   if foldclosed > -1 and vim.fn.foldclosed('.') == -1 then
     vim.cmd([[norm!zc]])
   end
@@ -476,10 +476,10 @@ function OrgMappings:do_promote(whole_subtree)
 end
 
 function OrgMappings:do_demote(whole_subtree)
-  local item = Files.get_closest_headline()
-  local old_level = item.level
+  local headline = ts_org.closest_headline()
+  local old_level = headline:level()
   local foldclosed = vim.fn.foldclosed('.')
-  item:demote(1, whole_subtree)
+  headline:demote(1, whole_subtree)
   if foldclosed > -1 and vim.fn.foldclosed('.') == -1 then
     vim.cmd([[norm!zc]])
   end

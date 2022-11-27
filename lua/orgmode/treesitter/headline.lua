@@ -1,3 +1,4 @@
+local utils = require('orgmode.utils')
 local ts_utils = require('nvim-treesitter.ts_utils')
 local tree_utils = require('orgmode.utils.treesitter')
 local Date = require('orgmode.objects.date')
@@ -50,6 +51,78 @@ end
 
 function Headline:priority()
   return self:parse('%[#(%w+)%]')
+end
+
+---@param amount number
+---@param recursive? boolean
+function Headline:promote(amount, recursive)
+  amount = amount or 1
+  recursive = recursive or false
+  if self:level() == 1 then
+    return utils.echo_warning('Cannot demote top level heading.')
+  end
+
+  return self:_handle_promote_demote(recursive, function(lines)
+    for i, line in ipairs(lines) do
+      if line:sub(1, 1) == '*' then
+        lines[i] = line:sub(1 + amount)
+      elseif vim.trim(line:sub(1, amount)) == '' then
+        lines[i] = line:sub(1 + amount)
+      end
+    end
+    return lines
+  end)
+end
+
+
+---@param amount number
+---@param recursive? boolean
+function Headline:demote(amount, recursive)
+  amount = amount or 1
+  recursive = recursive or false
+
+  return self:_handle_promote_demote(recursive, function(lines)
+    for i, line in ipairs(lines) do
+      if line:sub(1, 1) == '*' then
+        lines[i] = '*' .. line
+      else
+        lines[i] = config:apply_indent(line, amount)
+      end
+    end
+    return lines
+  end)
+end
+
+function Headline:_handle_promote_demote(recursive, modifier)
+  local whole_subtree = function()
+    local text = query.get_node_text(self.headline:parent(), 0)
+    local lines = modifier(vim.split(text, '\n', true))
+    local start_line, _, end_line, _ = self.headline:parent():range()
+    vim.api.nvim_buf_set_lines(0, start_line, end_line, false, lines)
+    return self:refresh()
+  end
+
+  if recursive then
+    return whole_subtree()
+  end
+
+  local first_child_section = nil
+  for _, node in ipairs(ts_utils.get_named_children(self.headline:parent())) do
+    if node:type() == 'section' then
+      first_child_section = node
+      break
+    end
+  end
+
+  if not first_child_section then
+    return whole_subtree()
+  end
+
+  local start = self.headline:start()
+  local end_line = first_child_section:start()
+  local lines = modifier(vim.api.nvim_buf_get_lines(0, start, end_line, false))
+  vim.api.nvim_buf_set_lines(0, start, end_line, false, lines)
+  return self:refresh()
 end
 
 ---@return userdata, string

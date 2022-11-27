@@ -404,35 +404,6 @@ function Section:demote(amount, demote_child_sections, dryRun)
   return lines
 end
 
----@param amount number
----@param promote_child_sections boolean
-function Section:promote(amount, promote_child_sections)
-  amount = amount or 1
-  promote_child_sections = promote_child_sections or false
-  if self.level == 1 then
-    return utils.echo_warning('Cannot demote top level heading.')
-  end
-  vim.api.nvim_call_function('setline', { self.range.start_line, self.line:sub(1 + amount) })
-  if config.org_indent_mode == 'indent' then
-    local contents = self.root:get_node_text_list(self.node)
-    for i, content in ipairs(contents) do
-      if i > 1 then
-        if content:match('^%*+') then
-          break
-        end
-        if vim.trim(content:sub(1, amount)) == '' then
-          vim.api.nvim_call_function('setline', { self.range.start_line + i - 1, content:sub(1 + amount) })
-        end
-      end
-    end
-  end
-  if promote_child_sections then
-    for _, section in ipairs(self.sections) do
-      section:promote(amount, true)
-    end
-  end
-end
-
 ---@return boolean
 function Section:has_planning()
   for _, date in ipairs(self.dates) do
