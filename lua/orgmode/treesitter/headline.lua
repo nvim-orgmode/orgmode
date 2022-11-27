@@ -56,7 +56,7 @@ end
 ---@param amount number
 ---@param recursive? boolean
 function Headline:promote(amount, recursive)
-  amount = amount or 1
+  amount = math.min(amount or 1, self:level() - 1)
   recursive = recursive or false
   if self:level() == 1 then
     return utils.echo_warning('Cannot demote top level heading.')
@@ -74,7 +74,6 @@ function Headline:promote(amount, recursive)
   end)
 end
 
-
 ---@param amount number
 ---@param recursive? boolean
 function Headline:demote(amount, recursive)
@@ -84,7 +83,7 @@ function Headline:demote(amount, recursive)
   return self:_handle_promote_demote(recursive, function(lines)
     for i, line in ipairs(lines) do
       if line:sub(1, 1) == '*' then
-        lines[i] = '*' .. line
+        lines[i] = string.rep('*', amount) .. line
       else
         lines[i] = config:apply_indent(line, amount)
       end
