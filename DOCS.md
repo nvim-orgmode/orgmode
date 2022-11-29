@@ -722,21 +722,20 @@ Save note window content as closing note for a headline. Ignores first comment (
 #### **org_note_kill**
 *mapped to*: `<Leader>ok`<br />
 Close note window without saving anything
-#### **org_capture_show_help**
+#### **org_note_show_help**
 *mapped to*: `g?`<br />
 Show help popup with mappings
 
-These mappings live under `mappings.capture`, and can be changed like this:
+These mappings live under `mappings.note`, and can be changed like this:
 
 ```lua
 require('orgmode').setup({
   org_agenda_files = {'~/Dropbox/org/*', '~/my-orgs/**/*'},
   org_default_notes_file = '~/Dropbox/org/refile.org',
   mappings = {
-    capture = {
-      org_capture_finalize = '<Leader>w',
-      org_capture_refile = 'R',
-      org_capture_kill = 'Q'
+    note = {
+      org_note_finalize = '<Leader>w',
+      org_note_kill = 'Q'
     }
   }
 })
