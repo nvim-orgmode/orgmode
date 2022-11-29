@@ -4,7 +4,7 @@ local defaults = require('orgmode.config.defaults')
 ---@type table<string, MapEntry>
 local mappings = require('orgmode.config.mappings')
 
----@class Config
+---@class Config:DefaultConfig
 ---@field opts table
 ---@field todo_keywords table
 local Config = {}

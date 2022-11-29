@@ -1,4 +1,5 @@
-return {
+---@class DefaultConfig
+local DefaultConfig = {
   org_agenda_files = '',
   org_default_notes_file = '',
   org_todo_keywords = { 'TODO', '|', 'DONE' },
@@ -169,3 +170,5 @@ return {
     config_path = '$HOME/.emacs.d/init.el',
   },
 }
+
+return DefaultConfig
