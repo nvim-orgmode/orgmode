@@ -1,5 +1,6 @@
 local config = require('orgmode.config')
 local highlights = require('orgmode.colors.highlights')
+local tree_utils = require('orgmode.utils.treesitter')
 local utils = require('orgmode.utils')
 
 local function add_todo_keyword_highlights()
@@ -52,7 +53,7 @@ local function add_todo_keyword_highlights()
           end
           vim.treesitter.set_query('org', 'highlights', table.concat(all_lines, '\n'))
           if vim.bo.filetype == 'org' then
-            vim.cmd([[filetype detect]])
+            tree_utils.restart_highlights()
           end
         end)
       )
