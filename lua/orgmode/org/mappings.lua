@@ -50,7 +50,7 @@ function OrgMappings:archive()
     archive_location,
     vim.schedule_wrap(function()
       Files.update_file(archive_location, function()
-        local archived_headline = ts_org.find_headline_by_title(item.title, true)
+        local archived_headline = ts_org.find_headline_by_title(item.title, { exact = true, from_end = true })
         if archived_headline then
           archived_headline:set_property('ARCHIVE_TIME', Date.now():to_string())
           archived_headline:set_property('ARCHIVE_FILE', file.filename)

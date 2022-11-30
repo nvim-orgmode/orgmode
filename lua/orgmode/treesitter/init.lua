@@ -3,27 +3,43 @@ local Headline = require('orgmode.treesitter.headline')
 local Listitem = require('orgmode.treesitter.listitem')
 local M = {}
 
----@param matcher function
+---@param matcher function(headline: Headline, index: number): boolean
+---@param from_end? boolean
 ---@return Headline|nil
-local function query_headlines(matcher)
+local function query_headlines(matcher, from_end)
   local trees = vim.treesitter.get_parser(0, 'org', {}):parse()
   if #trees == 0 then
     return {}
   end
   local root = trees[1]:root()
   local ts_query = tree_utils.parse_query('(section (headline) @headline)')
-  local index = 1
+  local headlines = {}
   for _, match, _ in ts_query:iter_matches(root) do
-    -- local items = {}
     for _, matched_node in pairs(match) do
       local headline = Headline:new(matched_node)
-      local valid = matcher(headline, index)
+      table.insert(headlines, headline)
+    end
+  end
+
+  if from_end then
+    for i = #headlines, 1, -1 do
+      local headline = headlines[i]
+      local valid = matcher(headline, i)
       if valid then
         return headline
       end
-      index = index + 1
+    end
+    return nil
+  end
+
+  for i, headline in ipairs(headlines) do
+    local valid = matcher(headline, i)
+    if valid then
+      return headline
     end
   end
+
+  return nil
 end
 
 ---@param cursor? Table Cursor position tuple {row, col}
@@ -53,18 +69,23 @@ M.headline_at = function(index)
   end)
 end
 
+---@class FindHeadlineOpts
+---@field from_end? boolean
+---@field exact? boolean
+
 ---@param title string
----@param exact? boolean
+---@param opts? FindHeadlineOpts
 ---@return Headline|nil
-M.find_headline_by_title = function(title, exact)
+M.find_headline_by_title = function(title, opts)
+  opts = opts or {}
   return query_headlines(function(headline, _)
     local pattern = '^' .. vim.pesc(title:lower())
-    if exact then
+    if opts.exact then
       pattern = pattern .. '$'
     end
 
     return headline:title():lower():match(pattern)
-  end)
+  end, opts.from_end)
 end
 
 return M
