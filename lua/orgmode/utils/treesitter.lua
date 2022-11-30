@@ -15,7 +15,7 @@ end
 -- Reload treesitter highlighter without triggering FileType autocommands that include reloading entire file
 function M.restart_highlights(bufnr)
   bufnr = bufnr or 0
-  require("nvim-treesitter.configs").reattach_module('highlight', bufnr, 'org')
+  require('nvim-treesitter.configs').reattach_module('highlight', bufnr, 'org')
 end
 
 function M.parse_query(query)
