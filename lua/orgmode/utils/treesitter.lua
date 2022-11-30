@@ -12,6 +12,12 @@ function M.parse(bufnr)
   return vim.treesitter.get_parser(bufnr or 0, 'org', {}):parse()
 end
 
+-- Reload treesitter highlighter without triggering FileType autocommands that include reloading entire file
+function M.restart_highlights(bufnr)
+  bufnr = bufnr or 0
+  require('nvim-treesitter.configs').reattach_module('highlight', bufnr, 'org')
+end
+
 function M.parse_query(query)
   local ts_query = query_cache[query]
   if not ts_query then
