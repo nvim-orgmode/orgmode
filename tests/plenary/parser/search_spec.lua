@@ -129,48 +129,48 @@ describe('Search parser', function()
   it('should search props, tags and todo keywords', function()
     local result = Search:new('CATEGORY="test"&MYPROP=myval+WORK/TODO|NEXT')
     assert.Is.True(result:check({
-      props = { CATEGORY = 'test', MYPROP = 'myval', AGE = 10 },
+      props = { category = 'test', myprop = 'myval', age = 10 },
       tags = { 'WORK', 'OFFICE' },
       todo = { 'TODO' },
     }))
     assert.Is.True(result:check({
-      props = { CATEGORY = 'test', MYPROP = 'myval', AGE = 10 },
+      props = { category = 'test', myprop = 'myval', age = 10 },
       tags = { 'WORK', 'OFFICE' },
       todo = 'NEXT',
     }))
     assert.Is.False(result:check({
-      props = { CATEGORY = 'test', MYPROP = 'myval', AGE = 10 },
+      props = { category = 'test', myprop = 'myval', age = 10 },
       tags = { 'WORK', 'OFFICE' },
       todo = { 'DONE' },
     }))
 
     result = Search:new('CATEGORY="test"+WORK/-WAITING')
     assert.Is.True(result:check({
-      props = { CATEGORY = 'test' },
+      props = { category = 'test' },
       tags = { 'WORK' },
       todo = { 'TODO' },
     }))
 
     assert.Is.True(result:check({
-      props = { CATEGORY = 'test' },
+      props = { category = 'test' },
       tags = { 'WORK' },
       todo = { 'DONE' },
     }))
 
     assert.Is.False(result:check({
-      props = { CATEGORY = 'test' },
+      props = { category = 'test' },
       tags = { 'WORK' },
       todo = { 'WAITING' },
     }))
 
     assert.Is.False(result:check({
-      props = { CATEGORY = 'test_bad' },
+      props = { category = 'test_bad' },
       tags = { 'WORK' },
       todo = { 'DONE' },
     }))
 
     assert.Is.False(result:check({
-      props = { CATEGORY = 'test' },
+      props = { category = 'test' },
       tags = { 'OFFICE' },
       todo = { 'DONE' },
     }))
