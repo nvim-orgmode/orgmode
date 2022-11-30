@@ -68,17 +68,17 @@ describe('Search parser', function()
   it('should parse search term and match string properties and value', function()
     local result = Search:new('CATEGORY="test"&MYPROP=myval+WORK')
     assert.Is.True(result:check({
-      props = { CATEGORY = 'test', MYPROP = 'myval', AGE = 10 },
+      props = { category = 'test', myprop = 'myval', age = 10 },
       tags = { 'WORK', 'OFFICE' },
     }))
 
     assert.Is.False(result:check({
-      props = { CATEGORY = 'invalid', MYPROP = 'myval', AGE = 10 },
+      props = { category = 'invalid', myprop = 'myval', age = 10 },
       tags = { 'WORK', 'OFFICE' },
     }))
 
     assert.Is.False(result:check({
-      props = { CATEGORY = 'test', MYPROP = 'myval', AGE = 10 },
+      props = { category = 'test', myprop = 'myval', age = 10 },
       tags = { 'OFFICE' },
     }))
   end)
@@ -86,42 +86,42 @@ describe('Search parser', function()
   it('should parse search term and match number properties and value', function()
     local result = Search:new('PAGES>=1000&ITEMS<500&COUNT=10&CALCULATION<>5&BOOKS>3+WORK')
     assert.Is.True(result:check({
-      props = { PAGES = 1010, ITEMS = 100, COUNT = 10, CALCULATION = 8, BOOKS = 5 },
+      props = { pages = 1010, items = 100, count = 10, calculation = 8, books = 5 },
       tags = { 'WORK', 'OFFICE' },
     }))
 
     assert.Is.True(result:check({
-      props = { PAGES = 1000, ITEMS = 499, COUNT = 10, CALCULATION = 10, BOOKS = 4 },
+      props = { pages = 1000, items = 499, count = 10, calculation = 10, books = 4 },
       tags = { 'WORK' },
     }))
 
     assert.Is.False(result:check({
-      props = { PAGES = 999, ITEMS = 499, COUNT = 10, CALCULATION = 10, BOOKS = 4 },
+      props = { pages = 999, items = 499, count = 10, calculation = 10, books = 4 },
       tags = { 'WORK' },
     }))
 
     assert.Is.False(result:check({
-      props = { PAGES = 1001, ITEMS = 500, COUNT = 10, CALCULATION = 10, BOOKS = 4 },
+      props = { pages = 1001, items = 500, count = 10, calculation = 10, books = 4 },
       tags = { 'WORK' },
     }))
 
     assert.Is.False(result:check({
-      props = { PAGES = 1001, ITEMS = 500, COUNT = 11, CALCULATION = 10, BOOKS = 4 },
+      props = { pages = 1001, items = 500, count = 11, calculation = 10, books = 4 },
       tags = { 'WORK' },
     }))
 
     assert.Is.False(result:check({
-      props = { PAGES = 1001, ITEMS = 500, COUNT = 11, CALCULATION = 5, BOOKS = 4 },
+      props = { pages = 1001, items = 500, count = 11, calculation = 5, books = 4 },
       tags = { 'WORK' },
     }))
 
     assert.Is.False(result:check({
-      props = { PAGES = 1001, ITEMS = 500, COUNT = 11, CALCULATION = 5, BOOKS = 3 },
+      props = { pages = 1001, items = 500, count = 11, calculation = 5, books = 3 },
       tags = { 'WORK' },
     }))
 
     assert.Is.False(result:check({
-      props = { PAGES = 1010, ITEMS = 100, COUNT = 10, CALCULATION = 8, BOOKS = 5 },
+      props = { pages = 1010, items = 100, count = 10, calculation = 8, books = 5 },
       tags = { 'OFFICE' },
     }))
   end)
@@ -129,48 +129,48 @@ describe('Search parser', function()
   it('should search props, tags and todo keywords', function()
     local result = Search:new('CATEGORY="test"&MYPROP=myval+WORK/TODO|NEXT')
     assert.Is.True(result:check({
-      props = { CATEGORY = 'test', MYPROP = 'myval', AGE = 10 },
+      props = { category = 'test', myprop = 'myval', age = 10 },
       tags = { 'WORK', 'OFFICE' },
       todo = { 'TODO' },
     }))
     assert.Is.True(result:check({
-      props = { CATEGORY = 'test', MYPROP = 'myval', AGE = 10 },
+      props = { category = 'test', myprop = 'myval', age = 10 },
       tags = { 'WORK', 'OFFICE' },
       todo = 'NEXT',
     }))
     assert.Is.False(result:check({
-      props = { CATEGORY = 'test', MYPROP = 'myval', AGE = 10 },
+      props = { category = 'test', myprop = 'myval', age = 10 },
       tags = { 'WORK', 'OFFICE' },
       todo = { 'DONE' },
     }))
 
     result = Search:new('CATEGORY="test"+WORK/-WAITING')
     assert.Is.True(result:check({
-      props = { CATEGORY = 'test' },
+      props = { category = 'test' },
       tags = { 'WORK' },
       todo = { 'TODO' },
     }))
 
     assert.Is.True(result:check({
-      props = { CATEGORY = 'test' },
+      props = { category = 'test' },
       tags = { 'WORK' },
       todo = { 'DONE' },
     }))
 
     assert.Is.False(result:check({
-      props = { CATEGORY = 'test' },
+      props = { category = 'test' },
       tags = { 'WORK' },
       todo = { 'WAITING' },
     }))
 
     assert.Is.False(result:check({
-      props = { CATEGORY = 'test_bad' },
+      props = { category = 'test_bad' },
       tags = { 'WORK' },
       todo = { 'DONE' },
     }))
 
     assert.Is.False(result:check({
-      props = { CATEGORY = 'test' },
+      props = { category = 'test' },
       tags = { 'OFFICE' },
       todo = { 'DONE' },
     }))
