@@ -493,7 +493,7 @@ function Date:subtract(opts)
 end
 
 ---@param date Date
----@param span string
+---@param span? string
 ---@return boolean
 function Date:is_same(date, span)
   if not span then

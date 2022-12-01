@@ -1,4 +1,5 @@
-return {
+---@class DefaultConfig
+local DefaultConfig = {
   org_agenda_files = '',
   org_default_notes_file = '',
   org_todo_keywords = { 'TODO', '|', 'DONE' },
@@ -94,6 +95,11 @@ return {
       org_capture_kill = '<prefix>k',
       org_capture_show_help = 'g?',
     },
+    note = {
+      org_note_finalize = '<C-c>',
+      org_note_kill = '<prefix>k',
+      org_note_show_help = 'g?',
+    },
     org = {
       org_refile = '<prefix>r',
       org_timestamp_up_day = '<S-UP>',
@@ -164,3 +170,5 @@ return {
     config_path = '$HOME/.emacs.d/init.el',
   },
 }
+
+return DefaultConfig

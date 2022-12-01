@@ -321,52 +321,6 @@ function Section:get_repeater_dates()
   end, self.dates)
 end
 
----@param properties table
----@return table
-function Section:add_properties(properties)
-  if self.properties.valid then
-    local start = vim.api.nvim_call_function('getline', { self.properties.range.start_line })
-    local indent = start:match('^%s*')
-    for name, val in pairs(properties) do
-      if self.properties.items[name:lower()] then
-        local properties_content = self.root:get_node_text_list(self.properties.node)
-        for i, content in ipairs(properties_content) do
-          if content:lower():match('^%s*:' .. name:lower() .. ':.*$') then
-            local new_line = content:gsub(vim.pesc(self.properties.items[name:lower()]), val)
-            vim.api.nvim_call_function('setline', { self.properties.range.start_line + i - 1, new_line })
-            break
-          end
-        end
-      else
-        vim.api.nvim_call_function('append', {
-          self.properties.range.start_line,
-          string.format('%s:%s: %s', indent, name, val),
-        })
-      end
-    end
-    return {
-      is_new = false,
-      indent = indent,
-    }
-  end
-
-  local properties_line = self:has_planning() and self.range.start_line + 1 or self.range.start_line
-  local indent = config:get_indent(self.level + 1)
-  local content = { string.format('%s:PROPERTIES:', indent) }
-
-  for name, val in pairs(properties) do
-    table.insert(content, string.format('%s:%s: %s', indent, name, val))
-  end
-
-  table.insert(content, string.format('%s:END:', indent))
-  vim.api.nvim_call_function('append', { properties_line, content })
-  return {
-    is_new = true,
-    end_line = properties_line + #content,
-    indent = indent,
-  }
-end
-
 ---@return boolean
 function Section:is_first_section()
   if not self.parent then
@@ -448,75 +402,6 @@ function Section:demote(amount, demote_child_sections, dryRun)
     end
   end
   return lines
-end
-
----@param amount number
----@param promote_child_sections boolean
-function Section:promote(amount, promote_child_sections)
-  amount = amount or 1
-  promote_child_sections = promote_child_sections or false
-  if self.level == 1 then
-    return utils.echo_warning('Cannot demote top level heading.')
-  end
-  vim.api.nvim_call_function('setline', { self.range.start_line, self.line:sub(1 + amount) })
-  if config.org_indent_mode == 'indent' then
-    local contents = self.root:get_node_text_list(self.node)
-    for i, content in ipairs(contents) do
-      if i > 1 then
-        if content:match('^%*+') then
-          break
-        end
-        if vim.trim(content:sub(1, amount)) == '' then
-          vim.api.nvim_call_function('setline', { self.range.start_line + i - 1, content:sub(1 + amount) })
-        end
-      end
-    end
-  end
-  if promote_child_sections then
-    for _, section in ipairs(self.sections) do
-      section:promote(amount, true)
-    end
-  end
-end
-
-function Section:add_closed_date()
-  local closed_date = self:get_closed_date()
-  if closed_date then
-    return nil
-  end
-  return self:_add_planning_date(Date.now(), 'CLOSED')
-end
-
----@param date Date
-function Section:add_scheduled_date(date)
-  local scheduled_date = self:get_scheduled_date()
-  if scheduled_date then
-    return self:_update_date(scheduled_date, date)
-  end
-  return self:_add_planning_date(date, 'SCHEDULED', true)
-end
-
----@param date Date
-function Section:add_deadline_date(date)
-  local deadline_date = self:get_deadline_date()
-  if deadline_date then
-    return self:_update_date(deadline_date, date)
-  end
-  return self:_add_planning_date(date, 'DEADLINE', true)
-end
-
-function Section:remove_closed_date()
-  local closed_date = self:get_closed_date()
-  if not closed_date then
-    return nil
-  end
-  local planning_linenr = self.range.start_line + 1
-  local planning_line = vim.api.nvim_call_function('getline', { planning_linenr })
-  local new_line = planning_line:gsub('%s*CLOSED:%s*[%[<]' .. vim.pesc(closed_date:to_string()) .. '[%]>]', '')
-  if vim.trim(new_line) == '' then
-    return vim.api.nvim_call_function('deletebufline', { vim.api.nvim_get_current_buf(), planning_linenr })
-  end
-  return vim.api.nvim_call_function('setline', { planning_linenr, new_line })
 end
 
 ---@return boolean
@@ -602,45 +487,6 @@ function Section:get_title()
   end
   local title = self.title:gsub('^%[#([A-Z0-9])%]%s*', '')
   return title
-end
-
-function Section:_update_date(date, new_date)
-  date = date:set({
-    year = new_date.year,
-    month = new_date.month,
-    day = new_date.day,
-  })
-  local line = vim.api.nvim_call_function('getline', { date.range.start_line })
-  local view = vim.fn.winsaveview()
-  local new_line =
-    string.format('%s%s%s', line:sub(1, date.range.start_col), date:to_string(), line:sub(date.range.end_col))
-  vim.api.nvim_call_function('setline', {
-    date.range.start_line,
-    new_line,
-  })
-  vim.fn.winrestview(view)
-  return true
-end
-
----@param date Date
----@param type string
----@param active? boolean
----@return string
-function Section:_add_planning_date(date, type, active)
-  local date_string = date:to_wrapped_string(active)
-  if self:has_planning() then
-    local planning_linenr = self.range.start_line + 1
-    return vim.api.nvim_call_function('setline', {
-      planning_linenr,
-      string.format('%s %s: %s', vim.api.nvim_call_function('getline', { planning_linenr }), type, date_string),
-    })
-  end
-
-  local indent = config:get_indent(self.level + 1)
-  return vim.api.nvim_call_function('append', {
-    self.range.start_line,
-    string.format('%s%s: %s', indent, type, date_string),
-  })
 end
 
 return Section

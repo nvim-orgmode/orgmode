@@ -336,6 +336,17 @@ describe('Mappings', function()
       '**** NEXT [#1] Level 3',
       ' Content Level 3',
     }, vim.api.nvim_buf_get_lines(0, 2, 8, false))
+
+    -- Support count
+    vim.cmd([[norm 4>s]])
+    assert.are.same({
+      '****** TODO Test orgmode',
+      '       DEADLINE: <2021-07-21 Wed 22:02>',
+      '******* TODO [#A] Test orgmode level 2 :PRIVATE:',
+      '     Some content for level 2',
+      '******** NEXT [#1] Level 3',
+      '     Content Level 3',
+    }, vim.api.nvim_buf_get_lines(0, 2, 8, false))
   end)
 
   it('should promote the heading (org_do_promote)', function()
@@ -391,6 +402,38 @@ describe('Mappings', function()
       '** NEXT [#1] Level 3',
       'Content Level 3',
     }, vim.api.nvim_buf_get_lines(0, 2, 8, false))
+
+    helpers.load_file_content({
+      '***** TODO Test orgmode',
+      '      DEADLINE: <2021-07-21 Wed 22:02>',
+      '****** TODO [#A] Test orgmode level 2 :PRIVATE:',
+      '       Some content for level 2',
+      '******* NEXT [#1] Level 3',
+      '        Content Level 3',
+    }, vim.api.nvim_buf_get_lines(0, 0, 6, false))
+    vim.fn.cursor(1, 1)
+
+    -- Support count
+    vim.cmd([[norm 2<s]])
+    assert.are.same({
+      '*** TODO Test orgmode',
+      '    DEADLINE: <2021-07-21 Wed 22:02>',
+      '**** TODO [#A] Test orgmode level 2 :PRIVATE:',
+      '     Some content for level 2',
+      '***** NEXT [#1] Level 3',
+      '      Content Level 3',
+    }, vim.api.nvim_buf_get_lines(0, 0, 6, false))
+
+    -- Handle overflow
+    vim.cmd([[norm 5<s]])
+    assert.are.same({
+      '* TODO Test orgmode',
+      '  DEADLINE: <2021-07-21 Wed 22:02>',
+      '** TODO [#A] Test orgmode level 2 :PRIVATE:',
+      '   Some content for level 2',
+      '*** NEXT [#1] Level 3',
+      '    Content Level 3',
+    }, vim.api.nvim_buf_get_lines(0, 0, 6, false))
   end)
 
   it('should add list item with Enter (org_meta_return)', function()

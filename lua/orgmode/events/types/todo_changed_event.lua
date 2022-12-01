@@ -11,7 +11,7 @@ local TodoChangedEvent = {
 ---@param section Section
 ---@param headline Headline
 ---@param old_todo_state? string
----@param is_done? string
+---@param is_done? boolean
 function TodoChangedEvent:new(section, headline, old_todo_state, is_done)
   local obj = setmetatable({}, self)
   self.__index = self
