@@ -252,6 +252,10 @@ function Help.prepare_content(opts)
 
   local content, include_generic = prepare_func(mappings, max_height)
   if include_generic then
+    -- remove the generic '<prefix>'
+    content = vim.tbl_map(function(line)
+      return string.gsub(line, '<prefix>', mappings.prefix)
+    end, content)
     return content
   end
 
@@ -271,6 +275,11 @@ function Help.prepare_content(opts)
 
   table.insert(content, '')
   table.insert(content, string.format('  `%-12s` - %s', '<Esc>, q', 'Close this help'))
+
+  -- remove the generic '<prefix>'
+  content = vim.tbl_map(function(line)
+    return string.gsub(line, '<prefix>', mappings.prefix)
+  end, content)
 
   return content
 end
