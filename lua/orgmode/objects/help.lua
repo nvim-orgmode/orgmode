@@ -165,7 +165,10 @@ function Help._prepare_orgcapture(mappings, max_height)
       maps = table.concat(maps, ', ')
     end
 
-    table.insert(content, string.format('  `%-12s` - %s', maps, item.description))
+    table.insert(
+      content,
+      string.format('  `%-12s` - %s', string.gsub(maps, '<prefix>', mappings.prefix), item.description)
+    )
   end
 
   table.insert(content, '  __Org__')
@@ -186,7 +189,10 @@ function Help._prepare_orgnote(mappings, max_height)
       maps = table.concat(maps, ', ')
     end
 
-    table.insert(content, string.format('  `%-12s` - %s', maps, item.description))
+    table.insert(
+      content,
+      string.format('  `%-12s` - %s', string.gsub(maps, '<prefix>', mappings.prefix), item.description)
+    )
   end
 
   table.insert(content, '  __Org__')
@@ -207,7 +213,10 @@ function Help._prepare_orgagenda(mappings, max_height)
       maps = table.concat(maps, ', ')
     end
 
-    table.insert(content, string.format('  `%-12s` - %s', maps, item.description))
+    table.insert(
+      content,
+      string.format('  `%-12s` - %s', string.gsub(maps, '<prefix>', mappings.prefix), item.description)
+    )
   end
 
   table.insert(content, '')
@@ -230,7 +239,10 @@ function Help._prepare_edit_src(mappings, max_height)
       maps = table.concat(maps, ', ')
     end
 
-    table.insert(content, string.format('  `%-12s` - %s', maps, item.description))
+    table.insert(
+      content,
+      string.format('  `%-12s` - %s', string.gsub(maps, '<prefix>', mappings.prefix), item.description)
+    )
   end
 
   return content, true
@@ -261,7 +273,10 @@ function Help.prepare_content(opts)
       maps = table.concat(maps, ', ')
     end
 
-    table.insert(content, string.format('  `%-12s` - %s', maps, item.description))
+    table.insert(
+      content,
+      string.format('  `%-12s` - %s', string.gsub(maps, '<prefix>', mappings.prefix), item.description)
+    )
   end
 
   for _, item in ipairs(helps.text_objects) do
