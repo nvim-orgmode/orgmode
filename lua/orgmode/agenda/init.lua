@@ -33,8 +33,9 @@ function Agenda:new(opts)
 end
 
 ---@param View table
+---@param type string
 ---@param opts? table
-function Agenda:open_agenda_view(View, opts)
+function Agenda:open_agenda_view(View, type, opts)
   self:open_window()
   self.win_width = utils.winwidth()
   local view = View:new(vim.tbl_deep_extend('force', opts or {}, {
@@ -42,24 +43,25 @@ function Agenda:open_agenda_view(View, opts)
     win_width = self.win_width,
   })):build()
   self.views = { view }
+  vim.b.org_agenda_type = type
   return self:_render()
 end
 
 function Agenda:agenda(opts)
-  self:open_agenda_view(AgendaView, opts)
+  self:open_agenda_view(AgendaView, 'agenda', opts)
 end
 
 -- TODO: Introduce searching ALL/DONE
 function Agenda:todos()
-  self:open_agenda_view(AgendaTodosView)
+  self:open_agenda_view(AgendaTodosView, 'todos')
 end
 
 function Agenda:search()
-  self:open_agenda_view(AgendaSearchView)
+  self:open_agenda_view(AgendaSearchView, 'search')
 end
 
 function Agenda:tags(opts)
-  self:open_agenda_view(AgendaTagsView, opts)
+  self:open_agenda_view(AgendaTagsView, 'tags', opts)
 end
 
 function Agenda:tags_todo()
