@@ -1,4 +1,5 @@
 local config = require('orgmode.config')
+local utils = require('orgmode.utils')
 local ts_utils = require('nvim-treesitter.ts_utils')
 local query = nil
 
@@ -360,18 +361,37 @@ local function get_matches(bufnr, first_line, last_line)
 end
 
 local function apply(namespace, bufnr, _, first_line, last_line, _)
-  local visible_lines = {}
   -- Add some offset to make sure everything is covered
-  local start_line = math.max(0, first_line - 5)
-  for i = start_line, last_line do
+  local line_ranges = { {} }
+  local current_line_range = 1
+  local last_valid_line = -1
+  for i = first_line, last_line do
     if vim.fn.foldclosed(i + 1) == -1 then
-      table.insert(visible_lines, i)
+      -- Generate list of valid ranges
+      if last_valid_line < 0 or (i - 1) == last_valid_line then
+        table.insert(line_ranges[current_line_range], i)
+      else
+        current_line_range = current_line_range + 1
+        line_ranges[current_line_range] = { i }
+      end
+      last_valid_line = i
     end
   end
-  if #visible_lines == 0 then
+
+  -- None of the lines are valid
+  if last_valid_line < 0 then
     return
   end
-  local ranges, link_ranges, latex_ranges = get_matches(bufnr, visible_lines[1], visible_lines[#visible_lines])
+  local ranges = {}
+  local link_ranges = {}
+  local latex_ranges = {}
+
+  for _, range in ipairs(line_ranges) do
+    local r, link_r, latex_r = get_matches(bufnr, math.max(1, range[1] - 5), range[#range] + 5)
+    utils.concat(ranges, r or {})
+    utils.concat(link_ranges, link_r or {})
+    utils.concat(latex_ranges, latex_r or {})
+  end
   local hide_markers = config.org_hide_emphasis_markers
 
   for _, range in ipairs(ranges) do
