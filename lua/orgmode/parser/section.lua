@@ -38,7 +38,6 @@ local Section = {}
 ---@field node unknown
 ---@field type 'TODO'|'DONE'|''
 ---@field value string
-local SectionTodoKeyword = {}
 
 ---@class NewSectionOptions
 ---@field content string[]
@@ -56,7 +55,6 @@ local SectionTodoKeyword = {}
 ---@field tags string[]
 ---@field title string
 ---@field todo_keyword_node unknown
-local NewSectionOptions = {}
 
 ---Constructs a new Section
 ---@param data NewSectionOptions
