@@ -11,7 +11,7 @@ local Logbook = require('orgmode.parser.logbook')
 local config = require('orgmode.config')
 
 ---@class Section
----@field id number
+---@field id string
 ---@field line_number number
 ---@field level number
 ---@field node table
@@ -20,7 +20,7 @@ local config = require('orgmode.config')
 ---@field line string
 ---@field range Range
 ---@field sections Section[]
----@field todo_keyword table<string, string>
+---@field todo_keyword SectionTodoKeyword
 ---@field priority string
 ---@field title string
 ---@field category string
@@ -34,8 +34,37 @@ local config = require('orgmode.config')
 ---@field clocked_in boolean
 local Section = {}
 
+---@class SectionTodoKeyword
+---@field node unknown
+---@field type 'TODO'|'DONE'|''
+---@field value string
+local SectionTodoKeyword = {}
+
+---@class NewSectionOptions
+---@field content string[]
+---@field dates Date[]
+---@field level number
+---@field line string
+---@field logbook Logbook
+---@field node table
+---@field own_tags string[]
+---@field parent Section
+---@field priority string
+---@field properties table
+---@field range Range
+---@field root File
+---@field tags string[]
+---@field title string
+---@field todo_keyword_node unknown
+local NewSectionOptions = {}
+
+---Constructs a new Section
+---@param data NewSectionOptions
+---@return Section
 function Section:new(data)
   data = data or {}
+
+  ---@type Section
   local section = {}
   section.id = string.format('%s####%s', data.root.filename or '', data.range.start_line)
   section.line_number = data.range.start_line
@@ -337,7 +366,7 @@ function Section:is_last_section()
   return self.parent.sections[#self.parent.sections].id == self.id
 end
 
----@return Section
+---@return Section?
 function Section:get_prev_headline_same_level()
   if self:is_first_section() then
     return nil
@@ -353,7 +382,7 @@ function Section:get_prev_headline_same_level()
   return nil
 end
 
----@return Section
+---@return Section?
 function Section:get_next_headline_same_level()
   if self:is_last_section() then
     return nil
