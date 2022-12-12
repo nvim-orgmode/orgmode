@@ -8,7 +8,7 @@
   <a href="/LICENSE">![License](https://img.shields.io/badge/license-MIT-brightgreen?style=flat-square)</a><a href="https://ko-fi.com/kristijanhusak"> ![Kofi](https://img.shields.io/badge/support-kofi-00b9fe?style=flat-square&logo=kofi)</a><a href="https://matrix.to/#/#neovim-orgmode:matrix.org"> ![Chat](https://img.shields.io/matrix/neovim-orgmode:matrix.org?logo=matrix&server_fqdn=matrix.org&style=flat-square)</a>
 
 
-  Orgmode clone written in Lua for Neovim 0.7+
+  Orgmode clone written in Lua for Neovim 0.8+
 
   [Setup](#setup) • [Docs](/DOCS.md) • [Showcase](#showcase) • [Treesitter](#treesitter-info) • [Troubleshoot](#troubleshoot) • [Plugins](#plugins) • [Development](#development) • [Kudos](#thanks-to)
 
@@ -19,7 +19,7 @@
 
 ### Requirements
 
-* Neovim 0.7.0 or later
+* Neovim 0.8.0 or later
 * [nvim-treesitter](https://github.com/nvim-treesitter/nvim-treesitter)
 
 ### Installation
