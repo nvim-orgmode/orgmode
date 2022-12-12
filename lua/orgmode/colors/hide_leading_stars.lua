@@ -1,6 +1,10 @@
 local config = require('orgmode.config')
 
-local function update_line_highlight(namespace, bufnr, line_index, line)
+local function apply(namespace, bufnr, line_index)
+  if not config.org_hide_leading_stars then
+    return
+  end
+  local line = vim.api.nvim_buf_get_lines(bufnr, line_index, line_index + 1, false)[1]
   local stars = line:match('^%*+')
   if stars then
     vim.api.nvim_buf_set_extmark(bufnr, namespace, line_index, 0, {
@@ -9,16 +13,6 @@ local function update_line_highlight(namespace, bufnr, line_index, line)
       hl_group = 'OrgHideLeadingStars',
       ephemeral = true,
     })
-  end
-end
-
-local function apply(namespace, bufnr, changed_lines, first_line, _)
-  if not config.org_hide_leading_stars then
-    return
-  end
-
-  for i, line in ipairs(changed_lines) do
-    update_line_highlight(namespace, bufnr, first_line + i - 1, line)
   end
 end
 
