@@ -360,38 +360,8 @@ local function get_matches(bufnr, first_line, last_line)
   return result, link_result, latex_result
 end
 
-local function apply(namespace, bufnr, _, first_line, last_line, _)
-  -- Add some offset to make sure everything is covered
-  local line_ranges = { {} }
-  local current_line_range = 1
-  local last_valid_line = -1
-  for i = first_line, last_line do
-    if vim.fn.foldclosed(i + 1) == -1 then
-      -- Generate list of valid ranges
-      if last_valid_line < 0 or (i - 1) == last_valid_line then
-        table.insert(line_ranges[current_line_range], i)
-      else
-        current_line_range = current_line_range + 1
-        line_ranges[current_line_range] = { i }
-      end
-      last_valid_line = i
-    end
-  end
-
-  -- None of the lines are valid
-  if last_valid_line < 0 then
-    return
-  end
-  local ranges = {}
-  local link_ranges = {}
-  local latex_ranges = {}
-
-  for _, range in ipairs(line_ranges) do
-    local r, link_r, latex_r = get_matches(bufnr, math.max(1, range[1] - 5), range[#range] + 5)
-    utils.concat(ranges, r or {})
-    utils.concat(link_ranges, link_r or {})
-    utils.concat(latex_ranges, latex_r or {})
-  end
+local function apply(namespace, bufnr, line_index)
+  local ranges, link_ranges, latex_ranges = get_matches(bufnr, line_index, line_index + 1)
   local hide_markers = config.org_hide_emphasis_markers
 
   for _, range in ipairs(ranges) do
