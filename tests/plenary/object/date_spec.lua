@@ -571,6 +571,13 @@ describe('Date object', function()
     assert.are.same(inTwoWeeks:to_string(), sunday:apply_repeater_until(inTwoWeeks):to_string())
   end)
 
+  it('should apply repeater to future dates', function()
+    local tomorrow = Date.now({ adjustments = { '++1d' } }):add({ day = 1 })
+    local day_after_tomorrow = tomorrow:add({ day = 1 })
+    local updated_date = tomorrow:apply_repeater()
+    assert.are.same(updated_date, day_after_tomorrow)
+  end)
+
   it('should cache check for today', function()
     local today = Date.today()
     assert.is.Nil(today.is_today_date)
