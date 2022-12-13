@@ -575,7 +575,7 @@ describe('Date object', function()
     local tomorrow = Date.now({ adjustments = { '++1d' } }):add({ day = 1 })
     local day_after_tomorrow = tomorrow:add({ day = 1 })
     local updated_date = tomorrow:apply_repeater()
-    assert.are.same(updated_date, day_after_tomorrow)
+    assert.are.same(updated_date:to_string(), day_after_tomorrow:to_string())
   end)
 
   it('should cache check for today', function()
