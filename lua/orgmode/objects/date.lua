@@ -757,16 +757,25 @@ function Date:apply_repeater()
   if not repeater then
     return self
   end
+
+  -- Repeater relative to completion time
   if repeater:match('^%.%+%d+') then
-    return date:set_todays_date():adjust(repeater:sub(2))
+    -- Strip the '.' from the repeater
+    local offset = repeater:sub(2)
+    return date:set_todays_date():adjust(offset)
   end
+
+  -- Repeater relative to deadline/scheduled date
   if repeater:match('^%+%+%d') then
-    while date.timestamp < current_time.timestamp do
-      date = date:adjust(repeater:sub(2))
-    end
+    -- Strip the '+' from the repeater
+    local offset = repeater:sub(2)
+    repeat
+      date = date:adjust(offset)
+    until date.timestamp > current_time.timestamp
     return date
   end
 
+  -- Simple repeat; apply repeater once to deadline/scheduled date
   return date:adjust(repeater)
 end
 
