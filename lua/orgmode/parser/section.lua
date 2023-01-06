@@ -27,12 +27,15 @@ local config = require('orgmode.config')
 ---@field file string
 ---@field content string[]
 ---@field dates Date[]
----@field properties table
+---@field properties SectionProperties
 ---@field tags string[]
 ---@field own_tags string[]
 ---@field logbook Logbook
 ---@field clocked_in boolean
 local Section = {}
+
+---@class SectionProperties
+---@field items table<string, string>
 
 ---@class SectionTodoKeyword
 ---@field node unknown
