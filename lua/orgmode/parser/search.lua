@@ -4,9 +4,18 @@
 ---@class Search
 ---@field term string
 ---@field expressions table
----@field logic table
+---@field logic SearchLogicClause[]
 ---@field todo_search table
 local Search = {}
+
+---@class SearchLogicClause
+---@field contains string[]
+---@field excludes string[]
+
+---@class Searchable
+---@field props table<string, string>
+---@field tags string[]
+---@field todo string
 
 ---@param term string
 function Search:new(term)
@@ -22,6 +31,8 @@ function Search:new(term)
   return data
 end
 
+---@param item Searchable
+---@return boolean
 function Search:check(item)
   for _, or_item in ipairs(self.logic) do
     local passes = self:_check_or(or_item, item)
@@ -32,6 +43,9 @@ function Search:check(item)
   return false
 end
 
+---@param or_item SearchLogicClause
+---@param item Searchable
+---@return boolean
 function Search:_check_or(or_item, item)
   for _, val in ipairs(or_item.contains) do
     if not self:_matches(val, item) then
@@ -52,6 +66,9 @@ function Search:_check_or(or_item, item)
   return true
 end
 
+---@param val string
+---@param item Searchable
+---@return boolean
 function Search:_matches(val, item)
   local prop_name, operator, prop_val = val:match('([^=<>]*)([=<>]+)([^=<>]*)')
   if not prop_name then
@@ -111,7 +128,7 @@ function Search:_matches(val, item)
 end
 
 ---@private
----@return string
+---@return nil
 function Search:_parse()
   local term = self.term
   local todo_search = term:match('/([^/]*)$')
