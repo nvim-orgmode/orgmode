@@ -25,7 +25,28 @@ local time_format = '%H:%M'
 ---@field related_date_range Date
 ---@field dayname string
 ---@field adjustments string[]
-local Date = {}
+local Date = {
+  ---@type fun(this: Date, other: Date): boolean
+  __eq = function(this, other)
+    return this.timestamp == other.timestamp
+  end,
+  ---@type fun(this: Date, other: Date): boolean
+  __lt = function(this, other)
+    return this.timestamp < other.timestamp
+  end,
+  ---@type fun(this: Date, other: Date): boolean
+  __le = function(this, other)
+    return this.timestamp <= other.timestamp
+  end,
+  ---@type fun(this: Date, other: Date): boolean
+  __gt = function(this, other)
+    return this.timestamp > other.timestamp
+  end,
+  ---@type fun(this: Date, other: Date): boolean
+  __ge = function(this, other)
+    return this.timestamp >= other.timestamp
+  end,
+}
 
 ---@param source table
 ---@param target? table
