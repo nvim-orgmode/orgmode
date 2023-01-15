@@ -11,7 +11,7 @@ local Search = {}
 
 ---@class Searchable
 ---@field props table<string, string>
----@field tags string[]
+---@field tags string|string[]
 ---@field todo string
 
 ---@class OrItem
@@ -331,7 +331,12 @@ end
 ---@param item Searchable
 ---@return boolean
 function TagMatch:match(item)
-  for _, tag in ipairs(item.tags) do
+  local item_tags = item.tags
+  if type(item_tags) == 'string' then
+    return item_tags == self.value
+  end
+
+  for _, tag in ipairs(item_tags) do
     if tag == self.value then
       return true
     end
