@@ -127,13 +127,15 @@ local function parse_delimited_sequence(input, item_parser, delimiter_pattern)
 
   -- Continue parsing items while there's a trailing delimiter
   delimiter, input = parse_pattern(input, delimiter_pattern)
-  while delimiter and input:len() do
+  while delimiter do
     item, input = item_parser(input)
     if not item then
       return nil, original_input
     end
 
     table.insert(sequence, item)
+
+    delimiter, input = parse_pattern(input, delimiter_pattern)
   end
 
   return sequence, input
