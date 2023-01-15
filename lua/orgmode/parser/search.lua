@@ -201,8 +201,8 @@ function OrItem:parse(input)
   local and_items
   local original_input = input
 
-  and_items, input = parse_delimited_sequence(input, function()
-    return AndItem:parse(input)
+  and_items, input = parse_delimited_sequence(input, function(i)
+    return AndItem:parse(i)
   end, '%&')
 
   if not and_items then
