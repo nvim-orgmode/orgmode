@@ -132,7 +132,7 @@ describe('Search parser', function()
     assert.Is.True(result:check({
       props = { category = 'test', myprop = 'myval', age = 10 },
       tags = { 'WORK', 'OFFICE' },
-      todo = { 'TODO' },
+      todo = 'TODO',
     }))
     assert.Is.True(result:check({
       props = { category = 'test', myprop = 'myval', age = 10 },
@@ -142,38 +142,38 @@ describe('Search parser', function()
     assert.Is.False(result:check({
       props = { category = 'test', myprop = 'myval', age = 10 },
       tags = { 'WORK', 'OFFICE' },
-      todo = { 'DONE' },
+      todo = 'DONE',
     }))
 
     result = Search:new('CATEGORY="test"+WORK/-WAITING')
     assert.Is.True(result:check({
       props = { category = 'test' },
       tags = { 'WORK' },
-      todo = { 'TODO' },
+      todo = 'TODO',
     }))
 
     assert.Is.True(result:check({
       props = { category = 'test' },
       tags = { 'WORK' },
-      todo = { 'DONE' },
+      todo = 'DONE',
     }))
 
     assert.Is.False(result:check({
       props = { category = 'test' },
       tags = { 'WORK' },
-      todo = { 'WAITING' },
+      todo = 'WAITING',
     }))
 
     assert.Is.False(result:check({
       props = { category = 'test_bad' },
       tags = { 'WORK' },
-      todo = { 'DONE' },
+      todo = 'DONE',
     }))
 
     assert.Is.False(result:check({
       props = { category = 'test' },
       tags = { 'OFFICE' },
-      todo = { 'DONE' },
+      todo = 'DONE',
     }))
   end)
 end)
