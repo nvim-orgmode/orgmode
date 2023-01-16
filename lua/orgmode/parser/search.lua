@@ -5,8 +5,8 @@ local Date = require('orgmode.objects.date')
 ---@class Search
 ---@field term string
 ---@field expressions table
----@field logic OrItem[]
----@field todo_search table
+---@field or_items OrItem[]
+---@field todo_search? TodoMatch
 local Search = {}
 
 ---@class Searchable
@@ -59,10 +59,17 @@ PropertyStringMatch.__index = PropertyStringMatch
 local PropertyNumberMatch = {}
 PropertyNumberMatch.__index = PropertyNumberMatch
 
+---@class TodoMatch
+---@field anyOf string[]
+---@field noneOf string[]
+local TodoMatch = {}
+TodoMatch.__index = TodoMatch
+
 ---@type table<PropertyMatchOperator, fun(a: string|number|Date, b: string|number|Date): boolean>
 local OPERATORS = {
   ['='] = function(a, b)
-    return a == b
+    local result = a == b
+    return result
   end,
   ['<='] = function(a, b)
     return a <= b
@@ -148,7 +155,7 @@ function Search:new(term)
   local data = {
     term = term,
     expressions = {},
-    logic = {},
+    or_items = {},
     todo_search = nil,
   }
   setmetatable(data, self)
@@ -161,25 +168,38 @@ end
 ---@param item Searchable
 ---@return boolean
 function Search:check(item)
-  for _, or_item in ipairs(self.logic) do
+  local ors_match = false
+  for _, or_item in ipairs(self.or_items) do
     if or_item:match(item) then
-      return true
+      ors_match = true
+      break
     end
   end
-  return false
+
+  local todos_match
+  if self.todo_search then
+    todos_match = self.todo_search:match(item)
+  else
+    todos_match = true
+  end
+
+  print(vim.inspect({ todos_match = todos_match, ors_match = ors_match }))
+  return ors_match and todos_match
 end
 
 ---@private
 function Search:_parse()
+  local input = self.term
   -- Parse the sequence of ORs
-  self.logic = parse_delimited_sequence(self.term, function(i)
+  self.or_items, input = parse_delimited_sequence(input, function(i)
     return OrItem:parse(i)
   end, '%|')
 
   -- If the sequence failed to parse, reset the array
-  if not self.logic then
-    self.logic = {}
-  end
+  self.or_items = self.or_items or {}
+
+  -- Parse the TODO word filters if present
+  self.todo_search, input = TodoMatch:parse(input)
 end
 
 ---@private
@@ -349,13 +369,14 @@ end
 ---@return PropertyMatch?, string
 function PropertyMatch:parse(input)
   ---@type string?, PropertyMatchOperator?
-  local name, operator, string, number_str, date_str
+  local name, operator, string_str, number_str, date_str
   local original_input = input
 
   name, input = parse_pattern(input, '[^=<>]+')
   if not name then
     return nil, original_input
   end
+  name = name:lower()
 
   operator, input = self:_parse_operator(input)
   if not operator then
@@ -370,11 +391,10 @@ function PropertyMatch:parse(input)
   end
 
   -- Date property
-  date_str, input = parse_pattern(input, '"<[^>]+>"')
+  date_str, input = parse_pattern(input, '"(<[^>]+>)"')
   if date_str then
-    local unquoted_date_str = date_str:gsub('^"<', ''):gsub('>"$', '')
     ---@type Date?
-    local date_value = Date.from_string(unquoted_date_str)
+    local date_value = Date.from_string(date_str)
     if date_value then
       return PropertyDateMatch:new(name, operator, date_value), input
     else
@@ -384,9 +404,11 @@ function PropertyMatch:parse(input)
   end
 
   -- String property
-  string, input = parse_pattern(input, '"[^"]+"')
-  if string then
-    return PropertyStringMatch:new(name, operator, string), input
+  string_str, input = parse_pattern(input, '"[^"]+"')
+  if string_str then
+    ---@type string
+    local unquote_string = string_str:match('^"([^"]+)"$')
+    return PropertyStringMatch:new(name, operator, unquote_string), input
   end
 
   return nil, original_input
@@ -397,7 +419,7 @@ end
 ---@param input string
 ---@return PropertyMatchOperator, string
 function PropertyMatch:_parse_operator(input)
-  return parse_pattern_choice(input, '%=', '%<%>', '%<', '%<%=', '%>', '%>%=') --[[@as PropertyMatchOperator]]
+  return parse_pattern_choice(input, '%=', '%<%>', '%<%=', '%<', '%>%=', '%>') --[[@as PropertyMatchOperator]]
 end
 
 ---Constructs a PropertyNumberMatch
@@ -451,46 +473,26 @@ end
 ---@param item Searchable
 ---@return boolean
 function PropertyDateMatch:match(item)
-  local should_print = item.props.foo
-
-  if should_print then
-    print('PropertyDateMatch:match(' .. vim.inspect(item) .. ')')
-  end
-
   local item_value = item.props[self.name]
 
   -- If the property is missing, then it's not a match
   if not item_value then
-    if should_print then
-      print('No foo value contained')
-    end
     return false
   end
 
   -- Extract the content between the braces/brackets
   local date_content = item_value:match('^[<%[]([^>%]]+)[>%]]$')
   if not date_content then
-    if should_print then
-      print('Failed to extract date content: "' .. item_value .. '"')
-    end
     return false
   end
 
   ---@type Date?
   local item_date = Date.from_string(date_content)
   if not item_date then
-    if should_print then
-      print('Date did not parse: ' .. date_content)
-    end
     return false
   end
 
-  local result = OPERATORS[self.operator](item_date, self.value)
-  if should_print then
-    print('The result is ' .. vim.inspect(result))
-  end
-
-  return result
+  return OPERATORS[self.operator](item_date, self.value)
 end
 
 ---@param name string
@@ -515,6 +517,100 @@ end
 function PropertyStringMatch:match(item)
   local item_value = item.props[self.name] or ''
   return OPERATORS[self.operator](item_value, self.value)
+end
+
+---@private
+---@return TodoMatch
+function TodoMatch:_new()
+  ---@type TodoMatch
+  local todo_match = {
+    anyOf = {},
+    noneOf = {},
+  }
+
+  setmetatable(todo_match, TodoMatch)
+
+  return todo_match
+end
+
+---@param input string
+---@return TodoMatch?, string
+function TodoMatch:parse(input)
+  local original_input = input
+
+  -- Parse the '/' or '/!' prefix that indicates a TodoMatch
+  ---@type string?
+  local prefix
+  prefix, input = parse_pattern(input, '%/[%!]?')
+  if not prefix then
+    return nil, original_input
+  end
+
+  -- Parse a whitelist of keywords
+  --- @type string[]?
+  local anyOf
+  anyOf, input = parse_delimited_sequence(input, function(i)
+    return parse_pattern(i, '%w+')
+  end, '%|')
+  if anyOf and #anyOf > 0 then
+    -- Successfully parsed the whitelist, return it
+    local todo_match = TodoMatch:_new()
+    todo_match.anyOf = anyOf
+    return todo_match, input
+  end
+
+  -- Parse a blacklist of keywords
+  ---@type string?
+  local negation
+  negation, input = parse_pattern(input, '-')
+  if negation then
+    local negative_items
+    negative_items, input = parse_delimited_sequence(input, function(i)
+      return parse_pattern(i, '%w+')
+    end, '%-')
+
+    if negative_items then
+      if #negation > 0 then
+        local todo_match = TodoMatch:_new()
+        todo_match.noneOf = negative_items
+        return todo_match, input
+      else
+        return nil, original_input
+      end
+    end
+  end
+
+  return nil, original_input
+end
+
+---@param item Searchable
+---@return boolean
+function TodoMatch:match(item)
+  print(('TodoMatch:match(%s)'):format(vim.inspect(item)))
+  local item_todo = item.todo
+
+  if #self.anyOf > 0 then
+    print('Checking for anyof')
+    for _, todo_value in ipairs(self.anyOf) do
+      if item_todo == todo_value then
+        return true
+      end
+    end
+
+    return false
+  elseif #self.noneOf > 0 then
+    print('Checking for noneOf')
+    for _, todo_value in ipairs(self.noneOf) do
+      print(('%s can not be %s'):format(item_todo, todo_value))
+      if item_todo == todo_value then
+        return false
+      end
+    end
+
+    return true
+  else
+    return true
+  end
 end
 
 return Search
