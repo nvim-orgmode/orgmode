@@ -862,7 +862,7 @@ function OrgMappings:org_time_stamp(inactive)
     if date_start then
       date_string = '--' .. date_string
     end
-    vim.cmd(string.format('norm!i%s', date_string))
+    vim.cmd(string.format('norm!a%s', date_string))
   end)
 end
 
