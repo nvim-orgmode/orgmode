@@ -187,6 +187,12 @@ local function today(data)
   return Date:new(opts)
 end
 
+---@return Date
+local function tomorrow()
+  local today_date = today()
+  return today_date:adjust('+1d')
+end
+
 ---@param data? table
 ---@return Date
 local function now(data)
@@ -930,6 +936,7 @@ return {
   from_string = from_string,
   now = now,
   today = today,
+  tomorrow = tomorrow,
   parse_all_from_line = parse_all_from_line,
   is_valid_date = is_valid_date,
   is_date_instance = is_date_instance,
