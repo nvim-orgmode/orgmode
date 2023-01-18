@@ -586,11 +586,9 @@ end
 ---@param item Searchable
 ---@return boolean
 function TodoMatch:match(item)
-  print(('TodoMatch:match(%s)'):format(vim.inspect(item)))
   local item_todo = item.todo
 
   if #self.anyOf > 0 then
-    print('Checking for anyof')
     for _, todo_value in ipairs(self.anyOf) do
       if item_todo == todo_value then
         return true
@@ -599,9 +597,7 @@ function TodoMatch:match(item)
 
     return false
   elseif #self.noneOf > 0 then
-    print('Checking for noneOf')
     for _, todo_value in ipairs(self.noneOf) do
-      print(('%s can not be %s'):format(item_todo, todo_value))
       if item_todo == todo_value then
         return false
       end
