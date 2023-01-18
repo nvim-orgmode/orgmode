@@ -393,8 +393,26 @@ function PropertyMatch:parse(input)
   -- Date property
   date_str, input = parse_pattern(input, '"(<[^>]+>)"')
   if date_str then
+    ---@type string?, Date?
+    local date_content, date_value
+    if date_str == '<today>' then
+      date_value = Date.today()
+    elseif date_str == '<tomorrow>' then
+      date_value = Date.tomorrow()
+    else
+      -- Parse relative formats (e.g. <+1d>) as well as absolute
+      date_content = date_str:match('^<([%+%-]%d+[dm])>$')
+      if date_content then
+        date_value = Date.from_string(date_str)
+      else
+        date_content = date_str:match('^<([^>]+)>$')
+        if date_content then
+          date_value = Date.from_string(date_str)
+        end
+      end
+    end
+
     ---@type Date?
-    local date_value = Date.from_string(date_str)
     if date_value then
       return PropertyDateMatch:new(name, operator, date_value), input
     else
