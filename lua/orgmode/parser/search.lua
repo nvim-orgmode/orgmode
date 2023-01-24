@@ -183,7 +183,6 @@ function Search:check(item)
     todos_match = true
   end
 
-  print(vim.inspect({ todos_match = todos_match, ors_match = ors_match }))
   return ors_match and todos_match
 end
 
