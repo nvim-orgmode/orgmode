@@ -245,6 +245,11 @@ describe('Parser', function()
           end_col = 6,
         }),
       },
+      properties_items = {
+        deadline = '<2021-05-20 Thu>',
+        scheduled = '<2021-05-18>',
+        closed = '[2021-05-21 Fri]',
+      },
       tags = { 'WORK' },
       own_tags = { 'WORK' },
       category = 'work',
@@ -378,6 +383,7 @@ describe('Parser', function()
       own_tags = { 'WORK' },
       category = 'work',
       properties_items = {
+        deadline = '<2021-05-10 11:00>',
         some_prop = 'some value',
       },
       properties_range = Range:new({
@@ -417,7 +423,7 @@ describe('Parser', function()
     }
     local parsed = File.from_content(lines, 'work')
     local section = parsed:get_section(1)
-    assert.are.same({ items = {} }, section.properties)
+    assert.are.same({ items = { deadline = '<2021-05-10 11:00>' } }, section.properties)
   end)
 
   it('should parse properties only if its positioned after headline or planning date', function()
@@ -433,7 +439,7 @@ describe('Parser', function()
 
     local parsed = File.from_content(lines, 'work')
     local headline = parsed:get_section(1)
-    assert.are.same({}, headline.properties.items)
+    assert.are.same({ deadline = '<2021-05-10 11:00>' }, headline.properties.items)
 
     lines = {
       '* TODO Test orgmode :WORK:',
@@ -471,7 +477,7 @@ describe('Parser', function()
 
     parsed = File.from_content(lines, 'work')
     headline = parsed:get_section(1)
-    assert.are.same({ some_prop = 'some value' }, headline.properties.items)
+    assert.are.same({ deadline = '<2021-05-10 11:00>', some_prop = 'some value' }, headline.properties.items)
   end)
 
   it('should override headline category from property', function()
@@ -635,6 +641,7 @@ describe('Parser', function()
       own_tags = { 'WORK' },
       category = 'work',
       properties_items = {
+        deadline = '<2021-05-10 11:00>',
         some_prop = 'some value',
       },
       properties_range = Range:new({
