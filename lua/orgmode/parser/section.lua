@@ -137,6 +137,7 @@ function Section.from_node(section_node, file, parent)
               type = first_node_text
             end
             local timestamp = file:get_node_text(entry:named_child(1))
+            data.properties.items[first_node_text:lower()] = timestamp
             utils.concat(
               data.dates,
               Date.from_org_date(timestamp, {
