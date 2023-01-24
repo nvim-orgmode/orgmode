@@ -401,9 +401,10 @@ function PropertyMatch:parse(input)
       date_value = Date.tomorrow()
     else
       -- Parse relative formats (e.g. <+1d>) as well as absolute
-      date_content = date_str:match('^<([%+%-]%d+[dm])>$')
+      date_content = date_str:match('^<([%+%-]%d+[dmyhwM])>$')
       if date_content then
-        date_value = Date.from_string(date_str)
+        date_value = Date.now()
+        date_value = date_value:adjust(date_content)
       else
         date_content = date_str:match('^<([^>]+)>$')
         if date_content then
