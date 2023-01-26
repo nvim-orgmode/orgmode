@@ -115,7 +115,7 @@ OrgAgendaOptions                                              *OrgAgendaOptions*
     Fields: ~
         {filters?}  (OrgAgendaFilter)
         {from?}     (string|Date)
-        {span?}     (number|day|week|month|year)
+        {span?}     (number|"day"|"week"|"month"|"year")
 
 
 OrgAgenda.agenda({options?})                                  *OrgAgenda.agenda*
