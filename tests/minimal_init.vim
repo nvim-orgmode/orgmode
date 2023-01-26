@@ -3,6 +3,7 @@ set rtp+=./plenary.nvim
 set rtp+=./nvim-treesitter
 set termguicolors
 set noswapfile
+language en_US.utf-8
 runtime plugin/plenary.vim
 runtime plugin/nvim-treesitter.lua
 let mapleader = ','
