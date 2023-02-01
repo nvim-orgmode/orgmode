@@ -206,7 +206,7 @@ function File:apply_search(search, todo_only)
       return false
     end
     return search:check({
-      props = vim.tbl_extend('force', {}, item.properties.items, {
+      props = vim.tbl_extend('keep', {}, item.properties.items, {
         category = item.category,
       }),
       tags = item.tags,
