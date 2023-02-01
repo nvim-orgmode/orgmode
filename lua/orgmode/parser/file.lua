@@ -201,11 +201,14 @@ function File:apply_search(search, todo_only)
   end
 
   return vim.tbl_filter(function(item)
+    ---@cast item Section
     if item:is_archived() or (todo_only and not item:is_todo()) then
       return false
     end
     return search:check({
-      props = item.properties.items,
+      props = vim.tbl_extend('keep', {}, item.properties.items, {
+        category = item.category,
+      }),
       tags = item.tags,
       todo = item.todo_keyword.value,
     })
