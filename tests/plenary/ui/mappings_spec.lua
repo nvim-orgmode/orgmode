@@ -899,6 +899,110 @@ describe('Mappings', function()
     end
   )
 
+  it('should insert new todo heading in empty org file', function()
+    helpers.load_file_content({ '' })
+    vim.fn.cursor(1, 1)
+    vim.cmd([[norm ,oiT]])
+    assert.are.same({ '* TODO ' }, vim.api.nvim_buf_get_lines(0, 0, 2, false))
+
+    helpers.load_file_content({ '' })
+    vim.fn.cursor(1, 1)
+    vim.cmd([[norm ,oit]])
+    assert.are.same({ '* TODO ' }, vim.api.nvim_buf_get_lines(0, 0, 2, false))
+
+    helpers.load_file_content({ '' })
+    vim.fn.cursor(1, 1)
+    vim.cmd([[norm ,oih]])
+    assert.are.same({ '* ' }, vim.api.nvim_buf_get_lines(0, 0, 2, false))
+  end)
+
+  it('should insert new todo heading on root level', function()
+    helpers.load_file_content({
+      '',
+      '* TODO heading',
+    })
+
+    vim.fn.cursor(1, 1)
+    vim.cmd([[norm ,oiT]])
+    assert.are.same({
+      '* TODO ',
+      '* TODO heading',
+    }, vim.api.nvim_buf_get_lines(0, 0, 3, false))
+
+    helpers.load_file_content({
+      '',
+      '* TODO heading',
+    })
+
+    vim.fn.cursor(1, 1)
+    vim.cmd([[norm ,oit]])
+    assert.are.same({
+      '* TODO ',
+      '* TODO heading',
+    }, vim.api.nvim_buf_get_lines(0, 0, 3, false))
+
+    helpers.load_file_content({
+      '',
+      '* TODO heading',
+    })
+
+    vim.fn.cursor(1, 1)
+    vim.cmd([[norm ,oih]])
+    assert.are.same({
+      '* ',
+      '* TODO heading',
+    }, vim.api.nvim_buf_get_lines(0, 0, 3, false))
+  end)
+
+  it('should promote line to (TODO) heading', function()
+    helpers.load_file_content({ 'foobar' })
+    vim.fn.cursor(1, 1)
+    vim.cmd([[norm ,oiT]])
+    assert.are.same({
+      '* TODO foobar',
+    }, vim.api.nvim_buf_get_lines(0, 0, 2, false))
+
+    helpers.load_file_content({ 'foobar' })
+    vim.fn.cursor(1, 1)
+    vim.cmd([[norm ,oit]])
+    assert.are.same({
+      '* TODO foobar',
+    }, vim.api.nvim_buf_get_lines(0, 0, 2, false))
+
+    helpers.load_file_content({ 'foobar' })
+    vim.fn.cursor(1, 1)
+    vim.cmd([[norm ,oih]])
+    assert.are.same({
+      '* foobar',
+    }, vim.api.nvim_buf_get_lines(0, 0, 2, false))
+  end)
+
+  it('should promote line left of the cursor to (TODO) heading', function()
+    helpers.load_file_content({ 'foobar' })
+    vim.fn.cursor(1, 4)
+    vim.cmd([[norm ,oiT]])
+    assert.are.same({
+      'foo',
+      '* TODO bar',
+    }, vim.api.nvim_buf_get_lines(0, 0, 2, false))
+
+    helpers.load_file_content({ 'foobar' })
+    vim.fn.cursor(1, 4)
+    vim.cmd([[norm ,oit]])
+    assert.are.same({
+      'foo',
+      '* TODO bar',
+    }, vim.api.nvim_buf_get_lines(0, 0, 2, false))
+
+    helpers.load_file_content({ 'foobar' })
+    vim.fn.cursor(1, 4)
+    vim.cmd([[norm ,oih]])
+    assert.are.same({
+      'foo',
+      '* bar',
+    }, vim.api.nvim_buf_get_lines(0, 0, 2, false))
+  end)
+
   it('should insert new todo heading after current one (org_insert_todo_heading)', function()
     helpers.load_file_content({
       '#TITLE: Test',
