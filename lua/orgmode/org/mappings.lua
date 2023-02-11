@@ -640,9 +640,13 @@ end
 function OrgMappings:insert_heading_respect_content(suffix)
   suffix = suffix or ''
   local item = Files.get_closest_headline()
-  local line = config:respect_blank_before_new_entry({ string.rep('*', item.level) .. ' ' .. suffix })
-  vim.fn.append(item.range.end_line, line)
-  vim.fn.cursor(item.range.end_line + #line, 0)
+  if not item then
+    self:_insert_heading_from_plain_line(suffix)
+  else
+    local line = config:respect_blank_before_new_entry({ string.rep('*', item.level) .. ' ' .. suffix })
+    vim.fn.append(item.range.end_line, line)
+    vim.fn.cursor(item.range.end_line + #line, 0)
+  end
   return vim.cmd([[startinsert!]])
 end
 
@@ -652,8 +656,41 @@ end
 
 function OrgMappings:insert_todo_heading()
   local item = Files.get_closest_headline()
-  vim.fn.cursor(item.range.start_line, 0)
-  return self:handle_return(config:get_todo_keywords().TODO[1] .. ' ')
+  if not item then
+    self:_insert_heading_from_plain_line(config:get_todo_keywords().TODO[1] .. ' ')
+    return vim.cmd([[startinsert!]])
+  else
+    vim.fn.cursor(item.range.start_line, 0)
+    return self:handle_return(config:get_todo_keywords().TODO[1] .. ' ')
+  end
+end
+
+function OrgMappings:_insert_heading_from_plain_line(suffix)
+  suffix = suffix or ''
+  local linenr = vim.fn.line('.')
+  local line = vim.fn.getline(linenr)
+  local heading_prefix = '* ' .. suffix
+
+  if #line == 0 then
+    line = heading_prefix
+    vim.fn.setline(linenr, line)
+    vim.fn.cursor(linenr, 0 + #line)
+  else
+    if vim.fn.col('.') == 1 then
+      -- promote whole line to heading
+      line = heading_prefix .. line
+      vim.fn.setline(linenr, line)
+      vim.fn.cursor(linenr, 0 + #line)
+    else
+      -- split at cursor
+      local left = string.sub(line, 0, vim.fn.col('.') - 1)
+      local right = string.sub(line, vim.fn.col('.'), #line)
+      line = heading_prefix .. right
+      vim.fn.setline(linenr, left)
+      vim.fn.append(linenr, line)
+      vim.fn.cursor(linenr + 1, 0 + #line)
+    end
+  end
 end
 
 function OrgMappings:move_subtree_up()
