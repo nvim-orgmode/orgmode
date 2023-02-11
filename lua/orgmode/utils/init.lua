@@ -536,10 +536,12 @@ end
 
 function utils.open_tmp_org_window(height, split_mode, on_close)
   local winnr = vim.api.nvim_get_current_win()
+  local bufnr = vim.api.nvim_get_current_buf()
   utils.open_window(vim.fn.tempname(), height or 16, split_mode)
   vim.cmd([[setf org]])
   vim.cmd([[setlocal bufhidden=wipe nobuflisted nolist noswapfile nofoldenable]])
   vim.api.nvim_buf_set_var(0, 'org_prev_window', winnr)
+  vim.api.nvim_buf_set_var(0, 'org_prev_buffer', bufnr)
 
   if on_close then
     vim.api.nvim_create_autocmd('BufWipeout', {
@@ -559,9 +561,16 @@ function utils.open_tmp_org_window(height, split_mode, on_close)
   return function()
     vim.api.nvim_create_augroup('OrgTmpWindow', { clear = true })
     local prev_winnr = vim.api.nvim_buf_get_var(0, 'org_prev_window')
-    vim.api.nvim_win_close(0, true)
-    if prev_winnr and vim.api.nvim_win_is_valid(prev_winnr) then
-      vim.api.nvim_set_current_win(prev_winnr)
+    if prev_winnr ~= vim.api.nvim_get_current_win() then
+      vim.api.nvim_win_close(0, true)
+      if prev_winnr and vim.api.nvim_win_is_valid(prev_winnr) then
+        vim.api.nvim_set_current_win(prev_winnr)
+      end
+    else
+      local prev_bufnr = vim.api.nvim_buf_get_var(0, 'org_prev_buffer')
+      if prev_bufnr and vim.api.nvim_buf_is_valid(prev_bufnr) then
+        vim.api.nvim_set_current_buf(prev_bufnr)
+      end
     end
   end
 end
