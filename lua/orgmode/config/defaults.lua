@@ -142,6 +142,7 @@ local DefaultConfig = {
       org_schedule = '<prefix>is',
       org_time_stamp = '<prefix>i.',
       org_time_stamp_inactive = '<prefix>i!',
+      org_insert_link = '<prefix>il',
       org_clock_in = '<prefix>xi',
       org_clock_out = '<prefix>xo',
       org_clock_cancel = '<prefix>xq',
