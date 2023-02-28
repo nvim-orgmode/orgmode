@@ -740,12 +740,15 @@ function OrgMappings:open_at_point()
   local parts = vim.split(link, '][', true)
   local url = parts[1]
   local link_ctx = { base = url, skip_add_prefix = true }
-  if url:find('^file:') then
+
+  -- file link
+  if url:find('^file:') or url:find('^/') or url:find('^./') then
+    -- TODO: this does not conform to orgmode. Line numbers should be handled with `::` as well
     if url:find(' +', 1, true) then
       parts = vim.split(url, ' +', true)
-      url = parts[1]
+      url = Hyperlinks.get_file_real_path(parts[1])
       local line_number = parts[2]
-      vim.cmd(string.format('edit +%s %s', line_number, Hyperlinks.get_file_real_path(url)))
+      vim.cmd(string.format('edit +%s %s', line_number, url))
       vim.cmd([[normal! zv]])
       return
     end
@@ -753,29 +756,31 @@ function OrgMappings:open_at_point()
     if url:find('^file:(.-)::') then
       link_ctx.line = url
     else
+      url = Hyperlinks.get_file_real_path(parts[1])
       vim.cmd(string.format('edit %s', Hyperlinks.get_file_real_path(url)))
       vim.cmd([[normal! zv]])
       return
     end
   end
+
+  -- web link
   if url:find('^https?://') then
     if not vim.g.loaded_netrwPlugin then
       return utils.echo_warning('Netrw plugin must be loaded in order to open urls.')
     end
     return vim.fn['netrw#BrowseX'](url, vim.fn['netrw#CheckIfRemote']())
   end
-  local stat = vim.loop.fs_stat(url)
-  if stat and stat.type == 'file' then
-    return vim.cmd(string.format('edit %s', url))
-  end
 
   local current_headline = Files.get_closest_headline()
+
   local headlines = vim.tbl_filter(function(headline)
     return headline.line ~= current_headline.line and headline.id ~= current_headline.id
   end, Hyperlinks.find_matching_links(link_ctx))
+
   if #headlines == 0 then
     return
   end
+
   local headline = headlines[1]
   if #headlines > 1 then
     local longest_headline = utils.reduce(headlines, function(acc, h)
