@@ -1021,10 +1021,10 @@ And going to line `4` and pressing `gqgq`, it will format it to this:
 
 The format for links is either `[[LINK]]` or `[[LINK][DESCRIPTION]]`. If a description is provided, the actual link is concealed in favor of the description.
 
-Hyperlink types supported:
+Supported hyperlink types:
 * URL (http://, https://)
-* File (starts with `file:`. Example: `file:/home/user/.config/nvim/init.lua`) Optionally, a line number can be specified
-using the '+' character (Example: `file:/home/user/.config/nvim/init.lua +10`) or a headline within the specified file using '::' (Example: `file:/home/user/org/file.org::*Specific Headline`)
+* File (starts with `file:`, `/`, `./` or `../`. Example: `file:/home/user/.config/nvim/init.lua`)
+    * Optionally, a line number or a headline in the target-file can be specified using '::' (Example: `/home/user/.config/nvim/init.lua::10` or `../file.org::*Specific Headline`)
 * Headline title target within the same file (starts with `*`)
 * Headline with `CUSTOM_ID` property within the same file (starts with `#`)
 * Fallback: If file path, opens the file, otherwise, tries to find the headline title.
