@@ -232,31 +232,15 @@ local function load_deps()
   vim.treesitter.query.add_predicate('org-is-valid-latex-range?', is_valid_latex_range)
 end
 
--- a function that splits a string on '.'
-local function split(string)
-  local t = {}
-  for str in string.gmatch(string, '([^.]+)') do
-    table.insert(t, str)
-  end
-  return t
-end
-
----@param bufnr? number
----@param first_line? number
----@param last_line? number
----@return table[]
-local function get_matches(bufnr, first_line, last_line)
-  bufnr = bufnr or 0
-  local root = get_tree(bufnr)
-  if not root then
-    return
-  end
-
+---@param bufnr number
+---@param line_index number
+---@return table
+local get_matches = ts_utils.memoize_by_buf_tick(function(bufnr, line_index, root)
   local ranges = {}
   local taken_locations = {}
 
-  for _, match, _ in query:iter_matches(root, bufnr, first_line, last_line) do
-    for id, node in pairs(match) do
+  for _, match, _ in query:iter_matches(root, bufnr, line_index, line_index + 1) do
+    for _, node in pairs(match) do
       local char = node:type()
       -- saves unnecessary parsing, since \\ is not used below
       if char ~= '\\' then
