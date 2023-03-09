@@ -1,2 +1,5 @@
-((section) @fold
+([
+  (section)
+  (table)
+  ] @fold
   (#trim! @fold))
