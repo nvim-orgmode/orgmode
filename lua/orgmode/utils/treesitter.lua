@@ -1,10 +1,30 @@
 local ts_utils = require('nvim-treesitter.ts_utils')
 local parsers = require('nvim-treesitter.parsers')
 local M = {}
+local query_cache = {}
 
 function M.current_node()
   local window = vim.api.nvim_get_current_win()
   return ts_utils.get_node_at_cursor(window)
+end
+
+function M.parse(bufnr)
+  return vim.treesitter.get_parser(bufnr or 0, 'org', {}):parse()
+end
+
+-- Reload treesitter highlighter without triggering FileType autocommands that include reloading entire file
+function M.restart_highlights(bufnr)
+  bufnr = bufnr or 0
+  require('nvim-treesitter.configs').reattach_module('highlight', bufnr, 'org')
+end
+
+function M.parse_query(query)
+  local ts_query = query_cache[query]
+  if not ts_query then
+    ts_query = vim.treesitter.query.parse_query('org', query)
+    query_cache[query] = ts_query
+  end
+  return query_cache[query]
 end
 
 ---This is a full copy of nvim_treesiter get_node_at_cursor with support for custom cursor position
@@ -88,12 +108,19 @@ function M.set_node_text(node, text, front_trim)
   local sr, sc, er, ec = node:range()
   if string.len(text) == 0 then
     if front_trim then
-      sc = sc - 1
+      sc = math.max(sc - 1, 0)
     else
       ec = ec + 1
     end
   end
   pcall(vim.api.nvim_buf_set_text, 0, sr, sc, er, ec, lines)
+end
+
+---@param node userdata
+---@param lines string[]
+function M.set_node_lines(node, lines)
+  local start_row, _, end_row, _ = node:range()
+  vim.api.nvim_buf_set_lines(0, start_row, end_row, false, lines)
 end
 
 return M

@@ -54,8 +54,8 @@ function Logbook:get_total_minutes(from, to)
   return total_minutes
 end
 
----@param from string
----@param to string
+---@param from? string
+---@param to? string
 ---@return Duration
 function Logbook:get_total(from, to)
   return Duration.from_minutes(self:get_total_minutes(from, to))
@@ -134,7 +134,8 @@ function Logbook:recalculate_estimate(line)
 end
 
 ---@param lines string
----@param dates string
+---@param node userdata
+---@param dates Date[]
 ---@return Logbook
 function Logbook.parse(lines, node, dates)
   local opts = {
@@ -173,6 +174,10 @@ function Logbook.new_from_section(section)
   })
 end
 
+---@param lines any
+---@param node any
+---@param dates Date[]
+---@return table
 function Logbook._parse_clocks(lines, node, dates)
   local items = {}
   local range = Range.from_node(node)

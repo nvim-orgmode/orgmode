@@ -53,6 +53,7 @@ function Org:setup_autocmds()
     group = org_augroup,
     callback = function()
       require('orgmode').reload(vim.fn.expand('<afile>:p'))
+      require('orgmode.org.diagnostics').report()
     end,
   })
   vim.api.nvim_create_autocmd('FileType', {
@@ -60,13 +61,6 @@ function Org:setup_autocmds()
     group = org_augroup,
     callback = function()
       require('orgmode').reload(vim.fn.expand('<afile>:p'))
-    end,
-  })
-  vim.api.nvim_create_autocmd({ 'CursorHold', 'CursorHoldI' }, {
-    pattern = { '*.org', '*.org_archive' },
-    group = org_augroup,
-    callback = function()
-      require('orgmode.org.diagnostics').report()
     end,
   })
 end
@@ -151,9 +145,17 @@ local function action(cmd, opts)
     return
   end
   instance:init()
-  if instance[parts[1]] and instance[parts[1]][parts[2]] then
-    local item = instance[parts[1]]
-    local method = item[parts[2]]
+  local item = nil
+  for i = 1, #parts - 1 do
+    local part = parts[i]
+    if not item then
+      item = instance[part]
+    else
+      item = item[part]
+    end
+  end
+  if item and item[parts[#parts]] then
+    local method = item[parts[#parts]]
     local success, result = pcall(method, item, opts)
     if not success then
       if result.message then

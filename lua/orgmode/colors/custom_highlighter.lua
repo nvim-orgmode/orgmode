@@ -5,12 +5,9 @@ local MarkupHighlighter = nil
 local valid_bufnrs = {}
 
 ---@param bufnr number
----@param first_line number
----@param last_line number
-local function apply_highlights(bufnr, first_line, last_line, tick_changed)
-  local changed_lines = vim.api.nvim_buf_get_lines(bufnr, first_line, last_line, false)
-  HideLeadingStars.apply(namespace, bufnr, changed_lines, first_line, last_line)
-  MarkupHighlighter.apply(namespace, bufnr, changed_lines, first_line, last_line, tick_changed)
+local function apply_highlights(bufnr, line)
+  HideLeadingStars.apply(namespace, bufnr, line)
+  MarkupHighlighter.apply(namespace, bufnr, line)
 end
 
 local function setup()
@@ -25,18 +22,19 @@ local function setup()
   MarkupHighlighter.setup()
 
   vim.api.nvim_set_decoration_provider(namespace, {
-    on_win = function(_, _, bufnr, topline, botline)
-      local changedtick = vim.api.nvim_buf_get_var(bufnr, 'changedtick')
-      local tick_changed = not valid_bufnrs[bufnr] or valid_bufnrs[bufnr] ~= changedtick
-      if valid_bufnrs[bufnr] then
-        valid_bufnrs[bufnr] = changedtick
-        return apply_highlights(bufnr, topline, botline, tick_changed)
+    on_start = function(_, tick)
+      local bufnr = vim.api.nvim_get_current_buf()
+      if valid_bufnrs[bufnr] == tick or vim.bo[bufnr].filetype ~= 'org' then
+        return false
       end
-      local ft = vim.api.nvim_buf_get_option(bufnr, 'filetype')
-      if ft == 'org' then
-        valid_bufnrs[bufnr] = changedtick
-        return apply_highlights(bufnr, topline, botline, tick_changed)
-      end
+      valid_bufnrs[bufnr] = tick
+      return true
+    end,
+    on_win = function(_, _, bufnr)
+      return vim.bo[bufnr].filetype == 'org'
+    end,
+    on_line = function(_, _, bufnr, line)
+      return apply_highlights(bufnr, line)
     end,
   })
 end

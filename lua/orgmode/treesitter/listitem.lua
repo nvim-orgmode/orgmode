@@ -3,6 +3,8 @@ local tree_utils = require('orgmode.utils.treesitter')
 local query = vim.treesitter.query
 local Headline = require('orgmode.treesitter.headline')
 
+---@class Listitem
+---@field listitem userdata
 local Listitem = {}
 
 function Listitem:new(listitem_node)

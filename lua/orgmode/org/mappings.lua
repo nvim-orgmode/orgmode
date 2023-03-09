@@ -13,6 +13,7 @@ local utils = require('orgmode.utils')
 local ts_org = require('orgmode.treesitter')
 local ts_table = require('orgmode.treesitter.table')
 local EventManager = require('orgmode.events')
+local Promise = require('orgmode.utils.promise')
 local events = EventManager.event
 
 ---@class OrgMappings
@@ -48,17 +49,14 @@ function OrgMappings:archive()
   Files.reload(
     archive_location,
     vim.schedule_wrap(function()
-      Files.update_file(archive_location, function(archive_file)
-        local last_item = archive_file:get_closest_headline(vim.fn.line('$'))
-        if not last_item then
-          return
+      Files.update_file(archive_location, function()
+        local archived_headline = ts_org.find_headline_by_title(item.title, { exact = true, from_end = true })
+        if archived_headline then
+          archived_headline:set_property('ARCHIVE_TIME', Date.now():to_string())
+          archived_headline:set_property('ARCHIVE_FILE', file.filename)
+          archived_headline:set_property('ARCHIVE_CATEGORY', item.category)
+          archived_headline:set_property('ARCHIVE_TODO', item.todo_keyword.value)
         end
-        last_item:add_properties({
-          ARCHIVE_TIME = Date.now():to_string(),
-          ARCHIVE_FILE = file.filename,
-          ARCHIVE_CATEGORY = item.category,
-          ARCHIVE_TODO = item.todo_keyword.value,
-        })
       end)
     end)
   )
@@ -395,13 +393,42 @@ function OrgMappings:_todo_change_state(direction)
     return dispatchEvent()
   end
 
+  local log_note = config.org_log_done == 'note'
+  local log_time = config.org_log_done == 'time'
+  local should_log_time = log_note or log_time
+  local indent = config:get_indent(headline:level() + 1)
+
+  local get_note = function(note)
+    if note == nil then
+      return
+    end
+
+    for i, line in ipairs(note) do
+      note[i] = indent .. '  ' .. line
+    end
+
+    table.insert(note, 1, ('%s- CLOSING NOTE %s \\\\'):format(indent, Date.now():to_wrapped_string(false)))
+    return note
+  end
+
   local repeater_dates = item:get_repeater_dates()
   if #repeater_dates == 0 then
-    local log_time = config.org_log_done == 'time'
-    if log_time and item:is_done() and not was_done then
-      headline:add_closed_date()
+    if should_log_time and item:is_done() and not was_done then
+      headline:set_closed_date()
+      item = Files.get_closest_headline()
+
+      if log_note then
+        dispatchEvent()
+        return self.capture.closing_note:open():next(function(note)
+          local valid_note = get_note(note)
+          if valid_note then
+            local append_line = headline:get_append_line()
+            vim.api.nvim_buf_set_lines(0, append_line, append_line, false, valid_note)
+          end
+        end)
+      end
     end
-    if log_time and not item:is_done() and was_done then
+    if should_log_time and not item:is_done() and was_done then
       headline:remove_closed_date()
     end
     return dispatchEvent()
@@ -412,27 +439,36 @@ function OrgMappings:_todo_change_state(direction)
   end
 
   self:_change_todo_state('reset')
-  local state_change =
-    string.format('- State "%s" from "%s" [%s]', item.todo_keyword.value, old_state, Date.now():to_string())
+  local state_change = {
+    string.format('%s- State "%s" from "%s" [%s]', indent, item.todo_keyword.value, old_state, Date.now():to_string()),
+  }
 
-  local data = item:add_properties({ LAST_REPEAT = '[' .. Date.now():to_string() .. ']' })
-  if data.is_new then
-    vim.fn.append(data.end_line, data.indent .. state_change)
-    return dispatchEvent()
-  end
-  item = Files.get_closest_headline()
-
-  if item.properties.valid then
-    vim.fn.append(item.properties.range.end_line, data.indent .. state_change)
-  end
   dispatchEvent()
+  return Promise.resolve()
+    :next(function()
+      if not log_note then
+        return state_change
+      end
+
+      return self.capture.closing_note:open():next(function(closing_note)
+        return get_note(closing_note)
+      end)
+    end)
+    :next(function(note)
+      headline:set_property('LAST_REPEAT', Date.now():to_wrapped_string(false))
+      if not note then
+        return
+      end
+      local append_line = headline:get_append_line()
+      vim.api.nvim_buf_set_lines(0, append_line, append_line, false, note)
+    end)
 end
 
 function OrgMappings:do_promote(whole_subtree)
-  local item = Files.get_closest_headline()
-  local old_level = item.level
+  local headline = ts_org.closest_headline()
+  local old_level = headline:level()
   local foldclosed = vim.fn.foldclosed('.')
-  item:promote(1, whole_subtree)
+  headline:promote(vim.v.count1, whole_subtree)
   if foldclosed > -1 and vim.fn.foldclosed('.') == -1 then
     vim.cmd([[norm!zc]])
   end
@@ -440,10 +476,10 @@ function OrgMappings:do_promote(whole_subtree)
 end
 
 function OrgMappings:do_demote(whole_subtree)
-  local item = Files.get_closest_headline()
-  local old_level = item.level
+  local headline = ts_org.closest_headline()
+  local old_level = headline:level()
   local foldclosed = vim.fn.foldclosed('.')
-  item:demote(1, whole_subtree)
+  headline:demote(vim.v.count1, whole_subtree)
   if foldclosed > -1 and vim.fn.foldclosed('.') == -1 then
     vim.cmd([[norm!zc]])
   end
@@ -604,9 +640,13 @@ end
 function OrgMappings:insert_heading_respect_content(suffix)
   suffix = suffix or ''
   local item = Files.get_closest_headline()
-  local line = config:respect_blank_before_new_entry({ string.rep('*', item.level) .. ' ' .. suffix })
-  vim.fn.append(item.range.end_line, line)
-  vim.fn.cursor(item.range.end_line + #line, 0)
+  if not item then
+    self:_insert_heading_from_plain_line(suffix)
+  else
+    local line = config:respect_blank_before_new_entry({ string.rep('*', item.level) .. ' ' .. suffix })
+    vim.fn.append(item.range.end_line, line)
+    vim.fn.cursor(item.range.end_line + #line, 0)
+  end
   return vim.cmd([[startinsert!]])
 end
 
@@ -616,8 +656,41 @@ end
 
 function OrgMappings:insert_todo_heading()
   local item = Files.get_closest_headline()
-  vim.fn.cursor(item.range.start_line, 0)
-  return self:handle_return(config:get_todo_keywords().TODO[1] .. ' ')
+  if not item then
+    self:_insert_heading_from_plain_line(config:get_todo_keywords().TODO[1] .. ' ')
+    return vim.cmd([[startinsert!]])
+  else
+    vim.fn.cursor(item.range.start_line, 0)
+    return self:handle_return(config:get_todo_keywords().TODO[1] .. ' ')
+  end
+end
+
+function OrgMappings:_insert_heading_from_plain_line(suffix)
+  suffix = suffix or ''
+  local linenr = vim.fn.line('.')
+  local line = vim.fn.getline(linenr)
+  local heading_prefix = '* ' .. suffix
+
+  if #line == 0 then
+    line = heading_prefix
+    vim.fn.setline(linenr, line)
+    vim.fn.cursor(linenr, 0 + #line)
+  else
+    if vim.fn.col('.') == 1 then
+      -- promote whole line to heading
+      line = heading_prefix .. line
+      vim.fn.setline(linenr, line)
+      vim.fn.cursor(linenr, 0 + #line)
+    else
+      -- split at cursor
+      local left = string.sub(line, 0, vim.fn.col('.') - 1)
+      local right = string.sub(line, vim.fn.col('.'), #line)
+      line = heading_prefix .. right
+      vim.fn.setline(linenr, left)
+      vim.fn.append(linenr, line)
+      vim.fn.cursor(linenr + 1, 0 + #line)
+    end
+  end
 end
 
 function OrgMappings:move_subtree_up()

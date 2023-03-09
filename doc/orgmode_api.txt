@@ -4,14 +4,14 @@ OrgApi.load({name?})                                               *OrgApi.load*
         {name?}  (string|string[])  specific file names to return (absolute path). If ommitted, returns all loaded files
 
     Returns: ~
-        {OrgFile|OrgFile[]}
+        (OrgFile|OrgFile[])
 
 
 OrgApi.current()                                                *OrgApi.current*
      Get current org buffer file
 
     Returns: ~
-        {OrgFile}
+        (OrgFile)
 
 
 OrgFile                                                                *OrgFile*
@@ -27,7 +27,7 @@ OrgFile:reload()                                                *OrgFile:reload*
      Return refreshed instance of the file
 
     Returns: ~
-        {OrgFile}
+        (OrgFile)
 
 
 OrgHeadline                                                        *OrgHeadline*
@@ -44,7 +44,7 @@ OrgHeadline:reload()                                        *OrgHeadline:reload*
      Return updated version of headline
 
     Returns: ~
-        {OrgHeadline}
+        (OrgHeadline)
 
 
 OrgHeadline:set_tags({tags})                              *OrgHeadline:set_tags*
@@ -54,21 +54,21 @@ OrgHeadline:set_tags({tags})                              *OrgHeadline:set_tags*
         {tags}  (string[])
 
     Returns: ~
-        {Promise}
+        (Promise)
 
 
 OrgHeadline:priority_up()                              *OrgHeadline:priority_up*
      Increase priority on a headline
 
     Returns: ~
-        {Promise}
+        (Promise)
 
 
 OrgHeadline:priority_down()                          *OrgHeadline:priority_down*
      Decrease priority on a headline
 
     Returns: ~
-        {Promise}
+        (Promise)
 
 
 OrgHeadline:set_priority({priority})                  *OrgHeadline:set_priority*
@@ -78,7 +78,7 @@ OrgHeadline:set_priority({priority})                  *OrgHeadline:set_priority*
         {priority}  (string)
 
     Returns: ~
-        {Promise}
+        (Promise)
 
 
 OrgHeadline:set_deadline({date?})                     *OrgHeadline:set_deadline*
@@ -88,7 +88,7 @@ OrgHeadline:set_deadline({date?})                     *OrgHeadline:set_deadline*
         {date?}  (Date|string|nil)  If ommited, opens the datepicker. Empty string removes the date. String must follow org date convention (YYYY-MM-DD HH:mm...)
 
     Returns: ~
-        {Promise}
+        (Promise)
 
 
 OrgHeadline:set_scheduled({date?})                   *OrgHeadline:set_scheduled*
@@ -98,7 +98,7 @@ OrgHeadline:set_scheduled({date?})                   *OrgHeadline:set_scheduled*
         {date?}  (Date|string|nil)  If ommited, opens the datepicker. Empty string removes the date. String must follow org date convention (YYYY-MM-DD HH:mm...)
 
     Returns: ~
-        {Promise}
+        (Promise)
 
 
 OrgAgenda                                                            *OrgAgenda*
@@ -115,7 +115,7 @@ OrgAgendaOptions                                              *OrgAgendaOptions*
     Fields: ~
         {filters?}  (OrgAgendaFilter)
         {from?}     (string|Date)
-        {span?}     (number|day|week|month|year)
+        {span?}     (number|"day"|"week"|"month"|"year")
 
 
 OrgAgenda.agenda({options?})                                  *OrgAgenda.agenda*

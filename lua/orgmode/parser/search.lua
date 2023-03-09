@@ -63,7 +63,7 @@ function Search:_matches(val, item)
     end
     return val == item.tags
   end
-  prop_name = vim.trim(prop_name)
+  prop_name = string.lower(vim.trim(prop_name))
   prop_val = vim.trim(prop_val)
   if not item.props or not item.props[prop_name] then
     return false

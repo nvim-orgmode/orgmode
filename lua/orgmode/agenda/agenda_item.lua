@@ -12,6 +12,7 @@ end
 ---@class AgendaItem
 ---@field date Date
 ---@field headline_date Date
+---@field real_date Date
 ---@field headline Section
 ---@field is_valid boolean
 ---@field is_today boolean
@@ -29,16 +30,25 @@ local AgendaItem = {}
 function AgendaItem:new(headline_date, headline, date, index)
   local opts = {}
   opts.headline_date = headline_date
+  opts.real_date = headline_date
   opts.headline = headline
   opts.date = date
   opts.index = index or 1
   opts.is_valid = false
   opts.is_today = date:is_today()
-  opts.is_same_day = headline_date:is_same(date, 'day') or headline_date:repeats_on(date)
+  opts.repeats_on_date = false
+  opts.is_same_day = headline_date:is_same(date, 'day')
+  if not opts.is_same_day then
+    opts.repeats_on_date = headline_date:repeats_on(date)
+    opts.is_same_day = opts.repeats_on_date
+  end
   opts.is_in_date_range = headline_date:is_none() and headline_date:is_in_date_range(date)
   opts.date_range_days = headline_date:get_date_range_days()
   opts.label = ''
   opts.highlights = {}
+  if opts.repeats_on_date then
+    opts.real_date = opts.headline_date:apply_repeater_until(opts.date)
+  end
   setmetatable(opts, self)
   self.__index = self
   opts:_process()

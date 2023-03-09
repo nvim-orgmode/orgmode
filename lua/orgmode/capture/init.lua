@@ -3,16 +3,17 @@ local config = require('orgmode.config')
 local Files = require('orgmode.parser.files')
 local File = require('orgmode.parser.file')
 local Templates = require('orgmode.capture.templates')
-
-local capture_augroup = vim.api.nvim_create_augroup('OrgCapture', { clear = true })
+local ClosingNote = require('orgmode.capture.closing_note')
 
 ---@class Capture
 ---@field templates Templates
+---@field closing_note ClosingNote
 local Capture = {}
 
 function Capture:new()
   local data = {}
   data.templates = Templates:new()
+  data.closing_note = ClosingNote:new()
   setmetatable(data, self)
   self.__index = self
   return data
@@ -68,33 +69,15 @@ end
 ---@param template table
 function Capture:open_template(template)
   local content = self.templates:compile(template)
-  local winnr = vim.api.nvim_get_current_win()
-  utils.open_window(vim.fn.tempname(), 16, config.win_split_mode)
-  vim.cmd([[setf org]])
-  vim.cmd([[setlocal bufhidden=wipe nobuflisted nolist noswapfile nofoldenable]])
+  local on_close = function()
+    require('orgmode').action('capture.refile', true)
+  end
+  self._close_tmp = utils.open_tmp_org_window(16, config.win_split_mode, on_close)
   vim.api.nvim_buf_set_lines(0, 0, -1, true, content)
   self.templates:setup()
   vim.api.nvim_buf_set_var(0, 'org_template', template)
   vim.api.nvim_buf_set_var(0, 'org_capture', true)
-  vim.api.nvim_buf_set_var(0, 'org_prev_window', winnr)
   config:setup_mappings('capture')
-
-  vim.api.nvim_create_autocmd('BufWipeout', {
-    buffer = 0,
-    group = capture_augroup,
-    callback = function()
-      require('orgmode').action('capture.refile', true)
-    end,
-    once = true,
-  })
-  vim.api.nvim_create_autocmd('VimLeavePre', {
-    buffer = 0,
-    group = capture_augroup,
-    callback = function()
-      require('orgmode').action('capture.refile', true)
-    end,
-    once = true,
-  })
 end
 
 ---@param shortcut string
@@ -351,12 +334,9 @@ function Capture.autocomplete_refile(arg_lead)
 end
 
 function Capture:kill()
-  -- Clear all autocmds
-  vim.api.nvim_create_augroup('OrgCapture', { clear = true })
-  local prev_winnr = vim.api.nvim_buf_get_var(0, 'org_prev_window')
-  vim.api.nvim_win_close(0, true)
-  if prev_winnr and vim.api.nvim_win_is_valid(prev_winnr) then
-    vim.api.nvim_set_current_win(prev_winnr)
+  if self._close_tmp then
+    self._close_tmp()
+    self._close_tmp = nil
   end
 end
 

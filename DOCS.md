@@ -9,10 +9,11 @@
    1. [Global mappings](#global-mappings)
    2. [Agenda mappings](#agenda-mappings)
    3. [Capture mappings](#capture-mappings)
-   4. [Org mappings](#org-mappings)
-   5. [Edit Src mappings](#edit-src)
-   6. [Text objects](#text-objects)
-   7. [Dot repeat](#dot-repeat)
+   4. [Note mappings](#note-mappings)
+   5. [Org mappings](#org-mappings)
+   6. [Edit Src mappings](#edit-src)
+   7. [Text objects](#text-objects)
+   8. [Dot repeat](#dot-repeat)
 4. [Document Diagnostics](#document-diagnostics)
 5. [Tables](#tables)
 6. [Hyperlinks](#hyperlinks)
@@ -209,8 +210,10 @@ Marker used to indicate a folded headline.
 #### **org_log_done**
 *type*: `string|nil`<br />
 *default value*: `time`<br />
-When set to `time`(default), adds `CLOSED` date when marking headline as done.<br />
-When set to `false`, it is disabled.
+Possible values:
+* `time` - adds `CLOSED` date when marking headline as done
+* `note` - adds `CLOSED` date as above, and prompts for closing note via capture window. Confirm note with `org_note_finalize` (Default `<C-c>`), or ignore providing note via `org_note_kill` (Default `<Leader>ok`)
+* `nil|false` - Disable any logging
 
 #### **org_highlight_latex_and_related**
 *type*: `string|nil`<br />
@@ -369,7 +372,7 @@ Variables:
   * `%x`: Insert content of the clipboard via the "+" register (see :help clipboard)
   * `%?`: Default cursor position when template is opened
   * `%^{PROMPT|DEFAULT|COMPLETION...}`: Prompt for input, if completion is provided an :h inputlist will be used
-  * `%(EXP)`: Runs the given lua code and inserts the result
+  * `%(EXP)`: Runs the given lua code and inserts the result. NOTE: this will internally pass the content to the lua `load()` function. So the body inside `%()` should be the body of a function that returns a string.
 
 Example:<br />
   ```lua
@@ -406,6 +409,16 @@ Nested key example:<br />
       headline = 'one-time'
     }
   }
+  ```
+
+Lua expression example:<br />
+  ```lua
+  { j = {
+    description = 'Journal',
+    template = '* %(return vim.fn.getreg "w")',
+    -- get the content of register "w"
+    target = '~/sync/org/journal.org'
+  } }
   ```
 
 #### **org_agenda_min_height**
@@ -694,6 +707,35 @@ require('orgmode').setup({
       org_capture_finalize = '<Leader>w',
       org_capture_refile = 'R',
       org_capture_kill = 'Q'
+    }
+  }
+})
+```
+
+### Closing note mappings
+
+Mappings used in closing note window.
+
+#### **org_note_finalize**
+*mapped to*: `<C-c>`<br />
+Save note window content as closing note for a headline. Ignores first comment (if exists)
+#### **org_note_kill**
+*mapped to*: `<Leader>ok`<br />
+Close note window without saving anything
+#### **org_note_show_help**
+*mapped to*: `g?`<br />
+Show help popup with mappings
+
+These mappings live under `mappings.note`, and can be changed like this:
+
+```lua
+require('orgmode').setup({
+  org_agenda_files = {'~/Dropbox/org/*', '~/my-orgs/**/*'},
+  org_default_notes_file = '~/Dropbox/org/refile.org',
+  mappings = {
+    note = {
+      org_note_finalize = '<Leader>w',
+      org_note_kill = 'Q'
     }
   }
 })
@@ -1044,7 +1086,9 @@ Some content [[|
 `org` buffers have access to two abbreviations:
 
 * `:today:` - expands to today's date (example: `<2021-06-29 Tue>`)
+* `:itoday:` - expands to an invactive version of today's date (example: `[2021-06-29 Tue]`)
 * `:now:` - expands to today's date and current time (example: `<2021-06-29 Tue 15:32>`)
+* `:inow:` - expands to invactive version of today's date and current time (example: `[2021-06-29 Tue 15:32]`)
 
 ## Formatting
 Formatting is done via `gq` mapping, which uses `formatexpr` under the hood (see `:help formatexpr` for more info).

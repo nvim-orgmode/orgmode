@@ -4,7 +4,7 @@ local defaults = require('orgmode.config.defaults')
 ---@type table<string, MapEntry>
 local mappings = require('orgmode.config.mappings')
 
----@class Config
+---@class Config:DefaultConfig
 ---@field opts table
 ---@field todo_keywords table
 local Config = {}
@@ -353,6 +353,8 @@ function Config:respect_blank_before_new_entry(content, option, prepend_content)
   return content
 end
 
+---@param amount number
+---@return string
 function Config:get_indent(amount)
   if self.opts.org_indent_mode == 'indent' then
     return string.rep(' ', amount)
@@ -360,5 +362,25 @@ function Config:get_indent(amount)
   return ''
 end
 
+---@param content table|string
+---@param amount number
+function Config:apply_indent(content, amount)
+  local indent = self:get_indent(amount)
+
+  if indent == '' then
+    return content
+  end
+
+  if type(content) ~= 'table' then
+    return indent .. content
+  end
+
+  for i, line in ipairs(content) do
+    content[i] = indent .. line
+  end
+  return content
+end
+
+---@type Config
 instance = Config:new()
 return instance

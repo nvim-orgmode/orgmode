@@ -63,6 +63,11 @@ local markers = {
   },
 }
 
+---@param node userdata
+---@param source number
+---@param offset_col_start? number
+---@param offset_col_end? number
+---@return string
 local function get_node_text(node, source, offset_col_start, offset_col_end)
   local start_row, start_col = node:start()
   local end_row, end_col = node:end_()
@@ -72,7 +77,7 @@ local function get_node_text(node, source, offset_col_start, offset_col_end)
   local lines
   local eof_row = vim.api.nvim_buf_line_count(source)
   if start_row >= eof_row then
-    return nil
+    return ''
   end
 
   if end_col == 0 then
@@ -106,7 +111,7 @@ local function get_predicate_nodes(match, n)
   local total = n or 2
   local counter = 1
   local nodes = {}
-  for i, node in pairs(match) do
+  for _, node in pairs(match) do
     nodes[counter] = node
     counter = counter + 1
     if counter > total then
@@ -378,25 +383,28 @@ local function get_matches(bufnr, first_line, last_line)
     end
   end
 
-  return result, link_result, latex_result
-end
+  return {
+    ranges = result,
+    link_ranges = link_result,
+    latex_ranges = latex_result,
+  }
+end, {
+  key = function(bufnr, line_index)
+    return bufnr .. '__' .. line_index
+  end,
+})
 
-local function apply(namespace, bufnr, _, first_line, last_line, _)
-  local visible_lines = {}
-  -- Add some offset to make sure everything is covered
-  local start_line = math.max(0, first_line - 5)
-  for i = start_line, last_line do
-    if vim.fn.foldclosed(i + 1) == -1 then
-      table.insert(visible_lines, i)
-    end
-  end
-  if #visible_lines == 0 then
+local function apply(namespace, bufnr, line_index)
+  bufnr = bufnr or 0
+  local root = get_tree(bufnr)
+  if not root then
     return
   end
-  local ranges, link_ranges, latex_ranges = get_matches(bufnr, visible_lines[1], visible_lines[#visible_lines])
+
+  local result = get_matches(bufnr, line_index, root)
   local hide_markers = config.org_hide_emphasis_markers
 
-  for _, range in ipairs(ranges) do
+  for _, range in ipairs(result.ranges) do
     vim.api.nvim_buf_set_extmark(bufnr, namespace, range.from.start.line, range.from.start.character, {
       ephemeral = true,
       end_col = range.to['end'].character,
@@ -418,7 +426,7 @@ local function apply(namespace, bufnr, _, first_line, last_line, _)
     end
   end
 
-  for _, link_range in ipairs(link_ranges) do
+  for _, link_range in ipairs(result.link_ranges) do
     local line = vim.api.nvim_buf_get_lines(bufnr, link_range.from.start.line, link_range.from.start.line + 1, false)[1]
     local link = line:sub(link_range.from.start.character + 1, link_range.to['end'].character)
     local alias = link:find('%]%[') or 1
@@ -443,7 +451,7 @@ local function apply(namespace, bufnr, _, first_line, last_line, _)
     })
   end
 
-  for _, latex_range in ipairs(latex_ranges) do
+  for _, latex_range in ipairs(result.latex_ranges) do
     vim.api.nvim_buf_set_extmark(bufnr, namespace, latex_range.from.start.line, latex_range.from.start.character, {
       ephemeral = true,
       end_col = latex_range.to['end'].character,

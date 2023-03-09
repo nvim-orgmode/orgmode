@@ -25,49 +25,56 @@ function Agenda:new(opts)
     views = {},
     content = {},
     highlights = {},
+    win_width = utils.winwidth(),
   }
   setmetatable(data, self)
   self.__index = self
   return data
 end
 
-function Agenda:agenda(opts)
-  local view = AgendaView:new(vim.tbl_deep_extend('force', opts or {}, {
+---@param View table
+---@param type string
+---@param opts? table
+function Agenda:open_agenda_view(View, type, opts)
+  self:open_window()
+  self.win_width = utils.winwidth()
+  local view = View:new(vim.tbl_deep_extend('force', opts or {}, {
     filters = self.filters,
+    win_width = self.win_width,
   })):build()
   self.views = { view }
+  vim.b.org_agenda_type = type
   return self:_render()
+end
+
+function Agenda:agenda(opts)
+  self:open_agenda_view(AgendaView, 'agenda', opts)
 end
 
 -- TODO: Introduce searching ALL/DONE
 function Agenda:todos()
-  local view = AgendaTodosView:new({ filters = self.filters }):build()
-  self.views = { view }
-  return self:_render()
+  self:open_agenda_view(AgendaTodosView, 'todos')
 end
 
 function Agenda:search()
-  local view = AgendaSearchView:new({ filters = self.filters }):build()
-  self.views = { view }
-  return self:_render()
+  self:open_agenda_view(AgendaSearchView, 'search')
 end
 
 function Agenda:tags(opts)
-  local view = AgendaTagsView:new(vim.tbl_deep_extend('force', opts or {}, {
-    filters = self.filters,
-  })):build()
-  self.views = { view }
-  return self:_render()
+  self:open_agenda_view(AgendaTagsView, 'tags', opts)
 end
 
 function Agenda:tags_todo()
   return self:tags({ todo_only = true })
 end
 
+---@return number|nil window id
 function Agenda:open_window()
-  local opened = self:is_opened()
-  if opened then
-    return opened
+  -- if an agenda window is already open, return it
+  for _, win in ipairs(vim.api.nvim_list_wins()) do
+    if vim.api.nvim_buf_get_option(vim.api.nvim_win_get_buf(win), 'filetype') == 'orgagenda' then
+      return win
+    end
   end
 
   utils.open_window('orgagenda', math.max(34, config.org_agenda_min_height), config.win_split_mode)
@@ -131,11 +138,8 @@ function Agenda:_render(skip_rebuild)
       utils.concat(self.highlights, view.highlights)
     end
   end
-  local opened = self:is_opened()
-  if not opened then
-    opened = self:open_window()
-  end
-  vim.cmd(vim.fn.win_id2win(opened) .. 'wincmd w')
+  local win = self:open_window()
+  vim.cmd(vim.fn.win_id2win(win) .. 'wincmd w')
   if vim.w.org_window_split_mode == 'horizontal' then
     local win_height = math.max(math.min(34, #self.content), config.org_agenda_min_height)
     if vim.w.org_window_pos and vim.deep_equal(vim.fn.win_screenpos(0), vim.w.org_window_pos) then
@@ -178,15 +182,6 @@ function Agenda:redo(preserve_cursor_pos)
       vim.fn.winrestview(cursor_view)
     end
   end))
-end
-
-function Agenda:is_opened()
-  for _, win in ipairs(vim.api.nvim_list_wins()) do
-    if vim.api.nvim_buf_get_option(vim.api.nvim_win_get_buf(win), 'filetype') == 'orgagenda' then
-      return win
-    end
-  end
-  return false
 end
 
 function Agenda:advance_span(direction)
@@ -419,8 +414,13 @@ function Agenda:_remote_edit(opts)
     end
     if item.agenda_item then
       item.agenda_item:set_headline(headline)
-      self.content[line] =
-        AgendaView.build_agenda_item_content(item.agenda_item, item.longest_category, item.longest_date, item.line)
+      self.content[line] = AgendaView.build_agenda_item_content(
+        item.agenda_item,
+        item.longest_category,
+        item.longest_date,
+        item.line,
+        self.win_width
+      )
     else
       self.content[line] = AgendaTodosView.generate_todo_item(headline, item.longest_category, item.line)
     end

@@ -1,4 +1,5 @@
-return {
+---@class DefaultConfig
+local DefaultConfig = {
   org_agenda_files = '',
   org_default_notes_file = '',
   org_todo_keywords = { 'TODO', '|', 'DONE' },
@@ -94,6 +95,11 @@ return {
       org_capture_kill = '<prefix>k',
       org_capture_show_help = 'g?',
     },
+    note = {
+      org_note_finalize = '<C-c>',
+      org_note_kill = '<prefix>k',
+      org_note_show_help = 'g?',
+    },
     org = {
       org_refile = '<prefix>r',
       org_timestamp_up_day = '<S-UP>',
@@ -119,11 +125,11 @@ return {
       org_do_demote = '>>',
       org_promote_subtree = '<s',
       org_demote_subtree = '>s',
-      org_meta_return = '<Leader><CR>', -- Add heading, item or row
+      org_meta_return = '<Leader><CR>', -- Add heading, item or row (context-dependent)
       org_return = '<CR>',
-      org_insert_heading_respect_content = '<prefix>ih', -- Add new headling after current heading block with same level
-      org_insert_todo_heading = '<prefix>iT', -- Add new todo headling right after current heading with same level
-      org_insert_todo_heading_respect_content = '<prefix>it', -- Add new todo headling after current heading block on same level
+      org_insert_heading_respect_content = '<prefix>ih', -- Add new heading after current heading block (same level)
+      org_insert_todo_heading = '<prefix>iT', -- Add new todo heading right after current heading (same level)
+      org_insert_todo_heading_respect_content = '<prefix>it', -- Add new todo heading after current heading block (same level)
       org_move_subtree_up = '<prefix>K',
       org_move_subtree_down = '<prefix>J',
       org_export = '<prefix>e',
@@ -164,3 +170,5 @@ return {
     config_path = '$HOME/.emacs.d/init.el',
   },
 }
+
+return DefaultConfig

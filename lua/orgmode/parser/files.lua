@@ -62,23 +62,35 @@ function Files._set_loaded_file(filename, orgfile)
 end
 
 function Files.reload(file, callback)
-  if file then
-    local prev_file = Files.get(file)
-    return File.load(file, function(orgfile)
-      if orgfile then
-        Files._set_loaded_file(file, orgfile)
-        Files._check_source_blocks(prev_file, Files.get(file))
-      end
-      Files.loaded = true
-      if callback then
-        callback()
-      end
-      Files._build_tags()
-      return Files.get(file)
-    end)
+  if not file then
+    return Files.load(callback)
   end
 
-  return Files.load(callback)
+  local onfinish = function()
+    if callback then
+      callback()
+    end
+    Files._build_tags()
+  end
+
+  local old_file = Files.orgfiles[file]
+  local new_file = Files.get(file)
+
+  if old_file then
+    Files._check_source_blocks(old_file, new_file)
+    onfinish()
+    return new_file
+  end
+
+  return File.load(file, function(orgfile)
+    if orgfile then
+      Files._set_loaded_file(file, orgfile)
+      Files._check_source_blocks(old_file, orgfile)
+    end
+    Files.loaded = true
+    onfinish()
+    return orgfile
+  end)
 end
 
 ---@return File[]
@@ -111,7 +123,7 @@ function Files.get(file)
   end
 
   if vim.bo.filetype == 'org' and vim.fn.filereadable(file) == 0 then
-    return File.from_content(vim.api.nvim_buf_get_lines(0, 0, -1, false))
+    return File.from_content(vim.api.nvim_buf_get_lines(0, 0, -1, false), nil, nil, false)
   end
 
   return nil
@@ -209,7 +221,7 @@ function Files.find_headlines_matching_search_term(term, no_escape, search_extra
 end
 
 ---@param id? number
----@return Section
+---@return Section?
 function Files.get_closest_headline(id)
   local current_file = Files.get_current_file()
   local msg = 'Make sure there are no errors in the document'

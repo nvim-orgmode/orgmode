@@ -1,3 +1,4 @@
+local utils = require('orgmode.utils')
 local ts_utils = require('nvim-treesitter.ts_utils')
 local tree_utils = require('orgmode.utils.treesitter')
 local Date = require('orgmode.objects.date')
@@ -17,9 +18,29 @@ function Headline:new(headline_node)
   return data
 end
 
+---@param cursor? Table Cursor position tuple {row, col}
+---@return Headline|nil
+function Headline.from_cursor(cursor)
+  local ts_headline = tree_utils.closest_headline(cursor)
+  if not ts_headline then
+    return nil
+  end
+  return Headline:new(ts_headline)
+end
+
 ---@return userdata stars node
 function Headline:stars()
   return self.headline:field('stars')[1]
+end
+
+function Headline:refresh()
+  tree_utils.parse()
+  local start_row, start_col = self.headline:start()
+  local updated_headline = Headline.from_cursor({ start_row + 1, start_col })
+  if updated_headline then
+    self.headline = updated_headline.headline
+  end
+  return self
 end
 
 ---@return number
@@ -30,6 +51,76 @@ end
 
 function Headline:priority()
   return self:parse('%[#(%w+)%]')
+end
+
+---@param amount number
+---@param recursive? boolean
+function Headline:promote(amount, recursive)
+  amount = math.min(amount or 1, self:level() - 1)
+  recursive = recursive or false
+  if self:level() == 1 then
+    return utils.echo_warning('Cannot demote top level heading.')
+  end
+
+  return self:_handle_promote_demote(recursive, function(lines)
+    for i, line in ipairs(lines) do
+      if line:sub(1, 1) == '*' then
+        lines[i] = line:sub(1 + amount)
+      elseif vim.trim(line:sub(1, amount)) == '' then
+        lines[i] = line:sub(1 + amount)
+      end
+    end
+    return lines
+  end)
+end
+
+---@param amount number
+---@param recursive? boolean
+function Headline:demote(amount, recursive)
+  amount = amount or 1
+  recursive = recursive or false
+
+  return self:_handle_promote_demote(recursive, function(lines)
+    for i, line in ipairs(lines) do
+      if line:sub(1, 1) == '*' then
+        lines[i] = string.rep('*', amount) .. line
+      else
+        lines[i] = config:apply_indent(line, amount)
+      end
+    end
+    return lines
+  end)
+end
+
+function Headline:_handle_promote_demote(recursive, modifier)
+  local whole_subtree = function()
+    local text = query.get_node_text(self.headline:parent(), 0)
+    local lines = modifier(vim.split(text, '\n', true))
+    tree_utils.set_node_lines(self.headline:parent(), lines)
+    return self:refresh()
+  end
+
+  if recursive then
+    return whole_subtree()
+  end
+
+  local first_child_section = nil
+  for _, node in ipairs(ts_utils.get_named_children(self.headline:parent())) do
+    if node:type() == 'section' then
+      first_child_section = node
+      break
+    end
+  end
+
+  if not first_child_section then
+    return whole_subtree()
+  end
+
+  local start = self.headline:start()
+  local end_line = first_child_section:start()
+  local lines = modifier(vim.api.nvim_buf_get_lines(0, start, end_line, false))
+  vim.api.nvim_buf_set_lines(0, start, end_line, false, lines)
+  return self:refresh()
 end
 
 ---@return userdata, string
@@ -130,8 +221,9 @@ end
 -- and if it's in done state
 -- @return Node, string, boolean
 function Headline:todo()
-  local keywords = config.todo_keywords.ALL
-  local done_keywords = config.todo_keywords.DONE
+  local todo_keywords = config:get_todo_keywords()
+  local keywords = todo_keywords.ALL
+  local done_keywords = todo_keywords.DONE
 
   -- A valid keyword can only be the first child
   local todo_node = self:item():named_child(0)
@@ -150,7 +242,45 @@ function Headline:todo()
   end
 end
 
----@return userdata
+function Headline:todo_keyword()
+  local node, word = self:todo()
+  if not node then
+    return {
+      value = '',
+      type = '',
+      node = nil,
+    }
+  end
+
+  local todo_keywords = config:get_todo_keywords()
+  return {
+    value = word,
+    type = todo_keywords.KEYS[word].type,
+    node = node,
+  }
+end
+
+---@return boolean
+function Headline:is_todo()
+  local _, _, is_done = self:todo()
+  return not is_done
+end
+
+---@return boolean
+function Headline:is_done()
+  return not self:is_todo()
+end
+
+function Headline:title()
+  local title = query.get_node_text(self:item(), 0) or ''
+  local todo, word = self:todo()
+  if todo then
+    title = title:gsub('^' .. vim.pesc(word) .. '%s*', '')
+  end
+  return title
+end
+
+---@return userdata|nil
 function Headline:plan()
   local section = self.headline:parent()
   for _, node in ipairs(ts_utils.get_named_children(section)) do
@@ -158,6 +288,75 @@ function Headline:plan()
       return node
     end
   end
+end
+
+---@return userdata|nil
+function Headline:properties()
+  local section = self.headline:parent()
+  for _, node in ipairs(ts_utils.get_named_children(section)) do
+    if node:type() == 'property_drawer' then
+      return node
+    end
+  end
+end
+
+---@param name string
+---@param value string
+function Headline:set_property(name, value)
+  local properties = self:properties()
+  if not properties then
+    local append_line = self:get_append_line()
+    local property_drawer = self:_apply_indent({ ':PROPERTIES:', ':END:' })
+    vim.api.nvim_buf_set_lines(0, append_line, append_line, false, property_drawer)
+    tree_utils.parse()
+    properties = self:refresh():properties()
+  end
+
+  local property = (':%s: %s'):format(name, value)
+  local existing_property = self:get_property(name)
+  if existing_property then
+    tree_utils.set_node_text(existing_property.node, property)
+    return self:refresh()
+  end
+  local property_end = properties and properties:end_()
+  vim.api.nvim_buf_set_lines(0, property_end - 1, property_end - 1, false, { self:_apply_indent(property) })
+  return self:refresh()
+end
+
+---@param property_name string
+---@return table|nil
+function Headline:get_property(property_name)
+  local properties = self:properties()
+  if not properties then
+    return nil
+  end
+
+  for _, node in ipairs(ts_utils.get_named_children(properties)) do
+    local name = node:field('name')[1]
+    local value = node:field('value')[1]
+    if name and query.get_node_text(name, 0):lower() == property_name:lower() then
+      return {
+        node = node,
+        name = name,
+        value = value and query.get_node_text(value, 0),
+      }
+    end
+  end
+end
+
+---Return the line number where content can be appended
+---
+---@return number
+function Headline:get_append_line()
+  local properties = self:properties()
+  if properties then
+    return properties:end_()
+  end
+  local plan = self:plan()
+  if plan then
+    return plan:end_()
+  end
+  return self.headline:end_()
 end
 
 ---@return Table<string, userdata>
@@ -208,12 +407,13 @@ function Headline:set_scheduled_date(date)
   return self:_add_date('SCHEDULED', date, true)
 end
 
-function Headline:add_closed_date()
+---@param date? Date
+function Headline:set_closed_date(date)
   local dates = self:dates()
   if dates['CLOSED'] then
     return
   end
-  return self:_add_date('CLOSED', Date.now(), false)
+  return self:_add_date('CLOSED', date or Date.now(), false)
 end
 
 function Headline:remove_closed_date()
@@ -303,13 +503,12 @@ function Headline:_add_date(type, date, active)
   if vim.tbl_isempty(dates) then
     local indent = config:get_indent(self:level() + 1)
     local start_line = self.headline:start()
-    return vim.api.nvim_call_function('append', {
-      start_line + 1,
-      string.format('%s%s', indent, text),
-    })
+    vim.fn.append(start_line + 1, ('%s%s'):format(indent, text))
+    return self:refresh()
   end
   if dates[type] then
-    return tree_utils.set_node_text(dates[type], text, true)
+    tree_utils.set_node_text(dates[type], text, true)
+    return self:refresh()
   end
 
   local keys = vim.tbl_keys(dates)
@@ -325,6 +524,7 @@ function Headline:_add_date(type, date, active)
   end
   local ptext = query.get_node_text(last_child, 0)
   tree_utils.set_node_text(last_child, ptext .. ' ' .. text)
+  return self:refresh()
 end
 
 ---@param type string | "DEADLINE" | "SCHEDULED" | "CLOSED"
@@ -337,8 +537,14 @@ function Headline:_remove_date(type)
   local line_nr = dates[type]:start() + 1
   tree_utils.set_node_text(dates[type], '', true)
   if vim.trim(vim.fn.getline(line_nr)) == '' then
-    return vim.api.nvim_call_function('deletebufline', { vim.api.nvim_get_current_buf(), line_nr })
+    vim.fn.deletebufline(vim.api.nvim_get_current_buf(), line_nr)
   end
+  return self:refresh()
+end
+
+---@param text table|string
+function Headline:_apply_indent(text)
+  return config:apply_indent(text, self:level() + 1)
 end
 
 return Headline

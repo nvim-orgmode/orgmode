@@ -22,13 +22,20 @@ local utils = require('orgmode.utils')
 local File = {}
 
 function File:new(tree, file_content, file_content_str, category, filename, is_archive_file)
+  local changedtick = 0
+  if filename then
+    local bufnr = vim.fn.bufnr(filename)
+    if bufnr > 0 then
+      changedtick = vim.api.nvim_buf_get_var(bufnr, 'changedtick')
+    end
+  end
   local data = {
     tree = tree,
     file_content = file_content,
     file_content_str = file_content_str,
     category = category,
     filename = filename,
-    changedtick = 0,
+    changedtick = changedtick,
     sections = {},
     sections_by_line = {},
     source_code_filetypes = {},
@@ -128,6 +135,15 @@ function File:get_headlines()
   return self.sections
 end
 
+---@return boolean
+function File:should_reload()
+  local bufnr = vim.fn.bufnr(self.filename)
+  if bufnr < 0 then
+    return false
+  end
+  return self.changedtick ~= vim.api.nvim_buf_get_var(bufnr, 'changedtick')
+end
+
 ---@param path string
 ---@returns File
 function File.load(path, callback)
@@ -163,14 +179,10 @@ function File.from_content(content, category, filename, is_archive_file)
 end
 
 function File:refresh()
+  if not self:should_reload() then
+    return self
+  end
   local bufnr = vim.fn.bufnr(self.filename)
-  if bufnr < 0 then
-    return self
-  end
-  local changed = self.changedtick ~= vim.api.nvim_buf_get_var(bufnr, 'changedtick')
-  if not changed then
-    return self
-  end
   local content = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
   local refreshed_file = File.from_content(content, self.category, self.filename, self.is_archive_file)
   refreshed_file.changedtick = vim.api.nvim_buf_get_var(bufnr, 'changedtick')
@@ -189,11 +201,14 @@ function File:apply_search(search, todo_only)
   end
 
   return vim.tbl_filter(function(item)
+    ---@cast item Section
     if item:is_archived() or (todo_only and not item:is_todo()) then
       return false
     end
     return search:check({
-      props = item.properties.items,
+      props = vim.tbl_extend('keep', {}, item.properties.items, {
+        category = item.category,
+      }),
       tags = item.tags,
       todo = item.todo_keyword.value,
     })

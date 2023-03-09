@@ -57,42 +57,50 @@ local helps = {
     { key = 'org_toggle_heading', description = 'Toggle current line to headline and vice versa' },
   },
   orgagenda = {
-    { key = 'org_agenda_later', description = 'Go forward one span' },
-    { key = 'org_agenda_earlier', description = 'Go backward one span' },
-    { key = 'org_agenda_goto_today', description = "Go to today's span" },
-    { key = 'org_agenda_goto_date', description = 'Jump to specific date' },
-    { key = 'org_agenda_day_view', description = 'Show day view' },
-    { key = 'org_agenda_week_view', description = 'Show week view' },
-    { key = 'org_agenda_month_view', description = 'Show month view' },
-    { key = 'org_agenda_year_view', description = 'Show year view' },
-    { key = 'org_agenda_switch_to', description = 'Open in current window' },
-    { key = 'org_agenda_goto', description = 'Open in another window' },
-    { key = 'org_agenda_redo', description = 'Reload org files and redraw' },
-    { key = 'org_agenda_todo', description = 'Change TODO state of an item' },
-    { key = 'org_agenda_clock_in', description = 'Clock in item under cursor' },
-    { key = 'org_agenda_clock_out', description = 'Clock out currently active clocked item' },
-    { key = 'org_agenda_clock_cancel', description = 'Cancel clocking on currently active clocked item' },
-    { key = 'org_agenda_clock_goto', description = 'Jump to currently active clock item' },
-    { key = 'org_agenda_set_effort', description = 'Set effort estimate for item under cursor' },
-    { key = 'org_agenda_clockreport_mode', description = 'Toggle clock report for current agenda time range' },
-    {
-      key = 'org_agenda_filter',
-      description = 'Open prompt that allows filtering by category, tags and title(vim regex)',
+    agenda_specific = {
+      { key = 'org_agenda_later', description = 'Go forward one span' },
+      { key = 'org_agenda_earlier', description = 'Go backward one span' },
+      { key = 'org_agenda_goto_today', description = "Go to today's span" },
+      { key = 'org_agenda_goto_date', description = 'Jump to specific date' },
+      { key = 'org_agenda_day_view', description = 'Show day view' },
+      { key = 'org_agenda_week_view', description = 'Show week view' },
+      { key = 'org_agenda_month_view', description = 'Show month view' },
+      { key = 'org_agenda_year_view', description = 'Show year view' },
     },
-    { key = 'org_agenda_priority', description = 'Set priority for current item' },
-    { key = 'org_agenda_priority_up', description = 'Increase priority for current item' },
-    { key = 'org_agenda_priority_down', description = 'Decrease priority for current item' },
-    { key = 'org_agenda_toggle_archive_tag', description = 'Toggle "ARCHIVE" tag on current headline' },
-    { key = 'org_agenda_set_tags', description = 'Change tags of current headline' },
-    { key = 'org_agenda_deadline', description = 'Insert/Update deadline date on current headline' },
-    { key = 'org_agenda_schedule', description = 'Insert/Update scheduled date on current headline' },
-    { key = 'org_agenda_quit', description = 'Close agenda' },
-    { key = 'org_agenda_show_help', description = 'Show this help' },
+    generic = {
+      { key = 'org_agenda_switch_to', description = 'Open in current window' },
+      { key = 'org_agenda_goto', description = 'Open in another window' },
+      { key = 'org_agenda_redo', description = 'Reload org files and redraw' },
+      { key = 'org_agenda_todo', description = 'Change TODO state of an item' },
+      { key = 'org_agenda_clock_in', description = 'Clock in item under cursor' },
+      { key = 'org_agenda_clock_out', description = 'Clock out currently active clocked item' },
+      { key = 'org_agenda_clock_cancel', description = 'Cancel clocking on currently active clocked item' },
+      { key = 'org_agenda_clock_goto', description = 'Jump to currently active clock item' },
+      { key = 'org_agenda_set_effort', description = 'Set effort estimate for item under cursor' },
+      { key = 'org_agenda_clockreport_mode', description = 'Toggle clock report for current agenda time range' },
+      {
+        key = 'org_agenda_filter',
+        description = 'Open prompt that allows filtering by category, tags and title(vim regex)',
+      },
+      { key = 'org_agenda_priority', description = 'Set priority for current item' },
+      { key = 'org_agenda_priority_up', description = 'Increase priority for current item' },
+      { key = 'org_agenda_priority_down', description = 'Decrease priority for current item' },
+      { key = 'org_agenda_toggle_archive_tag', description = 'Toggle "ARCHIVE" tag on current headline' },
+      { key = 'org_agenda_set_tags', description = 'Change tags of current headline' },
+      { key = 'org_agenda_deadline', description = 'Insert/Update deadline date on current headline' },
+      { key = 'org_agenda_schedule', description = 'Insert/Update scheduled date on current headline' },
+      { key = 'org_agenda_quit', description = 'Close agenda' },
+      { key = 'org_agenda_show_help', description = 'Show this help' },
+    },
   },
   capture = {
     { key = 'org_capture_finalize', description = 'Save to default notes file and close the window' },
     { key = 'org_capture_refile', description = 'Save to specific destination' },
     { key = 'org_capture_kill', description = 'Close without saving' },
+  },
+  note = {
+    { key = 'org_note_finalize', description = 'Save note and close the window' },
+    { key = 'org_note_kill', description = 'Close without saving' },
   },
   edit_src = {
     { key = 'org_edit_src_abort', description = 'Abort edit special buffer changes and discard content' },
@@ -123,6 +131,11 @@ function Help._get_content_type(opts)
   local has_capture, is_capture = pcall(vim.api.nvim_buf_get_var, 0, 'org_capture')
   if has_capture and is_capture then
     return 'orgcapture'
+  end
+
+  local has_note, is_note = pcall(vim.api.nvim_buf_get_var, 0, 'org_note')
+  if has_note and is_note then
+    return 'orgnote'
   end
 
   local ft = vim.bo.filetype
@@ -156,7 +169,34 @@ function Help._prepare_orgcapture(mappings, max_height)
       maps = table.concat(maps, ', ')
     end
 
-    table.insert(content, string.format('  `%-12s` - %s', maps, item.description))
+    table.insert(
+      content,
+      string.format('  `%-12s` - %s', string.gsub(maps, '<prefix>', mappings.prefix), item.description)
+    )
+  end
+
+  table.insert(content, '  __Org__')
+
+  return content, false
+end
+
+function Help._prepare_orgnote(mappings, max_height)
+  local scroll_more_text = ''
+  if (#helps.note + #helps.org) > max_height then
+    scroll_more_text = ' (Scroll down for more)'
+  end
+
+  local content = { string.format(' **Orgmode mappings Note + Org:%s**', scroll_more_text), '', '  __Note__' }
+  for _, item in ipairs(helps.note) do
+    local maps = mappings.note[item.key]
+    if type(maps) == 'table' then
+      maps = table.concat(maps, ', ')
+    end
+
+    table.insert(
+      content,
+      string.format('  `%-12s` - %s', string.gsub(maps, '<prefix>', mappings.prefix), item.description)
+    )
   end
 
   table.insert(content, '  __Org__')
@@ -165,19 +205,34 @@ function Help._prepare_orgcapture(mappings, max_height)
 end
 
 function Help._prepare_orgagenda(mappings, max_height)
+  local agenda_mappings = vim.deepcopy(helps.orgagenda.generic)
+  local height = #helps.orgagenda.generic
+
+  local agenda_type_text = ''
+  if vim.b.org_agenda_type == 'agenda' then
+    agenda_mappings = utils.concat(vim.deepcopy(helps.orgagenda.agenda_specific), agenda_mappings)
+    height = height + #helps.orgagenda.agenda_specific
+  else
+    agenda_type_text = ' ' .. vim.b.org_agenda_type
+  end
+
   local scroll_more_text = ''
-  if #helps.orgagenda > max_height then
+  if height > max_height then
     scroll_more_text = ' (Scroll down for more)'
   end
 
-  local content = { string.format(' **Orgmode mappings - Agenda%s:**', scroll_more_text), '' }
-  for _, item in ipairs(helps.orgagenda) do
+  local content = { string.format(' **Orgmode mappings - Agenda%s%s:**', agenda_type_text, scroll_more_text), '' }
+
+  for _, item in ipairs(agenda_mappings) do
     local maps = mappings.agenda[item.key]
     if type(maps) == 'table' then
       maps = table.concat(maps, ', ')
     end
 
-    table.insert(content, string.format('  `%-12s` - %s', maps, item.description))
+    table.insert(
+      content,
+      string.format('  `%-12s` - %s', string.gsub(maps, '<prefix>', mappings.prefix), item.description)
+    )
   end
 
   table.insert(content, '')
@@ -200,7 +255,10 @@ function Help._prepare_edit_src(mappings, max_height)
       maps = table.concat(maps, ', ')
     end
 
-    table.insert(content, string.format('  `%-12s` - %s', maps, item.description))
+    table.insert(
+      content,
+      string.format('  `%-12s` - %s', string.gsub(maps, '<prefix>', mappings.prefix), item.description)
+    )
   end
 
   return content, true
@@ -231,8 +289,13 @@ function Help.prepare_content(opts)
       maps = table.concat(maps, ', ')
     end
 
-    table.insert(content, string.format('  `%-12s` - %s', maps, item.description))
+    table.insert(
+      content,
+      string.format('  `%-12s` - %s', string.gsub(maps, '<prefix>', mappings.prefix), item.description)
+    )
   end
+
+  table.insert(content, '  __Text Objects__')
 
   for _, item in ipairs(helps.text_objects) do
     local maps = mappings.text_objects[item.key]
