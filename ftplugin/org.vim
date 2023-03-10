@@ -1,10 +1,6 @@
 lua require('orgmode.config'):setup_mappings('org')
 lua require('orgmode.config'):setup_mappings('text_objects')
 
-function! OrgmodeFoldExpr()
-  return luaeval('require("orgmode.org.indent").foldexpr()')
-endfunction
-
 function! OrgmodeFoldText()
   return luaeval('require("orgmode.org.indent").foldtext()')
 endfunction
