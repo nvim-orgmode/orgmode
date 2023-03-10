@@ -42,8 +42,8 @@ function M.get_node_at_cursor(cursor, winnr, ignore_injected_langs)
   if vim.treesitter.get_node then
     return vim.treesitter.get_node({
       bufrn = buf,
-      pos = {cursor[1] - 1, cursor[2]},
-      ignore_injections = ignore_injected_langs
+      pos = { cursor[1] - 1, cursor[2] },
+      ignore_injections = ignore_injected_langs,
     })
   end
 

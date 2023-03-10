@@ -20,7 +20,7 @@ endfunction
 setlocal nomodeline
 setlocal fillchars+=fold:\ 
 setlocal foldmethod=expr
-setlocal foldexpr=OrgmodeFoldExpr()
+setlocal foldexpr=nvim_treesitter#foldexpr()
 setlocal foldtext=OrgmodeFoldText()
 setlocal formatexpr=OrgmodeFormatExpr()
 setlocal foldlevel=0
