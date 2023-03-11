@@ -132,6 +132,32 @@ Always open horizontally with specific height of 20 lines:
 win_split_mode = '20split'
 ```
 
+#### **win_border**
+*type*: `string|string[]`<br />
+*default value*: `single`<br />
+Border style of floating windows.<br />
+Available options:
+* `none` - No border (default)
+* `single` - A single line box
+* `double` - A double line box
+* `rounded` - Like "single", but with rounded corners ("╭" etc.)
+* `solid` - Adds padding by a single whitespace cell
+* `shadow` - A drop shadow effect by blending with the background
+* `{'╔', '═' ,'╗', '║', '╝', '═', '╚', '║' }` - Specify border characters in a clock-wise fashion
+* `{'/', '-', '\\', '|' }` - If less than eight chars the chars will start repeating
+
+See `:help nvim_open_win()`
+
+Applies to:
+    always
+        - calendar pop-up
+        - help pop-up
+        - notification pop-up
+    `win_split_mode` is set to `float`
+        - agenda window
+        - capture window
+
+
 #### **org_todo_keyword_faces**
 *type*: `table<string, string>`<br />
 *default value*: `{}`<br />
@@ -139,7 +165,7 @@ Custom colors for todo keywords.<br />
 Available options:
 * foreground - `:foreground hex/colorname`. Examples: `:foreground #FF0000`, `:foreground blue`
 * background - `:background hex/colorname`. Examples: `:background #FF0000`, `:background blue`
-* weight - `:weight bold`.
+* weight - `:weight bold`
 * underline - `:underline on`
 * italic - `:slant italic`
 
@@ -1290,7 +1316,7 @@ In order to trigger notifications via cron, job needs to be added to the crontab
 This is currently possible only on Linux and MacOS, since I don't know how would this be done on Windows. Any help on this topic is appreciated. <br />
 This works by starting the headless Neovim instance, running one off function inside orgmode, and quitting the Neovim.
 
-Here's maximum simplified **Linux** example (Tested on Manjaro/Arch), but least optimized:
+Here's maximum simplified **Linux** example (Tested on Manjaro/Arch/Ubuntu), but least optimized:
 
 Run this to open crontab:
 ```

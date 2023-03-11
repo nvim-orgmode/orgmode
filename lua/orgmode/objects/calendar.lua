@@ -43,7 +43,7 @@ function Calendar.open()
     width = width,
     height = Calendar.clearable and height + 1 or height,
     style = 'minimal',
-    border = 'single',
+    border = config.win_border,
     row = vim.o.lines / 2 - (y_offset + height) / 2,
     col = vim.o.columns / 2 - (x_offset + width) / 2,
   }

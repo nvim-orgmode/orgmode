@@ -72,7 +72,7 @@ function Capture:open_template(template)
   local on_close = function()
     require('orgmode').action('capture.refile', true)
   end
-  self._close_tmp = utils.open_tmp_org_window(16, config.win_split_mode, on_close)
+  self._close_tmp = utils.open_tmp_org_window(16, config.win_split_mode, config.win_border, on_close)
   vim.api.nvim_buf_set_lines(0, 0, -1, true, content)
   self.templates:setup()
   vim.api.nvim_buf_set_var(0, 'org_template', template)
