@@ -77,7 +77,7 @@ function Agenda:open_window()
     end
   end
 
-  utils.open_window('orgagenda', math.max(34, config.org_agenda_min_height), config.win_split_mode)
+  utils.open_window('orgagenda', math.max(34, config.org_agenda_min_height), config.win_split_mode, config.win_border)
 
   vim.cmd([[setf orgagenda]])
   vim.cmd([[setlocal buftype=nofile bufhidden=wipe nobuflisted nolist noswapfile nowrap nospell]])

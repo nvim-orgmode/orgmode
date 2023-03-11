@@ -6,6 +6,7 @@ function NotificationPopup:new(opts)
     hide_after = opts.hide_after or 15000,
     buf = nil,
     win = nil,
+    border = opts.border,
   }
   setmetatable(data, self)
   self.__index = self
@@ -22,7 +23,7 @@ function NotificationPopup:show()
     width = 50,
     height = #self.content,
     style = 'minimal',
-    border = 'single',
+    border = self.border,
     anchor = 'NE',
     row = 0,
     col = vim.o.columns - 1,
