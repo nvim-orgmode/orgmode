@@ -55,9 +55,36 @@ describe('Search parser', function()
 
     result = Search:new('TAGS|TWO+THREE-FOUR&FIVE')
     assert.are.same({
-      { contains = { 'TAGS' }, excludes = {} },
-      { contains = { 'TWO', 'THREE', 'FIVE' }, excludes = { 'FOUR' } },
-    }, result.logic)
+      {
+        and_items = {
+          {
+            contains = {
+              { value = 'TAGS' },
+            },
+            excludes = {},
+          },
+        },
+      },
+      {
+        and_items = {
+          {
+            contains = {
+              { value = 'TWO' },
+              { value = 'THREE' },
+            },
+            excludes = {
+              { value = 'FOUR' },
+            },
+          },
+          {
+            contains = {
+              { value = 'FIVE' },
+            },
+            excludes = {},
+          },
+        },
+      },
+    }, result.or_items)
 
     assert.Is.True(result:check({ tags = { 'TAGS', 'THREE' } }))
     assert.Is.True(result:check({ tags = { 'TWO', 'THREE', 'FIVE' } }))
