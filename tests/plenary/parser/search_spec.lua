@@ -93,7 +93,7 @@ describe('Search parser', function()
   end)
 
   it('should parse search term and match string properties and value', function()
-    local result = Search:new('CATEGORY="test"&MYPROP=myval+WORK')
+    local result = Search:new('CATEGORY="test"&MYPROP="myval"+WORK')
     assert.Is.True(result:check({
       props = { category = 'test', myprop = 'myval', age = 10 },
       tags = { 'WORK', 'OFFICE' },
@@ -154,7 +154,7 @@ describe('Search parser', function()
   end)
 
   it('should search props, tags and todo keywords', function()
-    local result = Search:new('CATEGORY="test"&MYPROP=myval+WORK/TODO|NEXT')
+    local result = Search:new('CATEGORY="test"&MYPROP="myval"+WORK/TODO|NEXT')
     assert.Is.True(result:check({
       props = { category = 'test', myprop = 'myval', age = 10 },
       tags = { 'WORK', 'OFFICE' },
