@@ -85,11 +85,19 @@ local function check_ts_grammar()
       return
     end
     local parser_config = require('nvim-treesitter.parsers').get_parser_configs()
-    if parser_config and parser_config.org and parser_config.org.install_info.revision ~= ts_revision then
+    if parser_config and parser_config.org and parser_config.org.install_info.revision then
+      if parser_config.org.install_info.revision ~= ts_revision then
+        require('orgmode.utils').echo_error({
+          'You are using outdated version of tree-sitter grammar for Orgmode.',
+          'To use latest version, replace current grammar installation with "require(\'orgmode\').setup_ts_grammar()" and run :TSUpdate org.',
+          'More info in setup section of readme: https://github.com/nvim-orgmode/orgmode#setup',
+        })
+      end
+    else
       require('orgmode.utils').echo_error({
-        'You are using outdated version of tree-sitter grammar for Orgmode.',
-        'To use latest version, replace current grammar installation with "require(\'orgmode\').setup_ts_grammar()" and run :TSUpdate org.',
-        'More info in setup section of readme: https://github.com/nvim-orgmode/orgmode#setup',
+        'Cannot detect parser revision.',
+        "Please check your org grammar's install info.",
+        'Maybe you forgot to call "require(\'orgmode\').setup_ts_grammar()" before setup.',
       })
     end
   end, 200)
