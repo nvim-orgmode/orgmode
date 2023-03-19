@@ -30,6 +30,7 @@ local DefaultConfig = {
   org_hide_emphasis_markers = false,
   org_ellipsis = '...',
   org_log_done = 'time',
+  org_log_into_drawer = nil,
   org_highlight_latex_and_related = nil,
   org_custom_exports = {},
   org_indent_mode = 'indent',

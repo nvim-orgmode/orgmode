@@ -475,6 +475,41 @@ function Headline:parse(pattern)
   return matching_nodes[1], match
 end
 
+function Headline:get_drawer(name)
+  local section = self.headline:parent()
+  local body = section:field('body')
+  if not body then
+    return nil
+  end
+
+  for node, node_name in body[1]:iter_children() do
+    if node:type() == 'drawer' then
+      local drawer_name = node:field('name')
+      if #drawer_name and string.lower(query.get_node_text(drawer_name[1], 0)) == string.lower(name) then
+        return node
+      end
+    end
+  end
+end
+
+---Return the line number where content can be appended within
+---the drawer with the given name, matched case-insensitively
+---@param name string
+---
+---@return number
+function Headline:get_drawer_append_line(name)
+  local drawer = self:get_drawer(name)
+
+  if not drawer then
+    local append_line = self:get_append_line()
+    local new_drawer = self:_apply_indent({ ':' .. name .. ':', ':END:' })
+    vim.api.nvim_buf_set_lines(0, append_line, append_line, false, new_drawer)
+    drawer = self:refresh():get_drawer(name)
+  end
+  local name_row = drawer:field('name')[1]:end_()
+  return name_row + 1
+end
+
 ---@param type string | "DEADLINE" | "SCHEDULED" | "CLOSED"
 ---@return Date|nil
 function Headline:_get_date(type)

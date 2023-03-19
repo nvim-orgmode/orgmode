@@ -459,7 +459,13 @@ function OrgMappings:_todo_change_state(direction)
       if not note then
         return
       end
-      local append_line = headline:get_append_line()
+      local drawer = config.org_log_into_drawer
+      local append_line
+      if drawer ~= nil then
+        append_line = headline:get_drawer_append_line(drawer)
+      else
+        append_line = headline:get_append_line()
+      end
       vim.api.nvim_buf_set_lines(0, append_line, append_line, false, note)
     end)
 end
