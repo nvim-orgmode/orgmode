@@ -55,9 +55,36 @@ describe('Search parser', function()
 
     result = Search:new('TAGS|TWO+THREE-FOUR&FIVE')
     assert.are.same({
-      { contains = { 'TAGS' }, excludes = {} },
-      { contains = { 'TWO', 'THREE', 'FIVE' }, excludes = { 'FOUR' } },
-    }, result.logic)
+      {
+        and_items = {
+          {
+            contains = {
+              { value = 'TAGS' },
+            },
+            excludes = {},
+          },
+        },
+      },
+      {
+        and_items = {
+          {
+            contains = {
+              { value = 'TWO' },
+              { value = 'THREE' },
+            },
+            excludes = {
+              { value = 'FOUR' },
+            },
+          },
+          {
+            contains = {
+              { value = 'FIVE' },
+            },
+            excludes = {},
+          },
+        },
+      },
+    }, result.or_items)
 
     assert.Is.True(result:check({ tags = { 'TAGS', 'THREE' } }))
     assert.Is.True(result:check({ tags = { 'TWO', 'THREE', 'FIVE' } }))
@@ -66,7 +93,7 @@ describe('Search parser', function()
   end)
 
   it('should parse search term and match string properties and value', function()
-    local result = Search:new('CATEGORY="test"&MYPROP=myval+WORK')
+    local result = Search:new('CATEGORY="test"&MYPROP="myval"+WORK')
     assert.Is.True(result:check({
       props = { category = 'test', myprop = 'myval', age = 10 },
       tags = { 'WORK', 'OFFICE' },
@@ -127,11 +154,11 @@ describe('Search parser', function()
   end)
 
   it('should search props, tags and todo keywords', function()
-    local result = Search:new('CATEGORY="test"&MYPROP=myval+WORK/TODO|NEXT')
+    local result = Search:new('CATEGORY="test"&MYPROP="myval"+WORK/TODO|NEXT')
     assert.Is.True(result:check({
       props = { category = 'test', myprop = 'myval', age = 10 },
       tags = { 'WORK', 'OFFICE' },
-      todo = { 'TODO' },
+      todo = 'TODO',
     }))
     assert.Is.True(result:check({
       props = { category = 'test', myprop = 'myval', age = 10 },
@@ -141,38 +168,38 @@ describe('Search parser', function()
     assert.Is.False(result:check({
       props = { category = 'test', myprop = 'myval', age = 10 },
       tags = { 'WORK', 'OFFICE' },
-      todo = { 'DONE' },
+      todo = 'DONE',
     }))
 
     result = Search:new('CATEGORY="test"+WORK/-WAITING')
     assert.Is.True(result:check({
       props = { category = 'test' },
       tags = { 'WORK' },
-      todo = { 'TODO' },
+      todo = 'TODO',
     }))
 
     assert.Is.True(result:check({
       props = { category = 'test' },
       tags = { 'WORK' },
-      todo = { 'DONE' },
+      todo = 'DONE',
     }))
 
     assert.Is.False(result:check({
       props = { category = 'test' },
       tags = { 'WORK' },
-      todo = { 'WAITING' },
+      todo = 'WAITING',
     }))
 
     assert.Is.False(result:check({
       props = { category = 'test_bad' },
       tags = { 'WORK' },
-      todo = { 'DONE' },
+      todo = 'DONE',
     }))
 
     assert.Is.False(result:check({
       props = { category = 'test' },
       tags = { 'OFFICE' },
-      todo = { 'DONE' },
+      todo = 'DONE',
     }))
   end)
 end)
