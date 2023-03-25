@@ -21,7 +21,7 @@ end
 function M.parse_query(query)
   local ts_query = query_cache[query]
   if not ts_query then
-    ts_query = vim.treesitter.query.parse_query('org', query)
+    ts_query = vim.treesitter.query.parse('org', query)
     query_cache[query] = ts_query
   end
   return query_cache[query]

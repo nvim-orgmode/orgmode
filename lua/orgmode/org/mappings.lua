@@ -599,7 +599,7 @@ function OrgMappings:handle_return(suffix)
       local counter = 1
       while next_sibling do
         local bullet = next_sibling:child(0)
-        local text = vim.treesitter.query.get_node_text(bullet, 0)
+        local text = vim.treesitter.get_node_text(bullet, 0)
         local new_text = tostring(tonumber(text:match('%d+')) + 1) .. closer
 
         if counter == 1 then
