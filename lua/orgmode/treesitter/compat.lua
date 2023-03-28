@@ -12,6 +12,10 @@ function M.get_query(lang, query_name)
   return (tsq.get or tsq.get_query)(lang, query_name)
 end
 
+function M.set_query(lang, query_name, text)
+  return (tsq.set or tsq.set_query)(lang, query_name, text)
+end
+
 function M.parse_query(lang, query)
   return (tsq.parse or tsq.parse_query)(lang, query)
 end
