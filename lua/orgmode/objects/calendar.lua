@@ -71,7 +71,7 @@ function Calendar.open()
   vim.api.nvim_buf_set_var(Calendar.buf, 'indent_blankline_enabled', false)
   vim.api.nvim_buf_set_option(Calendar.buf, 'bufhidden', 'wipe')
 
-  local map_opts = { buffer = Calendar.buf, silent = true }
+  local map_opts = { buffer = Calendar.buf, silent = true, nowait = true }
 
   vim.keymap.set('n', 'j', '<cmd>lua require("orgmode.objects.calendar").cursor_down()<cr>', map_opts)
   vim.keymap.set('n', 'k', '<cmd>lua require("orgmode.objects.calendar").cursor_up()<cr>', map_opts)
