@@ -11,6 +11,7 @@ local constants = require('orgmode.utils.constants')
 local ts_utils = require('nvim-treesitter.ts_utils')
 local utils = require('orgmode.utils')
 local ts_org = require('orgmode.treesitter')
+local ts = require('orgmode.treesitter.compat')
 local ts_table = require('orgmode.treesitter.table')
 local EventManager = require('orgmode.events')
 local Promise = require('orgmode.utils.promise')
@@ -599,7 +600,7 @@ function OrgMappings:handle_return(suffix)
       local counter = 1
       while next_sibling do
         local bullet = next_sibling:child(0)
-        local text = vim.treesitter.query.get_node_text(bullet, 0)
+        local text = ts.get_node_text(bullet, 0)
         local new_text = tostring(tonumber(text:match('%d+')) + 1) .. closer
 
         if counter == 1 then

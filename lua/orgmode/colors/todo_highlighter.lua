@@ -1,10 +1,11 @@
+local ts = require('orgmode.treesitter.compat')
 local config = require('orgmode.config')
 local highlights = require('orgmode.colors.highlights')
 local tree_utils = require('orgmode.utils.treesitter')
 local utils = require('orgmode.utils')
 
 local function add_todo_keyword_highlights()
-  local query_files = vim.treesitter.get_query_files('org', 'highlights')
+  local query_files = ts.get_query_files('org', 'highlights')
   if not query_files or #query_files == 0 then
     return
   end
@@ -51,7 +52,7 @@ local function add_todo_keyword_highlights()
           for _, v in ipairs(lines) do
             table.insert(all_lines, v)
           end
-          vim.treesitter.set_query('org', 'highlights', table.concat(all_lines, '\n'))
+          ts.set_query('org', 'highlights', table.concat(all_lines, '\n'))
           if vim.bo.filetype == 'org' then
             tree_utils.restart_highlights()
           end

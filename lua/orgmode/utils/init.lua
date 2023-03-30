@@ -1,4 +1,4 @@
-local ts = require('vim.treesitter.query')
+local ts = require('orgmode.treesitter.compat')
 local ts_utils = require('nvim-treesitter.ts_utils')
 local Promise = require('orgmode.utils.promise')
 local uv = vim.loop
