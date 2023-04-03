@@ -42,4 +42,4 @@ jobs:
           neovim: true
           version: ${{ matrix.version }}
       - name: Run tests
-        run: make ci
+        run: make test

@@ -1,4 +1,4 @@
-local ts = require('vim.treesitter.query')
+local ts = require('orgmode.treesitter.compat')
 local ts_utils = require('nvim-treesitter.ts_utils')
 local Promise = require('orgmode.utils.promise')
 local uv = vim.loop
@@ -495,7 +495,8 @@ end
 ---@param name string
 ---@param height number
 ---@param split_mode string|function|table
-function utils.open_window(name, height, split_mode)
+---@param border string|table
+function utils.open_window(name, height, split_mode, border)
   local cmd_by_split_mode = {
     horizontal = string.format('%dsplit %s', height, name),
     vertical = string.format('vsplit %s', name),
@@ -524,19 +525,19 @@ function utils.open_window(name, height, split_mode)
   end
 
   if split_mode == 'float' then
-    return utils.open_float(name)
+    return utils.open_float(name, { border = border })
   end
 
   if type(split_mode) == 'table' and split_mode[1] == 'float' then
-    return utils.open_float(name, split_mode[2])
+    return utils.open_float(name, { scale = split_mode[2], border = border })
   end
 
   return vim.cmd(string.format('%s %s', split_mode, name))
 end
 
-function utils.open_tmp_org_window(height, split_mode, on_close)
+function utils.open_tmp_org_window(height, split_mode, border, on_close)
   local winnr = vim.api.nvim_get_current_win()
-  utils.open_window(vim.fn.tempname(), height or 16, split_mode)
+  utils.open_window(vim.fn.tempname(), height or 16, split_mode, border)
   vim.cmd([[setf org]])
   vim.cmd([[setlocal bufhidden=wipe nobuflisted nolist noswapfile nofoldenable]])
   vim.api.nvim_buf_set_var(0, 'org_prev_window', winnr)
@@ -567,11 +568,13 @@ function utils.open_tmp_org_window(height, split_mode, on_close)
 end
 
 ---@param name string
----@param scale? number
-function utils.open_float(name, scale)
-  scale = scale or 0.7
+---@param opts? table
+function utils.open_float(name, opts)
+  opts = opts or { scale = nil, border = nil }
+  opts.scale = opts.scale or 0.7
+  opts.border = opts.border or 'single'
   -- Make sure number is between 0 and 1
-  scale = math.min(math.max(0, scale), 1)
+  local scale = math.min(math.max(0, opts.scale), 1)
   local bufnr = vim.api.nvim_create_buf(false, true)
   vim.api.nvim_buf_set_name(bufnr, name)
 
@@ -587,7 +590,7 @@ function utils.open_float(name, scale)
     row = row,
     col = col,
     style = 'minimal',
-    border = 'rounded',
+    border = opts.border,
   })
 end
 

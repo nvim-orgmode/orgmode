@@ -1,3 +1,4 @@
+local ts = require('orgmode.treesitter.compat')
 local config = require('orgmode.config')
 local ts_utils = require('nvim-treesitter.ts_utils')
 local query = nil
@@ -226,7 +227,7 @@ local function load_deps()
   if query then
     return
   end
-  query = vim.treesitter.get_query('org', 'markup')
+  query = ts.get_query('org', 'markup')
   vim.treesitter.query.add_predicate('org-is-valid-markup-range?', is_valid_markup_range)
   vim.treesitter.query.add_predicate('org-is-valid-hyperlink-range?', is_valid_hyperlink_range)
   vim.treesitter.query.add_predicate('org-is-valid-latex-range?', is_valid_latex_range)

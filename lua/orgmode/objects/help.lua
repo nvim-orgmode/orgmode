@@ -322,7 +322,7 @@ function Help.show(opts)
     height = math.min(#content + 1, vim.o.lines - 2),
     anchor = 'NW',
     style = 'minimal',
-    border = 'single',
+    border = config.win_border,
     row = 5,
     col = vim.o.columns / 4,
   }

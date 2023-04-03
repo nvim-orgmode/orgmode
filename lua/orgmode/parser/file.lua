@@ -205,9 +205,17 @@ function File:apply_search(search, todo_only)
     if item:is_archived() or (todo_only and not item:is_todo()) then
       return false
     end
+
+    local deadline = item:get_deadline_date()
+    local scheduled = item:get_scheduled_date()
+    local closed = item:get_closed_date()
+
     return search:check({
       props = vim.tbl_extend('keep', {}, item.properties.items, {
         category = item.category,
+        deadline = deadline and deadline:to_wrapped_string(true),
+        scheduled = scheduled and scheduled:to_wrapped_string(true),
+        closed = closed and closed:to_wrapped_string(false),
       }),
       tags = item.tags,
       todo = item.todo_keyword.value,

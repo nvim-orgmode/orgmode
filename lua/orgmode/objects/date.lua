@@ -25,7 +25,28 @@ local time_format = '%H:%M'
 ---@field related_date_range Date
 ---@field dayname string
 ---@field adjustments string[]
-local Date = {}
+local Date = {
+  ---@type fun(this: Date, other: Date): boolean
+  __eq = function(this, other)
+    return this.timestamp == other.timestamp
+  end,
+  ---@type fun(this: Date, other: Date): boolean
+  __lt = function(this, other)
+    return this.timestamp < other.timestamp
+  end,
+  ---@type fun(this: Date, other: Date): boolean
+  __le = function(this, other)
+    return this.timestamp <= other.timestamp
+  end,
+  ---@type fun(this: Date, other: Date): boolean
+  __gt = function(this, other)
+    return this.timestamp > other.timestamp
+  end,
+  ---@type fun(this: Date, other: Date): boolean
+  __ge = function(this, other)
+    return this.timestamp >= other.timestamp
+  end,
+}
 
 ---@param source table
 ---@param target? table
@@ -164,6 +185,12 @@ local function today(data)
   local opts = vim.tbl_deep_extend('force', os.date('*t', os.time()), data or {})
   opts.date_only = true
   return Date:new(opts)
+end
+
+---@return Date
+local function tomorrow()
+  local today_date = today()
+  return today_date:adjust('+1d')
 end
 
 ---@param data? table
@@ -909,6 +936,7 @@ return {
   from_string = from_string,
   now = now,
   today = today,
+  tomorrow = tomorrow,
   parse_all_from_line = parse_all_from_line,
   is_valid_date = is_valid_date,
   is_date_instance = is_date_instance,

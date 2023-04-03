@@ -4,7 +4,7 @@ local tree_utils = require('orgmode.utils.treesitter')
 local Date = require('orgmode.objects.date')
 local Range = require('orgmode.parser.range')
 local config = require('orgmode.config')
-local query = vim.treesitter.query
+local ts = require('orgmode.treesitter.compat')
 
 ---@class Headline
 ---@field headline userdata
@@ -46,7 +46,7 @@ end
 ---@return number
 function Headline:level()
   local stars = self:stars()
-  return query.get_node_text(stars, 0):len()
+  return ts.get_node_text(stars, 0):len()
 end
 
 function Headline:priority()
@@ -94,7 +94,7 @@ end
 
 function Headline:_handle_promote_demote(recursive, modifier)
   local whole_subtree = function()
-    local text = query.get_node_text(self.headline:parent(), 0)
+    local text = ts.get_node_text(self.headline:parent(), 0)
     local lines = modifier(vim.split(text, '\n', true))
     tree_utils.set_node_lines(self.headline:parent(), lines)
     return self:refresh()
@@ -128,7 +128,7 @@ function Headline:tags()
   local node = self.headline:field('tags')[1]
   local text = ''
   if node then
-    text = query.get_node_text(node, 0)
+    text = ts.get_node_text(node, 0)
   end
   return node, text
 end
@@ -142,7 +142,7 @@ function Headline:set_tags(tags)
     end
   end
 
-  local txt = query.get_node_text(predecessor, 0)
+  local txt = ts.get_node_text(predecessor, 0)
   local pred_end_row, pred_end_col, _ = predecessor:end_()
   local line = vim.fn.getline(pred_end_row + 1)
   local stars = line:match('^%*+%s*')
@@ -190,13 +190,13 @@ function Headline:set_priority(priority)
 
   local todo = self:todo()
   if todo then
-    local text = query.get_node_text(todo, 0)
+    local text = ts.get_node_text(todo, 0)
     tree_utils.set_node_text(todo, ('%s [#%s]'):format(text, priority))
     return
   end
 
   local stars = self:stars()
-  local text = query.get_node_text(stars, 0)
+  local text = ts.get_node_text(stars, 0)
   tree_utils.set_node_text(stars, ('%s [#%s]'):format(text, priority))
 end
 
@@ -209,7 +209,7 @@ function Headline:set_todo(keyword)
   end
 
   local stars = self:stars()
-  local text = query.get_node_text(stars, 0)
+  local text = ts.get_node_text(stars, 0)
   tree_utils.set_node_text(stars, string.format('%s %s', text, keyword))
 end
 
@@ -231,7 +231,7 @@ function Headline:todo()
     return nil
   end
 
-  local text = query.get_node_text(todo_node, 0)
+  local text = ts.get_node_text(todo_node, 0)
   for _, word in ipairs(keywords) do
     -- there may be multiple substitutions necessary
     local escaped_word = vim.pesc(word)
@@ -272,7 +272,7 @@ function Headline:is_done()
 end
 
 function Headline:title()
-  local title = query.get_node_text(self:item(), 0) or ''
+  local title = ts.get_node_text(self:item(), 0) or ''
   local todo, word = self:todo()
   if todo then
     title = title:gsub('^' .. vim.pesc(word) .. '%s*', '')
@@ -334,11 +334,11 @@ function Headline:get_property(property_name)
   for _, node in ipairs(ts_utils.get_named_children(properties)) do
     local name = node:field('name')[1]
     local value = node:field('value')[1]
-    if name and query.get_node_text(name, 0):lower() == property_name:lower() then
+    if name and ts.get_node_text(name, 0):lower() == property_name:lower() then
       return {
         node = node,
         name = name,
-        value = value and query.get_node_text(value, 0),
+        value = value and ts.get_node_text(value, 0),
       }
     end
   end
@@ -369,7 +369,7 @@ function Headline:dates()
   end
 
   for _, node in ipairs(ts_utils.get_named_children(plan)) do
-    local name = query.get_node_text(node:named_child(0), 0)
+    local name = ts.get_node_text(node:named_child(0), 0)
     dates[name] = node
   end
   return dates
@@ -445,7 +445,7 @@ function Headline:update_cookie(list_node)
   local cookie = self:cookie()
   if cookie then
     local new_cookie_val
-    if query.get_node_text(cookie, 0):find('%%') then
+    if ts.get_node_text(cookie, 0):find('%%') then
       new_cookie_val = ('[%d%%]'):format((#checked_boxes / #total_boxes) * 100)
     else
       new_cookie_val = ('[%d/%d]'):format(#checked_boxes, #total_boxes)
@@ -456,7 +456,7 @@ end
 
 function Headline:child_checkboxes(list_node)
   return vim.tbl_map(function(node)
-    local text = query.get_node_text(node, 0)
+    local text = ts.get_node_text(node, 0)
     return text:match('%[.%]')
   end, ts_utils.get_named_children(list_node))
 end
@@ -465,7 +465,7 @@ end
 function Headline:parse(pattern)
   local match = ''
   local matching_nodes = vim.tbl_filter(function(node)
-    local text = query.get_node_text(node, 0) or ''
+    local text = ts.get_node_text(node, 0) or ''
     local m = text:match(pattern)
     if m then
       match = text:match(pattern)
@@ -487,7 +487,7 @@ function Headline:_get_date(type)
   if not timestamp_node then
     return nil
   end
-  local parsed_date = Date.from_org_date(query.get_node_text(timestamp_node, 0), {
+  local parsed_date = Date.from_org_date(ts.get_node_text(timestamp_node, 0), {
     range = Range.from_node(timestamp_node),
   })
   return parsed_date and parsed_date[1] or nil
@@ -522,7 +522,7 @@ function Headline:_add_date(type, date, active)
       break
     end
   end
-  local ptext = query.get_node_text(last_child, 0)
+  local ptext = ts.get_node_text(last_child, 0)
   tree_utils.set_node_text(last_child, ptext .. ' ' .. text)
   return self:refresh()
 end

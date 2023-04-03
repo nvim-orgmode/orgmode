@@ -42,6 +42,7 @@ local DefaultConfig = {
   org_edit_src_content_indentation = 0,
   diagnostics = true,
   win_split_mode = 'horizontal',
+  win_border = 'single',
   notifications = {
     enabled = false,
     cron_enabled = true,

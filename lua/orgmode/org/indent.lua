@@ -1,3 +1,4 @@
+local ts = require('orgmode.treesitter.compat')
 local config = require('orgmode.config')
 local ts_utils = require('nvim-treesitter.ts_utils')
 local query = nil
@@ -25,7 +26,7 @@ local get_matches = ts_utils.memoize_by_buf_tick(function(bufnr)
       }
 
       if type == 'headline' then
-        opts.stars = vim.treesitter.query.get_node_text(node:field('stars')[1], bufnr):len()
+        opts.stars = ts.get_node_text(node:field('stars')[1], bufnr):len()
         opts.indent = opts.indent + opts.stars + 1
         matches[range.start.line + 1] = opts
       end
@@ -52,7 +53,7 @@ local get_matches = ts_utils.memoize_by_buf_tick(function(bufnr)
         end
         if parent then
           local headline = parent:named_child('headline')
-          local stars = vim.treesitter.query.get_node_text(headline:field('stars')[1], bufnr):len()
+          local stars = ts.get_node_text(headline:field('stars')[1], bufnr):len()
           opts.indent = stars + 1
           for i = range.start.line, range['end'].line - 1 do
             matches[i + 1] = opts
@@ -67,7 +68,7 @@ end)
 
 local prev_section = nil
 local function foldexpr()
-  query = query or vim.treesitter.get_query('org', 'org_indent')
+  query = query or ts.get_query('org', 'org_indent')
   local matches = get_matches(0)
   local match = matches[vim.v.lnum]
   local next_match = matches[vim.v.lnum + 1]
@@ -114,7 +115,7 @@ end
 
 local function indentexpr()
   local noindent_mode = config.org_indent_mode == 'noindent'
-  query = query or vim.treesitter.get_query('org', 'org_indent')
+  query = query or ts.get_query('org', 'org_indent')
 
   local prev_linenr = vim.fn.prevnonblank(vim.v.lnum - 1)
 

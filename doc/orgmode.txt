@@ -14,21 +14,22 @@ CONTENTS                                                        *orgmode-content
             1.2.1.3. org_todo_keywords.................|orgmode-org_todo_keywords|
             1.2.1.4. diagnostics.............................|orgmode-diagnostics|
             1.2.1.5. win_split_mode.......................|orgmode-win_split_mode|
-            1.2.1.6. org_todo_keyword_faces.......|orgmode-org_todo_keyword_faces|
-            1.2.1.7. org_archive_location...........|orgmode-org_archive_location|
-            1.2.1.8. org_hide_leading_stars.......|orgmode-org_hide_leading_stars|
-            1.2.1.9. org_hide_emphasis_markers.|orgmode-org_hide_emphasis_markers|
-            1.2.1.10. org_ellipsis..........................|orgmode-org_ellipsis|
-            1.2.1.11. org_log_done..........................|orgmode-org_log_done|
-            1.2.1.12. org_highlight_latex_and_related.|orgmode-org_highlight_latex_and_related|
-            1.2.1.13. org_indent_mode....................|orgmode-org_indent_mode|
-            1.2.1.14. org_src_window_setup..........|orgmode-org_src_window_setup|
-            1.2.1.15. org_edit_src_content_indentation.|orgmode-org_edit_src_content_indentation|
-            1.2.1.16. org_custom_exports..............|orgmode-org_custom_exports|
-            1.2.1.17. org_time_stamp_rounding_minutes.|orgmode-org_time_stamp_rounding_minutes|
-            1.2.1.18. org_blank_before_new_entry.|orgmode-org_blank_before_new_entry|
-            1.2.1.19. calendar_week_start_day....|orgmode-calendar_week_start_day|
-            1.2.1.20. emacs_config..........................|orgmode-emacs_config|
+            1.2.1.6. win_border...............................|orgmode-win_border|
+            1.2.1.7. org_todo_keyword_faces.......|orgmode-org_todo_keyword_faces|
+            1.2.1.8. org_archive_location...........|orgmode-org_archive_location|
+            1.2.1.9. org_hide_leading_stars.......|orgmode-org_hide_leading_stars|
+            1.2.1.10. org_hide_emphasis_markers.|orgmode-org_hide_emphasis_markers|
+            1.2.1.11. org_ellipsis..........................|orgmode-org_ellipsis|
+            1.2.1.12. org_log_done..........................|orgmode-org_log_done|
+            1.2.1.13. org_highlight_latex_and_related.|orgmode-org_highlight_latex_and_related|
+            1.2.1.14. org_indent_mode....................|orgmode-org_indent_mode|
+            1.2.1.15. org_src_window_setup..........|orgmode-org_src_window_setup|
+            1.2.1.16. org_edit_src_content_indentation.|orgmode-org_edit_src_content_indentation|
+            1.2.1.17. org_custom_exports..............|orgmode-org_custom_exports|
+            1.2.1.18. org_time_stamp_rounding_minutes.|orgmode-org_time_stamp_rounding_minutes|
+            1.2.1.19. org_blank_before_new_entry.|orgmode-org_blank_before_new_entry|
+            1.2.1.20. calendar_week_start_day....|orgmode-calendar_week_start_day|
+            1.2.1.21. emacs_config..........................|orgmode-emacs_config|
         1.2.2. Agenda settings...........................|orgmode-agenda_settings|
             1.2.2.1. org_deadline_warning_days.|orgmode-org_deadline_warning_days|
             1.2.2.2. org_agenda_span.....................|orgmode-org_agenda_span|
@@ -316,6 +317,32 @@ Always open horizontally with specific height of 20 lines:
     win_split_mode = '20split'
 <
 
+WIN_BORDER                                                    *orgmode-win_border*
+
+type: `string|string[]`
+default value: `single`
+Border style of floating windows.
+Available options:
+* `none` - No border (default)
+* `single` - A single line box
+* `double` - A double line box
+* `rounded` - Like "single", but with rounded corners ("╭" etc.)
+* `solid` - Adds padding by a single whitespace cell
+* `shadow` - A drop shadow effect by blending with the background
+* `{'╔', '═' ,'╗', '║', '╝', '═', '╚', '║' }` - Specify border characters in a clock-wise fashion
+* `{'/', '-', '\\', '|' }` - If less than eight chars the chars will start repeating
+
+See `:help nvim_open_win()`
+
+Applies to:
+    always
+        - calendar pop-up
+        - help pop-up
+        - notification pop-up
+    `win_split_mode` is set to `float`
+        - agenda window
+        - capture window
+
 ORG_TODO_KEYWORD_FACES                            *orgmode-org_todo_keyword_faces*
 
 type: `table<string, string>`
@@ -324,7 +351,7 @@ Custom colors for todo keywords.
 Available options:
 * foreground - `:foreground hex/colorname`. Examples: `:foreground #FF0000`, `:foreground blue`
 * background - `:background hex/colorname`. Examples: `:background #FF0000`, `:background blue`
-* weight - `:weight bold`.
+* weight - `:weight bold`
 * underline - `:underline on`
 * italic - `:slant italic`
 
@@ -1674,7 +1701,7 @@ In order to trigger notifications via cron, job needs to be added to the crontab
 This is currently possible only on Linux and MacOS, since I don't know how would this be done on Windows. Any help on this topic is appreciated.
 This works by starting the headless Neovim instance, running one off function inside orgmode, and quitting the Neovim.
 
-Here's maximum simplified Linux example (Tested on Manjaro/Arch), but least optimized:
+Here's maximum simplified Linux example (Tested on Manjaro/Arch/Ubuntu), but least optimized:
 
 Run this to open crontab:
 >

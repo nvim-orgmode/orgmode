@@ -1,6 +1,6 @@
 local ts_utils = require('nvim-treesitter.ts_utils')
 local tree_utils = require('orgmode.utils.treesitter')
-local query = vim.treesitter.query
+local ts = require('orgmode.treesitter.compat')
 local Headline = require('orgmode.treesitter.headline')
 
 ---@class Listitem
@@ -36,7 +36,7 @@ function Listitem:checkbox()
   if not checkbox then
     return nil
   end
-  local text = query.get_node_text(checkbox, 0)
+  local text = ts.get_node_text(checkbox, 0)
   return { text = text, range = { checkbox:range() } }
 end
 
@@ -79,7 +79,7 @@ function Listitem:child_checkboxes()
   for _, content in ipairs(contents) do
     if content:type() == 'list' then
       return vim.tbl_map(function(node)
-        local text = query.get_node_text(node, 0)
+        local text = ts.get_node_text(node, 0)
         return text:match('%[.%]')
       end, ts_utils.get_named_children(content))
     end
@@ -94,7 +94,7 @@ function Listitem:cookie()
     return nil
   end
 
-  local text = query.get_node_text(cookie_node, 0)
+  local text = ts.get_node_text(cookie_node, 0)
   if text:match('%[%d*/%d*%]') or text:match('%[%d?%d?%d?%%%]') then
     return cookie_node
   end
@@ -104,7 +104,7 @@ function Listitem:update_cookie(total_child_checkboxes, checked_child_checkboxes
   local cookie = self:cookie()
   if cookie then
     local new_cookie_val
-    if query.get_node_text(cookie, 0):find('%%') then
+    if ts.get_node_text(cookie, 0):find('%%') then
       new_cookie_val = ('[%d%%]'):format((#checked_child_checkboxes / #total_child_checkboxes) * 100)
     else
       new_cookie_val = ('[%d/%d]'):format(#checked_child_checkboxes, #total_child_checkboxes)

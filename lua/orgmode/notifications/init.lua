@@ -55,7 +55,7 @@ function Notifications:notify(time)
   end
 
   if not vim.tbl_isempty(result) then
-    NotificationPopup:new({ content = result })
+    NotificationPopup:new({ content = result, border = config.win_border })
   end
 end
 

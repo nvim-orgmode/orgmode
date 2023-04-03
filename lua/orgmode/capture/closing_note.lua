@@ -14,7 +14,7 @@ end
 
 function ClosingNote:open()
   self._resolve_fn = nil
-  self._close_tmp = utils.open_tmp_org_window(16, config.win_split_mode)
+  self._close_tmp = utils.open_tmp_org_window(16, config.win_split_mode, config.win_border)
   config:setup_mappings('note')
   vim.api.nvim_buf_set_var(0, 'org_note', true)
   vim.api.nvim_buf_set_lines(0, 0, -1, false, { '# Insert note for closed todo item', '', '' })
