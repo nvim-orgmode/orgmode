@@ -422,7 +422,8 @@ function Agenda:_remote_edit(opts)
         self.win_width
       )
     else
-      self.content[line] = AgendaTodosView.generate_todo_item(headline, item.longest_category, item.line)
+      self.content[line] =
+        AgendaTodosView.generate_todo_item(headline, item.longest_category, item.line, self.win_width)
     end
     return self:_render(true)
   end)
