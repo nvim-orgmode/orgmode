@@ -10,7 +10,7 @@
 
   Orgmode clone written in Lua for Neovim 0.8+
 
-  [Setup](#setup) • [Docs](/DOCS.md) • [Showcase](#showcase) • [Treesitter](#treesitter-info) • [Troubleshoot](#troubleshoot) • [Plugins](#plugins) • [Development](#development) • [Kudos](#thanks-to)
+  [Setup](#setup) • [Docs](/DOCS.md) • [Showcase](#showcase) • [Treesitter](#treesitter-info) • [Troubleshoot](#troubleshoot) • [Plugins](#plugins) • [Contributing](CONTRIBUTING.md) • [Kudos](#thanks-to)
 
 
 </div>
@@ -371,29 +371,21 @@ and a good foundation for external plugins.<br />
 If you want to build a plugin, post suggestions and improvements on [Plugins infrastructure](https://github.com/nvim-orgmode/orgmode/issues/26)
 issue.
 
-## Development
+### :wrench: API
 
-### Tests
- To run tests, [plenary.nvim](https://github.com/nvim-lua/plenary.nvim) and [nvim-treesitter](https://github.com/nvim-treesitter/nvim-treesitter) must be present in the nvim-orgmode directory:
-```
-git clone https://github.com/nvim-treesitter/nvim-treesitter
-git clone https://github.com/nvim-lua/plenary.nvim
-make test
-```
+Documentation for our work-in-progress API can be found [here](doc/orgmode_api.txt)
 
-### Documentation
-Hosted documentation is on: [https://nvim-orgmode.github.io/](https://nvim-orgmode.github.io/)
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md)
+
+## Documentation
+
+If you are just starting out with orgmode, have a look at the [Getting Started](https://github.com/nvim-orgmode/orgmode/wiki/Getting-Started) section in our wiki.
 
 Vim documentation is auto generated from [DOCS.md](DOCS.md) file with [md2vim](https://github.com/FooSoft/md2vim).
 
-### Formatting
-Formatting is done via [StyLua](https://github.com/JohnnyMorganz/StyLua). To format everything run:
-```
-make format
-```
-
-### Parser
-Parsing is done via builtin treesitter parser and [tree-sitter-org](https://github.com/milisims/tree-sitter-org) grammar.
+Hosted documentation is on: [https://nvim-orgmode.github.io/](https://nvim-orgmode.github.io/)
 
 ## Roadmap
 * [X] Support searching by properties
