@@ -477,15 +477,15 @@ end
 
 function Headline:get_drawer(name)
   local section = self.headline:parent()
-  local body = section:field('body')
+  local body = section:field('body')[1]
   if not body then
     return nil
   end
 
-  for node, node_name in body[1]:iter_children() do
+  for _, node in ipairs(ts_utils.get_named_children(body)) do
     if node:type() == 'drawer' then
       local drawer_name = node:field('name')
-      if #drawer_name and string.lower(query.get_node_text(drawer_name[1], 0)) == string.lower(name) then
+      if #drawer_name and string.lower(ts.get_node_text(drawer_name[1], 0)) == string.lower(name) then
         return node
       end
     end
