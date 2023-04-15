@@ -1,5 +1,6 @@
 local helpers = require('tests.plenary.ui.helpers')
 local Date = require('orgmode.objects.date')
+local config = require('orgmode.config')
 
 describe('Todo mappings', function()
   after_each(function()
@@ -70,6 +71,59 @@ describe('Todo mappings', function()
       '',
       '* TODO Another task',
     }, vim.api.nvim_buf_get_lines(0, 2, 10, false))
+  end)
+  it('should add last repeat property and state change to drawer (org_log_into_drawer)', function()
+    config:extend({
+      org_log_into_drawer = 'LOGBOOK',
+    })
+
+    helpers.load_file_content({
+      '#TITLE: Test',
+      '',
+      '* TODO Test orgmode',
+      '  DEADLINE: <2021-09-07 Tue 12:00 +1w>',
+      '',
+      '* TODO Another task',
+    })
+
+    assert.are.same({
+      '* TODO Test orgmode',
+      '  DEADLINE: <2021-09-07 Tue 12:00 +1w>',
+      '',
+      '* TODO Another task',
+    }, vim.api.nvim_buf_get_lines(0, 2, 6, false))
+    vim.fn.cursor(3, 1)
+    vim.cmd([[norm cit]])
+    vim.wait(50)
+    assert.are.same({
+      '* TODO Test orgmode',
+      '  DEADLINE: <2021-09-14 Tue 12:00 +1w>',
+      '  :PROPERTIES:',
+      '  :LAST_REPEAT: [' .. Date.now():to_string() .. ']',
+      '  :END:',
+      '  :LOGBOOK:',
+      '  - State "DONE" from "TODO" [' .. Date.now():to_string() .. ']',
+      '  :END:',
+      '',
+      '* TODO Another task',
+    }, vim.api.nvim_buf_get_lines(0, 2, 12, false))
+
+    vim.fn.cursor(3, 1)
+    vim.cmd([[norm cit]])
+    vim.wait(200)
+    assert.are.same({
+      '* TODO Test orgmode',
+      '  DEADLINE: <2021-09-21 Tue 12:00 +1w>',
+      '  :PROPERTIES:',
+      '  :LAST_REPEAT: [' .. Date.now():to_string() .. ']',
+      '  :END:',
+      '  :LOGBOOK:',
+      '  - State "DONE" from "TODO" [' .. Date.now():to_string() .. ']',
+      '  - State "DONE" from "TODO" [' .. Date.now():to_string() .. ']',
+      '  :END:',
+      '',
+      '* TODO Another task',
+    }, vim.api.nvim_buf_get_lines(0, 2, 13, false))
   end)
   it('should change todo state of a headline backward (org_todo_prev)', function()
     helpers.load_file_content({

@@ -241,6 +241,13 @@ Possible values:
 * `note` - adds `CLOSED` date as above, and prompts for closing note via capture window. Confirm note with `org_note_finalize` (Default `<C-c>`), or ignore providing note via `org_note_kill` (Default `<Leader>ok`)
 * `nil|false` - Disable any logging
 
+#### **org_log_into_drawer**
+*type*: `string|nil`<br />
+*default value*: `nil`<br />
+Possible values:
+Log TODO state changes into a drawer with the given name. The recommended value is `LOGBOOK`.
+If `nil`, log into the section body.
+
 #### **org_highlight_latex_and_related**
 *type*: `string|nil`<br />
 *default value*: `nil`<br />
