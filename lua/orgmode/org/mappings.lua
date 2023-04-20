@@ -783,10 +783,13 @@ function OrgMappings:open_at_point()
     return vim.cmd(string.format('edit %s', url))
   end
 
+  local headlines = Hyperlinks.find_matching_links(link_ctx)
   local current_headline = Files.get_closest_headline()
-  local headlines = vim.tbl_filter(function(headline)
-    return headline.line ~= current_headline.line and headline.id ~= current_headline.id
-  end, Hyperlinks.find_matching_links(link_ctx))
+  if current_headline then
+    headlines = vim.tbl_filter(function(headline)
+      return headline.line ~= current_headline.line and headline.id ~= current_headline.id
+    end, headlines)
+  end
   if #headlines == 0 then
     return
   end
