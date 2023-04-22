@@ -507,10 +507,17 @@ function OrgMappings:org_return()
 
   local old_mapping = config.old_cr_mapping
 
+  -- No other mapping for <CR>, just reproduce it.
   if not old_mapping or vim.tbl_isempty(old_mapping) then
     return vim.api.nvim_feedkeys(utils.esc('<CR>'), 'n', true)
   end
 
+  -- Lua mapping that installed a Lua function to call.
+  if old_mapping.callback then
+    return old_mapping.callback()
+  end
+
+  -- Classic, string-based mapping. Reconstruct it as faithfully as possible.
   local rhs = utils.esc(old_mapping.rhs)
 
   if old_mapping.expr > 0 then
