@@ -8,6 +8,7 @@ runtime plugin/plenary.vim
 runtime plugin/nvim-treesitter.lua
 let mapleader = ','
 set shada="NONE"
+call setenv('TZ', 'Europe/London')
 
 lua << EOF
 require('orgmode').setup_ts_grammar()
