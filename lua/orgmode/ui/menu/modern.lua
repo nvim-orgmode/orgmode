@@ -5,6 +5,7 @@ function ModernMenu:new(config)
 
   local opts = {}
   opts.window = config.window
+  opts.icons = config.icons
 
   setmetatable(opts, self)
   self.__index = self
@@ -48,7 +49,9 @@ function ModernMenu:_process_items(items)
 
       table.insert(
         content,
-        string.rep(' ', pad_left) .. string.format('%s ➜ %s', item.key, item.label) .. string.rep(' ', pad_right)
+        string.rep(' ', pad_left)
+          .. string.format('%s %s %s', item.key, self.icons.separator, item.label)
+          .. string.rep(' ', pad_right)
       )
     end
   end

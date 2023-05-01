@@ -182,6 +182,9 @@ local DefaultConfig = {
         border = 'single',
         zindex = 1000,
       },
+      icons = {
+        separator = '➜',
+      },
     },
   },
 }
