@@ -119,4 +119,6 @@ hi def link org_subtask_percent String
 hi def link org_subtask_percent_100 Identifier
 hi def link org_subtask_number_all Identifier
 
+syntax spell toplevel
+
 " vi: ft=vim:tw=80:sw=4:ts=4:fdm=marker

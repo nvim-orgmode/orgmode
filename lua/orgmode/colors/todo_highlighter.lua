@@ -44,10 +44,13 @@ local function add_todo_keyword_highlights()
             end, todo_keywords.DONE),
             ' '
           )
-          table.insert(lines, string.format([[(item . (expr) @OrgTODO (#any-of? @OrgTODO %s))]], todo_type))
-          table.insert(lines, string.format([[(item . (expr) @OrgDONE (#any-of? @OrgDONE %s))]], done_type))
+          table.insert(lines, string.format([[(item . (expr) @OrgTODO @nospell (#any-of? @OrgTODO %s))]], todo_type))
+          table.insert(lines, string.format([[(item . (expr) @OrgDONE @nospell (#any-of? @OrgDONE %s))]], done_type))
           for face_name, face_hl in pairs(faces) do
-            table.insert(lines, string.format([[(item . (expr) @%s (#eq? @%s %s))]], face_hl, face_hl, face_name))
+            table.insert(
+              lines,
+              string.format([[(item . (expr) @%s @nospell (#eq? @%s %s))]], face_hl, face_hl, face_name)
+            )
           end
           for _, v in ipairs(lines) do
             table.insert(all_lines, v)

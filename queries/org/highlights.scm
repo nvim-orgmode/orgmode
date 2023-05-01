@@ -8,6 +8,9 @@
 (headline (stars) @stars (#eq? @stars "******")) @OrgTSHeadlineLevel6
 (headline (stars) @stars (#eq? @stars "*******")) @OrgTSHeadlineLevel7
 (headline (stars) @stars (#eq? @stars "********")) @OrgTSHeadlineLevel8
+(headline (item) @spell)
+(list (listitem (paragraph) @spell))
+(body (paragraph) @spell)
 (bullet) @OrgTSBullet
 (checkbox) @OrgTSCheckbox
 (checkbox status: (expr "-") @OrgTSCheckboxHalfChecked)
@@ -24,6 +27,6 @@
 (drawer) @OrgTSDrawer
 (tag_list) @OrgTSTag
 (plan) @OrgTSPlan
-(comment) @OrgTSComment
+(comment) @OrgTSComment @spell
 (directive) @OrgTSDirective
 (ERROR) @LspDiagnosticsUnderlineError
