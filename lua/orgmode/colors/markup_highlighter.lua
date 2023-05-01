@@ -36,18 +36,21 @@ local markers = {
     hl_name = 'org_code',
     hl_cmd = 'hi def link org_code String',
     nestable = false,
+    spell = false,
     type = 'text',
   },
   ['='] = {
     hl_name = 'org_verbatim',
     hl_cmd = 'hi def link org_verbatim String',
     nestable = false,
+    spell = false,
     type = 'text',
   },
   ['\\('] = {
     hl_name = 'org_latex',
     hl_cmd = 'hi def link org_latex OrgTSLatex',
     nestable = false,
+    spell = false,
     type = 'latex',
   },
   ['\\{'] = {
@@ -381,6 +384,7 @@ local function apply(namespace, bufnr, line_index)
       ephemeral = true,
       end_col = range.to['end'].character,
       hl_group = markers[range.type].hl_name,
+      spell = markers[range.type].spell,
       priority = 110 + range.from.start.character,
     })
 
@@ -402,6 +406,7 @@ local function apply(namespace, bufnr, line_index)
     local line = vim.api.nvim_buf_get_lines(bufnr, link_range.from.start.line, link_range.from.start.line + 1, false)[1]
     local link = line:sub(link_range.from.start.character + 1, link_range.to['end'].character)
     local alias = link:find('%]%[') or 1
+    local link_end = link:find('%]%[') or (link:len() - 1)
 
     vim.api.nvim_buf_set_extmark(bufnr, namespace, link_range.from.start.line, link_range.from.start.character, {
       ephemeral = true,
@@ -416,6 +421,12 @@ local function apply(namespace, bufnr, line_index)
       conceal = '',
     })
 
+    vim.api.nvim_buf_set_extmark(bufnr, namespace, link_range.from.start.line, link_range.from.start.character + 2, {
+      ephemeral = true,
+      end_col = link_range.from.start.character - 1 + link_end,
+      spell = false,
+    })
+
     vim.api.nvim_buf_set_extmark(bufnr, namespace, link_range.from.start.line, link_range.to['end'].character - 2, {
       ephemeral = true,
       end_col = link_range.to['end'].character,
@@ -428,6 +439,7 @@ local function apply(namespace, bufnr, line_index)
       ephemeral = true,
       end_col = latex_range.to['end'].character,
       hl_group = markers[latex_range.type].hl_name,
+      spell = markers[latex_range.type].spell,
       priority = 110 + latex_range.from.start.character,
     })
   end
