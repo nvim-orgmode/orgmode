@@ -50,7 +50,7 @@ function ModernMenu:_process_items(items)
       table.insert(
         content,
         string.rep(' ', pad_left)
-          .. string.format('%s %s %s', item.key, self.icons.separator, item.label)
+          .. vim.fn.join({ item.key, self.icons.separator, item.label })
           .. string.rep(' ', pad_right)
       )
     end
