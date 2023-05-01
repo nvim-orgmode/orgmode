@@ -1,19 +1,40 @@
 local config = require('orgmode.config')
-local utils = require('orgmode.utils')
 
 local Menu = {}
 
-Menu.open = function(title, items, prompt)
-  if config.ui.menu.custom then
-    return config.ui.menu.custom(title, items, prompt)
+function Menu._default_menu(title, items, prompt)
+  local content = { title .. '\\n' .. string.rep('-', #title) }
+  local valid_keys = {}
+  for _, item in ipairs(items) do
+    if item.separator then
+      table.insert(content, string.rep(item.separator or '-', item.length))
+    else
+      valid_keys[item.key] = item
+      table.insert(content, string.format('%s %s', item.key, item.label))
+    end
   end
+  prompt = prompt or 'key'
+  table.insert(content, prompt .. ': ')
+  vim.cmd(string.format('echon "%s"', table.concat(content, '\\n')))
+  local char = vim.fn.nr2char(vim.fn.getchar())
+  vim.cmd([[redraw!]])
+  local entry = valid_keys[char]
+  if not entry or not entry.action then
+    return
+  end
+  return entry.action()
+end
 
-  local preset = config.ui.menu.preset
-  local ok, menu = pcall(require, 'orgmode.ui.menu.' .. preset)
-  if ok then
-    return menu:new(config.ui.menu):open(title, items, prompt)
+--- Open the menu for selecting one of the options
+---@param title string Displayed title of the menu
+---@param items MenuItem|MenuSeparator[] Displayed elements
+---@param prompt string Prompt that will be shown
+function Menu.open(title, items, prompt)
+  local custom_handler = config.ui.menu.handler
+  if custom_handler then
+    return custom_handler(title, items, prompt)
   else
-    utils.echo_error(string.format('The "%s" menu preset was not found', preset))
+    return Menu._default_menu(title, items, prompt)
   end
 end
 

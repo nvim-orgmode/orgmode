@@ -1,6 +1,8 @@
 local utils = require('orgmode.utils')
 local config = require('orgmode.config')
 local Menu = require('orgmode.ui.menu')
+local MenuItem = require('orgmode.ui.menu.menu_item')
+local MenuSeparator = require('orgmode.ui.menu.menu_separator')
 
 ---@class Export
 local Export = {}
@@ -34,15 +36,15 @@ function Export._exporter(cmd, target, on_success, on_error)
       end
 
       return Menu.open(string.format('Exported to %s', target), {
-        { label = '', separator = '-', length = 34 },
-        {
+        MenuSeparator:new({ separator = '-', length = 34 }),
+        MenuItem:new({
           label = 'Yes',
           key = 'y',
           action = function()
             return utils.open(target)
           end,
-        },
-        { label = 'No', key = 'n' },
+        }),
+        MenuItem:new({ label = 'No', key = 'n' }),
       }, 'Open')
     end,
   })
@@ -118,13 +120,16 @@ function Export.prompt()
         exporter_label = name
       end
 
-      table.insert(commands, {
-        label = exporter_label,
-        key = keys[name],
-        action = function()
-          return Export[name](opts)
-        end,
-      })
+      table.insert(
+        commands,
+        MenuItem:new({
+          label = exporter_label,
+          key = keys[name],
+          action = function()
+            return Export[name](opts)
+          end,
+        })
+      )
     end
 
     table.sort(commands, function(lhs, rhs)
@@ -141,19 +146,22 @@ function Export.prompt()
         Menu.open(label .. ' via', commands, label .. ' via')
       end
 
-      table.insert(commands, {
-        label = 'quit',
-        key = 'q',
-      })
+      table.insert(
+        commands,
+        MenuItem:new({
+          label = 'quit',
+          key = 'q',
+        })
+      )
     else
       action = commands[1].action
     end
 
-    return {
+    return MenuItem:new({
       label = string.format('%s (%s)', label, table.concat(exporters_names, '/')),
       key = key,
       action = action,
-    }
+    })
   end
 
   local opts = {
@@ -198,18 +206,21 @@ function Export.prompt()
 
   if not vim.tbl_isempty(config.org_custom_exports) then
     for key, data in pairs(config.org_custom_exports) do
-      table.insert(opts, {
-        key = key,
-        label = data.label,
-        action = function()
-          return data.action(Export._exporter)
-        end,
-      })
+      table.insert(
+        opts,
+        MenuItem:new({
+          key = key,
+          label = data.label,
+          action = function()
+            return data.action(Export._exporter)
+          end,
+        })
+      )
     end
   end
 
-  table.insert(opts, { label = 'quit', key = 'q' })
-  table.insert(opts, { label = '', separator = ' ', length = 1 })
+  table.insert(opts, MenuItem:new({ label = 'quit', key = 'q' }))
+  table.insert(opts, MenuSeparator:new({ separator = ' ', length = 1 }))
 
   return Menu.open('Export options', opts, 'Export command')
 end

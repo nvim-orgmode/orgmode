@@ -173,18 +173,7 @@ local DefaultConfig = {
   },
   ui = {
     menu = {
-      preset = 'emacs',
-      custom = nil,
-      window = {
-        margin = { 1, 0, 1, 0 },
-        padding = { 0, 1, 0, 1 },
-        title_pos = 'center',
-        border = 'single',
-        zindex = 1000,
-      },
-      icons = {
-        separator = '➜',
-      },
+      handler = nil,
     },
   },
 }

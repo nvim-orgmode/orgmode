@@ -10,6 +10,8 @@ local AgendaTodosView = require('orgmode.agenda.views.todos')
 local AgendaTagsView = require('orgmode.agenda.views.tags')
 local AgendaView = require('orgmode.agenda.views.agenda')
 local Menu = require('orgmode.ui.menu')
+local MenuItem = require('orgmode.ui.menu.menu_item')
+local MenuSeparator = require('orgmode.ui.menu.menu_separator')
 
 ---@class Agenda
 ---@field content table[]
@@ -90,43 +92,43 @@ end
 function Agenda:prompt()
   self.filters:reset()
   return Menu.open('Press key for an agenda command', {
-    {
+    MenuItem:new({
       label = 'Agenda for current week or day',
       key = 'a',
       action = function()
         return self:agenda()
       end,
-    },
-    {
+    }),
+    MenuItem:new({
       label = 'List of all TODO entries',
       key = 't',
       action = function()
         return self:todos()
       end,
-    },
-    {
+    }),
+    MenuItem:new({
       label = 'Match a TAGS/PROP/TODO query',
       key = 'm',
       action = function()
         return self:tags()
       end,
-    },
-    {
+    }),
+    MenuItem:new({
       label = 'Like m, but only TODO entries',
       key = 'M',
       action = function()
         return self:tags({ todo_only = true })
       end,
-    },
-    {
+    }),
+    MenuItem:new({
       label = 'Search for keywords',
       key = 's',
       action = function()
         return self:search()
       end,
-    },
-    { label = 'Quit', key = 'q' },
-    { label = '', separator = ' ', length = 1 },
+    }),
+    MenuItem:new({ label = 'Quit', key = 'q' }),
+    MenuSeparator:new({ separator = ' ', length = 1 }),
   }, 'Press key for an agenda command')
 end
 
