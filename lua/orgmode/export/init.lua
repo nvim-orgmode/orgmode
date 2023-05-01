@@ -1,5 +1,6 @@
 local utils = require('orgmode.utils')
 local config = require('orgmode.config')
+local Menu = require('orgmode.ui.menu')
 
 ---@class Export
 local Export = {}
@@ -32,7 +33,7 @@ function Export._exporter(cmd, target, on_success, on_error)
         return on_success(output)
       end
 
-      return utils.menu(string.format('Exported to %s', target), {
+      return Menu.open(string.format('Exported to %s', target), {
         { label = '', separator = '-', length = 34 },
         {
           label = 'Yes',
@@ -137,7 +138,7 @@ function Export.prompt()
     local action
     if #commands > 1 then
       action = function()
-        utils.menu(label .. ' via', commands, label .. ' via')
+        Menu.open(label .. ' via', commands, label .. ' via')
       end
 
       table.insert(commands, {
@@ -210,7 +211,7 @@ function Export.prompt()
   table.insert(opts, { label = 'quit', key = 'q' })
   table.insert(opts, { label = '', separator = ' ', length = 1 })
 
-  return utils.menu('Export options', opts, 'Export command')
+  return Menu.open('Export options', opts, 'Export command')
 end
 
 return Export

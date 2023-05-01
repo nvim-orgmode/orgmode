@@ -9,6 +9,7 @@ local AgendaSearchView = require('orgmode.agenda.views.search')
 local AgendaTodosView = require('orgmode.agenda.views.todos')
 local AgendaTagsView = require('orgmode.agenda.views.tags')
 local AgendaView = require('orgmode.agenda.views.agenda')
+local Menu = require('orgmode.ui.menu')
 
 ---@class Agenda
 ---@field content table[]
@@ -88,7 +89,7 @@ end
 
 function Agenda:prompt()
   self.filters:reset()
-  return utils.menu('Press key for an agenda command', {
+  return Menu.open('Press key for an agenda command', {
     {
       label = 'Agenda for current week or day',
       key = 'a',

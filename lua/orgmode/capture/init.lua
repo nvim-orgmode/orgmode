@@ -4,6 +4,7 @@ local Files = require('orgmode.parser.files')
 local File = require('orgmode.parser.file')
 local Templates = require('orgmode.capture.templates')
 local ClosingNote = require('orgmode.capture.closing_note')
+local Menu = require('orgmode.ui.menu')
 
 ---@class Capture
 ---@field templates Templates
@@ -59,7 +60,7 @@ function Capture:_create_prompt(templates)
   table.insert(menu_items, { label = 'Quit', key = 'q' })
   table.insert(menu_items, { label = '', separator = ' ', length = 1 })
 
-  return utils.menu('Select a capture template', menu_items, 'Template key')
+  return Menu.open('Select a capture template', menu_items, 'Template key')
 end
 
 function Capture:prompt()
