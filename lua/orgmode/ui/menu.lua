@@ -26,7 +26,7 @@ function Menu:new(data)
   opts.title = data.title
   opts.prompt = data.prompt
   opts.items = data.items or {}
-  opts.separator = data.separator or { icon = '-', length = 80 }
+  opts.separator = vim.tbl_deep_extend('force', { icon = '-', length = 80 }, data.separator or {})
 
   setmetatable(opts, self)
   self.__index = self
@@ -97,12 +97,18 @@ function Menu:add_separator(separator)
   table.insert(self.items, vim.tbl_deep_extend('force', self.separator, separator))
 end
 
-function Menu._default_menu(title, items, prompt)
-  local content = { title .. '\\n' .. string.rep('-', #title) }
+---@class MenuData
+---@field title string
+---@field items MenuItem[]
+---@field prompt string
+
+---@param data MenuData
+function Menu._default_menu(data)
+  local content = { data.title .. '\\n' .. string.rep('-', #data.title) }
   local valid_keys = {}
-  for _, item in ipairs(items) do
-    if item.separator then
-      table.insert(content, string.rep(item.separator or '-', item.length))
+  for _, item in ipairs(data.items) do
+    if item.icon then
+      table.insert(content, string.rep(item.icon or '-', item.length))
     else
       valid_keys[item.key] = item
       table.insert(content, string.format('%s %s', item.key, item.label))
