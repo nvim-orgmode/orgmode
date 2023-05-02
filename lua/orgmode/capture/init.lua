@@ -5,8 +5,6 @@ local File = require('orgmode.parser.file')
 local Templates = require('orgmode.capture.templates')
 local ClosingNote = require('orgmode.capture.closing_note')
 local Menu = require('orgmode.ui.menu')
-local MenuItem = require('orgmode.ui.menu.menu_item')
-local MenuSeparator = require('orgmode.ui.menu.menu_separator')
 
 ---@class Capture
 ---@field templates Templates
@@ -50,19 +48,22 @@ function Capture:_create_menu_items(templates)
           return self:open_template(template)
         end
       end
-      table.insert(menu_items, MenuItem:new(item))
+      table.insert(menu_items, item)
     end
   end
   return menu_items
 end
 
 function Capture:_create_prompt(templates)
-  local menu_items = self:_create_menu_items(templates)
-  table.insert(menu_items, MenuSeparator:new({ separator = '-' }))
-  table.insert(menu_items, MenuItem:new({ label = 'Quit', key = 'q' }))
-  table.insert(menu_items, MenuSeparator:new({ separator = ' ', length = 1 }))
-
-  return Menu.open('Select a capture template', menu_items, 'Template key')
+  local menu = Menu:new({
+    title = 'Select a capture template',
+    items = self:_create_menu_items(templates),
+    prompt = 'Template key',
+  })
+  menu:add_separator({ icon = '-' })
+  menu:add_option({ label = 'Quit', key = 'q' })
+  menu:add_separator({ icon = ' ', length = 1 })
+  return menu:open()
 end
 
 function Capture:prompt()
