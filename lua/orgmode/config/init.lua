@@ -260,6 +260,10 @@ function Config:get_todo_keywords()
   return types
 end
 
+--- Setup mappings for a given category and buffer
+---@param category string Mapping category name (e.g. `agenda`, `capture`, `node`)
+---@param buffer number? Buffer id
+---@see orgmode.config.mappings
 function Config:setup_mappings(category, buffer)
   if not self.old_cr_mapping then
     self.old_cr_mapping = utils.get_keymap({

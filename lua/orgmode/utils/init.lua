@@ -173,6 +173,7 @@ end
 ---@field buffer integer?
 
 ---@param data KeymapData
+---@return table? map Mapping definition
 function utils.get_keymap(data)
   local keymaps
   if data.buffer then
