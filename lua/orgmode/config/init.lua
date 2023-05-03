@@ -260,9 +260,13 @@ function Config:get_todo_keywords()
   return types
 end
 
-function Config:setup_mappings(category, bufnr)
+function Config:setup_mappings(category, buffer)
   if not self.old_cr_mapping then
-    self.old_cr_mapping = vim.fn.maparg('<CR>', 'i', false, true)
+    self.old_cr_mapping = utils.get_keymap({
+      mode = 'i',
+      lhs = '<CR>',
+      buffer = buffer,
+    })
   end
   if self.opts.mappings.disable_all then
     return
@@ -272,8 +276,8 @@ function Config:setup_mappings(category, bufnr)
   local default_mappings = defaults.mappings[category] or {}
   local user_mappings = vim.tbl_get(self.opts.mappings, category) or {}
   local opts = {}
-  if bufnr then
-    opts.buffer = bufnr
+  if buffer then
+    opts.buffer = buffer
   end
 
   if self.opts.mappings.prefix then
