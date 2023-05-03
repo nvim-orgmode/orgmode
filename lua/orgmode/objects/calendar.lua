@@ -19,7 +19,7 @@ local Calendar = {
   clearable = false,
 }
 
-vim.cmd([[hi OrgCalendarToday gui=reverse cterm=reverse]])
+vim.cmd([[hi default OrgCalendarToday gui=reverse cterm=reverse]])
 
 ---@param data table
 function Calendar.new(data)
