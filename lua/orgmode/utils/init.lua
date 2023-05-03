@@ -176,7 +176,7 @@ end
 function utils.get_keymap(data)
   local keymaps
   if data.buffer then
-    keymaps = vim.api.nvim_buf_get_keymap(data.mode)
+    keymaps = vim.api.nvim_buf_get_keymap(data.buffer, data.mode)
   else
     keymaps = vim.api.nvim_get_keymap(data.mode)
   end
