@@ -1243,8 +1243,8 @@ Each menu item `MenuItem` is one of two types: `MenuOption` and `MenuSeparator`.
 * `action` (`function` *optional*) — handler that will be called when the `key` is pressed in the menu.
 
 `MenuSeparator` is a table containing the following fields:
-* `icon` (`string` *optional*) — character used as delimiter. The default character is `-`
-* `length` (`number` *optional*) — number of repetitions of the delimiter character. The default length is 80
+* `icon` (`string` *optional*) — character used as separator. The default character is `-`
+* `length` (`number` *optional*) — number of repetitions of the separator character. The default length is 80
 
 In order for the menu to work as expected, the handler must intercept the keystroke (for example, using [`vim.fn.getchar`](https://neovim.io/doc/user/builtin.html#getchar())) and call `action` from `MenuItem` with the corresponding `key`.
 
