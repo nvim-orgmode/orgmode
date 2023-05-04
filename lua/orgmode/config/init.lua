@@ -15,7 +15,6 @@ function Config:new(opts)
     opts = vim.tbl_deep_extend('force', defaults, opts or {}),
     todo_keywords = nil,
     ts_hl_enabled = nil,
-    old_cr_mapping = nil,
   }
   setmetatable(data, self)
   return data
@@ -261,12 +260,12 @@ function Config:get_todo_keywords()
 end
 
 --- Setup mappings for a given category and buffer
----@param category string Mapping category name (e.g. `agenda`, `capture`, `node`)
+---@param category string Mapping category name (e.g. `agenda`, `capture`, `org`)
 ---@param buffer number? Buffer id
 ---@see orgmode.config.mappings
 function Config:setup_mappings(category, buffer)
-  if not self.old_cr_mapping then
-    self.old_cr_mapping = utils.get_keymap({
+  if category == 'org' and vim.bo.filetype == 'org' and not vim.b.org_old_cr_mapping then
+    vim.b.org_old_cr_mapping = utils.get_keymap({
       mode = 'i',
       lhs = '<CR>',
       buffer = buffer,

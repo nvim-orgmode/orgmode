@@ -175,18 +175,25 @@ end
 ---@param data KeymapData
 ---@return table? map Mapping definition
 function utils.get_keymap(data)
-  local keymaps
-  if data.buffer then
-    keymaps = vim.api.nvim_buf_get_keymap(data.buffer, data.mode)
-  else
-    keymaps = vim.api.nvim_get_keymap(data.mode)
-  end
-
-  for _, map in ipairs(keymaps) do
-    if map.lhs == data.lhs then
-      return map
+  local find_keymap = function(list)
+    for _, map in ipairs(list) do
+      if map.lhs == data.lhs then
+        return map
+      end
     end
   end
+
+  local keymap = nil
+
+  if data.buffer then
+    keymap = find_keymap(vim.api.nvim_buf_get_keymap(data.buffer, data.mode))
+  end
+
+  if not keymap then
+    keymap = find_keymap(vim.api.nvim_get_keymap(data.mode))
+  end
+
+  return keymap
 end
 
 function utils.esc(cmd)

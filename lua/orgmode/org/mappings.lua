@@ -505,7 +505,7 @@ function OrgMappings:org_return()
     end
   end
 
-  local old_mapping = config.old_cr_mapping
+  local old_mapping = vim.b.org_old_cr_mapping
 
   -- No other mapping for <CR>, just reproduce it.
   if not old_mapping or vim.tbl_isempty(old_mapping) then
