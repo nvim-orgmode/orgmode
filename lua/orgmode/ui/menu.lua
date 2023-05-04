@@ -6,8 +6,8 @@ local config = require('orgmode.config')
 ---@field action? function Handler that will be called when the `key` is pressed in the menu.
 
 ---@class MenuSeparator
----@field icon string? Character used as delimiter. The default character is `-`
----@field length number? Number of repetitions of the delimiter character. The default length is 80
+---@field icon string? Character used as separator. The default character is `-`
+---@field length number? Number of repetitions of the separator character. The default length is 80
 
 ---@alias MenuItem MenuOption | MenuSeparator
 
