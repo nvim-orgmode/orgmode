@@ -104,21 +104,27 @@ end
 
 ---@param data MenuData
 function Menu._default_menu(data)
-  local content = { data.title .. '\\n' .. string.rep('-', #data.title) }
+  local content = { data.title, string.rep('-', #data.title) }
   local valid_keys = {}
+
   for _, item in ipairs(data.items) do
     if item.icon then
-      table.insert(content, string.rep(item.icon or '-', item.length))
+      ---@cast item MenuSeparator
+      table.insert(content, string.rep(item.icon, item.length))
     else
+      ---@cast item MenuOption
       valid_keys[item.key] = item
       table.insert(content, string.format('%s %s', item.key, item.label))
     end
   end
-  local prompt = data.prompt or 'key'
+
+  local prompt = data.prompt or 'Press any key'
   table.insert(content, prompt .. ': ')
+
   vim.cmd(string.format('echon "%s"', table.concat(content, '\\n')))
   local char = vim.fn.nr2char(vim.fn.getchar())
-  vim.cmd([[redraw!]])
+  vim.cmd('redraw!')
+
   local entry = valid_keys[char]
   if not entry or not entry.action then
     return
