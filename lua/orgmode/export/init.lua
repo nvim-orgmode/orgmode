@@ -37,7 +37,7 @@ function Export._exporter(cmd, target, on_success, on_error)
         title = string.format('Exported to %s', target),
         prompt = 'Open?',
       })
-      menu:add_separator({ icon = '-', length = 34 })
+      menu:add_separator({ length = 34 })
       menu:add_option({
         label = 'Yes',
         key = 'y',

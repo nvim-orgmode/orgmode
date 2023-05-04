@@ -1,21 +1,21 @@
 local config = require('orgmode.config')
 
 ---@class MenuOption
----@field label string
----@field key string
----@field action? function
+---@field label string Description of the action
+---@field key string Key that will be processed when the keys are pressed in the menu
+---@field action? function Handler that will be called when the `key` is pressed in the menu.
 
 ---@class MenuSeparator
----@field icon string?
----@field length number?
+---@field icon string? Character used as delimiter. The default character is `-`
+---@field length number? Number of repetitions of the delimiter character. The default length is 80
 
 ---@alias MenuItem MenuOption | MenuSeparator
 
 ---@class Menu
----@field title string
----@field items MenuItem[]?
----@field prompt string
----@field separator MenuSeparator?
+---@field title string Menu title
+---@field items MenuItem[]? Menu items, may include options and separators
+---@field prompt string Prompt text used to prompt a keystroke
+---@field separator MenuSeparator? Default separator
 local Menu = {}
 
 ---@param data Menu
@@ -94,13 +94,13 @@ end
 ---@param separator MenuSeparator
 function Menu:add_separator(separator)
   self:_validate_separator(separator)
-  table.insert(self.items, vim.tbl_deep_extend('force', self.separator, separator))
+  table.insert(self.items, vim.tbl_deep_extend('force', self.separator, separator or {}))
 end
 
 ---@class MenuData
----@field title string
----@field items MenuItem[]
----@field prompt string
+---@field title string Menu title
+---@field items MenuItem[] Menu items, may include options and separators
+---@field prompt string Prompt text used to prompt a keystroke
 
 ---@param data MenuData
 function Menu._default_menu(data)
@@ -114,7 +114,7 @@ function Menu._default_menu(data)
       table.insert(content, string.format('%s %s', item.key, item.label))
     end
   end
-  prompt = prompt or 'key'
+  local prompt = data.prompt or 'key'
   table.insert(content, prompt .. ': ')
   vim.cmd(string.format('echon "%s"', table.concat(content, '\\n')))
   local char = vim.fn.nr2char(vim.fn.getchar())

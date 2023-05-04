@@ -60,7 +60,7 @@ function Capture:_create_prompt(templates)
     items = self:_create_menu_items(templates),
     prompt = 'Template key',
   })
-  menu:add_separator({ icon = '-' })
+  menu:add_separator()
   menu:add_option({ label = 'Quit', key = 'q' })
   menu:add_separator({ icon = ' ', length = 1 })
   return menu:open()
