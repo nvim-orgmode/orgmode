@@ -118,8 +118,7 @@ function Menu._default_menu(data)
     end
   end
 
-  local prompt = data.prompt or 'Press any key'
-  table.insert(content, prompt .. ': ')
+  table.insert(content, data.prompt .. ': ')
 
   vim.cmd(string.format('echon "%s"', table.concat(content, '\\n')))
   local char = vim.fn.nr2char(vim.fn.getchar())
