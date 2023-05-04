@@ -11,6 +11,7 @@ local config = require('orgmode.config')
 
 ---@alias MenuItem MenuOption | MenuSeparator
 
+--- Menu for selecting an action by pressing a key by the user
 ---@class Menu
 ---@field title string Menu title
 ---@field items MenuItem[]? Menu items, may include options and separators
