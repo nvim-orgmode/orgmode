@@ -20,6 +20,7 @@ local time_format = '%H:%M'
 ---@field min number
 ---@field timestamp number
 ---@field timestamp_end number
+---@field is_dst boolean
 ---@field is_date_range_start boolean
 ---@field is_date_range_end boolean
 ---@field related_date_range Date
@@ -77,6 +78,7 @@ function Date:new(data)
   opts.timestamp = os.time(opts)
   opts.date_only = date_only
   opts.dayname = os.date('%a', opts.timestamp)
+  opts.is_dst = os.date('*t', opts.timestamp).isdst
   opts.adjustments = data.adjustments or {}
   opts.timestamp_end = data.timestamp_end
   opts.is_date_range_start = data.is_date_range_start or false
@@ -638,11 +640,16 @@ function Date:format(format)
 end
 
 ---@param from Date
----@param span? string
+---@param span? 'day' | 'minute'
 ---@return number
 function Date:diff(from, span)
   span = span or 'day'
-  local diff = self:start_of(span).timestamp - from:start_of(span).timestamp
+  local to_date = self:start_of(span)
+  local from_date = from:start_of(span)
+  local diff = to_date.timestamp - from_date.timestamp
+  if to_date.is_dst ~= from_date.is_dst then
+    diff = diff + (to_date.is_dst and 3600 or -3600)
+  end
   local durations = {
     day = 86400,
     minute = 60,

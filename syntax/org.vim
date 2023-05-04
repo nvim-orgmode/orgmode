@@ -5,9 +5,9 @@ if exists('b:current_syntax')
 endif
 
 lua require('orgmode.colors.highlights').define_highlights()
-lua require('orgmode.org.syntax').add_todo_keywords_to_spellgood()
 let s:ts_highlight = luaeval('require("orgmode.config"):ts_highlights_enabled()')
 if !s:ts_highlight
+  lua require('orgmode.org.syntax').add_todo_keywords_to_spellgood()
   runtime syntax/org_legacy.vim
 endif
 
@@ -47,8 +47,6 @@ syn match org_timestamp_inactive /\(\[%%(diary-float.\+\]\)/
 
 hi def link org_timestamp PreProc
 hi def link org_timestamp_inactive Comment
-
-syntax spell toplevel
 
 lua require("orgmode.org.syntax").load_code_blocks()
 

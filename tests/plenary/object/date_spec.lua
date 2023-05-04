@@ -362,6 +362,26 @@ describe('Date object', function()
     }, dates)
   end)
 
+  it('should return proper diff in days between DST difference', function()
+    -- No overlap
+    local date = Date.from_string('2023-06-26')
+    local end_date = Date.from_string('2023-06-27')
+    assert.are.same(1, end_date:diff(date))
+    assert.are.same(1440, end_date:diff(date, 'minute'))
+
+    -- DST start overlap
+    local date_no_dst = Date.from_string('2023-03-26 Sun')
+    local end_date_dst = Date.from_string('2023-03-27 Mon')
+    assert.are.same(1, end_date_dst:diff(date_no_dst))
+    assert.are.same(1440, end_date_dst:diff(date_no_dst, 'minute'))
+
+    -- DST end overlap
+    local date_dst = Date.from_string('2023-10-28 Sun')
+    local end_date_no_dst = Date.from_string('2023-10-29 Mon')
+    assert.are.same(1, end_date_no_dst:diff(date_dst))
+    assert.are.same(1440, end_date_no_dst:diff(date_dst, 'minute'))
+  end)
+
   it('should format the date', function()
     local date = Date.from_string('2021-05-12 14:00')
     assert.are.same('Wednesday 12 May', date:format('%A %d %B'))
@@ -394,6 +414,7 @@ describe('Date object', function()
       date_only = true,
       day = 15,
       dayname = 'Sat',
+      is_dst = true,
       hour = 0,
       min = 0,
       month = 5,
@@ -425,6 +446,7 @@ describe('Date object', function()
       dayname = 'Sat',
       hour = 0,
       min = 0,
+      is_dst = true,
       month = 5,
       is_date_range_start = false,
       is_date_range_end = false,
@@ -448,6 +470,7 @@ describe('Date object', function()
       hour = 9,
       min = 25,
       month = 6,
+      is_dst = true,
       is_date_range_start = false,
       is_date_range_end = false,
       related_date_range = nil,
@@ -476,6 +499,7 @@ describe('Date object', function()
       dayname = 'Sat',
       hour = 0,
       min = 0,
+      is_dst = true,
       month = 5,
       is_date_range_start = false,
       is_date_range_end = false,
@@ -499,6 +523,7 @@ describe('Date object', function()
       hour = 0,
       min = 0,
       month = 5,
+      is_dst = true,
       is_date_range_start = false,
       is_date_range_end = false,
       related_date_range = nil,
@@ -630,6 +655,7 @@ describe('Date object', function()
       dayname = 'Sat',
       hour = 14,
       min = 30,
+      is_dst = true,
       month = 5,
       is_date_range_start = false,
       is_date_range_end = false,
@@ -654,6 +680,7 @@ describe('Date object', function()
       hour = 0,
       min = 0,
       month = 5,
+      is_dst = true,
       is_date_range_start = false,
       is_date_range_end = false,
       related_date_range = nil,
@@ -681,6 +708,7 @@ describe('Date object', function()
       day = 15,
       dayname = 'Sat',
       hour = 0,
+      is_dst = true,
       min = 0,
       month = 5,
       is_date_range_start = true,
@@ -705,6 +733,7 @@ describe('Date object', function()
       hour = 0,
       min = 0,
       month = 5,
+      is_dst = true,
       is_date_range_start = false,
       is_date_range_end = true,
       related_date_range = dates[1],
@@ -730,6 +759,7 @@ describe('Date object', function()
       is_date_range_start = false,
       is_date_range_end = false,
       related_date_range = nil,
+      is_dst = true,
       range = Range:new({
         start_line = 1,
         end_line = 1,
