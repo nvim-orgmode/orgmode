@@ -1226,8 +1226,9 @@ require("orgmode").setup({
         local options_by_label = {}
 
         for _, item in ipairs(data.items) do
-          -- only MenuOption has `key`
-          if item.key then
+          -- Only MenuOption has `key`
+          -- Also we don't need `Quit` option because we can close the menu with ESC
+          if item.key and item.label:lower() ~= "quit" then
             table.insert(options, item.label)
             options_by_label[item.label] = item
           end
