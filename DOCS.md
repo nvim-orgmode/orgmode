@@ -1222,15 +1222,37 @@ require("orgmode").setup({
     menu = {
       handler = function(data)
         -- your handler here, for example:
-        vim.print(data.title)
-        vim.print(data.items)
-        vim.print(data.propmt)
+        local options = {}
+        local options_by_label = {}
+
+        for _, item in ipairs(data.items) do
+          -- only MenuOption has `key`
+          if item.key then
+            table.insert(options, item.label)
+            options_by_label[item.label] = item
+          end
+        end
+
+        local handler = function(choice)
+          if not choice then
+            return
+          end
+
+          local option = options_by_label[choice]
+          if option.action then
+            option.action()
+          end
+        end
+
+        vim.ui.select(options, {
+          propmt = data.propmt,
+        }, handler)
       end,
     },
   },
 })
 ```
-When the menu is called, the handler receives a table with the following fields as input:
+When the menu is called, the handler receives a table `data` with the following fields as input:
 * `title` (`string`) — menu title
 * `items` (`table`) — array containing `MenuItem` (see below)
 * `prompt` (`string`) — prompt text used to prompt a keystroke
