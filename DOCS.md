@@ -1268,7 +1268,7 @@ Each menu item `MenuItem` is one of two types: `MenuOption` and `MenuSeparator`.
 * `icon` (`string` *optional*) — character used as separator. The default character is `-`
 * `length` (`number` *optional*) — number of repetitions of the separator character. The default length is 80
 
-In order for the menu to work as expected, the handler must intercept the keystroke (for example, using [`vim.fn.getchar`](https://neovim.io/doc/user/builtin.html#getchar())) and call `action` from `MenuItem` with the corresponding `key`.
+In order for the menu to work as expected, the handler must call `action` from `MenuItem`.
 
 ## Advanced search
 Part of [Advanced search](https://orgmode.org/worg/org-tutorials/advanced-searching.html) functionality
