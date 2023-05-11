@@ -1,5 +1,6 @@
 local utils = require('orgmode.utils')
 local config = require('orgmode.config')
+local Menu = require('orgmode.ui.menu')
 
 ---@class Export
 local Export = {}
@@ -32,17 +33,20 @@ function Export._exporter(cmd, target, on_success, on_error)
         return on_success(output)
       end
 
-      return utils.menu(string.format('Exported to %s', target), {
-        { label = '', separator = '-', length = 34 },
-        {
-          label = 'Yes',
-          key = 'y',
-          action = function()
-            return utils.open(target)
-          end,
-        },
-        { label = 'No', key = 'n' },
-      }, 'Open')
+      local menu = Menu:new({
+        title = string.format('Exported to %s', target),
+        prompt = 'Open?',
+      })
+      menu:add_separator({ length = 34 })
+      menu:add_option({
+        label = 'Yes',
+        key = 'y',
+        action = function()
+          return utils.open(target)
+        end,
+      })
+      menu:add_option({ label = 'No', key = 'n' })
+      return menu:open()
     end,
   })
 end
@@ -137,7 +141,11 @@ function Export.prompt()
     local action
     if #commands > 1 then
       action = function()
-        utils.menu(label .. ' via', commands, label .. ' via')
+        Menu:new({
+          title = label .. ' via',
+          items = commands,
+          prompt = label .. ' via',
+        }):open()
       end
 
       table.insert(commands, {
@@ -208,9 +216,13 @@ function Export.prompt()
   end
 
   table.insert(opts, { label = 'quit', key = 'q' })
-  table.insert(opts, { label = '', separator = ' ', length = 1 })
+  table.insert(opts, { icon = ' ', length = 1 })
 
-  return utils.menu('Export options', opts, 'Export command')
+  return Menu:new({
+    title = 'Export options',
+    items = opts,
+    prompt = 'Export command',
+  }):open()
 end
 
 return Export

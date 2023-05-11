@@ -20,7 +20,9 @@
 7. [Autocompletion](#autocompletion)
 8. [Abbreviations](#abbreviations)
 9. [Formatting](#formatting)
-10. [Colors](#colors)
+10. [User interface](#user-interface)
+    1. [Colors](#colors)
+    2. [Menu](#menu)
 11. [Advanced search](#advanced-search)
 12. [Notifications (experimental)](#notifications-experimental)
 13. [Clocking](#clocking)
@@ -745,7 +747,7 @@ require('orgmode').setup({
 })
 ```
 
-### Closing note mappings
+### Note mappings
 
 Mappings used in closing note window.
 
@@ -1135,7 +1137,9 @@ Currently, these things are formatted:
 * Tables are formatted (see [Tables](#Tables) for more info)
 * Clock entries total time is recalculated (see [Recalculating totals](#recalculating-totals) in [Clocking](#Clocking) section)
 
-## Colors
+## User interface
+
+### Colors
 Colors used for todo keywords and agenda states (deadline, schedule ok, schedule warning)
 are parsed from the current colorsheme from several highlight groups (Error, WarningMsg, DiffAdd, etc.).
 If those colors are not suitable you can override them like this:
@@ -1162,7 +1166,7 @@ endfunction
 
 For adding/changing TODO keyword colors see [org-todo-keyword-faces](#org_todo_keyword_faces)
 
-### Highlight Groups
+#### Highlight Groups
 
 * The following highlight groups are based on _Treesitter_ query results, hence when setting up _Orgmode_ these
   highlights must be enabled by removing `disable = {'org'}` from the default recommended _Treesitter_ configuration.
@@ -1196,6 +1200,76 @@ For adding/changing TODO keyword colors see [org-todo-keyword-faces](#org_todo_k
   * `OrgAgendaDeadline`: A item deadline in the agenda view
   * `OrgAgendaScheduled`: A scheduled item in the agenda view
   * `OrgAgendaScheduledPast`: A item past its scheduled date in the agenda view
+
+### Menu
+
+The menu is used when selecting further actions in `agenda`, `capture` and `export`. Here is an example of the menu you see when opening `agenda`:
+
+```
+Press key for an agenda command
+-------------------------------
+a Agenda for current week or day
+t List of all TODO entries
+m Match a TAGS/PROP/TODO query
+M Like m, but only for TODO entries
+s Search for keywords
+q Quit
+```
+Users have the option to change the appearance of this menu. To do this, you need to add a handler in the UI configuration section:
+```lua
+require("orgmode").setup({
+  ui = {
+    menu = {
+      handler = function(data)
+        -- your handler here, for example:
+        local options = {}
+        local options_by_label = {}
+
+        for _, item in ipairs(data.items) do
+          -- Only MenuOption has `key`
+          -- Also we don't need `Quit` option because we can close the menu with ESC
+          if item.key and item.label:lower() ~= "quit" then
+            table.insert(options, item.label)
+            options_by_label[item.label] = item
+          end
+        end
+
+        local handler = function(choice)
+          if not choice then
+            return
+          end
+
+          local option = options_by_label[choice]
+          if option.action then
+            option.action()
+          end
+        end
+
+        vim.ui.select(options, {
+          propmt = data.propmt,
+        }, handler)
+      end,
+    },
+  },
+})
+```
+When the menu is called, the handler receives a table `data` with the following fields as input:
+* `title` (`string`) — menu title
+* `items` (`table`) — array containing `MenuItem` (see below)
+* `prompt` (`string`) — prompt text used to prompt a keystroke
+
+Each menu item `MenuItem` is one of two types: `MenuOption` and `MenuSeparator`.
+
+`MenuOption` is a table containing the following fields:
+* `label` (`string`) — description of the action
+* `key` (`string`) — key that will be processed when the keys are pressed in the menu
+* `action` (`function` *optional*) — handler that will be called when the `key` is pressed in the menu.
+
+`MenuSeparator` is a table containing the following fields:
+* `icon` (`string` *optional*) — character used as separator. The default character is `-`
+* `length` (`number` *optional*) — number of repetitions of the separator character. The default length is 80
+
+In order for the menu to work as expected, the handler must call `action` from `MenuItem`.
 
 ## Advanced search
 Part of [Advanced search](https://orgmode.org/worg/org-tutorials/advanced-searching.html) functionality
