@@ -58,8 +58,6 @@ function VirtualIndent:set_indent(start_line, end_line)
         virt_text = { { string.rep(' ', indent) } },
         virt_text_pos = 'inline',
         right_gravity = false,
-        virt_text_hide = true,
-        priority = 1,
       })
     end
   end
