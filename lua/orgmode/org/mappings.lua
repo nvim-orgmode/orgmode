@@ -571,7 +571,7 @@ function OrgMappings:handle_return(suffix)
     vim.cmd([[normal! ^]])
     item = Files.get_current_file():get_current_node()
   end
-  if item.type == 'paragraph' or item.type == 'bullet' then
+  if item.type == 'paragraph' or item.type == 'bullet' or item.type == 'checkbox' or item.type == 'status' then
     local listitem = item.node:parent()
     if listitem:type() ~= 'listitem' then
       return

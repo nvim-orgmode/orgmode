@@ -442,23 +442,61 @@ describe('Mappings', function()
       '',
       '* TODO Test orgmode',
       '  - Regular item',
-      '  - Second recular item',
+      '  - Second regular item',
       '    - Nested item',
+      '  - [x] Checkbox item',
+      '  - [x] Second checkbox item',
+      '    - [x] Nested checkbox item',
     })
 
     assert.are.same({
       '  - Regular item',
-      '  - Second recular item',
+      '  - Second regular item',
       '    - Nested item',
-    }, vim.api.nvim_buf_get_lines(0, 3, 6, false))
+      '  - [x] Checkbox item',
+      '  - [x] Second checkbox item',
+      '    - [x] Nested checkbox item',
+    }, vim.api.nvim_buf_get_lines(0, 3, 9, false))
+
+    -- test for plain list item
     vim.fn.cursor(4, 1)
     vim.cmd([[exe "norm ,\<CR>"]])
     assert.are.same({
       '  - Regular item',
       '  - ',
-      '  - Second recular item',
+      '  - Second regular item',
       '    - Nested item',
-    }, vim.api.nvim_buf_get_lines(0, 3, 7, false))
+      '  - [x] Checkbox item',
+      '  - [x] Second checkbox item',
+      '    - [x] Nested checkbox item',
+    }, vim.api.nvim_buf_get_lines(0, 3, 10, false))
+
+    -- tests for checkbox item
+    vim.fn.cursor(8, 7) -- on the opening bracket
+    vim.cmd([[exe "norm ,\<CR>"]])
+    assert.are.same({
+      '  - Regular item',
+      '  - ',
+      '  - Second regular item',
+      '    - Nested item',
+      '  - [x] Checkbox item',
+      '  - [ ] ',
+      '  - [x] Second checkbox item',
+      '    - [x] Nested checkbox item',
+    }, vim.api.nvim_buf_get_lines(0, 3, 11, false))
+    vim.fn.cursor(8, 8) -- on the 'x' (a.k.a. status)
+    vim.cmd([[exe "norm ,\<CR>"]])
+    assert.are.same({
+      '  - Regular item',
+      '  - ',
+      '  - Second regular item',
+      '    - Nested item',
+      '  - [x] Checkbox item',
+      '  - [ ] ',
+      '  - [ ] ',
+      '  - [x] Second checkbox item',
+      '    - [x] Nested checkbox item',
+    }, vim.api.nvim_buf_get_lines(0, 3, 12, false))
   end)
 
   it('should add list item with blank line with Enter (org_meta_return)', function()
@@ -473,13 +511,13 @@ describe('Mappings', function()
       '',
       '* TODO Test orgmode',
       '  - Regular item',
-      '  - Second recular item',
+      '  - Second regular item',
       '    - Nested item',
     })
 
     assert.are.same({
       '  - Regular item',
-      '  - Second recular item',
+      '  - Second regular item',
       '    - Nested item',
     }, vim.api.nvim_buf_get_lines(0, 3, 6, false))
     vim.fn.cursor(4, 1)
@@ -488,7 +526,7 @@ describe('Mappings', function()
       '  - Regular item',
       '',
       '  - ',
-      '  - Second recular item',
+      '  - Second regular item',
       '    - Nested item',
     }, vim.api.nvim_buf_get_lines(0, 3, 8, false))
     config:extend({
