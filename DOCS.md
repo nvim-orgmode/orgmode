@@ -1275,7 +1275,7 @@ In order for the menu to work as expected, the handler must call `action` from `
 
 ### Virtual indent
 
-Virtual indentation is the indentation that the user sees, which does not exist in the file. In other words, white space margins are part of the user interface, not the contents of the file. In emacs org-mode, this feature is called [Org Indent Mode](https://orgmode.org/manual/Org-Indent-Mode.html).
+Virtual indentation is the indentation that the user sees, which does not exist in the file. In other words, white space indents are part of the user interface, not the contents of the file. In emacs org-mode, this feature is called [Org Indent Mode](https://orgmode.org/manual/Org-Indent-Mode.html).
 
 For example, here's what the user sees:
 
