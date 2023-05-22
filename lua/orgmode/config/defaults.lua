@@ -171,6 +171,11 @@ local DefaultConfig = {
     executable_path = 'emacs',
     config_path = '$HOME/.emacs.d/init.el',
   },
+  ui = {
+    menu = {
+      handler = nil,
+    },
+  },
 }
 
 return DefaultConfig
