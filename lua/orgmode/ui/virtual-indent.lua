@@ -36,7 +36,7 @@ function VirtualIndent:_delete_old_extmarks(buffer, start_line, end_line)
     { type = 'virt_text' }
   )
   for _, ext in ipairs(old_extmarks) do
-    vim.api.nvim_buf_del_extmark(0, self._ns_id, ext[1])
+    vim.api.nvim_buf_del_extmark(buffer, self._ns_id, ext[1])
   end
 end
 
@@ -58,8 +58,8 @@ function VirtualIndent:_get_indent_size(line)
 end
 
 ---@param buffer number buffer id
----@param start_line number start line number, 0-based inclusive
----@param end_line number end line number, 0-based inclusive
+---@param start_line number start line number to set the indentation, 0-based inclusive
+---@param end_line number end line number to set the indentation, 0-based inclusive
 function VirtualIndent:set_indent(buffer, start_line, end_line)
   if self._handler then
     return self._handler(buffer, start_line, end_line)

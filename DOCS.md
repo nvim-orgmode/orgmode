@@ -23,6 +23,7 @@
 10. [User interface](#user-interface)
     1. [Colors](#colors)
     2. [Menu](#menu)
+    2. [Virtual indent](#virtual-indent)
 11. [Advanced search](#advanced-search)
 12. [Notifications (experimental)](#notifications-experimental)
 13. [Clocking](#clocking)
@@ -267,6 +268,7 @@ Possible values:
 *default value*: `indent`<br />
 Possible values:
 * `indent` - Use default indentation that follows headlines/checkboxes/previous line indent
+* `virtual_indent` - Use emacs-like virtual indentation. For more information, see the [Virtual indent section](#virtual-indent) .
 * `noindent` - Disable indentation. All lines start from 1st column
 
 #### **org_src_window_setup**
@@ -1217,7 +1219,7 @@ q Quit
 ```
 Users have the option to change the appearance of this menu. To do this, you need to add a handler in the UI configuration section:
 ```lua
-require("orgmode").setup({
+require('orgmode').setup({
   ui = {
     menu = {
       handler = function(data)
@@ -1228,7 +1230,7 @@ require("orgmode").setup({
         for _, item in ipairs(data.items) do
           -- Only MenuOption has `key`
           -- Also we don't need `Quit` option because we can close the menu with ESC
-          if item.key and item.label:lower() ~= "quit" then
+          if item.key and item.label:lower() ~= 'quit' then
             table.insert(options, item.label)
             options_by_label[item.label] = item
           end
@@ -1270,6 +1272,97 @@ Each menu item `MenuItem` is one of two types: `MenuOption` and `MenuSeparator`.
 * `length` (`number` *optional*) — number of repetitions of the separator character. The default length is 80
 
 In order for the menu to work as expected, the handler must call `action` from `MenuItem`.
+
+### Virtual indent
+
+In order to activate virtual indent, set the `org_indent_mode` parameter to `'virtual_indent'`:
+
+```lua
+require('orgmode').setup({
+  org_indent_mode = 'virtual_indent',
+})
+```
+
+You can learn more about the `org_indent_mode` parameter in the [corresponding section](#org_indent_mode). 
+
+The user can customize the virtual indentation. The user can customize the virtual indentation. To do this, you need to pass the handler to the corresponding `handler` parameter:
+```lua
+require('orgmode').setup({
+  ui = {
+    virtual_indent = {
+      handler = function(buffer, start_line, end_line)
+        -- ...
+      end,
+    },
+  },
+})
+```
+
+The function must accept the following parameters:
+* `buffer` - buffer id.
+* `start_line` - start line number to set the indentation, 0-based inclusive.
+* `end_line` - end line number to set the indentation, 0-based inclusive.
+
+The handler must set the indentation itself, for example using [`nvim_buf_set_extmark()`](https://neovim.io/doc/user/api.html#nvim_buf_set_extmark()). The following code represents the default handler in a simplified form::
+
+```lua
+local Headline = require('orgmode.treesitter.headline')
+
+local ns_id = vim.api.nvim_create_namespace('orgmode.ui.indent')
+
+local function get_indent_size(line)
+  local headline = Headline.from_cursor({ line + 1, 1 })
+
+  if headline then
+    local level = headline:level()
+    local headline_line, _, _ = headline.headline:start()
+
+    if headline_line == line then
+      return level - 1
+    else
+      return level * 2
+    end
+  end
+
+  return 0
+end
+
+local function delete_old_extmarks(buffer, start_line, end_line)
+  local old_extmarks = vim.api.nvim_buf_get_extmarks(
+    buffer,
+    ns_id,
+    { start_line, 0 },
+    { end_line, 0 },
+    { type = 'virt_text' }
+  )
+  for _, ext in ipairs(old_extmarks) do
+    vim.api.nvim_buf_del_extmark(buffer, ns_id, ext[1])
+  end
+end
+
+local function indent_handler(buffer, start_line, end_line)
+  delete_old_extmarks(buffer, start_line, end_line)
+  for line = start_line, end_line do
+    local indent = get_indent_size(line)
+
+    if indent > 0 then
+      vim.api.nvim_buf_set_extmark(buffer, ns_id, line, 0, {
+        virt_text = { { string.rep(' ', indent), 'OrgIndent' } },
+        virt_text_pos = 'inline',
+        right_gravity = false,
+      })
+    end
+  end
+end
+
+require('orgmode').setup({
+  ui = {
+    virtual_indent = {
+      handler = indent_handler,
+    },
+  },
+})
+```
 
 ## Advanced search
 Part of [Advanced search](https://orgmode.org/worg/org-tutorials/advanced-searching.html) functionality
