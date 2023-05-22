@@ -15,7 +15,7 @@ function! OrgmodeFormatExpr()
 endfunction
 
 setlocal nomodeline
-setlocal fillchars+=fold:\
+setlocal fillchars+=fold:\ 
 setlocal foldmethod=expr
 setlocal foldexpr=nvim_treesitter#foldexpr()
 setlocal foldtext=OrgmodeFoldText()
