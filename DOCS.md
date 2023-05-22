@@ -1275,6 +1275,29 @@ In order for the menu to work as expected, the handler must call `action` from `
 
 ### Virtual indent
 
+Virtual indentation is the indentation that the user sees, which does not exist in the file. In other words, white space margins are part of the user interface, not the contents of the file. In emacs org-mode, this feature is called [Org Indent Mode](https://orgmode.org/manual/Org-Indent-Mode.html).
+
+For example, here's what the user sees:
+
+```org
+* Heading 1
+  text under heading 1
+  ** Heading 2
+     text under heading 2
+     *** Heading 3
+         text under heading 3
+```
+
+The contents of the file are:
+```org
+* Heading 1
+text under heading 1
+** Heading 2
+text under heading 2
+*** Heading 3
+text under heading 3
+```
+
 In order to activate virtual indent, set the `org_indent_mode` parameter to `'virtual_indent'`:
 
 ```lua
@@ -1285,7 +1308,7 @@ require('orgmode').setup({
 
 You can learn more about the `org_indent_mode` parameter in the [corresponding section](#org_indent_mode). 
 
-The user can customize the virtual indentation. The user can customize the virtual indentation. To do this, you need to pass the handler to the corresponding `handler` parameter:
+To customize the highlighting of the virtual indentation, use the `OrgIndent` highlighting group. Also user can configure the virtual indentation by passing their own handler to the corresponding `handler` parameter:
 ```lua
 require('orgmode').setup({
   ui = {
