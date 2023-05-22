@@ -1,5 +1,6 @@
 lua require('orgmode.config'):setup_mappings('org')
 lua require('orgmode.config'):setup_mappings('text_objects')
+lua require('orgmode.org.indent').setup()
 
 function! OrgmodeFoldText()
   return luaeval('require("orgmode.org.indent").foldtext()')
@@ -14,7 +15,7 @@ function! OrgmodeFormatExpr()
 endfunction
 
 setlocal nomodeline
-setlocal fillchars+=fold:\ 
+setlocal fillchars+=fold:\
 setlocal foldmethod=expr
 setlocal foldexpr=nvim_treesitter#foldexpr()
 setlocal foldtext=OrgmodeFoldText()

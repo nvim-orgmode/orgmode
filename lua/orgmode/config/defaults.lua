@@ -175,6 +175,9 @@ local DefaultConfig = {
     menu = {
       handler = nil,
     },
+    virtual_indent = {
+      handler = nil,
+    },
   },
 }
 

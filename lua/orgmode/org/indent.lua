@@ -1,6 +1,7 @@
 local ts = require('orgmode.treesitter.compat')
 local config = require('orgmode.config')
 local ts_utils = require('nvim-treesitter.ts_utils')
+local VirtualIndent = require('orgmode.ui.virtual-indent')
 local query = nil
 
 local get_matches = ts_utils.memoize_by_buf_tick(function(bufnr)
@@ -194,8 +195,15 @@ local function foldtext()
   return line .. config.org_ellipsis
 end
 
+local function setup()
+  if config.org_indent_mode == 'virtual_indent' then
+    VirtualIndent:new(config.ui.virtual_indent):attach()
+  end
+end
+
 return {
   foldexpr = foldexpr,
   indentexpr = indentexpr,
   foldtext = foldtext,
+  setup = setup,
 }
