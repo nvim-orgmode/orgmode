@@ -222,9 +222,6 @@ Highlights are experimental and partially supported.
 * Headline markup highlighting (https://github.com/nvim-orgmode/orgmode/issues/67)
 
 ## Troubleshoot
-### Folding is not working
-Make sure you are not overriding foldexpr in Org buffers with [nvim-treesitter folding](https://github.com/nvim-treesitter/nvim-treesitter#folding)
-
 ### Indentation is not working
 Make sure you are not overriding indentexpr in Org buffers with [nvim-treesitter indentation](https://github.com/nvim-treesitter/nvim-treesitter#indentation)
 
