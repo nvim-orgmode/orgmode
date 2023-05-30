@@ -275,7 +275,7 @@ function Help.prepare_content(opts)
 
   local prepare_func = Help['_prepare_' .. t]
   if not prepare_func then
-    return
+    return {}
   end
 
   local content, include_generic = prepare_func(mappings, max_height)

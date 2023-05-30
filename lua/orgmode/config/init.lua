@@ -292,6 +292,7 @@ function Config:setup_mappings(category, buffer)
   end
 end
 
+---@return string|nil
 function Config:parse_archive_location(file, archive_loc)
   if self:is_archive_file(file) then
     return nil

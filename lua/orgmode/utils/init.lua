@@ -53,21 +53,21 @@ function utils.open(target)
   end
 end
 
----@param msg string
+---@param msg string|table
 ---@param additional_msg? table
 ---@param store_in_history? boolean
 function utils.echo_warning(msg, additional_msg, store_in_history)
   return utils._echo(msg, 'WarningMsg', additional_msg, store_in_history)
 end
 
----@param msg string
+---@param msg string|table
 ---@param additional_msg? table
 ---@param store_in_history? boolean
 function utils.echo_error(msg, additional_msg, store_in_history)
   return utils._echo(msg, 'ErrorMsg', additional_msg, store_in_history)
 end
 
----@param msg string
+---@param msg string|table
 ---@param additional_msg? table
 ---@param store_in_history? boolean
 function utils.echo_info(msg, additional_msg, store_in_history)
@@ -232,7 +232,7 @@ function utils.humanize_minutes(minutes)
 end
 
 ---@param query string
----@param node table
+---@param node userdata
 ---@param file_content string[]
 ---@param file_content_str string
 ---@return table[]
@@ -302,9 +302,9 @@ function utils.get_node_text(node, content)
   end
 end
 
----@param node table
+---@param node userdata
 ---@param type string
----@return table
+---@return userdata | nil
 function utils.get_closest_parent_of_type(node, type, accept_at_cursor)
   local parent = node
 
@@ -404,18 +404,9 @@ function utils.choose(items)
   end
 end
 
----@param fn function
----@return Promise
-function utils.promisify(fn)
-  if getmetatable(fn) ~= Promise then
-    return Promise.resolve(fn)
-  end
-  return fn
-end
-
 ---@param file File
 ---@param parent_node userdata
----@param children_names string[]
+---@param children_names table<string, boolean>
 ---@return table
 function utils.get_named_children_nodes(file, parent_node, children_names)
   local child_node_info = {}

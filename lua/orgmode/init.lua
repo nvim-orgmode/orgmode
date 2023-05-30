@@ -40,7 +40,6 @@ function Org:init()
 end
 
 ---@param file? string
----@return string
 function Org:reload(file)
   self:init()
   return self.files.reload(file)
@@ -122,7 +121,7 @@ local function setup(opts)
 end
 
 ---@param file? string
----@return Org
+---@return Org|nil
 local function reload(file)
   if not instance then
     return
@@ -146,7 +145,7 @@ local function set_dot_repeat(cmd, opts)
 end
 
 ---@param cmd string
----@param opts? table
+---@param opts? any
 local function action(cmd, opts)
   local parts = vim.split(cmd, '.', true)
   if not instance or #parts < 2 then

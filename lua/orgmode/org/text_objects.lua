@@ -61,7 +61,10 @@ local function do_selection(ranges, exclude_stars)
 end
 
 local function current_heading(exclude_stars)
-  do_selection(get_current_section_range(), exclude_stars)
+  local range = get_current_section_range()
+  if range then
+    do_selection(range, exclude_stars)
+  end
 end
 
 local function current_subtree(exclude_stars)

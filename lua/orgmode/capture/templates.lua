@@ -40,7 +40,7 @@ local Templates = {}
 -- TODO Introduce type
 function Templates:new()
   local opts = {}
-  opts.templates = config.org_agenda_templates or config.org_capture_templates
+  opts.templates = config.org_capture_templates
   setmetatable(opts, self)
   self.__index = self
   return opts
@@ -132,6 +132,7 @@ function Templates:_compile_expressions(content)
   for exp in content:gmatch('%%%b()') do
     local snippet = exp:match('%((.*)%)')
     local func = load(snippet)
+    ---@diagnostic disable-next-line: param-type-mismatch
     local ok, response = pcall(func)
     if ok then
       content = content:gsub(vim.pesc(exp), response)

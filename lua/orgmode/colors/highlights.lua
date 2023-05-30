@@ -101,7 +101,7 @@ end
 function M.define_org_headline_colors(faces)
   local headline_colors = { 'Title', 'Constant', 'Identifier', 'Statement', 'PreProc', 'Type', 'Special', 'String' }
   local ts_highlights_enabled = config:ts_highlights_enabled()
-  local all_keywords = {}
+  local all_keywords = ''
   if not ts_highlights_enabled then
     local todo_keywords = config:get_todo_keywords()
     all_keywords = table.concat(todo_keywords.ALL, [[\|]])
@@ -117,7 +117,6 @@ function M.define_org_headline_colors(faces)
     vim.cmd([[hi default OrgHideLeadingStars ctermfg=0 guifg=bg]])
     table.insert(contains, 'OrgHideLeadingStars')
   end
-  contains = table.concat(contains, ',')
   for i, color in ipairs(headline_colors) do
     local j = i
     while j < 40 do
@@ -128,7 +127,7 @@ function M.define_org_headline_colors(faces)
             j,
             j,
             all_keywords,
-            contains
+            table.concat(contains, ',')
           )
         )
       end

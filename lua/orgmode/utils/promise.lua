@@ -1,3 +1,4 @@
+---@diagnostic disable: undefined-field
 -- Taken from https://github.com/notomo/promise.nvim
 
 local vim = vim

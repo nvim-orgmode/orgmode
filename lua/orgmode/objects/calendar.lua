@@ -137,10 +137,9 @@ function Calendar.render()
   local content = vim.tbl_map(function(item)
     return ' ' .. table.concat(item, '   ') .. ' '
   end, cal_rows)
-  weekday_row = ' ' .. table.concat(weekday_row, '  ')
 
   -- put it all together
-  table.insert(content, 1, weekday_row)
+  table.insert(content, 1, ' ' .. table.concat(weekday_row, '  '))
   table.insert(content, 1, title)
   -- TODO: redundant, since it's static data
   table.insert(content, ' [<] - prev month  [>] - next month')

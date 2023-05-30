@@ -5,6 +5,7 @@ local OrgPosition = require('orgmode.api.position')
 local PriorityState = require('orgmode.objects.priority_state')
 local Date = require('orgmode.objects.date')
 local Calendar = require('orgmode.objects.calendar')
+local Promise = require('orgmode.utils.promise')
 
 ---@class OrgHeadline
 ---@field title string headline title without todo keyword, tags and priority. Ex. `* TODO I am a headline  :SOMETAG:` returns `I am a headline`
@@ -218,7 +219,7 @@ function OrgHeadline:_do_action(action)
   return Files.update_file(self.file.filename, function()
     local view = vim.fn.winsaveview()
     vim.fn.cursor({ self.position.start_line, 0 })
-    return utils.promisify(action()):next(function()
+    return Promise.resolve(action()):next(function()
       vim.fn.winrestview(view)
       return self:reload()
     end)

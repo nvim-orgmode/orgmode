@@ -86,6 +86,7 @@ local headline_contexts = {
   todo_keywords,
 }
 
+---@return table
 local function omni(findstart, base)
   local line = vim.api.nvim_get_current_line():sub(1, vim.api.nvim_call_function('col', { '.' }) - 1)
   local is_headline = line:match('^%*+%s+')

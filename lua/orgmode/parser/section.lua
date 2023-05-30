@@ -14,7 +14,7 @@ local config = require('orgmode.config')
 ---@field id string
 ---@field line_number number
 ---@field level number
----@field node table
+---@field node userdata
 ---@field root File
 ---@field parent Section
 ---@field line string
@@ -36,6 +36,9 @@ local Section = {}
 
 ---@class SectionProperties
 ---@field items table<string, string>
+---@field range Range
+---@field node userdata
+---@field valid boolean
 
 ---@class SectionTodoKeyword
 ---@field node unknown
@@ -48,7 +51,7 @@ local Section = {}
 ---@field level number
 ---@field line string
 ---@field logbook Logbook
----@field node table
+---@field node userdata
 ---@field own_tags string[]
 ---@field parent Section
 ---@field priority string

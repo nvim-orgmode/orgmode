@@ -101,7 +101,7 @@ function Hyperlinks.find_by_dedicated_target(ctx)
       table.insert(targets, m)
     end
     for _, content in ipairs(headline.content) do
-      for m in content.line:lower():gmatch(term) do
+      for m in content:lower():gmatch(term) do
         table.insert(targets, m)
       end
     end

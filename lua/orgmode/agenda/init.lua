@@ -10,6 +10,7 @@ local AgendaTodosView = require('orgmode.agenda.views.todos')
 local AgendaTagsView = require('orgmode.agenda.views.tags')
 local AgendaView = require('orgmode.agenda.views.agenda')
 local Menu = require('orgmode.ui.menu')
+local Promise = require('orgmode.utils.promise')
 
 ---@class Agenda
 ---@field content table[]
@@ -406,7 +407,7 @@ function Agenda:_remote_edit(opts)
   end
   local update = Files.update_file(item.file, function(_)
     vim.fn.cursor({ item.file_position, 0 })
-    return utils.promisify(require('orgmode').action(action)):next(function()
+    return Promise.resolve(require('orgmode').action(action)):next(function()
       return Files.get_closest_headline()
     end)
   end)

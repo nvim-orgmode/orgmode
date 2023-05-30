@@ -180,7 +180,7 @@ function Files.update_file(filename, action)
   local is_same_file = filename == utils.current_file_path()
   local cur_win = vim.api.nvim_get_current_win()
   if is_same_file then
-    return utils.promisify(action(file)):next(function(result)
+    return Promise.resolve(action(file)):next(function(result)
       vim.cmd(':silent! w')
       return result
     end)
@@ -197,7 +197,7 @@ function Files.update_file(filename, action)
     style = 'minimal',
   })
 
-  return utils.promisify(action(file)):next(function(result)
+  return Promise.resolve(action(file)):next(function(result)
     vim.cmd('silent! wq!')
     vim.api.nvim_set_current_win(cur_win)
     return result
