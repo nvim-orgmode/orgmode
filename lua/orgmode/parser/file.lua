@@ -1,7 +1,6 @@
 local Range = require('orgmode.parser.range')
 local Duration = require('orgmode.objects.duration')
 local Section = require('orgmode.parser.section')
-local LanguageTree = require('vim.treesitter.languagetree')
 local config = require('orgmode.config')
 local utils = require('orgmode.utils')
 
@@ -170,8 +169,7 @@ end
 ---@return File|nil
 function File.from_content(content, category, filename, is_archive_file)
   local str_content = table.concat(content, '\n')
-  local trees = LanguageTree.new(str_content, 'org', {})
-  trees = trees:parse()
+  local trees = vim.treesitter.get_string_parser(str_content, 'org', {}):parse()
   if #trees > 0 then
     return File:new(trees[1], content, str_content, category, filename, is_archive_file)
   end
