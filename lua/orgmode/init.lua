@@ -50,9 +50,8 @@ function Org:setup_autocmds()
   vim.api.nvim_create_autocmd('BufWritePost', {
     pattern = { '*.org', '*.org_archive' },
     group = org_augroup,
-    callback = function()
-      require('orgmode').reload(vim.fn.expand('<afile>:p'))
-      require('orgmode.org.diagnostics').report()
+    callback = function(event)
+      require('orgmode').reload(vim.fn.fnamemodify(event.file, ':p'))
     end,
   })
   vim.api.nvim_create_autocmd('FileType', {

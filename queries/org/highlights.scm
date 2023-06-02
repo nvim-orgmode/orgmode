@@ -29,4 +29,3 @@
 (plan) @OrgTSPlan
 (comment) @OrgTSComment @spell
 (directive) @OrgTSDirective
-(ERROR) @LspDiagnosticsUnderlineError

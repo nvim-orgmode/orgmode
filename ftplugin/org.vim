@@ -35,5 +35,3 @@ inoreabbrev <silent><buffer> :now: <C-R>=luaeval("require('orgmode.objects.date'
 " abbreviations
 inoreabbrev <silent><buffer> :itoday: <C-R>=luaeval("require('orgmode.objects.date').today():to_wrapped_string(false)")<CR>
 inoreabbrev <silent><buffer> :inow: <C-R>=luaeval("require('orgmode.objects.date').now():to_wrapped_string(false)")<CR>
-
-command! -buffer OrgDiagnostics lua require('orgmode.org.diagnostics').print()

@@ -14,19 +14,18 @@
    6. [Edit Src mappings](#edit-src)
    7. [Text objects](#text-objects)
    8. [Dot repeat](#dot-repeat)
-4. [Document Diagnostics](#document-diagnostics)
-5. [Tables](#tables)
-6. [Hyperlinks](#hyperlinks)
-7. [Autocompletion](#autocompletion)
-8. [Abbreviations](#abbreviations)
-9. [Formatting](#formatting)
-10. [User interface](#user-interface)
+4. [Tables](#tables)
+5. [Hyperlinks](#hyperlinks)
+6. [Autocompletion](#autocompletion)
+7. [Abbreviations](#abbreviations)
+8. [Formatting](#formatting)
+9. [User interface](#user-interface)
     1. [Colors](#colors)
     2. [Menu](#menu)
-11. [Advanced search](#advanced-search)
-12. [Notifications (experimental)](#notifications-experimental)
-13. [Clocking](#clocking)
-14. [Changelog](#changelog)
+10. [Advanced search](#advanced-search)
+11. [Notifications (experimental)](#notifications-experimental)
+12. [Clocking](#clocking)
+13. [Changelog](#changelog)
 
 ## Getting started with Orgmode
 To get a basic idea how Orgmode works, look at this screencast from [@dhruvasagar](https://github.com/dhruvasagar)
@@ -74,11 +73,6 @@ Examples (With fast access):
   * `{'TODO(t)', 'NEXT', '|', 'DONE'}` - will work same as above. Only one todo keyword needs to have fast access key, others will be parsed from first char.
 
 NOTE: Make sure fast access keys do not overlap. If that happens, first entry in list gets it.
-
-#### **diagnostics**
-*type*: `boolean`<br />
-*default value*: `true`<br />
-Should error diagnostics be shown. If you are using Neovim 0.6.0 or higher, these will be shown via `vim.diagnostic`.<br />
 
 #### **win_split_mode**
 *type*: `string|function|table`<br />
@@ -1024,10 +1018,6 @@ require('orgmode').setup({
 
 ### Dot repeat
 To make all mappings dot repeatable, install [vim-repeat](https://github.com/tpope/vim-repeat) plugin.
-
-## Document Diagnostics
-Since tree-sitter parser is being used to parse the file, if there are some syntax errors,
-it can potentially fail to parse specific parts of document when needed.
 
 ## Tables
 Tables can be formatted via built in `formatexpr` (see `:help gq`)
