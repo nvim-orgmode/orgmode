@@ -12,25 +12,24 @@ CONTENTS                                                        *orgmode-content
             1.2.1.1. org_agenda_files...................|orgmode-org_agenda_files|
             1.2.1.2. org_default_notes_file.......|orgmode-org_default_notes_file|
             1.2.1.3. org_todo_keywords.................|orgmode-org_todo_keywords|
-            1.2.1.4. diagnostics.............................|orgmode-diagnostics|
-            1.2.1.5. win_split_mode.......................|orgmode-win_split_mode|
-            1.2.1.6. win_border...............................|orgmode-win_border|
-            1.2.1.7. org_todo_keyword_faces.......|orgmode-org_todo_keyword_faces|
-            1.2.1.8. org_archive_location...........|orgmode-org_archive_location|
-            1.2.1.9. org_hide_leading_stars.......|orgmode-org_hide_leading_stars|
-            1.2.1.10. org_hide_emphasis_markers.|orgmode-org_hide_emphasis_markers|
-            1.2.1.11. org_ellipsis..........................|orgmode-org_ellipsis|
-            1.2.1.12. org_log_done..........................|orgmode-org_log_done|
-            1.2.1.13. org_log_into_drawer............|orgmode-org_log_into_drawer|
-            1.2.1.14. org_highlight_latex_and_related.|orgmode-org_highlight_latex_and_related|
-            1.2.1.15. org_indent_mode....................|orgmode-org_indent_mode|
-            1.2.1.16. org_src_window_setup..........|orgmode-org_src_window_setup|
-            1.2.1.17. org_edit_src_content_indentation.|orgmode-org_edit_src_content_indentation|
-            1.2.1.18. org_custom_exports..............|orgmode-org_custom_exports|
-            1.2.1.19. org_time_stamp_rounding_minutes.|orgmode-org_time_stamp_rounding_minutes|
-            1.2.1.20. org_blank_before_new_entry.|orgmode-org_blank_before_new_entry|
-            1.2.1.21. calendar_week_start_day....|orgmode-calendar_week_start_day|
-            1.2.1.22. emacs_config..........................|orgmode-emacs_config|
+            1.2.1.4. win_split_mode.......................|orgmode-win_split_mode|
+            1.2.1.5. win_border...............................|orgmode-win_border|
+            1.2.1.6. org_todo_keyword_faces.......|orgmode-org_todo_keyword_faces|
+            1.2.1.7. org_archive_location...........|orgmode-org_archive_location|
+            1.2.1.8. org_hide_leading_stars.......|orgmode-org_hide_leading_stars|
+            1.2.1.9. org_hide_emphasis_markers.|orgmode-org_hide_emphasis_markers|
+            1.2.1.10. org_ellipsis..........................|orgmode-org_ellipsis|
+            1.2.1.11. org_log_done..........................|orgmode-org_log_done|
+            1.2.1.12. org_log_into_drawer............|orgmode-org_log_into_drawer|
+            1.2.1.13. org_highlight_latex_and_related.|orgmode-org_highlight_latex_and_related|
+            1.2.1.14. org_indent_mode....................|orgmode-org_indent_mode|
+            1.2.1.15. org_src_window_setup..........|orgmode-org_src_window_setup|
+            1.2.1.16. org_edit_src_content_indentation.|orgmode-org_edit_src_content_indentation|
+            1.2.1.17. org_custom_exports..............|orgmode-org_custom_exports|
+            1.2.1.18. org_time_stamp_rounding_minutes.|orgmode-org_time_stamp_rounding_minutes|
+            1.2.1.19. org_blank_before_new_entry.|orgmode-org_blank_before_new_entry|
+            1.2.1.20. calendar_week_start_day....|orgmode-calendar_week_start_day|
+            1.2.1.21. emacs_config..........................|orgmode-emacs_config|
         1.2.2. Agenda settings...........................|orgmode-agenda_settings|
             1.2.2.1. org_deadline_warning_days.|orgmode-org_deadline_warning_days|
             1.2.2.2. org_agenda_span.....................|orgmode-org_agenda_span|
@@ -151,32 +150,31 @@ CONTENTS                                                        *orgmode-content
             1.3.7.7. inner_subtree_from_root.....|orgmode-inner_subtree_from_root|
             1.3.7.8. around_subtree_from_root...|orgmode-around_subtree_from_root|
         1.3.8. Dot repeat.....................................|orgmode-dot_repeat|
-    1.4. Document Diagnostics.......................|orgmode-document_diagnostics|
-    1.5. Tables...................................................|orgmode-tables|
-    1.6. Hyperlinks...........................................|orgmode-hyperlinks|
-    1.7. Autocompletion...................................|orgmode-autocompletion|
-    1.8. Abbreviations.....................................|orgmode-abbreviations|
-    1.9. Formatting...........................................|orgmode-formatting|
-    1.10. User interface..................................|orgmode-user_interface|
-        1.10.1. Colors............................................|orgmode-colors|
-            1.10.1.1. Highlight Groups..................|orgmode-highlight_groups|
-        1.10.2. Menu................................................|orgmode-menu|
-    1.11. Advanced search................................|orgmode-advanced_search|
-    1.12. Notifications (experimental)......|orgmode-notifications_(experimental)|
-        1.12.1. Cron................................................|orgmode-cron|
-    1.13. Clocking..............................................|orgmode-clocking|
-                1.13.1. Clock in................................|orgmode-clock_in|
-                1.13.2. Clock out..............................|orgmode-clock_out|
-                1.13.3. Clock cancel........................|orgmode-clock_cancel|
-                1.13.4. Clock goto............................|orgmode-clock_goto|
-                1.13.5. Set effort............................|orgmode-set_effort|
-                1.13.6. Clock report table............|orgmode-clock_report_table|
-                1.13.7. Automatic updates of totals.|orgmode-automatic_updates_of_totals|
-                1.13.8. Recalculating totals........|orgmode-recalculating_totals|
-                1.13.9. Statusline function..........|orgmode-statusline_function|
-    1.14. Changelog............................................|orgmode-changelog|
-            1.14.1. 24 October 2021......................|orgmode-24_october_2021|
-            1.14.2. 10 October 2021......................|orgmode-10_october_2021|
+    1.4. Tables...................................................|orgmode-tables|
+    1.5. Hyperlinks...........................................|orgmode-hyperlinks|
+    1.6. Autocompletion...................................|orgmode-autocompletion|
+    1.7. Abbreviations.....................................|orgmode-abbreviations|
+    1.8. Formatting...........................................|orgmode-formatting|
+    1.9. User interface...................................|orgmode-user_interface|
+        1.9.1. Colors.............................................|orgmode-colors|
+            1.9.1.1. Highlight Groups...................|orgmode-highlight_groups|
+        1.9.2. Menu.................................................|orgmode-menu|
+    1.10. Advanced search................................|orgmode-advanced_search|
+    1.11. Notifications (experimental)......|orgmode-notifications_(experimental)|
+        1.11.1. Cron................................................|orgmode-cron|
+    1.12. Clocking..............................................|orgmode-clocking|
+                1.12.1. Clock in................................|orgmode-clock_in|
+                1.12.2. Clock out..............................|orgmode-clock_out|
+                1.12.3. Clock cancel........................|orgmode-clock_cancel|
+                1.12.4. Clock goto............................|orgmode-clock_goto|
+                1.12.5. Set effort............................|orgmode-set_effort|
+                1.12.6. Clock report table............|orgmode-clock_report_table|
+                1.12.7. Automatic updates of totals.|orgmode-automatic_updates_of_totals|
+                1.12.8. Recalculating totals........|orgmode-recalculating_totals|
+                1.12.9. Statusline function..........|orgmode-statusline_function|
+    1.13. Changelog............................................|orgmode-changelog|
+            1.13.1. 24 October 2021......................|orgmode-24_october_2021|
+            1.13.2. 10 October 2021......................|orgmode-10_october_2021|
 
 ================================================================================
 TABLE OF CONTENT                                        *orgmode-table_of_content*
@@ -195,19 +193,18 @@ TABLE OF CONTENT                                        *orgmode-table_of_conten
     6.  Edit Src mappings (#edit-src)
     7.  Text objects (#text-objects)
     8.  Dot repeat (#dot-repeat)
-4.  Document Diagnostics (#document-diagnostics)
-5.  Tables (#tables)
-6.  Hyperlinks (#hyperlinks)
-7.  Autocompletion (#autocompletion)
-8.  Abbreviations (#abbreviations)
-9.  Formatting (#formatting)
-10. User interface (#user-interface)
+4.  Tables (#tables)
+5.  Hyperlinks (#hyperlinks)
+6.  Autocompletion (#autocompletion)
+7.  Abbreviations (#abbreviations)
+8.  Formatting (#formatting)
+9.  User interface (#user-interface)
     1.  Colors (#colors)
     2.  Menu (#menu)
-11. Advanced search (#advanced-search)
-12. Notifications (experimental) (#notifications-experimental)
-13. Clocking (#clocking)
-14. Changelog (#changelog)
+10. Advanced search (#advanced-search)
+11. Notifications (experimental) (#notifications-experimental)
+12. Clocking (#clocking)
+13. Changelog (#changelog)
 
 --------------------------------------------------------------------------------
 GETTING STARTED WITH ORGMODE                *orgmode-getting_started_with_orgmode*
@@ -262,12 +259,6 @@ Examples (With fast access):
   * `{'TODO(t)', 'NEXT', '|', 'DONE'}` - will work same as above. Only one todo keyword needs to have fast access key, others will be parsed from first char.
 
 NOTE: Make sure fast access keys do not overlap. If that happens, first entry in list gets it.
-
-DIAGNOSTICS                                                  *orgmode-diagnostics*
-
-type: `boolean`
-default value: `true`
-Should error diagnostics be shown. If you are using Neovim 0.6.0 or higher, these will be shown via `vim.diagnostic`.
 
 WIN_SPLIT_MODE                                            *orgmode-win_split_mode*
 
@@ -1408,12 +1399,6 @@ These mappings live under `mappings.text_objects`, and can be changed like this:
 DOT REPEAT                                                    *orgmode-dot_repeat*
 
 To make all mappings dot repeatable, install vim-repeat (https://github.com/tpope/vim-repeat) plugin.
-
---------------------------------------------------------------------------------
-DOCUMENT DIAGNOSTICS                                *orgmode-document_diagnostics*
-
-Since tree-sitter parser is being used to parse the file, if there are some syntax errors,
-it can potentially fail to parse specific parts of document when needed.
 
 --------------------------------------------------------------------------------
 TABLES                                                            *orgmode-tables*
