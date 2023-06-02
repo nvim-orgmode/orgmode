@@ -239,12 +239,17 @@ function Capture:refile_to_headline(destination_filename, lines, item, headline_
     end
   end
 
-  if item and item.level <= headline.level then
+  if item then
     -- Refiling in same file just moves the lines from one position
     -- to another,so we need to apply demote instantly
     local is_same_file = destination_file.filename == item.root.filename
-    lines = item:demote(headline.level - item.level + 1, true, not is_same_file)
+    if item.level <= headline.level then
+      lines = item:demote(headline.level - item.level + 1, true, not is_same_file)
+    else
+      lines = item:promote(item.level - headline.level - 1, true, not is_same_file)
+    end
   end
+
   local refiled = self:_refile_to(destination_filename, lines, item, headline.range.end_line)
   if not refiled then
     return false

@@ -437,6 +437,53 @@ function Section:demote(amount, demote_child_sections, dryRun)
   return lines
 end
 
+---@param amount number
+---@param promote_child_sections? boolean
+---@param dryRun? boolean
+---@return string[]
+function Section:promote(amount, promote_child_sections, dryRun)
+  amount = amount or 1
+  promote_child_sections = promote_child_sections or false
+  local should_dedent = config.org_indent_mode == 'indent'
+  local lines = {}
+  if self.level == 1 then
+    utils.echo_warning('Cannot demote top level heading.')
+    return lines
+  end
+  local headline_line = self.line:sub(1 + amount)
+  table.insert(lines, headline_line)
+  if not dryRun then
+    vim.api.nvim_call_function('setline', { self.range.start_line, headline_line })
+  end
+  if should_dedent then
+    local contents = self.root:get_node_text_list(self.node)
+    for i, content in ipairs(contents) do
+      if i > 1 then
+        if content:match('^%*+') then
+          break
+        end
+        local can_dedent = vim.trim(content:sub(1, amount)) == ''
+        local content_line = content
+        if can_dedent then
+          content_line = content:sub(1 + amount)
+        end
+        table.insert(lines, content_line)
+        if not dryRun and can_dedent then
+          vim.api.nvim_call_function('setline', { self.range.start_line + i - 1, content_line })
+        end
+      end
+    end
+  end
+
+  if promote_child_sections then
+    for _, section in ipairs(self.sections) do
+      utils.concat(lines, section:promote(amount, true, dryRun))
+    end
+  end
+
+  return lines
+end
+
 ---@return boolean
 function Section:has_planning()
   for _, date in ipairs(self.dates) do
