@@ -139,7 +139,7 @@ local function is_valid_markup_range(match, _, source, _)
   end
 
   local start_line = start_node:range()
-  local end_line = start_node:range()
+  local end_line = end_node:range()
 
   if start_line ~= end_line then
     return false
@@ -194,9 +194,10 @@ local function is_valid_latex_range(match, _, source, _)
   end
 
   local start_line = start_node_left:range()
-  local end_line = start_node_left:range()
+  local start_line_right = start_node_right:range()
+  local end_line = end_node:range()
 
-  if start_line ~= end_line then
+  if start_line ~= start_line_right or start_line ~= end_line then
     return false
   end
 
