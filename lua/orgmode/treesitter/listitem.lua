@@ -69,7 +69,7 @@ function Listitem:update_checkbox(action)
   else
     local parent_headline = tree_utils.closest_headline()
     if parent_headline then
-      Headline:new(parent_headline):update_cookie(parent_list)
+      Headline:new(parent_headline):update_cookie()
     end
   end
 end

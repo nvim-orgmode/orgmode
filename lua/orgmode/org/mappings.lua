@@ -564,6 +564,7 @@ function OrgMappings:handle_return(suffix)
     local content = config:respect_blank_before_new_entry({ string.rep('*', item.level) .. ' ' .. suffix })
     vim.fn.append(linenr, content)
     vim.fn.cursor(linenr + #content, 0)
+    require('orgmode.treesitter.headline'):new(item.node):update_cookie()
     return vim.cmd([[startinsert!]])
   end
 

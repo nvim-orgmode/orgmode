@@ -205,12 +205,15 @@ function Headline:set_todo(keyword)
   local current_todo = self:todo()
   if current_todo then
     tree_utils.set_node_text(current_todo, keyword)
+    self:update_cookie()
     return
   end
 
   local stars = self:stars()
   local text = ts.get_node_text(stars, 0)
   tree_utils.set_node_text(stars, string.format('%s %s', text, keyword))
+  self:refresh()
+  self:update_cookie()
 end
 
 function Headline:item()
@@ -436,22 +439,61 @@ function Headline:cookie()
   return self:parse('%[%d?%d?%d?%%%]')
 end
 
-function Headline:update_cookie(list_node)
-  local total_boxes = self:child_checkboxes(list_node)
-  local checked_boxes = vim.tbl_filter(function(box)
-    return box:match('%[%w%]')
-  end, total_boxes)
+function Headline:update_cookie()
+  local total = 0
+  local done = 0
+  local target = self
 
-  local cookie = self:cookie()
-  if cookie then
-    local new_cookie_val
-    if ts.get_node_text(cookie, 0):find('%%') then
-      new_cookie_val = ('[%d%%]'):format((#checked_boxes / #total_boxes) * 100)
+  -- Determine the target (headline with the cookie). This could be parent
+  -- headline, as Headline:set_todo() will likely be called on headlines
+  -- whose parents have cookies.
+  local cookie = target:cookie()
+  if not cookie then
+    local parent_section = target.headline:parent():parent()
+    if parent_section:child(0):type() == 'headline' then
+      local parent_headline = Headline:new(parent_section:child(0))
+      cookie = parent_headline:cookie()
+      if cookie ~= nil then
+        target = parent_headline
+      else
+        return nil
+      end
     else
-      new_cookie_val = ('[%d/%d]'):format(#checked_boxes, #total_boxes)
+      return nil
     end
-    tree_utils.set_node_text(cookie, new_cookie_val)
   end
+
+  -- Parse the children of the headline's parent section for child headlines and lists:
+  for _, node in pairs(ts_utils.get_named_children(tree_utils.find_parent_type(self.headline, 'section'))) do
+    -- The child is a list:
+    if node:type() == 'body' and node:child(0):type() == 'list' then
+      local total_boxes = target:child_checkboxes(node:child(0))
+      local checked_boxes = vim.tbl_filter(function(box)
+        return box:match('%[%w%]')
+      end, total_boxes)
+      total = total + #total_boxes
+      done = done + #checked_boxes
+    end
+    -- The child is a section:
+    if node:type() == 'section' and node:child(0):type() == 'headline' then
+      local hl = Headline:new(node:child(0))
+      local _, word, is_done = hl:todo()
+      if word ~= nil then
+        total = total + 1
+      end
+      if is_done then
+        done = done + 1
+      end
+    end
+  end
+
+  local new_cookie_val
+  if ts.get_node_text(cookie, 0):find('%%') then
+    new_cookie_val = ('[%d%%]'):format((total == 0 and 0 or done / total) * 100)
+  else
+    new_cookie_val = ('[%d/%d]'):format(done, total)
+  end
+  tree_utils.set_node_text(cookie, new_cookie_val)
 end
 
 function Headline:child_checkboxes(list_node)
