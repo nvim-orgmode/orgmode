@@ -24,7 +24,6 @@ setlocal foldmethod=expr
 setlocal foldexpr=nvim_treesitter#foldexpr()
 setlocal foldtext=OrgmodeFoldText()
 setlocal formatexpr=OrgmodeFormatExpr()
-setlocal foldlevel=0
 setlocal omnifunc=OrgmodeOmni
 setlocal commentstring=#\ %s
 inoreabbrev <silent><buffer> :today: <C-R>=luaeval("require('orgmode.objects.date').today():to_wrapped_string(true)")<CR>
