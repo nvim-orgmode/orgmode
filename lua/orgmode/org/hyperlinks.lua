@@ -148,6 +148,9 @@ end
 function Hyperlinks.get_file_real_path(url_path)
   local path = url_path
   path = path:gsub('^file:', '')
+  if path:match('^~/') then
+    path = path:gsub('^~', os.getenv('HOME'))
+  end
   if path:match('^/') then
     return path
   end
