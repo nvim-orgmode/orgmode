@@ -754,6 +754,8 @@ function OrgMappings:open_at_point()
   local parts = vim.split(link, '][', true)
   local url = parts[1]
   local link_ctx = { base = url, skip_add_prefix = true }
+  local ext_opener = 'xdg-open'
+
   if url:find('^file:') then
     if url:find(' +', 1, true) then
       parts = vim.split(url, ' +', true)
@@ -766,6 +768,9 @@ function OrgMappings:open_at_point()
 
     if url:find('^file:(.-)::') then
       link_ctx.line = url
+    elseif vim.filetype.match({ filename = url }) == nil then
+      local filepath = Hyperlinks.get_file_real_path(url)
+      vim.fn.jobstart(ext_opener .. ' ' .. vim.fn.shellescape(filepath), { detach = true })
     else
       vim.cmd(string.format('edit %s', Hyperlinks.get_file_real_path(url)))
       vim.cmd([[normal! zv]])
@@ -781,6 +786,13 @@ function OrgMappings:open_at_point()
   local stat = vim.loop.fs_stat(url)
   if stat and stat.type == 'file' then
     return vim.cmd(string.format('edit %s', url))
+  end
+
+  if url:find('^custom:') then
+    url = string.gsub(url, '^custom:', '')
+    local opener = string.gsub(url, '^(.-):.*', '%1')
+    local target = string.gsub(url, '^.-:', '')
+    vim.fn.jobstart(opener .. ' ' .. vim.fn.shellescape(target), { detach = true })
   end
 
   local headlines = Hyperlinks.find_matching_links(link_ctx)
