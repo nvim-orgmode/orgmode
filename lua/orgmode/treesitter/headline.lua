@@ -447,9 +447,11 @@ function Headline:update_cookie()
   -- Determine the target (headline with the cookie). This could be parent
   -- headline, as Headline:set_todo() will likely be called on headlines
   -- whose parents have cookies.
+  local parent_section = tree_utils.find_parent_type(target.headline, 'section')
   local cookie = target:cookie()
   if not cookie then
-    local parent_section = target.headline:parent():parent()
+    -- We need to check the next section up:
+    parent_section = target.headline:parent():parent()
     if parent_section:child(0):type() == 'headline' then
       local parent_headline = Headline:new(parent_section:child(0))
       cookie = parent_headline:cookie()
@@ -464,7 +466,7 @@ function Headline:update_cookie()
   end
 
   -- Parse the children of the headline's parent section for child headlines and lists:
-  for _, node in pairs(ts_utils.get_named_children(tree_utils.find_parent_type(self.headline, 'section'))) do
+  for _, node in pairs(ts_utils.get_named_children(parent_section)) do
     -- The child is a list:
     if node:type() == 'body' and node:child(0):type() == 'list' then
       local total_boxes = target:child_checkboxes(node:child(0))
