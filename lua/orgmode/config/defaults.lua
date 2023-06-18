@@ -52,6 +52,7 @@ local DefaultConfig = {
     deadline_reminder = true,
     scheduled_reminder = true,
   },
+  org_external_opener = 'xdg-open',
   mappings = {
     disable_all = false,
     prefix = '<Leader>o',

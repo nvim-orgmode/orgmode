@@ -754,7 +754,6 @@ function OrgMappings:open_at_point()
   local parts = vim.split(link, '][', true)
   local url = parts[1]
   local link_ctx = { base = url, skip_add_prefix = true }
-  local ext_opener = 'xdg-open'
 
   if url:find('^file:') then
     if url:find(' +', 1, true) then
@@ -770,7 +769,7 @@ function OrgMappings:open_at_point()
       link_ctx.line = url
     elseif vim.filetype.match({ filename = url }) == nil then
       local filepath = Hyperlinks.get_file_real_path(url)
-      vim.fn.jobstart(ext_opener .. ' ' .. vim.fn.shellescape(filepath), { detach = true })
+      vim.fn.jobstart(config.org_external_opener .. ' ' .. vim.fn.shellescape(filepath), { detach = true })
     else
       vim.cmd(string.format('edit %s', Hyperlinks.get_file_real_path(url)))
       vim.cmd([[normal! zv]])
