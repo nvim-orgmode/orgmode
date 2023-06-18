@@ -480,9 +480,9 @@ function Headline:update_cookie()
       local _, word, is_done = hl:todo()
       if word ~= nil then
         total = total + 1
-      end
-      if is_done then
-        done = done + 1
+        if is_done then
+          done = done + 1
+        end
       end
     end
   end
