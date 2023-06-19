@@ -767,7 +767,7 @@ function OrgMappings:open_at_point()
 
     if url:find('^file:(.-)::') then
       link_ctx.line = url
-    elseif vim.filetype.match({ filename = url }) == nil then
+    elseif config.org_nontext_hyperlinks and vim.filetype.match({ filename = url }) == nil then
       local filepath = Hyperlinks.get_file_real_path(url)
       vim.fn.jobstart(config.org_external_opener .. ' ' .. vim.fn.shellescape(filepath), { detach = true })
     else
