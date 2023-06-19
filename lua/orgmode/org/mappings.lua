@@ -787,11 +787,12 @@ function OrgMappings:open_at_point()
     return vim.cmd(string.format('edit %s', url))
   end
 
-  if url:find('^custom:') then
-    url = string.gsub(url, '^custom:', '')
-    local opener = string.gsub(url, '^(.-):.*', '%1')
-    local target = string.gsub(url, '^.-:', '')
-    vim.fn.jobstart(opener .. ' ' .. vim.fn.shellescape(target), { detach = true })
+  if url:find('^shell:') then
+    url = string.gsub(url, '^shell:', '')
+    url = vim.fn.shellescape(url)
+    print(url)
+    vim.fn.jobstart(url, { detach = true })
+    return
   end
 
   local headlines = Hyperlinks.find_matching_links(link_ctx)
