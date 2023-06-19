@@ -789,8 +789,6 @@ function OrgMappings:open_at_point()
 
   if url:find('^shell:') then
     url = string.gsub(url, '^shell:', '')
-    url = vim.fn.shellescape(url)
-    print(url)
     vim.fn.jobstart(url, { detach = true })
     return
   end
