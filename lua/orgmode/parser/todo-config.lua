@@ -69,6 +69,35 @@ function TodoConfig:parse(input)
 
   return TodoConfig:_new(words), input
 end
+
+--- @param from string
+--- @param to string
+--- @return TodoConfigRecordBehavior
+function TodoConfig:get_logging_behavior(from, to)
+  ---  Find the from config
+  local from_config = self:_find_word(from)
+  local to_config = self:_find_word(to)
+
+  -- Ensure the described transition is valid
+  if from_config == nil or to_config == nil then
+    return false
+  end
+
+  return to_config.on_enter or from_config.on_leave
+end
+
+--- Finds the word config with the associated name
+--- @private
+--- @param name string
+--- @return TodoConfigWord?
+function TodoConfig:_find_word(name)
+  for _, x in ipairs(self.words) do
+    if x.name == name then
+      return x
+    end
+  end
+
+  return nil
 end
 
 --- @param name string
