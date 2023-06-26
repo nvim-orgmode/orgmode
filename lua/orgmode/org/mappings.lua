@@ -707,6 +707,51 @@ function OrgMappings:_insert_heading_from_plain_line(suffix)
   end
 end
 
+-- Inserts a new link at the cursor position or modifies the link the cursor is
+-- currently on
+function OrgMappings:insert_link()
+  local link_location = vim.fn.OrgmodeInput('Links: ', '')
+  if vim.trim(link_location) ~= '' then
+    link_location = '[' .. link_location .. ']'
+  else
+    utils.echo_warning('No Link selected')
+    return
+  end
+  local link_description = vim.trim(vim.fn.OrgmodeInput('Description: ', ''))
+  if link_description ~= '' then
+    link_description = '[' .. link_description .. ']'
+  end
+
+  local insert_from
+  local insert_to
+  local target_col = #link_location + #link_description + 2
+
+  -- check if currently on link
+  local link = self:_get_link_under_cursor()
+  if link then
+    insert_from = link.from - 1
+    insert_to = link.to + 1
+    target_col = target_col + link.from
+  else
+    local colnr = vim.fn.col('.')
+    insert_from = colnr - 1
+    insert_to = colnr
+    target_col = target_col + colnr
+  end
+
+  local linenr = vim.fn.line('.')
+  local curr_line = vim.fn.getline(linenr)
+  local new_line = string.sub(curr_line, 0, insert_from)
+    .. '['
+    .. link_location
+    .. link_description
+    .. ']'
+    .. string.sub(curr_line, insert_to, #curr_line)
+
+  vim.fn.setline(linenr, new_line)
+  vim.fn.cursor(linenr, target_col)
+end
+
 function OrgMappings:move_subtree_up()
   local item = Files.get_closest_headline()
   local prev_headline = item:get_prev_headline_same_level()
@@ -751,7 +796,7 @@ function OrgMappings:open_at_point()
     return
   end
 
-  local parts = vim.split(link, '][', true)
+  local parts = vim.split(link.content, '][', true)
   local url = parts[1]
   local link_ctx = { base = url, skip_add_prefix = true }
   if url:find('^file:') then
@@ -991,6 +1036,7 @@ function OrgMappings:_get_date_under_cursor(col_offset)
     return nil
   end
 
+  -- TODO: this will result in a bug, when more than one date is in the line
   return dates[1]
 end
 
@@ -1025,7 +1071,7 @@ function OrgMappings:_adjust_date(amount, span, fallback)
   return vim.api.nvim_feedkeys(utils.esc(fallback), 'n', true)
 end
 
----@return string|nil
+---@return table|nil
 function OrgMappings:_get_link_under_cursor()
   local found_link = nil
   local links = {}
@@ -1035,10 +1081,10 @@ function OrgMappings:_get_link_under_cursor()
     local start_from = #links > 0 and links[#links].to or nil
     local from, to = line:find('%[%[(.-)%]%]', start_from)
     if col >= from and col <= to then
-      found_link = link
+      found_link = { content = link, from = from, to = to }
       break
     end
-    table.insert(links, { link = link, from = from, to = to })
+    table.insert(links, { content = link, from = from, to = to })
   end
   return found_link
 end

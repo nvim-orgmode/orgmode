@@ -821,6 +821,9 @@ Toggle current line checkbox state
 #### **org_toggle_heading**
 *mapped to*: `<Leader>o*`<br />
 Toggle current line to headline and vice versa. Checkboxes will turn into TODO headlines.
+#### **org_insert_link**
+*mapped to*: `<Leader>oil`<br />
+Insert a hyperlink at cursor position. When the cursor is on a hyperlink, edit that hyperlink.<br />
 #### **org_open_at_point**
 *mapped to*: `<Leader>oo`<br />
 Open hyperlink or date under cursor. When date is under the cursor, open the agenda for that day.<br />
