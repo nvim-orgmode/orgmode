@@ -3,7 +3,16 @@ local utils = require('orgmode.utils')
 local Hyperlinks = {}
 
 local function get_file_from_context(ctx)
-  return (ctx.hyperlinks and ctx.hyperlinks.filepath and Files.get(ctx.hyperlinks.filepath) or Files.get_current_file())
+  local filepath = (ctx.hyperlinks and ctx.hyperlinks.filepath)
+  if not filepath then
+    return Files.get_current_file()
+  end
+  local canonical = vim.loop.fs_realpath(filepath)
+  if not canonical then
+    return Files.get_current_file()
+  end
+
+  return Files.get(canonical)
 end
 
 local function update_hyperlink_ctx(ctx)
@@ -21,6 +30,10 @@ local function update_hyperlink_ctx(ctx)
   local file_match = ctx.line:match('file:(.-)::')
   if file_match then
     file_match = Hyperlinks.get_file_real_path(file_match)
+  end
+
+  if file_match then
+    file_match = vim.loop.fs_realpath(file_match)
   end
 
   if file_match and Files.get(file_match) then
