@@ -428,11 +428,27 @@ function OrgMappings:_todo_change_state(direction)
     section_config = nil
   end
 
+  -- @type nil | false | 'time' | 'note'
+  local user_config
+  if config.org_todo_keywords ~= nil then
+    local todoConfig = TodoConfig:parse(table.concat(config.org_todo_keywords, ' '))
+    if todoConfig ~= nil then
+      user_config = todoConfig:get_logging_behavior(old_state, new_state)
+    else
+      -- TODO: Report invalid config?
+      user_config = nil
+    end
+  else
+    user_config = nil
+  end
+
   -- Use the most locally available log config
   --- @type  false | 'time' | 'note'
   local log_config
   if section_config ~= nil then
     log_config = section_config
+  elseif user_config ~= nil then
+    log_config = user_config
   else
     log_config = global_config
   end
