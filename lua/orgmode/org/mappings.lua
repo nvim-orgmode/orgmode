@@ -16,6 +16,7 @@ local ts_table = require('orgmode.treesitter.table')
 local EventManager = require('orgmode.events')
 local Promise = require('orgmode.utils.promise')
 local events = EventManager.event
+local Link = require('orgmode.objects.link')
 
 ---@class OrgMappings
 ---@field capture Capture
@@ -796,12 +797,11 @@ function OrgMappings:open_at_point()
     return
   end
 
-  local parts = vim.split(link.content, '][', true)
-  local url = parts[1]
+  local url = link.url.str
   local link_ctx = { base = url, skip_add_prefix = true }
   if url:find('^file:') then
     if url:find(' +', 1, true) then
-      parts = vim.split(url, ' +', true)
+      local parts = vim.split(url, ' +', true)
       url = parts[1]
       local line_number = parts[2]
       vim.cmd(string.format('edit +%s %s', line_number, Hyperlinks.get_file_real_path(url)))
@@ -1071,22 +1071,11 @@ function OrgMappings:_adjust_date(amount, span, fallback)
   return vim.api.nvim_feedkeys(utils.esc(fallback), 'n', true)
 end
 
----@return table|nil
+---@return Link|nil
 function OrgMappings:_get_link_under_cursor()
-  local found_link = nil
-  local links = {}
   local line = vim.fn.getline('.')
   local col = vim.fn.col('.')
-  for link in line:gmatch('%[%[(.-)%]%]') do
-    local start_from = #links > 0 and links[#links].to or nil
-    local from, to = line:find('%[%[(.-)%]%]', start_from)
-    if col >= from and col <= to then
-      found_link = { content = link, from = from, to = to }
-      break
-    end
-    table.insert(links, { content = link, from = from, to = to })
-  end
-  return found_link
+  return Link.at_pos(line, col)
 end
 
 return OrgMappings
