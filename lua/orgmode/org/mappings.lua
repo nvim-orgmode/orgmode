@@ -518,22 +518,24 @@ function OrgMappings:org_return()
   end
 
   -- Classic, string-based mapping. Reconstruct it as faithfully as possible.
-  local rhs = utils.esc(old_mapping.rhs)
+  local rhs = old_mapping.rhs
 
   if old_mapping.expr > 0 then
     rhs = vim.api.nvim_eval(rhs)
   end
 
+  rhs = utils.esc(rhs)
+
   if old_mapping.script > 0 then
     rhs = rhs:gsub('<SID>', string.format('<SNR>%d_', old_mapping.sid))
     if rhs:match('^<CR>') then
       rhs = rhs:gsub('<CR>', '')
-      vim.api.nvim_feedkeys(utils.esc('<CR>'), 'n', true)
+      vim.api.nvim_feedkeys(utils.esc('<CR>'), 'n', false)
     end
 
     if rhs:match('^' .. utils.esc('<CR>')) then
       rhs = rhs:gsub('^' .. utils.esc('<CR>'), '')
-      vim.api.nvim_feedkeys(utils.esc('<CR>'), 'n', true)
+      vim.api.nvim_feedkeys(utils.esc('<CR>'), 'n', false)
     end
 
     if old_mapping.expr > 0 and rhs:match('^' .. utils.esc('<c-r>') .. '=') then
@@ -541,10 +543,10 @@ function OrgMappings:org_return()
       rhs = vim.api.nvim_eval(rhs)
     end
 
-    return vim.api.nvim_feedkeys(utils.esc(rhs), '', true)
+    return vim.api.nvim_feedkeys(utils.esc(rhs), '', false)
   end
 
-  return vim.api.nvim_feedkeys(rhs, 'n', true)
+  return vim.api.nvim_feedkeys(rhs, 'n', false)
 end
 
 function OrgMappings:handle_return(suffix)
