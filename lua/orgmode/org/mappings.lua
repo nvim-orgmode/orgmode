@@ -798,35 +798,29 @@ function OrgMappings:open_at_point()
   end
 
   local url = link.url.str
-  local link_ctx = { base = url, skip_add_prefix = true }
-  if url:find('^file:') then
-    if url:find(' +', 1, true) then
-      local parts = vim.split(url, ' +', true)
-      url = parts[1]
-      local line_number = parts[2]
-      vim.cmd(string.format('edit +%s %s', line_number, Hyperlinks.get_file_real_path(url)))
-      vim.cmd([[normal! zv]])
-      return
-    end
-
-    if url:find('^file:(.-)::') then
-      link_ctx.line = url
-    else
-      vim.cmd(string.format('edit %s', Hyperlinks.get_file_real_path(url)))
-      vim.cmd([[normal! zv]])
-      return
-    end
-  end
-  if url:find('^https?://') then
+  if link.url:is_file_plain() then
+    local file_path = link.url:get_filepath()
+    vim.cmd(string.format('edit %s', Hyperlinks.get_file_real_path(file_path)))
+    vim.cmd([[normal! zv]])
+    return
+  elseif link.url:is_file_line_number() then
+    local line_number = link.url:get_linenumber() or 0
+    local file_path = link.url:get_filepath() or utils.current_file_path()
+    local cmd = string.format('edit +%s %s', line_number, Hyperlinks.get_file_real_path(file_path))
+    vim.cmd(cmd)
+    return vim.cmd([[normal! zv]])
+  elseif link.url:is_http_url() then
     if not vim.g.loaded_netrwPlugin then
       return utils.echo_warning('Netrw plugin must be loaded in order to open urls.')
     end
     return vim.fn['netrw#BrowseX'](url, vim.fn['netrw#CheckIfRemote']())
+  elseif not link.url:is_org_link() then
+    utils.echo_warning(string.format('Unsupported link format: %q', url))
+    return
   end
-  local stat = vim.loop.fs_stat(url)
-  if stat and stat.type == 'file' then
-    return vim.cmd(string.format('edit %s', url))
-  end
+
+  local link_ctx = { base = url, skip_add_prefix = true }
+  link_ctx.line = url
 
   local headlines = Hyperlinks.find_matching_links(link_ctx)
   local current_headline = Files.get_closest_headline()
