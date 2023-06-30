@@ -793,6 +793,12 @@ function OrgMappings:open_at_point()
     return
   end
 
+  pref = string.gsub(url, '^(.-):.*', '%1')
+  if config.org_link_types[pref] ~= nil then
+    config.org_link_types[pref].handler(url)
+    return
+  end
+
   local headlines = Hyperlinks.find_matching_links(link_ctx)
   local current_headline = Files.get_closest_headline()
   if current_headline then
