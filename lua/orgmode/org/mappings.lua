@@ -850,6 +850,7 @@ function OrgMappings:open_at_point()
   end
   vim.cmd(string.format('edit %s', headline.file))
   vim.fn.cursor(headline.range.start_line, 0)
+  vim.cmd([[normal! zv]])
 end
 
 function OrgMappings:export()
