@@ -787,12 +787,6 @@ function OrgMappings:open_at_point()
     return vim.cmd(string.format('edit %s', url))
   end
 
-  if url:find('^shell:') then
-    url = string.gsub(url, '^shell:', '')
-    vim.fn.jobstart(url, { detach = true })
-    return
-  end
-
   pref = string.gsub(url, '^(.-):.*', '%1')
   if config.org_link_types[pref] ~= nil then
     config.org_link_types[pref].handler(url)
