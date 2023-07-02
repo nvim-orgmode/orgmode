@@ -218,11 +218,15 @@ describe('Autocompletion', function()
     })
 
     mock_line(api, string.format('  [[file:%s::*', filename))
+    local vim_loop = mock(vim.loop, true)
+    vim_loop.fs_realpath.returns(filename)
     result = OrgmodeOmniCompletion(0, '*')
     assert.are.same({
       { menu = '[Org]', word = '*' .. headlines[1].title },
       { menu = '[Org]', word = '*' .. headlines[2].title },
     }, result)
+
+    mock.revert(vim_loop)
 
     mock.revert(MockFiles)
 
