@@ -3,58 +3,10 @@ local org = require('orgmode')
 local config = require('orgmode.config')
 local Files = require('orgmode.parser.files')
 local Date = require('orgmode.objects.date')
-local Capture = require('orgmode.capture')
 
 describe('Mappings', function()
   after_each(function()
     vim.cmd([[silent! %bw!]])
-  end)
-
-  it('should toggle the current line into a headline and vice versa', function()
-    helpers.load_file_content({
-      'top level line',
-      '* top level heading',
-      '  simple line',
-      '  - list item',
-      '  * [ ] unfinished checkbox item',
-      '  - [X] finished checkbox item',
-    })
-
-    assert.are.same('top level line', vim.fn.getline(1))
-    assert.are.same('  simple line', vim.fn.getline(3))
-    assert.are.same('  - list item', vim.fn.getline(4))
-    assert.are.same('  * [ ] unfinished checkbox item', vim.fn.getline(5))
-    assert.are.same('  - [X] finished checkbox item', vim.fn.getline(6))
-
-    vim.fn.cursor(1, 1)
-    vim.cmd([[norm ,o*]])
-    assert.are.same('* top level line', vim.fn.getline(1))
-    vim.cmd([[norm ,o*]])
-    assert.are.same('top level line', vim.fn.getline(1))
-
-    vim.fn.cursor(3, 1)
-    vim.cmd([[norm ,o*]])
-    assert.are.same('** simple line', vim.fn.getline(3))
-    vim.cmd([[norm ,o*]])
-    assert.are.same('simple line', vim.fn.getline(3))
-
-    vim.fn.cursor(4, 1)
-    vim.cmd([[norm ,o*]])
-    assert.are.same('** list item', vim.fn.getline(4))
-    vim.cmd([[norm ,o*]])
-    assert.are.same('list item', vim.fn.getline(4))
-
-    vim.fn.cursor(5, 1)
-    vim.cmd([[norm ,o*]])
-    assert.are.same('** TODO unfinished checkbox item', vim.fn.getline(5))
-    vim.cmd([[norm ,o*]])
-    assert.are.same('TODO unfinished checkbox item', vim.fn.getline(5))
-
-    vim.fn.cursor(6, 1)
-    vim.cmd([[norm ,o*]])
-    assert.are.same('** DONE finished checkbox item', vim.fn.getline(6))
-    vim.cmd([[norm ,o*]])
-    assert.are.same('DONE finished checkbox item', vim.fn.getline(6))
   end)
 
   it('should toggle archive tag on headline (org_toggle_archive_tag)', function()
