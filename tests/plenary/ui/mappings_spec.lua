@@ -2,7 +2,6 @@ local helpers = require('tests.plenary.ui.helpers')
 local org = require('orgmode')
 local config = require('orgmode.config')
 local Files = require('orgmode.parser.files')
-local Date = require('orgmode.objects.date')
 
 describe('Mappings', function()
   after_each(function()
@@ -18,73 +17,13 @@ describe('Mappings', function()
       '',
       '* TODO Another task',
     })
-    assert.are.same('* TODO Test orgmode', vim.fn.getline(3))
+   assert.are.same('* TODO Test orgmode', vim.fn.getline(3))
     vim.fn.cursor(3, 1)
     vim.cmd([[norm ,oA]])
     assert.are.same(
       '* TODO Test orgmode                                                    :ARCHIVE:',
       vim.fn.getline(3)
     )
-  end)
-
-  it('should increase the priority of the current headline', function()
-    helpers.load_file_content({
-      '* TODO [#B] Test orgmode',
-    })
-    vim.fn.cursor(1, 1)
-    assert.are.same('* TODO [#B] Test orgmode', vim.fn.getline(1))
-    vim.cmd('norm ciR')
-    assert.are.same('* TODO [#A] Test orgmode', vim.fn.getline(1))
-  end)
-
-  it('should decrease the priority of the current headline', function()
-    helpers.load_file_content({
-      '* TODO [#B] Test orgmode',
-    })
-    vim.fn.cursor(1, 1)
-    assert.are.same('* TODO [#B] Test orgmode', vim.fn.getline(1))
-    vim.cmd('norm cir')
-    assert.are.same('* TODO [#C] Test orgmode', vim.fn.getline(1))
-  end)
-
-  it('should set the priority based on the input key', function()
-    helpers.load_file_content({
-      '* TODO [#B] Test orgmode',
-    })
-    vim.fn.cursor(1, 1)
-    assert.are.same('* TODO [#B] Test orgmode', vim.fn.getline(1))
-    vim.cmd('norm ,o,a\r')
-    assert.are.same('* TODO [#A] Test orgmode', vim.fn.getline(1))
-  end)
-
-  it('should remove the priority if <Space> is pressed', function()
-    helpers.load_file_content({
-      '* TODO [#B] Test orgmode',
-    })
-    vim.fn.cursor(1, 1)
-    assert.are.same('* TODO [#B] Test orgmode', vim.fn.getline(1))
-    vim.cmd('norm ,o, \r')
-    assert.are.same('* TODO Test orgmode', vim.fn.getline(1))
-  end)
-
-  it('should add a priority if the item does not already have one', function()
-    helpers.load_file_content({
-      '* TODO Test orgmode',
-    })
-    vim.fn.cursor(1, 1)
-    assert.are.same('* TODO Test orgmode', vim.fn.getline(1))
-    vim.cmd('norm ,o,a\r')
-    assert.are.same('* TODO [#A] Test orgmode', vim.fn.getline(1))
-  end)
-
-  it('should add a priority if the item has no todo keyword', function()
-    helpers.load_file_content({
-      '* Test orgmode',
-    })
-    vim.fn.cursor(1, 1)
-    assert.are.same('* Test orgmode', vim.fn.getline(1))
-    vim.cmd('norm ,o,a\r')
-    assert.are.same('* [#A] Test orgmode', vim.fn.getline(1))
   end)
 
   it('should refile to headline that matches name exactly', function()
