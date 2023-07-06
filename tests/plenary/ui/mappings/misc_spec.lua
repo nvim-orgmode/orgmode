@@ -17,7 +17,7 @@ describe('Mappings', function()
       '',
       '* TODO Another task',
     })
-   assert.are.same('* TODO Test orgmode', vim.fn.getline(3))
+    assert.are.same('* TODO Test orgmode', vim.fn.getline(3))
     vim.fn.cursor(3, 1)
     vim.cmd([[norm ,oA]])
     assert.are.same(
