@@ -91,21 +91,36 @@ describe('Autocompletion', function()
 
     mock.revert(api)
   end)
+end)
 
-  it('should properly return results for base', function()
-    local api = mock(vim.api, true)
+describe('Autocompletion', function()
+  local api
+  before_each(function()
+    api = mock(vim.api, true)
+    mock_line(api, '')
+  end)
+
+  after_each(function()
+    mock.revert(api)
+  end)
+
+  it('should return an empty table when base is empty', function()
+    api = mock(vim.api, true)
     mock_line(api, '')
     local result = OrgmodeOmniCompletion(0, '')
     assert.are.same({}, result)
+  end)
 
+  it('should return DEADLINE: when base is D', function()
     -- Metadata
-    result = OrgmodeOmniCompletion(0, 'D')
+    local result = OrgmodeOmniCompletion(0, 'D')
     assert.are.same({
       { menu = '[Org]', word = 'DEADLINE:' },
     }, result)
+  end)
 
-    -- Properties
-    result = OrgmodeOmniCompletion(0, ':')
+  it('should return defined keywords when base is :', function()
+    local result = OrgmodeOmniCompletion(0, ':')
     local props = {
       { menu = '[Org]', word = ':PROPERTIES:' },
       { menu = '[Org]', word = ':END:' },
@@ -116,8 +131,10 @@ describe('Autocompletion', function()
       { menu = '[Org]', word = ':CATEGORY:' },
     }
     assert.are.same(props, result)
+  end)
 
-    result = OrgmodeOmniCompletion(0, ':C')
+  it('should filter keywords down', function()
+    local result = OrgmodeOmniCompletion(0, ':C')
     assert.are.same({
       { menu = '[Org]', word = ':CUSTOM_ID:' },
       { menu = '[Org]', word = ':CATEGORY:' },
@@ -127,9 +144,11 @@ describe('Autocompletion', function()
     assert.are.same({
       { menu = '[Org]', word = ':CATEGORY:' },
     }, result)
+  end)
 
+  it('should find and filter down export options when base is #', function()
     -- Directives
-    result = OrgmodeOmniCompletion(0, '#')
+    local result = OrgmodeOmniCompletion(0, '#')
     local directives = {
       { menu = '[Org]', word = '#+title' },
       { menu = '[Org]', word = '#+author' },
@@ -154,10 +173,22 @@ describe('Autocompletion', function()
       { menu = '[Org]', word = '#+begin_src' },
       { menu = '[Org]', word = '#+begin_example' },
     }, result)
+  end)
+end)
 
-    -- Headline
+describe('Autocompletion', function()
+  local api
+  before_each(function()
+    api = mock(vim.api, true)
     mock_line(api, '* ')
-    result = OrgmodeOmniCompletion(0, '')
+  end)
+
+  after_each(function()
+    mock.revert(api)
+  end)
+
+  it('should find and filter down TODO keywords at the beginning of a headline', function()
+    local result = OrgmodeOmniCompletion(0, '')
     assert.are.same({
       { menu = '[Org]', word = 'TODO' },
       { menu = '[Org]', word = 'DONE' },
@@ -168,10 +199,12 @@ describe('Autocompletion', function()
     assert.are.same({
       { menu = '[Org]', word = 'TODO' },
     }, result)
+  end)
 
+  it('should find defined tags', function()
     Files.tags = { 'OFFICE', 'PRIVATE' }
     mock_line(api, '* TODO tags go at the end :')
-    result = OrgmodeOmniCompletion(0, ':')
+    local result = OrgmodeOmniCompletion(0, ':')
     assert.are.same({
       { menu = '[Org]', word = ':OFFICE:' },
       { menu = '[Org]', word = ':PRIVATE:' },
@@ -200,8 +233,13 @@ describe('Autocompletion', function()
       { menu = '[Org]', word = ':OFFICE:' },
       { menu = '[Org]', word = ':PRIVATE:' },
     }, result)
+  end)
+end)
 
+describe('Autocompletion', function()
+  it('should complete links', function()
     -- TODO: Add more hyperlink tests
+    local api = mock(vim.api, true)
     local MockFiles = mock(Files, true)
     local filename = 'work.org'
     local headlines = {
@@ -220,7 +258,7 @@ describe('Autocompletion', function()
     mock_line(api, string.format('  [[file:%s::*', filename))
     local vim_loop = mock(vim.loop, true)
     vim_loop.fs_realpath.returns(filename)
-    result = OrgmodeOmniCompletion(0, '*')
+    local result = OrgmodeOmniCompletion(0, '*')
     assert.are.same({
       { menu = '[Org]', word = '*' .. headlines[1].title },
       { menu = '[Org]', word = '*' .. headlines[2].title },
