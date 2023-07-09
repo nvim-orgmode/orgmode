@@ -10,6 +10,7 @@ local config = require('orgmode.config')
 local constants = require('orgmode.utils.constants')
 local ts_utils = require('nvim-treesitter.ts_utils')
 local utils = require('orgmode.utils')
+local fs = require('orgmode.utils.fs')
 local ts_org = require('orgmode.treesitter')
 local ts = require('orgmode.treesitter.compat')
 local ts_table = require('orgmode.treesitter.table')
@@ -800,13 +801,14 @@ function OrgMappings:open_at_point()
   local url = link.url.str
   if link.url:is_file_plain() then
     local file_path = link.url:get_filepath()
-    vim.cmd(string.format('edit %s', Hyperlinks.get_file_real_path(file_path)))
+    local cmd = file_path and string.format('edit %s', fs.get_real_path(file_path)) or ''
+    vim.cmd(cmd)
     vim.cmd([[normal! zv]])
     return
   elseif link.url:is_file_line_number() then
     local line_number = link.url:get_linenumber() or 0
     local file_path = link.url:get_filepath() or utils.current_file_path()
-    local cmd = string.format('edit +%s %s', line_number, Hyperlinks.get_file_real_path(file_path))
+    local cmd = string.format('edit +%s %s', line_number, fs.get_real_path(file_path))
     vim.cmd(cmd)
     return vim.cmd([[normal! zv]])
   elseif link.url:is_http_url() then
@@ -819,10 +821,7 @@ function OrgMappings:open_at_point()
     return
   end
 
-  local link_ctx = { base = url, skip_add_prefix = true }
-  link_ctx.line = url
-
-  local headlines = Hyperlinks.find_matching_links(link_ctx)
+  local headlines = Hyperlinks.find_matching_links(link.url)
   local current_headline = Files.get_closest_headline()
   if current_headline then
     headlines = vim.tbl_filter(function(headline)
@@ -849,7 +848,7 @@ function OrgMappings:open_at_point()
     headline = headlines[choice]
   end
   vim.cmd(string.format('edit %s', headline.file))
-  vim.fn.cursor(headline.range.start_line, 0)
+  vim.fn.cursor({ headline.range.start_line, 0 })
   vim.cmd([[normal! zv]])
 end
 

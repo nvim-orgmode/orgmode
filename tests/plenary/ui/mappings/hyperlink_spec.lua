@@ -50,7 +50,37 @@ describe('Hyperlink mappings', function()
     assert.is.same('** headline of target custom_id', vim.api.nvim_get_current_line())
   end)
 
-  it('should follow link to headline of given custom_id in given org file', function()
+  it('should follow link to headline of given custom_id in given org file (no "file:" prefix)', function()
+    local target_path = helpers.load_file_content({
+      '* Test hyperlink',
+      ' - some',
+      ' - boiler',
+      ' - plate',
+      '** headline of target custom_id',
+      '   :PROPERTIES:',
+      '   :CUSTOM_ID: target',
+      '   :END:',
+      '   - more',
+      '   - boiler',
+      '   - plate',
+    })
+    assert.is.truthy(target_path)
+    if not target_path then
+      return
+    end
+    local dir = vim.fs.dirname(target_path)
+    local url = target_path:gsub(dir, '.')
+    vim.cmd([[norm w]])
+    helpers.load_file_content({
+      string.format('This link should lead to [[%s::#target][target]]', url),
+    })
+    vim.cmd([[norm w]])
+    vim.fn.cursor(1, 30)
+    vim.cmd([[norm ,oo]])
+    assert.is.same('** headline of target custom_id', vim.api.nvim_get_current_line(), string.format('in file %s', url))
+  end)
+
+  it('should follow link to headline of given dedicated target', function()
     local target_path = helpers.load_file_content({
       '* Test hyperlink',
       '  an [[target][internal link]]',
@@ -67,5 +97,73 @@ describe('Hyperlink mappings', function()
     assert.is.same('  an [[target][internal link]]', vim.api.nvim_get_current_line())
     vim.cmd([[norm ,oo]])
     assert.is.same('** headline of a deticated anchor', vim.api.nvim_get_current_line())
+  end)
+
+  it('should follow link to certain line (orgmode standard notation)', function()
+    local target_path = helpers.load_file_content({
+      '* Test hyperlink',
+      '  - some',
+      '  - boiler',
+      '  - plate',
+      '** some headline',
+      '   - more',
+      '   - boiler',
+      '   - plate',
+      ' ->   9',
+      ' ->  10',
+      ' --> eleven <--',
+      ' ->  12',
+      ' ->  13',
+      ' ->  14',
+      ' ->  15 <--',
+    })
+    vim.cmd([[norm w]])
+    assert.is.truthy(target_path)
+    if not target_path then
+      return
+    end
+    local dir = vim.fs.dirname(target_path)
+    local url = target_path:gsub(dir, '.')
+    helpers.load_file_content({
+      string.format('This [[%s::11][link]] should bring us to the 11th line.', url),
+    })
+    vim.cmd([[norm w]])
+    vim.fn.cursor(1, 10)
+    vim.cmd([[norm ,oo]])
+    assert.is.same(' --> eleven <--', vim.api.nvim_get_current_line())
+  end)
+
+  it('should follow link to certain line (nvim-orgmode compatibility)', function()
+    local target_path = helpers.load_file_content({
+      '* Test hyperlink',
+      '  - some',
+      '  - boiler',
+      '  - plate',
+      '** some headline',
+      '   - more',
+      '   - boiler',
+      '   - plate',
+      ' ->   9',
+      ' ->  10',
+      ' --> eleven <--',
+      ' ->  12',
+      ' ->  13',
+      ' ->  14',
+      ' ->  15 <--',
+    })
+    vim.cmd([[norm w]])
+    assert.is.truthy(target_path)
+    if not target_path then
+      return
+    end
+    local dir = vim.fs.dirname(target_path)
+    local url = target_path:gsub(dir, '.')
+    helpers.load_file_content({
+      string.format('This [[%s +11][link]] should bring us to the 11th line.', url),
+    })
+    vim.cmd([[norm w]])
+    vim.fn.cursor(1, 10)
+    vim.cmd([[norm ,oo]])
+    assert.is.same(' --> eleven <--', vim.api.nvim_get_current_line())
   end)
 end)

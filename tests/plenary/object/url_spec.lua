@@ -44,7 +44,35 @@ describe('Url', function()
     for _, url_str in ipairs(anchor_examples) do
       local url = Url.new(url_str)
       local anchor = url:get_dedicated_target()
-      assert(anchor == nil, string.format('Expected %q to be resolved to nil, actual %q', url_str, anchor))
+      assert.is.falsy(anchor, nil, string.format('Expected %q to be resolved to nil, actual %q', url_str, anchor))
+    end
+  end)
+
+  it('should handle different file paths', function()
+    local filepath_examples = {
+      { url_str = 'file:./../some_file', exp = './../some_file' },
+      { url_str = './../some_file.txt', exp = './../some_file.txt' },
+      { url_str = '/some/path/some_file', exp = '/some/path/some_file' },
+      { url_str = 'file:./../some_file.org::*headline', exp = './../some_file.org' },
+      { url_str = 'file:./../some_file.org::#custom_id', exp = './../some_file.org' },
+      { url_str = 'file:./../some_file.org::an anchor', exp = './../some_file.org' },
+      { url_str = 'file:./../some_file.org::123', exp = './../some_file.org' },
+      { url_str = 'file:./../some_file.org +123', exp = './../some_file.org' },
+      { url_str = './../some_file.org::*headline', exp = './../some_file.org' },
+      { url_str = './../some_file.org::#custom_id', exp = './../some_file.org' },
+      { url_str = './../some_file.org::an anchor', exp = './../some_file.org' },
+      { url_str = './../some_file.org::123', exp = './../some_file.org' },
+      { url_str = './../some_file.org +123', exp = './../some_file.org' },
+      { url_str = '/some/path/some_file.org::*headline', exp = '/some/path/some_file.org' },
+      { url_str = '/some/path/some_file.org::#custom_id', exp = '/some/path/some_file.org' },
+      { url_str = '/some/path/some_file.org::an anchor', exp = '/some/path/some_file.org' },
+      { url_str = '/some/path/some_file.org::123', exp = '/some/path/some_file.org' },
+      { url_str = '/some/path/some_file.org +123', exp = '/some/path/some_file.org' },
+    }
+    for _, tc in ipairs(filepath_examples) do
+      local url = Url.new(tc.url_str)
+      local filepath = url:get_filepath()
+      assert.is.same(tc.exp, filepath, string.format('Failed for url %q:', tc.url_str))
     end
   end)
 end)

@@ -1,6 +1,8 @@
 local Files = require('orgmode.parser.files')
 local config = require('orgmode.config')
 local Hyperlinks = require('orgmode.org.hyperlinks')
+local Url = require('orgmode.objects.url')
+local Link = require('orgmode.objects.link')
 
 local data = {
   directives = { '#+title', '#+author', '#+email', '#+name', '#+filetags', '#+archive', '#+options', '#+category' },
@@ -33,7 +35,10 @@ local properties = {
 local links = {
   line_rgx = vim.regex([[\(\(^\|\s\+\)\[\[\)\@<=\(\*\|\#\|file:\)\?\(\(\w\|\/\|\.\|\\\|-\|_\|\d\)\+\)\?]]),
   rgx = vim.regex([[\(\*\|\#\|file:\)\?\(\(\w\|\/\|\.\|\\\|-\|_\|\d\)\+\)\?$]]),
-  fetcher = Hyperlinks.find_matching_links,
+  fetcher = function(url)
+    local hyperlinks, mapper = Hyperlinks.find_matching_links(url)
+    return mapper(hyperlinks)
+  end,
 }
 
 local metadata = {
@@ -101,7 +106,8 @@ local function omni(findstart, base)
     return -1
   end
 
-  local fetcher_ctx = { base = base, line = line }
+  local url_str = line:match('%[%[(.-)$')
+  local url = Url.new(url_str)
   local results = {}
 
   for _, context in ipairs(ctx) do
@@ -112,7 +118,7 @@ local function omni(findstart, base)
     then
       local items = {}
       if context.fetcher then
-        items = context.fetcher(fetcher_ctx)
+        items = context.fetcher(url)
       else
         items = { unpack(context.list) }
       end

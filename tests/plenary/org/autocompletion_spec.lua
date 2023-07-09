@@ -1,6 +1,7 @@
 local mock = require('luassert.mock')
 local OrgmodeOmniCompletion = require('orgmode.org.autocompletion.omni')
 local Files = require('orgmode.parser.files')
+local fs = require('orgmode.utils.fs')
 
 local function mock_line(api, content)
   api.nvim_get_current_line.returns(content)
@@ -236,38 +237,165 @@ describe('Autocompletion', function()
   end)
 end)
 
-describe('Autocompletion', function()
-  it('should complete links', function()
-    -- TODO: Add more hyperlink tests
-    local api = mock(vim.api, true)
-    local MockFiles = mock(Files, true)
+describe('Autocompletion in hyperlinks', function()
+  local api
+  local MockFiles
+  local MockFs
+
+  before_each(function()
+    api = mock(vim.api, true)
+    MockFiles = mock(Files, true)
+    MockFs = mock(fs, true)
+  end)
+
+  after_each(function()
+    mock.revert(MockFiles)
+    mock.revert(MockFs)
+    mock.revert(api)
+  end)
+
+  it('should complete headlines', function()
     local filename = 'work.org'
+    local file_dir_absolute = '/some/path'
+    local file_path_relative = string.format('./%s', filename)
+    local file_path_absolute = string.format('/%s/%s', file_dir_absolute, filename)
     local headlines = {
       { title = 'Item for work 1' },
       { title = 'Item for work 2' },
     }
 
-    MockFiles.filenames.returns({ filename })
+    mock_line(api, string.format('  [[%s::*', file_path_relative))
+
+    MockFs.get_real_path.returns(file_path_absolute)
+    MockFs.get_current_file_dir.returns(file_dir_absolute)
+    MockFiles.filenames.returns({ file_path_absolute })
     MockFiles.get.returns({
-      filename = filename,
+      filename = file_path_absolute,
       find_headlines_by_title = function()
         return headlines
       end,
     })
 
-    mock_line(api, string.format('  [[file:%s::*', filename))
-    local vim_loop = mock(vim.loop, true)
-    vim_loop.fs_realpath.returns(filename)
     local result = OrgmodeOmniCompletion(0, '*')
     assert.are.same({
       { menu = '[Org]', word = '*' .. headlines[1].title },
       { menu = '[Org]', word = '*' .. headlines[2].title },
     }, result)
+  end)
 
-    mock.revert(vim_loop)
+  it('should complete custom_ids', function()
+    local filename = 'work.org'
+    local file_dir_absolute = '/some/path'
+    local file_path_relative = string.format('./%s', filename)
+    local file_path_absolute = string.format('/%s/%s', file_dir_absolute, filename)
+    -- properties.items.custom_id
+    local custom_ids = {
+      { properties = { items = { custom_id = 'ID_1' } } },
+      { properties = { items = { custom_id = 'ID_2' } } },
+    }
 
-    mock.revert(MockFiles)
+    mock_line(api, string.format('  [[%s::#', file_path_relative))
 
-    mock.revert(api)
+    MockFs.get_real_path.returns(file_path_absolute)
+    MockFs.get_current_file_dir.returns(file_dir_absolute)
+    MockFiles.filenames.returns({ file_path_absolute })
+    MockFiles.get.returns({
+      filename = file_path_absolute,
+      find_headlines_with_property_matching = function()
+        return custom_ids
+      end,
+    })
+
+    local result = OrgmodeOmniCompletion(0, '#')
+    assert.are.same({
+      { menu = '[Org]', word = '#' .. custom_ids[1].properties.items.custom_id },
+      { menu = '[Org]', word = '#' .. custom_ids[2].properties.items.custom_id },
+    }, result)
+  end)
+
+  it('should complete dedicated anchors', function()
+    local filename = 'work.org'
+    local file_dir_absolute = '/some/path'
+    local file_path_relative = string.format('./%s', filename)
+    local file_path_absolute = string.format('/%s/%s', file_dir_absolute, filename)
+
+    local sections = {
+      { title = 'Title with an <<some anchor>>', content = { 'line1', 'line2', 'line3' } },
+      {
+        title = 'Title with anchor in content',
+        content = { 'line1', '... <<some other anchor>> ...', 'line3' },
+      },
+      { title = 'Title with nothing', content = { 'line1', 'line2', 'line3' } },
+    }
+
+    MockFs.get_real_path.returns(file_path_absolute)
+    MockFs.get_current_file_dir.returns(file_dir_absolute)
+    MockFiles.filenames.returns({ file_path_absolute })
+    MockFiles.get_current_file.returns({
+      filename = file_path_absolute,
+      find_headlines_matching_search_term = function()
+        return sections
+      end,
+      find_headlines_by_title = function()
+        return {}
+      end,
+    })
+    MockFiles.get.returns({
+      find_headlines_by_title = function()
+        return {}
+      end,
+    })
+
+    mock_line(api, string.format('  [[so', file_path_relative))
+
+    local result = OrgmodeOmniCompletion(0, 'so')
+
+    assert.are.same({
+      { menu = '[Org]', word = 'some anchor' },
+      { menu = '[Org]', word = 'some other anchor' },
+    }, result)
+  end)
+
+  it('should complete fuzzy titles', function()
+    local filename = 'work.org'
+    local file_dir_absolute = '/some/path'
+    local file_path_relative = string.format('./%s', filename)
+    local file_path_absolute = string.format('/%s/%s', file_dir_absolute, filename)
+
+    local sections = {
+      { title = 'Title with an <<some anchor>>', content = { 'line1', 'line2', 'line3' } },
+      {
+        title = 'This headline should not be found',
+        content = { 'line1', '... <<some other anchor>> ...', 'line3' },
+      },
+      { title = 'Title without anchor', content = { 'line1', 'line2', 'line3' } },
+    }
+
+    MockFs.get_real_path.returns(file_path_absolute)
+    MockFs.get_current_file_dir.returns(file_dir_absolute)
+    MockFiles.filenames.returns({ file_path_absolute })
+    MockFiles.get_current_file.returns({
+      filename = file_path_absolute,
+      find_headlines_matching_search_term = function()
+        return sections
+      end,
+      find_headlines_by_title = function()
+        return {}
+      end,
+    })
+    MockFiles.get.returns({
+      find_headlines_by_title = function()
+        return {}
+      end,
+    })
+
+    mock_line(api, string.format('  [[Tit', file_path_relative))
+
+    local result = OrgmodeOmniCompletion(0, 'Tit')
+
+    assert.are.same({
+      { menu = '[Org]', word = 'Title with an <<some anchor>>' },
+      { menu = '[Org]', word = 'Title without anchor' },
+    }, result)
   end)
 end)

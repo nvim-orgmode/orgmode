@@ -173,7 +173,7 @@ describe('Heading mappings', function()
       '       Some content for level 2',
       '******* NEXT [#1] Level 3',
       '        Content Level 3',
-    }, vim.api.nvim_buf_get_lines(0, 0, 6, false))
+    })
     vim.fn.cursor(1, 1)
 
     -- Support count
