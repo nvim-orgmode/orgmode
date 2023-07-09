@@ -32,8 +32,8 @@ local properties = {
 }
 
 local links = {
-  line_rgx = vim.regex([[\(\(^\|\s\+\)\[\[\)\@<=\(\*\|\#\|file:\)\?\(\(\w\|\/\|\.\|\\\|-\|_\|\d\)\+\)\?]]),
-  rgx = vim.regex([[\(\*\|\#\|file:\)\?\(\(\w\|\/\|\.\|\\\|-\|_\|\d\)\+\)\?$]]),
+  line_rgx = vim.regex([[\(\(^\|\s\+\)\[\[\)\@<=\(\*\|\#\|file:\)\?\(\(\w\|\/\|\.\|\\\|-\)\+\)\?]]),
+  rgx = vim.regex([[\(\*\|\#\|file:\)\?\(\(\w\|\/\|\.\|\\\|-\)\+\)\?$]]),
   fetcher = function(url)
     local hyperlinks, mapper = Hyperlinks.find_matching_links(url)
     return mapper(hyperlinks)
@@ -126,6 +126,7 @@ function Omni.all_ctx_conditions_apply(context, line, base)
     and context.rgx:match_str(base)
     and (not context.extra_cond or context.extra_cond(line, base))
 end
+
 ---@param base? string
 ---@return number
 function Omni.find_start(base)
