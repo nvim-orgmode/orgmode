@@ -421,6 +421,15 @@ Journal example:<br />
   } }
   ```
 
+Journal example with dynamic target, i.e. a separate file per month:<br />
+  ```lua
+  { J = {
+    description = 'Journal',
+    template = '\n*** %<%Y-%m-%d> %<%A>\n**** %U\n\n%?',
+    target = '~/sync/org/journal/%<%Y-%m>.org'
+  } }
+  ```
+
 Nested key example:<br />
   ```lua
   {

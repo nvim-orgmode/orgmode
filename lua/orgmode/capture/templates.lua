@@ -55,11 +55,14 @@ function Templates:compile(template)
   if type(content) == 'table' then
     content = table.concat(content, '\n')
   end
-  content = self:_compile_dates(content)
-  content = self:_compile_expansions(content)
-  content = self:_compile_expressions(content)
-  content = self:_compile_prompts(content)
+  content = self:_compile(content)
   return vim.split(content, '\n', true)
+end
+
+---@param target string
+---@return string
+function Templates:compile_target(target)
+  return self:_compile(target)
 end
 
 function Templates:setup()
@@ -74,6 +77,17 @@ function Templates:setup()
       vim.cmd([[startinsert]])
     end
   end
+end
+
+---@private
+---@param content string
+---@return string
+function Templates:_compile(content)
+  content = self:_compile_dates(content)
+  content = self:_compile_expansions(content)
+  content = self:_compile_expressions(content)
+  content = self:_compile_prompts(content)
+  return content
 end
 
 ---@param content string
