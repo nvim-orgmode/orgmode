@@ -131,13 +131,6 @@ local function is_valid_markup_range(match, _, source, _)
     return
   end
 
-  -- Ignore conflicts with hyperlink or math
-  for _, char in ipairs({ '[', '\\' }) do
-    if start_node:type() == char or end_node:type() == char then
-      return true
-    end
-  end
-
   local start_line = start_node:range()
   local end_line = end_node:range()
 
@@ -163,10 +156,6 @@ local function is_valid_hyperlink_range(match, _, source, _)
   if not start_node or not end_node then
     return
   end
-  -- Ignore conflicts with markup
-  if start_node:type() ~= '[' or end_node:type() ~= ']' then
-    return true
-  end
 
   local start_line = start_node:range()
   local end_line = start_node:range()
@@ -185,10 +174,6 @@ end
 
 local function is_valid_latex_range(match, _, source, _)
   local start_node_left, start_node_right, end_node = get_predicate_nodes(match, 3)
-  -- Ignore conflicts with markup
-  if start_node_left:type() ~= '\\' then
-    return true
-  end
   if not start_node_right or not end_node then
     return
   end
