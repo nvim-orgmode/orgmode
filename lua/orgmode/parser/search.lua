@@ -339,7 +339,7 @@ end
 ---@return TagMatch?, string
 function TagMatch:parse(input)
   local tag
-  tag, input = parse_pattern(input, '%w+')
+  tag, input = parse_pattern(input, '[%w_@#%%]+')
   if not tag then
     return nil, input
   end
