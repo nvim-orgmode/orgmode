@@ -173,19 +173,19 @@ function OrgMappings:toggle_checkbox()
 end
 
 function OrgMappings:timestamp_up_day()
-  return self:_adjust_date(vim.v.count1, 'd', config.mappings.org.org_timestamp_up_day)
+  return self:_adjust_date(vim.v.count1, 'd', vim.v.count1 .. config.mappings.org.org_timestamp_up_day)
 end
 
 function OrgMappings:timestamp_down_day()
-  return self:_adjust_date(-vim.v.count1, 'd', config.mappings.org.org_timestamp_down_day)
+  return self:_adjust_date(-vim.v.count1, 'd', vim.v.count1 .. config.mappings.org.org_timestamp_down_day)
 end
 
 function OrgMappings:timestamp_up()
-  return self:_adjust_date_part('+', vim.v.count1, config.mappings.org.org_timestamp_up)
+  return self:_adjust_date_part('+', vim.v.count1, vim.v.count1 .. config.mappings.org.org_timestamp_up)
 end
 
 function OrgMappings:timestamp_down()
-  return self:_adjust_date_part('-', vim.v.count1, config.mappings.org.org_timestamp_down)
+  return self:_adjust_date_part('-', vim.v.count1, vim.v.count1 .. config.mappings.org.org_timestamp_down)
 end
 
 function OrgMappings:_adjust_date_part(direction, amount, fallback)
