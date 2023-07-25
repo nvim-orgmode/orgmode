@@ -707,7 +707,7 @@ function OrgMappings:_insert_heading_from_plain_line(suffix)
   end
 end
 
--- Inserts a new link at the cursor position or modifies the link the cursor is
+-- Inserts a new link after the cursor position or modifies the link the cursor is
 -- currently on
 function OrgMappings:insert_link()
   local link_location = vim.fn.OrgmodeInput('Links: ', '')
@@ -734,8 +734,8 @@ function OrgMappings:insert_link()
     target_col = target_col + link.from
   else
     local colnr = vim.fn.col('.')
-    insert_from = colnr - 1
-    insert_to = colnr
+    insert_from = colnr
+    insert_to = colnr + 1
     target_col = target_col + colnr
   end
 
