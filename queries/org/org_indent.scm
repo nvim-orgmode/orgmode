@@ -1,5 +1,5 @@
 (headline) @OrgIndentHeadline
-(body (list) @OrgList)
+(listitem) @OrgListItem
 (body (paragraph) @OrgParagraph)
 (body (drawer) @OrgDrawer)
 (section (property_drawer) @OrgPropertyDrawer)

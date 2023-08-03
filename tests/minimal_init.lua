@@ -85,6 +85,7 @@ M.setup({
 vim.opt.runtimepath:prepend(vim.fn.fnamemodify(base_root_path, ':h'))
 vim.opt.termguicolors = true
 vim.opt.swapfile = false
+vim.opt.expandtab = true -- Accommodates some deep nesting in indent_spec.lua
 vim.cmd.language('en_US.utf-8')
 vim.env.TZ = 'Europe/London'
 vim.g.mapleader = ','

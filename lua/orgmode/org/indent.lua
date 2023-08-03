@@ -30,11 +30,24 @@ local get_matches = ts_utils.memoize_by_buf_tick(function(bufnr)
         matches[range.start.line + 1] = opts
       end
 
-      if type == 'list' then
-        local first_list_item = node:named_child(0)
-        local first_list_item_linenr = first_list_item:start()
-        local first_item_indent = vim.fn.indent(first_list_item_linenr + 1)
-        opts.indent = first_item_indent
+      if type == 'listitem' then
+        local content = node:named_child(1)
+        if content then
+          local content_linenr, content_indent = content:start()
+          if content_linenr == range.start.line then
+            opts.overhang = content_indent - opts.indent
+          end
+        end
+        if not opts.overhang then
+          local bullet = node:named_child(0)
+          opts.overhang = vim.treesitter.get_node_text(bullet, bufnr):len() + 1
+        end
+
+        local parent = node:parent()
+        while parent and parent:type() ~= 'section' and parent:type() ~= 'listitem' do
+          parent = parent:parent()
+        end
+        opts.nesting_parent_linenr = parent and (parent:start() + 1)
 
         for i = range.start.line, range['end'].line - 1 do
           matches[i + 1] = opts
@@ -46,9 +59,6 @@ local get_matches = ts_utils.memoize_by_buf_tick(function(bufnr)
         local parent = node:parent()
         while parent and parent:type() ~= 'section' do
           parent = parent:parent()
-          if not parent then
-            break
-          end
         end
         if parent then
           local headline = parent:named_child('headline')
@@ -106,12 +116,6 @@ local function foldexpr()
   return '='
 end
 
-local function get_is_list_item(line)
-  local line_numbered_list_item = line:match('^%s*(%d+[%)%.]%s+)')
-  local line_unordered_list_item = line:match('^%s*([%+%-]%s+)')
-  return line_numbered_list_item or line_unordered_list_item
-end
-
 local function indentexpr(linenr, mode)
   linenr = linenr or vim.v.lnum
   mode = mode or vim.fn.mode()
@@ -142,26 +146,49 @@ local function indentexpr(linenr, mode)
     return 0
   end
 
-  if match.type == 'list' and prev_line_match.type == 'list' then
-    local prev_line_list_item = get_is_list_item(vim.fn.getline(prev_linenr))
-    local cur_line_list_item = get_is_list_item(vim.fn.getline(linenr))
-
-    if cur_line_list_item then
-      local diff = match.indent - vim.fn.indent(match.line_nr)
-      local indent = vim.fn.indent(linenr)
-      return indent - diff
+  if match.type == 'listitem' then
+    -- We first figure out the indent of the first line of a listitem. Then we
+    -- check if we're on the first line or a "hanging" line. In the latter
+    -- case, we add the overhang.
+    local first_line_indent
+    local parent_linenr = match.nesting_parent_linenr
+    if parent_linenr then
+      local parent_match = matches[parent_linenr]
+      if parent_match.type == 'listitem' then
+        -- Nested listitem. Because two listitems cannot start on the same line,
+        -- we simply fetch the parent's indentation and add its overhang.
+        -- Don't use parent_match.indent, it might be stale if the parent
+        -- already got reindented.
+        first_line_indent = vim.fn.indent(parent_linenr) + parent_match.overhang
+      elseif parent_match.type == 'headline' and not noindent_mode then
+        -- Un-nested list inside a section, indent according to section.
+        first_line_indent = parent_match.indent
+      else
+        -- Noindent mode.
+        first_line_indent = 0
+      end
+    else
+      -- Top-level list before the first headline.
+      first_line_indent = 0
     end
-
-    if prev_line_list_item then
-      return vim.fn.indent(prev_linenr) + prev_line_list_item:len()
+    -- Add overhang if this is a hanging line.
+    if linenr ~= match.line_nr then
+      return first_line_indent + match.overhang
     end
+    return first_line_indent
   end
 
-  if prev_line_match.type == 'list' and match.type ~= 'list' then
-    local prev_line_list_item = get_is_list_item(vim.fn.getline(prev_linenr))
-    if prev_line_list_item then
-      return vim.fn.indent(prev_linenr) + prev_line_list_item:len()
+  -- In insert mode, we also count the non-listitem line *after* a listitem as
+  -- part of the listitem. Keep in mind that double empty lines end a list as
+  -- per Orgmode syntax.
+  if mode:match('^[iR]') and prev_line_match.type == 'listitem' and linenr - prev_linenr < 3 then
+    -- After the first line of a listitem, we have to add the overhang to the
+    -- listitem's own base indent. After all further lines, we can simply copy
+    -- the indentation.
+    if prev_linenr == prev_line_match.line_nr then
+      return vim.fn.indent(prev_linenr) + prev_line_match.overhang
     end
+    return vim.fn.indent(prev_linenr)
   end
 
   if noindent_mode then
