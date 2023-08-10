@@ -112,14 +112,16 @@ local function get_is_list_item(line)
   return line_numbered_list_item or line_unordered_list_item
 end
 
-local function indentexpr()
+local function indentexpr(linenr, mode)
+  linenr = linenr or vim.v.lnum
+  mode = mode or vim.fn.mode()
   local noindent_mode = config.org_indent_mode == 'noindent'
   query = query or vim.treesitter.query.get('org', 'org_indent')
 
-  local prev_linenr = vim.fn.prevnonblank(vim.v.lnum - 1)
+  local prev_linenr = vim.fn.prevnonblank(linenr - 1)
 
   local matches = get_matches(0)
-  local match = matches[vim.v.lnum]
+  local match = matches[linenr]
   local prev_line_match = matches[prev_linenr]
 
   if not match and not prev_line_match then
@@ -142,11 +144,11 @@ local function indentexpr()
 
   if match.type == 'list' and prev_line_match.type == 'list' then
     local prev_line_list_item = get_is_list_item(vim.fn.getline(prev_linenr))
-    local cur_line_list_item = get_is_list_item(vim.fn.getline(vim.v.lnum))
+    local cur_line_list_item = get_is_list_item(vim.fn.getline(linenr))
 
     if cur_line_list_item then
       local diff = match.indent - vim.fn.indent(match.line_nr)
-      local indent = vim.fn.indent(vim.v.lnum)
+      local indent = vim.fn.indent(linenr)
       return indent - diff
     end
 
