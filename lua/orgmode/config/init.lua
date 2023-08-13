@@ -7,6 +7,7 @@ local mappings = require('orgmode.config.mappings')
 ---@class Config:DefaultConfig
 ---@field opts table
 ---@field todo_keywords table
+---@field priority_values table<string> priority values, only cached after calling `get_priority_values`
 local Config = {}
 
 ---@param opts? table
@@ -14,6 +15,7 @@ function Config:new(opts)
   local data = {
     opts = vim.tbl_deep_extend('force', defaults, opts or {}),
     todo_keywords = nil,
+    priority_values = nil,
     ts_hl_enabled = nil,
   }
   setmetatable(data, self)
@@ -257,6 +259,35 @@ function Config:get_todo_keywords()
   end
   self.todo_keywords = types
   return types
+end
+
+--- Get a list of priority values based on user configuration of the low/high values
+---
+---@return table<string> priority values in ascending order
+function Config:get_priority_values()
+  if self.priority_values then
+    return self.priority_values
+  end
+
+  local priorities = {}
+  local low_priority, high_priority, convert
+  local priorities_are_numbers = type(tonumber(self.org_priority_default)) == 'number'
+  if priorities_are_numbers then
+    convert = tostring
+    low_priority = tonumber(self.org_priority_lowest)
+    high_priority = tonumber(self.org_priority_highest)
+  else
+    convert = string.char
+    low_priority = string.byte(self.org_priority_lowest)
+    high_priority = string.byte(self.org_priority_highest)
+  end
+
+  for i = low_priority, high_priority, -1 do
+    table.insert(priorities, convert(i))
+  end
+
+  self.priority_values = priorities
+  return self.priority_values
 end
 
 --- Setup mappings for a given category and buffer

@@ -14,7 +14,9 @@ local function setup()
   if not ts_highlights_enabled then
     return
   end
-  require('orgmode.colors.todo_highlighter').add_todo_keyword_highlights()
+
+  require('orgmode.colors.from_config').setup()
+
   HideLeadingStars = require('orgmode.colors.hide_leading_stars')
   MarkupHighlighter = require('orgmode.colors.markup_highlighter')
 
