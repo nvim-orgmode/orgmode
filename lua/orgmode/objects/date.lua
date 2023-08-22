@@ -329,6 +329,12 @@ function Date:to_string()
     date = os.date(format .. ' ' .. time_format, self.timestamp)
     if self.timestamp_end then
       date = date .. '-' .. os.date(time_format, self.timestamp_end)
+    elseif
+      self.related_date_range
+      and self.related_date_range.is_date_range_end
+      and self:is_same(self.related_date_range, 'day')
+    then
+      date = date .. '-' .. os.date(time_format, self.related_date_range.timestamp)
     end
   end
 
@@ -359,6 +365,12 @@ function Date:format_time()
   local t = self:format(time_format)
   if self.timestamp_end then
     t = t .. '-' .. os.date(time_format, self.timestamp_end)
+  elseif
+    self.related_date_range
+    and self.related_date_range.is_date_range_end
+    and self:is_same(self.related_date_range, 'day')
+  then
+    t = t .. '-' .. os.date(time_format, self.related_date_range.timestamp)
   end
   return t
 end
