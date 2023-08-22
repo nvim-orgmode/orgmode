@@ -323,19 +323,9 @@ function Date:to_string()
     format = format .. ' %a'
   end
 
-  if self.date_only then
-    date = os.date(format, self.timestamp)
-  else
-    date = os.date(format .. ' ' .. time_format, self.timestamp)
-    if self.timestamp_end then
-      date = date .. '-' .. os.date(time_format, self.timestamp_end)
-    elseif
-      self.related_date_range
-      and self.related_date_range.is_date_range_end
-      and self:is_same(self.related_date_range, 'day')
-    then
-      date = date .. '-' .. os.date(time_format, self.related_date_range.timestamp)
-    end
+  date = os.date(format, self.timestamp)
+  if not self.date_only then
+    date = date .. ' ' .. self:format_time()
   end
 
   if #self.adjustments > 0 then
