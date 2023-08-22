@@ -447,6 +447,15 @@ describe('Agenda item', function()
     local agenda_item = AgendaItem:new(headline.dates[1], headline, day_with_end_time)
     assert.are.same('10:00-11:00 Scheduled:', agenda_item.label)
 
+    local day_with_related_time = Date.now():set({ hour = 10, min = 0 })
+    day_with_related_time.is_date_range_start = true
+    local day_end = Date.now():set({ hour = 11, min = 0})
+    day_end.is_date_range_end = true
+    day_with_related_time.related_date_range = day_end
+    headline = generate(string.format('SCHEDULED: <%s>', day_with_related_time:to_string()))
+    agenda_item = AgendaItem:new(headline.dates[1], headline, day_with_related_time)
+    assert.are.same('10:00-11:00 Scheduled:', agenda_item.label)
+
     local day_with_only_time = Date.now():set({ hour = 10, min = 0 })
     headline = generate(string.format('SCHEDULED: <%s>', day_with_only_time:to_string()))
     agenda_item = AgendaItem:new(headline.dates[1], headline, day_with_only_time)
@@ -492,24 +501,6 @@ describe('Agenda item', function()
     agenda_item = AgendaItem:new(headline.dates[2], headline, day)
     assert.is.True(agenda_item.is_valid)
     assert.are.same('14:30...... (5/5):', agenda_item.label)
-  end)
-
-  it('should ignore end range if it is set to the same day as start day', function()
-    local range_start = Date.from_string('2021-06-13 Sun 13:30')
-    local range_end = range_start:add({ hour = 5 })
-    local headline = generate(string.format('Some text <%s>--<%s>', range_start:to_string(), range_end:to_string()))
-    local day = range_start:clone()
-    local agenda_item = AgendaItem:new(headline.dates[1], headline, day)
-    assert.is.True(agenda_item.is_valid)
-    assert.are.same('13:30...... ', agenda_item.label)
-    agenda_item = AgendaItem:new(headline.dates[2], headline, day)
-    assert.is.False(agenda_item.is_valid)
-
-    day = day:add({ day = 1 })
-    agenda_item = AgendaItem:new(headline.dates[1], headline, day)
-    assert.is.False(agenda_item.is_valid)
-    agenda_item = AgendaItem:new(headline.dates[2], headline, day)
-    assert.is.False(agenda_item.is_valid)
   end)
 
   it('should not show scheduled DONE item if disabled in config', function()
