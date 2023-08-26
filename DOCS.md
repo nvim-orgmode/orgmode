@@ -1123,9 +1123,9 @@ Some content [[|
 `org` buffers have access to two abbreviations:
 
 * `:today:` - expands to today's date (example: `<2021-06-29 Tue>`)
-* `:itoday:` - expands to an invactive version of today's date (example: `[2021-06-29 Tue]`)
+* `:itoday:` - expands to an inactive version of today's date (example: `[2021-06-29 Tue]`)
 * `:now:` - expands to today's date and current time (example: `<2021-06-29 Tue 15:32>`)
-* `:inow:` - expands to invactive version of today's date and current time (example: `[2021-06-29 Tue 15:32]`)
+* `:inow:` - expands to inactive version of today's date and current time (example: `[2021-06-29 Tue 15:32]`)
 
 ## Formatting
 Formatting is done via `gq` mapping, which uses `formatexpr` under the hood (see `:help formatexpr` for more info).
