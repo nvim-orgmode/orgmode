@@ -26,11 +26,11 @@
      inkscape:deskcolor="#d1d1d1"
      inkscape:zoom="0.48837209"
      inkscape:cx="302.02381"
-     inkscape:cy="367.54762"
-     inkscape:window-width="950"
-     inkscape:window-height="1031"
-     inkscape:window-x="1"
-     inkscape:window-y="1"
+     inkscape:cy="366.52381"
+     inkscape:window-width="1920"
+     inkscape:window-height="1080"
+     inkscape:window-x="0"
+     inkscape:window-y="0"
      inkscape:window-maximized="0"
      inkscape:current-layer="Page-1" />
   <title
@@ -57,7 +57,7 @@
          stop-opacity="0.83700023"
          offset="1"
          id="stop2"
-         style="stop-color:#874e2b;stop-opacity:0.92000002;" />
+         style="stop-color:#874e2b;stop-opacity:1;" />
     </linearGradient>
     <linearGradient
        x1="1118.3426"
@@ -97,7 +97,7 @@
          stop-opacity="0.84"
          offset="1"
          id="stop6"
-         style="stop-color:#6d9792;stop-opacity:0.83999997;" />
+         style="stop-color:#6d9792;stop-opacity:1;" />
     </linearGradient>
   </defs>
   <g
