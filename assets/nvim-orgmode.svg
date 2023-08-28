@@ -5,34 +5,12 @@
    viewBox="0 0 602 734"
    version="1.1"
    id="svg6"
-   sodipodi:docname="neovim-mark.svg"
-   inkscape:version="1.3 (0e150ed6c4, 2023-07-21)"
-   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
-   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns="http://www.w3.org/2000/svg"
    xmlns:svg="http://www.w3.org/2000/svg"
    xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
    xmlns:cc="http://creativecommons.org/ns#"
    xmlns:dc="http://purl.org/dc/elements/1.1/"
    xmlns:sketch="http://www.bohemiancoding.com/sketch/ns">
-  <sodipodi:namedview
-     id="namedview6"
-     pagecolor="#ffffff"
-     bordercolor="#000000"
-     borderopacity="0.25"
-     inkscape:showpageshadow="2"
-     inkscape:pageopacity="0.0"
-     inkscape:pagecheckerboard="0"
-     inkscape:deskcolor="#d1d1d1"
-     inkscape:zoom="0.48837209"
-     inkscape:cx="302.02381"
-     inkscape:cy="366.52381"
-     inkscape:window-width="1920"
-     inkscape:window-height="1080"
-     inkscape:window-x="0"
-     inkscape:window-y="0"
-     inkscape:window-maximized="0"
-     inkscape:current-layer="Page-1" />
   <title
      id="title1">neovim-mark@2x</title>
   <description>Created with Sketch (http://www.bohemiancoding.com/sketch)</description>
@@ -51,7 +29,7 @@
          stop-opacity="0.800235524"
          offset="0"
          id="stop1"
-         style="stop-color:#bb483a;stop-opacity:0.80023551;" />
+         style="stop-color:#bb483a;stop-opacity:1;" />
       <stop
          stop-color="#0F59B2"
          stop-opacity="0.83700023"
@@ -91,13 +69,13 @@
          stop-opacity="0.8"
          offset="0"
          id="stop5"
-         style="stop-color:#85bd9d;stop-opacity:0.80000001;" />
+         style="stop-color:#85bd9d;stop-opacity:0.89999998;" />
       <stop
          stop-color="#439240"
          stop-opacity="0.84"
          offset="1"
          id="stop6"
-         style="stop-color:#6d9792;stop-opacity:1;" />
+         style="stop-color:#6d9792;stop-opacity:0.92000002;" />
     </linearGradient>
   </defs>
   <g
