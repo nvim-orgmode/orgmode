@@ -286,7 +286,8 @@ function Capture:_refile_to(file, lines, item, destination_line)
     vim.api.nvim_open_win(bufnr, true, {
       relative = 'editor',
       width = 1,
-      height = 1,
+      -- TODO: Revert to 1 once the https://github.com/neovim/neovim/issues/19464 is fixed
+      height = 2,
       row = 99999,
       col = 99999,
       zindex = 1,
