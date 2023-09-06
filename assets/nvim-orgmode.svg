@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   width="602px"
+   height="734px"
+   viewBox="0 0 602 734"
+   version="1.1"
+   id="svg6"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:sketch="http://www.bohemiancoding.com/sketch/ns">
+  <title
+     id="title1">neovim-mark@2x</title>
+  <description>Created with Sketch (http://www.bohemiancoding.com/sketch)</description>
+  <defs
+     id="defs6">
+    <linearGradient
+       x1="167.95833"
+       y1="-0.46142398"
+       x2="167.95833"
+       y2="335.45523"
+       id="linearGradient-1"
+       gradientTransform="matrix(0.46142398,0,0,2.1672042,2,3)"
+       gradientUnits="userSpaceOnUse">
+      <stop
+         stop-color="#16B0ED"
+         stop-opacity="0.800235524"
+         offset="0"
+         id="stop1"
+         style="stop-color:#bb483a;stop-opacity:1;" />
+      <stop
+         stop-color="#0F59B2"
+         stop-opacity="0.83700023"
+         offset="1"
+         id="stop2"
+         style="stop-color:#874e2b;stop-opacity:1;" />
+    </linearGradient>
+    <linearGradient
+       x1="1118.3426"
+       y1="-0.46586797"
+       x2="1118.3426"
+       y2="338.68602"
+       id="linearGradient-2"
+       gradientTransform="matrix(-0.46586797,0,0,2.1465309,1044,3)"
+       gradientUnits="userSpaceOnUse">
+      <stop
+         stop-color="#7DB643"
+         offset="0"
+         id="stop3"
+         style="stop-color:#80b798;stop-opacity:1;" />
+      <stop
+         stop-color="#367533"
+         offset="1"
+         id="stop4"
+         style="stop-color:#709e9a;stop-opacity:1;" />
+    </linearGradient>
+    <linearGradient
+       x1="356.33796"
+       y1="0"
+       x2="356.33796"
+       y2="612.9013"
+       id="linearGradient-3"
+       gradientTransform="matrix(0.84189739,0,0,1.1877932,2,3)"
+       gradientUnits="userSpaceOnUse">
+      <stop
+         stop-color="#88C649"
+         stop-opacity="0.8"
+         offset="0"
+         id="stop5"
+         style="stop-color:#85bd9d;stop-opacity:0.89999998;" />
+      <stop
+         stop-color="#439240"
+         stop-opacity="0.84"
+         offset="1"
+         id="stop6"
+         style="stop-color:#6d9792;stop-opacity:0.92000002;" />
+    </linearGradient>
+  </defs>
+  <g
+     id="Page-1"
+     stroke="none"
+     stroke-width="1"
+     fill="none"
+     fill-rule="evenodd"
+     sketch:type="MSPage">
+    <path
+       d="M 2,158.5704 157,2 V 730 L 2,575.23792 Z"
+       id="Left---green"
+       fill="url(#linearGradient-1)"
+       sketch:type="MSShapeGroup"
+       style="fill:url(#linearGradient-1)" />
+    <path
+       d="M 600.9396,159.9824 444,2 447.18121,730 602,575.21994 Z"
+       id="Right---blue"
+       fill="url(#linearGradient-2)"
+       sketch:type="MSShapeGroup"
+       style="fill:url(#linearGradient-2)" />
+    <path
+       d="M 157,286.83232 156.78675,311 33,127.71061 44.461949,116 Z"
+       id="Shadow"
+       fill-opacity="0.13"
+       fill="#000000"
+       sketch:type="MSShapeGroup" />
+    <path
+       d="M 156.98629,3 560,618.1897 447.2246,731 44,117.17202 Z"
+       id="Cross---blue"
+       fill="url(#linearGradient-3)"
+       sketch:type="MSShapeGroup"
+       style="fill:url(#linearGradient-3)" />
+  </g>
+  <metadata
+     id="metadata6">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:title>neovim-mark@2x</dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+</svg>
