@@ -91,6 +91,15 @@ local headline_contexts = {
   todo_keywords,
 }
 
+---Determines an URL for link handling. Handles a couple of corner-cases
+---@param base string The string to complete
+---@return string
+local function get_url_str(line, base)
+  local line_base = line:match('%[%[(.-)$') or line
+  line_base = line_base:gsub(base .. '$', '')
+  return (line_base or '') .. (base or '')
+end
+
 --- This function is registered to omnicompletion in ftplugin/org.vim.
 ---
 --- If the user want to use it in his completion plugin (like cmp) he has to do
@@ -110,26 +119,7 @@ local function omni(findstart, base)
     return -1
   end
 
-  -- The function omni gets called twice when used by omnicompletion but when
-  -- used by cmp it is called differently.
-  -- TODO Refactoring is actually needed to make this more reliable
-  local line_base = line:match('%[%[(.-)$')
-  local url_str
-  if base:match('^file:') then
-    -- when linking to another file the prefix is also part of base, when called
-    -- from cmp because when called from omnifunc it is already cut out, we need
-    -- to clean it up
-    url_str = base:gsub('^file:', '')
-  elseif line_base == base then
-    -- when linking to an internal anchor and called by cmp plugin
-    url_str = base
-  else
-    -- typically when linking to a headline within another file the information
-    -- we need for completion is split between line_base and base
-    url_str = (line_base or '') .. (base or '')
-  end
-
-  local url = Url.new(url_str)
+  local url = Url.new(get_url_str(line, base))
   local results = {}
 
   for _, context in ipairs(ctx) do

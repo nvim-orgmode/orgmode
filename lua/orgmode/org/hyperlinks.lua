@@ -25,7 +25,7 @@ function Hyperlinks.find_by_filepath(url)
   local valid_filenames = {}
   for _, f in ipairs(filenames) do
     if is_relative_path then
-      local match = f:match('^' .. current_file_directory .. '/(' .. file_base_no_start_path .. '[^/]*%.org)$')
+      local match = f:match('^' .. current_file_directory .. '/(' .. file_base_no_start_path .. '.*%.org)$')
       if match then
         table.insert(valid_filenames, './' .. match)
       end
