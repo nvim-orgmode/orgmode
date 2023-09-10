@@ -72,7 +72,7 @@ function Url:is_internal_custom_id()
 end
 
 function Url:is_dedicated_anchor_or_internal_title()
-  return self:get_dedicated_anchor() and true
+  return self:get_dedicated_target() ~= nil
 end
 
 ---@return string | false
@@ -111,14 +111,6 @@ function Url:get_custom_id()
     or self.str:match('^#(.-)$')
 end
 
----@return string | false
-function Url:get_dedicated_anchor()
-  return not (self:get_headline() or self:get_filepath()) and self.str:match('^file:[^:]+::(.+)$')
-    or self.str:match('^./[^:]+::(.+)')
-    or self.str:match('^/[^:]+::(.+)')
-    or self.str:match('^([^%*#].+)$')
-end
-
 ---@return number | false
 function Url:get_linenumber()
   -- official orgmode convention
@@ -136,15 +128,17 @@ function Url:get_filepath()
   return
     -- for backwards compatibility
     self.str:match('^file:([^:]+) %+%d+')
-      or self.str:match('^(./[^:]+) %+%d+')
+      or self.str:match('^(%./[^:]+) %+%d+')
       or self.str:match('^(/[^:]+) %+%d+')
       -- official orgmode convention
       or self.str:match('^file:([^:]+)::')
-      or self.str:match('^(./[^:]+)::')
+      or self.str:match('^(%./[^:]+)::')
       or self.str:match('^(/[^:]+)::')
       or self.str:match('^file:([^:]+)$')
-      or self.str:match('^(./[^:]+)$')
+      or self.str:match('^(%./[^:]+)$')
       or self.str:match('^(/[^:]+)$')
+      or self.str:match('^(%./)$')
+      or self.str:match('^(/)$')
 end
 --
 ---@return string

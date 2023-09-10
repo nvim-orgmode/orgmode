@@ -91,6 +91,10 @@ local headline_contexts = {
   todo_keywords,
 }
 
+--- This function is registered to omnicompletion in ftplugin/org.vim.
+---
+--- If the user want to use it in his completion plugin (like cmp) he has to do
+--- that in the configuration of that plugin.
 ---@return table
 local function omni(findstart, base)
   local line = vim.api.nvim_get_current_line():sub(1, vim.api.nvim_call_function('col', { '.' }) - 1)
@@ -106,7 +110,25 @@ local function omni(findstart, base)
     return -1
   end
 
-  local url_str = line:match('%[%[(.-)$')
+  -- The function omni gets called twice when used by omnicompletion but when
+  -- used by cmp it is called differently.
+  -- TODO Refactoring is actually needed to make this more reliable
+  local line_base = line:match('%[%[(.-)$')
+  local url_str
+  if base:match('^file:') then
+    -- when linking to another file the prefix is also part of base, when called
+    -- from cmp because when called from omnifunc it is already cut out, we need
+    -- to clean it up
+    url_str = base:gsub('^file:', '')
+  elseif line_base == base then
+    -- when linking to an internal anchor and called by cmp plugin
+    url_str = base
+  else
+    -- typically when linking to a headline within another file the information
+    -- we need for completion is split between line_base and base
+    url_str = (line_base or '') .. (base or '')
+  end
+
   local url = Url.new(url_str)
   local results = {}
 

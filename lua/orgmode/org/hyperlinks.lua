@@ -84,7 +84,7 @@ end
 ---@return Section[]
 function Hyperlinks.find_by_title(url)
   local file = get_file_from_url(url)
-  local headline = url:get_headline() or url:get_dedicated_anchor()
+  local headline = url:get_headline() or url:get_dedicated_target()
   if not headline then
     error(string.format('Expect an url with a headline: %q', url.str))
     return {}
@@ -99,7 +99,7 @@ end
 ---@param url Url
 ---@return Section[]
 function Hyperlinks.find_by_dedicated_target(url)
-  local anchor = url and url:get_dedicated_anchor()
+  local anchor = url and url:get_dedicated_target()
   if anchor then
     return Files.get_current_file():find_headlines_matching_search_term(as_dedicated_anchor_pattern(anchor), true)
   else
@@ -112,7 +112,7 @@ end
 function Hyperlinks.as_dedicated_targets(url)
   return function(headlines)
     local targets = {}
-    local term = as_dedicated_anchor_pattern(url:get_dedicated_anchor())
+    local term = as_dedicated_anchor_pattern(url:get_dedicated_target())
     for _, headline in ipairs(headlines) do
       for m in headline.title:lower():gmatch(term) do
         table.insert(targets, m)

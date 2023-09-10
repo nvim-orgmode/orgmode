@@ -10,7 +10,23 @@ describe('Url', function()
     for _, url_str in ipairs(anchor_examples) do
       local url = Url.new(url_str)
       local anchor = url:get_dedicated_target()
+      assert(url_str ~= nil, string.format('Expected %q to be not nil', url_str))
+      assert(anchor ~= nil, string.format('Expected dedicated anchor of %q to be not nil', url_str))
       assert(anchor == url_str, string.format('Expected %q, actual %q', url_str, anchor))
+    end
+  end)
+
+  it('should classify dedicated target or internal titel correctly', function()
+    local anchor_examples = {
+      'some anchor',
+      '_12 ABC',
+      '123-456-2342',
+      'x',
+    }
+    for _, url_str in ipairs(anchor_examples) do
+      local url = Url.new(url_str)
+      local is_title_or_anchor = url:is_dedicated_anchor_or_internal_title()
+      assert(is_title_or_anchor, string.format('Expected %q to be true, actual false', url_str))
     end
   end)
 

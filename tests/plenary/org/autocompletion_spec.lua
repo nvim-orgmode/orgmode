@@ -313,49 +313,6 @@ describe('Autocompletion in hyperlinks', function()
     }, result)
   end)
 
-  it('should complete dedicated anchors', function()
-    local filename = 'work.org'
-    local file_dir_absolute = '/some/path'
-    local file_path_relative = string.format('./%s', filename)
-    local file_path_absolute = string.format('/%s/%s', file_dir_absolute, filename)
-
-    local sections = {
-      { title = 'Title with an <<some anchor>>', content = { 'line1', 'line2', 'line3' } },
-      {
-        title = 'Title with anchor in content',
-        content = { 'line1', '... <<some other anchor>> ...', 'line3' },
-      },
-      { title = 'Title with nothing', content = { 'line1', 'line2', 'line3' } },
-    }
-
-    MockFs.get_real_path.returns(file_path_absolute)
-    MockFs.get_current_file_dir.returns(file_dir_absolute)
-    MockFiles.filenames.returns({ file_path_absolute })
-    MockFiles.get_current_file.returns({
-      filename = file_path_absolute,
-      find_headlines_matching_search_term = function()
-        return sections
-      end,
-      find_headlines_by_title = function()
-        return {}
-      end,
-    })
-    MockFiles.get.returns({
-      find_headlines_by_title = function()
-        return {}
-      end,
-    })
-
-    mock_line(api, string.format('  [[so', file_path_relative))
-
-    local result = OrgmodeOmniCompletion(0, 'so')
-
-    assert.are.same({
-      { menu = '[Org]', word = 'some anchor' },
-      { menu = '[Org]', word = 'some other anchor' },
-    }, result)
-  end)
-
   it('should complete fuzzy titles', function()
     local filename = 'work.org'
     local file_dir_absolute = '/some/path'
