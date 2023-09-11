@@ -32,8 +32,8 @@ local properties = {
 }
 
 local links = {
-  line_rgx = vim.regex([[\(\(^\|\s\+\)\[\[\)\@<=\(\*\|\#\|file:\)\?\(\(\w\|\/\|\.\|\\\|-\)\+\)\?]]),
-  rgx = vim.regex([[\(\*\|\#\|file:\)\?\(\(\w\|\/\|\.\|\\\|-\)\+\)\?$]]),
+  line_rgx = vim.regex([[\(\(^\|\s\+\)\[\[\)\@<=\(\*\|#\|file:\)\?\(\(\w\|\/\|\.\|\\\|-\)\+\)\?]]),
+  rgx = vim.regex([[\(\*\|#\|file:\)\?\(\(\w\|\/\|\.\|\\\|-\)\+\)\?$]]),
   fetcher = function(url)
     local hyperlinks, mapper = Hyperlinks.find_matching_links(url)
     return mapper(hyperlinks)
