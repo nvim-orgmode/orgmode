@@ -3,7 +3,7 @@ if not has_compe then
   return
 end
 
-local OrgmodeOmniCompletion = require('orgmode.org.autocompletion.omni')
+local Omni = require('orgmode.org.autocompletion.omni')
 
 local CompeSource = {}
 
@@ -22,7 +22,7 @@ function CompeSource.get_metadata()
 end
 
 function CompeSource.determine(_, context)
-  local offset = OrgmodeOmniCompletion(1, '') + 1
+  local offset = Omni.find_start() + 1
   if offset > 0 then
     return {
       keyword_pattern_offset = offset,
@@ -32,7 +32,7 @@ function CompeSource.determine(_, context)
 end
 
 function CompeSource.complete(_, context)
-  local items = OrgmodeOmniCompletion(0, context.input)
+  local items = Omni.get_completions(context.input)
   context.callback({
     items = items,
     incomplete = true,
