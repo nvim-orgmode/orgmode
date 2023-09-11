@@ -101,6 +101,7 @@ function Omni.is_headline()
   return Omni.get_line_content_before_cursor():match('^%*+%s+')
 end
 
+---@return Table
 function Omni.get_all_contexts()
   return Omni.is_headline() and headline_contexts or contexts
 end
