@@ -26,19 +26,43 @@
 
 Use your favourite package manager:
 
-<details>
-  <summary><a href="https://github.com/kristijanhusak/vim-packager"><b>vim-packager</b></a></summary>
+<details open>
+  <summary><b><a href="https://github.com/folke/lazy.nvim">lazy.nvim</a> (recommended)</b></summary>
   </br>
 
 ```lua
-packager.add('nvim-treesitter/nvim-treesitter')
-packager.add('nvim-orgmode/orgmode')
+{
+  'nvim-orgmode/orgmode',
+  dependencies = {
+    { 'nvim-treesitter/nvim-treesitter', lazy = true },
+  },
+  event = 'VeryLazy',
+  config = function()
+    -- Load treesitter grammar for org
+    require('orgmode').setup_ts_grammar()
+
+    -- Setup treesitter
+    require('nvim-treesitter.configs').setup({
+      highlight = {
+        enable = true,
+        additional_vim_regex_highlighting = { 'org' },
+      },
+      ensure_installed = { 'org' },
+    })
+
+    -- Setup orgmode
+    require('orgmode').setup({
+      org_agenda_files = '~/orgfiles/**/*',
+      org_default_notes_file = '~/orgfiles/refile.org',
+    })
+  end,
+}
 ```
 
 </details>
 
 <details open>
-  <summary><b><a href="https://github.com/wbthomason/packer.nvim">packer.nvim</a> (recommended)</b></summary>
+  <summary><b><a href="https://github.com/wbthomason/packer.nvim">packer.nvim</a></b></summary>
   </br>
 
 ```lua
@@ -96,6 +120,7 @@ use {'nvim-orgmode/orgmode',
 
 ```lua
 -- init.lua
+-- NOTE: this is not needed for lazy.nvim if above instructions were used
 
 -- Load custom treesitter grammar for org filetype
 require('orgmode').setup_ts_grammar()
