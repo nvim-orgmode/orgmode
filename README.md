@@ -96,31 +96,13 @@ call dein#add('nvim-orgmode/orgmode')
 ```
 
 </details>
-
-<details>
-  <summary><b>Lazy loading (not recommended)</b></summary>
-  </br>
-
-Lazy loading via `ft` option works, but not completely. Global mappings are not set because plugin is not initialized on startup.
-Above setup has a startup time of somewhere between 1 and 3 ms, so there are not many benefits in lazy loading.
-If you want to do it anyway, here's the lazy load setup:
-```lua
-use {'nvim-treesitter/nvim-treesitter'}
-use {'nvim-orgmode/orgmode',
-    ft = {'org'},
-    config = function()
-            require('orgmode').setup{}
-    end
-    }
-```
-
-</details>
-
 ### Setup
+
+Note that this setup is not needed for [lazy.nvim](https://github.com/folke/lazy.nvim)
+since instructions above covers full setup
 
 ```lua
 -- init.lua
--- NOTE: this is not needed for lazy.nvim if above instructions were used
 
 -- Load custom treesitter grammar for org filetype
 require('orgmode').setup_ts_grammar()
