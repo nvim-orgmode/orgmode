@@ -42,11 +42,19 @@ function OrgMappings:archive()
   end
   local item = file:get_closest_headline()
   local archive_location = file:get_archive_file_location()
+  if not archive_location or not item then
+    return
+  end
+
   local archive_directory = vim.fn.fnamemodify(archive_location, ':p:h')
   if vim.fn.isdirectory(archive_directory) == 0 then
     vim.fn.mkdir(archive_directory, 'p')
   end
-  self.capture:refile_file_headline_to_archive(file, item, archive_location)
+  self.capture:refile_file_headline_to_archive({
+    file = archive_location,
+    item = item,
+    lines = file:get_headline_lines(item),
+  })
   Files.reload(
     archive_location,
     vim.schedule_wrap(function()

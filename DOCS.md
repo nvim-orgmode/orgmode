@@ -403,6 +403,15 @@ Variables:
   * `%^{PROMPT|DEFAULT|COMPLETION...}`: Prompt for input, if completion is provided an :h inputlist will be used
   * `%(EXP)`: Runs the given lua code and inserts the result. NOTE: this will internally pass the content to the lua `load()` function. So the body inside `%()` should be the body of a function that returns a string.
 
+Templates have the following fields:
+  * `description` (`string`) — description of the template that is displayed in the template selection menu
+  * `template` (`string|string[]`) — body of the template that will be used when creating capture
+  * `target` (`string?`) — name of the file to which the capture content will be added. If the target is not specified, the content will be added to the [`org_default_notes_file`](#orgdefaultnotesfile) file
+  * `headline` (`string?`) — title of the headline after which the capture content will be added. If no headline is specified, the content will be appended to the end of the file
+  * `empty_lines` (`table?`):
+    * `before` (`integer`) — add empty lines to the beginning of the content
+    * `after` (`integer`) — add empty lines to the end of the content
+
 Example:<br />
   ```lua
   { T = {
