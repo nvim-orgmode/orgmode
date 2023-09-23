@@ -51,6 +51,11 @@ function Capture:_create_menu_items(templates)
         item.action = function()
           self:_create_prompt(self:_get_subtemplates(key, templates))
         end
+      elseif template.subtemplates then
+        item.label = template.description .. '...'
+        item.action = function()
+          self:_create_prompt(template.subtemplates)
+        end
       else
         item.label = template.description
         item.action = function()

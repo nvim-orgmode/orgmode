@@ -423,20 +423,24 @@ Example:<br />
 
 Journal example:<br />
   ```lua
-  { j = {
-    description = 'Journal',
-    template = '\n*** %<%Y-%m-%d> %<%A>\n**** %U\n\n%?',
-    target = '~/sync/org/journal.org'
-  } }
+  {
+    j = {
+      description = 'Journal',
+      template = '\n*** %<%Y-%m-%d> %<%A>\n**** %U\n\n%?',
+      target = '~/sync/org/journal.org'
+    },
+  }
   ```
 
 Journal example with dynamic target, i.e. a separate file per month:<br />
   ```lua
-  { J = {
-    description = 'Journal',
-    template = '\n*** %<%Y-%m-%d> %<%A>\n**** %U\n\n%?',
-    target = '~/sync/org/journal/%<%Y-%m>.org'
-  } }
+  {
+    J = {
+      description = 'Journal',
+      template = '\n*** %<%Y-%m-%d> %<%A>\n**** %U\n\n%?',
+      target = '~/sync/org/journal/%<%Y-%m>.org'
+    },
+  }
   ```
 
 Nested key example:<br />
@@ -456,16 +460,38 @@ Nested key example:<br />
       headline = 'one-time'
     }
   }
+  -- or
+  {
+    e = {
+      description = 'Event',
+      subtemplates = {
+        r = {
+          description = 'recurring',
+          template = '** %?\n %T',
+          target = '~/org/calendar.org',
+          headline = 'recurring'
+        },
+        o = {
+          description = 'one-time',
+          template = '** %?\n %T',
+          target = '~/org/calendar.org',
+          headline = 'one-time'
+        },
+      },
+    },
+  }
   ```
 
 Lua expression example:<br />
   ```lua
-  { j = {
-    description = 'Journal',
-    template = '* %(return vim.fn.getreg "w")',
-    -- get the content of register "w"
-    target = '~/sync/org/journal.org'
-  } }
+  { 
+    j = {
+      description = 'Journal',
+      template = '* %(return vim.fn.getreg "w")',
+      -- get the content of register "w"
+      target = '~/sync/org/journal.org'
+    },
+  }
   ```
 
 #### **org_agenda_min_height**
