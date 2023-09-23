@@ -1694,9 +1694,7 @@ describe('Mappings', function()
       file = destination_file,
       lines = source_file:get_headline_lines(item),
       item = item,
-      template = Template:new({
-        headline = 'foo',
-      }),
+      headline = 'foo',
     })
     assert.are.same('* not to be refiled', vim.fn.getline(1))
     vim.cmd('edit' .. vim.fn.fnameescape(destination_file))
@@ -1726,9 +1724,7 @@ describe('Mappings', function()
       file = destination_file,
       lines = source_file:get_headline_lines(item),
       item = item,
-      template = Template:new({
-        headline = 'foobar',
-      }),
+      headline = 'foobar',
     })
     assert.are.same('* not to be refiled', vim.fn.getline(1))
     vim.cmd('edit' .. vim.fn.fnameescape(destination_file))
@@ -1758,9 +1754,7 @@ describe('Mappings', function()
       file = destination_file,
       lines = source_file:get_headline_lines(item),
       item = item,
-      template = Template:new({
-        headline = 'foobar',
-      }),
+      headline = 'foobar',
     })
     assert.are.same('* not to be refiled', vim.fn.getline(1))
     vim.cmd('edit' .. vim.fn.fnameescape(destination_file))

@@ -9,9 +9,10 @@ local Range = require('orgmode.parser.range')
 
 ---@class CaptureOpts
 ---@field file string
----@field template Template
 ---@field range Range
 ---@field lines string[]
+---@field template Template?
+---@field headline string?
 ---@field item Section?
 
 ---@class Capture
@@ -118,7 +119,7 @@ function Capture:refile(confirm)
     end
   end
   vim.defer_fn(function()
-    if opts.template.headline then
+    if opts.headline then
       self:refile_to_headline(opts)
     else
       self:_refile_to_end(opts)
@@ -168,6 +169,7 @@ function Capture:_get_refile_vars()
     lines = lines,
     item = item,
     template = template,
+    headline = template.headline,
   }
 end
 
@@ -228,8 +230,8 @@ function Capture:_refile_content_with_fallback(opts)
   end
 
   opts.file = valid_destinations[destination[1]]
-  opts.template.headline = table.concat({ unpack(destination, 2) }, '/')
-  if not opts.template.headline or opts.template.headline == '' then
+  opts.headline = table.concat({ unpack(destination, 2) }, '/')
+  if not opts.headline or opts.headline == '' then
     return self:_refile_to_end(opts)
   end
   return self:refile_to_headline(opts)
@@ -239,13 +241,11 @@ end
 function Capture:refile_to_headline(opts)
   local destination_file = Files.get(opts.file)
   local headline
-  if opts.template.headline then
-    headline = destination_file:find_headline_by_title(opts.template.headline, true)
+  if opts.headline then
+    headline = destination_file:find_headline_by_title(opts.headline, true)
 
     if not headline then
-      utils.echo_error(
-        "headline '" .. opts.template.headline .. "' does not exist in '" .. opts.file .. "'. Aborted refiling."
-      )
+      utils.echo_error("headline '" .. opts.headline .. "' does not exist in '" .. opts.file .. "'. Aborted refiling.")
       return false
     end
   end
@@ -271,15 +271,9 @@ function Capture:refile_to_headline(opts)
   return true
 end
 
----@private
----@param opts CaptureOpts
----@return boolean
-function Capture:_refile_to(opts)
-  if not opts.file then
-    return false
-  end
-
-  local empty_lines = opts.template.empty_lines
+local function add_empty_lines(opts)
+  local template = opts.template or {}
+  local empty_lines = template.empty_lines or {}
   local before = empty_lines.before or 0
   local after = empty_lines.after or 0
 
@@ -290,6 +284,17 @@ function Capture:_refile_to(opts)
   for _ = 1, after do
     table.insert(opts.lines, '')
   end
+end
+
+---@private
+---@param opts CaptureOpts
+---@return boolean
+function Capture:_refile_to(opts)
+  if not opts.file then
+    return false
+  end
+
+  add_empty_lines(opts)
 
   local is_same_file = opts.file == utils.current_file_path()
   local cur_win = vim.api.nvim_get_current_win()
