@@ -57,7 +57,7 @@ function Template:new(opts)
   opts = opts or {}
 
   vim.validate({
-    description = { opts.description, 'string' },
+    description = { opts.description, 'string', true },
     template = { opts.template, 'string', true },
     target = { opts.target, 'string', true },
     headline = { opts.headline, 'string', true },
@@ -66,7 +66,7 @@ function Template:new(opts)
   })
 
   local this = {}
-  this.description = opts.description
+  this.description = opts.description or ''
   this.template = opts.template or ''
   this.target = opts.target
   this.headline = opts.headline

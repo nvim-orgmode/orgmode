@@ -3,7 +3,6 @@ local org = require('orgmode')
 local config = require('orgmode.config')
 local Files = require('orgmode.parser.files')
 local Date = require('orgmode.objects.date')
-local Template = require('orgmode.capture.template')
 
 describe('Mappings', function()
   after_each(function()
