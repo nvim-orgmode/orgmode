@@ -317,19 +317,15 @@ end
 
 ---@return string
 function Date:to_string()
-  local date = ''
   local format = date_format
   if self.dayname then
     format = format .. ' %a'
   end
 
-  if self.date_only then
-    date = os.date(format, self.timestamp)
-  else
-    date = os.date(format .. ' ' .. time_format, self.timestamp)
-    if self.timestamp_end then
-      date = date .. '-' .. os.date(time_format, self.timestamp_end)
-    end
+  local date = tostring(os.date(format, self.timestamp))
+
+  if self:has_time() then
+    date = date .. ' ' .. self:format_time()
   end
 
   if #self.adjustments > 0 then
@@ -353,7 +349,7 @@ end
 
 ---@return string
 function Date:format_time()
-  if self.date_only then
+  if not self:has_time() then
     return ''
   end
   local t = self:format(time_format)
@@ -597,6 +593,25 @@ end
 ---@return boolean
 function Date:is_obsolete_range_end()
   return self.is_date_range_end and self.related_date_range:is_same(self, 'day')
+end
+
+---@return boolean
+function Date:has_date_range_end()
+  return self.related_date_range and self.is_date_range_start
+end
+
+function Date:has_time()
+  return not self.date_only
+end
+
+---@return boolean
+function Date:has_time_range()
+  return self.timestamp_end ~= nil
+end
+
+---@return Date|nil
+function Date:get_date_range_end()
+  return self:has_date_range_end() and self.related_date_range or nil
 end
 
 ---Return number of days for a date range
