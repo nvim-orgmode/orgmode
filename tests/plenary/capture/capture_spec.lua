@@ -1,8 +1,9 @@
 local Capture = require('orgmode.capture')
+local Templates = require('orgmode.capture.templates')
 
 describe('Menu Items', function()
   it('should create a menu item for each template', function()
-    local templates = {
+    local templates = Templates:new({
       t = {
         description = 'todo',
       },
@@ -12,8 +13,8 @@ describe('Menu Items', function()
       f = {
         description = 'file update',
       },
-    }
-    menu_items = Capture:_create_menu_items(templates)
+    })
+    local menu_items = Capture:_create_menu_items(templates:get_list())
     assert.are.same(#menu_items, 3)
     assert.are.same(
       { 'b', 'f', 't' },
@@ -24,7 +25,7 @@ describe('Menu Items', function()
   end)
 
   it('should create one entry for multi-key shortcuts', function()
-    local multikey_templates = {
+    local multikey_templates = Templates:new({
       k = 'Multikey templates',
       kt = {
         description = 'multikey todo',
@@ -36,8 +37,8 @@ describe('Menu Items', function()
       kbf = {
         description = 'file bookmark',
       },
-    }
-    menu_items = Capture:_create_menu_items(multikey_templates)
+    })
+    local menu_items = Capture:_create_menu_items(multikey_templates:get_list())
     assert.are.same(#menu_items, 1)
     assert.are.same(
       { 'k' },
@@ -48,7 +49,7 @@ describe('Menu Items', function()
   end)
 
   it('computes the sub templates', function()
-    local multikey_templates = {
+    local multikey_templates = Templates:new({
       k = 'Multikey templates',
       kt = {
         description = 'multikey todo',
@@ -60,9 +61,9 @@ describe('Menu Items', function()
       kbf = {
         description = 'file bookmark',
       },
-    }
-    sub_template_items = Capture:_get_subtemplates('k', multikey_templates)
-    assert.are.same({
+    })
+    local sub_template_items = Capture:_get_subtemplates('k', multikey_templates:get_list())
+    local expected = Templates:new({
       b = 'multikey bookmark',
       bb = {
         description = 'browser bookmark',
@@ -73,14 +74,47 @@ describe('Menu Items', function()
       t = {
         description = 'multikey todo',
       },
-    }, sub_template_items)
+    }):get_list()
+    assert.are.same(expected, sub_template_items)
+  end)
+
+  it('should create one entry for multi-key shortcuts with subtemplates', function()
+    local multikey_templates = Templates:new({
+      k = {
+        description = 'Multikey templates',
+        subtemplates = {
+          t = {
+            description = 'multikey todo',
+          },
+          b = {
+            description = 'multikey bookmark',
+            subtemplates = {
+              b = {
+                description = 'browser bookmark',
+              },
+              f = {
+                description = 'file bookmark',
+              },
+            },
+          },
+        },
+      },
+    })
+    local menu_items = Capture:_create_menu_items(multikey_templates:get_list())
+    assert.are.same(#menu_items, 1)
+    assert.are.same(
+      { 'k' },
+      vim.tbl_map(function(x)
+        return x.key
+      end, vim.fn.sort(menu_items))
+    )
   end)
 
   it('adds an ellipses', function()
-    local template = {
+    local templates = Templates:new({
       k = 'Multikey template',
-    }
-    menu_item = Capture:_create_menu_items(template)
+    })
+    local menu_item = Capture:_create_menu_items(templates:get_list())
     assert.are.same('Multikey template...', menu_item[1].label)
   end)
 end)

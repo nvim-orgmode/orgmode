@@ -39,11 +39,15 @@ local expansions = {
 ---@field templates table<string, Template>
 local Templates = {}
 
-function Templates:new()
+function Templates:new(templates)
   local opts = {}
 
+  vim.validate({
+    templates = { templates, 'table', true },
+  })
+
   opts.templates = {}
-  for key, template in pairs(config.org_capture_templates) do
+  for key, template in pairs(templates or config.org_capture_templates) do
     if type(template) == 'table' then
       opts.templates[key] = Template:new(template)
     else

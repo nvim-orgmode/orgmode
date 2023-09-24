@@ -3,6 +3,7 @@ local config = require('orgmode.config')
 local Files = require('orgmode.parser.files')
 local File = require('orgmode.parser.file')
 local Templates = require('orgmode.capture.templates')
+local Template = require('orgmode.capture.template')
 local ClosingNote = require('orgmode.capture.closing_note')
 local Menu = require('orgmode.ui.menu')
 local Range = require('orgmode.parser.range')
@@ -29,6 +30,8 @@ function Capture:new()
   return data
 end
 
+---@param base_key string
+---@param templates table<string, Template>
 function Capture:_get_subtemplates(base_key, templates)
   local subtemplates = {}
   for key, template in pairs(templates) do
@@ -39,6 +42,7 @@ function Capture:_get_subtemplates(base_key, templates)
   return subtemplates
 end
 
+---@param templates table<string, Template>
 function Capture:_create_menu_items(templates)
   local menu_items = {}
   for key, template in pairs(templates) do
@@ -51,7 +55,7 @@ function Capture:_create_menu_items(templates)
         item.action = function()
           self:_create_prompt(self:_get_subtemplates(key, templates))
         end
-      elseif template.subtemplates then
+      elseif vim.tbl_count(template.subtemplates) > 0 then
         item.label = template.description .. '...'
         item.action = function()
           self:_create_prompt(template.subtemplates)
@@ -68,6 +72,7 @@ function Capture:_create_menu_items(templates)
   return menu_items
 end
 
+---@param templates table<string, Template>
 function Capture:_create_prompt(templates)
   local menu = Menu:new({
     title = 'Select a capture template',
@@ -186,7 +191,11 @@ function Capture:refile_headline_to_destination()
     return
   end
   local lines = destination_file:get_headline_lines(item)
-  return self:_refile_content_with_fallback({ lines = lines, item = item, template = {} })
+  return self:_refile_content_with_fallback({
+    lines = lines,
+    item = item,
+    template = Template:new(),
+  })
 end
 
 ---@param opts CaptureOpts
@@ -277,17 +286,20 @@ function Capture:refile_to_headline(opts)
 end
 
 local function add_empty_lines(opts)
-  local template = opts.template or {}
-  local empty_lines = template.empty_lines or {}
-  local before = empty_lines.before or 0
-  local after = empty_lines.after or 0
+  local empty_lines = opts.template.properties.empty_lines
 
-  for _ = 1, before do
+  for _ = 1, empty_lines.before do
     table.insert(opts.lines, 1, '')
   end
 
-  for _ = 1, after do
+  for _ = 1, empty_lines.after do
     table.insert(opts.lines, '')
+  end
+end
+
+local function apply_properties(opts)
+  if opts.template then
+    add_empty_lines(opts)
   end
 end
 
@@ -299,7 +311,7 @@ function Capture:_refile_to(opts)
     return false
   end
 
-  add_empty_lines(opts)
+  apply_properties(opts)
 
   local is_same_file = opts.file == utils.current_file_path()
   local cur_win = vim.api.nvim_get_current_win()

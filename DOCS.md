@@ -408,9 +408,10 @@ Templates have the following fields:
   * `template` (`string|string[]`) — body of the template that will be used when creating capture
   * `target` (`string?`) — name of the file to which the capture content will be added. If the target is not specified, the content will be added to the [`org_default_notes_file`](#orgdefaultnotesfile) file
   * `headline` (`string?`) — title of the headline after which the capture content will be added. If no headline is specified, the content will be appended to the end of the file
-  * `empty_lines` (`table?`):
-    * `before` (`integer`) — add empty lines to the beginning of the content
-    * `after` (`integer`) — add empty lines to the end of the content
+  * `properties` (`table?`):
+    * `empty_lines` (`table?`):
+      * `before` (`integer`) — add empty lines to the beginning of the content
+      * `after` (`integer`) — add empty lines to the end of the content
 
 Example:<br />
   ```lua

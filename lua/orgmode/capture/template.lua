@@ -1,13 +1,50 @@
 ---@class TemplateEmptyLines
 ---@field before integer
 ---@field after integer
+local TemplateEmptyLines = {}
+
+function TemplateEmptyLines:new(opts)
+  opts = opts or {}
+
+  vim.validate({
+    before = { opts.before, 'number', true },
+    after = { opts.after, 'number', true },
+  })
+
+  local this = {}
+  this.before = opts.before or 0
+  this.after = opts.after or 0
+
+  setmetatable(this, self)
+  self.__index = self
+  return this
+end
+
+---@class TemplateProperties
+---@field empty_lines TemplateEmptyLines
+local TemplateProperties = {}
+
+function TemplateProperties:new(opts)
+  opts = opts or {}
+
+  vim.validate({
+    empty_lines = { opts.empty_lines, 'table', true },
+  })
+
+  local this = {}
+  this.empty_lines = TemplateEmptyLines:new(opts.empty_lines or {})
+
+  setmetatable(this, self)
+  self.__index = self
+  return this
+end
 
 ---@class Template
 ---@field description string
 ---@field template string|string[]
 ---@field target string?
 ---@field headline string?
----@field empty_lines TemplateEmptyLines
+---@field properties TemplateProperties
 ---@field subtemplates table<string, Template>
 local Template = {}
 
@@ -19,7 +56,7 @@ function Template:new(opts)
     template = { opts.template, 'string', true },
     target = { opts.target, 'string', true },
     headline = { opts.headline, 'string', true },
-    empty_lines = { opts.empty_lines, 'table', true },
+    properties = { opts.properties, 'table', true },
     subtemplates = { opts.subtemplates, 'table', true },
   })
 
@@ -28,11 +65,12 @@ function Template:new(opts)
   this.template = opts.template or ''
   this.target = opts.target
   this.headline = opts.headline
-  this.empty_lines = vim.tbl_deep_extend('keep', opts.empty_lines or {}, {
-    before = 0,
-    after = 0,
-  })
-  this.subtemplates = opts.subtemplates
+  this.properties = TemplateProperties:new(opts.properties)
+
+  this.subtemplates = {}
+  for key, subtemplate in pairs(opts.subtemplates or {}) do
+    this.subtemplates[key] = Template:new(subtemplate)
+  end
 
   setmetatable(this, self)
   self.__index = self
