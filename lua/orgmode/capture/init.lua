@@ -209,7 +209,7 @@ end
 ---@param opts CaptureOpts
 ---@return boolean
 function Capture:_refile_to_end(opts)
-  opts.range = Range.from_line(vim.api.nvim_buf_line_count(0))
+  opts.range = Range.from_line(-1)
   local refiled = self:_refile_to(opts)
   if not refiled then
     return false
@@ -306,9 +306,15 @@ local function apply_properties(opts)
 end
 
 local function remove_buffer_empty_lines(opts)
+  local line_count = vim.api.nvim_buf_line_count(0)
   local range = opts.range
-  local start_line = range.end_line - 1
+
   local end_line = range.end_line
+  if end_line < 0 then
+    end_line = end_line + line_count + 1
+  end
+
+  local start_line = end_line - 1
 
   local is_line_empty = function(row)
     local line = vim.api.nvim_buf_get_lines(0, row, row + 1, true)[1]
@@ -321,7 +327,6 @@ local function remove_buffer_empty_lines(opts)
   end
   start_line = start_line + 1
 
-  local line_count = vim.api.nvim_buf_line_count(0)
   while end_line < line_count and is_line_empty(end_line) do
     end_line = end_line + 1
   end
