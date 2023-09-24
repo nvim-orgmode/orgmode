@@ -475,15 +475,17 @@ describe('Agenda item', function()
     -- Time range on a date has precedence over same day date range
     date_with_time_range = Date.from_string('2021-06-13 Sun 18:00-19:30')
     local date_with_time_range_end = Date.from_string('2021-06-13 Sun 20:00')
-    headline = generate(string.format('Some text <%s>--<%s>', date_with_time_range:to_string(), date_with_time_range_end:to_string()))
+    headline = generate(
+      string.format('Some text <%s>--<%s>', date_with_time_range:to_string(), date_with_time_range_end:to_string())
+    )
     agenda_item = AgendaItem:new(headline.dates[1], headline, date_with_time_range)
     assert.is.True(agenda_item.is_valid)
     assert.are.same(agenda_item.label, '18:00-19:30 ')
   end)
 
-    local range_start = Date.from_string('2021-06-13 Sun 13:30')
-    local range_end = range_start:add({ day = 4, hour = 1 })
-    local headline = generate(string.format('Some text <%s>--<%s>', range_start:to_string(), range_end:to_string()))
+  local range_start = Date.from_string('2021-06-13 Sun 13:30')
+  local range_end = range_start:add({ day = 4, hour = 1 })
+  local headline = generate(string.format('Some text <%s>--<%s>', range_start:to_string(), range_end:to_string()))
 
   it('should not show scheduled DONE item if disabled in config', function()
     local future_day = Date.now():add({ day = 2 })
