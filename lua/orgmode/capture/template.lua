@@ -28,11 +28,16 @@ function TemplateProperties:new(opts)
   opts = opts or {}
 
   vim.validate({
-    empty_lines = { opts.empty_lines, 'table', true },
+    empty_lines = { opts.empty_lines, { 'table', 'number' }, true },
   })
 
+  local empty_lines = opts.empty_lines or {}
+  if type(empty_lines) == 'number' then
+    empty_lines = { before = empty_lines, after = empty_lines }
+  end
+
   local this = {}
-  this.empty_lines = TemplateEmptyLines:new(opts.empty_lines or {})
+  this.empty_lines = TemplateEmptyLines:new(empty_lines)
 
   setmetatable(this, self)
   self.__index = self

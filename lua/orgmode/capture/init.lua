@@ -285,6 +285,7 @@ function Capture:refile_to_headline(opts)
   return true
 end
 
+---@param opts CaptureOpts
 local function add_empty_lines(opts)
   local empty_lines = opts.template.properties.empty_lines
 
@@ -297,10 +298,36 @@ local function add_empty_lines(opts)
   end
 end
 
+---@param opts CaptureOpts
 local function apply_properties(opts)
   if opts.template then
     add_empty_lines(opts)
   end
+end
+
+local function remove_buffer_empty_lines(opts)
+  local range = opts.range
+  local start_line = range.end_line - 1
+  local end_line = range.end_line
+
+  local is_line_empty = function(row)
+    local line = vim.api.nvim_buf_get_lines(0, row, row + 1, true)[1]
+    line = vim.trim(line)
+    return #line == 0
+  end
+
+  while start_line >= 0 and is_line_empty(start_line) do
+    start_line = start_line - 1
+  end
+  start_line = start_line + 1
+
+  local line_count = vim.api.nvim_buf_line_count(0)
+  while end_line < line_count and is_line_empty(end_line) do
+    end_line = end_line + 1
+  end
+
+  range.start_line = start_line
+  range.end_line = end_line
 end
 
 ---@private
@@ -335,6 +362,8 @@ function Capture:_refile_to(opts)
       style = 'minimal',
     })
   end
+
+  remove_buffer_empty_lines(opts)
 
   local range = opts.range
   vim.api.nvim_buf_set_lines(0, range.start_line, range.end_line, false, opts.lines)
