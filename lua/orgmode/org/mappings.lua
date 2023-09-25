@@ -1089,4 +1089,10 @@ function OrgMappings:_get_link_under_cursor()
   return found_link
 end
 
+function OrgMappings:tangle_file()
+  local file = Files.get_current_file()
+
+  file:tangle()
+end
+
 return OrgMappings

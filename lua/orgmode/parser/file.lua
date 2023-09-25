@@ -3,6 +3,7 @@ local Duration = require('orgmode.objects.duration')
 local Section = require('orgmode.parser.section')
 local config = require('orgmode.config')
 local utils = require('orgmode.utils')
+local tangle = require('orgmode.tangle')
 
 ---@class File
 ---@field tree userdata
@@ -427,6 +428,10 @@ function File:_parse_directives()
     end
   end
   self.tags = tags
+end
+
+function File:tangle()
+  tangle.tangle_file(self)
 end
 
 return File
