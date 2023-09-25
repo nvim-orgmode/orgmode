@@ -16,6 +16,7 @@ local DefaultConfig = {
       template = '* TODO %?\n  %u',
     },
   },
+  org_startup_folded = 'overview',
   org_agenda_skip_scheduled_if_done = false,
   org_agenda_skip_deadline_if_done = false,
   org_agenda_text_search_extra_files = {},
