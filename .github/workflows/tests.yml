@@ -24,6 +24,7 @@ jobs:
       - uses: JohnnyMorganz/stylua-action@v3
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
+          version: latest
           # CLI arguments
           args: --check lua/ tests/
       - name: Install Neovim
