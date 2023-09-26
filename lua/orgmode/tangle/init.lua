@@ -1,5 +1,6 @@
 local ts_org = require('orgmode.treesitter')
 local ts = require('orgmode.treesitter.compat')
+local utils = require('orgmode.utils')
 
 -- Expand a relative path given an origin file (took from the one found in Hyperlinks module)
 ---@param relative_path string The relative path to expand
@@ -51,47 +52,79 @@ local save_into_files = function(files)
   for filename, code_blocks in pairs(files) do
     -- Without expanding the file will be nil
     local file = io.open(vim.fn.expand(filename), 'w+')
-    io.output(file)
-    for _, block in ipairs(code_blocks) do
-      io.write(block .. '\n\n')
+    if not file then
+      utils.echo_error(string.format('Cannot open file "%s"', file))
+    else
+      io.output(file)
+      for _, block in ipairs(code_blocks) do
+        io.write(block .. '\n\n')
+      end
+      io.close(file)
+      out = out .. filename .. ' '
     end
-    io.close(file)
-    out = out .. filename .. ' '
   end
-  print(out)
+  utils.echo_info(out)
+end
+
+local BLOCK_QUERY = ts.parse_query(
+  'org',
+  [[
+    (block
+      name: (expr) @name (#eq? @name "src")
+      parameter: (expr) @language
+      (contents) @content) @block
+  ]]
+)
+
+local function get_code_blocks(root)
+  local blocks = {}
+  local visited = {}
+  for _, match, _ in BLOCK_QUERY:iter_matches(root, 0, 0, -1) do
+    local capture_range = match[#match]:range(false)
+
+    if not visited[capture_range] then
+      local block_info = {}
+      for id, node in pairs(match) do
+        local name = BLOCK_QUERY.captures[id]
+        block_info[name] = {
+          node = node,
+          text = ts.get_node_text(node, 0),
+        }
+      end
+      table.insert(blocks, block_info)
+    end
+
+    visited[capture_range] = true
+  end
+
+  return blocks
 end
 
 -- Main function that recursively check for code blocks to be tangled
----@param node any The current node to inspect
+---@param root any The current node to inspect
 ---@param files table<string, table<string>> The map between filenames and codeblocks to tangle
-local function process_node(node, files, file)
-  if node == nil then
+local function process_code_blocks(root, files, file)
+  if root == nil then
     return
   end
 
-  for subnode in node:iter_children() do
-    local t = subnode:type()
-    -- If the node is a block, add it to the blocks that need to be tangled if necessary
-    if t == 'block' then
-      local properties = ts_org.get_node_properties(subnode)
-      local cur_file = properties['tangle']
+  local blocks = get_code_blocks(root)
 
-      if cur_file then
-        cur_file = _expand_relative_path(cur_file, file.filename)
+  for _, block in ipairs(blocks) do
+    local block_node = block.block.node
+    local properties = ts_org.get_node_properties(block_node)
+    local cur_file = properties.tangle
 
-        if not files[cur_file] then
-          files[cur_file] = {}
-        end
+    if cur_file then
+      cur_file = _expand_relative_path(cur_file, file.filename)
 
-        for block_prop in subnode:iter_children() do
-          if block_prop:type() == 'contents' then
-            local _, col = block_prop:range()
-            table.insert(files[cur_file], fix_indentation(ts.get_node_text(block_prop, 0), col))
-          end
-        end
+      if not files[cur_file] then
+        files[cur_file] = {}
       end
-    else
-      process_node(subnode, files, file)
+
+      local content_node = block.content.node
+      local _, col = content_node:range()
+      table.insert(files[cur_file], fix_indentation(block.content.text, col))
     end
   end
 end
@@ -100,9 +133,7 @@ end
 local tangle_file = function(file)
   local files_to_blocks = {}
 
-  local root = file.tree:root()
-
-  process_node(root, files_to_blocks, file)
+  process_code_blocks(file.tree:root(), files_to_blocks, file)
   save_into_files(files_to_blocks)
 end
 
