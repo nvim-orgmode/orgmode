@@ -12,7 +12,7 @@ local base_root_path = vim.fn.fnamemodify(debug.getinfo(1, 'S').source:sub(2), '
 ---@param path string? The additional path to append to the root, not required
 ---@return string root The root path suffixed with the path provided or an empty suffix if none was given
 function M.root(path)
-  return base_root_path .. '/.min/' .. (path or '')
+  return base_root_path .. '/.deps/' .. (path or '')
 end
 
 ---Downloads a plugin from a given url and registers it on the 'runtimepath'

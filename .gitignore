@@ -40,4 +40,4 @@ luac.out
 *.hex
 
 # Directory containing testing dependencies downloaded during test run
-.min/
+.deps/
