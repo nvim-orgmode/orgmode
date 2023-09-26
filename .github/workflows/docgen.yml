@@ -9,8 +9,8 @@ jobs:
   docgen:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-go@v2
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v4
         with:
           go-version: '^1.17.1'
       - name: Install md2vim
@@ -31,7 +31,7 @@ jobs:
   api_docgen:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: Install Neovim
         uses: rhysd/action-setup-vim@v1
         id: neovim
