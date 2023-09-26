@@ -113,18 +113,21 @@ local function process_code_blocks(root, files, file)
   for _, block in ipairs(blocks) do
     local block_node = block.block.node
     local properties = ts_org.get_node_properties(block_node)
-    local cur_file = properties.tangle
+    local filename = properties.tangle
 
-    if cur_file then
-      cur_file = _expand_relative_path(cur_file, file.filename)
+    if filename and filename ~= 'no' then
+      if filename == 'yes' then
+        filename = string.format('%s.%s', vim.fn.fnamemodify(file.filename, ':t:r'), block.language.text)
+      end
+      filename = _expand_relative_path(filename, file.filename)
 
-      if not files[cur_file] then
-        files[cur_file] = {}
+      if not files[filename] then
+        files[filename] = {}
       end
 
       local content_node = block.content.node
       local _, col = content_node:range()
-      table.insert(files[cur_file], fix_indentation(block.content.text, col))
+      table.insert(files[filename], fix_indentation(block.content.text, col))
     end
   end
 end
