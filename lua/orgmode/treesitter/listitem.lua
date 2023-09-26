@@ -1,6 +1,6 @@
 local ts_utils = require('nvim-treesitter.ts_utils')
 local tree_utils = require('orgmode.utils.treesitter')
-local ts = require('orgmode.treesitter.compat')
+local ts = vim.treesitter
 local Headline = require('orgmode.treesitter.headline')
 
 ---@class Listitem

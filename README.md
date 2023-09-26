@@ -8,7 +8,7 @@
   <a href="/LICENSE">![License](https://img.shields.io/badge/license-MIT-brightgreen?style=flat-square)</a><a href="https://ko-fi.com/kristijanhusak"> ![Kofi](https://img.shields.io/badge/support-kofi-00b9fe?style=flat-square&logo=kofi)</a><a href="https://matrix.to/#/#neovim-orgmode:matrix.org"> ![Chat](https://img.shields.io/matrix/neovim-orgmode:matrix.org?logo=matrix&server_fqdn=matrix.org&style=flat-square)</a>
 
 
-  Orgmode clone written in Lua for Neovim 0.8+
+  Orgmode clone written in Lua for Neovim 0.9+
 
   [Setup](#setup) • [Docs](/DOCS.md) • [Showcase](#showcase) • [Treesitter](#treesitter-info) • [Troubleshoot](#troubleshoot) • [Plugins](#plugins) • [Contributing](CONTRIBUTING.md) • [Kudos](#thanks-to)
 
@@ -19,7 +19,7 @@
 
 ### Requirements
 
-* Neovim 0.8.0 or later
+* Neovim 0.9.0 or later
 * [nvim-treesitter](https://github.com/nvim-treesitter/nvim-treesitter)
 
 ### Installation
@@ -219,8 +219,6 @@ Highlights are experimental and partially supported.
 * Allows for easier hacking (custom motions that can work with TS nodes, etc.)
 
 ### Known highlighting issues and limitations
-* Performance issues. This is generally an issue in Neovim that should be resolved before 0.6 release (https://github.com/neovim/neovim/issues/14762, https://github.com/neovim/neovim/issues/14762)
-* Anything that requires concealing ([org_hide_emphasis_markers](/DOCS.md#org_hide_emphasis_markers), links concealing) is not (yet) supported in TS highlighter
 * LaTex is still highlighted through syntax file
 
 ### Improvements over Vim's syntax highlighting

@@ -2,7 +2,6 @@ local ts_utils = require('orgmode.utils.treesitter')
 local Table = require('orgmode.parser.table')
 local utils = require('orgmode.utils')
 local config = require('orgmode.config')
-local ts = require('orgmode.treesitter.compat')
 
 ---@class TsTable
 ---@field node userdata
@@ -54,7 +53,7 @@ function TsTable:_parse_data()
           local cell_val = ''
           local cell_content = cell:field('contents')
           if cell_content and #cell_content > 0 then
-            cell_val = ts.get_node_text(cell_content[1], 0)
+            cell_val = vim.treesitter.get_node_text(cell_content[1], 0)
           end
           table.insert(row_data, cell_val)
         end
