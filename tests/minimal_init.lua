@@ -68,7 +68,7 @@ function M.setup(plugins)
   -- NOTE: Cleanup the xdg cache on exit so new runs of the minimal init doesn't share any previous state, e.g. shada
   vim.api.nvim_create_autocmd('VimLeave', {
     callback = function()
-      vim.fn.delete(M.root("xdg"), "rf")
+      vim.fn.delete(M.root('xdg'), 'rf')
     end,
   })
 end
