@@ -301,8 +301,8 @@ function Config:setup_foldlevel()
   elseif self.org_startup_folded == 'showeverything' then
     vim.opt_local.foldlevel = 99
   elseif self.org_startup_folded ~= 'inherit' then
-    vim.notify("Invalid option passed for 'org_startup_folded'!", vim.log.levels.WARN)
-    self.org_startup_folded = 'overview'
+    utils.echo_warning("Invalid option passed for 'org_startup_folded'!")
+    self.opts.org_startup_folded = 'overview'
     self:setup_foldlevel()
   end
 end
