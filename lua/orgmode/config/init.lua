@@ -292,6 +292,21 @@ function Config:setup_mappings(category, buffer)
   end
 end
 
+--- Setup the foldlevel for a given org file
+function Config:setup_foldlevel()
+  if self.org_startup_folded == 'overview' then
+    vim.opt_local.foldlevel = 0
+  elseif self.org_startup_folded == 'content' then
+    vim.opt_local.foldlevel = 1
+  elseif self.org_startup_folded == 'showeverything' then
+    vim.opt_local.foldlevel = 99
+  elseif self.org_startup_folded ~= 'inherit' then
+    utils.echo_warning("Invalid option passed for 'org_startup_folded'!")
+    self.opts.org_startup_folded = 'overview'
+    self:setup_foldlevel()
+  end
+end
+
 ---@return string|nil
 function Config:parse_archive_location(file, archive_loc)
   if self:is_archive_file(file) then

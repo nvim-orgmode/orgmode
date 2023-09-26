@@ -153,6 +153,15 @@ Applies to:
         - agenda window
         - capture window
 
+#### **org_startup_folded**
+*type*: `string`<br />
+*default value*: `overview`<br />
+How many headings and other foldable items should be shown when an org file is opened.<br />
+Available options:
+* `overview` - Only show top level elements (default)
+* `content` - Only show the first two levels
+* `showeverything` - A double line box
+* `inherit` - Use the fold level set in Neovim's global `foldlevel` option
 
 #### **org_todo_keyword_faces**
 *type*: `table<string, string>`<br />
