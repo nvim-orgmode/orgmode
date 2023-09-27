@@ -349,7 +349,7 @@ How many headings and other foldable items should be shown when an org file is o
 Available options:
 * `overview` - Only show top level elements (default)
 * `content` - Only show the first two levels
-* `showeverything` - A double line box
+* `showeverything` - Show all elements
 * `inherit` - Use the fold level set in Neovim's global `foldlevel` option
 
 ORG_TODO_KEYWORD_FACES                            *orgmode-org_todo_keyword_faces*
