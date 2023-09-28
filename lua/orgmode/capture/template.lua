@@ -58,7 +58,7 @@ function Template:new(opts)
 
   vim.validate({
     description = { opts.description, 'string', true },
-    template = { opts.template, 'string', true },
+    template = { opts.template, { 'string', 'table' }, true },
     target = { opts.target, 'string', true },
     headline = { opts.headline, 'string', true },
     properties = { opts.properties, 'table', true },
