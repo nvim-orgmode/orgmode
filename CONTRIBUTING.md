@@ -25,11 +25,15 @@ Please document any new code you add with [emmylua annotations](https://emmylua.
 
 ### Tests
 
- To run tests, [plenary.nvim](https://github.com/nvim-lua/plenary.nvim) and [nvim-treesitter](https://github.com/nvim-treesitter/nvim-treesitter) must be present in the nvim-orgmode directory:
+ To run tests run `make test` in the nvim-orgmode directory:
 ```
-git clone https://github.com/nvim-treesitter/nvim-treesitter
-git clone https://github.com/nvim-lua/plenary.nvim
 make test
+```
+
+To run a specific test you can set a `FILE` environment variable to a specific
+spec you want to test. Example:
+```
+make test FILE=./tests/plenary/api/api_spec.lua
 ```
 
 ### Formatting

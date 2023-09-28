@@ -1,4 +1,3 @@
-local ts = require('orgmode.treesitter.compat')
 local ts_utils = require('nvim-treesitter.ts_utils')
 local Promise = require('orgmode.utils.promise')
 local uv = vim.loop
@@ -240,7 +239,7 @@ function utils.get_ts_matches(query, node, file_content, file_content_str)
   local matches = {}
   local ts_query = query_cache[query]
   if not ts_query then
-    ts_query = ts.parse_query('org', query)
+    ts_query = vim.treesitter.query.parse('org', query)
     query_cache[query] = ts_query
   end
   for _, match, _ in ts_query:iter_matches(node, file_content_str) do

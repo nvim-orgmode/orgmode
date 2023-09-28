@@ -14,22 +14,23 @@ CONTENTS                                                        *orgmode-content
             1.2.1.3. org_todo_keywords.................|orgmode-org_todo_keywords|
             1.2.1.4. win_split_mode.......................|orgmode-win_split_mode|
             1.2.1.5. win_border...............................|orgmode-win_border|
-            1.2.1.6. org_todo_keyword_faces.......|orgmode-org_todo_keyword_faces|
-            1.2.1.7. org_archive_location...........|orgmode-org_archive_location|
-            1.2.1.8. org_hide_leading_stars.......|orgmode-org_hide_leading_stars|
-            1.2.1.9. org_hide_emphasis_markers.|orgmode-org_hide_emphasis_markers|
-            1.2.1.10. org_ellipsis..........................|orgmode-org_ellipsis|
-            1.2.1.11. org_log_done..........................|orgmode-org_log_done|
-            1.2.1.12. org_log_into_drawer............|orgmode-org_log_into_drawer|
-            1.2.1.13. org_highlight_latex_and_related.|orgmode-org_highlight_latex_and_related|
-            1.2.1.14. org_indent_mode....................|orgmode-org_indent_mode|
-            1.2.1.15. org_src_window_setup..........|orgmode-org_src_window_setup|
-            1.2.1.16. org_edit_src_content_indentation.|orgmode-org_edit_src_content_indentation|
-            1.2.1.17. org_custom_exports..............|orgmode-org_custom_exports|
-            1.2.1.18. org_time_stamp_rounding_minutes.|orgmode-org_time_stamp_rounding_minutes|
-            1.2.1.19. org_blank_before_new_entry.|orgmode-org_blank_before_new_entry|
-            1.2.1.20. calendar_week_start_day....|orgmode-calendar_week_start_day|
-            1.2.1.21. emacs_config..........................|orgmode-emacs_config|
+            1.2.1.6. org_startup_folded...............|orgmode-org_startup_folded|
+            1.2.1.7. org_todo_keyword_faces.......|orgmode-org_todo_keyword_faces|
+            1.2.1.8. org_archive_location...........|orgmode-org_archive_location|
+            1.2.1.9. org_hide_leading_stars.......|orgmode-org_hide_leading_stars|
+            1.2.1.10. org_hide_emphasis_markers.|orgmode-org_hide_emphasis_markers|
+            1.2.1.11. org_ellipsis..........................|orgmode-org_ellipsis|
+            1.2.1.12. org_log_done..........................|orgmode-org_log_done|
+            1.2.1.13. org_log_into_drawer............|orgmode-org_log_into_drawer|
+            1.2.1.14. org_highlight_latex_and_related.|orgmode-org_highlight_latex_and_related|
+            1.2.1.15. org_indent_mode....................|orgmode-org_indent_mode|
+            1.2.1.16. org_src_window_setup..........|orgmode-org_src_window_setup|
+            1.2.1.17. org_edit_src_content_indentation.|orgmode-org_edit_src_content_indentation|
+            1.2.1.18. org_custom_exports..............|orgmode-org_custom_exports|
+            1.2.1.19. org_time_stamp_rounding_minutes.|orgmode-org_time_stamp_rounding_minutes|
+            1.2.1.20. org_blank_before_new_entry.|orgmode-org_blank_before_new_entry|
+            1.2.1.21. calendar_week_start_day....|orgmode-calendar_week_start_day|
+            1.2.1.22. emacs_config..........................|orgmode-emacs_config|
         1.2.2. Agenda settings...........................|orgmode-agenda_settings|
             1.2.2.1. org_deadline_warning_days.|orgmode-org_deadline_warning_days|
             1.2.2.2. org_agenda_span.....................|orgmode-org_agenda_span|
@@ -339,6 +340,17 @@ Applies to:
     `win_split_mode` is set to `float`
         - agenda window
         - capture window
+
+ORG_STARTUP_FOLDED                                    *orgmode-org_startup_folded*
+
+type: `string`
+default value: `overview`
+How many headings and other foldable items should be shown when an org file is opened.
+Available options:
+* `overview` - Only show top level elements (default)
+* `content` - Only show the first two levels
+* `showeverything` - Show all elements
+* `inherit` - Use the fold level set in Neovim's global `foldlevel` option
 
 ORG_TODO_KEYWORD_FACES                            *orgmode-org_todo_keyword_faces*
 

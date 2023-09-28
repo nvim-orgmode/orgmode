@@ -4,7 +4,7 @@ local tree_utils = require('orgmode.utils.treesitter')
 local Date = require('orgmode.objects.date')
 local Range = require('orgmode.parser.range')
 local config = require('orgmode.config')
-local ts = require('orgmode.treesitter.compat')
+local ts = vim.treesitter
 
 ---@class Headline
 ---@field headline userdata

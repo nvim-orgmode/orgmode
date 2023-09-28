@@ -1,4 +1,3 @@
-local ts = require('orgmode.treesitter.compat')
 local ts_utils = require('nvim-treesitter.ts_utils')
 local parsers = require('nvim-treesitter.parsers')
 local M = {}
@@ -22,7 +21,7 @@ end
 function M.parse_query(query)
   local ts_query = query_cache[query]
   if not ts_query then
-    ts_query = ts.parse_query('org', query)
+    ts_query = vim.treesitter.query.parse('org', query)
     query_cache[query] = ts_query
   end
   return query_cache[query]
