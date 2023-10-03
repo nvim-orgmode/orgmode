@@ -108,6 +108,7 @@ local function setup(opts)
   instance = Org:new()
   check_ts_grammar()
   local config = require('orgmode.config'):extend(opts)
+  config:setup_ts_predicates()
   vim.defer_fn(function()
     if config.notifications.enabled and #vim.api.nvim_list_uis() > 0 then
       require('orgmode.parser.files').load(vim.schedule_wrap(function()
