@@ -10,11 +10,13 @@ local config = require('orgmode.config')
 local constants = require('orgmode.utils.constants')
 local ts_utils = require('nvim-treesitter.ts_utils')
 local utils = require('orgmode.utils')
+local fs = require('orgmode.utils.fs')
 local ts_org = require('orgmode.treesitter')
 local ts_table = require('orgmode.treesitter.table')
 local EventManager = require('orgmode.events')
 local Promise = require('orgmode.utils.promise')
 local events = EventManager.event
+local Link = require('orgmode.objects.link')
 
 ---@class OrgMappings
 ---@field capture Capture
@@ -795,39 +797,30 @@ function OrgMappings:open_at_point()
     return
   end
 
-  local parts = vim.split(link.content, '][', true)
-  local url = parts[1]
-  local link_ctx = { base = url, skip_add_prefix = true }
-  if url:find('^file:') then
-    if url:find(' +', 1, true) then
-      parts = vim.split(url, ' +', true)
-      url = parts[1]
-      local line_number = parts[2]
-      vim.cmd(string.format('edit +%s %s', line_number, Hyperlinks.get_file_real_path(url)))
-      vim.cmd([[normal! zv]])
-      return
-    end
-
-    if url:find('^file:(.-)::') then
-      link_ctx.line = url
-    else
-      vim.cmd(string.format('edit %s', Hyperlinks.get_file_real_path(url)))
-      vim.cmd([[normal! zv]])
-      return
-    end
-  end
-  if url:find('^https?://') then
+  local url = link.url.str
+  if link.url:is_file_plain() then
+    local file_path = link.url:get_filepath()
+    local cmd = file_path and string.format('edit %s', fs.get_real_path(file_path)) or ''
+    vim.cmd(cmd)
+    vim.cmd([[normal! zv]])
+    return
+  elseif link.url:is_file_line_number() then
+    local line_number = link.url:get_linenumber() or 0
+    local file_path = link.url:get_filepath() or utils.current_file_path()
+    local cmd = string.format('edit +%s %s', line_number, fs.get_real_path(file_path))
+    vim.cmd(cmd)
+    return vim.cmd([[normal! zv]])
+  elseif link.url:is_http_url() then
     if not vim.g.loaded_netrwPlugin then
       return utils.echo_warning('Netrw plugin must be loaded in order to open urls.')
     end
     return vim.fn['netrw#BrowseX'](url, vim.fn['netrw#CheckIfRemote']())
-  end
-  local stat = vim.loop.fs_stat(url)
-  if stat and stat.type == 'file' then
-    return vim.cmd(string.format('edit %s', url))
+  elseif not link.url:is_org_link() then
+    utils.echo_warning(string.format('Unsupported link format: %q', url))
+    return
   end
 
-  local headlines = Hyperlinks.find_matching_links(link_ctx)
+  local headlines = Hyperlinks.find_matching_links(link.url)
   local current_headline = Files.get_closest_headline()
   if current_headline then
     headlines = vim.tbl_filter(function(headline)
@@ -854,7 +847,8 @@ function OrgMappings:open_at_point()
     headline = headlines[choice]
   end
   vim.cmd(string.format('edit %s', headline.file))
-  vim.fn.cursor(headline.range.start_line, 0)
+  vim.fn.cursor({ headline.range.start_line, 0 })
+  vim.cmd([[normal! zv]])
 end
 
 function OrgMappings:export()
@@ -1070,22 +1064,11 @@ function OrgMappings:_adjust_date(amount, span, fallback)
   return vim.api.nvim_feedkeys(utils.esc(fallback), 'n', true)
 end
 
----@return table|nil
+---@return Link|nil
 function OrgMappings:_get_link_under_cursor()
-  local found_link = nil
-  local links = {}
   local line = vim.fn.getline('.')
   local col = vim.fn.col('.')
-  for link in line:gmatch('%[%[(.-)%]%]') do
-    local start_from = #links > 0 and links[#links].to or nil
-    local from, to = line:find('%[%[(.-)%]%]', start_from)
-    if col >= from and col <= to then
-      found_link = { content = link, from = from, to = to }
-      break
-    end
-    table.insert(links, { content = link, from = from, to = to })
-  end
-  return found_link
+  return Link.at_pos(line, col)
 end
 
 return OrgMappings

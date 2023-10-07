@@ -1,0 +1,10 @@
+* Heading Sub2
+  [[file:./../testfile.org]]
+** Subheading Sub2
+*** Test
+    [[../testfile.org::*Heading Sub2]]
+*** Test
+   :PROPERTIES:
+   :CUSTOM_ID: ID_Test
+   :END:
+
