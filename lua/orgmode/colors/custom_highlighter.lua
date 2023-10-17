@@ -2,7 +2,6 @@ local config = require('orgmode.config')
 local namespace = vim.api.nvim_create_namespace('org_custom_highlighter')
 local HideLeadingStars = nil
 local MarkupHighlighter = nil
-local valid_bufnrs = {}
 
 ---@param bufnr number
 local function apply_highlights(bufnr, line)
@@ -22,14 +21,6 @@ local function setup()
   MarkupHighlighter.setup()
 
   vim.api.nvim_set_decoration_provider(namespace, {
-    on_start = function(_, tick)
-      local bufnr = vim.api.nvim_get_current_buf()
-      if valid_bufnrs[bufnr] == tick or vim.bo[bufnr].filetype ~= 'org' then
-        return false
-      end
-      valid_bufnrs[bufnr] = tick
-      return true
-    end,
     on_win = function(_, _, bufnr)
       return vim.bo[bufnr].filetype == 'org'
     end,

@@ -16,6 +16,7 @@ local DefaultConfig = {
       template = '* TODO %?\n  %u',
     },
   },
+  org_startup_folded = 'overview',
   org_agenda_skip_scheduled_if_done = false,
   org_agenda_skip_deadline_if_done = false,
   org_agenda_text_search_extra_files = {},
@@ -30,6 +31,7 @@ local DefaultConfig = {
   org_hide_emphasis_markers = false,
   org_ellipsis = '...',
   org_log_done = 'time',
+  org_log_into_drawer = nil,
   org_highlight_latex_and_related = nil,
   org_custom_exports = {},
   org_indent_mode = 'indent',
@@ -40,7 +42,6 @@ local DefaultConfig = {
   },
   org_src_window_setup = 'top 16new',
   org_edit_src_content_indentation = 0,
-  diagnostics = true,
   win_split_mode = 'horizontal',
   win_border = 'single',
   notifications = {
@@ -143,6 +144,7 @@ local DefaultConfig = {
       org_schedule = '<prefix>is',
       org_time_stamp = '<prefix>i.',
       org_time_stamp_inactive = '<prefix>i!',
+      org_insert_link = '<prefix>il',
       org_clock_in = '<prefix>xi',
       org_clock_out = '<prefix>xo',
       org_clock_cancel = '<prefix>xq',
@@ -169,6 +171,11 @@ local DefaultConfig = {
   emacs_config = {
     executable_path = 'emacs',
     config_path = '$HOME/.emacs.d/init.el',
+  },
+  ui = {
+    menu = {
+      handler = nil,
+    },
   },
 }
 

@@ -9,6 +9,8 @@ local AgendaSearchView = require('orgmode.agenda.views.search')
 local AgendaTodosView = require('orgmode.agenda.views.todos')
 local AgendaTagsView = require('orgmode.agenda.views.tags')
 local AgendaView = require('orgmode.agenda.views.agenda')
+local Menu = require('orgmode.ui.menu')
+local Promise = require('orgmode.utils.promise')
 
 ---@class Agenda
 ---@field content table[]
@@ -88,45 +90,50 @@ end
 
 function Agenda:prompt()
   self.filters:reset()
-  return utils.menu('Press key for an agenda command', {
-    {
-      label = 'Agenda for current week or day',
-      key = 'a',
-      action = function()
-        return self:agenda()
-      end,
-    },
-    {
-      label = 'List of all TODO entries',
-      key = 't',
-      action = function()
-        return self:todos()
-      end,
-    },
-    {
-      label = 'Match a TAGS/PROP/TODO query',
-      key = 'm',
-      action = function()
-        return self:tags()
-      end,
-    },
-    {
-      label = 'Like m, but only TODO entries',
-      key = 'M',
-      action = function()
-        return self:tags({ todo_only = true })
-      end,
-    },
-    {
-      label = 'Search for keywords',
-      key = 's',
-      action = function()
-        return self:search()
-      end,
-    },
-    { label = 'Quit', key = 'q' },
-    { label = '', separator = ' ', length = 1 },
-  }, 'Press key for an agenda command')
+  local menu = Menu:new({
+    title = 'Press key for an agenda command',
+    prompt = 'Press key for an agenda command',
+  })
+
+  menu:add_option({
+    label = 'Agenda for current week or day',
+    key = 'a',
+    action = function()
+      return self:agenda()
+    end,
+  })
+  menu:add_option({
+    label = 'List of all TODO entries',
+    key = 't',
+    action = function()
+      return self:todos()
+    end,
+  })
+  menu:add_option({
+    label = 'Match a TAGS/PROP/TODO query',
+    key = 'm',
+    action = function()
+      return self:tags()
+    end,
+  })
+  menu:add_option({
+    label = 'Like m, but only TODO entries',
+    key = 'M',
+    action = function()
+      return self:tags({ todo_only = true })
+    end,
+  })
+  menu:add_option({
+    label = 'Search for keywords',
+    key = 's',
+    action = function()
+      return self:search()
+    end,
+  })
+  menu:add_option({ label = 'Quit', key = 'q' })
+  menu:add_separator({ icon = ' ', length = 1 })
+
+  return menu:open()
 end
 
 function Agenda:_render(skip_rebuild)
@@ -400,7 +407,7 @@ function Agenda:_remote_edit(opts)
   end
   local update = Files.update_file(item.file, function(_)
     vim.fn.cursor({ item.file_position, 0 })
-    return utils.promisify(require('orgmode').action(action)):next(function()
+    return Promise.resolve(require('orgmode').action(action)):next(function()
       return Files.get_closest_headline()
     end)
   end)
@@ -422,7 +429,8 @@ function Agenda:_remote_edit(opts)
         self.win_width
       )
     else
-      self.content[line] = AgendaTodosView.generate_todo_item(headline, item.longest_category, item.line)
+      self.content[line] =
+        AgendaTodosView.generate_todo_item(headline, item.longest_category, item.line, self.win_width)
     end
     return self:_render(true)
   end)

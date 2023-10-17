@@ -1,55 +1,53 @@
-vim.cmd([[set runtimepath=$VIMRUNTIME]])
-vim.cmd([[set packpath=/tmp/nvim/site]])
+local nvim_root = '/tmp/nvim_orgmode'
+local lazy_root = nvim_root .. '/lazy'
+local lazypath = lazy_root .. '/lazy.nvim'
 
-local package_root = '/tmp/nvim/site/pack'
-local install_path = package_root .. '/packer/start/packer.nvim'
-
-local function load_plugins()
-  require('packer').startup({
-    {
-      'wbthomason/packer.nvim',
-      { 'nvim-treesitter/nvim-treesitter' },
-      { 'kristijanhusak/orgmode.nvim', branch = 'master' },
-    },
-    config = {
-      package_root = package_root,
-      compile_path = install_path .. '/plugin/packer_compiled.lua',
-    },
+-- Install lazy.nvim if not already installed
+if not vim.loop.fs_stat(lazypath) then
+  vim.fn.system({
+    'git',
+    'clone',
+    '--filter=blob:none',
+    'https://github.com/folke/lazy.nvim.git',
+    '--branch=stable', -- latest stable release
+    lazypath,
   })
 end
+vim.opt.rtp:prepend(lazypath)
 
-_G.load_config = function()
-  require('orgmode').setup_ts_grammar()
-  require('nvim-treesitter.configs').setup({
-    highlight = {
-      enable = true,
-      additional_vim_regex_highlighting = { 'org' },
+require('lazy').setup({
+  {
+    'nvim-orgmode/orgmode',
+    dependencies = {
+      { 'nvim-treesitter/nvim-treesitter', lazy = true },
     },
-  })
+    event = 'VeryLazy',
+    config = function()
+      -- Load treesitter grammar for org
+      require('orgmode').setup_ts_grammar()
 
-  vim.cmd([[packadd nvim-treesitter]])
-  vim.cmd([[runtime plugin/nvim-treesitter.lua]])
-  vim.cmd([[TSUpdateSync org]])
+      -- Setup treesitter
+      require('nvim-treesitter.configs').setup({
+        highlight = {
+          enable = true,
+          additional_vim_regex_highlighting = { 'org' },
+        },
+        ensure_installed = { 'org' },
+      })
 
-  -- Close packer after install
-  if vim.bo.filetype == 'packer' then
-    vim.api.nvim_win_close(0, true)
-  end
+      -- Setup orgmode
+      require('orgmode').setup()
+    end,
+  },
+}, {
+  root = lazy_root,
+  lockfile = nvim_root .. '/lazy.json',
+  install = {
+    missing = false,
+  },
+})
 
-  require('orgmode').setup()
-
-  -- Reload current file if it's org file to reload tree-sitter
-  if vim.bo.filetype == 'org' then
-    vim.cmd([[edit!]])
-  end
-end
-
-if vim.fn.isdirectory(install_path) == 0 then
-  vim.fn.system({ 'git', 'clone', 'https://github.com/wbthomason/packer.nvim', install_path })
-  load_plugins()
-  require('packer').sync()
-  vim.cmd([[autocmd User PackerCompileDone ++once lua load_config()]])
-else
-  load_plugins()
-  load_config()
-end
+require('lazy').sync({
+  wait = true,
+  show = false,
+})

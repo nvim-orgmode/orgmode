@@ -1,6 +1,8 @@
 local Files = require('orgmode.parser.files')
 local config = require('orgmode.config')
 local Hyperlinks = require('orgmode.org.hyperlinks')
+local Url = require('orgmode.objects.url')
+local Link = require('orgmode.objects.link')
 
 local data = {
   directives = { '#+title', '#+author', '#+email', '#+name', '#+filetags', '#+archive', '#+options', '#+category' },
@@ -33,7 +35,10 @@ local properties = {
 local links = {
   line_rgx = vim.regex([[\(\(^\|\s\+\)\[\[\)\@<=\(\*\|\#\|file:\)\?\(\(\w\|\/\|\.\|\\\|-\|_\|\d\)\+\)\?]]),
   rgx = vim.regex([[\(\*\|\#\|file:\)\?\(\(\w\|\/\|\.\|\\\|-\|_\|\d\)\+\)\?$]]),
-  fetcher = Hyperlinks.find_matching_links,
+  fetcher = function(url)
+    local hyperlinks, mapper = Hyperlinks.find_matching_links(url)
+    return mapper(hyperlinks)
+  end,
 }
 
 local metadata = {
@@ -86,6 +91,20 @@ local headline_contexts = {
   todo_keywords,
 }
 
+---Determines an URL for link handling. Handles a couple of corner-cases
+---@param base string The string to complete
+---@return string
+local function get_url_str(line, base)
+  local line_base = line:match('%[%[(.-)$') or line
+  line_base = line_base:gsub(base .. '$', '')
+  return (line_base or '') .. (base or '')
+end
+
+--- This function is registered to omnicompletion in ftplugin/org.vim.
+---
+--- If the user want to use it in his completion plugin (like cmp) he has to do
+--- that in the configuration of that plugin.
+---@return table
 local function omni(findstart, base)
   local line = vim.api.nvim_get_current_line():sub(1, vim.api.nvim_call_function('col', { '.' }) - 1)
   local is_headline = line:match('^%*+%s+')
@@ -100,7 +119,7 @@ local function omni(findstart, base)
     return -1
   end
 
-  local fetcher_ctx = { base = base, line = line }
+  local url = Url.new(get_url_str(line, base))
   local results = {}
 
   for _, context in ipairs(ctx) do
@@ -111,7 +130,7 @@ local function omni(findstart, base)
     then
       local items = {}
       if context.fetcher then
-        items = context.fetcher(fetcher_ctx)
+        items = context.fetcher(url)
       else
         items = { unpack(context.list) }
       end

@@ -1,4 +1,3 @@
-local ts = require('orgmode.treesitter.compat')
 local config = require('orgmode.config')
 local ts_utils = require('nvim-treesitter.ts_utils')
 local query = nil
@@ -36,18 +35,21 @@ local markers = {
     hl_name = 'org_code',
     hl_cmd = 'hi def link org_code String',
     nestable = false,
+    spell = false,
     type = 'text',
   },
   ['='] = {
     hl_name = 'org_verbatim',
     hl_cmd = 'hi def link org_verbatim String',
     nestable = false,
+    spell = false,
     type = 'text',
   },
   ['\\('] = {
     hl_name = 'org_latex',
     hl_cmd = 'hi def link org_latex OrgTSLatex',
     nestable = false,
+    spell = false,
     type = 'latex',
   },
   ['\\{'] = {
@@ -108,35 +110,16 @@ local get_tree = ts_utils.memoize_by_buf_tick(function(bufnr)
   return tree[1]:root()
 end)
 
-local function get_predicate_nodes(match, n)
-  local total = n or 2
-  local counter = 1
-  local nodes = {}
-  for _, node in pairs(match) do
-    nodes[counter] = node
-    counter = counter + 1
-    if counter > total then
-      break
-    end
-  end
-  return unpack(nodes)
-end
+local function is_valid_markup_range(match, _, source, predicates)
+  local start_node = match[predicates[2]]
+  local end_node = match[predicates[3]]
 
-local function is_valid_markup_range(match, _, source, _)
-  local start_node, end_node = get_predicate_nodes(match)
   if not start_node or not end_node then
     return
   end
 
-  -- Ignore conflicts with hyperlink or math
-  for _, char in ipairs({ '[', '\\' }) do
-    if start_node:type() == char or end_node:type() == char then
-      return true
-    end
-  end
-
   local start_line = start_node:range()
-  local end_line = start_node:range()
+  local end_line = end_node:range()
 
   if start_line ~= end_line then
     return false
@@ -155,14 +138,12 @@ local function is_valid_markup_range(match, _, source, _)
     and end_text:sub(1, 1) ~= ' '
 end
 
-local function is_valid_hyperlink_range(match, _, source, _)
-  local start_node, end_node = get_predicate_nodes(match)
+local function is_valid_hyperlink_range(match, _, source, predicates)
+  local start_node = match[predicates[2]]
+  local end_node = match[predicates[3]]
+
   if not start_node or not end_node then
     return
-  end
-  -- Ignore conflicts with markup
-  if start_node:type() ~= '[' or end_node:type() ~= ']' then
-    return true
   end
 
   local start_line = start_node:range()
@@ -180,20 +161,19 @@ local function is_valid_hyperlink_range(match, _, source, _)
   return is_valid_start and is_valid_end
 end
 
-local function is_valid_latex_range(match, _, source, _)
-  local start_node_left, start_node_right, end_node = get_predicate_nodes(match, 3)
-  -- Ignore conflicts with markup
-  if start_node_left:type() ~= '\\' then
-    return true
-  end
+local function is_valid_latex_range(match, _, source, predicates)
+  local start_node_left = match[predicates[2]]
+  local start_node_right = match[predicates[3]]
+  local end_node = match[predicates[4]]
   if not start_node_right or not end_node then
     return
   end
 
   local start_line = start_node_left:range()
-  local end_line = start_node_left:range()
+  local start_line_right = start_node_right:range()
+  local end_line = end_node:range()
 
-  if start_line ~= end_line then
+  if start_line ~= start_line_right or start_line ~= end_line then
     return false
   end
 
@@ -227,7 +207,7 @@ local function load_deps()
   if query then
     return
   end
-  query = ts.get_query('org', 'markup')
+  query = vim.treesitter.query.get('org', 'markup')
   vim.treesitter.query.add_predicate('org-is-valid-markup-range?', is_valid_markup_range)
   vim.treesitter.query.add_predicate('org-is-valid-hyperlink-range?', is_valid_hyperlink_range)
   vim.treesitter.query.add_predicate('org-is-valid-latex-range?', is_valid_latex_range)
@@ -403,6 +383,7 @@ local function apply(namespace, bufnr, line_index)
       ephemeral = true,
       end_col = range.to['end'].character,
       hl_group = markers[range.type].hl_name,
+      spell = markers[range.type].spell,
       priority = 110 + range.from.start.character,
     })
 
@@ -424,6 +405,7 @@ local function apply(namespace, bufnr, line_index)
     local line = vim.api.nvim_buf_get_lines(bufnr, link_range.from.start.line, link_range.from.start.line + 1, false)[1]
     local link = line:sub(link_range.from.start.character + 1, link_range.to['end'].character)
     local alias = link:find('%]%[') or 1
+    local link_end = link:find('%]%[') or (link:len() - 1)
 
     vim.api.nvim_buf_set_extmark(bufnr, namespace, link_range.from.start.line, link_range.from.start.character, {
       ephemeral = true,
@@ -438,6 +420,12 @@ local function apply(namespace, bufnr, line_index)
       conceal = '',
     })
 
+    vim.api.nvim_buf_set_extmark(bufnr, namespace, link_range.from.start.line, link_range.from.start.character + 2, {
+      ephemeral = true,
+      end_col = link_range.from.start.character - 1 + link_end,
+      spell = false,
+    })
+
     vim.api.nvim_buf_set_extmark(bufnr, namespace, link_range.from.start.line, link_range.to['end'].character - 2, {
       ephemeral = true,
       end_col = link_range.to['end'].character,
@@ -450,6 +438,7 @@ local function apply(namespace, bufnr, line_index)
       ephemeral = true,
       end_col = latex_range.to['end'].character,
       hl_group = markers[latex_range.type].hl_name,
+      spell = markers[latex_range.type].spell,
       priority = 110 + latex_range.from.start.character,
     })
   end

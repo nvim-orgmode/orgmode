@@ -1,0 +1,19 @@
+* Heading Sub1
+  [[file:./../testfile.org::*Heading root]] -> should jump to Ha
+  [[*Redundant]] -> should work (should show options)
+  [[file:./../subdir2/subtest2.org::*Subheading Sub2][to subtest2]] -> should work
+  [[file:./../subdir2/subtest2.org::* -> test autocompletion, should work (Bug: works only when file is open)
+
+  [[file:./../testfile.org::*Heading root][to root]]
+** Redundant
+   :PROPERTIES:
+   :CUSTOM_ID: ID_Redundant
+   :END:
+   [[][should not work]]
+*** Redundant
+   :PROPERTIES:
+   :CUSTOM_ID: ID_Redundant
+   :END:
+    [[./../testfile.org]]
+    [[file:./../testfile.org::#ID_Subheading_root]]
+    [[./../testfile.org::*Tests: Misc]]

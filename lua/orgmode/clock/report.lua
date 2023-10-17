@@ -45,7 +45,7 @@ function ClockReport:draw_for_agenda(start_line)
     table.insert(data, 'hr')
   end
 
-  local clock_table = Table.from_list(data, start_line):compile()
+  local clock_table = Table.from_list(data, start_line, 0):compile()
   self.table = clock_table
   local result = {}
   for i, row in ipairs(clock_table.rows) do
@@ -111,25 +111,25 @@ end
 ---@param to Date
 ---@return ClockReport
 function ClockReport.from_date_range(from, to)
-  local report = {
-    from = from,
-    to = to,
-    total_duration = 0,
-    files = {},
-  }
+  local total_duration = 0
+  local files = {}
   for _, orgfile in ipairs(Files.all()) do
     local file_clocks = orgfile:get_clock_report(from, to)
     if #file_clocks.headlines > 0 then
-      report.total_duration = report.total_duration + file_clocks.total_duration.minutes
-      table.insert(report.files, {
+      total_duration = total_duration + file_clocks.total_duration.minutes
+      table.insert(files, {
         name = orgfile.category .. '.org',
         total_duration = file_clocks.total_duration,
         headlines = file_clocks.headlines,
       })
     end
   end
-  report.total_duration = Duration.from_minutes(report.total_duration)
-  return ClockReport:new(report)
+  return ClockReport:new({
+    from = from,
+    to = to,
+    total_duration = Duration.from_minutes(total_duration),
+    files = files,
+  })
 end
 
 return ClockReport

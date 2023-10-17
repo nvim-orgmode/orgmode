@@ -10,12 +10,13 @@ local config = require('orgmode.config')
 local constants = require('orgmode.utils.constants')
 local ts_utils = require('nvim-treesitter.ts_utils')
 local utils = require('orgmode.utils')
+local fs = require('orgmode.utils.fs')
 local ts_org = require('orgmode.treesitter')
-local ts = require('orgmode.treesitter.compat')
 local ts_table = require('orgmode.treesitter.table')
 local EventManager = require('orgmode.events')
 local Promise = require('orgmode.utils.promise')
 local events = EventManager.event
+local Link = require('orgmode.objects.link')
 
 ---@class OrgMappings
 ---@field capture Capture
@@ -173,19 +174,19 @@ function OrgMappings:toggle_checkbox()
 end
 
 function OrgMappings:timestamp_up_day()
-  return self:_adjust_date(vim.v.count1, 'd', config.mappings.org.org_timestamp_up_day)
+  return self:_adjust_date(vim.v.count1, 'd', vim.v.count1 .. config.mappings.org.org_timestamp_up_day)
 end
 
 function OrgMappings:timestamp_down_day()
-  return self:_adjust_date(-vim.v.count1, 'd', config.mappings.org.org_timestamp_down_day)
+  return self:_adjust_date(-vim.v.count1, 'd', vim.v.count1 .. config.mappings.org.org_timestamp_down_day)
 end
 
 function OrgMappings:timestamp_up()
-  return self:_adjust_date_part('+', vim.v.count1, config.mappings.org.org_timestamp_up)
+  return self:_adjust_date_part('+', vim.v.count1, vim.v.count1 .. config.mappings.org.org_timestamp_up)
 end
 
 function OrgMappings:timestamp_down()
-  return self:_adjust_date_part('-', vim.v.count1, config.mappings.org.org_timestamp_down)
+  return self:_adjust_date_part('-', vim.v.count1, vim.v.count1 .. config.mappings.org.org_timestamp_down)
 end
 
 function OrgMappings:_adjust_date_part(direction, amount, fallback)
@@ -460,7 +461,13 @@ function OrgMappings:_todo_change_state(direction)
       if not note then
         return
       end
-      local append_line = headline:get_append_line()
+      local drawer = config.org_log_into_drawer
+      local append_line
+      if drawer ~= nil then
+        append_line = headline:get_drawer_append_line(drawer)
+      else
+        append_line = headline:get_append_line()
+      end
       vim.api.nvim_buf_set_lines(0, append_line, append_line, false, note)
     end)
 end
@@ -499,12 +506,19 @@ function OrgMappings:org_return()
     end
   end
 
-  local old_mapping = config.old_cr_mapping
+  local old_mapping = vim.b.org_old_cr_mapping
 
+  -- No other mapping for <CR>, just reproduce it.
   if not old_mapping or vim.tbl_isempty(old_mapping) then
     return vim.api.nvim_feedkeys(utils.esc('<CR>'), 'n', true)
   end
 
+  -- Lua mapping that installed a Lua function to call.
+  if old_mapping.callback then
+    return old_mapping.callback()
+  end
+
+  -- Classic, string-based mapping. Reconstruct it as faithfully as possible.
   local rhs = utils.esc(old_mapping.rhs)
 
   if old_mapping.expr > 0 then
@@ -558,7 +572,7 @@ function OrgMappings:handle_return(suffix)
     vim.cmd([[normal! ^]])
     item = Files.get_current_file():get_current_node()
   end
-  if item.type == 'paragraph' or item.type == 'bullet' then
+  if item.type == 'paragraph' or item.type == 'bullet' or item.type == 'checkbox' or item.type == 'status' then
     local listitem = item.node:parent()
     if listitem:type() ~= 'listitem' then
       return
@@ -600,7 +614,7 @@ function OrgMappings:handle_return(suffix)
       local counter = 1
       while next_sibling do
         local bullet = next_sibling:child(0)
-        local text = ts.get_node_text(bullet, 0)
+        local text = vim.treesitter.get_node_text(bullet, 0)
         local new_text = tostring(tonumber(text:match('%d+')) + 1) .. closer
 
         if counter == 1 then
@@ -694,6 +708,51 @@ function OrgMappings:_insert_heading_from_plain_line(suffix)
   end
 end
 
+-- Inserts a new link after the cursor position or modifies the link the cursor is
+-- currently on
+function OrgMappings:insert_link()
+  local link_location = vim.fn.OrgmodeInput('Links: ', '')
+  if vim.trim(link_location) ~= '' then
+    link_location = '[' .. link_location .. ']'
+  else
+    utils.echo_warning('No Link selected')
+    return
+  end
+  local link_description = vim.trim(vim.fn.OrgmodeInput('Description: ', ''))
+  if link_description ~= '' then
+    link_description = '[' .. link_description .. ']'
+  end
+
+  local insert_from
+  local insert_to
+  local target_col = #link_location + #link_description + 2
+
+  -- check if currently on link
+  local link = self:_get_link_under_cursor()
+  if link then
+    insert_from = link.from - 1
+    insert_to = link.to + 1
+    target_col = target_col + link.from
+  else
+    local colnr = vim.fn.col('.')
+    insert_from = colnr
+    insert_to = colnr + 1
+    target_col = target_col + colnr
+  end
+
+  local linenr = vim.fn.line('.')
+  local curr_line = vim.fn.getline(linenr)
+  local new_line = string.sub(curr_line, 0, insert_from)
+    .. '['
+    .. link_location
+    .. link_description
+    .. ']'
+    .. string.sub(curr_line, insert_to, #curr_line)
+
+  vim.fn.setline(linenr, new_line)
+  vim.fn.cursor(linenr, target_col)
+end
+
 function OrgMappings:move_subtree_up()
   local item = Files.get_closest_headline()
   local prev_headline = item:get_prev_headline_same_level()
@@ -738,42 +797,36 @@ function OrgMappings:open_at_point()
     return
   end
 
-  local parts = vim.split(link, '][', true)
-  local url = parts[1]
-  local link_ctx = { base = url, skip_add_prefix = true }
-  if url:find('^file:') then
-    if url:find(' +', 1, true) then
-      parts = vim.split(url, ' +', true)
-      url = parts[1]
-      local line_number = parts[2]
-      vim.cmd(string.format('edit +%s %s', line_number, Hyperlinks.get_file_real_path(url)))
-      vim.cmd([[normal! zv]])
-      return
-    end
-
-    if url:find('^file:(.-)::') then
-      link_ctx.line = url
-    else
-      vim.cmd(string.format('edit %s', Hyperlinks.get_file_real_path(url)))
-      vim.cmd([[normal! zv]])
-      return
-    end
-  end
-  if url:find('^https?://') then
+  local url = link.url.str
+  if link.url:is_file_plain() then
+    local file_path = link.url:get_filepath()
+    local cmd = file_path and string.format('edit %s', fs.get_real_path(file_path)) or ''
+    vim.cmd(cmd)
+    vim.cmd([[normal! zv]])
+    return
+  elseif link.url:is_file_line_number() then
+    local line_number = link.url:get_linenumber() or 0
+    local file_path = link.url:get_filepath() or utils.current_file_path()
+    local cmd = string.format('edit +%s %s', line_number, fs.get_real_path(file_path))
+    vim.cmd(cmd)
+    return vim.cmd([[normal! zv]])
+  elseif link.url:is_http_url() then
     if not vim.g.loaded_netrwPlugin then
       return utils.echo_warning('Netrw plugin must be loaded in order to open urls.')
     end
     return vim.fn['netrw#BrowseX'](url, vim.fn['netrw#CheckIfRemote']())
-  end
-  local stat = vim.loop.fs_stat(url)
-  if stat and stat.type == 'file' then
-    return vim.cmd(string.format('edit %s', url))
+  elseif not link.url:is_org_link() then
+    utils.echo_warning(string.format('Unsupported link format: %q', url))
+    return
   end
 
+  local headlines = Hyperlinks.find_matching_links(link.url)
   local current_headline = Files.get_closest_headline()
-  local headlines = vim.tbl_filter(function(headline)
-    return headline.line ~= current_headline.line and headline.id ~= current_headline.id
-  end, Hyperlinks.find_matching_links(link_ctx))
+  if current_headline then
+    headlines = vim.tbl_filter(function(headline)
+      return headline.line ~= current_headline.line and headline.id ~= current_headline.id
+    end, headlines)
+  end
   if #headlines == 0 then
     return
   end
@@ -794,7 +847,8 @@ function OrgMappings:open_at_point()
     headline = headlines[choice]
   end
   vim.cmd(string.format('edit %s', headline.file))
-  vim.fn.cursor(headline.range.start_line, 0)
+  vim.fn.cursor({ headline.range.start_line, 0 })
+  vim.cmd([[normal! zv]])
 end
 
 function OrgMappings:export()
@@ -975,6 +1029,7 @@ function OrgMappings:_get_date_under_cursor(col_offset)
     return nil
   end
 
+  -- TODO: this will result in a bug, when more than one date is in the line
   return dates[1]
 end
 
@@ -1009,22 +1064,11 @@ function OrgMappings:_adjust_date(amount, span, fallback)
   return vim.api.nvim_feedkeys(utils.esc(fallback), 'n', true)
 end
 
----@return string|nil
+---@return Link|nil
 function OrgMappings:_get_link_under_cursor()
-  local found_link = nil
-  local links = {}
   local line = vim.fn.getline('.')
   local col = vim.fn.col('.')
-  for link in line:gmatch('%[%[(.-)%]%]') do
-    local start_from = #links > 0 and links[#links].to or nil
-    local from, to = line:find('%[%[(.-)%]%]', start_from)
-    if col >= from and col <= to then
-      found_link = link
-      break
-    end
-    table.insert(links, { link = link, from = from, to = to })
-  end
-  return found_link
+  return Link.at_pos(line, col)
 end
 
 return OrgMappings

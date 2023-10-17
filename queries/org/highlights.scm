@@ -8,6 +8,11 @@
 (headline (stars) @stars (#eq? @stars "******")) @OrgTSHeadlineLevel6
 (headline (stars) @stars (#eq? @stars "*******")) @OrgTSHeadlineLevel7
 (headline (stars) @stars (#eq? @stars "********")) @OrgTSHeadlineLevel8
+(headline (item) @spell)
+(item . (expr) @OrgTODO @nospell (#org-is-todo-keyword? @OrgTODO "TODO"))
+(item . (expr) @OrgDONE @nospell (#org-is-todo-keyword? @OrgDONE "DONE"))
+(list (listitem (paragraph) @spell))
+(body (paragraph) @spell)
 (bullet) @OrgTSBullet
 (checkbox) @OrgTSCheckbox
 (checkbox status: (expr "-") @OrgTSCheckboxHalfChecked)
@@ -24,6 +29,5 @@
 (drawer) @OrgTSDrawer
 (tag_list) @OrgTSTag
 (plan) @OrgTSPlan
-(comment) @OrgTSComment
+(comment) @OrgTSComment @spell
 (directive) @OrgTSDirective
-(ERROR) @LspDiagnosticsUnderlineError

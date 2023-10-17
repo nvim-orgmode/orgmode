@@ -131,6 +131,7 @@ return {
       'org_mappings.org_time_stamp',
       { args = { true }, opts = { desc = 'org timestamp (inactive)' } }
     ),
+    org_insert_link = m.action('org_mappings.insert_link', { opts = { desc = 'org insert link' } }),
     org_clock_in = m.action('clock.org_clock_in', { opts = { desc = 'org clock in' } }),
     org_clock_out = m.action('clock.org_clock_out', { opts = { desc = 'org clock out' } }),
     org_clock_cancel = m.action('clock.org_clock_cancel', { opts = { desc = 'org clock cancel' } }),

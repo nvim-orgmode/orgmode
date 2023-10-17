@@ -21,9 +21,9 @@ function MapEntry.action(handler, opts)
     opts.args = nil
   end
 
-  action = ('<cmd>lua require("orgmode").action(%s)<CR>'):format(table.concat(action, ','))
+  local formatted_action = ('<cmd>lua require("orgmode").action(%s)<CR>'):format(table.concat(action, ','))
 
-  return MapEntry:new(action, opts)
+  return MapEntry:new(formatted_action, opts)
 end
 
 function MapEntry.text_object(handler)

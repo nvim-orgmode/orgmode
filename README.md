@@ -1,16 +1,16 @@
 
 
 <div align="center">
-  <img alt="[org-neovim-blend" src="https://user-images.githubusercontent.com/1782860/124820564-eddc5000-df6d-11eb-9016-d0c073a9575c.png" width="250" />
+  <img alt="A blend of the Neovim (shape) and Org-mode (colours) logos" src="assets/nvim-orgmode.svg" width="250px" />
 
 # nvim-orgmode
 
   <a href="/LICENSE">![License](https://img.shields.io/badge/license-MIT-brightgreen?style=flat-square)</a><a href="https://ko-fi.com/kristijanhusak"> ![Kofi](https://img.shields.io/badge/support-kofi-00b9fe?style=flat-square&logo=kofi)</a><a href="https://matrix.to/#/#neovim-orgmode:matrix.org"> ![Chat](https://img.shields.io/matrix/neovim-orgmode:matrix.org?logo=matrix&server_fqdn=matrix.org&style=flat-square)</a>
 
 
-  Orgmode clone written in Lua for Neovim 0.8+
+  Orgmode clone written in Lua for Neovim 0.9+
 
-  [Setup](#setup) • [Docs](/DOCS.md) • [Showcase](#showcase) • [Treesitter](#treesitter-info) • [Troubleshoot](#troubleshoot) • [Plugins](#plugins) • [Development](#development) • [Kudos](#thanks-to)
+  [Setup](#setup) • [Docs](/DOCS.md) • [Showcase](#showcase) • [Treesitter](#treesitter-info) • [Troubleshoot](#troubleshoot) • [Plugins](#plugins) • [Contributing](CONTRIBUTING.md) • [Kudos](#thanks-to)
 
 
 </div>
@@ -19,26 +19,50 @@
 
 ### Requirements
 
-* Neovim 0.8.0 or later
+* Neovim 0.9.0 or later
 * [nvim-treesitter](https://github.com/nvim-treesitter/nvim-treesitter)
 
 ### Installation
 
 Use your favourite package manager:
 
-<details>
-  <summary><a href="https://github.com/kristijanhusak/vim-packager"><b>vim-packager</b></a></summary>
+<details open>
+  <summary><b><a href="https://github.com/folke/lazy.nvim">lazy.nvim</a> (recommended)</b></summary>
   </br>
 
 ```lua
-packager.add('nvim-treesitter/nvim-treesitter')
-packager.add('nvim-orgmode/orgmode')
+{
+  'nvim-orgmode/orgmode',
+  dependencies = {
+    { 'nvim-treesitter/nvim-treesitter', lazy = true },
+  },
+  event = 'VeryLazy',
+  config = function()
+    -- Load treesitter grammar for org
+    require('orgmode').setup_ts_grammar()
+
+    -- Setup treesitter
+    require('nvim-treesitter.configs').setup({
+      highlight = {
+        enable = true,
+        additional_vim_regex_highlighting = { 'org' },
+      },
+      ensure_installed = { 'org' },
+    })
+
+    -- Setup orgmode
+    require('orgmode').setup({
+      org_agenda_files = '~/orgfiles/**/*',
+      org_default_notes_file = '~/orgfiles/refile.org',
+    })
+  end,
+}
 ```
 
 </details>
 
 <details open>
-  <summary><b><a href="https://github.com/wbthomason/packer.nvim">packer.nvim</a> (recommended)</b></summary>
+  <summary><b><a href="https://github.com/wbthomason/packer.nvim">packer.nvim</a></b></summary>
   </br>
 
 ```lua
@@ -72,27 +96,10 @@ call dein#add('nvim-orgmode/orgmode')
 ```
 
 </details>
-
-<details>
-  <summary><b>Lazy loading (not recommended)</b></summary>
-  </br>
-
-Lazy loading via `ft` option works, but not completely. Global mappings are not set because plugin is not initialized on startup.
-Above setup has a startup time of somewhere between 1 and 3 ms, so there are not many benefits in lazy loading.
-If you want to do it anyway, here's the lazy load setup:
-```lua
-use {'nvim-treesitter/nvim-treesitter'}
-use {'nvim-orgmode/orgmode',
-    ft = {'org'},
-    config = function()
-            require('orgmode').setup{}
-    end
-    }
-```
-
-</details>
-
 ### Setup
+
+Note that this setup is not needed for [lazy.nvim](https://github.com/folke/lazy.nvim)
+since instructions above covers full setup
 
 ```lua
 -- init.lua
@@ -212,8 +219,6 @@ Highlights are experimental and partially supported.
 * Allows for easier hacking (custom motions that can work with TS nodes, etc.)
 
 ### Known highlighting issues and limitations
-* Performance issues. This is generally an issue in Neovim that should be resolved before 0.6 release (https://github.com/neovim/neovim/issues/14762, https://github.com/neovim/neovim/issues/14762)
-* Anything that requires concealing ([org_hide_emphasis_markers](/DOCS.md#org_hide_emphasis_markers), links concealing) is not (yet) supported in TS highlighter
 * LaTex is still highlighted through syntax file
 
 ### Improvements over Vim's syntax highlighting
@@ -222,9 +227,6 @@ Highlights are experimental and partially supported.
 * Headline markup highlighting (https://github.com/nvim-orgmode/orgmode/issues/67)
 
 ## Troubleshoot
-### Folding is not working
-Make sure you are not overriding foldexpr in Org buffers with [nvim-treesitter folding](https://github.com/nvim-treesitter/nvim-treesitter#folding)
-
 ### Indentation is not working
 Make sure you are not overriding indentexpr in Org buffers with [nvim-treesitter indentation](https://github.com/nvim-treesitter/nvim-treesitter#indentation)
 
@@ -371,29 +373,21 @@ and a good foundation for external plugins.<br />
 If you want to build a plugin, post suggestions and improvements on [Plugins infrastructure](https://github.com/nvim-orgmode/orgmode/issues/26)
 issue.
 
-## Development
+### :wrench: API
 
-### Tests
- To run tests, [plenary.nvim](https://github.com/nvim-lua/plenary.nvim) and [nvim-treesitter](https://github.com/nvim-treesitter/nvim-treesitter) must be present in the nvim-orgmode directory:
-```
-git clone https://github.com/nvim-treesitter/nvim-treesitter
-git clone https://github.com/nvim-lua/plenary.nvim
-make test
-```
+Documentation for our work-in-progress API can be found [here](doc/orgmode_api.txt)
 
-### Documentation
-Hosted documentation is on: [https://nvim-orgmode.github.io/](https://nvim-orgmode.github.io/)
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md)
+
+## Documentation
+
+If you are just starting out with orgmode, have a look at the [Getting Started](https://github.com/nvim-orgmode/orgmode/wiki/Getting-Started) section in our wiki.
 
 Vim documentation is auto generated from [DOCS.md](DOCS.md) file with [md2vim](https://github.com/FooSoft/md2vim).
 
-### Formatting
-Formatting is done via [StyLua](https://github.com/JohnnyMorganz/StyLua). To format everything run:
-```
-make format
-```
-
-### Parser
-Parsing is done via builtin treesitter parser and [tree-sitter-org](https://github.com/milisims/tree-sitter-org) grammar.
+Hosted documentation is on: [https://nvim-orgmode.github.io/](https://nvim-orgmode.github.io/)
 
 ## Roadmap
 * [X] Support searching by properties

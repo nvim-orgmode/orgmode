@@ -1,65 +1,48 @@
-local ts = require('orgmode.treesitter.compat')
-local config = require('orgmode.config')
+local Promise = require('orgmode.utils.promise')
 local highlights = require('orgmode.colors.highlights')
 local tree_utils = require('orgmode.utils.treesitter')
 local utils = require('orgmode.utils')
 
 local function add_todo_keyword_highlights()
-  local query_files = ts.get_query_files('org', 'highlights')
+  local query_files = vim.treesitter.query.get_files('org', 'highlights')
   if not query_files or #query_files == 0 then
     return
   end
-  local todo_keywords = config:get_todo_keywords()
   local faces = highlights.parse_todo_keyword_faces()
-  local all_lines = {}
+  if not faces or vim.tbl_isempty(faces) then
+    return
+  end
+
+  local actions = {}
   for i, _ in pairs(query_files) do
     if i ~= #query_files then
-      utils.readfile(
-        query_files[i],
-        vim.schedule_wrap(function(err, lines)
-          if err then
-            return
-          end
-          for _, v in ipairs(lines) do
-            table.insert(all_lines, v)
-          end
-        end)
-      )
+      table.insert(actions, utils.readfile(query_files[i]))
     else
-      utils.readfile(
-        query_files[i],
-        vim.schedule_wrap(function(err, lines)
-          if err then
-            return
-          end
-          local todo_type = table.concat(
-            vim.tbl_map(function(word)
-              return string.format('"%s"', word)
-            end, todo_keywords.TODO),
-            ' '
-          )
-          local done_type = table.concat(
-            vim.tbl_map(function(word)
-              return string.format('"%s"', word)
-            end, todo_keywords.DONE),
-            ' '
-          )
-          table.insert(lines, string.format([[(item . (expr) @OrgTODO (#any-of? @OrgTODO %s))]], todo_type))
-          table.insert(lines, string.format([[(item . (expr) @OrgDONE (#any-of? @OrgDONE %s))]], done_type))
+      table.insert(
+        actions,
+        utils.readfile(query_files[i]):next(function(lines)
           for face_name, face_hl in pairs(faces) do
-            table.insert(lines, string.format([[(item . (expr) @%s (#eq? @%s %s))]], face_hl, face_hl, face_name))
+            table.insert(
+              lines,
+              string.format([[(item . (expr) @%s @nospell (#eq? @%s %s))]], face_hl, face_hl, face_name)
+            )
           end
-          for _, v in ipairs(lines) do
-            table.insert(all_lines, v)
-          end
-          ts.set_query('org', 'highlights', table.concat(all_lines, '\n'))
-          if vim.bo.filetype == 'org' then
-            tree_utils.restart_highlights()
-          end
+          return lines
         end)
       )
     end
   end
+
+  return Promise.all(actions):next(function(line_parts)
+    local all_lines = {}
+    for _, line_part in ipairs(line_parts) do
+      utils.concat(all_lines, line_part)
+    end
+    vim.treesitter.query.set('org', 'highlights', table.concat(all_lines, '\n'))
+    if vim.bo.filetype == 'org' then
+      tree_utils.restart_highlights()
+    end
+  end)
 end
 
 return {

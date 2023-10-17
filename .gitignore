@@ -39,6 +39,5 @@ luac.out
 *.x86_64
 *.hex
 
-plenary.nvim/
-nvim-treesitter/
-mini.nvim/
+# Directory containing testing dependencies downloaded during test run
+.deps/

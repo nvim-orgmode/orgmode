@@ -22,26 +22,26 @@ end
 local function sort_agenda_items(agenda_items)
   table.sort(agenda_items, function(a, b)
     if a.is_same_day and b.is_same_day then
-      if not a.real_date.date_only and b.real_date.date_only then
+      if a.real_date:has_time() and not b.real_date:has_time() then
         return true
       end
-      if not b.real_date.date_only and a.real_date.date_only then
+      if b.real_date:has_time() and not a.real_date:has_time() then
         return false
       end
-      if not a.real_date.date_only and not b.real_date.date_only then
+      if a.real_date:has_time() and b.real_date:has_time() then
         return a.real_date:is_before(b.real_date)
       end
       return sort_by_date_or_priority_or_category(a, b)
     end
 
     if a.is_same_day and not b.is_same_day then
-      if not a.real_date.date_only or (b.real_date:is_none() and not a.real_date:is_none()) then
+      if a.real_date:has_time() or (b.real_date:is_none() and not a.real_date:is_none()) then
         return true
       end
     end
 
     if not a.is_same_day and b.is_same_day then
-      if not b.real_date.date_only or (a.real_date:is_none() and not b.real_date:is_none()) then
+      if b.real_date:has_time() or (a.real_date:is_none() and not b.real_date:is_none()) then
         return false
       end
     end

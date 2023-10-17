@@ -14,27 +14,19 @@ jobs:
       fail-fast: false
       matrix:
         version:
-          - v0.8.0
-          - v0.8.1
+          - v0.9.0
+          - v0.9.1
+          - v0.9.2
           - nightly
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - uses: JohnnyMorganz/stylua-action@v1
+      - uses: actions/checkout@v4
+      - uses: JohnnyMorganz/stylua-action@v3
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
+          version: latest
           # CLI arguments
           args: --check lua/ tests/
-      - name: Install Plenary
-        uses: actions/checkout@v2
-        with:
-          repository: nvim-lua/plenary.nvim
-          path: plenary.nvim
-      - name: Install Treesitter
-        uses: actions/checkout@v2
-        with:
-          repository: nvim-treesitter/nvim-treesitter
-          path: nvim-treesitter
       - name: Install Neovim
         uses: rhysd/action-setup-vim@v1
         id: neovim

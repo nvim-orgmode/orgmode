@@ -150,7 +150,7 @@ function AgendaItem:_is_valid_for_date()
 end
 
 function AgendaItem:_generate_label()
-  local time = not self.headline_date.date_only and add_padding(self.headline_date:format_time()) or ''
+  local time = self.headline_date:has_time() and add_padding(self:_format_time(self.headline_date)) or ''
   if self.headline_date:is_deadline() then
     if self.is_same_day then
       return time .. 'Deadline:'
@@ -185,6 +185,29 @@ function AgendaItem:_generate_label()
   end
 
   return time
+end
+
+---@private
+---@param date Date
+function AgendaItem:_format_time(date)
+  local formatted_time = date:format_time()
+
+  -- e.g. <2024-09-24 Sun 10:00-11:00>
+  if date:has_time_range() then
+    return formatted_time
+  end
+
+  local date_range_end = date:get_date_range_end()
+
+  -- Format same day date ranges as a time range if the date itself
+  -- does not have a time range (e.g. <2023-09-24 Sun 10:00-11:00)
+  -- example: <2023-09-24 Sun 10:00>--<2023-09-24 Sun 11:00>
+  -- result: 10:00-11:00
+  if date_range_end and date_range_end:is_same(date, 'day') and date_range_end:has_time() then
+    return formatted_time .. '-' .. date_range_end:format_time()
+  end
+
+  return formatted_time
 end
 
 function AgendaItem:_generate_highlight()

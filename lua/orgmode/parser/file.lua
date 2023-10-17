@@ -1,12 +1,11 @@
 local Range = require('orgmode.parser.range')
 local Duration = require('orgmode.objects.duration')
 local Section = require('orgmode.parser.section')
-local LanguageTree = require('vim.treesitter.languagetree')
 local config = require('orgmode.config')
 local utils = require('orgmode.utils')
 
 ---@class File
----@field tree table
+---@field tree userdata
 ---@field file_content string[]
 ---@field file_content_str string
 ---@field category string
@@ -16,7 +15,7 @@ local utils = require('orgmode.utils')
 ---@field sections_by_line table<number, Section>
 ---@field source_code_filetypes string[]
 ---@field is_archive_file boolean
----@field archive_location string
+---@field archive_location string|nil
 ---@field clocked_headline Section
 ---@field tags string[]
 local File = {}
@@ -108,20 +107,20 @@ function File:get_unfinished_todo_entries()
   end, self.sections)
 end
 
----@param node table
+---@param node userdata
 ---@return string
 function File:get_node_text(node)
   return utils.get_node_text(node, self.file_content)[1] or ''
 end
 
----@param node table
+---@param node userdata
 ---@return string[]
 function File:get_node_text_list(node)
   return utils.get_node_text(node, self.file_content) or {}
 end
 
 ---@param query string
----@param node table|nil
+---@param node userdata|nil
 ---@return table[]
 function File:get_ts_matches(query, node)
   return utils.get_ts_matches(query, node or self.tree:root(), self.file_content, self.file_content_str)
@@ -152,26 +151,19 @@ function File.load(path, callback)
     return callback(nil)
   end
   local category = vim.fn.fnamemodify(path, ':t:r')
-  utils.readfile(
-    path,
-    vim.schedule_wrap(function(err, content)
-      if err then
-        return callback(nil)
-      end
-      return callback(File.from_content(content, category, path, ext == 'org_archive'))
-    end)
-  )
+  utils.readfile(path):next(vim.schedule_wrap(function(content)
+    return callback(File.from_content(content, category, path, ext == 'org_archive'))
+  end))
 end
 
----@param content string|table
+---@param content table
 ---@param category? string
 ---@param filename? string
 ---@param is_archive_file? boolean
 ---@return File|nil
 function File.from_content(content, category, filename, is_archive_file)
   local str_content = table.concat(content, '\n')
-  local trees = LanguageTree.new(str_content, 'org', {})
-  trees = trees:parse()
+  local trees = vim.treesitter.get_string_parser(str_content, 'org', {}):parse()
   if #trees > 0 then
     return File:new(trees[1], content, str_content, category, filename, is_archive_file)
   end
@@ -247,7 +239,7 @@ end
 
 ---@param search_term string
 ---@param no_escape boolean
----@param ignore_archive_flag boolean
+---@param ignore_archive_flag? boolean
 ---@return Section[]
 function File:find_headlines_matching_search_term(search_term, no_escape, ignore_archive_flag)
   if self.is_archive_file and not ignore_archive_flag then
@@ -295,7 +287,7 @@ function File:get_node_at_cursor(cursor)
 end
 
 ---@param id? string
----@return Section
+---@return Section|nil
 function File:get_closest_headline(id)
   local node = nil
   if not id then
@@ -329,22 +321,22 @@ end
 ---@param to Date
 ---@return table
 function File:get_clock_report(from, to)
-  local result = {
-    total_duration = 0,
-    headlines = {},
-  }
+  local total_duration = 0
+  local headlines = {}
   for _, section in ipairs(self.sections) do
     if section.logbook then
       local minutes = section.logbook:get_total_minutes(from, to)
       if minutes > 0 then
-        table.insert(result.headlines, section)
-        result.total_duration = result.total_duration + minutes
+        table.insert(headlines, section)
+        total_duration = total_duration + minutes
       end
     end
   end
 
-  result.total_duration = Duration.from_minutes(result.total_duration)
-  return result
+  return {
+    headlines = headlines,
+    total_duration = Duration.from_minutes(total_duration),
+  }
 end
 
 ---@param headline Section
@@ -353,7 +345,7 @@ function File:get_headline_lines(headline)
   return self:get_node_text_list(headline.node)
 end
 
----@return string
+---@return string|nil
 function File:get_archive_file_location()
   if self.archive_location then
     return self.archive_location

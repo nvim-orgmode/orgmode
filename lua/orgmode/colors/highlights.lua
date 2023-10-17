@@ -32,9 +32,7 @@ function M.link_ts_highlights()
   }
 
   for src, def in pairs(links) do
-    if vim.fn.has('nvim-0.8') > 0 then
-      vim.cmd(string.format([[hi link @%s %s]], src, src))
-    end
+    vim.cmd(string.format([[hi link @%s %s]], src, src))
     vim.cmd(string.format([[hi def link %s %s]], src, def))
   end
 end
@@ -81,9 +79,7 @@ function M.define_org_todo_keyword_colors(do_syn_match)
     )
   )
   vim.cmd('hi default link OrgTODO OrgTODO_builtin')
-  if vim.fn.has('nvim-0.8') > 0 then
-    vim.cmd('hi link @OrgTODO OrgTODO')
-  end
+  vim.cmd('hi link @OrgTODO OrgTODO')
   vim.cmd(
     string.format(
       'hi OrgDONE_builtin guifg=%s ctermfg=%s gui=bold cterm=bold',
@@ -92,16 +88,14 @@ function M.define_org_todo_keyword_colors(do_syn_match)
     )
   )
   vim.cmd('hi default link OrgDONE OrgDONE_builtin')
-  if vim.fn.has('nvim-0.8') > 0 then
-    vim.cmd('hi link @OrgDONE OrgDONE')
-  end
+  vim.cmd('hi link @OrgDONE OrgDONE')
   return M.parse_todo_keyword_faces(do_syn_match)
 end
 
 function M.define_org_headline_colors(faces)
   local headline_colors = { 'Title', 'Constant', 'Identifier', 'Statement', 'PreProc', 'Type', 'Special', 'String' }
   local ts_highlights_enabled = config:ts_highlights_enabled()
-  local all_keywords = {}
+  local all_keywords = ''
   if not ts_highlights_enabled then
     local todo_keywords = config:get_todo_keywords()
     all_keywords = table.concat(todo_keywords.ALL, [[\|]])
@@ -117,7 +111,6 @@ function M.define_org_headline_colors(faces)
     vim.cmd([[hi default OrgHideLeadingStars ctermfg=0 guifg=bg]])
     table.insert(contains, 'OrgHideLeadingStars')
   end
-  contains = table.concat(contains, ',')
   for i, color in ipairs(headline_colors) do
     local j = i
     while j < 40 do
@@ -128,7 +121,7 @@ function M.define_org_headline_colors(faces)
             j,
             j,
             all_keywords,
-            contains
+            table.concat(contains, ',')
           )
         )
       end
@@ -203,9 +196,7 @@ function M.parse_todo_keyword_faces(do_syn_match)
         vim.cmd(string.format([[syn match %s "\<%s\>" contained]], hl_name, name))
       end
       vim.cmd(string.format('hi %s %s', hl_name, hl))
-      if vim.fn.has('nvim-0.8') > 0 then
-        vim.cmd(string.format([[hi link @%s %s]], hl_name, hl_name))
-      end
+      vim.cmd(string.format([[hi link @%s %s]], hl_name, hl_name))
       result[name] = hl_name
     end
   end

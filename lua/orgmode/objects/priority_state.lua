@@ -23,7 +23,7 @@ function PriorityState:new(priority)
   return o
 end
 
----@return string
+---@return string|nil
 function PriorityState:prompt_user()
   local prompt = string.format('Priority %s-%s, <Space> to remove: ', self.high_priority, self.low_priority)
   local choice = vim.fn.input(prompt)

@@ -17,6 +17,9 @@ end
 function Clock:org_clock_in()
   local item = Files.get_closest_headline()
   local last_clocked_headline = Files.get_clocked_headline()
+  if not item then
+    return
+  end
   if item:is_clocked_in() then
     return utils.echo_info(string.format('Clock continues in "%s"', item.title))
   end
@@ -41,6 +44,9 @@ end
 
 function Clock:org_clock_out()
   local item = Files.get_closest_headline()
+  if not item then
+    return
+  end
   if not item:is_clocked_in() then
     return
   end
@@ -51,6 +57,9 @@ end
 
 function Clock:org_clock_cancel()
   local item = Files.get_closest_headline()
+  if not item then
+    return
+  end
   if not item:is_clocked_in() then
     return utils.echo_info('No active clock')
   end

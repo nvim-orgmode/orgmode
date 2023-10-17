@@ -4,6 +4,7 @@ local Files = require('orgmode.parser.files')
 local File = require('orgmode.parser.file')
 local Templates = require('orgmode.capture.templates')
 local ClosingNote = require('orgmode.capture.closing_note')
+local Menu = require('orgmode.ui.menu')
 
 ---@class Capture
 ---@field templates Templates
@@ -37,13 +38,13 @@ function Capture:_create_menu_items(templates)
         key = key,
       }
       if type(template) == 'string' then
-        item['label'] = template .. '...'
-        item['action'] = function()
+        item.label = template .. '...'
+        item.action = function()
           self:_create_prompt(self:_get_subtemplates(key, templates))
         end
       else
-        item['label'] = template.description
-        item['action'] = function()
+        item.label = template.description
+        item.action = function()
           return self:open_template(template)
         end
       end
@@ -54,12 +55,15 @@ function Capture:_create_menu_items(templates)
 end
 
 function Capture:_create_prompt(templates)
-  local menu_items = self:_create_menu_items(templates)
-  table.insert(menu_items, { label = '', key = '', separator = '-' })
-  table.insert(menu_items, { label = 'Quit', key = 'q' })
-  table.insert(menu_items, { label = '', separator = ' ', length = 1 })
-
-  return utils.menu('Select a capture template', menu_items, 'Template key')
+  local menu = Menu:new({
+    title = 'Select a capture template',
+    items = self:_create_menu_items(templates),
+    prompt = 'Template key',
+  })
+  menu:add_separator()
+  menu:add_option({ label = 'Quit', key = 'q' })
+  menu:add_separator({ icon = ' ', length = 1 })
+  return menu:open()
 end
 
 function Capture:prompt()
@@ -131,7 +135,9 @@ end
 ---@private
 function Capture:_get_refile_vars()
   local template = vim.api.nvim_buf_get_var(0, 'org_template') or {}
-  local file = vim.fn.resolve(vim.fn.fnamemodify(template.target or config.org_default_notes_file, ':p'))
+  local target = self.templates:compile_target(template.target or config.org_default_notes_file)
+  local file = vim.fn.resolve(vim.fn.fnamemodify(target, ':p'))
+
   if vim.fn.filereadable(file) == 0 then
     local choice = vim.fn.confirm(('Refile destination %s does not exist. Create now?'):format(file), '&Yes\n&No')
     if choice ~= 1 then
@@ -235,12 +241,17 @@ function Capture:refile_to_headline(destination_filename, lines, item, headline_
     end
   end
 
-  if item and item.level <= headline.level then
+  if item then
     -- Refiling in same file just moves the lines from one position
     -- to another,so we need to apply demote instantly
     local is_same_file = destination_file.filename == item.root.filename
-    lines = item:demote(headline.level - item.level + 1, true, not is_same_file)
+    if item.level <= headline.level then
+      lines = item:demote(headline.level - item.level + 1, true, not is_same_file)
+    else
+      lines = item:promote(item.level - headline.level - 1, true, not is_same_file)
+    end
   end
+
   local refiled = self:_refile_to(destination_filename, lines, item, headline.range.end_line)
   if not refiled then
     return false
@@ -275,7 +286,8 @@ function Capture:_refile_to(file, lines, item, destination_line)
     vim.api.nvim_open_win(bufnr, true, {
       relative = 'editor',
       width = 1,
-      height = 1,
+      -- TODO: Revert to 1 once the https://github.com/neovim/neovim/issues/19464 is fixed
+      height = 2,
       row = 99999,
       col = 99999,
       zindex = 1,

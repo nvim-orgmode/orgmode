@@ -180,7 +180,7 @@ function Files.update_file(filename, action)
   local is_same_file = filename == utils.current_file_path()
   local cur_win = vim.api.nvim_get_current_win()
   if is_same_file then
-    return utils.promisify(action(file)):next(function(result)
+    return Promise.resolve(action(file)):next(function(result)
       vim.cmd(':silent! w')
       return result
     end)
@@ -190,14 +190,15 @@ function Files.update_file(filename, action)
   vim.api.nvim_open_win(bufnr, true, {
     relative = 'editor',
     width = 1,
-    height = 1,
+    -- TODO: Revert to 1 once the https://github.com/neovim/neovim/issues/19464 is fixed
+    height = 2,
     row = 99999,
     col = 99999,
     zindex = 1,
     style = 'minimal',
   })
 
-  return utils.promisify(action(file)):next(function(result)
+  return Promise.resolve(action(file)):next(function(result)
     vim.cmd('silent! wq!')
     vim.api.nvim_set_current_win(cur_win)
     return result

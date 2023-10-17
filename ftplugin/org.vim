@@ -1,5 +1,11 @@
+if exists('b:did_ftplugin')
+  finish
+endif
+let b:did_ftplugin = 1
+
 lua require('orgmode.config'):setup_mappings('org')
 lua require('orgmode.config'):setup_mappings('text_objects')
+lua require('orgmode.config'):setup_foldlevel()
 
 function! OrgmodeFoldText()
   return luaeval('require("orgmode.org.indent").foldtext()')
@@ -29,5 +35,3 @@ inoreabbrev <silent><buffer> :now: <C-R>=luaeval("require('orgmode.objects.date'
 " abbreviations
 inoreabbrev <silent><buffer> :itoday: <C-R>=luaeval("require('orgmode.objects.date').today():to_wrapped_string(false)")<CR>
 inoreabbrev <silent><buffer> :inow: <C-R>=luaeval("require('orgmode.objects.date').now():to_wrapped_string(false)")<CR>
-
-command! -buffer OrgDiagnostics lua require('orgmode.org.diagnostics').print()
