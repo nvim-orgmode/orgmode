@@ -1196,14 +1196,6 @@ For adding/changing TODO keyword colors see [org-todo-keyword-faces](#org_todo_k
   * `OrgTSCheckboxChecked`: A checkbox checked with either `[x]` or `[X]`
   * `OrgTSCheckboxHalfChecked`: A checkbox checked with `[-]`
   * `OrgTSCheckboxUnchecked`: A empty checkbox
-  * `OrgTSHeadlineLevel1`: Headline at level 1
-  * `OrgTSHeadlineLevel2`: Headline at level 2
-  * `OrgTSHeadlineLevel3`: Headline at level 3
-  * `OrgTSHeadlineLevel4`: Headline at level 4
-  * `OrgTSHeadlineLevel5`: Headline at level 5
-  * `OrgTSHeadlineLevel6`: Headline at level 6
-  * `OrgTSHeadlineLevel7`: Headline at level 7
-  * `OrgTSHeadlineLevel8`: Headline at level 8
 
 * The following use vanilla _Vim_ syntax matching, and will work without _Treesitter_ highlighting enabled.
 

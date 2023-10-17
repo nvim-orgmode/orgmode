@@ -1589,14 +1589,6 @@ HIGHLIGHT GROUPS                                        *orgmode-highlight_group
     *   `OrgTSCheckboxChecked`: A checkbox checked with either `[x]` or `[X]`
     *   `OrgTSCheckboxHalfChecked`: A checkbox checked with `[-]`
     *   `OrgTSCheckboxUnchecked`: A empty checkbox
-    *   `OrgTSHeadlineLevel1`: Headline at level 1
-    *   `OrgTSHeadlineLevel2`: Headline at level 2
-    *   `OrgTSHeadlineLevel3`: Headline at level 3
-    *   `OrgTSHeadlineLevel4`: Headline at level 4
-    *   `OrgTSHeadlineLevel5`: Headline at level 5
-    *   `OrgTSHeadlineLevel6`: Headline at level 6
-    *   `OrgTSHeadlineLevel7`: Headline at level 7
-    *   `OrgTSHeadlineLevel8`: Headline at level 8
 *   The following use vanilla Vim syntax matching, and will work without Treesitter highlighting enabled.
     *   `OrgEditSrcHighlight`: The highlight for the source content in an Org buffer while it is being edited in an edit special buffer
     *   `OrgAgendaDeadline`: A item deadline in the agenda view

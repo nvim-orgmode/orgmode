@@ -20,10 +20,10 @@ function! OrgmodeFormatExpr()
 endfunction
 
 setlocal nomodeline
-setlocal fillchars+=fold:\ 
-setlocal foldmethod=expr
-setlocal foldexpr=nvim_treesitter#foldexpr()
-setlocal foldtext=OrgmodeFoldText()
+" setlocal fillchars+=fold:\ 
+" setlocal foldmethod=expr
+" setlocal foldexpr=nvim_treesitter#foldexpr()
+" setlocal foldtext=OrgmodeFoldText()
 setlocal formatexpr=OrgmodeFormatExpr()
 setlocal omnifunc=OrgmodeOmni
 setlocal commentstring=#\ %s

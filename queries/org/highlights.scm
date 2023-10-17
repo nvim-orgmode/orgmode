@@ -1,13 +1,13 @@
 (timestamp "<") @OrgTSTimestampActive
 (timestamp "[") @OrgTSTimestampInactive
-(headline (stars) @stars (#eq? @stars "*")) @OrgTSHeadlineLevel1
-(headline (stars) @stars (#eq? @stars "**")) @OrgTSHeadlineLevel2
-(headline (stars) @stars (#eq? @stars "***")) @OrgTSHeadlineLevel3
-(headline (stars) @stars (#eq? @stars "****")) @OrgTSHeadlineLevel4
-(headline (stars) @stars (#eq? @stars "*****")) @OrgTSHeadlineLevel5
-(headline (stars) @stars (#eq? @stars "******")) @OrgTSHeadlineLevel6
-(headline (stars) @stars (#eq? @stars "*******")) @OrgTSHeadlineLevel7
-(headline (stars) @stars (#eq? @stars "********")) @OrgTSHeadlineLevel8
+(headline (stars) @text.title.1.marker (#eq? @text.title.1.marker "*")) @text.title.1
+(headline (stars) @text.title.2.marker (#eq? @text.title.2.marker "**")) @text.title.2
+(headline (stars) @text.title.3.marker (#eq? @text.title.3.marker "***")) @text.title.3
+(headline (stars) @text.title.4.marker (#eq? @text.title.4.marker "****")) @text.title.4
+(headline (stars) @text.title.5.marker (#eq? @text.title.5.marker "*****")) @text.title.5
+(headline (stars) @text.title.6.marker (#eq? @text.title.6.marker "******")) @text.title.6
+(headline (stars) @text.title.7.marker (#eq? @text.title.7.marker "*******")) @text.title.7
+(headline (stars) @text.title.8.marker (#eq? @text.title.8.marker "********")) @text.title.8
 (headline (item) @spell)
 (item . (expr) @OrgTODO @nospell (#org-is-todo-keyword? @OrgTODO "TODO"))
 (item . (expr) @OrgDONE @nospell (#org-is-todo-keyword? @OrgDONE "DONE"))
