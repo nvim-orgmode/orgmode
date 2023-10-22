@@ -10,9 +10,12 @@ function M.substitute_path(path_str)
   elseif path_str:match('^~/') then
     local home_path = os.getenv('HOME')
     return home_path and path_str:gsub('^~', home_path) or false
-  elseif path_str:match('^./') then
+  elseif path_str:match('^%./') then
     local base = vim.fn.fnamemodify(utils.current_file_path(), ':p:h')
-    return base .. '/' .. path_str:gsub('^./', '')
+    return base .. '/' .. path_str:gsub('^%./', '')
+  elseif path_str:match('^%.%./') then
+    local base = vim.fn.fnamemodify(utils.current_file_path(), ':p:h')
+    return base .. '/' .. path_str
   else
     return false
   end

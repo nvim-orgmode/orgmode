@@ -50,7 +50,7 @@ function Url:is_org_link()
 end
 
 function Url:is_file()
-  return self.str:find('^file:') or self.str:find('^./') or self.str:find('^/')
+  return self.str:find('^file:') or self.str:find('^%.%./') or self.str:find('^%./') or self.str:find('^/')
 end
 
 function Url:is_file_plain()
@@ -79,11 +79,20 @@ end
 function Url:extract_path()
   local url = self
   if url:is_file_headline() or url:is_file_custom_id() then
-    return url.str:match('^file:([^:]-)::') or url.str:match('^(./[^:]-)::') or url.str:match('^(/[^:]-)::')
+    return url.str:match('^file:([^:]-)::')
+      or url.str:match('^(%.%./[^:]-)::')
+      or url.str:match('^(%./[^:]-)::')
+      or url.str:match('^(/[^:]-)::')
   elseif url:is_file_line_number() then
-    return url.str:match('^file:([^:]-) %+') or url.str:match('^(./[^:]-) %+') or url.str:match('^(/[^:]-) %+')
+    return url.str:match('^file:([^:]-) %+')
+      or url.str:match('^(%.%./[^:]-) %+')
+      or url.str:match('^(%./[^:]-) %+')
+      or url.str:match('^(/[^:]-) %+')
   elseif url:is_file_plain() then
-    return url.str:match('^file:([^:]-)$') or url.str:match('^(./[^:]-)$') or url.str:match('^(/[^:]-)$')
+    return url.str:match('^file:([^:]-)$')
+      or url.str:match('^(%.%./[^:]-)$')
+      or url.str:match('^(%./[^:]-)$')
+      or url.str:match('^(/[^:]-)$')
   else
     return false
   end
@@ -98,7 +107,8 @@ end
 ---@return string | false
 function Url:get_headline()
   return self.str:match('^file:[^:]+::%*(.-)$')
-    or self.str:match('^./[^:]+::%*(.-)$')
+    or self.str:match('^%.%./[^:]+::%*(.-)$')
+    or self.str:match('^%./[^:]+::%*(.-)$')
     or self.str:match('^/[^:]+::%*(.-)$')
     or self.str:match('^%*(.-)$')
 end
@@ -106,7 +116,8 @@ end
 ---@return string | false
 function Url:get_custom_id()
   return self.str:match('^file:[^:]+::#(.-)$')
-    or self.str:match('^./[^:]+::#(.-)$')
+    or self.str:match('^%.%./[^:]+::#(.-)$')
+    or self.str:match('^%./[^:]+::#(.-)$')
     or self.str:match('^/[^:]+::#(.-)$')
     or self.str:match('^#(.-)$')
 end
@@ -115,11 +126,13 @@ end
 function Url:get_linenumber()
   -- official orgmode convention
   return self.str:match('^file:[^:]+::(%d+)$')
-    or self.str:match('^./[^:]+::(%d+)$')
+    or self.str:match('^%.%./[^:]+::(%d+)$')
+    or self.str:match('^%./[^:]+::(%d+)$')
     or self.str:match('^/[^:]+::(%d+)$')
     -- for backwards compatibility
     or self.str:match('^file:[^:]+ %+(%d+)$')
-    or self.str:match('^./[^:]+ %+(%d+)$')
+    or self.str:match('^%.%./[^:]+ %+(%d+)$')
+    or self.str:match('^%./[^:]+ %+(%d+)$')
     or self.str:match('^/[^:]+ %+(%d+)$')
 end
 
@@ -128,15 +141,19 @@ function Url:get_filepath()
   return
     -- for backwards compatibility
     self.str:match('^file:([^:]+) %+%d+')
+      or self.str:match('^(%.%./[^:]+) %+%d+')
       or self.str:match('^(%./[^:]+) %+%d+')
       or self.str:match('^(/[^:]+) %+%d+')
       -- official orgmode convention
       or self.str:match('^file:([^:]+)::')
+      or self.str:match('^(%.%./[^:]+)::')
       or self.str:match('^(%./[^:]+)::')
       or self.str:match('^(/[^:]+)::')
       or self.str:match('^file:([^:]+)$')
+      or self.str:match('^(%.%./[^:]+)$')
       or self.str:match('^(%./[^:]+)$')
       or self.str:match('^(/[^:]+)$')
+      or self.str:match('^(%.%./)$')
       or self.str:match('^(%./)$')
       or self.str:match('^(/)$')
 end

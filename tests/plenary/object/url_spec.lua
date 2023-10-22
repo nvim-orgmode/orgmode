@@ -67,7 +67,9 @@ describe('Url', function()
   it('should handle different file paths', function()
     local filepath_examples = {
       { url_str = 'file:./../some_file', exp = './../some_file' },
+      { url_str = 'file:../some_file', exp = '../some_file' },
       { url_str = './../some_file.txt', exp = './../some_file.txt' },
+      { url_str = '../some_file.txt', exp = '../some_file.txt' },
       { url_str = '/some/path/some_file', exp = '/some/path/some_file' },
       { url_str = 'file:./../some_file.org::*headline', exp = './../some_file.org' },
       { url_str = 'file:./../some_file.org::#custom_id', exp = './../some_file.org' },
