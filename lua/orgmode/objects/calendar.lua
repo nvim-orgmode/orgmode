@@ -493,7 +493,8 @@ function Calendar:clear_date()
 end
 
 function Calendar:read_date()
-  vim.ui.input({ prompt = 'Enter date: ' }, function(result)
+  local default = self:get_selected_date():to_string()
+  vim.ui.input({ prompt = 'Enter date: ', default = default }, function(result)
     if result then
       local date = Date.from_string(result)
       if not date then
