@@ -22,7 +22,12 @@ describe('Refile mappings', function()
 
     source_file = Files.get_current_file()
     local item = source_file:get_closest_headline()
-    org.instance().capture:refile_to_headline(destination_file, source_file:get_headline_lines(item), item, 'foo')
+    org.instance().capture:refile_to_headline({
+      file = destination_file,
+      lines = source_file:get_headline_lines(item),
+      item = item,
+      headline = 'foo',
+    })
     assert.are.same('* not to be refiled', vim.fn.getline(1))
     vim.cmd('edit' .. vim.fn.fnameescape(destination_file))
     assert.are.same({
@@ -47,7 +52,12 @@ describe('Refile mappings', function()
 
     source_file = Files.get_current_file()
     local item = source_file:get_closest_headline()
-    org.instance().capture:refile_to_headline(destination_file, source_file:get_headline_lines(item), item, 'foobar')
+    org.instance().capture:refile_to_headline({
+      file = destination_file,
+      lines = source_file:get_headline_lines(item),
+      item = item,
+      headline = 'foobar',
+    })
     assert.are.same('* not to be refiled', vim.fn.getline(1))
     vim.cmd('edit' .. vim.fn.fnameescape(destination_file))
     assert.are.same({
@@ -72,7 +82,12 @@ describe('Refile mappings', function()
 
     source_file = Files.get_current_file()
     local item = source_file:get_closest_headline()
-    org.instance().capture:refile_to_headline(destination_file, source_file:get_headline_lines(item), item, 'foobar')
+    org.instance().capture:refile_to_headline({
+      file = destination_file,
+      lines = source_file:get_headline_lines(item),
+      item = item,
+      headline = 'foobar',
+    })
     assert.are.same('* not to be refiled', vim.fn.getline(1))
     vim.cmd('edit' .. vim.fn.fnameescape(destination_file))
     assert.are.same({

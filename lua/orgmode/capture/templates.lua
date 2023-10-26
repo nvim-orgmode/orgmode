@@ -1,6 +1,8 @@
 local config = require('orgmode.config')
+local Template = require('orgmode.capture.template')
 local Date = require('orgmode.objects.date')
 local utils = require('orgmode.utils')
+
 local expansions = {
   ['%f'] = function()
     return vim.fn.expand('%')
@@ -34,13 +36,25 @@ local expansions = {
 ---@see https://orgmode.org/manual/Capture-templates.html
 
 ---@class Templates
----@field templates table<string, table>
+---@field templates table<string, Template>
 local Templates = {}
 
--- TODO Introduce type
-function Templates:new()
+function Templates:new(templates)
   local opts = {}
-  opts.templates = config.org_capture_templates
+
+  vim.validate({
+    templates = { templates, 'table', true },
+  })
+
+  opts.templates = {}
+  for key, template in pairs(templates or config.org_capture_templates) do
+    if type(template) == 'table' then
+      opts.templates[key] = Template:new(template)
+    else
+      opts.templates[key] = template
+    end
+  end
+
   setmetatable(opts, self)
   self.__index = self
   return opts
