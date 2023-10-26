@@ -343,6 +343,20 @@ function Config:get_inheritable_tags(headline)
   end, headline.tags)
 end
 
+function Config:setup_ts_predicates()
+  local todo_keywords = self:get_todo_keywords().KEYS
+
+  vim.treesitter.query.add_predicate('org-is-todo-keyword?', function(match, _, source, predicate)
+    local node = match[predicate[2]]
+    if node then
+      local text = vim.treesitter.get_node_text(node, source)
+      return todo_keywords[text] and todo_keywords[text].type == predicate[3] or false
+    end
+
+    return false
+  end, true)
+end
+
 function Config:ts_highlights_enabled()
   if self.ts_hl_enabled ~= nil then
     return self.ts_hl_enabled

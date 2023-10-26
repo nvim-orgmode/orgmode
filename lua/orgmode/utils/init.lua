@@ -6,32 +6,28 @@ local debounce_timers = {}
 local query_cache = {}
 local tmp_window_augroup = vim.api.nvim_create_augroup('OrgTmpWindow', { clear = true })
 
----@param file string
----@param callback function
----@param as_string? boolean
-function utils.readfile(file, callback, as_string)
-  uv.fs_open(file, 'r', 438, function(err1, fd)
-    if err1 then
-      return callback(err1)
-    end
-    uv.fs_fstat(fd, function(err2, stat)
-      if err2 then
-        return callback(err2)
+function utils.readfile(file)
+  return Promise.new(function(resolve, reject)
+    uv.fs_open(file, 'r', 438, function(err1, fd)
+      if err1 then
+        return reject(err1)
       end
-      uv.fs_read(fd, stat.size, 0, function(err3, data)
-        if err3 then
-          return callback(err3)
+      uv.fs_fstat(fd, function(err2, stat)
+        if err2 then
+          return reject(err2)
         end
-        uv.fs_close(fd, function(err4)
-          if err4 then
-            return callback(err4)
+        uv.fs_read(fd, stat.size, 0, function(err3, data)
+          if err3 then
+            return reject(err3)
           end
-          local lines = data
-          if not as_string then
-            lines = vim.split(data, '\n')
+          uv.fs_close(fd, function(err4)
+            if err4 then
+              return reject(err4)
+            end
+            local lines = vim.split(data, '\n')
             table.remove(lines, #lines)
-          end
-          return callback(nil, lines)
+            return resolve(lines)
+          end)
         end)
       end)
     end)

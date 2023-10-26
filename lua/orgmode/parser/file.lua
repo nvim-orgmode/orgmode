@@ -151,15 +151,9 @@ function File.load(path, callback)
     return callback(nil)
   end
   local category = vim.fn.fnamemodify(path, ':t:r')
-  utils.readfile(
-    path,
-    vim.schedule_wrap(function(err, content)
-      if err then
-        return callback(nil)
-      end
-      return callback(File.from_content(content, category, path, ext == 'org_archive'))
-    end)
-  )
+  utils.readfile(path):next(vim.schedule_wrap(function(content)
+    return callback(File.from_content(content, category, path, ext == 'org_archive'))
+  end))
 end
 
 ---@param content table
