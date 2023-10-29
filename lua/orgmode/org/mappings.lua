@@ -15,7 +15,6 @@ local ts_org = require('orgmode.treesitter')
 local ts_table = require('orgmode.treesitter.table')
 local EventManager = require('orgmode.events')
 local Promise = require('orgmode.utils.promise')
-local TodoConfig = require('orgmode.parser.todo-config')
 local events = EventManager.event
 local Link = require('orgmode.objects.link')
 
@@ -387,8 +386,6 @@ end
 function OrgMappings:_todo_change_state(direction)
   local headline = ts_org.closest_headline()
   local _, old_state, was_done = headline:todo()
-  --- @cast old_state -nil
-  --- @cast was_done -nil
   local changed = self:_change_todo_state(direction, true)
   if not changed then
     return
@@ -406,53 +403,9 @@ function OrgMappings:_todo_change_state(direction)
     return dispatchEvent()
   end
 
-  local new_state = item.todo_keyword.value
-
-  -- Determine which configuration to use
-  local global_config = config.org_log_done
-
-  --- @type nil | false | 'time' | 'note'
-  local section_config
-  local logging_prop = item.properties.items.logging
-  if logging_prop == 'nil' then
-    section_config = false
-  elseif logging_prop ~= nil then
-    local todoConfig = TodoConfig:parse(logging_prop)
-    if todoConfig ~= nil then
-      section_config = todoConfig:get_logging_behavior(old_state, new_state)
-    else
-      -- TODO: Report invalid config?
-      section_config = nil
-    end
-  else
-    section_config = nil
-  end
-
-  -- @type nil | false | 'time' | 'note'
-  local user_config
-  if config.org_todo_keywords ~= nil then
-    local todoConfig = TodoConfig:parse(table.concat(config.org_todo_keywords, ' '))
-    if todoConfig ~= nil then
-      user_config = todoConfig:get_logging_behavior(old_state, new_state)
-    else
-      -- TODO: Report invalid config?
-      user_config = nil
-    end
-  else
-    user_config = nil
-  end
-
-  -- Use the most locally available log config
-  --- @type  false | 'time' | 'note'
-  local log_config
-  if section_config ~= nil then
-    log_config = section_config
-  elseif user_config ~= nil then
-    log_config = user_config
-  else
-    log_config = global_config
-  end
-
+  local log_note = config.org_log_done == 'note'
+  local log_time = config.org_log_done == 'time'
+  local should_log_time = log_note or log_time
   local indent = config:get_indent(headline:level() + 1)
 
   local get_note = function(note)
@@ -470,12 +423,11 @@ function OrgMappings:_todo_change_state(direction)
 
   local repeater_dates = item:get_repeater_dates()
   if #repeater_dates == 0 then
-    -- If going from "not done" to "done", set the closed date and add the note/time
-    if log_config ~= false and item:is_done() and not was_done then
+    if should_log_time and item:is_done() and not was_done then
       headline:set_closed_date()
       item = Files.get_closest_headline()
 
-      if log_config == 'note' then
+      if log_note then
         dispatchEvent()
         return self.capture.closing_note:open():next(function(note)
           local valid_note = get_note(note)
@@ -486,9 +438,7 @@ function OrgMappings:_todo_change_state(direction)
         end)
       end
     end
-
-    -- If going from "done" to "not done", remove the close date
-    if log_config ~= false and not item:is_done() and was_done then
+    if should_log_time and not item:is_done() and was_done then
       headline:remove_closed_date()
     end
     return dispatchEvent()
@@ -500,19 +450,19 @@ function OrgMappings:_todo_change_state(direction)
 
   self:_change_todo_state('reset')
   local state_change = {
-    string.format('%s- State "%s" from "%s" [%s]', indent, new_state, old_state, Date.now():to_string()),
+    string.format('%s- State "%s" from "%s" [%s]', indent, item.todo_keyword.value, old_state, Date.now():to_string()),
   }
 
   dispatchEvent()
   return Promise.resolve()
     :next(function()
-      if log_config == 'time' then
+      if not log_note then
         return state_change
-      elseif log_config == 'note' then
-        return self.capture.closing_note:open():next(function(closing_note)
-          return get_note(closing_note)
-        end)
       end
+
+      return self.capture.closing_note:open():next(function(closing_note)
+        return get_note(closing_note)
+      end)
     end)
     :next(function(note)
       headline:set_property('LAST_REPEAT', Date.now():to_wrapped_string(false))
