@@ -6,7 +6,8 @@ local debounce_timers = {}
 local query_cache = {}
 local tmp_window_augroup = vim.api.nvim_create_augroup('OrgTmpWindow', { clear = true })
 
-function utils.readfile(file)
+function utils.readfile(file, opts)
+  opts = vim.tbl_deep_extend('keep', opts or {}, { raw = false })
   return Promise.new(function(resolve, reject)
     uv.fs_open(file, 'r', 438, function(err1, fd)
       if err1 then
@@ -24,9 +25,38 @@ function utils.readfile(file)
             if err4 then
               return reject(err4)
             end
+            if opts.raw then
+              return resolve(data)
+            end
             local lines = vim.split(data, '\n')
             table.remove(lines, #lines)
             return resolve(lines)
+          end)
+        end)
+      end)
+    end)
+  end)
+end
+
+function utils.writefile(file, data)
+  return Promise.new(function(resolve, reject)
+    uv.fs_open(file, 'w', 438, function(err1, fd)
+      if err1 then
+        return reject(err1)
+      end
+      uv.fs_fstat(fd, function(err2, stat)
+        if err2 then
+          return reject(err2)
+        end
+        uv.fs_write(fd, data, nil, function(err3, bytes)
+          if err3 then
+            return reject(err3)
+          end
+          uv.fs_close(fd, function(err4)
+            if err4 then
+              return reject(err4)
+            end
+            return resolve(bytes)
           end)
         end)
       end)
