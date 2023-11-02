@@ -59,8 +59,9 @@ function State:load()
       })
       self._ctx.curr_loader = nil
       if not success then
+        local err_msg = vim.deepcopy(decoded)
         vim.schedule(function()
-          vim.notify('State cache load failure, error: ' .. decoded, vim.log.levels.WARN, {
+          vim.notify('State cache load failure, error: ' .. vim.inspect(err_msg), vim.log.levels.WARN, {
             title = 'Orgmode',
           })
           -- Try to 'repair' the cache by saving the current state
