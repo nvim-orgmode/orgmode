@@ -10,30 +10,35 @@ local markers = {
   ['*'] = {
     hl_name = 'org_bold',
     hl_cmd = 'hi def %s term=bold cterm=bold gui=bold',
+    delimiter_hl = true,
     nestable = true,
     type = 'text',
   },
   ['/'] = {
     hl_name = 'org_italic',
     hl_cmd = 'hi def %s term=italic cterm=italic gui=italic',
+    delimiter_hl = true,
     nestable = true,
     type = 'text',
   },
   ['_'] = {
     hl_name = 'org_underline',
     hl_cmd = 'hi def %s term=underline cterm=underline gui=underline',
+    delimiter_hl = true,
     nestable = true,
     type = 'text',
   },
   ['+'] = {
     hl_name = 'org_strikethrough',
     hl_cmd = 'hi def %s term=strikethrough cterm=strikethrough gui=strikethrough',
+    delimiter_hl = true,
     nestable = true,
     type = 'text',
   },
   ['~'] = {
     hl_name = 'org_code',
     hl_cmd = 'hi def link %s String',
+    delimiter_hl = true,
     nestable = false,
     spell = false,
     type = 'text',
@@ -41,6 +46,7 @@ local markers = {
   ['='] = {
     hl_name = 'org_verbatim',
     hl_cmd = 'hi def link %s String',
+    delimiter_hl = true,
     nestable = false,
     spell = false,
     type = 'text',
@@ -50,18 +56,21 @@ local markers = {
     hl_cmd = 'hi def link %s OrgTSLatex',
     nestable = false,
     spell = false,
+    delimiter_hl = false,
     type = 'latex',
   },
   ['\\{'] = {
     hl_name = 'org_latex',
     hl_cmd = 'hi def link %s OrgTSLatex',
     nestable = false,
+    delimiter_hl = false,
     type = 'latex',
   },
   ['\\s'] = {
     hl_name = 'org_latex',
     hl_cmd = 'hi def link %s OrgTSLatex',
     nestable = false,
+    delimiter_hl = false,
     type = 'latex',
   },
 }
@@ -357,29 +366,33 @@ local function apply(namespace, bufnr, line_index)
   local hide_markers = config.org_hide_emphasis_markers
 
   for _, range in ipairs(result.ranges) do
+    local hl_offset = 0
+    if markers[range.type].delimiter_hl then
+      hl_offset = 1
+      -- Leading delimiter
+      vim.api.nvim_buf_set_extmark(bufnr, namespace, range.from.start.line, range.from.start.character, {
+        ephemeral = true,
+        end_col = range.from.start.character + hl_offset,
+        hl_group = markers[range.type].hl_name .. '_delimiter',
+        spell = markers[range.type].spell,
+        priority = 110 + range.from.start.character,
+      })
+
+      -- Closing delimiter
+      vim.api.nvim_buf_set_extmark(bufnr, namespace, range.from.start.line, range.to['end'].character - hl_offset, {
+        ephemeral = true,
+        end_col = range.to['end'].character,
+        hl_group = markers[range.type].hl_name .. '_delimiter',
+        spell = markers[range.type].spell,
+        priority = 110 + range.from.start.character,
+      })
+    end
+
     -- Main body highlight
-    vim.api.nvim_buf_set_extmark(bufnr, namespace, range.from.start.line, range.from.start.character + 1, {
+    vim.api.nvim_buf_set_extmark(bufnr, namespace, range.from.start.line, range.from.start.character + hl_offset, {
       ephemeral = true,
-      end_col = range.to['end'].character - 1,
+      end_col = range.to['end'].character - hl_offset,
       hl_group = markers[range.type].hl_name,
-      spell = markers[range.type].spell,
-      priority = 110 + range.from.start.character,
-    })
-
-    -- Leading delimiter
-    vim.api.nvim_buf_set_extmark(bufnr, namespace, range.from.start.line, range.from.start.character, {
-      ephemeral = true,
-      end_col = range.from.start.character + 1,
-      hl_group = markers[range.type].hl_name .. '_delimiter',
-      spell = markers[range.type].spell,
-      priority = 110 + range.from.start.character,
-    })
-
-    -- Closing delimiter
-    vim.api.nvim_buf_set_extmark(bufnr, namespace, range.from.start.line, range.to['end'].character - 1, {
-      ephemeral = true,
-      end_col = range.to['end'].character,
-      hl_group = markers[range.type].hl_name .. '_delimiter',
       spell = markers[range.type].spell,
       priority = 110 + range.from.start.character,
     })
@@ -444,7 +457,9 @@ end
 local function setup()
   for _, marker in pairs(markers) do
     vim.cmd(string.format(marker.hl_cmd, marker.hl_name))
-    vim.cmd(string.format(marker.hl_cmd, marker.hl_name .. '_delimiter'))
+    if marker.delimiter_hl then
+      vim.cmd(string.format(marker.hl_cmd, marker.hl_name .. '_delimiter'))
+    end
   end
   vim.cmd('hi def link org_hyperlink Underlined')
   load_deps()
