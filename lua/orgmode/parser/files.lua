@@ -186,21 +186,11 @@ function Files.update_file(filename, action)
     end)
   end
 
-  local bufnr = vim.fn.bufadd(filename)
-  vim.api.nvim_open_win(bufnr, true, {
-    relative = 'editor',
-    width = 1,
-    -- TODO: Revert to 1 once the https://github.com/neovim/neovim/issues/19464 is fixed
-    height = 2,
-    row = 99999,
-    col = 99999,
-    zindex = 1,
-    style = 'minimal',
-  })
+  local edit_file = utils.edit_file(filename)
+  edit_file.open()
 
   return Promise.resolve(action(file)):next(function(result)
-    vim.cmd('silent! wq!')
-    vim.api.nvim_set_current_win(cur_win)
+    edit_file.close()
     return result
   end)
 end

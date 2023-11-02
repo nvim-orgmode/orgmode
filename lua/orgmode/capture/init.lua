@@ -346,7 +346,6 @@ function Capture:_refile_to(opts)
   apply_properties(opts)
 
   local is_same_file = opts.file == utils.current_file_path()
-  local cur_win = vim.api.nvim_get_current_win()
 
   local item = opts.item
   if is_same_file and item then
@@ -354,18 +353,10 @@ function Capture:_refile_to(opts)
     return true
   end
 
+  local edit_file = utils.edit_file(opts.file)
+
   if not is_same_file then
-    local bufnr = vim.fn.bufadd(opts.file)
-    vim.api.nvim_open_win(bufnr, true, {
-      relative = 'editor',
-      width = 1,
-      -- TODO: Revert to 1 once the https://github.com/neovim/neovim/issues/19464 is fixed
-      height = 2,
-      row = 99999,
-      col = 99999,
-      zindex = 1,
-      style = 'minimal',
-    })
+    edit_file.open()
   end
 
   remove_buffer_empty_lines(opts)
@@ -374,8 +365,7 @@ function Capture:_refile_to(opts)
   vim.api.nvim_buf_set_lines(0, range.start_line, range.end_line, false, opts.lines)
 
   if not is_same_file then
-    vim.cmd('silent! wq!')
-    vim.api.nvim_set_current_win(cur_win)
+    edit_file.close()
   end
 
   if item and item.file == utils.current_file_path() then

@@ -596,4 +596,35 @@ function utils.pad_right(str, amount)
   return string.format('%s%s', str, string.rep(' ', spaces))
 end
 
+---@param filename string
+function utils.edit_file(filename)
+  local buf_not_already_loaded = vim.fn.bufexists(filename) ~= 1
+  local cur_win = vim.api.nvim_get_current_win()
+
+  return {
+    open = function()
+      local bufnr = vim.fn.bufadd(filename)
+      vim.api.nvim_open_win(bufnr, true, {
+        relative = 'editor',
+        width = 1,
+        -- TODO: Revert to 1 once the https://github.com/neovim/neovim/issues/19464 is fixed
+        height = 2,
+        row = 99999,
+        col = 99999,
+        zindex = 1,
+        style = 'minimal',
+      })
+    end,
+    close = function()
+      vim.cmd('silent! w')
+      if buf_not_already_loaded then
+        vim.cmd('silent! bw!')
+      else
+        vim.cmd('silent! q!')
+      end
+      vim.api.nvim_set_current_win(cur_win)
+    end,
+  }
+end
+
 return utils
