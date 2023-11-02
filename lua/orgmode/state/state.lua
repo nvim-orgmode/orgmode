@@ -25,13 +25,13 @@ end
 ---@return Promise
 function State:save()
   --- We want to ensure the state was loaded before saving.
-  return self:load():next(function(_)
-    utils.writefile(cache_path, vim.json.encode(State.data)):next(function(_) end, function(err_msg)
+  return self:load():finally(function(_)
+    utils.writefile(cache_path, vim.json.encode(State.data)):catch(function(err_msg)
       vim.schedule_wrap(function()
         vim.notify('Failed to save current state! Error: ' .. err_msg, vim.log.levels.WARN, { title = 'Orgmode' })
       end)
     end)
-  end, function(_) end)
+  end)
 end
 
 ---Load the state cache into the current state
