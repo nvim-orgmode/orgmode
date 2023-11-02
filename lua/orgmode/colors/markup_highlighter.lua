@@ -442,9 +442,8 @@ local function apply(namespace, bufnr, line_index)
 end
 
 local function setup()
-  for delimiter, marker in pairs(markers) do
+  for _, marker in pairs(markers) do
     vim.cmd(string.format(marker.hl_cmd, marker.hl_name))
-    vim.cmd(string.format('syn keyword %s_delimiter %s', marker.hl_name, delimiter))
     vim.cmd(string.format(marker.hl_cmd, marker.hl_name .. '_delimiter'))
   end
   vim.cmd('hi def link org_hyperlink Underlined')
