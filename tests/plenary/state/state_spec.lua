@@ -56,4 +56,18 @@ describe('State', function()
       end)
     end)
   end)
+
+  it('should be able to self-heal from an invalid state file', function()
+    local state = state_mod()
+    state.my_var = 'hello world'
+    state:save():finally(function()
+      vim.cmd.edit(cache_path)
+      vim.api.nvim_buf_set_lines(0, 0, -1, false, { '[ invalid json!' })
+      vim.cmd.write()
+      local err, err_msg = state:load()
+      if err then
+        error('Unable to self-heal from an invalid state! Error: ' .. vim.inspect(err_msg))
+      end
+    end)
+  end)
 end)
