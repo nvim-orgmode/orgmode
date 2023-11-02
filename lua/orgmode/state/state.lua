@@ -5,7 +5,7 @@ local State = { data = {}, _ctx = { loaded = false, curr_loader = nil } }
 
 local cache_path = vim.fs.normalize(vim.fn.stdpath('cache') .. '/org-cache.json', { expand_env = false })
 --- Returns the current State singleton
-function State:new()
+function State.new()
   -- This is done so we can later iterate the 'data'
   -- subtable cleanly and shove it into a cache
   setmetatable(State, {
@@ -16,6 +16,7 @@ function State:new()
       tbl.data[key] = value
     end,
   })
+  local self = State
   -- Start trying to load the state from cache as part of initializing the state
   self:load()
   return self
@@ -96,4 +97,4 @@ function State:load()
   return self._ctx.curr_loader
 end
 
-return State:new()
+return State.new
