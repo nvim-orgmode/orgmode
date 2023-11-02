@@ -7,7 +7,7 @@ local query_cache = {}
 local tmp_window_augroup = vim.api.nvim_create_augroup('OrgTmpWindow', { clear = true })
 
 function utils.readfile(file, opts)
-  opts = vim.tbl_deep_extend('keep', opts or {}, { raw = false })
+  opts = opts or {}
   return Promise.new(function(resolve, reject)
     uv.fs_open(file, 'r', 438, function(err1, fd)
       if err1 then
