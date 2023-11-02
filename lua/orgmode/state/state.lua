@@ -47,9 +47,7 @@ function State:load()
 
   --- If we've already loaded the state from cache we don't need to do so again
   if self._ctx.loaded then
-    return Promise.new(function(resolve, _)
-      return resolve()
-    end)
+    return Promise.resolve()
   end
 
   self._ctx.curr_loader = utils.readfile(cache_path, { raw = true }):next(
