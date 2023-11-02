@@ -423,7 +423,7 @@ local function apply(namespace, bufnr, line_index)
     vim.api.nvim_buf_set_extmark(bufnr, namespace, link_range.from.start.line, link_range.from.start.character + 2, {
       ephemeral = true,
       end_col = link_range.from.start.character - 1 + link_end,
-      spell = false,
+      spell = true,
     })
 
     vim.api.nvim_buf_set_extmark(bufnr, namespace, link_range.from.start.line, link_range.to['end'].character - 2, {
