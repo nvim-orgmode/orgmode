@@ -151,9 +151,18 @@ function File.load(path, callback)
     return callback(nil)
   end
   local category = vim.fn.fnamemodify(path, ':t:r')
-  utils.readfile(path):next(vim.schedule_wrap(function(content)
-    return callback(File.from_content(content, category, path, ext == 'org_archive'))
-  end))
+  utils
+    .readfile(path)
+    :next(vim.schedule_wrap(function(content)
+      return callback(File.from_content(content, category, path, ext == 'org_archive'))
+    end))
+    :catch(function(err)
+      -- Ignore file not found errors
+      if vim.startswith(err, 'ENOENT') then
+        return
+      end
+      error(err)
+    end)
 end
 
 ---@param content table
