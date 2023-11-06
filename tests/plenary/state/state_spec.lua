@@ -5,7 +5,7 @@ local cache_path = vim.fs.normalize(vim.fn.stdpath('cache') .. '/org-cache.json'
 describe('State', function()
   before_each(function()
     -- Ensure the cache file is removed before each run
-    state = require("orgmode.state.state")
+    state = require('orgmode.state.state')
     vim.fn.delete(cache_path, 'rf')
   end)
   it("should create a state file if it doesn't exist", function()
@@ -42,7 +42,6 @@ describe('State', function()
   end)
 
   it('should be able to save and load state data', function()
-
     -- Set a variable into the state object
     state.my_var = 'hello world'
     state:save():finally(function()

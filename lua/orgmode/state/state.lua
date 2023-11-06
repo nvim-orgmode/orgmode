@@ -51,8 +51,9 @@ function State:load()
     return Promise.resolve()
   end
 
-  self._ctx.curr_loader = utils.readfile(cache_path, { raw = true }):next(
-    function(data)
+  self._ctx.curr_loader = utils
+    .readfile(cache_path, { raw = true })
+    :next(function(data)
       local success, decoded = pcall(vim.json.decode, data, {
         luanil = { object = true, array = true },
       })
@@ -81,8 +82,8 @@ function State:load()
       -- interim of the load operation.
       self.data = vim.tbl_deep_extend('force', decoded, self.data)
       return self
-    end):catch(
-    function(err)
+    end)
+    :catch(function(err)
       -- If the file didn't exist then go ahead and save
       -- our current cache and as a side effect create the file
       if type(err) == 'string' and err:match([[^ENOENT.*]]) then
