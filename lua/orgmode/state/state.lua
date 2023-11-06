@@ -86,11 +86,10 @@ function State:load()
       -- If the file didn't exist then go ahead and save
       -- our current cache and as a side effect create the file
       if type(err) == 'string' and err:match([[^ENOENT.*]]) then
-        self:save()
-      else
-        -- If the file did exist, something is wrong. Kick this to the top
-        error(err)
+        return self:save()
       end
+      -- If the file did exist, something is wrong. Kick this to the top
+      error(err)
     end)
 
   return self._ctx.curr_loader
