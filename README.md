@@ -96,6 +96,7 @@ call dein#add('nvim-orgmode/orgmode')
 ```
 
 </details>
+
 ### Setup
 
 Note that this setup is not needed for [lazy.nvim](https://github.com/folke/lazy.nvim)
