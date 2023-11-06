@@ -81,7 +81,7 @@ function State:load()
       -- interim of the load operation.
       self.data = vim.tbl_deep_extend('force', decoded, self.data)
       return self
-    end, ---@param err string
+    end):catch(
     function(err)
       -- If the file didn't exist then go ahead and save
       -- our current cache and as a side effect create the file
@@ -91,8 +91,7 @@ function State:load()
         -- If the file did exist, something is wrong. Kick this to the top
         error(err)
       end
-    end
-  )
+    end)
 
   return self._ctx.curr_loader
 end
