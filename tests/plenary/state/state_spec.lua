@@ -1,10 +1,11 @@
 local utils = require('orgmode.utils')
-local state_mod = require('orgmode.state.state')
+local state = nil
 local cache_path = vim.fs.normalize(vim.fn.stdpath('cache') .. '/org-cache.json', { expand_env = false })
 
 describe('State', function()
   before_each(function()
     -- Ensure the cache file is removed before each run
+    state = require("orgmode.state.state")
     vim.fn.delete(cache_path, 'rf')
   end)
   it("should create a state file if it doesn't exist", function()
@@ -15,7 +16,6 @@ describe('State', function()
     end
 
     -- This creates the cache file on new instances of `State`
-    local state = state_mod()
     state:load():finally(function()
       ---@diagnostic disable-next-line: redefined-local
       local err, stat = pcall(vim.loop.fs_stat, cache_path)
@@ -28,7 +28,6 @@ describe('State', function()
   end)
 
   it('should save the cache file as valid json', function()
-    local state = state_mod()
     state:save():finally(function()
       utils.readfile(cache_path, { raw = true }):next(function(cache_content)
         local err, err_msg = vim.json.decode(cache_content, {
@@ -43,7 +42,6 @@ describe('State', function()
   end)
 
   it('should be able to save and load state data', function()
-    local state = state_mod()
 
     -- Set a variable into the state object
     state.my_var = 'hello world'
@@ -58,7 +56,6 @@ describe('State', function()
   end)
 
   it('should be able to self-heal from an invalid state file', function()
-    local state = state_mod()
     state.my_var = 'hello world'
     state:save():finally(function()
       vim.cmd.edit(cache_path)

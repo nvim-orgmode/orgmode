@@ -97,4 +97,4 @@ function State:load()
   return self._ctx.curr_loader
 end
 
-return State.new
+return State.new()
