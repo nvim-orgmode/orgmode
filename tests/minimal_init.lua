@@ -65,6 +65,16 @@ function M.setup(plugins)
   vim.env.XDG_STATE_HOME = M.root('xdg/state')
   vim.env.XDG_CACHE_HOME = M.root('xdg/cache')
 
+  local std_paths = {
+    'cache',
+    'data',
+    'config',
+  }
+
+  for _, std_path in pairs(std_paths) do
+    vim.fn.mkdir(vim.fn.stdpath(std_path), 'p')
+  end
+
   -- NOTE: Cleanup the xdg cache on exit so new runs of the minimal init doesn't share any previous state, e.g. shada
   vim.api.nvim_create_autocmd('VimLeave', {
     callback = function()
