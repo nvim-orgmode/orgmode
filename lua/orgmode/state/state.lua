@@ -75,7 +75,6 @@ function State:load()
         decoded = {}
       end
 
-      self._ctx.loaded = true
       -- It is possible that while the state was loading from cache values
       -- were saved into the state. We want to preference the newer values in
       -- the state and still get whatever values may not have been set in the
@@ -87,10 +86,15 @@ function State:load()
       -- If the file didn't exist then go ahead and save
       -- our current cache and as a side effect create the file
       if type(err) == 'string' and err:match([[^ENOENT.*]]) then
-        return self:save()
+        self:save()
+        return self
       end
       -- If the file did exist, something is wrong. Kick this to the top
       error(err)
+    end)
+    :finally(function()
+      self._ctx.loaded = true
+      self._ctx.curr_loader = nil
     end)
 
   return self._ctx.curr_loader
