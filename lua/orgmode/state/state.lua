@@ -35,7 +35,7 @@ function State:save()
       end)
       :catch(function(err_msg)
         vim.schedule_wrap(function()
-          vim.notify('Failed to save current state! Error: ' .. err_msg, vim.log.levels.WARN, { title = 'Orgmode' })
+          utils.echo_warning('Failed to save current state! Error: ' .. err_msg)
         end)
       end)
   end)
@@ -67,9 +67,7 @@ function State:load()
       if not success then
         local err_msg = vim.deepcopy(decoded)
         vim.schedule(function()
-          vim.notify('State cache load failure, error: ' .. vim.inspect(err_msg), vim.log.levels.WARN, {
-            title = 'Orgmode',
-          })
+          utils.echo_warning('State cache load failure, error: ' .. vim.inspect(err_msg))
           -- Try to 'repair' the cache by saving the current state
           self:save()
         end)
