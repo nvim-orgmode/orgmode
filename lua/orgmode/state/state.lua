@@ -4,7 +4,9 @@ local Promise = require('orgmode.utils.promise')
 local State = { data = {}, _ctx = { loaded = false, saved = false, curr_loader = nil } }
 
 local cache_path = vim.fs.normalize(vim.fn.stdpath('cache') .. '/org-cache.json', { expand_env = false })
---- Returns the current State singleton
+
+---Returns the current State singleton
+---@return State
 function State.new()
   -- This is done so we can later iterate the 'data'
   -- subtable cleanly and shove it into a cache
