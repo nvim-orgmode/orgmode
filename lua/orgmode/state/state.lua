@@ -150,4 +150,18 @@ function State:load_sync(timeout)
   return state
 end
 
+---Reset the current state to empty
+---@param overwrite? boolean Whether or not the cache should also be wiped
+function State:wipe(overwrite)
+  overwrite = overwrite or false
+
+  self.data = {}
+  self._ctx.curr_loader = nil
+  self._ctx.loaded = false
+  self._ctx.saved = false
+  if overwrite then
+    state:save_sync()
+  end
+end
+
 return State.new()
