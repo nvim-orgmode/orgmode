@@ -40,6 +40,16 @@ function State:save()
     end)
 end
 
+---Synchronously save the state into cache
+---@param timeout? number How long to wait for the save operation
+function State:save_sync(timeout)
+  State._ctx.saved = false
+  self:save()
+  vim.wait(timeout or 500, function()
+    return State._ctx.saved
+  end, 20)
+end
+
 ---Load the state cache into the current state
 ---@return Promise
 function State:load()
@@ -53,7 +63,7 @@ function State:load()
 
   --- If we've already loaded the state from cache we don't need to do so again
   if self._ctx.loaded then
-    return Promise.resolve()
+    return Promise.resolve(self)
   end
 
   self._ctx.curr_loader = utils
@@ -101,6 +111,36 @@ function State:load()
     end)
 
   return self._ctx.curr_loader
+end
+
+---Synchronously load the state from cache if it hasn't been loaded
+---@param timeout? number How long to wait for the cache load before erroring
+---@return State
+function State:load_sync(timeout)
+  local state
+  local err
+  self
+    :load()
+    :next(function(loaded_state)
+      state = loaded_state
+    end)
+    :catch(function(reject)
+      err = reject
+    end)
+
+  vim.wait(timeout or 500, function()
+    return state ~= nil or err ~= nil
+  end, 20)
+
+  if err then
+    error(err)
+  end
+
+  if err == nil and state == nil then
+    error('Did not load State in time')
+  end
+
+  return state
 end
 
 return State.new()
