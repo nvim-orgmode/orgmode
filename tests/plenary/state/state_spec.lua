@@ -102,6 +102,8 @@ describe('State', function()
     vim.wait(500, function()
       return state._ctx.saved
     end)
+    -- Wait a little longer to ensure the data is flushed into the cache
+    vim.wait(100)
 
     -- Now attempt to read the file and check that it is, in fact, "healed"
     local cache_data = nil
