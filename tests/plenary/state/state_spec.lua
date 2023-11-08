@@ -9,8 +9,7 @@ describe('State', function()
     vim.wait(50, function()
       return state._ctx.saved
     end, 10)
-    state._ctx.saved = false
-    state._ctx.loaded = false
+    state:wipe()
     vim.fn.delete(cache_path, 'rf')
   end)
 
@@ -77,41 +76,67 @@ describe('State', function()
     -- Set a variable into the state object
     state.my_var = 'hello world'
     -- Save the state
-    state:save()
-    vim.wait(50, function()
-      return state._ctx.saved
-    end, 10)
+    state:save_sync()
     -- Wipe the variable and "unload" the State
     state.my_var = nil
     state._ctx.loaded = false
 
     -- Ensure the state can be loaded from the file now by ignoring the previous load
-    state:load()
-    -- wait until the state has been loaded
-    vim.wait(50, function()
-      return state._ctx.loaded
-    end, 10)
+    state:load_sync()
     -- These should be the same after the wipe. We just loaded it back in from the state cache.
     assert.are.equal('hello world', state.my_var)
   end)
 
   it('should be able to self-heal from an invalid state file', function()
-    local err = nil
-    state.my_var = 'hello world'
-    state:save():finally(function()
-      vim.cmd.edit(cache_path)
-      vim.api.nvim_buf_set_lines(0, 0, -1, false, { '[ invalid json!' })
-      vim.cmd.write()
-      state:load():catch(function(err)
-        err = err
-      end)
-    end)
-    vim.wait(50, function()
-      return state._ctx.loaded
-    end, 10)
+    state:save_sync()
 
-    if err then
-      error('Unable to self-heal from an invalid state! Error: ' .. vim.inspect(err_msg))
+    -- Mangle the cache
+    vim.cmd.edit(cache_path)
+    vim.api.nvim_buf_set_lines(0, 0, -1, false, { '[ invalid json!' })
+    vim.cmd.write()
+
+    -- Ensure we reload the state from its cache file (this should also "heal" the cache)
+    state._ctx.loaded = false
+    state._ctx.saved = false
+    state:load_sync()
+    vim.wait(500, function()
+      return state._ctx.saved
+    end)
+
+    -- Now attempt to read the file and check that it is, in fact, "healed"
+    local cache_data = nil
+    local read_f_err = nil
+    utils
+      .readfile(cache_path, { raw = true })
+      :next(function(state_data)
+        cache_data = state_data
+      end)
+      :catch(function(reject)
+        read_f_err = reject
+      end)
+      :finally(function()
+        read_file = true
+      end)
+
+    vim.wait(500, function()
+      return cache_data ~= nil or read_f_err ~= nil
+    end, 20)
+
+    if read_f_err then
+      error('Unable to read the healed state cache! Error: ' .. vim.inspect(read_f_err))
+    end
+
+    local success, decoded = pcall(vim.json.decode, cache_data, {
+      luanil = { object = true, array = true },
+    })
+
+    if not success then
+      error(
+        'Unable to self-heal from an invalid state! Error: '
+          .. vim.inspect(decoded)
+          .. '\n\t-> Got cache content as '
+          .. vim.inspect(cache_data)
+      )
     end
   end)
 end)
