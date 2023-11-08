@@ -1,7 +1,7 @@
 local utils = require('orgmode.utils')
 local Promise = require('orgmode.utils.promise')
 
-local State = { data = {}, _ctx = { loaded = false, saved = false, curr_loader = nil } }
+local State = { data = {}, _ctx = { loaded = false, saved = false, curr_loader = nil, savers = 0 } }
 
 local cache_path = vim.fs.normalize(vim.fn.stdpath('cache') .. '/org-cache.json', { expand_env = false })
 
@@ -30,12 +30,17 @@ function State:save()
   State._ctx.saved = false
   --- We want to ensure the state was loaded before saving.
   self:load()
+  self._ctx.savers = self._ctx.savers + 1
   return utils
     .writefile(cache_path, vim.json.encode(State.data))
     :next(function()
-      State._ctx.saved = true
+      self._ctx.savers = self._ctx.savers - 1
+      if self._ctx.savers == 0 then
+        State._ctx.saved = true
+      end
     end)
     :catch(function(err_msg)
+      self._ctx.savers = self._ctx.savers - 1
       vim.schedule_wrap(function()
         utils.echo_warning('Failed to save current state! Error: ' .. err_msg)
       end)
