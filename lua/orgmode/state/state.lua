@@ -27,18 +27,17 @@ end
 function State:save()
   State._ctx.saved = false
   --- We want to ensure the state was loaded before saving.
-  return self:load():finally(function()
-    utils
-      .writefile(cache_path, vim.json.encode(State.data))
-      :next(function()
-        State._ctx.saved = true
+  self:load()
+  return utils
+    .writefile(cache_path, vim.json.encode(State.data))
+    :next(function()
+      State._ctx.saved = true
+    end)
+    :catch(function(err_msg)
+      vim.schedule_wrap(function()
+        utils.echo_warning('Failed to save current state! Error: ' .. err_msg)
       end)
-      :catch(function(err_msg)
-        vim.schedule_wrap(function()
-          utils.echo_warning('Failed to save current state! Error: ' .. err_msg)
-        end)
-      end)
-  end)
+    end)
 end
 
 ---Load the state cache into the current state
