@@ -6,23 +6,11 @@ describe('State', function()
   before_each(function()
     -- Ensure the cache file is removed before each run
     state = require('orgmode.state.state')
-    vim.wait(50, function()
-      return state._ctx.saved
-    end, 10)
     state:wipe()
     vim.fn.delete(cache_path, 'rf')
   end)
 
-  after_each(function()
-    state._ctx.saved = false
-    state._ctx.loaded = false
-    state = nil
-    -- vim.fn.delete(cache_path, 'rf')
-  end)
-
   it("should create a state file if it doesn't exist", function()
-    -- Ensure the file doesn't exist
-    vim.fn.delete(cache_path, 'rf')
     local stat = vim.loop.fs_stat(cache_path)
     if stat then
       error('Cache file existed before it should! Ensure it is deleted before each test run!')
