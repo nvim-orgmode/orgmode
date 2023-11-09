@@ -1,4 +1,5 @@
 local utils = require('orgmode.utils')
+---@type OrgState
 local state = nil
 local cache_path = vim.fs.normalize(vim.fn.stdpath('cache') .. '/org-cache.json', { expand_env = false })
 
