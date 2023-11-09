@@ -1,16 +1,17 @@
 local utils = require('orgmode.utils')
 local Promise = require('orgmode.utils.promise')
 
-local State = { data = {}, _ctx = { loaded = false, saved = false, curr_loader = nil, savers = 0 } }
+---@class OrgState
+local OrgState = { data = {}, _ctx = { loaded = false, saved = false, curr_loader = nil, savers = 0 } }
 
 local cache_path = vim.fs.normalize(vim.fn.stdpath('cache') .. '/org-cache.json', { expand_env = false })
 
----Returns the current State singleton
----@return State
-function State.new()
+---Returns the current OrgState singleton
+---@return OrgState
+function OrgState.new()
   -- This is done so we can later iterate the 'data'
   -- subtable cleanly and shove it into a cache
-  setmetatable(State, {
+  setmetatable(OrgState, {
     __index = function(tbl, key)
       return tbl.data[key]
     end,
@@ -18,7 +19,7 @@ function State.new()
       tbl.data[key] = value
     end,
   })
-  local self = State
+  local self = OrgState
   -- Start trying to load the state from cache as part of initializing the state
   self:load()
   return self
@@ -26,17 +27,17 @@ end
 
 ---Save the current state to cache
 ---@return Promise
-function State:save()
-  State._ctx.saved = false
+function OrgState:save()
+  OrgState._ctx.saved = false
   --- We want to ensure the state was loaded before saving.
   self:load()
   self._ctx.savers = self._ctx.savers + 1
   return utils
-    .writefile(cache_path, vim.json.encode(State.data))
+    .writefile(cache_path, vim.json.encode(OrgState.data))
     :next(function()
       self._ctx.savers = self._ctx.savers - 1
       if self._ctx.savers == 0 then
-        State._ctx.saved = true
+        OrgState._ctx.saved = true
       end
     end)
     :catch(function(err_msg)
@@ -49,20 +50,20 @@ end
 
 ---Synchronously save the state into cache
 ---@param timeout? number How long to wait for the save operation
-function State:save_sync(timeout)
-  State._ctx.saved = false
+function OrgState:save_sync(timeout)
+  OrgState._ctx.saved = false
   self:save()
   vim.wait(timeout or 500, function()
-    return State._ctx.saved
+    return OrgState._ctx.saved
   end, 20)
 end
 
 ---Load the state cache into the current state
 ---@return Promise
-function State:load()
+function OrgState:load()
   --- If we currently have a loading operation already running, return that
   --- promise. This avoids a race condition of sorts as without this there's
-  --- potential to have two State:load operations occuring and whichever
+  --- potential to have two OrgState:load operations occuring and whichever
   --- finishes last sets the state. Not desirable.
   if self._ctx.curr_loader ~= nil then
     return self._ctx.curr_loader
@@ -83,7 +84,7 @@ function State:load()
       if not success then
         local err_msg = vim.deepcopy(decoded)
         vim.schedule(function()
-          utils.echo_warning('State cache load failure, error: ' .. vim.inspect(err_msg))
+          utils.echo_warning('OrgState cache load failure, error: ' .. vim.inspect(err_msg))
           -- Try to 'repair' the cache by saving the current state
           self:save()
         end)
@@ -122,8 +123,8 @@ end
 
 ---Synchronously load the state from cache if it hasn't been loaded
 ---@param timeout? number How long to wait for the cache load before erroring
----@return State
-function State:load_sync(timeout)
+---@return OrgState
+function OrgState:load_sync(timeout)
   local state
   local err
   self
@@ -144,7 +145,7 @@ function State:load_sync(timeout)
   end
 
   if err == nil and state == nil then
-    error('Did not load State in time')
+    error('Did not load OrgState in time')
   end
 
   return state
@@ -152,7 +153,7 @@ end
 
 ---Reset the current state to empty
 ---@param overwrite? boolean Whether or not the cache should also be wiped
-function State:wipe(overwrite)
+function OrgState:wipe(overwrite)
   overwrite = overwrite or false
 
   self.data = {}
@@ -164,4 +165,4 @@ function State:wipe(overwrite)
   end
 end
 
-return State.new()
+return OrgState.new()
