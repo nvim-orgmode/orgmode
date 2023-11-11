@@ -54,7 +54,76 @@ local get_matches = ts_utils.memoize_by_buf_tick(function(bufnr)
         end
       end
 
-      if type == 'paragraph' or type == 'drawer' or type == 'property_drawer' or type == 'block' then
+      if type == 'block' then
+        opts.indent_type = 'block'
+        local parent = node:parent()
+        while parent and parent:type() ~= 'section' and parent:type() ~= 'listitem' do
+          parent = parent:parent()
+        end
+        -- We want to find the difference in indentation level between the item to be indented and the parent node.
+        -- If the item is in the block, we shouldn't change the indentation beyond how much we modify the indent of the
+        -- block header and footer. This keeps code correctly indented in `BEGIN_SRC` blocks as well as ensuring
+        -- `BEGIN_EXAMPLE` blocks don't have their indentation changed inside of them.
+        local parent_indent = vim.fn.indent(parent:start() + 1)
+
+        if config.org_indent_mode == 'indent' and parent:type() == 'section' then
+          local headline = parent:named_child('headline')
+          if headline then
+            local stars = vim.treesitter.get_node_text(headline:field('stars')[1], bufnr):len() + 1
+            parent_indent = stars
+          end
+        end
+
+        -- We want to align to the listitem body, not the bullet
+        if parent:type() == 'listitem' then
+          parent_indent = parent_indent + 2
+        end
+
+        local curr_header_indent = vim.fn.indent(range.start.line + 1)
+        local header_indent_diff = curr_header_indent - parent_indent
+        local new_header_indent = curr_header_indent - header_indent_diff
+        -- Ensure the block footer is properly aligned with the header
+        matches[range['end'].line] = vim.tbl_deep_extend('force', opts, {
+          indent = new_header_indent,
+        })
+
+        local content_indent_pad = 0
+        -- Only include the header line and the content. Do not include the footer in the loop.
+        for i = range.start.line, range['end'].line - 2 do
+          local curr_indent = vim.fn.indent(i + 1)
+          -- Correctly align the pad to the new header position if it was underindented
+          local new_indent_pad = new_header_indent - curr_indent
+          -- If the current content indentaion is less than the new header indent we want to increase all of the
+          -- content by the largest difference in indentation between a given content line and the new header indent.
+          if curr_indent < new_header_indent then
+            content_indent_pad = math.max(new_indent_pad, content_indent_pad)
+          else
+            -- If the current content indentation is more than the new header indentation, but it was the current
+            -- content indentation was less than the current header indent then we want to add some indentation onto
+            -- the content by the largest negative difference (meaning -1 > -2 > -3 so take -1 as the pad).
+            --
+            -- We do a check for 0 here as we don't want to do a max of neg number against 0. 0 will always win. As
+            -- such if the current pad is 0 just set to the new calculated pad.
+            if content_indent_pad == 0 then
+              content_indent_pad = new_indent_pad
+            else
+              content_indent_pad = math.max(new_indent_pad, content_indent_pad)
+            end
+          end
+          matches[i + 1] = vim.tbl_deep_extend('force', opts, {
+            indent = curr_indent - header_indent_diff,
+          })
+        end
+        -- If any of the content is underindented relative to the header and footer, we need to indent all of the
+        -- content until the most underindented content is equal in indention to the header and footer.
+        --
+        -- Only loop the content.
+        for i = range.start.line + 1, range['end'].line - 2 do
+          matches[i + 1] = vim.tbl_deep_extend('force', opts, {
+            indent = vim.fn.indent(i + 1) + content_indent_pad,
+          })
+        end
+      elseif type == 'paragraph' or type == 'drawer' or type == 'property_drawer' then
         opts.indent_type = 'other'
         local parent = node:parent()
         while parent and parent:type() ~= 'section' do
@@ -189,6 +258,10 @@ local function indentexpr(linenr, mode)
       return vim.fn.indent(prev_linenr) + prev_line_match.overhang
     end
     return vim.fn.indent(prev_linenr)
+  end
+
+  if match.indent_type == 'block' then
+    return match.indent
   end
 
   if noindent_mode then

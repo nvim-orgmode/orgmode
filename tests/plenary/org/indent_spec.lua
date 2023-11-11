@@ -40,6 +40,14 @@ local function test_full_reindent()
     '    continuation',
     ' part of the first-level list',
     'Not part of the list',
+    '',
+    '*** Incorrectly indented block',
+    '     #+BEGIN_SRC json',
+    ' {',
+    '   "key": "value",',
+    '   "another key": "another value"',
+    ' }',
+    '     #+END_SRC',
   }
   helpers.load_file_content(unformatted_file)
   vim.cmd([[silent norm 0gg=G]])
@@ -73,6 +81,14 @@ local function test_full_reindent()
       '         continuation',
       '     part of the first-level list',
       '   Not part of the list',
+      '',
+      '*** Incorrectly indented block',
+      '     #+BEGIN_SRC json',
+      '     {',
+      '       "key": "value",',
+      '       "another key": "another value"',
+      '     }',
+      '     #+END_SRC',
     }
   elseif config.org_indent_mode == 'noindent' then
     expected = {
@@ -103,6 +119,14 @@ local function test_full_reindent()
       '      continuation',
       '  part of the first-level list',
       'Not part of the list',
+      '',
+      '*** Incorrectly indented block',
+      '#+BEGIN_SRC json',
+      '{',
+      '  "key": "value",',
+      '  "another key": "another value"',
+      '}',
+      '#+END_SRC',
     }
   end
   expect_whole_buffer(expected)
