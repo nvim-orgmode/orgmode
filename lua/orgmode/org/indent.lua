@@ -2,7 +2,7 @@ local config = require('orgmode.config')
 local ts_utils = require('nvim-treesitter.ts_utils')
 local query = nil
 
-local function get_indent_for_linenr(matches, linenr, mode)
+local function get_indent_for_match(matches, linenr, mode)
   linenr = linenr or vim.v.lnum
   mode = mode or vim.fn.mode()
   local noindent_mode = config.org_indent_mode == 'noindent'
@@ -37,11 +37,9 @@ local function get_indent_for_linenr(matches, linenr, mode)
     if parent_linenr then
       local parent_match = matches[parent_linenr]
       if parent_match.type == 'listitem' then
-        -- Nested listitem. Because two listitems cannot start on the same line,
-        -- we simply fetch the parent's indentation and add its overhang.
-        -- Don't use parent_match.indent, it might be stale if the parent
-        -- already got reindented.
-        first_line_indent = vim.fn.indent(parent_linenr) + parent_match.overhang
+        -- Nested listitem. We recursively find the correct indent for this
+        -- based on its parents correct indentation level.
+        first_line_indent = get_indent_for_match(matches, parent_linenr) + parent_match.overhang
       elseif parent_match.type == 'headline' and not noindent_mode then
         -- Un-nested list inside a section, indent according to section.
         first_line_indent = parent_match.indent
@@ -133,6 +131,8 @@ local get_matches = ts_utils.memoize_by_buf_tick(function(bufnr)
         while parent and parent:type() ~= 'section' and parent:type() ~= 'listitem' do
           parent = parent:parent()
         end
+        local prev_sibling = node:prev_sibling()
+        opts.prev_sibling_linenr = prev_sibling and (prev_sibling:start() + 1)
         opts.nesting_parent_linenr = parent and (parent:start() + 1)
 
         for i = range.start.line, range['end'].line - 1 do
@@ -150,7 +150,8 @@ local get_matches = ts_utils.memoize_by_buf_tick(function(bufnr)
         -- If the item is in the block, we shouldn't change the indentation beyond how much we modify the indent of the
         -- block header and footer. This keeps code correctly indented in `BEGIN_SRC` blocks as well as ensuring
         -- `BEGIN_EXAMPLE` blocks don't have their indentation changed inside of them.
-        local parent_indent = get_indent_for_linenr(matches, parent:start() + 1)
+        local parent_linenr = parent:start() + 1
+        local parent_indent = get_indent_for_match(matches, parent:start() + 1)
 
         if config.org_indent_mode == 'indent' and parent:type() == 'section' then
           local headline = parent:named_child('headline')
@@ -162,7 +163,7 @@ local get_matches = ts_utils.memoize_by_buf_tick(function(bufnr)
 
         -- We want to align to the listitem body, not the bullet
         if parent:type() == 'listitem' then
-          parent_indent = parent_indent + 2
+          parent_indent = parent_indent + matches[parent_linenr].overhang
         end
 
         local curr_header_indent = vim.fn.indent(range.start.line + 1)
@@ -277,7 +278,7 @@ local function indentexpr(linenr, mode)
   query = query or vim.treesitter.query.get('org', 'org_indent')
   local matches = get_matches(0)
 
-  return get_indent_for_linenr(matches, linenr, mode)
+  return get_indent_for_match(matches, linenr, mode)
 end
 
 local function foldtext()
