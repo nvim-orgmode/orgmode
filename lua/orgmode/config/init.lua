@@ -1,5 +1,6 @@
 local instance = {}
 local utils = require('orgmode.utils')
+local fs = require('orgmode.utils.fs')
 local defaults = require('orgmode.config.defaults')
 ---@type table<string, MapEntry>
 local mappings = require('orgmode.config.mappings')
@@ -154,8 +155,10 @@ end
 function Config:get_all_files()
   local all_filenames = {}
   if self.opts.org_default_notes_file and self.opts.org_default_notes_file ~= '' then
-    local default_full_path = vim.fn.resolve(vim.fn.expand(self.opts.org_default_notes_file, ':p'))
-    table.insert(all_filenames, default_full_path)
+    local default_full_path = vim.fn.resolve(vim.fn.fnamemodify(self.opts.org_default_notes_file, ':p'))
+    if vim.loop.fs_stat(default_full_path) then
+      table.insert(all_filenames, default_full_path)
+    end
   end
   local files = self.opts.org_agenda_files
   if not files or files == '' or (type(files) == 'table' and vim.tbl_isempty(files)) then
@@ -317,13 +320,23 @@ function Config:parse_archive_location(file, archive_loc)
   -- TODO: Support archive to headline
   local parts = vim.split(archive_loc, '::')
   local archive_location = vim.trim(parts[1])
-  if archive_location:find('%%s') then
-    local file_path = vim.fn.fnamemodify(file, ':p:h')
-    local file_name = vim.fn.fnamemodify(file, ':t')
-    local archive_filename = string.format(archive_location, file_name)
+  if not archive_location:find('%%s') then
+    return vim.fn.fnamemodify(archive_location, ':p')
+  end
+
+  local file_path = vim.fn.fnamemodify(file, ':p:h')
+  local file_name = vim.fn.fnamemodify(file, ':t')
+  local archive_filename = string.format(archive_location, file_name)
+
+  -- If org_archive_location is defined as relative path (example: "archive/%s_archive")
+  -- then we need to prepend the file path to it
+  local is_full_path = fs.substitute_path(archive_filename)
+
+  if not is_full_path then
     return string.format('%s/%s', file_path, archive_filename)
   end
-  return vim.fn.fnamemodify(archive_location, ':p')
+
+  return vim.fn.fnamemodify(archive_filename, ':p')
 end
 
 function Config:is_archive_file(file)

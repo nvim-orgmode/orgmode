@@ -16,9 +16,8 @@ function M.substitute_path(path_str)
   elseif path_str:match('^%.%./') then
     local base = vim.fn.fnamemodify(utils.current_file_path(), ':p:h')
     return base .. '/' .. path_str
-  else
-    return false
   end
+  return false
 end
 
 ---@param filepath string
