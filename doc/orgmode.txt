@@ -703,7 +703,7 @@ Nested key example:
 
 Lua expression example:
 >
-      { 
+      {
         j = {
           description = 'Journal',
           template = '* %(return vim.fn.getreg "w")',
@@ -820,6 +820,25 @@ To disable all mappings, just pass `disable_all = true` to mappings settings:
       }
     })
 <
+
+To disable a specific mapping, set it's value to `false`:
+>
+    require('orgmode').setup({
+      org_agenda_files = {'~/Dropbox/org/*', '~/my-orgs/**/*'},
+      org_default_notes_file = '~/Dropbox/org/refile.org',
+      mappings = {
+        global = {
+          org_agenda = false,
+          org_capture = 'gC'
+        },
+        agenda = {
+          org_agenda_later = false
+        }
+      }
+    })
+<
+
+You can find the configuration file that holds all default mappings here (./lua/orgmode/config/mappings/init.lua)
 
 NOTE: All mappings are normal mode mappings (`nnoremap`)
 
