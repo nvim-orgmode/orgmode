@@ -502,9 +502,27 @@ function OrgMappings:do_demote(whole_subtree)
   EventManager.dispatch(events.HeadlineDemoted:new(Files.get_closest_headline(), ts_org.closest_headline(), old_level))
 end
 
+local function table_handle_cr()
+  if vim.fn.col('.') == vim.fn.col('$') then
+    return false
+  end
+  local tbl = ts_table.from_current_node()
+  if not tbl then
+    return false
+  end
+
+  tbl:add_row()
+  vim.api.nvim_feedkeys(utils.esc('<Down>'), 'n', true)
+  vim.schedule(function()
+    vim.cmd([[norm! F|]])
+    vim.api.nvim_feedkeys(utils.esc('<Right><Right>'), 'n', true)
+  end)
+  return true
+end
+
 function OrgMappings:org_return()
   local actions = {
-    ts_table.handle_cr,
+    table_handle_cr,
   }
 
   for _, action in ipairs(actions) do

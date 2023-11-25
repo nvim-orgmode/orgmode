@@ -1,5 +1,5 @@
 local Files = require('orgmode.parser.files')
-local Table = require('orgmode.treesitter.table')
+local ts_table = require('orgmode.treesitter.table')
 local ts_org = require('orgmode.treesitter')
 
 local function format_line(linenr)
@@ -13,7 +13,9 @@ local function format_line(linenr)
     end
   end
 
-  if Table.format(linenr) then
+  local tbl = ts_table.from_current_node(linenr)
+  if tbl then
+    tbl:reformat()
     return true
   end
 

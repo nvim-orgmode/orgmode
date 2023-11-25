@@ -96,36 +96,4 @@ function TsTable:add_row()
   return TsTable.from_current_node():reformat()
 end
 
-local function format(linenr)
-  local tbl = TsTable.from_current_node(linenr)
-
-  if not tbl then
-    return false
-  end
-
-  tbl:reformat()
-  return true
-end
-
-local function handle_cr()
-  if vim.fn.col('.') == vim.fn.col('$') then
-    return false
-  end
-  local tbl = TsTable.from_current_node()
-  if not tbl then
-    return false
-  end
-
-  tbl:add_row()
-  vim.api.nvim_feedkeys(utils.esc('<Down>'), 'n', true)
-  vim.schedule(function()
-    vim.cmd([[norm! F|]])
-    vim.api.nvim_feedkeys(utils.esc('<Right><Right>'), 'n', true)
-  end)
-  return true
-end
-
-return {
-  format = format,
-  handle_cr = handle_cr,
-}
+return TsTable
