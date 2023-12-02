@@ -33,8 +33,9 @@ local function get_indent_for_match(matches, linenr, mode)
 
   if match.type == 'headline' then
     -- We ensure we check headlines (even if a bit redundant) to ensure nothing else is checked below
-    indent = 0
-  elseif match.type == 'listitem' then
+    return 0
+  end
+  if match.type == 'listitem' then
     -- We first figure out the indent of the first line of a listitem. Then we
     -- check if we're on the first line or a "hanging" line. In the latter
     -- case, we add the overhang.
@@ -58,7 +59,9 @@ local function get_indent_for_match(matches, linenr, mode)
     if linenr ~= match.line_nr then
       indent = indent + match.overhang
     end
-  elseif mode:match('^[iR]') and prev_line_match.type == 'listitem' and linenr - prev_linenr < 3 then
+    return indent
+  end
+  if mode:match('^[iR]') and prev_line_match.type == 'listitem' and linenr - prev_linenr < 3 then
     -- In insert mode, we also count the non-listitem line *after* a listitem as
     -- part of the listitem. Keep in mind that double empty lines end a list as
     -- per Orgmode syntax.
@@ -70,17 +73,15 @@ local function get_indent_for_match(matches, linenr, mode)
     if prev_linenr == prev_line_match.line_nr then
       indent = indent + prev_line_match.overhang
     end
-  elseif match.indent_type == 'block' then
+    return indent
+  end
+  if match.indent_type == 'block' then
     -- Blocks do some precalculation of their own against the intended indent level of the parent. As such we just want
     -- to return their indent without any other modifications.
-    indent = match.indent
+    return match.indent
   end
 
-  -- Listitems and headlines are special butterflies
-  if match.type ~= 'headline' and match.type ~= 'listitem' and match.type ~= 'block' then
-    indent = indent + get_indent_pad(linenr)
-  end
-  return indent
+  return indent + get_indent_pad(linenr)
 end
 
 local get_matches = ts_utils.memoize_by_buf_tick(function(bufnr)
