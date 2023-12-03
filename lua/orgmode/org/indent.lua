@@ -21,12 +21,11 @@ local function get_indent_for_match(matches, linenr, mode)
   local prev_linenr = vim.fn.prevnonblank(linenr - 1)
   local match = matches[linenr]
   local prev_line_match = matches[prev_linenr]
+  local indent = 0
 
   if not match and not prev_line_match then
-    return -1
+    return indent + get_indent_pad(linenr)
   end
-
-  local indent = 0
 
   match = match or {}
   prev_line_match = prev_line_match or {}
