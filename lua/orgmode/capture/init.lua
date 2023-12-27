@@ -349,7 +349,10 @@ function Capture:_refile_to(opts)
 
   local item = opts.item
   if is_same_file and item then
-    vim.cmd(string.format('silent! %d,%d move %s', item.range.start_line, item.range.end_line, tostring(opts.file)))
+    local target = opts.range.end_line
+    local pos = vim.fn.getcurpos()
+    vim.cmd(string.format('silent! %d,%d move %s', item.range.start_line, item.range.end_line, target))
+    vim.fn.cursor(pos[2], pos[3])
     return true
   end
 
