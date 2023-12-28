@@ -350,9 +350,9 @@ function Capture:_refile_to(opts)
   local item = opts.item
   if is_same_file and item then
     local target = opts.range.end_line
-    local pos = vim.fn.getcurpos()
+    local view = vim.fn.winsaveview()
     vim.cmd(string.format('silent! %d,%d move %s', item.range.start_line, item.range.end_line, target))
-    vim.fn.cursor(pos[2], pos[3])
+    vim.fn.winrestview(view)
     return true
   end
 
