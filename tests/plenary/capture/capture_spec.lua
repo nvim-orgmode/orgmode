@@ -133,7 +133,7 @@ describe('Refile', function()
     assert(capture_file)
     local item = capture_file:get_headlines()[1]
 
-    org.instance().capture:_refile_to_end({
+    org.instance().capture:_refile_to({
       file = destination_file,
       lines = capture_lines,
       item = item,
@@ -159,7 +159,7 @@ describe('Refile', function()
     assert(capture_file)
     local item = capture_file:get_headlines()[1]
 
-    org.instance().capture:_refile_to_end({
+    org.instance().capture:_refile_to({
       file = destination_file,
       lines = capture_lines,
       item = item,
@@ -189,7 +189,7 @@ describe('Refile', function()
     assert(capture_file)
     local item = capture_file:get_headlines()[1]
 
-    org.instance().capture:refile_to_headline({
+    org.instance().capture:_refile_to({
       file = destination_file,
       lines = capture_lines,
       item = item,
@@ -217,7 +217,7 @@ describe('Refile with empty lines', function()
     assert(capture_file)
     local item = capture_file:get_headlines()[1]
 
-    org.instance().capture:_refile_to_end({
+    org.instance().capture:_refile_to({
       file = destination_file,
       lines = capture_lines,
       item = item,
@@ -254,7 +254,7 @@ describe('Refile with empty lines', function()
     assert(capture_file)
     local item = capture_file:get_headlines()[1]
 
-    org.instance().capture:_refile_to_end({
+    org.instance().capture:_refile_to({
       file = destination_file,
       lines = capture_lines,
       item = item,
@@ -295,7 +295,7 @@ describe('Refile with empty lines', function()
     assert(capture_file)
     local item = capture_file:get_headlines()[1]
 
-    org.instance().capture:refile_to_headline({
+    org.instance().capture:_refile_to({
       file = destination_file,
       lines = capture_lines,
       item = item,

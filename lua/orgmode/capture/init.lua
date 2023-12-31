@@ -204,19 +204,6 @@ end
 ---@private
 ---@param opts CaptureOpts
 ---@return boolean
-function Capture:_refile_to_end(opts)
-  opts.range = Range.from_line(-1)
-  local refiled = self:_refile_to(opts)
-  if not refiled then
-    return false
-  end
-  utils.echo_info(opts.message or string.format('Wrote %s', opts.file))
-  return true
-end
-
----@private
----@param opts CaptureOpts
----@return boolean
 function Capture:_refile_content_with_fallback(opts)
   local default_file = opts.file and opts.file ~= '' and vim.fn.fnamemodify(opts.file, ':p') or nil
 
@@ -257,16 +244,6 @@ function Capture:_adapt_headline_level(item, target_level, is_same_file)
     return item:demote(target_level - item.level + 1, true, not is_same_file)
   end
   return item:promote(item.level - target_level - 1, true, not is_same_file)
-end
-
----@param opts CaptureOpts
-function Capture:refile_to_headline(opts)
-  local refiled = self:_refile_to(opts)
-  if not refiled then
-    return false
-  end
-  utils.echo_info(string.format('Wrote %s', opts.file))
-  return true
 end
 
 ---@param opts CaptureOpts
