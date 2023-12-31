@@ -167,7 +167,7 @@ describe('Refile', function()
     vim.cmd('edit' .. vim.fn.fnameescape(destination_file))
     assert.are.same({
       '* foobar',
-      '** baz',
+      '* baz',
     }, vim.api.nvim_buf_get_lines(0, 0, -1, false))
   end)
   it('to headline', function()
@@ -272,7 +272,7 @@ describe('Refile with empty lines', function()
       '* foobar',
       '',
       '',
-      '** baz',
+      '* baz',
       '',
     }, vim.api.nvim_buf_get_lines(0, 0, -1, false))
   end)
