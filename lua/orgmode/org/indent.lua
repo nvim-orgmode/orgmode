@@ -251,13 +251,42 @@ local function foldexpr()
   return '='
 end
 
+-- Some explanation as to the caching insanity inside of this function. The `get_matches` function
+-- is memoized, but that only goes so far. When a user wants to indent a large region, say with
+-- `norm! 0gg=G` every indent operation will call `get_matches` and get *new* matches. For the most
+-- part, this is fine, but on occasion the cache can end up invalidated when the indent operation doesn't
+-- occur fast enough. When the cache is invalidated new matches are returned and this leads to an
+-- issue in which the indent calculated for the line is no longer correct as it is based on bad
+-- data. This causes indents, especially for lists, to be incorrect as many indents are dependent on
+-- the previous node's indentation.
+--
+-- By caching the matches and previous line numbers matched we can effectively check if a range was
+-- requested for indentation and, if so, stop requesting new matches; then we only use the initial
+-- matches while updating the previous indent amounts as we return the new indents. We invalidate
+-- the cached matches when the user isn't in normal mode as it's likely they're modifying buffer
+-- content which requires us to get the updated matches for the changed content.
+--
+-- TLDR: The caching avoids some inconsistent race conditions with getting the Treesitter matches.
+local buf_indentexpr_cache = {}
 local function indentexpr(linenr, mode)
   linenr = linenr or vim.v.lnum
   mode = mode or vim.fn.mode()
   query = query or vim.treesitter.query.get('org', 'org_indent')
-  local matches = get_matches(0)
 
-  return get_indent_for_match(matches, linenr, mode)
+  local bufnr = vim.api.nvim_get_current_buf()
+  local indentexpr_cache = buf_indentexpr_cache[bufnr] or { prev_linenr = -1 }
+  if indentexpr_cache.prev_linenr ~= linenr - 1 or not mode:lower():find('n') then
+    indentexpr_cache.matches = get_matches(0)
+  end
+
+  local new_indent = get_indent_for_match(indentexpr_cache.matches, linenr, mode)
+  local match = indentexpr_cache.matches[linenr]
+  if match then
+    match.indent = new_indent
+  end
+  indentexpr_cache.prev_linenr = linenr
+  buf_indentexpr_cache[bufnr] = indentexpr_cache
+  return new_indent
 end
 
 local function foldtext()
