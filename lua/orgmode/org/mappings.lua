@@ -805,6 +805,7 @@ function OrgMappings:open_at_point()
     return
   end
 
+  -- handle external links (non-org or without org-specific line target)
   local url = link.url.str
   if link.url:is_file_plain() then
     local file_path = link.url:get_filepath()
@@ -854,7 +855,12 @@ function OrgMappings:open_at_point()
     end
     headline = headlines[choice]
   end
-  vim.cmd(string.format('edit %s', headline.file))
+
+  if link.url:is_file() then
+    vim.cmd(string.format('edit %s', headline.file))
+  else
+    vim.cmd([[normal! m']]) -- add link source to jumplist
+  end
   vim.fn.cursor({ headline.range.start_line, 0 })
   vim.cmd([[normal! zv]])
 end
