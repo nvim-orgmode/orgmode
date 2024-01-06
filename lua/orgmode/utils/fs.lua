@@ -1,6 +1,6 @@
 local utils = require('orgmode.utils')
 
-M = {}
+local M = {}
 
 ---@param path_str string
 ---@return string | false
