@@ -296,6 +296,15 @@ local function remove_buffer_empty_lines(opts)
   range.end_line = end_line
 end
 
+--- Checks, if we refile a heading within one file or from one file to another.
+---@param opts CaptureOpts
+---@return boolean
+local function check_refile_source(opts)
+  local source_file = opts.item and opts.item.file or utils.current_file_path()
+  local target_file = opts.file
+  return source_file == target_file
+end
+
 ---@private
 ---@param opts CaptureOpts
 ---@return boolean
@@ -319,8 +328,8 @@ function Capture:_refile_to(opts)
     target_line = headline.range.end_line
   end
 
-  local is_same_file = opts.file == utils.current_file_path()
   local item = opts.item
+  local is_same_file = check_refile_source(opts)
   if item and should_adapt_headline then
     -- Refiling in same file just moves the lines from one position
     -- to another,so we need to apply demote instantly
