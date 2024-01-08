@@ -100,6 +100,31 @@ vim.cmd.language('en_US.utf-8')
 vim.env.TZ = 'Europe/London'
 vim.g.mapleader = ','
 
+-- NOTE: This is a workaround to get the clipboard working in the CI environment
+-- where the clipboard provider does not exist.
+if vim.env.CI == 'true' then
+  vim.g.org_custom_clipboard = {}
+  vim.g.clipboard = {
+    name = 'org_custom_clipboard',
+    copy = {
+      ['+'] = function(lines, regtype)
+        vim.g.org_custom_clipboard = { lines, regtype }
+      end,
+      ['*'] = function(lines, regtype)
+        vim.g.org_custom_clipboard = { lines, regtype }
+      end,
+    },
+    paste = {
+      ['+'] = function()
+        return vim.g.org_custom_clipboard or {}
+      end,
+      ['*'] = function()
+        return vim.g.org_custom_clipboard or {}
+      end,
+    },
+  }
+end
+
 require('orgmode').setup_ts_grammar()
 require('nvim-treesitter.configs').setup({
   ensure_installed = { 'org' },
