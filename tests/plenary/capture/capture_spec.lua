@@ -133,7 +133,7 @@ describe('Refile', function()
     assert(capture_file)
     local item = capture_file:get_headlines()[1]
 
-    org.instance().capture:_refile_to_end({
+    org.instance().capture:_refile_to({
       file = destination_file,
       lines = capture_lines,
       item = item,
@@ -159,7 +159,7 @@ describe('Refile', function()
     assert(capture_file)
     local item = capture_file:get_headlines()[1]
 
-    org.instance().capture:_refile_to_end({
+    org.instance().capture:_refile_to({
       file = destination_file,
       lines = capture_lines,
       item = item,
@@ -167,7 +167,7 @@ describe('Refile', function()
     vim.cmd('edit' .. vim.fn.fnameescape(destination_file))
     assert.are.same({
       '* foobar',
-      '** baz',
+      '* baz',
     }, vim.api.nvim_buf_get_lines(0, 0, -1, false))
   end)
   it('to headline', function()
@@ -189,7 +189,7 @@ describe('Refile', function()
     assert(capture_file)
     local item = capture_file:get_headlines()[1]
 
-    org.instance().capture:refile_to_headline({
+    org.instance().capture:_refile_to({
       file = destination_file,
       lines = capture_lines,
       item = item,
@@ -217,7 +217,7 @@ describe('Refile with empty lines', function()
     assert(capture_file)
     local item = capture_file:get_headlines()[1]
 
-    org.instance().capture:_refile_to_end({
+    org.instance().capture:_refile_to({
       file = destination_file,
       lines = capture_lines,
       item = item,
@@ -254,7 +254,7 @@ describe('Refile with empty lines', function()
     assert(capture_file)
     local item = capture_file:get_headlines()[1]
 
-    org.instance().capture:_refile_to_end({
+    org.instance().capture:_refile_to({
       file = destination_file,
       lines = capture_lines,
       item = item,
@@ -272,7 +272,7 @@ describe('Refile with empty lines', function()
       '* foobar',
       '',
       '',
-      '** baz',
+      '* baz',
       '',
     }, vim.api.nvim_buf_get_lines(0, 0, -1, false))
   end)
@@ -295,7 +295,7 @@ describe('Refile with empty lines', function()
     assert(capture_file)
     local item = capture_file:get_headlines()[1]
 
-    org.instance().capture:refile_to_headline({
+    org.instance().capture:_refile_to({
       file = destination_file,
       lines = capture_lines,
       item = item,

@@ -22,7 +22,7 @@ describe('Refile mappings', function()
 
     source_file = Files.get_current_file()
     local item = source_file:get_closest_headline()
-    org.instance().capture:refile_to_headline({
+    org.instance().capture:_refile_to({
       file = destination_file,
       lines = source_file:get_headline_lines(item),
       item = item,
@@ -52,7 +52,7 @@ describe('Refile mappings', function()
 
     source_file = Files.get_current_file()
     local item = source_file:get_closest_headline()
-    org.instance().capture:refile_to_headline({
+    org.instance().capture:_refile_to({
       file = destination_file,
       lines = source_file:get_headline_lines(item),
       item = item,
@@ -82,7 +82,7 @@ describe('Refile mappings', function()
 
     source_file = Files.get_current_file()
     local item = source_file:get_closest_headline()
-    org.instance().capture:refile_to_headline({
+    org.instance().capture:_refile_to({
       file = destination_file,
       lines = source_file:get_headline_lines(item),
       item = item,

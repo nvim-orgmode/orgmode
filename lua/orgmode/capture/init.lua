@@ -129,11 +129,7 @@ function Capture:refile(confirm)
     end
   end
   vim.defer_fn(function()
-    if opts.headline then
-      self:refile_to_headline(opts)
-    else
-      self:_refile_to_end(opts)
-    end
+    self:_refile_to(opts)
 
     if not confirm then
       self:kill()
@@ -202,20 +198,7 @@ end
 ---@return boolean
 function Capture:refile_file_headline_to_archive(opts)
   opts.message = string.format('Archived to %s', opts.file)
-  return self:_refile_to_end(opts)
-end
-
----@private
----@param opts CaptureOpts
----@return boolean
-function Capture:_refile_to_end(opts)
-  opts.range = Range.from_line(-1)
-  local refiled = self:_refile_to(opts)
-  if not refiled then
-    return false
-  end
-  utils.echo_info(opts.message or string.format('Wrote %s', opts.file))
-  return true
+  return self:_refile_to(opts)
 end
 
 ---@private
@@ -240,49 +223,27 @@ function Capture:_refile_content_with_fallback(opts)
       return false
     end
     opts.file = default_file
-    return self:_refile_to_end(opts)
+    return self:_refile_to(opts)
   end
 
   opts.file = valid_destinations[destination[1]]
   opts.headline = table.concat({ unpack(destination, 2) }, '/')
-  if not opts.headline or opts.headline == '' then
-    return self:_refile_to_end(opts)
-  end
-  return self:refile_to_headline(opts)
+  return self:_refile_to(opts)
 end
 
----@param opts CaptureOpts
-function Capture:refile_to_headline(opts)
-  local destination_file = Files.get(opts.file)
-  local headline
-  if opts.headline then
-    headline = destination_file:find_headline_by_title(opts.headline, true)
-
-    if not headline then
-      utils.echo_error("headline '" .. opts.headline .. "' does not exist in '" .. opts.file .. "'. Aborted refiling.")
-      return false
-    end
+---@param item Section
+---@param target_level integer
+---@param is_same_file boolean
+function Capture:_adapt_headline_level(item, target_level, is_same_file)
+  -- Refiling in same file just moves the lines from one position
+  -- to another,so we need to apply demote instantly
+  if target_level == 0 then
+    return item:promote(item.level - 1, true, not is_same_file)
   end
-
-  local item = opts.item
-  if item then
-    -- Refiling in same file just moves the lines from one position
-    -- to another,so we need to apply demote instantly
-    local is_same_file = destination_file.filename == item.root.filename
-    if item.level <= headline.level then
-      opts.lines = item:demote(headline.level - item.level + 1, true, not is_same_file)
-    else
-      opts.lines = item:promote(item.level - headline.level - 1, true, not is_same_file)
-    end
+  if item.level <= target_level then
+    return item:demote(target_level - item.level + 1, true, not is_same_file)
   end
-
-  opts.range = Range.from_line(headline.range.end_line)
-  local refiled = self:_refile_to(opts)
-  if not refiled then
-    return false
-  end
-  utils.echo_info(string.format('Wrote %s', opts.file))
-  return true
+  return item:promote(item.level - target_level - 1, true, not is_same_file)
 end
 
 ---@param opts CaptureOpts
@@ -343,16 +304,40 @@ function Capture:_refile_to(opts)
     return false
   end
 
-  apply_properties(opts)
+  local has_headline = opts.headline and opts.headline ~= ''
+  local destination_file = Files.get(opts.file)
+  local target_level = 0
+  local target_line = -1
+  local should_adapt_headline = has_headline or (opts.item ~= nil and opts.item.level > 1)
+  if has_headline then
+    local headline = destination_file:find_headline_by_title(opts.headline, true)
+    if not headline then
+      utils.echo_error("headline '" .. opts.headline .. "' does not exist in '" .. opts.file .. "'. Aborted refiling.")
+      return false
+    end
+    target_level = headline.level
+    target_line = headline.range.end_line
+  end
 
   local is_same_file = opts.file == utils.current_file_path()
-
   local item = opts.item
+  if item and should_adapt_headline then
+    -- Refiling in same file just moves the lines from one position
+    -- to another,so we need to apply demote instantly
+    opts.lines = self:_adapt_headline_level(item, target_level, is_same_file)
+  end
+
+  opts.range = Range.from_line(target_line)
+
+  apply_properties(opts)
+
   if is_same_file and item then
     local target = opts.range.end_line
     local view = vim.fn.winsaveview()
     vim.cmd(string.format('silent! %d,%d move %s', item.range.start_line, item.range.end_line, target))
     vim.fn.winrestview(view)
+
+    utils.echo_info(opts.message or string.format('Wrote %s', opts.file))
     return true
   end
 
@@ -375,6 +360,7 @@ function Capture:_refile_to(opts)
     pcall(vim.api.nvim_buf_set_lines, 0, item.range.start_line - 1, item.range.end_line, false, {})
   end
 
+  utils.echo_info(opts.message or string.format('Wrote %s', opts.file))
   return true
 end
 
