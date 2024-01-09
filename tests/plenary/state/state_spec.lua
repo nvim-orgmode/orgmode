@@ -79,10 +79,9 @@ describe('State', function()
   it('should be able to self-heal from an invalid state file', function()
     state:save_sync()
 
-    -- Mangle the cache
-    vim.cmd.edit(cache_path)
+    vim.cmd(('edit %s'):format(cache_path))
     vim.api.nvim_buf_set_lines(0, 0, -1, false, { '[ invalid json!' })
-    vim.cmd.write()
+    vim.cmd('write')
 
     -- Ensure we reload the state from its cache file (this should also "heal" the cache)
     state._ctx.loaded = false
