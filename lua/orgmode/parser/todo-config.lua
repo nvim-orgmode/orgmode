@@ -1,4 +1,4 @@
-local parsing = require('orgmode.parsers.utils')
+local parsing = require('orgmode.parser.utils')
 
 --- @class TodoConfig
 --- @field words TodoConfigWord[]

@@ -1,7 +1,7 @@
 --TODO: Support regex search
 
 local Date = require('orgmode.objects.date')
-local parsing = require('orgmode.parsers.utils')
+local parsing = require('orgmode.parser.utils')
 
 ---@class Search
 ---@field term string
