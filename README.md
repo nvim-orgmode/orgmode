@@ -296,7 +296,6 @@ More info on issue [#281](https://github.com/nvim-orgmode/orgmode/issues/281#iss
   * Insert/Move/Refile headlines
   * Change tags
   * Toggle checkbox state
-* Clocking time
 * Remote editing from agenda view
 * Repeatable mapping via [vim-repeat](https://github.com/tpope/vim-repeat)
 
