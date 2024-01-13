@@ -7,9 +7,9 @@ local namespace = vim.api.nvim_create_namespace('org_calendar')
 ---@alias OrgCalendarOnRenderDayOpts { line: number, from: number, to: number, buf: number, namespace: number }
 ---@alias OrgCalendarOnRenderDay fun(day: OrgDate, opts: OrgCalendarOnRenderDayOpts)
 
--- // begin TODO still relevant?
-local SelState = { DAY = 0, HOUR = 1, MIN_10 = 2, MIN_5 = 3 }
--- // end
+local SelState = { DAY = 0, HOUR = 1, MIN_BIG = 2, MIN_SMALL = 3 }
+local big_minute_step = config.org_time_stamp_rounding_min_big
+local small_minute_step = config.org_time_stamp_rounding_minutes
 
 ---@class OrgCalendar
 ---@field win number?
@@ -296,10 +296,10 @@ end
 function Calendar:cursor_right()
   if self.select_state ~= SelState.DAY then
     if self.select_state == SelState.HOUR then
-      self:set_sel_min10()
-    elseif self.select_state == SelState.MIN_10 then
-      self:set_sel_min5()
-    elseif self.select_state == SelState.MIN_5 then
+      self:set_min_big()
+    elseif self.select_state == SelState.MIN_BIG then
+      self:set_min_small()
+    elseif self.select_state == SelState.MIN_SMALL then
       self:set_sel_hour()
     end
     return
@@ -317,11 +317,11 @@ end
 function Calendar:cursor_left()
   if self.select_state ~= SelState.DAY then
     if self.select_state == SelState.HOUR then
-      self:set_sel_min5()
-    elseif self.select_state == SelState.MIN_10 then
+      self:set_min_small()
+    elseif self.select_state == SelState.MIN_BIG then
       self:set_sel_hour()
-    elseif self.select_state == SelState.MIN_5 then
-      self:set_sel_min10()
+    elseif self.select_state == SelState.MIN_SMALL then
+      self:set_min_big()
     end
     return
   end
@@ -335,16 +335,27 @@ function Calendar:cursor_left()
   end
 end
 
+---@param direction string
+---@param step_size number
+---@param current number
+---@param count number
+local function step(direction, step_size, current, count)
+  local sign = direction == 'up' and -1 or 1
+  local residual = current % step_size
+  local factor = (residual == 0 or direction == 'up') and count or count - 1
+  return factor * step_size + sign * residual
+end
+
 function Calendar:cursor_up()
   if self.select_state ~= SelState.DAY then
     -- to avoid unexpectedly changing the day we cache it ...
     local day = self.date.day
     if self.select_state == SelState.HOUR then
       self.date = self.date:add({ hour = vim.v.count1 })
-    elseif self.select_state == SelState.MIN_10 then
-      self.date = self.date:add({ min = 10 * vim.v.count1 - self.date.min % 10 })
-    elseif self.select_state == SelState.MIN_5 then
-      self.date = self.date:add({ min = 5 * vim.v.count1 - self.date.min % 5 })
+    elseif self.select_state == SelState.MIN_BIG then
+      self.date = self.date:add({ min = step('up', big_minute_step, self.date.min, vim.v.count1) })
+    elseif self.select_state == SelState.MIN_SMALL then
+      self.date = self.date:add({ min = step('up', small_minute_step, self.date.min, vim.v.count1) })
     end
     -- and restore the cached day after adjusting the time
     self.date = self.date:set({ day = day })
@@ -381,10 +392,10 @@ function Calendar:cursor_down()
     local day = self.date.day
     if self.select_state == SelState.HOUR then
       self.date = self.date:subtract({ hour = 1 * vim.v.count1 })
-    elseif self.select_state == SelState.MIN_10 then
-      self.date = self.date:subtract({ min = 10 * vim.v.count1 + self.date.min % 10 })
-    elseif self.select_state == SelState.MIN_5 then
-      self.date = self.date:subtract({ min = 5 * vim.v.count1 + self.date.min % 5 })
+    elseif self.select_state == SelState.MIN_BIG then
+      self.date = self.date:subtract({ min = step('down', big_minute_step, self.date.min, vim.v.count1) })
+    elseif self.select_state == SelState.MIN_SMALL then
+      self.date = self.date:subtract({ min = step('down', small_minute_step, self.date.min, vim.v.count1) })
     end
     -- and restore the cached day after adjusting the time
     self.date = self.date:set({ day = day })
@@ -546,13 +557,13 @@ function Calendar:set_sel_day()
   self:jump_day()
 end
 
-function Calendar:set_sel_min10()
-  self.select_state = SelState.MIN_10
+function Calendar:set_min_big()
+  self.select_state = SelState.MIN_BIG
   vim.fn.cursor({ 9, 19 })
 end
 
-function Calendar:set_sel_min5()
-  self.select_state = SelState.MIN_5
+function Calendar:set_min_small()
+  self.select_state = SelState.MIN_SMALL
   vim.fn.cursor({ 9, 20 })
 end
 
