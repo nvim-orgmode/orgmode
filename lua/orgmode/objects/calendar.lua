@@ -428,14 +428,12 @@ function Calendar:get_selected_date()
   end
   local col = vim.fn.col('.')
   local char = vim.fn.getline('.'):sub(col, col)
-  local day = vim.trim(vim.fn.expand('<cword>'))
+  local day = tonumber(vim.trim(vim.fn.expand('<cword>')))
   local line = vim.fn.line('.')
   vim.cmd([[redraw!]])
   if line < 3 or not char:match('%d') then
     return utils.echo_warning('Please select valid day number.', nil, false)
   end
-  --return self.month:set({ day = tonumber(day) })
-  --  day = tonumber(day)
   return self.date:set({
     month = self.month.month,
     day = day,
