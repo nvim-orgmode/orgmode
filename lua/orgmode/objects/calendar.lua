@@ -340,11 +340,11 @@ function Calendar:cursor_up()
     -- to avoid unexpectedly changing the day we cache it ...
     local day = self.date.day
     if self.select_state == SelState.HOUR then
-      self.date = self.date:subtract({ hour = vim.v.count1 })
+      self.date = self.date:add({ hour = vim.v.count1 })
     elseif self.select_state == SelState.MIN_10 then
-      self.date = self.date:subtract({ min = 10 * vim.v.count1 })
+      self.date = self.date:add({ min = 10 * vim.v.count1 - self.date.min % 10 })
     elseif self.select_state == SelState.MIN_5 then
-      self.date = self.date:subtract({ min = 5 * vim.v.count1 })
+      self.date = self.date:add({ min = 5 * vim.v.count1 - self.date.min % 5 })
     end
     -- and restore the cached day after adjusting the time
     self.date = self.date:set({ day = day })
@@ -380,11 +380,11 @@ function Calendar:cursor_down()
     -- to avoid unexpectedly changing the day we cache it ...
     local day = self.date.day
     if self.select_state == SelState.HOUR then
-      self.date = self.date:add({ hour = 1 * vim.v.count1 })
+      self.date = self.date:subtract({ hour = 1 * vim.v.count1 })
     elseif self.select_state == SelState.MIN_10 then
-      self.date = self.date:add({ min = 10 * vim.v.count1 })
+      self.date = self.date:subtract({ min = 10 * vim.v.count1 + self.date.min % 10 })
     elseif self.select_state == SelState.MIN_5 then
-      self.date = self.date:add({ min = 5 * vim.v.count1 })
+      self.date = self.date:subtract({ min = 5 * vim.v.count1 + self.date.min % 5 })
     end
     -- and restore the cached day after adjusting the time
     self.date = self.date:set({ day = day })
