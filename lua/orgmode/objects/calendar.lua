@@ -8,7 +8,7 @@ local namespace = vim.api.nvim_create_namespace('org_calendar')
 ---@alias OrgCalendarOnRenderDay fun(day: OrgDate, opts: OrgCalendarOnRenderDayOpts)
 
 local SelState = { DAY = 0, HOUR = 1, MIN_BIG = 2, MIN_SMALL = 3 }
-local big_minute_step = config.org_time_stamp_rounding_min_big
+local big_minute_step = config.org_time_picker_min_big
 local small_minute_step = config.org_time_stamp_rounding_minutes
 
 ---@class OrgCalendar
@@ -313,7 +313,7 @@ function Calendar:forward()
   self:render()
   vim.fn.cursor(2, 1)
   vim.fn.search('01')
-  Calendar.render()
+  self:render()
 end
 
 function Calendar:backward()
@@ -321,7 +321,7 @@ function Calendar:backward()
   self:render()
   vim.fn.cursor(vim.fn.line('$'), 0)
   vim.fn.search([[\d\d]], 'b')
-  Calendar.render()
+  self:render()
 end
 
 function Calendar:cursor_right()
@@ -343,8 +343,8 @@ function Calendar:cursor_right()
       vim.fn.cursor(line, col + offset)
     end
   end
-  Calendar.date = Calendar.get_selected_date()
-  Calendar.render()
+  self.date = self:get_selected_date()
+  self:render()
 end
 
 function Calendar:cursor_left()
@@ -366,19 +366,39 @@ function Calendar:cursor_left()
       vim.fn.cursor(line, offset)
     end
   end
-  Calendar.date = Calendar.get_selected_date()
-  Calendar.render()
+  self.date = self:get_selected_date()
+  self:render()
 end
 
 ---@param direction string
 ---@param step_size number
 ---@param current number
 ---@param count number
-local function step(direction, step_size, current, count)
+local function step_minute(direction, step_size, current, count)
   local sign = direction == 'up' and -1 or 1
   local residual = current % step_size
   local factor = (residual == 0 or direction == 'up') and count or count - 1
   return factor * step_size + sign * residual
+end
+
+--- Controls, how the hours are adjusted. The rounding the minutes can be disabled
+--- by the user, so adjusting the hours just moves the time 1 our back or forth
+---@param direction string
+---@param current OrgDate
+---@param count number
+---@return table
+local function step_hour(direction, current, count)
+  if not config.org_time_picker_round_min_with_hours or current.min % big_minute_step == 0 then
+    return { hour = count, min = 0 }
+  end
+
+  -- if adjusting the mins would land on a full hour, we don't step a full hour,
+  -- otherwise we do and round the minutes
+  local sign = direction == 'up' and 1 or -1
+  local min = step_minute(direction, big_minute_step, current.min, 1)
+  local min_new = current.min + sign * min
+  local hour = min_new % 60 ~= 0 and count or count - 1
+  return { hour = hour, min = min }
 end
 
 function Calendar:cursor_up()
@@ -386,11 +406,11 @@ function Calendar:cursor_up()
     -- to avoid unexpectedly changing the day we cache it ...
     local day = self.date.day
     if self.select_state == SelState.HOUR then
-      self.date = self.date:add({ hour = vim.v.count1 })
+      self.date = self.date:add(step_hour('up', self.date, vim.v.count1))
     elseif self.select_state == SelState.MIN_BIG then
-      self.date = self.date:add({ min = step('up', big_minute_step, self.date.min, vim.v.count1) })
+      self.date = self.date:add({ min = step_minute('up', big_minute_step, self.date.min, vim.v.count1) })
     elseif self.select_state == SelState.MIN_SMALL then
-      self.date = self.date:add({ min = step('up', small_minute_step, self.date.min, vim.v.count1) })
+      self.date = self.date:add({ min = step_minute('up', small_minute_step, self.date.min, vim.v.count1) })
     end
     -- and restore the cached day after adjusting the time
     self.date = self.date:set({ day = day })
@@ -419,20 +439,19 @@ function Calendar:cursor_up()
     end
     vim.fn.cursor(line - 1, move_to)
   end
-  Calendar.date = Calendar.get_selected_date()
-  Calendar.render()
+  self.date = self:get_selected_date()
+  self:render()
 end
 
 function Calendar:cursor_down()
   if self.select_state ~= SelState.DAY then
-    -- to avoid unexpectedly changing the day we cache it ...
     local day = self.date.day
     if self.select_state == SelState.HOUR then
-      self.date = self.date:subtract({ hour = 1 * vim.v.count1 })
+      self.date = self.date:subtract(step_hour('down', self.date, vim.v.count1))
     elseif self.select_state == SelState.MIN_BIG then
-      self.date = self.date:subtract({ min = step('down', big_minute_step, self.date.min, vim.v.count1) })
+      self.date = self.date:subtract({ min = step_minute('down', big_minute_step, self.date.min, vim.v.count1) })
     elseif self.select_state == SelState.MIN_SMALL then
-      self.date = self.date:subtract({ min = step('down', small_minute_step, self.date.min, vim.v.count1) })
+      self.date = self.date:subtract({ min = step_minute('down', small_minute_step, self.date.min, vim.v.count1) })
     end
     -- and restore the cached day after adjusting the time
     self.date = self.date:set({ day = day })
@@ -460,8 +479,8 @@ function Calendar:cursor_down()
     end
     vim.fn.cursor(line + 1, move_to)
   end
-  Calendar.date = Calendar.get_selected_date()
-  Calendar.render()
+  self.date = self:get_selected_date()
+  self:render()
 end
 
 function Calendar:reset()
