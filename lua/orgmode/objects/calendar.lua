@@ -200,6 +200,8 @@ function Calendar:render()
   else
     table.insert(content, ' [i] - enter date')
   end
+
+  -- FIXME this line is currently not shown because of a bug.
   if self:has_time() then
     table.insert(content, ' [t] - enter time  [T] - clear time')
   else
@@ -221,19 +223,12 @@ function Calendar:render()
   vim.api.nvim_buf_add_highlight(self.buf, namespace, 'Comment', #content - 2, 0, -1)
   vim.api.nvim_buf_add_highlight(self.buf, namespace, 'Comment', #content - 1, 0, -1)
 
+  -- highlight the cell of the current day
+  self:highlight_day(content, Date.today(), 'OrgCalendarToday')
   -- highlight selected day
-  local current_date = self.date
-  local is_selected_month = current_date ~= nil and current_date:is_same(self.month, 'month')
-  if is_selected_month then
-    local day_formatted = current_date and current_date:format('%d')
-    for i, line in ipairs(content) do
-      local from, to = line:find('%s' .. day_formatted .. '%s')
-      if from and to then
-        vim.api.nvim_buf_add_highlight(self.buf, namespace, 'OrgCalendarSelected', i - 1, from - 1, to)
-      end
-    end
-  end
+  self:highlight_day(content, self.date, 'OrgCalendarSelected')
 
+  -- TODO this new loop (after Kristjans refactoring) is currently not fully understood.
   for i, line in ipairs(content) do
     local from = 0
     local to, num
@@ -275,6 +270,26 @@ function Calendar:on_render_day(day, opts)
   end
 
   vim.api.nvim_set_option_value('modifiable', false, { buf = self.buf })
+end
+
+---@param day OrgDate?
+---@param hl_group string
+function Calendar:highlight_day(content, day, hl_group)
+  if not day then
+    return
+  end
+
+  if not day:is_same(self.month, 'month') then
+    return
+  end
+
+  local day_formatted = day:format('%d')
+  for i, line in ipairs(content) do
+    local from, to = line:find('%s' .. day_formatted .. '%s')
+    if from and to then
+      vim.api.nvim_buf_add_highlight(self.buf, namespace, hl_group, i - 1, from - 1, to)
+    end
+  end
 end
 
 function Calendar.left_pad(time_part)
