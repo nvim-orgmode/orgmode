@@ -20,6 +20,7 @@ local small_minute_step = config.org_time_stamp_rounding_minutes
 ---@field month OrgDate
 ---@field title? string
 ---@field on_day? OrgCalendarOnRenderDay
+---@field selected OrgDate?
 ---@field select_state integer
 ---@field clearable boolean
 local Calendar = {
@@ -34,6 +35,7 @@ local Calendar = {
 Calendar.__index = Calendar
 
 vim.cmd([[hi default OrgCalendarToday gui=reverse cterm=reverse]])
+vim.cmd([[hi default OrgCalendarSelected gui=underline cterm=underline]])
 
 ---@param data { date?: OrgDate, clearable?: boolean, title?: string, on_day?: OrgCalendarOnRenderDay }
 function Calendar.new(data)
@@ -204,22 +206,33 @@ function Calendar:render()
     table.insert(content, ' [t] - enter time')
   end
 
-  --<<<<<<< HEAD
   vim.api.nvim_buf_set_lines(self.buf, 0, -1, true, content)
   vim.api.nvim_buf_clear_namespace(self.buf, namespace, 0, -1)
   if self.clearable then
     vim.api.nvim_buf_add_highlight(self.buf, namespace, 'Comment', #content - 3, 0, -1)
   end
-  --
+
   if not self:has_time() then
     vim.api.nvim_buf_add_highlight(self.buf, namespace, 'Comment', 8, 0, -1)
   end
+
   vim.api.nvim_buf_add_highlight(self.buf, namespace, 'Comment', #content - 4, 0, -1)
   vim.api.nvim_buf_add_highlight(self.buf, namespace, 'Comment', #content - 3, 0, -1)
-  --
   vim.api.nvim_buf_add_highlight(self.buf, namespace, 'Comment', #content - 2, 0, -1)
   vim.api.nvim_buf_add_highlight(self.buf, namespace, 'Comment', #content - 1, 0, -1)
-  -->>>>>>> 008d7dd (feat: implement time picker)
+
+  -- highlight selected day
+  local current_date = self.date
+  local is_selected_month = current_date ~= nil and current_date:is_same(self.month, 'month')
+  if is_selected_month then
+    local day_formatted = current_date and current_date:format('%d')
+    for i, line in ipairs(content) do
+      local from, to = line:find('%s' .. day_formatted .. '%s')
+      if from and to then
+        vim.api.nvim_buf_add_highlight(self.buf, namespace, 'OrgCalendarSelected', i - 1, from - 1, to)
+      end
+    end
+  end
 
   for i, line in ipairs(content) do
     local from = 0
@@ -244,7 +257,6 @@ function Calendar:render()
   vim.api.nvim_set_option_value('modifiable', false, { buf = self.buf })
 end
 
---<<<<<<< HEAD
 ---@param day OrgDate
 ---@param opts { from: number, to: number, line: number}
 function Calendar:on_render_day(day, opts)
@@ -261,6 +273,8 @@ function Calendar:on_render_day(day, opts)
       })
     )
   end
+
+  vim.api.nvim_set_option_value('modifiable', false, { buf = self.buf })
 end
 
 function Calendar.left_pad(time_part)
@@ -473,16 +487,6 @@ function Calendar:select()
   return cb(selected_date)
 end
 
---=======
---function Calendar.abort()
---  if Calendar.select_state == SelState.DAY then
---    vim.cmd([[echon]])
---    vim.api.nvim_win_close(0, true)
---    Calendar.dispose()
---  end
---  Calendar.set_sel_day()
---end
---<<<<<<< HEAD
 function Calendar:dispose()
   self.win = nil
   self.buf = nil
@@ -522,7 +526,8 @@ end
 function Calendar:set_time()
   self.date = self:get_selected_date()
   self.date = self.date:set({ date_only = false })
-  self:rerender_time()
+  --self:rerender_time()
+  self:render() -- because we want to highlight the currently selected date, we have to render everything
   self:set_sel_hour()
 end
 
