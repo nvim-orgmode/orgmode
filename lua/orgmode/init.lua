@@ -1,5 +1,5 @@
 _G.orgmode = _G.orgmode or {}
-local ts_revision = '081179c52b3e8175af62b9b91dc099d010c38770'
+local ts_revision = 'f8c6b1e72f82f17e41004e04e15f62a83ecc27b0'
 local setup_ts_grammar_used = false
 local instance = nil
 
@@ -69,9 +69,9 @@ local function setup_ts_grammar(revision)
   local parser_config = require('nvim-treesitter.parsers').get_parser_configs()
   parser_config.org = {
     install_info = {
-      url = 'https://github.com/milisims/tree-sitter-org',
+      url = 'https://github.com/nvim-orgmode/tree-sitter-org',
       revision = revision or ts_revision,
-      files = { 'src/parser.c', 'src/scanner.cc' },
+      files = { 'src/parser.c', 'src/scanner.c' },
     },
     filetype = 'org',
   }
