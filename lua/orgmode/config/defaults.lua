@@ -1,4 +1,5 @@
 ---@class DefaultConfig
+---@field org_log_done 'time' | 'note' | false
 local DefaultConfig = {
   org_agenda_files = '',
   org_default_notes_file = '',

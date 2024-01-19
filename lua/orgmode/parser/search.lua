@@ -1,6 +1,7 @@
 --TODO: Support regex search
 
 local Date = require('orgmode.objects.date')
+local parsing = require('orgmode.parser.utils')
 
 ---@class Search
 ---@field term string
@@ -88,66 +89,6 @@ local OPERATORS = {
   end,
 }
 
----Parses a pattern from the beginning of an input using Lua's pattern syntax
----@param input string
----@param pattern string
----@return string?, string
-local function parse_pattern(input, pattern)
-  local value = input:match('^' .. pattern)
-  if value then
-    return value, input:sub(#value + 1)
-  else
-    return nil, input
-  end
-end
-
----Parses the first of a sequence of patterns
----@param input string The input to parse
----@param ... string The patterns to accept
----@return string?, string
-local function parse_pattern_choice(input, ...)
-  for _, pattern in ipairs({ ... }) do
-    local value, remaining = parse_pattern(input, pattern)
-    if value then
-      return value, remaining
-    end
-  end
-
-  return nil, input
-end
-
----@generic T
----@param input string
----@param item_parser fun(input: string): (T?, string)
----@param delimiter_pattern string
----@return (T[])?, string
-local function parse_delimited_sequence(input, item_parser, delimiter_pattern)
-  local sequence, item, delimiter = {}, nil, nil
-  local original_input = input
-
-  -- Parse the first item
-  item, input = item_parser(input)
-  if not item then
-    return sequence, input
-  end
-  table.insert(sequence, item)
-
-  -- Continue parsing items while there's a trailing delimiter
-  delimiter, input = parse_pattern(input, delimiter_pattern)
-  while delimiter do
-    item, input = item_parser(input)
-    if not item then
-      return nil, original_input
-    end
-
-    table.insert(sequence, item)
-
-    delimiter, input = parse_pattern(input, delimiter_pattern)
-  end
-
-  return sequence, input
-end
-
 ---@param term string
 ---@return Search
 function Search:new(term)
@@ -190,7 +131,7 @@ end
 function Search:_parse()
   local input = self.term
   -- Parse the sequence of ORs
-  self.or_items, input = parse_delimited_sequence(input, function(i)
+  self.or_items, input = parsing.parse_delimited_sequence(input, function(i)
     return OrItem:parse(i)
   end, '%|')
 
@@ -220,7 +161,7 @@ function OrItem:parse(input)
   local and_items
   local original_input = input
 
-  and_items, input = parse_delimited_sequence(input, function(i)
+  and_items, input = parsing.parse_delimited_sequence(input, function(i)
     return AndItem:parse(i)
   end, '%&')
 
@@ -269,7 +210,7 @@ function AndItem:parse(input)
   local operator
   local original_input = input
 
-  operator, input = parse_pattern(input, '[%+%-]?')
+  operator, input = parsing.parse_pattern(input, '[%+%-]?')
 
   -- A '+' operator is implied if none is present
   if operator == '' then
@@ -300,7 +241,7 @@ function AndItem:parse(input)
     end
 
     -- Attempt to parse the next operator
-    operator, input = parse_pattern(input, '[%+%-]')
+    operator, input = parsing.parse_pattern(input, '[%+%-]')
   end
 
   return and_item, input
@@ -339,7 +280,7 @@ end
 ---@return TagMatch?, string
 function TagMatch:parse(input)
   local tag
-  tag, input = parse_pattern(input, '[%w_@#%%]+')
+  tag, input = parsing.parse_pattern(input, '[%w_@#%%]+')
   if not tag then
     return nil, input
   end
@@ -371,7 +312,7 @@ function PropertyMatch:parse(input)
   local name, operator, string_str, number_str, date_str
   local original_input = input
 
-  name, input = parse_pattern(input, '[^=<>]+')
+  name, input = parsing.parse_pattern(input, '[^=<>]+')
   if not name then
     return nil, original_input
   end
@@ -383,14 +324,14 @@ function PropertyMatch:parse(input)
   end
 
   -- Number property
-  number_str, input = parse_pattern(input, '%d+')
+  number_str, input = parsing.parse_pattern(input, '%d+')
   if number_str then
     local number = tonumber(number_str) --[[@as number]]
     return PropertyNumberMatch:new(name, operator, number), input
   end
 
   -- Date property
-  date_str, input = parse_pattern(input, '"(<[^>]+>)"')
+  date_str, input = parsing.parse_pattern(input, '"(<[^>]+>)"')
   if date_str then
     ---@type string?, Date?
     local date_content, date_value
@@ -422,7 +363,7 @@ function PropertyMatch:parse(input)
   end
 
   -- String property
-  string_str, input = parse_pattern(input, '"[^"]+"')
+  string_str, input = parsing.parse_pattern(input, '"[^"]+"')
   if string_str then
     ---@type string
     local unquote_string = string_str:match('^"([^"]+)"$')
@@ -437,7 +378,7 @@ end
 ---@param input string
 ---@return PropertyMatchOperator, string
 function PropertyMatch:_parse_operator(input)
-  return parse_pattern_choice(input, '%=', '%<%>', '%<%=', '%<', '%>%=', '%>') --[[@as PropertyMatchOperator]]
+  return parsing.parse_pattern_choice(input, '%=', '%<%>', '%<%=', '%<', '%>%=', '%>') --[[@as PropertyMatchOperator]]
 end
 
 ---Constructs a PropertyNumberMatch
@@ -559,7 +500,7 @@ function TodoMatch:parse(input)
   -- Parse the '/' or '/!' prefix that indicates a TodoMatch
   ---@type string?
   local prefix
-  prefix, input = parse_pattern(input, '%/[%!]?')
+  prefix, input = parsing.parse_pattern(input, '%/[%!]?')
   if not prefix then
     return nil, original_input
   end
@@ -567,8 +508,8 @@ function TodoMatch:parse(input)
   -- Parse a whitelist of keywords
   --- @type string[]?
   local anyOf
-  anyOf, input = parse_delimited_sequence(input, function(i)
-    return parse_pattern(i, '%w+')
+  anyOf, input = parsing.parse_delimited_sequence(input, function(i)
+    return parsing.parse_pattern(i, '%w+')
   end, '%|')
   if anyOf and #anyOf > 0 then
     -- Successfully parsed the whitelist, return it
@@ -580,11 +521,11 @@ function TodoMatch:parse(input)
   -- Parse a blacklist of keywords
   ---@type string?
   local negation
-  negation, input = parse_pattern(input, '-')
+  negation, input = parsing.parse_pattern(input, '-')
   if negation then
     local negative_items
-    negative_items, input = parse_delimited_sequence(input, function(i)
-      return parse_pattern(i, '%w+')
+    negative_items, input = parsing.parse_delimited_sequence(input, function(i)
+      return parsing.parse_pattern(i, '%w+')
     end, '%-')
 
     if negative_items then

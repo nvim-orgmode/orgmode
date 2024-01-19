@@ -217,9 +217,8 @@ function Headline:item()
   return self.headline:field('item')[1]
 end
 
--- Returns the headlines todo node, it's keyword,
--- and if it's in done state
--- @return Node, string, boolean
+--- Returns the headlines todo node, it's keyword, and if it's in done state
+--- @return Node? node, string? word, boolean? isDone
 function Headline:todo()
   local todo_keywords = config:get_todo_keywords()
   local keywords = todo_keywords.ALL
