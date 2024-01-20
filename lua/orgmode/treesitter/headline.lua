@@ -582,4 +582,14 @@ function Headline:_apply_indent(text)
   return config:apply_indent(text, self:level() + 1)
 end
 
+function Headline:id_get_or_create()
+  local id_prop = self:get_property('ID')
+  if id_prop then
+    return vim.trim(id_prop.value)
+  end
+  local org_id = require('orgmode.org.id').new()
+  self:set_property('ID', org_id)
+  return org_id
+end
+
 return Headline

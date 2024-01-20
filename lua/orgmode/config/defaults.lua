@@ -1,4 +1,5 @@
 ---@class DefaultConfig
+---@field org_id_method 'uuid' | 'ts' | 'org'
 local DefaultConfig = {
   org_agenda_files = '',
   org_default_notes_file = '',
@@ -42,6 +43,10 @@ local DefaultConfig = {
   },
   org_src_window_setup = 'top 16new',
   org_edit_src_content_indentation = 0,
+  org_id_uuid_program = 'uuidgen',
+  org_id_ts_format = '%Y%m%d%H%M%S',
+  org_id_method = 'uuid',
+  org_id_prefix = nil,
   win_split_mode = 'horizontal',
   win_border = 'single',
   notifications = {

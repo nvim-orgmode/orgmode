@@ -2,7 +2,7 @@ local utils = require('orgmode.utils')
 local Promise = require('orgmode.utils.promise')
 
 ---@class OrgState
-local OrgState = { data = {}, _ctx = { loaded = false, saved = false, curr_loader = nil, savers = 0 } }
+local OrgState = { data = {}, _ctx = { loaded = false, saved = false, curr_loader = nil, savers = 0, dirty = false } }
 
 local cache_path = vim.fs.normalize(vim.fn.stdpath('cache') .. '/org-cache.json', { expand_env = false })
 
@@ -16,6 +16,9 @@ function OrgState.new()
       return tbl.data[key]
     end,
     __newindex = function(tbl, key, value)
+      if tbl.data[key] ~= value then
+        tbl._ctx.dirty = true
+      end
       tbl.data[key] = value
     end,
   })
@@ -28,6 +31,9 @@ end
 ---Save the current state to cache
 ---@return Promise
 function OrgState:save()
+  if not OrgState._ctx.dirty then
+    return Promise.resolve(self)
+  end
   OrgState._ctx.saved = false
   --- We want to ensure the state was loaded before saving.
   self:load()
@@ -38,6 +44,7 @@ function OrgState:save()
       self._ctx.savers = self._ctx.savers - 1
       if self._ctx.savers == 0 then
         OrgState._ctx.saved = true
+        OrgState._ctx.dirty = false
       end
     end)
     :catch(function(err_msg)
@@ -86,6 +93,7 @@ function OrgState:load()
         vim.schedule(function()
           utils.echo_warning('OrgState cache load failure, error: ' .. vim.inspect(err_msg))
           -- Try to 'repair' the cache by saving the current state
+          self._ctx.dirty = true
           self:save()
         end)
       end
@@ -107,6 +115,7 @@ function OrgState:load()
       -- If the file didn't exist then go ahead and save
       -- our current cache and as a side effect create the file
       if type(err) == 'string' and err:match([[^ENOENT.*]]) then
+        self._ctx.dirty = true
         self:save()
         return self
       end
@@ -116,6 +125,7 @@ function OrgState:load()
     :finally(function()
       self._ctx.loaded = true
       self._ctx.curr_loader = nil
+      self._ctx.dirty = false
     end)
 
   return self._ctx.curr_loader
@@ -160,6 +170,7 @@ function OrgState:wipe(overwrite)
   self._ctx.curr_loader = nil
   self._ctx.loaded = false
   self._ctx.saved = false
+  self._ctx.dirty = true
   if overwrite then
     state:save_sync()
   end
