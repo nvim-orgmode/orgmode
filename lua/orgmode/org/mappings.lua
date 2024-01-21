@@ -835,6 +835,17 @@ function OrgMappings:open_at_point()
     local cmd = string.format('edit +%s %s', line_number, fs.get_real_path(file_path))
     vim.cmd(cmd)
     return vim.cmd([[normal! zv]])
+  elseif link.url:is_id() then
+    local id = link.url:get_id()
+    local headlines = Files.find_headlines_with_property_matching('id', id)
+    if #headlines == 0 then
+      return utils.echo_warning(string.format('No headline found with id: %s', id))
+    end
+    if #headlines > 1 then
+      return utils.echo_warning(string.format('Multiple headlines found with id: %s', id))
+    end
+    local headline = headlines[1]
+    return self:_goto_headline(headline)
   elseif link.url:is_http_url() then
     if not vim.g.loaded_netrwPlugin then
       return utils.echo_warning('Netrw plugin must be loaded in order to open urls.')
@@ -872,13 +883,7 @@ function OrgMappings:open_at_point()
     headline = headlines[choice]
   end
 
-  if link.url:is_file() then
-    vim.cmd(string.format('edit %s', headline.file))
-  else
-    vim.cmd([[normal! m']]) -- add link source to jumplist
-  end
-  vim.fn.cursor({ headline.range.start_line, 0 })
-  vim.cmd([[normal! zv]])
+  return self:_goto_headline(headline)
 end
 
 function OrgMappings:export()
@@ -990,7 +995,7 @@ end
 
 ---@param direction string
 ---@param use_fast_access? boolean
----@return string
+---@return boolean
 function OrgMappings:_change_todo_state(direction, use_fast_access)
   local headline = ts_org.closest_headline()
   local todo, current_keyword = headline:todo()
@@ -1013,7 +1018,7 @@ function OrgMappings:_change_todo_state(direction, use_fast_access)
   end
 
   if next_state.value == current_keyword then
-    if todo.value ~= '' then
+    if todo ~= '' then
       utils.echo_info('TODO state was already ', { { next_state.value, next_state.hl } })
     end
     return false
@@ -1044,7 +1049,7 @@ end
 function OrgMappings:_get_date_under_cursor(col_offset)
   col_offset = col_offset or 0
   local col = vim.fn.col('.') + col_offset
-  local line = vim.fn.line('.')
+  local line = vim.fn.line('.') or 0
   local item = Files.get_closest_headline()
   local dates = {}
   if item then
@@ -1096,8 +1101,20 @@ end
 ---@return Link|nil, table | nil
 function OrgMappings:_get_link_under_cursor()
   local line = vim.fn.getline('.')
-  local col = vim.fn.col('.')
+  local col = vim.fn.col('.') or 0
   return Link.at_pos(line, col)
+end
+
+---@param headline Section
+function OrgMappings:_goto_headline(headline)
+  local current_file_path = utils.current_file_path()
+  if headline.file ~= current_file_path then
+    vim.cmd(string.format('edit %s', headline.file))
+  else
+    vim.cmd([[normal! m']]) -- add link source to jumplist
+  end
+  vim.fn.cursor({ headline.range.start_line, 0 })
+  vim.cmd([[normal! zv]])
 end
 
 return OrgMappings

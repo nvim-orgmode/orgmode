@@ -16,6 +16,7 @@ local Files = {
 }
 
 function Files.new()
+  Files.loaded = false
   Files.load()
   return Files
 end

@@ -50,6 +50,35 @@ describe('Hyperlink mappings', function()
     assert.is.same('** headline of target custom_id', vim.api.nvim_get_current_line())
   end)
 
+  it('should follow link to id', function()
+    local target_path = helpers.load_file_content({
+      '* Test hyperlink',
+      ' - some',
+      ' - boiler',
+      ' - plate',
+      '** headline of target id',
+      '   :PROPERTIES:',
+      '   :ID: 8ce79e8c-0b5d-4fd6-9eea-ab47c93398ba',
+      '   :END:',
+      '   - more',
+      '   - boiler',
+      '   - plate',
+    })
+    local source_path = helpers.load_file_content({
+      'This link should lead to [[id:8ce79e8c-0b5d-4fd6-9eea-ab47c93398ba][headline of target with id]]',
+    })
+    local org = require('orgmode').setup({
+      org_agenda_files = {
+        vim.fn.fnamemodify(target_path, ':p:h')..'**/*',
+      }
+    })
+    org:init()
+    vim.fn.cursor(1, 30)
+    vim.cmd([[norm ,oo]])
+    vim.print(vim.api.nvim_buf_get_lines(0, 0, -1, false))
+    assert.is.same('** headline of target id', vim.api.nvim_get_current_line())
+  end)
+
   it('should follow link to headline of given custom_id in given org file (no "file:" prefix)', function()
     local target_path = helpers.load_file_content({
       '* Test hyperlink',
