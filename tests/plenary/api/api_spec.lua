@@ -248,4 +248,27 @@ describe('Api', function()
     expect = vim.pesc('  DEADLINE: <2021-07-21 Wed 22:02>')
     assert.Is.True(vim.fn.getline(3):match(expect) ~= nil)
   end)
+
+  it('sets the property on the headline', function()
+    helpers.load_file_content({
+      '* TODO Test orgmode',
+      '  SCHEDULED: <2021-07-21 Wed 22:02>',
+      '** TODO Second level :NESTEDTAG:',
+      '  DEADLINE: <2021-07-21 Wed 22:02>',
+      '* TODO Some task',
+    })
+
+    api.current().headlines[2]:set_property('NAME', 'test')
+    assert.are.same({
+      '* TODO Test orgmode',
+      '  SCHEDULED: <2021-07-21 Wed 22:02>',
+      '** TODO Second level :NESTEDTAG:',
+      '  DEADLINE: <2021-07-21 Wed 22:02>',
+      '   :PROPERTIES:',
+      '   :NAME: test',
+      '   :END:',
+      '* TODO Some task',
+    }, vim.api.nvim_buf_get_lines(0, 0, -1, false))
+    assert.are.same(api.current().headlines[2]:get_property('NAME'), 'test')
+  end)
 end)

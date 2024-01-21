@@ -309,6 +309,11 @@ function Section:get_property(name)
   return self.properties.items[name:lower()]
 end
 
+---@return table<string, string>
+function Section:get_properties()
+  return self.properties and self.properties.items or {}
+end
+
 function Section:matches_search_term(term)
   if self.title:lower():match(term) then
     return true

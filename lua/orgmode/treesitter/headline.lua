@@ -277,6 +277,10 @@ function Headline:title()
   if todo then
     title = title:gsub('^' .. vim.pesc(word) .. '%s*', '')
   end
+  local _, priority = self:priority()
+  if priority then
+    title = title:gsub('^' .. vim.pesc(priority) .. '%s*', '')
+  end
   return title
 end
 

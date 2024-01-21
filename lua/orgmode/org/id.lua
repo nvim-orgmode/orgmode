@@ -2,11 +2,6 @@ local config = require('orgmode.config')
 local utils = require('orgmode.utils')
 local state = require('orgmode.state.state')
 
--- TODO
--- Create org-store-link
--- On store link, check for variable org-id-link-to-org-use-id
--- Create link with id
--- Support links with id: prefix
 local OrgId = {}
 
 function OrgId.new()
