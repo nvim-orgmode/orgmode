@@ -4,7 +4,7 @@ local ts = vim.treesitter
 local Headline = require('orgmode.treesitter.headline')
 
 ---@class Listitem
----@field listitem userdata
+---@field listitem TSNode
 local Listitem = {}
 
 function Listitem:new(listitem_node)

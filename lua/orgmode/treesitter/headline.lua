@@ -7,10 +7,10 @@ local config = require('orgmode.config')
 local ts = vim.treesitter
 
 ---@class Headline
----@field headline userdata
+---@field headline TSNode
 local Headline = {}
 
----@param headline_node userdata tree sitter headline node
+---@param headline_node TSNode tree sitter headline node
 function Headline:new(headline_node)
   local data = { headline = headline_node }
   setmetatable(data, self)
@@ -28,7 +28,7 @@ function Headline.from_cursor(cursor)
   return Headline:new(ts_headline)
 end
 
----@return userdata stars node
+---@return TSNode stars node
 function Headline:stars()
   return self.headline:field('stars')[1]
 end
@@ -123,7 +123,7 @@ function Headline:_handle_promote_demote(recursive, modifier)
   return self:refresh()
 end
 
----@return userdata, string
+---@return TsNode, string
 function Headline:tags()
   local node = self.headline:field('tags')[1]
   local text = ''
@@ -284,7 +284,7 @@ function Headline:title()
   return title
 end
 
----@return userdata|nil
+---@return TSNode|nil
 function Headline:plan()
   local section = self.headline:parent()
   for _, node in ipairs(ts_utils.get_named_children(section)) do
@@ -294,7 +294,7 @@ function Headline:plan()
   end
 end
 
----@return userdata|nil
+---@return TSNode|nil
 function Headline:properties()
   local section = self.headline:parent()
   for _, node in ipairs(ts_utils.get_named_children(section)) do
@@ -363,7 +363,7 @@ function Headline:get_append_line()
   return self.headline:end_()
 end
 
----@return Table<string, userdata>
+---@return Table<string, TSNode>
 function Headline:dates()
   local plan = self:plan()
   local dates = {}
@@ -379,7 +379,7 @@ function Headline:dates()
   return dates
 end
 
----@return userdata[]
+---@return TSNode[]
 function Headline:repeater_dates()
   return vim.tbl_filter(function(entry)
     local timestamp = entry:field('timestamp')[1]

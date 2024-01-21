@@ -4,7 +4,7 @@ local utils = require('orgmode.utils')
 local config = require('orgmode.config')
 
 ---@class TsTable
----@field node userdata
+---@field node TSNode
 ---@field data table[]
 ---@field tbl Table
 local TsTable = {}

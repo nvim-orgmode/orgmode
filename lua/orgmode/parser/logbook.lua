@@ -134,7 +134,7 @@ function Logbook:recalculate_estimate(line)
 end
 
 ---@param lines string
----@param node userdata
+---@param node TSNode
 ---@param dates Date[]
 ---@return Logbook
 function Logbook.parse(lines, node, dates)

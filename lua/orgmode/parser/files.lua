@@ -226,7 +226,7 @@ function Files.get_closest_headline(id)
   return headline
 end
 
----@return userdata
+---@return TSNode
 function Files.get_node_at_cursor()
   return Files.get_current_file():get_node_at_cursor()
 end

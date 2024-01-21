@@ -5,7 +5,7 @@ local config = require('orgmode.config')
 local utils = require('orgmode.utils')
 
 ---@class File
----@field tree userdata
+---@field tree TSTree
 ---@field file_content string[]
 ---@field file_content_str string
 ---@field category string
@@ -23,7 +23,7 @@ local File = {}
 function File:new(tree, file_content, file_content_str, category, filename, is_archive_file)
   local changedtick = 0
   if filename then
-    local bufnr = vim.fn.bufnr(filename)
+    local bufnr = vim.fn.bufnr(filename) or -1
     if bufnr > 0 then
       changedtick = vim.api.nvim_buf_get_var(bufnr, 'changedtick')
     end
@@ -107,20 +107,20 @@ function File:get_unfinished_todo_entries()
   end, self.sections)
 end
 
----@param node userdata
+---@param node TSNode
 ---@return string
 function File:get_node_text(node)
   return utils.get_node_text(node, self.file_content)[1] or ''
 end
 
----@param node userdata
+---@param node TSNode
 ---@return string[]
 function File:get_node_text_list(node)
   return utils.get_node_text(node, self.file_content) or {}
 end
 
 ---@param query string
----@param node userdata|nil
+---@param node TSNode|nil
 ---@return table[]
 function File:get_ts_matches(query, node)
   return utils.get_ts_matches(query, node or self.tree:root(), self.file_content, self.file_content_str)
@@ -136,7 +136,7 @@ end
 
 ---@return boolean
 function File:should_reload()
-  local bufnr = vim.fn.bufnr(self.filename)
+  local bufnr = vim.fn.bufnr(self.filename) or -1
   if bufnr < 0 then
     return false
   end
@@ -183,7 +183,7 @@ function File:refresh()
   if not self:should_reload() then
     return self
   end
-  local bufnr = vim.fn.bufnr(self.filename)
+  local bufnr = vim.fn.bufnr(self.filename) or -1
   local content = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
   local refreshed_file = File.from_content(content, self.category, self.filename, self.is_archive_file)
   refreshed_file.changedtick = vim.api.nvim_buf_get_var(bufnr, 'changedtick')
@@ -282,7 +282,7 @@ function File:get_opened_unfinished_headlines()
   end, self.sections)
 end
 
----@return userdata
+---@return TSNode
 function File:get_node_at_cursor(cursor)
   cursor = cursor or vim.api.nvim_win_get_cursor(0)
   local cursor_range = { cursor[1] - 1, cursor[2] }
