@@ -3,7 +3,16 @@ describe('org id', function()
   it('should generate an id using uuid method', function()
     local uuid = org_id.new()
     assert.are.same(36, #uuid)
-    assert.is.True(uuid:match('%x%x%x%x%x%x%x%-%x%x%x%x%-%x%x%x%x%-%x%x%x%x%-%x%x%x%x%x%x%x%x%x%x%x%x') ~= nil)
+    assert.is.True(uuid:match('%x%x%x%x%x%x%x%x%-%x%x%x%x%-%x%x%x%x%-%x%x%x%x%-%x%x%x%x%x%x%x%x%x%x%x%x') ~= nil)
+  end)
+
+  it('should validate an uuid', function()
+    local valid_uuid = 'f47ac10b-58cc-4372-a567-0e02b2c3d479'
+    assert.is.True(org_id.is_valid_uuid(valid_uuid))
+    assert.is.False(org_id.is_valid_uuid(nil))
+    assert.is.False(org_id.is_valid_uuid(''))
+    assert.is.False(org_id.is_valid_uuid(' '))
+    assert.is.False(org_id.is_valid_uuid('not an uuid'))
   end)
 
   it('should generate an id using "ts" method', function()

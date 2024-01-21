@@ -233,6 +233,18 @@ function OrgHeadline:get_property(key)
   return self.properties[key:lower()]
 end
 
+--- Get headline id or create a new one if it doesn't exist
+--- @return string
+function OrgHeadline:id_get_or_create()
+  local id = self:get_property('id')
+  if id then
+    return id
+  end
+  local org_id = require('orgmode.org.id').new()
+  self:set_property('ID', org_id)
+  return org_id
+end
+
 ---@param action function
 ---@private
 function OrgHeadline:_do_action(action)

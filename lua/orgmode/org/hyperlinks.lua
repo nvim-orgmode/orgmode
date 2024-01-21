@@ -200,7 +200,7 @@ end
 ---@return string[]
 function Hyperlinks.autocomplete_links(arg_lead)
   local url = Url.new(arg_lead)
-  local result, mapper = Hyperlinks.find_matching_links(Url.new(arg_lead))
+  local result, mapper = Hyperlinks.find_matching_links(url)
 
   if url:is_file_plain() then
     return mapper(result)

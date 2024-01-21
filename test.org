@@ -1,8 +1,0 @@
-* TODO Test
-
-* TODO Test1
-  :PROPERTIES:
-  :ID: 1717a012-6ca3-42bd-b471-4e6855618096
-  :END:
-
-* TODO Test2

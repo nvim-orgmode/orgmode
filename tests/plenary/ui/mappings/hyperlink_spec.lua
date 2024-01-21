@@ -1,4 +1,5 @@
 local helpers = require('tests.plenary.ui.helpers')
+local OrgId = require('orgmode.org.id')
 
 describe('Hyperlink mappings', function()
   after_each(function()
@@ -69,14 +70,56 @@ describe('Hyperlink mappings', function()
     })
     local org = require('orgmode').setup({
       org_agenda_files = {
-        vim.fn.fnamemodify(target_path, ':p:h')..'**/*',
-      }
+        vim.fn.fnamemodify(target_path, ':p:h') .. '**/*',
+      },
     })
     org:init()
     vim.fn.cursor(1, 30)
     vim.cmd([[norm ,oo]])
-    vim.print(vim.api.nvim_buf_get_lines(0, 0, -1, false))
     assert.is.same('** headline of target id', vim.api.nvim_get_current_line())
+  end)
+
+  it('should store link to a headline', function()
+    local target_path = helpers.load_file_content({
+      '* Test hyperlink',
+      ' - some',
+      '** headline of target id',
+      '   - more',
+      '   - boiler',
+      '   - plate',
+      '* Test hyperlink 2',
+    })
+    vim.fn.cursor(4, 10)
+    vim.cmd([[norm ,ols]])
+    assert.are.same({
+      [('file:%s::*headline of target id'):format(target_path)] = 'headline of target id',
+    }, require('orgmode.org.hyperlinks').stored_links)
+  end)
+
+  it('should store link to a headline with id', function()
+    require('orgmode.org.hyperlinks').stored_links = {}
+    local org = require('orgmode').setup({
+      org_id_link_to_org_use_id = true,
+    })
+    helpers.load_file_content({
+      '* Test hyperlink',
+      ' - some',
+      '** headline of target id',
+      '   - more',
+      '   - boiler',
+      '   - plate',
+      '* Test hyperlink 2',
+    })
+
+    org:init()
+    vim.fn.cursor(4, 10)
+    vim.cmd([[norm ,ols]])
+    local stored_links = require('orgmode.org.hyperlinks').stored_links
+    local keys = vim.tbl_keys(stored_links)
+    local values = vim.tbl_values(stored_links)
+    assert.is.True(keys[1]:match('^id:' .. OrgId.uuid_pattern .. '.*$') ~= nil)
+    assert.is.True(vim.fn.getline(5):match('%s+:ID: ' .. OrgId.uuid_pattern .. '$') ~= nil)
+    assert.is.same(values[1], 'headline of target id')
   end)
 
   it('should follow link to headline of given custom_id in given org file (no "file:" prefix)', function()

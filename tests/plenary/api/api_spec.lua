@@ -1,6 +1,7 @@
 local helpers = require('tests.plenary.ui.helpers')
 local api = require('orgmode.api')
 local Date = require('orgmode.objects.date')
+local OrgId = require('orgmode.org.id')
 
 describe('Api', function()
   it('should parse current file through api', function()
@@ -270,5 +271,20 @@ describe('Api', function()
       '* TODO Some task',
     }, vim.api.nvim_buf_get_lines(0, 0, -1, false))
     assert.are.same(api.current().headlines[2]:get_property('NAME'), 'test')
+  end)
+
+  it('sets the id on headline', function()
+    helpers.load_file_content({
+      '* TODO Test orgmode',
+      '  SCHEDULED: <2021-07-21 Wed 22:02>',
+      '** TODO Second level :NESTEDTAG:',
+      '  DEADLINE: <2021-07-21 Wed 22:02>',
+      '* TODO Some task',
+    })
+
+    local id = api.current().headlines[2]:id_get_or_create()
+    assert.is.True(OrgId.is_valid_uuid(id))
+    assert.are.same(api.current().headlines[2]:get_property('ID'), id)
+    assert.are.same(vim.fn.getline(6), ('   :ID: %s'):format(id))
   end)
 end)

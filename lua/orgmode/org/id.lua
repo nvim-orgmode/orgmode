@@ -2,10 +2,22 @@ local config = require('orgmode.config')
 local utils = require('orgmode.utils')
 local state = require('orgmode.state.state')
 
-local OrgId = {}
+local OrgId = {
+  uuid_pattern = '%x%x%x%x%x%x%x%x%-%x%x%x%x%-%x%x%x%x%-%x%x%x%x%-%x%x%x%x%x%x%x%x%x%x%x%x',
+}
 
+---@return string
 function OrgId.new()
   return OrgId._generate()
+end
+
+---@return boolean
+function OrgId.is_valid_uuid(value)
+  if not value or vim.trim(value) == '' then
+    return false
+  end
+
+  return value:match(OrgId.uuid_pattern) ~= nil
 end
 
 ---@private
