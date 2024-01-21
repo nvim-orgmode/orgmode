@@ -1,4 +1,3 @@
-local utils = require('orgmode.utils')
 local fs = require('orgmode.utils.fs')
 
 ---@class Url
@@ -27,16 +26,22 @@ end
 
 ---@return boolean
 function Url:is_file_headline()
-  return self:is_file() and self:get_headline() and true
+  return self:is_file() and self:get_headline() and true or false
 end
 
+---@return boolean
 function Url:is_custom_id()
-  return self:is_file_custom_id() or self:is_internal_custom_id()
+  return (self:is_file_custom_id() or self:is_internal_custom_id()) and true or false
+end
+
+---@return boolean
+function Url:is_id()
+  return self.str:find('^id:') and true or false
 end
 
 ---@return boolean
 function Url:is_file_custom_id()
-  return self:is_file() and self:get_custom_id() and true
+  return self:is_file() and self:get_custom_id() and true or false
 end
 
 ---@return boolean
@@ -64,7 +69,7 @@ end
 
 ---@return boolean
 function Url:is_internal_headline()
-  return self.str:find('^*') and true
+  return self.str:find('^*') and true or false
 end
 
 function Url:is_internal_custom_id()
@@ -120,6 +125,10 @@ function Url:get_custom_id()
     or self.str:match('^%./[^:]+::#(.-)$')
     or self.str:match('^/[^:]+::#(.-)$')
     or self.str:match('^#(.-)$')
+end
+
+function Url:get_id()
+  return self.str:match('^id:(%S+)')
 end
 
 ---@return number | false
@@ -179,6 +188,11 @@ end
 ---@return string | false
 function Url:get_http_url()
   return self.str:match('^https?://.+$')
+end
+
+---@return string | false
+function Url:extract_target()
+  return self:get_headline() or self:get_custom_id() or self:get_dedicated_target()
 end
 
 return Url

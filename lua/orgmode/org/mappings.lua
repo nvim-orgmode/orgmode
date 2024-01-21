@@ -104,7 +104,7 @@ end
 
 function OrgMappings:cycle()
   local file = Files.get_current_file()
-  local line = vim.fn.line('.')
+  local line = vim.fn.line('.') or 0
   if not vim.wo.foldenable then
     vim.wo.foldenable = true
     vim.cmd([[silent! norm!zx]])
@@ -204,7 +204,7 @@ function OrgMappings:_adjust_date_part(direction, amount, fallback)
   end
   local minute_adj = get_adj('M', tonumber(config.org_time_stamp_rounding_minutes) * amount)
   local do_replacement = function(date)
-    local col = vim.fn.col('.')
+    local col = vim.fn.col('.') or 0
     local char = vim.fn.getline('.'):sub(col, col)
     local raw_date_value = vim.fn.getline('.'):sub(date.range.start_col + 1, date.range.end_col - 1)
     if col == date.range.start_col or col == date.range.end_col then
@@ -569,7 +569,7 @@ function OrgMappings:handle_return(suffix)
   end
 
   if item.type == 'headline' then
-    local linenr = vim.fn.line('.')
+    local linenr = vim.fn.line('.') or 0
     local content = config:respect_blank_before_new_entry({ string.rep('*', item.level) .. ' ' .. suffix })
     vim.fn.append(linenr, content)
     vim.fn.cursor(linenr + #content, 0)
@@ -690,7 +690,7 @@ end
 
 function OrgMappings:_insert_heading_from_plain_line(suffix)
   suffix = suffix or ''
-  local linenr = vim.fn.line('.')
+  local linenr = vim.fn.line('.') or 0
   local line = vim.fn.getline(linenr)
   local heading_prefix = '* ' .. suffix
 
@@ -707,7 +707,7 @@ function OrgMappings:_insert_heading_from_plain_line(suffix)
     else
       -- split at cursor
       local left = string.sub(line, 0, vim.fn.col('.') - 1)
-      local right = string.sub(line, vim.fn.col('.'), #line)
+      local right = string.sub(line, vim.fn.col('.') or 0, #line)
       line = heading_prefix .. right
       vim.fn.setline(linenr, left)
       vim.fn.append(linenr, line)
@@ -719,14 +719,24 @@ end
 -- Inserts a new link after the cursor position or modifies the link the cursor is
 -- currently on
 function OrgMappings:insert_link()
-  local link_location = vim.fn.OrgmodeInput('Links: ', '')
-  if vim.trim(link_location) ~= '' then
-    link_location = '[' .. link_location .. ']'
-  else
+  local link_location = vim.fn.OrgmodeInput('Links: ', '', Hyperlinks.autocomplete_links)
+  if vim.trim(link_location) == '' then
     utils.echo_warning('No Link selected')
     return
   end
-  local link_description = vim.trim(vim.fn.OrgmodeInput('Description: ', ''))
+
+  local selected_link = Link.new(link_location)
+  local desc = selected_link.url:extract_target()
+  if selected_link.url:is_id() then
+    local id_link = ('id:%s'):format(selected_link.url:get_id())
+    desc = link_location:gsub('^' .. vim.pesc(id_link) .. '%s+', '')
+    link_location = id_link
+  end
+
+  local link_description = vim.trim(vim.fn.OrgmodeInput('Description: ', desc))
+
+  link_location = '[' .. vim.trim(link_location) .. ']'
+
   if link_description ~= '' then
     link_description = '[' .. link_description .. ']'
   end
@@ -736,11 +746,11 @@ function OrgMappings:insert_link()
   local target_col = #link_location + #link_description + 2
 
   -- check if currently on link
-  local link = self:_get_link_under_cursor()
-  if link then
-    insert_from = link.from - 1
-    insert_to = link.to + 1
-    target_col = target_col + link.from
+  local link, position = self:_get_link_under_cursor()
+  if link and position then
+    insert_from = position.from - 1
+    insert_to = position.to + 1
+    target_col = target_col + position.from
   else
     local colnr = vim.fn.col('.')
     insert_from = colnr
@@ -748,7 +758,7 @@ function OrgMappings:insert_link()
     target_col = target_col + colnr
   end
 
-  local linenr = vim.fn.line('.')
+  local linenr = vim.fn.line('.') or 0
   local curr_line = vim.fn.getline(linenr)
   local new_line = string.sub(curr_line, 0, insert_from)
     .. '['
@@ -759,6 +769,12 @@ function OrgMappings:insert_link()
 
   vim.fn.setline(linenr, new_line)
   vim.fn.cursor(linenr, target_col)
+end
+
+function OrgMappings:store_link()
+  local headline = ts_org.closest_headline()
+  Hyperlinks.store_link_to_headline(headline)
+  return utils.echo_info('Stored: ' .. headline:title())
 end
 
 function OrgMappings:move_subtree_up()
@@ -1050,7 +1066,6 @@ end
 ---@param amount number
 ---@param span string
 ---@param fallback string
----@return string
 function OrgMappings:_adjust_date(amount, span, fallback)
   local adjustment = string.format('%s%d%s', amount > 0 and '+' or '', amount, span)
   local date = self:_get_date_under_cursor()
@@ -1078,7 +1093,7 @@ function OrgMappings:_adjust_date(amount, span, fallback)
   return vim.api.nvim_feedkeys(utils.esc(fallback), 'n', true)
 end
 
----@return Link|nil
+---@return Link|nil, table | nil
 function OrgMappings:_get_link_under_cursor()
   local line = vim.fn.getline('.')
   local col = vim.fn.col('.')
