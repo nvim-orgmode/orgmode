@@ -1,5 +1,4 @@
-local ts_utils = require('nvim-treesitter.ts_utils')
-local Files = require('orgmode.parser.files')
+local ts_utils = require('orgmode.utils.treesitter')
 local TextObjects = {}
 
 local function get_range_for_node_range(start_line, end_line, end_col)
@@ -14,7 +13,7 @@ local function get_range_for_node_range(start_line, end_line, end_col)
 end
 
 local function get_current_section_range()
-  local node = Files.get_node_at_cursor()
+  local node = ts_utils.get_node_at_cursor()
   if not node then
     return
   end
@@ -68,13 +67,7 @@ local function current_heading(exclude_stars)
 end
 
 local function current_subtree(exclude_stars)
-  local node = Files.get_node_at_cursor()
-  if not node then
-    return
-  end
-  while node and node:type() ~= 'section' do
-    node = node:parent()
-  end
+  local node = ts_utils.closest_node(ts_utils.get_node_at_cursor(), 'section')
   if not node then
     return
   end
@@ -84,7 +77,7 @@ end
 
 local function current_heading_from_root(exclude_stars)
   local end_range = get_current_section_range().end_range
-  local node = Files.get_node_at_cursor()
+  local node = ts_utils.get_node_at_cursor()
   if not node then
     return
   end
@@ -100,7 +93,7 @@ local function current_heading_from_root(exclude_stars)
 end
 
 local function current_subtree_from_root(exclude_stars)
-  local node = Files.get_node_at_cursor()
+  local node = ts_utils.get_node_at_cursor()
   if not node then
     return
   end

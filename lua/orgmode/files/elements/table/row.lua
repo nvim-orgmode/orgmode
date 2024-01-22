@@ -1,9 +1,9 @@
-local Range = require('orgmode.parser.range')
-local TableCell = require('orgmode.parser.table.cell')
----@class TableRow
----@field table Table
----@field cells TableCell[]
----@field range Range
+local Range = require('orgmode.files.elements.range')
+local TableCell = require('orgmode.files.elements.table.cell')
+---@class OrgTableRow
+---@field table OrgTable
+---@field cells OrgTableCell[]
+---@field range OrgRange
 ---@field content string
 ---@field is_separator boolean
 ---@field line number
@@ -23,14 +23,14 @@ function TableRow:new(opts)
   return data
 end
 
----@param cell TableCell
----@return TableRow
+---@param cell OrgTableCell
+---@return OrgTableRow
 function TableRow:add_cell(cell)
   table.insert(self.cells, cell)
   return self
 end
 
----@return TableRow
+---@return OrgTableRow
 function TableRow:compile()
   local row_content = {}
   for _, cell in ipairs(self.cells) do
@@ -63,8 +63,8 @@ end
 
 ---@param row table | string
 ---@param line number
----@param parent_table Table
----@return TableRow
+---@param parent_table OrgTable
+---@return OrgTableRow
 function TableRow.from_table_item(row, line, parent_table)
   local table_row = TableRow:new({
     table = parent_table,

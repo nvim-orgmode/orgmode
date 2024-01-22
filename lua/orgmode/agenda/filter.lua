@@ -1,5 +1,5 @@
 local utils = require('orgmode.utils')
----@class AgendaFilter
+---@class OrgAgendaFilter
 ---@field value string
 ---@field available_tags table<string, boolean>
 ---@field available_categories table<string, boolean>
@@ -33,7 +33,7 @@ function AgendaFilter:should_filter()
   return vim.trim(self.value) ~= ''
 end
 
----@param headline Section
+---@param headline OrgHeadline
 ---@return boolean
 function AgendaFilter:matches(headline)
   if not self:should_filter() then
@@ -44,7 +44,7 @@ function AgendaFilter:matches(headline)
 
   if not term_match then
     local rgx = vim.regex(self.term)
-    term_match = rgx:match_str(headline.title)
+    term_match = rgx:match_str(headline:get_title())
   end
 
   if tag_cat_match_empty then
@@ -62,7 +62,7 @@ function AgendaFilter:matches(headline)
   return tag_cat_match and term_match
 end
 
----@param headline Section
+---@param headline OrgHeadline
 ---@private
 function AgendaFilter:_matches_exclude(headline)
   for _, tag in ipairs(self.tags) do
@@ -80,7 +80,7 @@ function AgendaFilter:_matches_exclude(headline)
   return true
 end
 
----@param headline Section
+---@param headline OrgHeadline
 ---@private
 function AgendaFilter:_matches_include(headline)
   local tags_to_check = {}
@@ -175,8 +175,8 @@ function AgendaFilter:parse_tags_and_categories(content)
   local categories = {}
   for _, item in ipairs(content) do
     if item.jumpable and item.headline then
-      categories[item.headline.category:lower()] = true
-      for _, tag in ipairs(item.headline.tags) do
+      categories[item.headline:get_category():lower()] = true
+      for _, tag in ipairs(item.headline:get_tags()) do
         tags[tag:lower()] = true
       end
     end

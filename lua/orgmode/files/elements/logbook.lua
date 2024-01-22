@@ -1,11 +1,11 @@
-local Range = require('orgmode.parser.range')
+local Range = require('orgmode.files.elements.range')
 local utils = require('orgmode.utils')
 local config = require('orgmode.config')
 local Date = require('orgmode.objects.date')
 local Duration = require('orgmode.objects.duration')
 
----@class Logbook
----@field range Range
+---@class OrgLogbook
+---@field range OrgRange
 ---@field items table[]
 local Logbook = {}
 
@@ -19,8 +19,16 @@ function Logbook:new(opts)
   return data
 end
 
+---@param node TSNode
+---@param file OrgFile
+---@param dates OrgDate[]
+---@return OrgLogbook
+function Logbook.from_node(node, file, dates)
+  return Logbook.parse(file:get_node_text_list(node), node, dates)
+end
+
 ---@param lines string[]
----@param dates Date[]
+---@param dates OrgDate[]
 function Logbook:add(lines, node, dates)
   local items = Logbook._parse_clocks(lines, node, dates)
   if #items > 0 then
@@ -40,6 +48,8 @@ function Logbook:get_active()
   end, self.items)[1]
 end
 
+---@param from? OrgDate
+---@param to? OrgDate
 ---@return number
 function Logbook:get_total_minutes(from, to)
   local total_minutes = 0
@@ -54,9 +64,9 @@ function Logbook:get_total_minutes(from, to)
   return total_minutes
 end
 
----@param from? string
----@param to? string
----@return Duration
+---@param from? OrgDate
+---@param to? OrgDate
+---@return OrgDuration
 function Logbook:get_total(from, to)
   return Duration.from_minutes(self:get_total_minutes(from, to))
 end
@@ -128,15 +138,15 @@ function Logbook:recalculate_estimate(line)
   end
   local content = vim.fn.getline(line):gsub('%s*=>%s*[%-%+]?%d+:%d+%s*$', '')
   content = string.format('%s => %s', content, item.duration:to_string('HH:MM'))
-  local view = vim.fn.winsaveview()
+  local view = vim.fn.winsaveview() or {}
   vim.api.nvim_call_function('setline', { line, content })
   vim.fn.winrestview(view)
 end
 
----@param lines string
+---@param lines string[]
 ---@param node TSNode
----@param dates Date[]
----@return Logbook
+---@param dates OrgDate[]
+---@return OrgLogbook
 function Logbook.parse(lines, node, dates)
   local opts = {
     range = Range.from_node(node),
@@ -146,27 +156,20 @@ function Logbook.parse(lines, node, dates)
   return Logbook:new(opts)
 end
 
----@param section Section
----@return Logbook
-function Logbook.new_from_section(section)
-  local line = nil
-  if section.properties.valid then
-    line = section.properties.range.end_line
-  else
-    line = section:has_planning() and section.range.start_line + 1 or section.range.start_line
-  end
-  local indent = config:get_indent(section.level + 1)
+---@param headline OrgHeadline
+function Logbook.new_from_headline(headline)
+  local append_line = headline:get_append_line()
+  local indent = config:get_indent(headline:get_level() + 1)
 
   local date = Date.now({ active = false })
   local content = {
     string.format('%s:LOGBOOK:', indent),
-    string.format('%sCLOCK: %s', indent, date:to_wrapped_string()),
     string.format('%s:END:', indent),
   }
-  vim.api.nvim_call_function('append', { line, content })
+  vim.api.nvim_call_function('append', { append_line, content })
 
   return Logbook:new({
-    range = Range:new({ start_line = line + 1, end_line = line + 3 }),
+    range = Range:new({ start_line = append_line + 1, end_line = append_line + 3 }),
     items = { {
       start_time = date,
       end_time = nil,
@@ -174,9 +177,9 @@ function Logbook.new_from_section(section)
   })
 end
 
----@param lines any
+---@param lines string[]
 ---@param node any
----@param dates Date[]
+---@param dates OrgDate[]
 ---@return table
 function Logbook._parse_clocks(lines, node, dates)
   local items = {}

@@ -1,5 +1,5 @@
 local Date = require('orgmode.objects.date')
-local Range = require('orgmode.parser.range')
+local Range = require('orgmode.files.elements.range')
 local function get_timestamp(year, month, day, hour, min)
   return os.time({ year = year, month = month, day = day, hour = hour or 0, min = min or 0 })
 end

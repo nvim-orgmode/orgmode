@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - master
+      - nightly
   pull_request:
     branches:
       - master

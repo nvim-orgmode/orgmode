@@ -1,12 +1,12 @@
 local utils = require('orgmode.utils')
 
----@class TableCell
----@field row TableRow
+---@class OrgTableCell
+---@field row OrgTableRow
 ---@field value string
 ---@field len number
 ---@field display_len number
 ---@field col number
----@field range Range
+---@field range OrgRange
 ---@field content string
 ---@field reference any
 local TableCell = {}
@@ -27,7 +27,7 @@ function TableCell:new(opts)
   return data
 end
 
----@return TableCell
+---@return OrgTableCell
 function TableCell:compile()
   local width = self.row.table.cols_width[self.col]
   local val = ''
@@ -57,8 +57,8 @@ end
 
 ---@param data table
 ---@param col_number number
----@param row TableRow
----@return TableCell
+---@param row OrgTableRow
+---@return OrgTableCell
 function TableCell.from_row_item(data, col_number, row)
   local cell_data = {
     row = row,

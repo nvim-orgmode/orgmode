@@ -1,5 +1,3 @@
--- TODO:
--- Figure out how to hide leading stars with treesitter
 local config = require('orgmode.config')
 local colors = require('orgmode.colors')
 local M = {}

@@ -1,5 +1,5 @@
 local config = require('orgmode.config')
-local ts_utils = require('nvim-treesitter.ts_utils')
+local ts_utils = require('orgmode.utils.treesitter')
 ---@type Query
 local query = nil
 
@@ -119,6 +119,13 @@ local get_tree = ts_utils.memoize_by_buf_tick(function(bufnr)
   return tree[1]:root()
 end)
 
+local function get_query()
+  if not query then
+    query = vim.treesitter.query.get('org', 'markup') --[[@as Query]]
+  end
+  return query
+end
+
 local function is_valid_markup_range(match, _, source, predicates)
   local start_node = match[predicates[2]]
   local end_node = match[predicates[3]]
@@ -207,7 +214,6 @@ local function load_deps()
     return
   end
 
-  query = vim.treesitter.query.get('org', 'markup') --[[@as Query]]
   vim.treesitter.query.add_predicate('org-is-valid-markup-range?', is_valid_markup_range)
   vim.treesitter.query.add_predicate('org-is-valid-hyperlink-range?', is_valid_hyperlink_range)
   vim.treesitter.query.add_predicate('org-is-valid-latex-range?', is_valid_latex_range)
@@ -348,7 +354,7 @@ local get_matches = ts_utils.memoize_by_buf_tick(function(bufnr, line_index, roo
   local ranges = {}
   local taken_locations = {}
 
-  for _, match, _ in query:iter_matches(root, bufnr, line_index, line_index + 1) do
+  for _, match, _ in get_query():iter_matches(root, bufnr, line_index, line_index + 1) do
     for _, node in pairs(match) do
       local char = node:type()
       local marker = markers[char]

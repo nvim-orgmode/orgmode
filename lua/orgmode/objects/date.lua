@@ -3,16 +3,16 @@
 local spans = { d = 'day', m = 'month', y = 'year', h = 'hour', w = 'week', M = 'min' }
 local config = require('orgmode.config')
 local utils = require('orgmode.utils')
-local Range = require('orgmode.parser.range')
+local Range = require('orgmode.files.elements.range')
 local pattern = '([<%[])(%d%d%d%d%-%d?%d%-%d%d[^>%]]*)([>%]])'
 local date_format = '%Y-%m-%d'
 local time_format = '%H:%M'
 
----@class Date
+---@class OrgDate
 ---@field type string
 ---@field active boolean
 ---@field date_only boolean
----@field range Range
+---@field range OrgRange
 ---@field day number
 ---@field month number
 ---@field year number
@@ -23,27 +23,27 @@ local time_format = '%H:%M'
 ---@field is_dst boolean
 ---@field is_date_range_start boolean
 ---@field is_date_range_end boolean
----@field related_date_range Date
+---@field related_date_range OrgDate
 ---@field dayname string
 ---@field adjustments string[]
 local Date = {
-  ---@type fun(this: Date, other: Date): boolean
+  ---@type fun(this: OrgDate, other: OrgDate): boolean
   __eq = function(this, other)
     return this.timestamp == other.timestamp
   end,
-  ---@type fun(this: Date, other: Date): boolean
+  ---@type fun(this: OrgDate, other: OrgDate): boolean
   __lt = function(this, other)
     return this.timestamp < other.timestamp
   end,
-  ---@type fun(this: Date, other: Date): boolean
+  ---@type fun(this: OrgDate, other: OrgDate): boolean
   __le = function(this, other)
     return this.timestamp <= other.timestamp
   end,
-  ---@type fun(this: Date, other: Date): boolean
+  ---@type fun(this: OrgDate, other: OrgDate): boolean
   __gt = function(this, other)
     return this.timestamp > other.timestamp
   end,
-  ---@type fun(this: Date, other: Date): boolean
+  ---@type fun(this: OrgDate, other: OrgDate): boolean
   __ge = function(this, other)
     return this.timestamp >= other.timestamp
   end,
@@ -90,7 +90,7 @@ function Date:new(data)
 end
 
 ---@param time table
----@return Date
+---@return OrgDate
 function Date:from_time_table(time)
   local range_diff = self.timestamp_end and self.timestamp_end - self.timestamp or 0
   local timestamp = os.time(set_date_opts(time, {}, true))
@@ -111,7 +111,7 @@ function Date:from_time_table(time)
 end
 
 ---@param opts? table
----@return Date
+---@return OrgDate
 function Date:set(opts)
   opts = opts or {}
   local date = os.date('*t', self.timestamp)
@@ -122,7 +122,7 @@ function Date:set(opts)
 end
 
 ---@param opts? table
----@return Date
+---@return OrgDate
 function Date:clone(opts)
   local date = Date:new(self)
   for opt, val in pairs(opts or {}) do
@@ -136,7 +136,7 @@ end
 ---@param time string
 ---@param adjustments string
 ---@param data table
----@return Date
+---@return OrgDate
 local function parse_datetime(date, dayname, time, time_end, adjustments, data)
   local date_parts = vim.split(date, '-')
   local time_parts = vim.split(time, ':')
@@ -167,7 +167,7 @@ end
 ---@param dayname string
 ---@param adjustments string
 ---@param data table
----@return Date
+---@return OrgDate
 local function parse_date(date, dayname, adjustments, data)
   local date_parts = vim.split(date, '-')
   local opts = {
@@ -182,21 +182,21 @@ local function parse_date(date, dayname, adjustments, data)
 end
 
 ---@param data? table
----@return Date
+---@return OrgDate
 local function today(data)
   local opts = vim.tbl_deep_extend('force', os.date('*t', os.time()), data or {})
   opts.date_only = true
   return Date:new(opts)
 end
 
----@return Date
+---@return OrgDate
 local function tomorrow()
   local today_date = today()
   return today_date:adjust('+1d')
 end
 
 ---@param data? table
----@return Date
+---@return OrgDate
 local function now(data)
   local opts = vim.tbl_deep_extend('force', os.date('*t', os.time()), data or {})
   return Date:new(opts)
@@ -210,7 +210,7 @@ end
 
 ---@param datestr string
 ---@param opts? table
----@return Date
+---@return OrgDate
 local function from_string(datestr, opts)
   if not is_valid_date(datestr) then
     return nil
@@ -360,7 +360,7 @@ function Date:format_time()
 end
 
 ---@param value string
----@return Date
+---@return OrgDate
 function Date:adjust(value)
   local adjustment = self:_parse_adjustment(value)
   local modifier = { [adjustment.span] = adjustment.amount }
@@ -371,7 +371,7 @@ function Date:adjust(value)
 end
 
 ---@param value string
----@return Date
+---@return OrgDate
 function Date:adjust_end_time(value)
   if not self.timestamp_end then
     return self
@@ -404,7 +404,7 @@ function Date:without_adjustments()
 end
 
 ---@param span string
----@return Date
+---@return OrgDate
 function Date:start_of(span)
   if #span == 1 then
     span = spans[span]
@@ -434,7 +434,7 @@ function Date:start_of(span)
 end
 
 ---@param span string
----@return Date
+---@return OrgDate
 function Date:end_of(span)
   if #span == 1 then
     span = spans[span]
@@ -480,7 +480,7 @@ end
 
 ---@param isoweekday number
 ---@param future? boolean
----@return Date
+---@return OrgDate
 function Date:set_isoweekday(isoweekday, future)
   local current_isoweekday = self:get_isoweekday()
   if isoweekday <= current_isoweekday then
@@ -493,7 +493,7 @@ function Date:set_isoweekday(isoweekday, future)
 end
 
 ---@param opts table
----@return Date
+---@return OrgDate
 function Date:add(opts)
   opts = opts or {}
   local date = os.date('*t', self.timestamp)
@@ -508,7 +508,7 @@ function Date:add(opts)
 end
 
 ---@param opts table
----@return Date
+---@return OrgDate
 function Date:subtract(opts)
   opts = opts or {}
   for opt, val in pairs(opts) do
@@ -517,7 +517,7 @@ function Date:subtract(opts)
   return self:add(opts)
 end
 
----@param date Date
+---@param date OrgDate
 ---@param span? string
 ---@return boolean
 function Date:is_same(date, span)
@@ -527,8 +527,8 @@ function Date:is_same(date, span)
   return self:start_of(span).timestamp == date:start_of(span).timestamp
 end
 
----@param from Date
----@param to Date
+---@param from OrgDate
+---@param to OrgDate
 ---@param span string
 ---@return boolean
 function Date:is_between(from, to, span)
@@ -541,14 +541,14 @@ function Date:is_between(from, to, span)
   return self.timestamp >= f.timestamp and self.timestamp <= t.timestamp
 end
 
----@param date Date
+---@param date OrgDate
 ---@param span? string
 ---@return boolean
 function Date:is_before(date, span)
   return not self:is_same_or_after(date, span)
 end
 
----@param date Date
+---@param date OrgDate
 ---@param span string
 ---@return boolean
 function Date:is_same_or_before(date, span)
@@ -561,14 +561,14 @@ function Date:is_same_or_before(date, span)
   return s.timestamp <= d.timestamp
 end
 
----@param date Date
+---@param date OrgDate
 ---@param span string
 ---@return boolean
 function Date:is_after(date, span)
   return not self:is_same_or_before(date, span)
 end
 
----@param date Date
+---@param date OrgDate
 ---@param span string
 ---@return boolean
 function Date:is_same_or_after(date, span)
@@ -609,7 +609,7 @@ function Date:has_time_range()
   return self.timestamp_end ~= nil
 end
 
----@return Date|nil
+---@return OrgDate|nil
 function Date:get_date_range_end()
   return self:has_date_range_end() and self.related_date_range or nil
 end
@@ -623,7 +623,7 @@ function Date:get_date_range_days()
   return math.abs(self.related_date_range:diff(self)) + 1
 end
 
----@param date Date
+---@param date OrgDate
 ---@return boolean
 function Date:is_in_date_range(date)
   if self.is_date_range_start then
@@ -636,8 +636,8 @@ function Date:is_in_date_range(date)
   return false
 end
 
----@param date Date
----@return Date[]
+---@param date OrgDate
+---@return OrgDate[]
 function Date:get_range_until(date)
   local this = self
   local dates = {}
@@ -654,7 +654,7 @@ function Date:format(format)
   return os.date(format, self.timestamp)
 end
 
----@param from Date
+---@param from OrgDate
 ---@param span? 'day' | 'minute'
 ---@return number
 function Date:diff(from, span)
@@ -696,7 +696,7 @@ function Date:is_today_or_future(span)
   return self:is_same_or_after(now(), span)
 end
 
----@param from Date
+---@param from OrgDate
 ---@return string
 function Date:humanize(from)
   from = from or now()
@@ -776,7 +776,7 @@ function Date:with_negative_adjustment()
 end
 
 ---Get repeater value (ex. +1w, .+1w, ++1w)
----@return string
+---@return string | nil
 function Date:get_repeater()
   if #self.adjustments == 0 then
     return nil
@@ -828,7 +828,7 @@ function Date:apply_repeater()
   return date:adjust(repeater)
 end
 
----@param date Date
+---@param date OrgDate
 ---@return boolean
 function Date:repeats_on(date)
   local repeater = self:get_repeater()
@@ -844,7 +844,7 @@ function Date:repeats_on(date)
   return repeat_date:is_same(date, 'day')
 end
 
----@param date Date
+---@param date OrgDate
 function Date:apply_repeater_until(date)
   local repeater = self:get_repeater()
   if not repeater then
@@ -861,7 +861,7 @@ function Date:apply_repeater_until(date)
   return repeat_date
 end
 
----@return Date
+---@return OrgDate
 function Date:get_adjusted_date()
   if not self:is_deadline() and not self:is_scheduled() then
     return self
@@ -910,9 +910,9 @@ end
 ---@param open string
 ---@param datetime string
 ---@param close string
----@param last_match? Date
+---@param last_match? OrgDate
 ---@param type? string
----@return Date
+---@return OrgDate
 local function from_match(line, lnum, open, datetime, close, last_match, type)
   local search_from = last_match ~= nil and last_match.range.end_col or 0
   local from, to = line:find(vim.pesc(open .. datetime .. close), search_from)
@@ -935,7 +935,7 @@ end
 
 ---@param line string
 ---@param lnum number
----@return Date[]
+---@return OrgDate[]
 local function parse_all_from_line(line, lnum)
   local dates = {}
   for open, datetime, close in line:gmatch(pattern) do

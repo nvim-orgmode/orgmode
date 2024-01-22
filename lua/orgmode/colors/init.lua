@@ -3,7 +3,7 @@ local namespace = vim.api.nvim_create_namespace('org_agenda')
 local M = {}
 
 ---@param hex_color string hex color (#FFFFFFF)
----@return Color
+---@return OrgColor
 function M.from_hex(hex_color)
   return colors.new(hex_color)
 end

@@ -1,7 +1,7 @@
 local config = require('orgmode.config')
 local utils = require('orgmode.utils')
 
----@class PriorityState
+---@class OrgPriorityState
 ---@field high_priority string
 ---@field low_priority string
 ---@field priority string

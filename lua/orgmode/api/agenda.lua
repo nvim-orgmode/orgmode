@@ -20,16 +20,25 @@ local function get_date(date, name)
   error(('Invalid format for "%s" date in Org Agenda'):format(name))
 end
 
+---@return table
+local function org_instance()
+  local org = orgmode.instance()
+  if not org then
+    error('Orgmode was not set up. Run require("orgmode").setup() first.')
+  end
+  org:init()
+  return org
+end
+
 ---@class OrgAgendaOptions
 ---@field filters? OrgAgendaFilter
----@field from? string | Date
+---@field from? string | OrgDate
 ---@field span? number | 'day' | 'week' | 'month' | 'year'
 
 ---@param options? OrgAgendaOptions
 function OrgAgenda.agenda(options)
   options = options or {}
-  local org = orgmode.instance()
-  org:init()
+  local org = org_instance()
   if options.filters and options.filters ~= '' then
     org.agenda.filters:parse(options.filters, true)
   end
@@ -46,8 +55,7 @@ end
 ---@param options? OrgAgendaTodosOptions
 function OrgAgenda.todos(options)
   options = options or {}
-  local org = orgmode.instance()
-  org:init()
+  local org = org_instance()
   if options.filters and options.filters ~= '' then
     org.agenda.filters:parse(options.filters, true)
   end
@@ -61,8 +69,7 @@ end
 ---@param options? OrgAgendaTagsOptions
 function OrgAgenda.tags(options)
   options = options or {}
-  local org = orgmode.instance()
-  org:init()
+  local org = org_instance()
   if options.filters and options.filters ~= '' then
     org.agenda.filters:parse(options.filters, true)
   end

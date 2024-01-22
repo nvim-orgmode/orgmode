@@ -2,13 +2,13 @@ local Date = require('orgmode.objects.date')
 local utils = require('orgmode.utils')
 local Promise = require('orgmode.utils.promise')
 local config = require('orgmode.config')
----@class Calendar
+---@class OrgCalendar
 ---@field win number
 ---@field buf number
 ---@field callback function
 ---@field namespace function
----@field date Date
----@field month Date
+---@field date OrgDate
+---@field month OrgDate
 
 local Calendar = {
   win = nil,
@@ -64,12 +64,12 @@ function Calendar.open()
 
   Calendar.render()
 
-  vim.api.nvim_win_set_option(Calendar.win, 'winhl', 'Normal:Normal')
-  vim.api.nvim_win_set_option(Calendar.win, 'wrap', false)
-  vim.api.nvim_win_set_option(Calendar.win, 'scrolloff', 0)
-  vim.api.nvim_win_set_option(Calendar.win, 'sidescrolloff', 0)
+  vim.api.nvim_set_option_value('winhl', 'Normal:Normal', { win = Calendar.win })
+  vim.api.nvim_set_option_value('wrap', false, { win = Calendar.win })
+  vim.api.nvim_set_option_value('scrolloff', 0, { win = Calendar.win })
+  vim.api.nvim_set_option_value('sidescrolloff', 0, { win = Calendar.win })
   vim.api.nvim_buf_set_var(Calendar.buf, 'indent_blankline_enabled', false)
-  vim.api.nvim_buf_set_option(Calendar.buf, 'bufhidden', 'wipe')
+  vim.api.nvim_set_option_value('bufhidden', 'wipe', { buf = Calendar.buf })
 
   local map_opts = { buffer = Calendar.buf, silent = true, nowait = true }
 
@@ -91,7 +91,7 @@ function Calendar.open()
   if Calendar.date then
     search_day = Calendar.date:format('%d')
   end
-  vim.fn.cursor(2, 0)
+  vim.fn.cursor(2, 1)
   vim.fn.search(search_day, 'W')
   return Promise.new(function(resolve)
     Calendar.callback = resolve
@@ -99,7 +99,7 @@ function Calendar.open()
 end
 
 function Calendar.render()
-  vim.api.nvim_buf_set_option(Calendar.buf, 'modifiable', true)
+  vim.api.nvim_set_option_value('modifiable', true, { buf = Calendar.buf })
 
   local cal_rows = { {}, {}, {}, {}, {}, {} } -- the calendar rows
   local start_from_sunday = config.calendar_week_start_day == 0
@@ -171,20 +171,20 @@ function Calendar.render()
     end
   end
 
-  vim.api.nvim_buf_set_option(Calendar.buf, 'modifiable', false)
+  vim.api.nvim_set_option_value('modifiable', false, { buf = Calendar.buf })
 end
 
 function Calendar.forward()
   Calendar.month = Calendar.month:add({ month = vim.v.count1 })
   Calendar.render()
-  vim.fn.cursor(2, 0)
+  vim.fn.cursor(2, 1)
   vim.fn.search('01')
 end
 
 function Calendar.backward()
   Calendar.month = Calendar.month:subtract({ month = vim.v.count1 })
   Calendar.render()
-  vim.fn.cursor('$', 0)
+  vim.fn.cursor(vim.fn.line('$'), 0)
   vim.fn.search([[\d\d]], 'b')
 end
 
@@ -262,7 +262,7 @@ function Calendar.reset()
   local today = Calendar.month:set_todays_date()
   Calendar.month = today:set({ day = 1 })
   Calendar.render()
-  vim.fn.cursor(2, 0)
+  vim.fn.cursor(2, 1)
   vim.fn.search(today:format('%d'), 'W')
 end
 
@@ -317,7 +317,7 @@ function Calendar.read_date()
       Calendar.date = date
       Calendar.month = date:set({ day = 1 })
       Calendar.render()
-      vim.fn.cursor(2, 0)
+      vim.fn.cursor(2, 1)
       vim.fn.search(date:format('%d'), 'W')
     end
   end)

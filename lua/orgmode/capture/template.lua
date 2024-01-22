@@ -1,4 +1,4 @@
----@class TemplateEmptyLines
+---@class OrgCaptureTemplateEmptyLines
 ---@field before integer
 ---@field after integer
 local TemplateEmptyLines = {}
@@ -20,8 +20,8 @@ function TemplateEmptyLines:new(opts)
   return this
 end
 
----@class TemplateProperties
----@field empty_lines TemplateEmptyLines
+---@class OrgCaptureTemplateProperties
+---@field empty_lines OrgCaptureTemplateEmptyLines
 local TemplateProperties = {}
 
 function TemplateProperties:new(opts)
@@ -44,13 +44,13 @@ function TemplateProperties:new(opts)
   return this
 end
 
----@class Template
+---@class OrgCaptureTemplate
 ---@field description string
 ---@field template string|string[]
 ---@field target string?
 ---@field headline string?
----@field properties TemplateProperties
----@field subtemplates table<string, Template>
+---@field properties OrgCaptureTemplateProperties
+---@field subtemplates table<string, OrgCaptureTemplate>
 local Template = {}
 
 function Template:new(opts)

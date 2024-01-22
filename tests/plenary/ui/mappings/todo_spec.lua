@@ -1,4 +1,4 @@
-local helpers = require('tests.plenary.ui.helpers')
+local helpers = require('tests.plenary.helpers')
 local Date = require('orgmode.objects.date')
 local config = require('orgmode.config')
 
@@ -8,7 +8,7 @@ describe('Todo mappings', function()
   end)
 
   it('should change todo state of a headline forward (org_todo)', function()
-    helpers.load_file_content({
+    helpers.load_as_agenda_file({
       '#TITLE: Test',
       '',
       '* TODO Test orgmode',
@@ -43,7 +43,7 @@ describe('Todo mappings', function()
   end)
 
   it('should change todo state of repeatable task and add last repeat property and state change (org_todo)', function()
-    helpers.load_file_content({
+    helpers.load_as_agenda_file({
       '#TITLE: Test',
       '',
       '* TODO Test orgmode',
@@ -77,7 +77,7 @@ describe('Todo mappings', function()
       org_log_into_drawer = 'LOGBOOK',
     })
 
-    helpers.load_file_content({
+    helpers.load_as_agenda_file({
       '#TITLE: Test',
       '',
       '* TODO Test orgmode',
@@ -126,7 +126,7 @@ describe('Todo mappings', function()
     }, vim.api.nvim_buf_get_lines(0, 2, 13, false))
   end)
   it('should change todo state of a headline backward (org_todo_prev)', function()
-    helpers.load_file_content({
+    helpers.load_as_agenda_file({
       '#TITLE: Test',
       '',
       '* TODO Test orgmode',
@@ -162,7 +162,7 @@ describe('Todo mappings', function()
   end)
 
   it('Only modifies the actually todo keyword even when a match exists in the text', function()
-    helpers.load_file_content({
+    helpers.load_as_agenda_file({
       '* TODO test TODO',
     })
     vim.fn.cursor(1, 1)
@@ -171,7 +171,7 @@ describe('Todo mappings', function()
   end)
 
   it('Should properly add closed date when plan date is not of specific type', function()
-    helpers.load_file_content({
+    helpers.load_as_agenda_file({
       '#TITLE: Test',
       '',
       '* TODO Test orgmode',
@@ -181,7 +181,8 @@ describe('Todo mappings', function()
     vim.cmd([[norm cit]])
     assert.are.same({
       '* DONE Test orgmode',
-      '  <2021-07-21 Wed 22:02> CLOSED: [' .. Date.now():to_string() .. ']',
-    }, vim.api.nvim_buf_get_lines(0, 2, 4, false))
+      '  CLOSED: [' .. Date.now():to_string() .. ']',
+      '  <2021-07-21 Wed 22:02>',
+    }, vim.api.nvim_buf_get_lines(0, 2, 5, false))
   end)
 end)

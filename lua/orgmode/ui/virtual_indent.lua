@@ -1,4 +1,5 @@
----@class VirtualIndent
+local tree_utils = require('orgmode.utils.treesitter')
+---@class OrgVirtualIndent
 ---@field private _ns_id number extmarks namespace id
 local VirtualIndent = {
   enabled = false,
@@ -10,7 +11,6 @@ function VirtualIndent:new()
     return self
   end
   self._ns_id = vim.api.nvim_create_namespace('orgmode.ui.indent')
-  self.lib.headline = require('orgmode.treesitter.headline')
   self.enabled = true
   return self
 end
@@ -29,13 +29,14 @@ function VirtualIndent:_delete_old_extmarks(buffer, start_line, end_line)
 end
 
 function VirtualIndent:_get_indent_size(line)
-  local headline = self.lib.headline.from_cursor({ line + 1, 1 })
+  local headline = tree_utils.closest_headline_node({ line + 1, 1 })
 
   if headline then
-    local headline_line, _, _ = headline.headline:start()
+    local headline_line = headline:start()
 
     if headline_line ~= line then
-      return headline:level() + 1
+      local _, level = headline:field('stars')[1]:end_()
+      return level + 1
     end
   end
 
@@ -48,11 +49,13 @@ end
 ---@param ignore_ts? boolean whether or not to skip the treesitter start & end lookup
 function VirtualIndent:set_indent(bufnr, start_line, end_line, ignore_ts)
   ignore_ts = ignore_ts or false
-  local headline = self.lib.headline.from_cursor({ start_line + 1, 1 })
+  local headline = tree_utils.closest_headline_node({ start_line + 1, 1 })
   if headline and not ignore_ts then
-    local parent = headline.headline:parent()
-    start_line = parent:start()
-    end_line = parent:end_()
+    local parent = headline:parent()
+    if parent then
+      start_line = parent:start()
+      end_line = parent:end_()
+    end
   end
   if start_line > 0 then
     start_line = start_line - 1
@@ -63,7 +66,7 @@ function VirtualIndent:set_indent(bufnr, start_line, end_line, ignore_ts)
 
     if indent > 0 then
       -- NOTE: `ephemeral = true` is not implemented for `inline` virt_text_pos :(
-      vim.api.nvim_buf_set_extmark(bufnr, self._ns_id, line, 0, {
+      pcall(vim.api.nvim_buf_set_extmark, bufnr, self._ns_id, line, 0, {
         virt_text = { { string.rep(' ', indent), 'OrgIndent' } },
         virt_text_pos = 'inline',
         right_gravity = false,

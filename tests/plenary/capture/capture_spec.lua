@@ -1,8 +1,7 @@
 local Capture = require('orgmode.capture')
 local Templates = require('orgmode.capture.templates')
 local Template = require('orgmode.capture.template')
-local File = require('orgmode.parser.file')
-local helpers = require('tests.plenary.ui.helpers')
+local helpers = require('tests.plenary.helpers')
 local org = require('orgmode')
 
 describe('Menu Items', function()
@@ -129,11 +128,11 @@ describe('Refile', function()
 
     local capture_lines = { '* foo' }
     helpers.load_file_content(capture_lines)
-    local capture_file = File.from_content(capture_lines, 'capture')
+    local capture_file = helpers.file_from_content(capture_lines)
     assert(capture_file)
     local item = capture_file:get_headlines()[1]
 
-    org.instance().capture:_refile_to({
+    org.capture:_refile_to({
       file = destination_file,
       lines = capture_lines,
       item = item,
@@ -155,11 +154,11 @@ describe('Refile', function()
 
     local capture_lines = { '** baz' }
     helpers.load_file_content(capture_lines)
-    local capture_file = File.from_content(capture_lines, 'capture')
+    local capture_file = helpers.file_from_content(capture_lines)
     assert(capture_file)
     local item = capture_file:get_headlines()[1]
 
-    org.instance().capture:_refile_to({
+    org.capture:_refile_to({
       file = destination_file,
       lines = capture_lines,
       item = item,
@@ -185,11 +184,11 @@ describe('Refile', function()
 
     local capture_lines = { '** baz' }
     helpers.load_file_content(capture_lines)
-    local capture_file = File.from_content(capture_lines, 'capture')
+    local capture_file = helpers.file_from_content(capture_lines)
     assert(capture_file)
     local item = capture_file:get_headlines()[1]
 
-    org.instance().capture:_refile_to({
+    org.capture:_refile_to({
       file = destination_file,
       lines = capture_lines,
       item = item,
@@ -213,11 +212,11 @@ describe('Refile with empty lines', function()
 
     local capture_lines = { '* foo' }
     helpers.load_file_content(capture_lines)
-    local capture_file = File.from_content(capture_lines, 'capture')
+    local capture_file = helpers.file_from_content(capture_lines)
     assert(capture_file)
     local item = capture_file:get_headlines()[1]
 
-    org.instance().capture:_refile_to({
+    org.capture:_refile_to({
       file = destination_file,
       lines = capture_lines,
       item = item,
@@ -250,11 +249,11 @@ describe('Refile with empty lines', function()
 
     local capture_lines = { '** baz' }
     helpers.load_file_content(capture_lines)
-    local capture_file = File.from_content(capture_lines, 'capture')
+    local capture_file = helpers.file_from_content(capture_lines)
     assert(capture_file)
     local item = capture_file:get_headlines()[1]
 
-    org.instance().capture:_refile_to({
+    org.capture:_refile_to({
       file = destination_file,
       lines = capture_lines,
       item = item,
@@ -291,11 +290,11 @@ describe('Refile with empty lines', function()
 
     local capture_lines = { '** baz' }
     helpers.load_file_content(capture_lines)
-    local capture_file = File.from_content(capture_lines, 'capture')
+    local capture_file = helpers.file_from_content(capture_lines)
     assert(capture_file)
     local item = capture_file:get_headlines()[1]
 
-    org.instance().capture:_refile_to({
+    org.capture:_refile_to({
       file = destination_file,
       lines = capture_lines,
       item = item,

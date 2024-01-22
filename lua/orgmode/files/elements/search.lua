@@ -2,70 +2,70 @@
 
 local Date = require('orgmode.objects.date')
 
----@class Search
+---@class OrgSearch
 ---@field term string
 ---@field expressions table
----@field or_items OrItem[]
----@field todo_search? TodoMatch
+---@field or_items OrgOrItem[]
+---@field todo_search? OrgTodoMatch
 local Search = {}
 
----@class Searchable
+---@class OrgSearchable
 ---@field props table<string, string>
 ---@field tags string|string[]
 ---@field todo string
 
----@class OrItem
----@field and_items AndItem[]
+---@class OrgOrItem
+---@field and_items OrgAndItem[]
 local OrItem = {}
 OrItem.__index = OrItem
 
----@class AndItem
----@field contains Matchable[]
----@field excludes Matchable[]
+---@class OrgAndItem
+---@field contains OrgMatchable[]
+---@field excludes OrgMatchable[]
 local AndItem = {}
 AndItem.__index = AndItem
 
----@alias Matchable TagMatch|PropertyMatch
+---@alias OrgMatchable OrgTagMatch|OrgPropertyMatch
 
----@class TagMatch
+---@class OrgTagMatch
 ---@field value string
 local TagMatch = {}
 TagMatch.__index = TagMatch
 
----@alias PropertyMatch PropertyDateMatch|PropertyStringMatch|PropertyNumberMatch
+---@alias OrgPropertyMatch OrgPropertyDateMatch|OrgPropertyStringMatch|OrgPropertyNumberMatch
 local PropertyMatch = {}
 PropertyMatch.__index = PropertyMatch
 
----@alias PropertyMatchOperator '='|'<>'|'<'|'<='|'>'|'>='
+---@alias OrgPropertyMatchOperator '='|'<>'|'<'|'<='|'>'|'>='
 
----@class PropertyDateMatch
+---@class OrgPropertyDateMatch
 ---@field name string
----@field operator PropertyMatchOperator
----@field value Date
+---@field operator OrgPropertyMatchOperator
+---@field value OrgDate
 local PropertyDateMatch = {}
 PropertyDateMatch.__index = PropertyDateMatch
 
----@class PropertyStringMatch
+---@class OrgPropertyStringMatch
 ---@field name string
----@field operator PropertyMatchOperator
+---@field operator OrgPropertyMatchOperator
 ---@field value string
 local PropertyStringMatch = {}
 PropertyStringMatch.__index = PropertyStringMatch
 
----@class PropertyNumberMatch
+---@class OrgPropertyNumberMatch
 ---@field name string
----@field operator PropertyMatchOperator
+---@field operator OrgPropertyMatchOperator
 ---@field value number
 local PropertyNumberMatch = {}
 PropertyNumberMatch.__index = PropertyNumberMatch
 
----@class TodoMatch
+---@class OrgTodoMatch
 ---@field anyOf string[]
 ---@field noneOf string[]
 local TodoMatch = {}
 TodoMatch.__index = TodoMatch
 
----@type table<PropertyMatchOperator, fun(a: string|number|Date, b: string|number|Date): boolean>
+---@type table<OrgPropertyMatchOperator, fun(a: string|number|OrgDate, b: string|number|OrgDate): boolean>
 local OPERATORS = {
   ['='] = function(a, b)
     local result = a == b
@@ -149,9 +149,9 @@ local function parse_delimited_sequence(input, item_parser, delimiter_pattern)
 end
 
 ---@param term string
----@return Search
+---@return OrgSearch
 function Search:new(term)
-  ---@type Search
+  ---@type OrgSearch
   local data = {
     term = term,
     expressions = {},
@@ -165,7 +165,7 @@ function Search:new(term)
   return data
 end
 
----@param item Searchable
+---@param item OrgSearchable
 ---@return boolean
 function Search:check(item)
   local ors_match = false
@@ -202,9 +202,9 @@ function Search:_parse()
 end
 
 ---@private
----@return OrItem
+---@return OrgOrItem
 function OrItem:_new()
-  ---@type OrItem
+  ---@type OrgOrItem
   local or_item = {
     and_items = {},
   }
@@ -214,9 +214,9 @@ function OrItem:_new()
 end
 
 ---@param input string
----@return OrItem?, string
+---@return OrgOrItem?, string
 function OrItem:parse(input)
-  ---@type AndItem[]?
+  ---@type OrgAndItem[]?
   local and_items
   local original_input = input
 
@@ -235,7 +235,7 @@ function OrItem:parse(input)
 end
 
 ---Verifies that each AndItem contained within the OrItem matches
----@param item Searchable
+---@param item OrgSearchable
 ---@return boolean
 function OrItem:match(item)
   for _, and_item in ipairs(self.and_items) do
@@ -248,9 +248,9 @@ function OrItem:match(item)
 end
 
 ---@private
----@return AndItem
+---@return OrgAndItem
 function AndItem:_new()
-  ---@type AndItem
+  ---@type OrgAndItem
   local and_item = {
     contains = {},
     excludes = {},
@@ -261,9 +261,9 @@ function AndItem:_new()
 end
 
 ---@param input string
----@return AndItem?, string
+---@return OrgAndItem?, string
 function AndItem:parse(input)
-  ---@type AndItem
+  ---@type OrgAndItem
   local and_item = AndItem:_new()
   ---@type string?
   local operator
@@ -277,7 +277,7 @@ function AndItem:parse(input)
   end
 
   while operator do
-    ---@type Matchable?
+    ---@type OrgMatchable?
     local matchable
 
     -- Try to parse as a PropertyMatch first
@@ -306,7 +306,7 @@ function AndItem:parse(input)
   return and_item, input
 end
 
----@param item Searchable
+---@param item OrgSearchable
 ---@return boolean
 function AndItem:match(item)
   for _, c in ipairs(self.contains) do
@@ -326,9 +326,9 @@ end
 
 ---@private
 ---@param tag string
----@return TagMatch
+---@return OrgTagMatch
 function TagMatch:_new(tag)
-  ---@type TagMatch
+  ---@type OrgTagMatch
   local tag_match = { value = tag }
   setmetatable(tag_match, TagMatch)
 
@@ -336,7 +336,7 @@ function TagMatch:_new(tag)
 end
 
 ---@param input string
----@return TagMatch?, string
+---@return OrgTagMatch?, string
 function TagMatch:parse(input)
   local tag
   tag, input = parse_pattern(input, '[%w_@#%%]+')
@@ -347,7 +347,7 @@ function TagMatch:parse(input)
   return TagMatch:_new(tag), input
 end
 
----@param item Searchable
+---@param item OrgSearchable
 ---@return boolean
 function TagMatch:match(item)
   local item_tags = item.tags
@@ -365,9 +365,9 @@ function TagMatch:match(item)
 end
 
 ---@param input string
----@return PropertyMatch?, string
+---@return OrgPropertyMatch?, string
 function PropertyMatch:parse(input)
-  ---@type string?, PropertyMatchOperator?
+  ---@type string?, OrgPropertyMatchOperator?
   local name, operator, string_str, number_str, date_str
   local original_input = input
 
@@ -392,7 +392,7 @@ function PropertyMatch:parse(input)
   -- Date property
   date_str, input = parse_pattern(input, '"(<[^>]+>)"')
   if date_str then
-    ---@type string?, Date?
+    ---@type string?, OrgDate?
     local date_content, date_value
     if date_str == '<today>' then
       date_value = Date.today()
@@ -412,7 +412,7 @@ function PropertyMatch:parse(input)
       end
     end
 
-    ---@type Date?
+    ---@type OrgDate?
     if date_value then
       return PropertyDateMatch:new(name, operator, date_value), input
     else
@@ -435,18 +435,18 @@ end
 ---@private
 ---Parses one of the comparison operators (=, <>, <, <=, >, >=)
 ---@param input string
----@return PropertyMatchOperator, string
+---@return OrgPropertyMatchOperator, string
 function PropertyMatch:_parse_operator(input)
-  return parse_pattern_choice(input, '%=', '%<%>', '%<%=', '%<', '%>%=', '%>') --[[@as PropertyMatchOperator]]
+  return parse_pattern_choice(input, '%=', '%<%>', '%<%=', '%<', '%>%=', '%>') --[[@as OrgPropertyMatchOperator]]
 end
 
 ---Constructs a PropertyNumberMatch
 ---@param name string
----@param operator PropertyMatchOperator
+---@param operator OrgPropertyMatchOperator
 ---@param value number
----@return PropertyNumberMatch
+---@return OrgPropertyNumberMatch
 function PropertyNumberMatch:new(name, operator, value)
-  ---@type PropertyNumberMatch
+  ---@type OrgPropertyNumberMatch
   local number_match = {
     name = name,
     operator = operator,
@@ -458,7 +458,7 @@ function PropertyNumberMatch:new(name, operator, value)
   return number_match
 end
 
----@param item Searchable
+---@param item OrgSearchable
 ---@return boolean
 function PropertyNumberMatch:match(item)
   local item_str_value = item.props[self.name]
@@ -473,11 +473,11 @@ function PropertyNumberMatch:match(item)
 end
 
 ---@param name string
----@param operator PropertyMatchOperator
----@param value Date
----@return PropertyDateMatch
+---@param operator OrgPropertyMatchOperator
+---@param value OrgDate
+---@return OrgPropertyDateMatch
 function PropertyDateMatch:new(name, operator, value)
-  ---@type PropertyDateMatch
+  ---@type OrgPropertyDateMatch
   local date_match = {
     name = name,
     operator = operator,
@@ -488,7 +488,7 @@ function PropertyDateMatch:new(name, operator, value)
   return date_match
 end
 
----@param item Searchable
+---@param item OrgSearchable
 ---@return boolean
 function PropertyDateMatch:match(item)
   local item_value = item.props[self.name]
@@ -504,7 +504,7 @@ function PropertyDateMatch:match(item)
     return false
   end
 
-  ---@type Date?
+  ---@type OrgDate?
   local item_date = Date.from_string(date_content)
   if not item_date then
     return false
@@ -514,11 +514,11 @@ function PropertyDateMatch:match(item)
 end
 
 ---@param name string
----@param operator PropertyMatchOperator
+---@param operator OrgPropertyMatchOperator
 ---@param value string
----@return PropertyStringMatch
+---@return OrgPropertyStringMatch
 function PropertyStringMatch:new(name, operator, value)
-  ---@type PropertyStringMatch
+  ---@type OrgPropertyStringMatch
   local string_match = {
     name = name,
     operator = operator,
@@ -530,7 +530,7 @@ function PropertyStringMatch:new(name, operator, value)
   return string_match
 end
 
----@param item Searchable
+---@param item OrgSearchable
 ---@return boolean
 function PropertyStringMatch:match(item)
   local item_value = item.props[self.name] or ''
@@ -538,9 +538,9 @@ function PropertyStringMatch:match(item)
 end
 
 ---@private
----@return TodoMatch
+---@return OrgTodoMatch
 function TodoMatch:_new()
-  ---@type TodoMatch
+  ---@type OrgTodoMatch
   local todo_match = {
     anyOf = {},
     noneOf = {},
@@ -552,7 +552,7 @@ function TodoMatch:_new()
 end
 
 ---@param input string
----@return TodoMatch?, string
+---@return OrgTodoMatch?, string
 function TodoMatch:parse(input)
   local original_input = input
 
@@ -601,7 +601,7 @@ function TodoMatch:parse(input)
   return nil, original_input
 end
 
----@param item Searchable
+---@param item OrgSearchable
 ---@return boolean
 function TodoMatch:match(item)
   local item_todo = item.todo

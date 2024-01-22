@@ -1,16 +1,14 @@
 local Url = require('orgmode.objects.url')
 local utils = require('orgmode.utils')
-local config = require('orgmode.config')
-local Range = require('orgmode.parser.range')
 
----@class Link
----@field url Url
+---@class OrgLink
+---@field url OrgUrl
 ---@field desc string | nil
 local Link = {}
 
 ---@param str string
 function Link:init(str)
-  local parts = vim.split(str, '][', true)
+  local parts = vim.split(str, '][', { plain = true })
   self.url = Url.new(parts[1] or '')
   self.desc = parts[2]
   return self
@@ -26,7 +24,7 @@ function Link:to_str()
 end
 
 ---@param str string
----@return Link
+---@return OrgLink
 function Link.new(str)
   local self = setmetatable({}, { __index = Link })
   return self:init(str)
@@ -34,7 +32,7 @@ end
 
 ---@param line string
 ---@param pos number
----@return Link | nil, table | nil
+---@return OrgLink | nil, table | nil
 function Link.at_pos(line, pos)
   local links = {}
   local found_link = nil

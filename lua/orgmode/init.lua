@@ -1,23 +1,40 @@
 _G.orgmode = _G.orgmode or {}
 local ts_revision = 'f8c6b1e72f82f17e41004e04e15f62a83ecc27b0'
 local setup_ts_grammar_used = false
+---@type Org
 local instance = nil
+
+local auto_instance_keys = {
+  files = true,
+  agenda = true,
+  capture = true,
+  clock = true,
+  org_mappings = true,
+  notifications = true,
+}
 
 ---@class Org
 ---@field initialized boolean
----@field files Files
----@field agenda Agenda
----@field capture Capture
----@field clock Clock
----@field notifications Notifications
+---@field files OrgFiles
+---@field agenda OrgAgenda
+---@field capture OrgCapture
+---@field clock OrgClock
+---@field org_mappings OrgMappings
+---@field notifications OrgNotifications
 local Org = {}
 
 function Org:new()
-  local data = { initialized = false }
+  local data = {}
   setmetatable(data, self)
-  self.__index = self
-  data:setup_autocmds()
-  return data
+  self.__index = function(tbl, key)
+    if auto_instance_keys[key] and not instance then
+      Org.instance()
+    end
+    return rawget(tbl, key)
+  end
+  self.initialized = false
+  self:setup_autocmds()
+  return self
 end
 
 function Org:init()
@@ -26,14 +43,23 @@ function Org:init()
   end
   require('orgmode.colors.custom_highlighter').setup()
   require('orgmode.events').init()
-  self.files = require('orgmode.parser.files').new()
-  self.agenda = require('orgmode.agenda'):new()
-  self.capture = require('orgmode.capture'):new()
+  self.files = require('orgmode.files'):new({
+    paths = require('orgmode.config').org_agenda_files,
+  })
+  self.agenda = require('orgmode.agenda'):new({
+    files = self.files,
+  })
+  self.capture = require('orgmode.capture'):new({
+    files = self.files,
+  })
   self.org_mappings = require('orgmode.org.mappings'):new({
     capture = self.capture,
     agenda = self.agenda,
+    files = self.files,
   })
-  self.clock = require('orgmode.clock'):new()
+  self.clock = require('orgmode.clock'):new({
+    files = self.files,
+  })
   require('orgmode.org.autocompletion').register()
   self.statusline_debounced = require('orgmode.utils').debounce('statusline', self.clock.get_statusline, 300)
   self.initialized = true
@@ -42,7 +68,7 @@ end
 ---@param file? string
 function Org:reload(file)
   self:init()
-  return self.files.reload(file)
+  return self.files:reload(file)
 end
 
 function Org:setup_autocmds()
@@ -51,22 +77,23 @@ function Org:setup_autocmds()
     pattern = { '*.org', '*.org_archive' },
     group = org_augroup,
     callback = function(event)
-      require('orgmode').reload(vim.fn.fnamemodify(event.file, ':p'))
+      self:reload(vim.fn.fnamemodify(event.file, ':p'))
     end,
   })
   vim.api.nvim_create_autocmd('FileType', {
     pattern = 'org',
     group = org_augroup,
     callback = function()
-      require('orgmode').reload(vim.fn.expand('<afile>:p'))
+      return self:reload(vim.fn.expand('<afile>:p'))
     end,
   })
 end
 
 --- @param revision string?
-local function setup_ts_grammar(revision)
+function Org.setup_ts_grammar(revision)
   setup_ts_grammar_used = true
   local parser_config = require('nvim-treesitter.parsers').get_parser_configs()
+  ---@diagnostic disable-next-line: inject-field
   parser_config.org = {
     install_info = {
       url = 'https://github.com/nvim-orgmode/tree-sitter-org',
@@ -77,7 +104,8 @@ local function setup_ts_grammar(revision)
   }
 end
 
-local function check_ts_grammar()
+---@private
+function Org._check_ts_grammar()
   vim.defer_fn(function()
     if setup_ts_grammar_used then
       return
@@ -101,18 +129,22 @@ local function check_ts_grammar()
   end, 200)
 end
 
----@param opts? table
+---@param opts? OrgDefaultConfig
 ---@return Org
-local function setup(opts)
+function Org.setup(opts)
   opts = opts or {}
-  instance = Org:new()
-  check_ts_grammar()
+  Org._check_ts_grammar()
   local config = require('orgmode.config'):extend(opts)
+  instance = Org:new()
   config:setup_ts_predicates()
   vim.defer_fn(function()
     if config.notifications.enabled and #vim.api.nvim_list_uis() > 0 then
-      require('orgmode.parser.files').load(vim.schedule_wrap(function()
-        instance.notifications = require('orgmode.notifications'):new():start_timer()
+      Org.files:load():next(vim.schedule_wrap(function()
+        instance.notifications = require('orgmode.notifications')
+          :new({
+            files = Org.files,
+          })
+          :start_timer()
       end))
     end
     config:setup_mappings('global')
@@ -120,18 +152,10 @@ local function setup(opts)
   return instance
 end
 
----@param file? string
----@return Org|nil
-local function reload(file)
-  if not instance then
-    return
-  end
-  return instance:reload(file)
-end
-
+---@private
 ---@param cmd string
 ---@param opts string
-local function set_dot_repeat(cmd, opts)
+function Org._set_dot_repeat(cmd, opts)
   local repeat_action = { string.format("'%s'", cmd) }
   if opts then
     table.insert(repeat_action, string.format("'%s'", opts))
@@ -146,17 +170,17 @@ end
 
 ---@param cmd string
 ---@param opts? any
-local function action(cmd, opts)
-  local parts = vim.split(cmd, '.', true)
-  if not instance or #parts < 2 then
+function Org.action(cmd, opts)
+  local parts = vim.split(cmd, '.', { plain = true })
+  if #parts < 2 then
     return
   end
-  instance:init()
+  local org = Org.instance()
   local item = nil
   for i = 1, #parts - 1 do
     local part = parts[i]
     if not item then
-      item = instance[part]
+      item = org[part]
     else
       item = item[part]
     end
@@ -172,22 +196,31 @@ local function action(cmd, opts)
         return require('orgmode.utils').echo_error(result)
       end
     end
-    set_dot_repeat(cmd, opts)
+    Org._set_dot_repeat(cmd, opts)
     return result
   end
 end
 
-local function cron(opts)
+function Org.cron(opts)
   local config = require('orgmode.config'):extend(opts or {})
   if not config.notifications.cron_enabled then
     return vim.cmd([[qa!]])
   end
-  require('orgmode.parser.files').load(vim.schedule_wrap(function()
-    instance.notifications = require('orgmode.notifications'):new():cron()
+  Org.files:load():next(vim.schedule_wrap(function()
+    ---@diagnostic disable-next-line: inject-field
+    instance.notifications = require('orgmode.notifications')
+      :new({
+        files = instance.files,
+      })
+      :cron()
   end))
 end
 
-local function get_instance()
+function Org.instance()
+  if not instance then
+    instance = Org:new()
+  end
+  instance:init()
   return instance
 end
 
@@ -198,11 +231,4 @@ function _G.orgmode.statusline()
   return instance.statusline_debounced() or ''
 end
 
-return {
-  setup_ts_grammar = setup_ts_grammar,
-  setup = setup,
-  reload = reload,
-  action = action,
-  cron = cron,
-  instance = get_instance,
-}
+return Org

@@ -1,8 +1,11 @@
-local Files = require('orgmode.parser.files')
 local Help = require('orgmode.objects.help')
 local config = require('orgmode.config')
+local ts_utils = require('orgmode.utils.treesitter')
 local utils = require('orgmode.utils')
+local org = require('orgmode')
 
+---@class OrgEditSpecial
+---@field files OrgFiles
 local EditSpecial = {
   context_var = '__org_edit_special_ctx',
   aborted_var = '__org_edit_special_aborted',
@@ -12,6 +15,7 @@ local EditSpecial = {
   },
 }
 
+---@return OrgEditSpecial
 function EditSpecial:new()
   local o = {}
 
@@ -22,7 +26,7 @@ function EditSpecial:new()
 end
 
 function EditSpecial:_parse_position()
-  local nearest_block_node_info = utils.get_nearest_block_node(self.file, self.org_pos, true)
+  local nearest_block_node_info = self:_get_nearest_block_node()
 
   if not nearest_block_node_info then
     utils.echo_warning('No block node found near cursor')
@@ -48,6 +52,7 @@ end
 
 function EditSpecial:get_context(bufnr)
   local exists, ctx = pcall(vim.api.nvim_buf_get_var, bufnr or self.org_bufnr, self.context_var)
+  ---@cast ctx table
   if not exists then
     error({ message = 'Unable to find context for edit special action' })
   end
@@ -56,7 +61,7 @@ function EditSpecial:get_context(bufnr)
     error({ message = 'Org buffer associated with edit special no longer valid' })
   end
 
-  ctx.file = Files.get(ctx.filename)
+  ctx.file = org.files:get(ctx.filename)
   if not ctx.file then
     error({ message = 'Edit special callback with invalid file: ' .. (ctx.filename or '?') })
   end
@@ -70,7 +75,7 @@ end
 function EditSpecial:init_in_org_buffer()
   self.org_bufnr = vim.api.nvim_get_current_buf()
   self.org_pos = vim.api.nvim_win_get_cursor(0)
-  self.file = Files.get_current_file()
+  self.file = org.files:get_current_file()
 end
 
 function EditSpecial:init()
@@ -139,7 +144,7 @@ function EditSpecial:done()
   block:write(ctx)
 
   vim.schedule(function()
-    local winid = vim.fn.bufwinid(ctx.org_bufnr)
+    local winid = vim.fn.bufwinid(ctx.org_bufnr) or -1
     if winid == -1 then
       return
     end
@@ -148,6 +153,31 @@ function EditSpecial:done()
       vim.api.nvim_set_current_win(winid)
     end
   end)
+end
+
+function EditSpecial:_get_nearest_block_node()
+  local current_node = self.file:get_node_at_cursor(self.org_pos)
+  if not current_node then
+    return
+  end
+  local block_node = ts_utils.parents_until(current_node, 'block')
+  if not block_node then
+    return
+  end
+
+  -- Block might not have contents yet, which is fine
+  local children_nodes = self.file:get_ts_matches(
+    '(block name: (expr) @name parameter: (expr) @parameters contents: (contents)? @contents)',
+    block_node
+  )[1]
+  if not children_nodes or not children_nodes.name or not children_nodes.parameters then
+    return
+  end
+
+  return {
+    node = block_node,
+    children = children_nodes,
+  }
 end
 
 EditSpecial.show_help = function()

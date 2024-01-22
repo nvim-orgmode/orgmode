@@ -2,7 +2,7 @@ local config = require('orgmode.config')
 local highlights = require('orgmode.colors.highlights')
 local utils = require('orgmode.utils')
 
----@class TodoState
+---@class OrgTodoState
 ---@field current_state string
 ---@field hl_map table
 ---@field todos table

@@ -1,16 +1,18 @@
 local Date = require('orgmode.objects.date')
-local Files = require('orgmode.parser.files')
 local config = require('orgmode.config')
 local utils = require('orgmode.utils')
 local NotificationPopup = require('orgmode.notifications.notification_popup')
 
----@class Notifications
+---@class OrgNotifications
 ---@field timer table
+---@field files OrgFiles
 local Notifications = {}
 
-function Notifications:new()
+---@param opts { files: OrgFiles }
+function Notifications:new(opts)
   local data = {
     timer = nil,
+    files = opts.files,
   }
   setmetatable(data, self)
   self.__index = self
@@ -37,7 +39,7 @@ function Notifications:stop_timer()
   end
 end
 
----@param time Date
+---@param time OrgDate
 function Notifications:notify(time)
   local tasks = self:get_tasks(time)
 
@@ -86,29 +88,29 @@ function Notifications:_cron_notifier(tasks)
   end
 end
 
----@param time Date
+---@param time OrgDate
 function Notifications:get_tasks(time)
   local tasks = {}
-  for _, orgfile in ipairs(Files.all()) do
+  for _, orgfile in ipairs(self.files:all()) do
     for _, headline in ipairs(orgfile:get_opened_unfinished_headlines()) do
       for _, date in ipairs(headline:get_deadline_and_scheduled_dates()) do
         local reminders = self:_check_reminders(date, time)
         for _, reminder in ipairs(reminders) do
           table.insert(tasks, {
-            file = headline.file,
-            todo = headline.todo_keyword.value,
-            category = headline.category,
-            priority = headline.priority,
-            title = headline.title,
-            level = headline.level,
-            tags = headline.tags,
+            file = orgfile.filename,
+            todo = headline:get_todo(),
+            category = headline:get_category(),
+            priority = headline:get_priority(),
+            title = headline:get_title(),
+            level = headline:get_level(),
+            tags = headline:get_tags(),
             original_time = date,
             time = reminder.time,
             reminder_type = reminder.reminder_type,
             minutes = reminder.minutes,
             humanized_duration = utils.humanize_minutes(reminder.minutes),
             type = date.type,
-            range = headline.range,
+            range = headline:get_range(),
           })
         end
       end
@@ -118,8 +120,8 @@ function Notifications:get_tasks(time)
   return tasks
 end
 
----@param date Date - date to check
----@param time Date - time to check agains
+---@param date OrgDate - date to check
+---@param time OrgDate - time to check agains
 ---@returns table|nil
 function Notifications:_check_reminders(date, time)
   local result = {}

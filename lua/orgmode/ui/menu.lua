@@ -1,25 +1,25 @@
 local config = require('orgmode.config')
 
----@class MenuOption
+---@class OrgMenuOption
 ---@field label string Description of the action
 ---@field key string Key that will be processed when the keys are pressed in the menu
 ---@field action? function Handler that will be called when the `key` is pressed in the menu.
 
----@class MenuSeparator
+---@class OrgMenuSeparator
 ---@field icon string? Character used as separator. The default character is `-`
 ---@field length number? Number of repetitions of the separator character. The default length is 80
 
----@alias MenuItem MenuOption | MenuSeparator
+---@alias OrgMenuItem OrgMenuOption | OrgMenuSeparator
 
 --- Menu for selecting an action by pressing a key by the user
----@class Menu
+---@class OrgMenu
 ---@field title string Menu title
----@field items MenuItem[]? Menu items, may include options and separators
+---@field items OrgMenuItem[]? Menu items, may include options and separators
 ---@field prompt string Prompt text used to prompt a keystroke
----@field separator MenuSeparator? Default separator
+---@field separator OrgMenuSeparator? Default separator
 local Menu = {}
 
----@param data Menu
+---@param data OrgMenu
 function Menu:new(data)
   self:_validate_data(data)
 
@@ -34,7 +34,7 @@ function Menu:new(data)
   return opts
 end
 
----@param option MenuOption
+---@param option OrgMenuOption
 function Menu:_validate_option(option)
   vim.validate({
     label = { option.label, 'string' },
@@ -43,7 +43,7 @@ function Menu:_validate_option(option)
   })
 end
 
----@param items MenuItem[]?
+---@param items OrgMenuItem[]?
 function Menu:_validate_items(items)
   vim.validate({
     items = { items, 'table', true },
@@ -54,16 +54,16 @@ function Menu:_validate_items(items)
 
   for _, item in ipairs(items) do
     if item.icon then
-      ---@cast item MenuSeparator
+      ---@cast item OrgMenuSeparator
       self:_validate_separator(item)
     else
-      ---@cast item MenuOption
+      ---@cast item OrgMenuOption
       self:_validate_option(item)
     end
   end
 end
 
----@param separator MenuSeparator?
+---@param separator OrgMenuSeparator?
 function Menu:_validate_separator(separator)
   vim.validate({
     separator = { separator, 'table', true },
@@ -76,7 +76,7 @@ function Menu:_validate_separator(separator)
   end
 end
 
----@param data Menu
+---@param data OrgMenu
 function Menu:_validate_data(data)
   vim.validate({
     title = { data.title, 'string' },
@@ -86,34 +86,34 @@ function Menu:_validate_data(data)
   self:_validate_separator(data.separator)
 end
 
----@param option MenuOption
+---@param option OrgMenuOption
 function Menu:add_option(option)
   self:_validate_option(option)
   table.insert(self.items, option)
 end
 
----@param separator MenuSeparator
+---@param separator OrgMenuSeparator
 function Menu:add_separator(separator)
   self:_validate_separator(separator)
   table.insert(self.items, vim.tbl_deep_extend('force', self.separator, separator or {}))
 end
 
----@class MenuData
+---@class OrgMenuData
 ---@field title string Menu title
----@field items MenuItem[] Menu items, may include options and separators
+---@field items OrgMenuItem[] Menu items, may include options and separators
 ---@field prompt string Prompt text used to prompt a keystroke
 
----@param data MenuData
+---@param data OrgMenuData
 function Menu._default_menu(data)
   local content = { data.title, string.rep('-', #data.title) }
   local valid_keys = {}
 
   for _, item in ipairs(data.items) do
     if item.icon then
-      ---@cast item MenuSeparator
+      ---@cast item OrgMenuSeparator
       table.insert(content, string.rep(item.icon, item.length))
     else
-      ---@cast item MenuOption
+      ---@cast item OrgMenuOption
       valid_keys[item.key] = item
       table.insert(content, string.format('%s %s', item.key, item.label))
     end

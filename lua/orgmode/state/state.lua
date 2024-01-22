@@ -29,7 +29,7 @@ function OrgState.new()
 end
 
 ---Save the current state to cache
----@return Promise
+---@return OrgPromise
 function OrgState:save()
   if not OrgState._ctx.dirty then
     return Promise.resolve(self)
@@ -66,7 +66,7 @@ function OrgState:save_sync(timeout)
 end
 
 ---Load the state cache into the current state
----@return Promise
+---@return OrgPromise
 function OrgState:load()
   --- If we currently have a loading operation already running, return that
   --- promise. This avoids a race condition of sorts as without this there's
@@ -87,7 +87,6 @@ function OrgState:load()
       local success, decoded = pcall(vim.json.decode, data, {
         luanil = { object = true, array = true },
       })
-      self._ctx.curr_loader = nil
       if not success then
         local err_msg = vim.deepcopy(decoded)
         vim.schedule(function()
@@ -109,6 +108,7 @@ function OrgState:load()
       -- the state and still get whatever values may not have been set in the
       -- interim of the load operation.
       self.data = vim.tbl_deep_extend('force', decoded, self.data)
+      self._ctx.curr_loader = nil
       return self
     end)
     :catch(function(err)

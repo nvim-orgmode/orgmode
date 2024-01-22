@@ -18,7 +18,7 @@ function OrgPosition:_new(opts)
   return data
 end
 
----@param range Range
+---@param range OrgRange
 ---@private
 function OrgPosition:_build_from_internal_range(range)
   return OrgPosition:_new({

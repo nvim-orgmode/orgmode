@@ -1,7 +1,5 @@
-local helpers = require('tests.plenary.ui.helpers')
+local helpers = require('tests.plenary.helpers')
 local org = require('orgmode')
-local config = require('orgmode.config')
-local Files = require('orgmode.parser.files')
 
 describe('Refile mappings', function()
   after_each(function()
@@ -20,11 +18,11 @@ describe('Refile mappings', function()
       '* not to be refiled',
     })
 
-    source_file = Files.get_current_file()
+    source_file = org.files:get_current_file()
     local item = source_file:get_closest_headline()
-    org.instance().capture:_refile_to({
+    org.capture:_refile_to({
       file = destination_file,
-      lines = source_file:get_headline_lines(item),
+      lines = item:get_lines(),
       item = item,
       headline = 'foo',
     })
@@ -50,11 +48,11 @@ describe('Refile mappings', function()
       '* not to be refiled',
     })
 
-    source_file = Files.get_current_file()
+    source_file = org.files:get_current_file()
     local item = source_file:get_closest_headline()
-    org.instance().capture:_refile_to({
+    org.capture:_refile_to({
       file = destination_file,
-      lines = source_file:get_headline_lines(item),
+      lines = item:get_lines(),
       item = item,
       headline = 'foobar',
     })
@@ -80,11 +78,11 @@ describe('Refile mappings', function()
       '* not to be refiled',
     })
 
-    source_file = Files.get_current_file()
+    source_file = org.files:get_current_file()
     local item = source_file:get_closest_headline()
-    org.instance().capture:_refile_to({
+    org.capture:_refile_to({
       file = destination_file,
-      lines = source_file:get_headline_lines(item),
+      lines = item:get_lines(),
       item = item,
       headline = 'foobar',
     })

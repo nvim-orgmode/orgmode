@@ -1,5 +1,5 @@
 local config = require('orgmode.config')
-local helpers = require('tests.plenary.ui.helpers')
+local helpers = require('tests.plenary.helpers')
 
 -- Helper assert function.
 local function expect_whole_buffer(expected)

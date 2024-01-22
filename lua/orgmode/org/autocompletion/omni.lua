@@ -1,4 +1,4 @@
-local Files = require('orgmode.parser.files')
+local org = require('orgmode')
 local config = require('orgmode.config')
 local Hyperlinks = require('orgmode.org.hyperlinks')
 local Url = require('orgmode.objects.url')
@@ -50,7 +50,7 @@ local tags = {
   fetcher = function()
     return vim.tbl_map(function(tag)
       return ':' .. tag .. ':'
-    end, Files.get_tags())
+    end, org.files:get_tags() or {})
   end,
 }
 
@@ -63,7 +63,7 @@ local filetags = {
   fetcher = function()
     return vim.tbl_map(function(tag)
       return ':' .. tag .. ':'
-    end, Files.get_tags())
+    end, org.files:get_tags() or {})
   end,
 }
 
@@ -101,7 +101,7 @@ function Omni.is_headline()
   return Omni.get_line_content_before_cursor():match('^%*+%s+')
 end
 
----@return Table
+---@return OrgTable
 function Omni.get_all_contexts()
   return Omni.is_headline() and headline_contexts or contexts
 end

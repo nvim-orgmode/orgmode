@@ -1,4 +1,4 @@
-local Search = require('orgmode.parser.search')
+local Search = require('orgmode.files.elements.search')
 
 describe('Search parser', function()
   it('should parse search term and check value value', function()

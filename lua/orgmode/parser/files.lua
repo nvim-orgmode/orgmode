@@ -1,110 +1,61 @@
 local config = require('orgmode.config')
-local File = require('orgmode.parser.file')
 local utils = require('orgmode.utils')
-local Promise = require('orgmode.utils.promise')
+local ts_utils = require('orgmode.utils.treesitter')
+local OrgFiles = require('orgmode.files')
+local Listitem = require('orgmode.files.elements.listitem')
 
 ---@class Files
----@field loaded boolean
----@field orgfiles table
+---@field orgfiles table<string, OrgFile>
 ---@field tags string[]
----@field clocked_headline string|nil
+---@field file_loader OrgFiles|nil
 local Files = {
-  loaded = false,
   orgfiles = {},
   tags = {},
-  clocked_headline = nil,
+  file_loader = nil,
 }
 
 function Files.new()
-  Files.loaded = false
   Files.load()
+  vim.notify(
+    '[orgmode] "orgmode.parser.files" is deprecated. Use "orgmode.api" instead (see :h OrgApi.load)',
+    vim.log.levels.WARN
+  )
   return Files
 end
 
 function Files.load(callback)
-  local files = config:get_all_files()
-  Files.orgfiles = {}
-  if #files == 0 then
-    Files.loaded = true
+  Files.loader():load():next(function(files)
+    Files.orgfiles = files
+    Files._build_tags()
     if callback then
       callback()
     end
-    return Files
-  end
-  local files_to_process = #files
-  for _, item in ipairs(files) do
-    File.load(item, function(file)
-      files_to_process = files_to_process - 1
-      if file then
-        if file.clocked_headline then
-          Files.set_clocked_headline(file.clocked_headline)
-        end
-        Files.orgfiles[item] = file
-      end
-
-      if files_to_process == 0 then
-        Files._build_tags()
-        Files.loaded = true
-        if callback then
-          callback()
-        end
-      end
-    end)
-  end
+  end)
 
   return Files
 end
 
-function Files._set_loaded_file(filename, orgfile)
-  Files.orgfiles[filename] = orgfile
-  if orgfile.clocked_headline then
-    Files.set_clocked_headline(orgfile.clocked_headline)
-  end
+function Files.unload()
+  Files.loader():unload()
+  Files.file_loader = nil
+  return Files
 end
 
 function Files.reload(file, callback)
-  if not file then
-    return Files.load(callback)
-  end
-
-  local onfinish = function()
+  local prev_file = Files.orgfiles[file]
+  Files.loader():load_file(file):next(function(orgfile)
+    Files.orgfiles[orgfile.filename] = orgfile
+    Files._build_tags()
     if callback then
       callback()
     end
-    Files._build_tags()
-  end
-
-  local old_file = Files.orgfiles[file]
-  local new_file = Files.get(file)
-
-  if old_file then
-    Files._check_source_blocks(old_file, new_file)
-    onfinish()
-    return new_file
-  end
-
-  return File.load(file, function(orgfile)
-    if orgfile then
-      Files._set_loaded_file(file, orgfile)
-      Files._check_source_blocks(old_file, orgfile)
-    end
-    Files.loaded = true
-    onfinish()
     return orgfile
   end)
 end
 
----@return File[]
+---@return OrgFile[]
 function Files.all()
-  Files.ensure_loaded()
-  local valid_files = {}
-  local filenames = config:get_all_files()
-  for _, file in ipairs(filenames) do
-    if Files.orgfiles[file] then
-      table.insert(valid_files, Files.orgfiles[file])
-    end
-  end
-  return valid_files
+  return Files.loader():all()
 end
 
 ---@return string[]
@@ -115,19 +66,11 @@ function Files.filenames()
 end
 
 ---@param file string
----@return File
+---@return OrgFile
 function Files.get(file)
-  local f = Files.orgfiles[file]
-  if f then
-    Files._set_loaded_file(file, f:refresh())
-    return Files.orgfiles[file]
-  end
-
-  if vim.bo.filetype == 'org' and vim.fn.filereadable(file) == 0 then
-    return File.from_content(vim.api.nvim_buf_get_lines(0, 0, -1, false), nil, nil, false)
-  end
-
-  return nil
+  local orgfile = Files.loader():load_file_sync(file)
+  assert(orgfile, 'File not found or is in invalid format')
+  return orgfile
 end
 
 ---@return string[]
@@ -135,126 +78,69 @@ function Files.get_tags()
   return Files.tags
 end
 
----@return File
+---@return OrgFile
 function Files.get_current_file()
-  local name = utils.current_file_path()
-  local has_capture_var, is_capture = pcall(vim.api.nvim_buf_get_var, 0, 'org_capture')
-  if has_capture_var and is_capture then
-    return File.from_content(vim.api.nvim_buf_get_lines(0, 0, -1, false))
-  end
-  return Files.get(name)
+  local current_file = Files.loader():get_current_file()
+  assert(current_file, 'Current file not found or is in invalid format')
+  return current_file
 end
 
 ---@param title string
----@return Section[]
+---@return OrgHeadline[]
 function Files.find_headlines_by_title(title, exact)
-  local headlines = {}
-  for _, orgfile in ipairs(Files.all()) do
-    for _, headline in ipairs(orgfile:find_headlines_by_title(title, exact)) do
-      table.insert(headlines, headline)
-    end
-  end
-  return headlines
+  return Files.loader():find_headlines_by_title(title, exact)
 end
 
 ---@param property_name string
 ---@param term string
----@return Section[]
+---@return OrgHeadline[]
 function Files.find_headlines_with_property_matching(property_name, term)
-  local headlines = {}
-  for _, orgfile in ipairs(Files.all()) do
-    for _, headline in ipairs(orgfile:find_headlines_with_property_matching(property_name, term)) do
-      table.insert(headlines, headline)
-    end
-  end
-  return headlines
+  return Files.loader():find_headlines_with_property_matching(property_name, term)
 end
 
 ---@param filename string
 ---@param action function
----@return Promise
+---@return OrgPromise<OrgFile>
 function Files.update_file(filename, action)
-  local file = Files.get(filename)
-  if not file then
-    return Promise.resolve()
-  end
-  local is_same_file = filename == utils.current_file_path()
-  local cur_win = vim.api.nvim_get_current_win()
-  if is_same_file then
-    return Promise.resolve(action(file)):next(function(result)
-      vim.cmd(':silent! w')
-      return result
-    end)
-  end
-
-  local edit_file = utils.edit_file(filename)
-  edit_file.open()
-
-  return Promise.resolve(action(file)):next(function(result)
-    edit_file.close()
-    return result
-  end)
+  return Files.loader():update_file(filename, action)
 end
 
 ---@param term string
 ---@param no_escape boolean
 ---@param search_extra_files boolean
----@return Section
+---@return OrgHeadline[]
 function Files.find_headlines_matching_search_term(term, no_escape, search_extra_files)
-  local headlines = {}
-  local ignore_archive_flag = search_extra_files
-    and vim.tbl_contains(config.org_agenda_text_search_extra_files, 'agenda-archives')
-  for _, orgfile in ipairs(Files.all()) do
-    for _, headline in ipairs(orgfile:find_headlines_matching_search_term(term, no_escape, ignore_archive_flag)) do
-      table.insert(headlines, headline)
-    end
-  end
-  return headlines
+  return Files.loader():find_headlines_matching_search_term(term, no_escape, search_extra_files)
 end
 
----@param id? number
----@return Section?
-function Files.get_closest_headline(id)
-  local current_file = Files.get_current_file()
-  local msg = 'Make sure there are no errors in the document'
-  if not current_file then
-    error({ message = string.format('Failed to parse current file. %s.', msg) })
-  end
-  local headline = current_file:get_closest_headline(id)
-  if not headline and current_file:has_errors() then
-    error({ message = string.format('Failed to parse current headline. %s.', msg) })
-  end
-  return headline
+---@return OrgHeadline
+function Files.get_closest_headline(cursor)
+  return Files.loader():get_closest_headline(cursor)
 end
 
----@return TSNode
-function Files.get_node_at_cursor()
-  return Files.get_current_file():get_node_at_cursor()
+---Return closest headline or nil if none found
+---@return OrgHeadline | nil
+function Files.get_closest_headline_or_nil(cursor)
+  return Files.loader():get_closest_headline_or_nil(cursor)
 end
 
----@return Section
+---@return OrgHeadline | nil
 function Files.get_clocked_headline()
-  if Files.clocked_headline then
-    return Files.get_headline_by_id(Files.clocked_headline)
+  -- TODO: Optimize
+  for _, file in ipairs(Files.all()) do
+    for _, headline in ipairs(file:get_headlines()) do
+      if headline:is_clocked_in() then
+        return headline
+      end
+    end
   end
   return nil
 end
 
----@param headline Section
-function Files.set_clocked_headline(headline)
-  Files.clocked_headline = headline.id
-end
-
----@param id string
----@return Section
-function Files.get_headline_by_id(id)
-  local parts = vim.split(id, '####', true)
-  if #parts ~= 2 then
-    return nil
-  end
-  local file = Files.get(parts[1])
-  if file then
-    return file:get_closest_headline(tonumber(parts[2]))
+function Files.get_closest_listitem()
+  local node = ts_utils.closest_node(ts_utils.get_node_at_cursor(), 'listitem')
+  if node then
+    return Listitem:new(node, Files.get_current_file())
   end
   return nil
 end
@@ -267,7 +153,7 @@ function Files.get_clock_report(from, to)
   for name, orgfile in pairs(Files.all()) do
     local file_clocks = orgfile:get_clock_report(from, to)
     if #file_clocks.headlines > 0 then
-      report.total = report.total + file_clocks.total_minutes
+      report.total = report.total + file_clocks.total_duration.minutes
       report.files[name] = file_clocks.headlines
     end
   end
@@ -277,11 +163,14 @@ end
 
 function Files._build_tags()
   local tags = {}
-  for _, orgfile in pairs(Files.orgfiles) do
-    for _, headline in ipairs(orgfile:get_headlines()) do
-      if headline.tags and #headline.tags > 0 then
-        for _, tag in ipairs(headline.tags) do
-          tags[tag] = 1
+  for _, orgfile in ipairs(Files.all()) do
+    if not orgfile:is_archive_file() then
+      for _, headline in ipairs(orgfile:get_headlines()) do
+        local htags = headline:get_tags()
+        if htags and #htags > 0 then
+          for _, tag in ipairs(htags) do
+            tags[tag] = 1
+          end
         end
       end
     end
@@ -295,27 +184,15 @@ function Files.autocomplete_tags(arg_lead)
   return utils.prompt_autocomplete(arg_lead, Files.get_tags())
 end
 
----@param old_file? File
----@param new_file File
-function Files._check_source_blocks(old_file, new_file)
-  local old_source_blocks = old_file and old_file.source_code_filetypes or {}
-  local new_source_blocks = new_file.source_code_filetypes or {}
-  for _, ft in ipairs(new_source_blocks) do
-    if not vim.tbl_contains(old_source_blocks, ft) then
-      return vim.schedule(function()
-        vim.cmd([[filetype detect]])
-      end)
-    end
+---@return OrgFiles
+function Files.loader()
+  if not Files.file_loader then
+    Files.file_loader = OrgFiles:new({
+      paths = config.org_agenda_files,
+    })
   end
+
+  return Files.file_loader
 end
 
-function Files.ensure_loaded()
-  if Files.loaded then
-    return true
-  end
-  vim.wait(5000, function()
-    return Files.loaded
-  end, 5)
-end
-
-return Files
+return Files.new()

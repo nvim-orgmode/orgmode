@@ -1,9 +1,9 @@
 local M = {}
 ---
----@class MinPlugin A plugin to download and register on the package path
----@alias PluginName string The plugin name, will be used as part of the git clone destination
----@alias PluginUrl string The git url at which a plugin is located, can be a path. See https://git-scm.com/book/en/v2/Git-on-the-Server-The-Protocols for details
----@alias MinPlugins table<PluginName, PluginUrl>
+---@class OrgMinPlugin A plugin to download and register on the package path
+---@alias OrgPluginName string The plugin name, will be used as part of the git clone destination
+---@alias OrgPluginUrl string The git url at which a plugin is located, can be a path. See https://git-scm.com/book/en/v2/Git-on-the-Server-The-Protocols for details
+---@alias OrgMinPlugins table<OrgPluginName, OrgPluginUrl>
 
 -- Gets the current directory of this file
 local base_root_path = vim.fn.fnamemodify(debug.getinfo(1, 'S').source:sub(2), ':p:h')
@@ -16,8 +16,8 @@ function M.root(path)
 end
 
 ---Downloads a plugin from a given url and registers it on the 'runtimepath'
----@param plugin_name PluginName
----@param plugin_url PluginUrl
+---@param plugin_name OrgPluginName
+---@param plugin_url OrgPluginUrl
 function M.load_plugin(plugin_name, plugin_url)
   local package_root = M.root('plugins/')
   local install_destination = package_root .. plugin_name
@@ -48,7 +48,7 @@ end
 
 ---Do the initial setup. Downloads plugins, ensures the minimal init does not pollute the filesystem by keeping
 ---everything self contained to the CWD of the minimal init file. Run prior to running tests, reproducing issues, etc.
----@param plugins? MinPlugins
+---@param plugins? OrgMinPlugins
 function M.setup(plugins)
   vim.opt.packpath = {} -- Empty the package path so we use only the plugins specified
   vim.opt.runtimepath:append(M.root('.min')) -- Ensure the runtime detects the root min dir

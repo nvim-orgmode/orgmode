@@ -1,5 +1,6 @@
----@class DefaultConfig
+---@class OrgDefaultConfig
 ---@field org_id_method 'uuid' | 'ts' | 'org'
+---@field org_agenda_span 'day' | 'week' | 'month' | 'year' | number
 local DefaultConfig = {
   org_agenda_files = '',
   org_default_notes_file = '',

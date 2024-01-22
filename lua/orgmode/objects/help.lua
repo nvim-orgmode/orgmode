@@ -87,6 +87,7 @@ local helps = {
       { key = 'org_agenda_priority_up', description = 'Increase priority for current item' },
       { key = 'org_agenda_priority_down', description = 'Decrease priority for current item' },
       { key = 'org_agenda_toggle_archive_tag', description = 'Toggle "ARCHIVE" tag on current headline' },
+      { key = 'org_agenda_archive', description = 'Archive headline to archive file' },
       { key = 'org_agenda_set_tags', description = 'Change tags of current headline' },
       { key = 'org_agenda_deadline', description = 'Insert/Update deadline date on current headline' },
       { key = 'org_agenda_schedule', description = 'Insert/Update scheduled date on current headline' },
@@ -333,17 +334,17 @@ function Help.show(opts)
 
   Help.buf = vim.api.nvim_create_buf(false, true)
   vim.api.nvim_buf_set_name(Help.buf, 'orghelp')
-  vim.api.nvim_buf_set_option(Help.buf, 'filetype', 'orghelp')
-  vim.api.nvim_buf_set_option(Help.buf, 'bufhidden', 'wipe')
+  vim.api.nvim_set_option_value('filetype', 'orghelp', { buf = Help.buf })
+  vim.api.nvim_set_option_value('bufhidden', 'wipe', { buf = Help.buf })
   Help.win = vim.api.nvim_open_win(Help.buf, true, window_opts)
 
   vim.api.nvim_buf_set_lines(Help.buf, 0, -1, true, content)
 
-  vim.api.nvim_win_set_option(Help.win, 'winhl', 'Normal:Normal')
-  vim.api.nvim_win_set_option(Help.win, 'wrap', false)
-  vim.api.nvim_win_set_option(Help.win, 'conceallevel', 3)
-  vim.api.nvim_win_set_option(Help.win, 'concealcursor', 'nvic')
-  vim.api.nvim_buf_set_option(Help.buf, 'modifiable', false)
+  vim.api.nvim_set_option_value('winhl', 'Normal:Normal', { win = Help.win })
+  vim.api.nvim_set_option_value('wrap', false, { win = Help.win })
+  vim.api.nvim_set_option_value('conceallevel', 3, { win = Help.win })
+  vim.api.nvim_set_option_value('concealcursor', 'nvic', { win = Help.win })
+  vim.api.nvim_set_option_value('modifiable', false, { buf = Help.buf })
   vim.api.nvim_buf_set_var(Help.buf, 'indent_blankline_enabled', false)
 
   vim.keymap.set('n', 'q', ':call nvim_win_close(win_getid(), v:true)<CR>', { buffer = Help.buf, silent = true })

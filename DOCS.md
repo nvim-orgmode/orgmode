@@ -237,14 +237,15 @@ Ensure your `:h conceallevel` is set properly in order for this to function.
 *type*: `string`<br />
 *default value*: `...`<br />
 Marker used to indicate a folded headline.
+Not applicable with new empty `foldtext` options in Neovim
 
 #### **org_log_done**
-*type*: `string|nil`<br />
+*type*: `string|false`<br />
 *default value*: `time`<br />
 Possible values:
 * `time` - adds `CLOSED` date when marking headline as done
 * `note` - adds `CLOSED` date as above, and prompts for closing note via capture window. Confirm note with `org_note_finalize` (Default `<C-c>`), or ignore providing note via `org_note_kill` (Default `<Leader>ok`)
-* `nil|false` - Disable any logging
+* `false` - Disable any logging
 
 #### **org_log_into_drawer**
 *type*: `string|nil`<br />

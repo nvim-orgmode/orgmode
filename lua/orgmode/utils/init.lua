@@ -1,11 +1,11 @@
-local ts_utils = require('nvim-treesitter.ts_utils')
 local Promise = require('orgmode.utils.promise')
 local uv = vim.loop
 local utils = {}
 local debounce_timers = {}
-local query_cache = {}
 local tmp_window_augroup = vim.api.nvim_create_augroup('OrgTmpWindow', { clear = true })
 
+---@param file string full path to filename
+---@param opts? { raw: boolean, schedule: boolean } raw: Return raw results, schedule: wrap results in vim.schedule
 function utils.readfile(file, opts)
   opts = opts or {}
   return Promise.new(function(resolve, reject)
@@ -13,10 +13,12 @@ function utils.readfile(file, opts)
       if err1 then
         return reject(err1)
       end
+      assert(fd)
       uv.fs_fstat(fd, function(err2, stat)
         if err2 then
           return reject(err2)
         end
+        assert(stat)
         uv.fs_read(fd, stat.size, 0, function(err3, data)
           if err3 then
             return reject(err3)
@@ -25,12 +27,23 @@ function utils.readfile(file, opts)
             if err4 then
               return reject(err4)
             end
+            assert(data)
+            local result = nil
             if opts.raw then
-              return resolve(data)
+              result = data
+            else
+              local lines = vim.split(data, '\n')
+              table.remove(lines, #lines)
+              result = lines
             end
-            local lines = vim.split(data, '\n')
-            table.remove(lines, #lines)
-            return resolve(lines)
+
+            if not opts.schedule then
+              return resolve(result)
+            end
+
+            vim.schedule(function()
+              return resolve(result)
+            end)
           end)
         end)
       end)
@@ -44,10 +57,12 @@ function utils.writefile(file, data)
       if err1 then
         return reject(err1)
       end
+      assert(fd)
       uv.fs_fstat(fd, function(err2, stat)
         if err2 then
           return reject(err2)
         end
+        assert(stat)
         uv.fs_write(fd, data, nil, function(err3, bytes)
           if err3 then
             return reject(err3)
@@ -147,12 +162,23 @@ end
 ---@param tbl table
 ---@param callback function
 ---@param acc any
----@return table
+---@return unknown
 function utils.reduce(tbl, callback, acc)
   for i, v in pairs(tbl) do
     acc = callback(acc, v, i)
   end
   return acc
+end
+
+---Reverse order in table
+---@param tbl table
+---@return table
+function utils.reverse(tbl)
+  local reversed = {}
+  for i = #tbl, 1, -1 do
+    table.insert(reversed, tbl[i])
+  end
+  return reversed
 end
 
 --- Concat one table at the end of another table
@@ -169,12 +195,12 @@ function utils.concat(first, second, unique)
   return first
 end
 
----@class KeymapData
+---@class OrgKeymapData
 ---@field mode string|table
 ---@field lhs string
 ---@field buffer integer?
 
----@param data KeymapData
+---@param data OrgKeymapData
 ---@return table? map Mapping definition
 function utils.get_keymap(data)
   local find_keymap = function(list)
@@ -256,95 +282,6 @@ function utils.humanize_minutes(minutes)
   return string.format('in %d hr and %d min', hours, remaining_minutes)
 end
 
----@param query string
----@param node TSNode
----@param file_content string[]
----@param file_content_str string
----@return table[]
-function utils.get_ts_matches(query, node, file_content, file_content_str)
-  local matches = {}
-  local ts_query = query_cache[query]
-  if not ts_query then
-    ts_query = vim.treesitter.query.parse('org', query)
-    query_cache[query] = ts_query
-  end
-  for _, match, _ in ts_query:iter_matches(node, file_content_str) do
-    local items = {}
-    for id, matched_node in pairs(match) do
-      local name = ts_query.captures[id]
-      local node_text = utils.get_node_text(matched_node, file_content)
-      items[name] = {
-        node = matched_node,
-        text_list = node_text,
-        text = node_text[1],
-      }
-    end
-    table.insert(matches, items)
-  end
-  return matches
-end
-
----@param node TSNode
----@param content string[]
----@return string[]
-function utils.get_node_text(node, content)
-  if not node then
-    return {}
-  end
-  local start_row, start_col, end_row, end_col = node:range()
-
-  if start_row ~= end_row then
-    local start_line = start_row + 1
-    local end_line = end_row + 1
-    if end_col == 0 then
-      end_line = end_row
-    end
-    local range = end_line - start_line + 1
-    local lines = {}
-    if range < 5000 then
-      lines = { unpack(content, start_line, end_line) }
-    else
-      local chunks = math.floor(range / 5000)
-      local leftover = range % 5000
-      for i = 1, chunks do
-        lines = utils.concat(lines, { unpack(content, (i - 1) * 5000 + 1, i * 5000) })
-      end
-      if leftover > 0 then
-        local s = chunks * 5000
-        lines = utils.concat(lines, { unpack(content, s + 1, s + leftover) })
-      end
-    end
-
-    lines[1] = string.sub(lines[1], start_col + 1)
-    if end_col > 0 then
-      lines[#lines] = string.sub(lines[#lines], 1, end_col)
-    end
-    return lines
-  else
-    local line = content[start_row + 1]
-    -- If line is nil then the line is empty
-    return line and { string.sub(line, start_col + 1, end_col) } or {}
-  end
-end
-
----@param node TSNode
----@param type string
----@return TSNode | nil
-function utils.get_closest_parent_of_type(node, type, accept_at_cursor)
-  local parent = node
-
-  if not accept_at_cursor then
-    parent = node:parent()
-  end
-
-  while parent do
-    if parent:type() == type then
-      return parent
-    end
-    parent = parent:parent()
-  end
-end
-
 function utils.debounce(name, fn, ms)
   local result = nil
   return function(...)
@@ -370,9 +307,9 @@ end
 ---@param name string
 ---@return function
 function utils.profile(name)
-  local start_time = os.clock()
+  local start_time = vim.loop.hrtime()
   return function()
-    return print(name, string.format('%.2f', os.clock() - start_time))
+    return print(name, string.format('%.2f', (vim.loop.hrtime() - start_time) / 1000000))
   end
 end
 
@@ -427,68 +364,6 @@ function utils.choose(items)
       return { choice_value = item.choice_value, choice_text = item.choice_text, raw = raw, ctx = item.ctx }
     end
   end
-end
-
----@param file File
----@param parent_node TSNode
----@param children_names table<string, boolean>
----@return table
-function utils.get_named_children_nodes(file, parent_node, children_names)
-  local child_node_info = {}
-
-  if children_names then
-    -- Only grab information for specific named children
-    for _, child_name in ipairs(children_names) do
-      children_names[child_name] = false
-    end
-  end
-
-  vim.tbl_map(function(node)
-    if not children_names or children_names[node:type()] ~= nil then
-      local text
-      local text_list = utils.get_node_text(node, file.file_content)
-
-      if #text_list == 0 then
-        text = ''
-      else
-        text = text_list[1]
-      end
-
-      child_node_info[node:type()] = {
-        node = node,
-        text = text,
-        text_list = text_list,
-      }
-    end
-  end, ts_utils.get_named_children(parent_node))
-
-  return child_node_info
-end
-
----@param file File
----@param cursor string[]
----@param accept_at_cursor boolean
----@return nil|table
-function utils.get_nearest_block_node(file, cursor, accept_at_cursor)
-  local current_node = file:get_node_at_cursor(cursor)
-  local block_node = utils.get_closest_parent_of_type(current_node, 'block', accept_at_cursor)
-  if not block_node then
-    return
-  end
-
-  -- Block might not have contents yet, which is fine
-  local children_nodes = file:get_ts_matches(
-    '(block name: (expr) @name parameter: (expr) @parameters contents: (contents)? @contents)',
-    block_node
-  )[1]
-  if not children_nodes or not children_nodes.name or not children_nodes.parameters then
-    return
-  end
-
-  return {
-    node = block_node,
-    children = children_nodes,
-  }
 end
 
 function utils.current_file_path()
@@ -559,7 +434,7 @@ end
 
 function utils.open_tmp_org_window(height, split_mode, border, on_close)
   local winnr = vim.api.nvim_get_current_win()
-  utils.open_window(vim.fn.tempname(), height or 16, split_mode, border)
+  utils.open_window(vim.fn.tempname() .. '.org', height or 16, split_mode, border)
   vim.cmd([[setf org]])
   vim.cmd([[setlocal bufhidden=wipe nobuflisted nolist noswapfile nofoldenable]])
   vim.api.nvim_buf_set_var(0, 'org_prev_window', winnr)
@@ -633,7 +508,7 @@ function utils.edit_file(filename)
 
   return {
     open = function()
-      local bufnr = vim.fn.bufadd(filename)
+      local bufnr = vim.fn.bufadd(filename) or -1
       vim.api.nvim_open_win(bufnr, true, {
         relative = 'editor',
         width = 1,
@@ -655,6 +530,50 @@ function utils.edit_file(filename)
       vim.api.nvim_set_current_win(cur_win)
     end,
   }
+end
+
+function utils.memoize(class, key_getter)
+  local memoizedMethods = {}
+  local methodsToMemoize = {}
+  local cache = setmetatable({}, { __mode = 'k' })
+
+  local function memoizedIndex(_, key)
+    local method = class[key]
+
+    if type(method) == 'function' and methodsToMemoize[key] and not memoizedMethods[key] then
+      memoizedMethods[key] = function(self, ...)
+        local top_key = key_getter(self)
+        local arg_key = key .. '_' .. table.concat({ ... }, '_')
+
+        if not cache[top_key] then
+          cache[top_key] = {}
+        end
+
+        if not cache[top_key][arg_key] then
+          local value = vim.F.pack_len(method(self, ...))
+          cache[top_key][arg_key] = value
+        end
+
+        local cached_value = cache[top_key][arg_key]
+
+        if cached_value then
+          local result = { pcall(vim.F.unpack_len, cached_value) }
+          if result[1] then
+            return unpack(result, 2)
+          end
+        end
+      end
+    end
+
+    return memoizedMethods[key] or method
+  end
+
+  class.__index = memoizedIndex
+
+  return function(method)
+    methodsToMemoize[method] = true
+    return true
+  end
 end
 
 return utils

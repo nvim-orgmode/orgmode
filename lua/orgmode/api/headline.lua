@@ -1,32 +1,30 @@
-local Files = require('orgmode.parser.files')
-local utils = require('orgmode.utils')
-local ts_org = require('orgmode.treesitter')
 local OrgPosition = require('orgmode.api.position')
 local PriorityState = require('orgmode.objects.priority_state')
 local Date = require('orgmode.objects.date')
 local Calendar = require('orgmode.objects.calendar')
 local Promise = require('orgmode.utils.promise')
+local org = require('orgmode')
 
----@class OrgHeadline
+---@class OrgApiHeadline
 ---@field title string headline title without todo keyword, tags and priority. Ex. `* TODO I am a headline  :SOMETAG:` returns `I am a headline`
 ---@field line string full headline line
 ---@field level number headline level (number of asterisks). Example: 1
 ---@field todo_value? string todo keyword of the headline (Example: TODO, DONE)
----@field todo_type? string | "'TODO'" | "'DONE'" | "''"
+---@field todo_type? 'TODO' | 'DONE' | ''
 ---@field tags string[] List of own tags
----@field deadline Date|nil
----@field scheduled Date|nil
+---@field deadline OrgDate|nil
+---@field scheduled OrgDate|nil
 ---@field properties table<string, string> Table containing all properties. All keys are lowercased
----@field closed Date|nil
----@field dates Date[] List of all dates that are not "plan" dates
----@field position Range
+---@field closed OrgDate|nil
+---@field dates OrgDate[] List of all dates that are not "plan" dates
+---@field position OrgRange
 ---@field all_tags string[] List of all tags (own + inherited)
----@field file OrgFile
----@field parent OrgHeadline|nil
+---@field file OrgApiFile
+---@field parent OrgApiHeadline|nil
 ---@field priority string|nil
 ---@field is_archived boolean headline marked with the `:ARCHIVE:` tag
----@field headlines OrgHeadline[]
----@field private _section Section
+---@field headlines OrgApiHeadline[]
+---@field private _section OrgHeadline
 ---@field private _index number
 local OrgHeadline = {}
 
@@ -60,27 +58,30 @@ function OrgHeadline:_new(opts)
   return data
 end
 
----@param section Section
+---@param section OrgHeadline
 ---@param index number
 ---@private
-function OrgHeadline._build_from_internal_section(section, index)
+function OrgHeadline._build_from_internal_headline(section, index)
+  local todo, _, type = section:get_todo()
+  local _, properties = section:get_properties()
   return OrgHeadline:_new({
-    title = section.title,
-    line = section.line,
-    level = section.level,
-    todo_type = section.todo_keyword.type,
-    todo_value = section.todo_keyword.value,
-    all_tags = { unpack(section.tags) },
+    title = section:get_title(),
+    line = section:get_headline_line_content(),
+    level = section:get_level(),
+    todo_type = type,
+    todo_value = todo,
+    all_tags = section:get_tags(),
     tags = section:get_own_tags(),
-    position = OrgPosition:_build_from_internal_range(section.range),
-    properties = section:get_properties(),
+    ---@diagnostic disable-next-line: invisible
+    position = OrgPosition:_build_from_internal_range(section:get_range()),
+    properties = properties,
     deadline = section:get_deadline_date(),
     scheduled = section:get_scheduled_date(),
     closed = section:get_closed_date(),
     dates = vim.tbl_filter(function(date)
       return date:is_none()
-    end, section.dates),
-    priority = section.priority,
+    end, section:get_all_dates()),
+    priority = section:get_priority(),
     is_archived = section:is_archived(),
     _section = section,
     _index = index,
@@ -88,7 +89,7 @@ function OrgHeadline._build_from_internal_section(section, index)
 end
 
 --- Return updated version of headline
----@return OrgHeadline
+---@return OrgApiHeadline
 function OrgHeadline:reload()
   local file = self.file:reload()
   return file.headlines[self._index]
@@ -96,31 +97,31 @@ end
 
 --- Set tags on the headline. This replaces all current tags with provided ones
 ---@param tags string[]
----@return Promise
+---@return OrgPromise
 function OrgHeadline:set_tags(tags)
   return self:_do_action(function()
-    local headline = ts_org.closest_headline()
-    return headline:set_tags(string.format(':%s:', table.concat(tags, ':')))
+    local headline = org.files:get_closest_headline()
+    headline:set_tags(string.format(':%s:', table.concat(tags, ':')))
   end)
 end
 
 --- Increase priority on a headline
----@return Promise
+---@return OrgPromise
 function OrgHeadline:priority_up()
   return self:_do_action(function()
-    local headline = ts_org.closest_headline()
-    local _, current_priority = headline:priority()
+    local headline = org.files:get_closest_headline()
+    local current_priority = headline:get_priority()
     local priority_state = PriorityState:new(current_priority)
     return headline:set_priority(priority_state:increase())
   end)
 end
 
 --- Decrease priority on a headline
----@return Promise
+---@return OrgPromise
 function OrgHeadline:priority_down()
   return self:_do_action(function()
-    local headline = ts_org.closest_headline()
-    local _, current_priority = headline:priority()
+    local headline = org.files:get_closest_headline()
+    local current_priority = headline:get_priority()
     local priority_state = PriorityState:new(current_priority)
     return headline:set_priority(priority_state:decrease())
   end)
@@ -128,21 +129,21 @@ end
 
 --- Set specific priority on a headline. Empty string clears the priority
 ---@param priority string
----@return Promise
+---@return OrgPromise
 function OrgHeadline:set_priority(priority)
   return self:_do_action(function()
-    local headline = ts_org.closest_headline()
+    local headline = org.files:get_closest_headline()
     return headline:set_priority(priority)
   end)
 end
 
 --- Set deadline date
----@param date? Date|string|nil If ommited, opens the datepicker. Empty string removes the date. String must follow org date convention (YYYY-MM-DD HH:mm...)
----@return Promise
+---@param date? OrgDate|string|nil If ommited, opens the datepicker. Empty string removes the date. String must follow org date convention (YYYY-MM-DD HH:mm...)
+---@return OrgPromise
 function OrgHeadline:set_deadline(date)
   return self:_do_action(function()
-    local headline = ts_org.closest_headline()
-    local deadline_date = headline:deadline()
+    local headline = org.files:get_closest_headline()
+    local deadline_date = headline:get_deadline_date()
     if not date then
       return Calendar.new({ date = deadline_date or Date.today(), clearable = true })
         .open()
@@ -177,12 +178,12 @@ function OrgHeadline:set_deadline(date)
 end
 
 --- Set scheduled date
----@param date? Date|string|nil If ommited, opens the datepicker. Empty string removes the date. String must follow org date convention (YYYY-MM-DD HH:mm...)
----@return Promise
+---@param date? OrgDate|string|nil If ommited, opens the datepicker. Empty string removes the date. String must follow org date convention (YYYY-MM-DD HH:mm...)
+---@return OrgPromise
 function OrgHeadline:set_scheduled(date)
   return self:_do_action(function()
-    local headline = ts_org.closest_headline()
-    local scheduled_date = headline:scheduled()
+    local headline = org.files:get_closest_headline()
+    local scheduled_date = headline:get_scheduled_date()
     if not date then
       return Calendar.new({ date = scheduled_date or Date.today(), clearable = true })
         .open()
@@ -221,7 +222,7 @@ end
 ---@param value string
 function OrgHeadline:set_property(key, value)
   return self:_do_action(function()
-    local headline = ts_org.closest_headline()
+    local headline = org.files:get_closest_headline()
     return headline:set_property(key, value)
   end)
 end
@@ -248,9 +249,9 @@ end
 ---@param action function
 ---@private
 function OrgHeadline:_do_action(action)
-  return Files.update_file(self.file.filename, function()
-    local view = vim.fn.winsaveview()
-    vim.fn.cursor({ self.position.start_line, 0 })
+  return org.files:update_file(self.file.filename, function()
+    local view = vim.fn.winsaveview() or {}
+    vim.fn.cursor({ self.position.start_line, 1 })
     return Promise.resolve(action()):next(function()
       vim.fn.winrestview(view)
       return self:reload()

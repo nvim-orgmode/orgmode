@@ -3,7 +3,6 @@ local utils = require('orgmode.utils')
 local config = require('orgmode.config')
 local colors = require('orgmode.colors')
 local Calendar = require('orgmode.objects.calendar')
-local Files = require('orgmode.parser.files')
 local AgendaFilter = require('orgmode.agenda.filter')
 local AgendaSearchView = require('orgmode.agenda.views.search')
 local AgendaTodosView = require('orgmode.agenda.views.todos')
@@ -12,11 +11,12 @@ local AgendaView = require('orgmode.agenda.views.agenda')
 local Menu = require('orgmode.ui.menu')
 local Promise = require('orgmode.utils.promise')
 
----@class Agenda
+---@class OrgAgenda
 ---@field content table[]
 ---@field highlights table[]
 ---@field views table[]
----@field filters AgendaFilter
+---@field filters OrgAgendaFilter
+---@field files OrgFiles
 local Agenda = {}
 
 ---@param opts? table
@@ -28,6 +28,7 @@ function Agenda:new(opts)
     content = {},
     highlights = {},
     win_width = utils.winwidth(),
+    files = opts.files,
   }
   setmetatable(data, self)
   self.__index = self
@@ -43,6 +44,7 @@ function Agenda:open_agenda_view(View, type, opts)
   local view = View:new(vim.tbl_deep_extend('force', opts or {}, {
     filters = self.filters,
     win_width = self.win_width,
+    files = self.files,
   })):build()
   self.views = { view }
   vim.b.org_agenda_type = type
@@ -74,7 +76,10 @@ end
 function Agenda:open_window()
   -- if an agenda window is already open, return it
   for _, win in ipairs(vim.api.nvim_list_wins()) do
-    if vim.api.nvim_buf_get_option(vim.api.nvim_win_get_buf(win), 'filetype') == 'orgagenda' then
+    local ft = vim.api.nvim_get_option_value('filetype', {
+      buf = vim.api.nvim_win_get_buf(win),
+    })
+    if ft == 'orgagenda' then
       return win
     end
   end
@@ -179,13 +184,13 @@ function Agenda:reset()
 end
 
 function Agenda:redo(preserve_cursor_pos)
-  Files.load(vim.schedule_wrap(function()
+  self.files:load():next(vim.schedule_wrap(function()
     local cursor_view = nil
     if preserve_cursor_pos then
-      cursor_view = vim.fn.winsaveview()
+      cursor_view = vim.fn.winsaveview() or {}
     end
     self:_call_view_and_render('build')
-    if preserve_cursor_pos then
+    if cursor_view then
       vim.fn.winrestview(cursor_view)
     end
   end))
@@ -234,7 +239,7 @@ function Agenda:switch_to_item()
     return
   end
   vim.cmd('edit ' .. vim.fn.fnameescape(item.file))
-  vim.fn.cursor({ item.file_position, 0 })
+  vim.fn.cursor({ item.file_position, 1 })
   vim.cmd([[normal! zv]])
 end
 
@@ -257,9 +262,9 @@ function Agenda:clock_out()
     action = 'clock.org_clock_out',
     redo = true,
     getter = function()
-      local last_clocked = Files.get_clocked_headline()
+      local last_clocked = self.files:get_clocked_headline()
       if last_clocked and last_clocked:is_clocked_in() then
-        return { file = last_clocked.file, file_position = last_clocked.range.start_line }
+        return { file = last_clocked.file.filename, file_position = last_clocked:get_range().start_line }
       end
     end,
   })
@@ -270,9 +275,9 @@ function Agenda:clock_cancel()
     action = 'clock.org_clock_cancel',
     redo = true,
     getter = function()
-      local last_clocked = Files.get_clocked_headline()
+      local last_clocked = self.files:get_clocked_headline()
       if last_clocked and last_clocked:is_clocked_in() then
-        return { file = last_clocked.file, file_position = last_clocked.range.start_line }
+        return { file = last_clocked.file.filename, file_position = last_clocked:get_range().start_line }
       end
     end,
   })
@@ -350,7 +355,10 @@ function Agenda:goto_item()
   end
   local target_window = nil
   for _, win in ipairs(vim.api.nvim_list_wins()) do
-    if vim.api.nvim_buf_get_option(vim.api.nvim_win_get_buf(win), 'filetype') == 'org' then
+    local ft = vim.api.nvim_get_option_value('filetype', {
+      buf = vim.api.nvim_win_get_buf(win),
+    })
+    if ft == 'org' then
       target_window = win
     end
   end
@@ -358,7 +366,9 @@ function Agenda:goto_item()
   if not target_window then
     for _, win in ipairs(vim.api.nvim_list_wins()) do
       local buf = vim.api.nvim_win_get_buf(win)
-      if vim.api.nvim_buf_get_option(buf, 'buftype') == '' and vim.api.nvim_buf_get_option(buf, 'modifiable') then
+      local ft = vim.api.nvim_get_option_value('filetype', { buf = buf })
+      local modifiable = vim.api.nvim_get_option_value('modifiable', { buf = buf })
+      if ft == '' and modifiable then
         target_window = win
       end
     end
@@ -371,7 +381,7 @@ function Agenda:goto_item()
   end
 
   vim.cmd('edit ' .. vim.fn.fnameescape(item.file))
-  vim.fn.cursor({ item.file_position, 0 })
+  vim.fn.cursor({ item.file_position, 1 })
   vim.cmd([[normal! zv]])
 end
 
@@ -388,7 +398,7 @@ end
 ---@param opts table
 function Agenda:_remote_edit(opts)
   opts = opts or {}
-  local line = vim.fn.line('.')
+  local line = vim.fn.line('.') or 0
   local action = opts.action
   if not action then
     return
@@ -405,14 +415,15 @@ function Agenda:_remote_edit(opts)
   if not item then
     return
   end
-  local update = Files.update_file(item.file, function(_)
-    vim.fn.cursor({ item.file_position, 0 })
+  local update = self.files:update_file(item.file, function(_)
+    vim.fn.cursor({ item.file_position, 1 })
     return Promise.resolve(require('orgmode').action(action)):next(function()
-      return Files.get_closest_headline()
+      return self.files:get_closest_headline_or_nil()
     end)
   end)
 
   update:next(function(headline)
+    ---@cast headline OrgHeadline
     if opts.redo then
       return self:redo(true)
     end

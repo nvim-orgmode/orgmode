@@ -1,6 +1,5 @@
 local config = require('orgmode.config')
 local es_utils = require('orgmode.objects.edit_special.utils')
-local ts_utils = require('nvim-treesitter.ts_utils')
 local utils = require('orgmode.utils')
 
 local EditSpecialSrc = {
@@ -58,7 +57,8 @@ end
 
 function EditSpecialSrc:_highlight_contents(range)
   self:clear_highlights()
-  ts_utils.highlight_range(range, self.org_bufnr, self.hl_ns, 'OrgEditSrcHighlight')
+  local start_row, start_col, end_row, end_col = unpack(range)
+  vim.highlight.range(self.org_bufnr, self.hl_ns, 'OrgEditSrcHighlight', { start_row, start_col }, { end_row, end_col })
 end
 
 function EditSpecialSrc:abort()
@@ -102,10 +102,10 @@ function EditSpecialSrc:init()
 
   content = self:_update_content('remove', block_start_line, content)
 
-  vim.api.nvim_buf_set_option(bufnr, 'bufhidden', 'wipe')
-  vim.api.nvim_buf_set_option(bufnr, 'filetype', ft)
+  vim.api.nvim_set_option_value('bufhidden', 'wipe', { buf = bufnr })
+  vim.api.nvim_set_option_value('filetype', ft, { buf = bufnr })
   vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, content)
-  vim.api.nvim_buf_set_option(ctx.bufnr, 'modified', false)
+  vim.api.nvim_set_option_value('modified', false, { buf = ctx.bufnr })
 
   self:_highlight_contents({
     block_start_line + 1,
@@ -131,7 +131,7 @@ function EditSpecialSrc:write(ctx)
 
   vim.api.nvim_buf_set_lines(ctx.org_bufnr, content_start, content_end, false, new_content)
 
-  self.file:refresh()
+  self.file:reload()
 
   -- If this is after the special buffer has been closed, our extmarks will have already
   -- been removed
