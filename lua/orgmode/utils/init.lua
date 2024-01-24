@@ -257,7 +257,7 @@ function utils.humanize_minutes(minutes)
 end
 
 ---@param query string
----@param node userdata
+---@param node TSNode
 ---@param file_content string[]
 ---@param file_content_str string
 ---@return table[]
@@ -284,7 +284,7 @@ function utils.get_ts_matches(query, node, file_content, file_content_str)
   return matches
 end
 
----@param node userdata
+---@param node TSNode
 ---@param content string[]
 ---@return string[]
 function utils.get_node_text(node, content)
@@ -327,9 +327,9 @@ function utils.get_node_text(node, content)
   end
 end
 
----@param node userdata
+---@param node TSNode
 ---@param type string
----@return userdata | nil
+---@return TSNode | nil
 function utils.get_closest_parent_of_type(node, type, accept_at_cursor)
   local parent = node
 
@@ -430,7 +430,7 @@ function utils.choose(items)
 end
 
 ---@param file File
----@param parent_node userdata
+---@param parent_node TSNode
 ---@param children_names table<string, boolean>
 ---@return table
 function utils.get_named_children_nodes(file, parent_node, children_names)

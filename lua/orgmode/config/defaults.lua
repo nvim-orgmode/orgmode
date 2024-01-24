@@ -1,4 +1,5 @@
 ---@class DefaultConfig
+---@field org_id_method 'uuid' | 'ts' | 'org'
 local DefaultConfig = {
   org_agenda_files = '',
   org_default_notes_file = '',
@@ -42,6 +43,11 @@ local DefaultConfig = {
   },
   org_src_window_setup = 'top 16new',
   org_edit_src_content_indentation = 0,
+  org_id_uuid_program = 'uuidgen',
+  org_id_ts_format = '%Y%m%d%H%M%S',
+  org_id_method = 'uuid',
+  org_id_prefix = nil,
+  org_id_link_to_org_use_id = false,
   win_split_mode = 'horizontal',
   win_border = 'single',
   notifications = {
@@ -144,7 +150,8 @@ local DefaultConfig = {
       org_schedule = '<prefix>is',
       org_time_stamp = '<prefix>i.',
       org_time_stamp_inactive = '<prefix>i!',
-      org_insert_link = '<prefix>il',
+      org_insert_link = '<prefix>li',
+      org_store_link = '<prefix>ls',
       org_clock_in = '<prefix>xi',
       org_clock_out = '<prefix>xo',
       org_clock_cancel = '<prefix>xq',

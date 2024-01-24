@@ -1,7 +1,11 @@
 local Files = require('orgmode.parser.files')
 local utils = require('orgmode.utils')
 local fs = require('orgmode.utils.fs')
-local Hyperlinks = {}
+local Url = require('orgmode.objects.url')
+local config = require('orgmode.config')
+local Hyperlinks = {
+  stored_links = {},
+}
 
 ---@param url Url
 local function get_file_from_url(url)
@@ -66,7 +70,7 @@ function Hyperlinks.as_custom_id_anchors(headlines)
       and '#' .. headline.properties.items.custom_id
   end, headlines)
 end
---
+
 ---@param headlines Section[]
 ---@param omit_prefix? boolean
 ---@return string[]
@@ -164,6 +168,53 @@ function Hyperlinks.find_matching_links(url)
   end
 
   return result, mapper
+end
+
+---@param headline Headline
+---@param path? string
+function Hyperlinks.get_link_to_headline(headline, path)
+  path = path or utils.current_file_path()
+  local title = headline:title()
+  local id
+  if config.org_id_link_to_org_use_id then
+    id = headline:id_get_or_create()
+  end
+  return Hyperlinks._generate_link_to_headline(title, id, path)
+end
+
+---@private
+function Hyperlinks._generate_link_to_headline(title, id, path)
+  if not config.org_id_link_to_org_use_id or not id then
+    return ('file:%s::*%s'):format(path, title)
+  end
+  return ('id:%s  %s'):format(id, title)
+end
+
+---@param headline Headline
+function Hyperlinks.store_link_to_headline(headline)
+  local title = headline:title()
+  Hyperlinks.stored_links[Hyperlinks.get_link_to_headline(headline)] = title
+end
+
+---@param arg_lead string
+---@return string[]
+function Hyperlinks.autocomplete_links(arg_lead)
+  local url = Url.new(arg_lead)
+  local result, mapper = Hyperlinks.find_matching_links(url)
+
+  if url:is_file_plain() then
+    return mapper(result)
+  end
+
+  if url:is_custom_id() or url:is_headline() then
+    local file = get_file_from_url(url)
+    local results = mapper(result)
+    return vim.tbl_map(function(value)
+      return ('file:%s::%s'):format(file.filename, value)
+    end, results)
+  end
+
+  return vim.tbl_keys(Hyperlinks.stored_links)
 end
 
 return Hyperlinks

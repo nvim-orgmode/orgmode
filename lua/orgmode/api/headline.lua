@@ -16,6 +16,7 @@ local Promise = require('orgmode.utils.promise')
 ---@field tags string[] List of own tags
 ---@field deadline Date|nil
 ---@field scheduled Date|nil
+---@field properties table<string, string> Table containing all properties. All keys are lowercased
 ---@field closed Date|nil
 ---@field dates Date[] List of all dates that are not "plan" dates
 ---@field position Range
@@ -44,6 +45,7 @@ function OrgHeadline:_new(opts)
   data.all_tags = opts.all_tags
   data.priority = opts.priority
   data.deadline = opts.deadline
+  data.properties = opts.properties
   data.scheduled = opts.scheduled
   data.closed = opts.closed
   data.dates = opts.dates
@@ -71,6 +73,7 @@ function OrgHeadline._build_from_internal_section(section, index)
     all_tags = { unpack(section.tags) },
     tags = section:get_own_tags(),
     position = OrgPosition:_build_from_internal_range(section.range),
+    properties = section:get_properties(),
     deadline = section:get_deadline_date(),
     scheduled = section:get_scheduled_date(),
     closed = section:get_closed_date(),
@@ -211,6 +214,35 @@ function OrgHeadline:set_scheduled(date)
 
     error('Invalid argument to set_scheduled')
   end)
+end
+
+--- Set property on a headline
+---@param key string
+---@param value string
+function OrgHeadline:set_property(key, value)
+  return self:_do_action(function()
+    local headline = ts_org.closest_headline()
+    return headline:set_property(key, value)
+  end)
+end
+
+--- Get headline property
+---@param key string
+---@return string | nil
+function OrgHeadline:get_property(key)
+  return self.properties[key:lower()]
+end
+
+--- Get headline id or create a new one if it doesn't exist
+--- @return string
+function OrgHeadline:id_get_or_create()
+  local id = self:get_property('id')
+  if id then
+    return id
+  end
+  local org_id = require('orgmode.org.id').new()
+  self:set_property('ID', org_id)
+  return org_id
 end
 
 ---@param action function

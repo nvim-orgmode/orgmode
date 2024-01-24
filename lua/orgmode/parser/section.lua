@@ -14,7 +14,7 @@ local config = require('orgmode.config')
 ---@field id string
 ---@field line_number number
 ---@field level number
----@field node userdata
+---@field node TSNode
 ---@field root File
 ---@field parent Section
 ---@field line string
@@ -37,7 +37,7 @@ local Section = {}
 ---@class SectionProperties
 ---@field items table<string, string>
 ---@field range Range
----@field node userdata
+---@field node TSNode
 ---@field valid boolean
 
 ---@class SectionTodoKeyword
@@ -51,7 +51,7 @@ local Section = {}
 ---@field level number
 ---@field line string
 ---@field logbook Logbook
----@field node userdata
+---@field node TSNode
 ---@field own_tags string[]
 ---@field parent Section
 ---@field priority string
@@ -307,6 +307,11 @@ end
 ---@return string|nil
 function Section:get_property(name)
   return self.properties.items[name:lower()]
+end
+
+---@return table<string, string>
+function Section:get_properties()
+  return self.properties and self.properties.items or {}
 end
 
 function Section:matches_search_term(term)

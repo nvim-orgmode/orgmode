@@ -1,4 +1,7 @@
 local Url = require('orgmode.objects.url')
+local utils = require('orgmode.utils')
+local config = require('orgmode.config')
+local Range = require('orgmode.parser.range')
 
 ---@class Link
 ---@field url Url
@@ -10,6 +13,7 @@ function Link:init(str)
   local parts = vim.split(str, '][', true)
   self.url = Url.new(parts[1] or '')
   self.desc = parts[2]
+  return self
 end
 
 ---@return string
@@ -22,29 +26,35 @@ function Link:to_str()
 end
 
 ---@param str string
+---@return Link
 function Link.new(str)
   local self = setmetatable({}, { __index = Link })
-  self:init(str)
-  return self
+  return self:init(str)
 end
 
 ---@param line string
 ---@param pos number
----@return Link | nil
+---@return Link | nil, table | nil
 function Link.at_pos(line, pos)
   local links = {}
   local found_link = nil
   local pattern = '%[%[([^%]]+.-)%]%]'
+  local position
   for link in line:gmatch(pattern) do
     local start_from = #links > 0 and links[#links].to or nil
     local from, to = line:find(pattern, start_from)
+    local current_pos = { from = from, to = to }
     if pos >= from and pos <= to then
       found_link = link
+      position = current_pos
       break
     end
-    table.insert(links, { link = link, from = from, to = to })
+    table.insert(links, current_pos)
   end
-  return (found_link and Link.new(found_link) or nil)
+  if not found_link then
+    return nil, nil
+  end
+  return Link.new(found_link), position
 end
 
 return Link
