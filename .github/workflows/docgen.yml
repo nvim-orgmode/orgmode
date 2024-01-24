@@ -19,6 +19,7 @@ jobs:
         run: make docs
       - name: Commit changes
         env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
           COMMIT_MSG: |
             [docgen] Update doc/orgmode.txt
         run: |
@@ -26,7 +27,7 @@ jobs:
           git config user.email github-actions@github.com
           git add doc/orgmode.txt
           # Only commit and push if we have changes
-          git diff --quiet && git diff --staged --quiet || (git commit -m "${COMMIT_MSG}"; git push)
+          git diff --quiet && git diff --staged --quiet || (git commit -m "${COMMIT_MSG}"; git push -u $GH_TOKEN)
 
   api_docgen:
     runs-on: ubuntu-latest
@@ -46,6 +47,7 @@ jobs:
         run: make api_docs
       - name: Commit changes
         env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
           COMMIT_MSG: |
             [docgen] Update doc/orgmode_api.txt
         run: |
@@ -53,4 +55,4 @@ jobs:
           git config user.email github-actions@github.com
           git add doc/orgmode_api.txt
           # Only commit and push if we have changes
-          git diff --quiet && git diff --staged --quiet || (git commit -m "${COMMIT_MSG}"; git push)
+          git diff --quiet && git diff --staged --quiet || (git commit -m "${COMMIT_MSG}"; git push -u $GH_TOKEN)
