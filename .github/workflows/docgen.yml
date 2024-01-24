@@ -27,7 +27,7 @@ jobs:
           git config user.email github-actions@github.com
           git add doc/orgmode.txt
           # Only commit and push if we have changes
-          git diff --quiet && git diff --staged --quiet || (git commit -m "${COMMIT_MSG}"; git push -u $GH_TOKEN)
+          git diff --quiet && git diff --staged --quiet || (git commit -m "${COMMIT_MSG}"; git push origin master -u $GH_TOKEN)
 
   api_docgen:
     runs-on: ubuntu-latest
@@ -55,4 +55,4 @@ jobs:
           git config user.email github-actions@github.com
           git add doc/orgmode_api.txt
           # Only commit and push if we have changes
-          git diff --quiet && git diff --staged --quiet || (git commit -m "${COMMIT_MSG}"; git push -u $GH_TOKEN)
+          git diff --quiet && git diff --staged --quiet || (git commit -m "${COMMIT_MSG}"; git push origin master -u $GH_TOKEN)
