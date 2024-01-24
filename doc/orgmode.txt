@@ -29,8 +29,13 @@ CONTENTS                                                        *orgmode-content
             1.2.1.18. org_custom_exports..............|orgmode-org_custom_exports|
             1.2.1.19. org_time_stamp_rounding_minutes.|orgmode-org_time_stamp_rounding_minutes|
             1.2.1.20. org_blank_before_new_entry.|orgmode-org_blank_before_new_entry|
-            1.2.1.21. calendar_week_start_day....|orgmode-calendar_week_start_day|
-            1.2.1.22. emacs_config..........................|orgmode-emacs_config|
+            1.2.1.21. org_id_uuid_program............|orgmode-org_id_uuid_program|
+            1.2.1.22. org_id_ts_format..................|orgmode-org_id_ts_format|
+            1.2.1.23. org_id_method........................|orgmode-org_id_method|
+            1.2.1.24. org_id_prefix........................|orgmode-org_id_prefix|
+            1.2.1.25. org_id_link_to_org_use_id.|orgmode-org_id_link_to_org_use_id|
+            1.2.1.26. calendar_week_start_day....|orgmode-calendar_week_start_day|
+            1.2.1.27. emacs_config..........................|orgmode-emacs_config|
         1.2.2. Agenda settings...........................|orgmode-agenda_settings|
             1.2.2.1. org_deadline_warning_days.|orgmode-org_deadline_warning_days|
             1.2.2.2. org_agenda_span.....................|orgmode-org_agenda_span|
@@ -105,39 +110,40 @@ CONTENTS                                                        *orgmode-content
             1.3.5.12. org_toggle_checkbox............|orgmode-org_toggle_checkbox|
             1.3.5.13. org_toggle_heading..............|orgmode-org_toggle_heading|
             1.3.5.14. org_insert_link....................|orgmode-org_insert_link|
-            1.3.5.15. org_open_at_point................|orgmode-org_open_at_point|
-            1.3.5.16. org_edit_special..................|orgmode-org_edit_special|
-            1.3.5.17. org_cycle................................|orgmode-org_cycle|
-            1.3.5.18. org_global_cycle..................|orgmode-org_global_cycle|
-            1.3.5.19. org_archive_subtree............|orgmode-org_archive_subtree|
-            1.3.5.20. org_set_tags_command..........|orgmode-org_set_tags_command|
-            1.3.5.21. org_toggle_archive_tag......|orgmode-org_toggle_archive_tag|
-            1.3.5.22. org_do_promote......................|orgmode-org_do_promote|
-            1.3.5.23. org_do_demote........................|orgmode-org_do_demote|
-            1.3.5.24. org_promote_subtree............|orgmode-org_promote_subtree|
-            1.3.5.25. org_demote_subtree..............|orgmode-org_demote_subtree|
-            1.3.5.26. org_meta_return....................|orgmode-org_meta_return|
-            1.3.5.27. org_insert_heading_respect_content.|orgmode-org_insert_heading_respect_content|
-            1.3.5.28. org_insert_todo_heading....|orgmode-org_insert_todo_heading|
-            1.3.5.29. org_insert_todo_heading_respect_content.|orgmode-org_insert_todo_heading_respect_content|
-            1.3.5.30. org_move_subtree_up............|orgmode-org_move_subtree_up|
-            1.3.5.31. org_move_subtree_down........|orgmode-org_move_subtree_down|
-            1.3.5.32. org_export..............................|orgmode-org_export|
-            1.3.5.33. org_next_visible_heading..|orgmode-org_next_visible_heading|
-            1.3.5.34. org_previous_visible_heading.|orgmode-org_previous_visible_heading|
-            1.3.5.35. org_forward_heading_same_level.|orgmode-org_forward_heading_same_level|
-            1.3.5.36. org_backward_heading_same_level.|orgmode-org_backward_heading_same_level|
-            1.3.5.37. outline_up_heading..............|orgmode-outline_up_heading|
-            1.3.5.38. org_deadline..........................|orgmode-org_deadline|
-            1.3.5.39. org_schedule..........................|orgmode-org_schedule|
-            1.3.5.40. org_time_stamp......................|orgmode-org_time_stamp|
-            1.3.5.41. org_time_stamp_inactive....|orgmode-org_time_stamp_inactive|
-            1.3.5.42. org_clock_in..........................|orgmode-org_clock_in|
-            1.3.5.43. org_clock_out........................|orgmode-org_clock_out|
-            1.3.5.44. org_clock_cancel..................|orgmode-org_clock_cancel|
-            1.3.5.45. org_clock_goto......................|orgmode-org_clock_goto|
-            1.3.5.46. org_set_effort......................|orgmode-org_set_effort|
-            1.3.5.47. org_show_help........................|orgmode-org_show_help|
+            1.3.5.15. org_store_link......................|orgmode-org_store_link|
+            1.3.5.16. org_open_at_point................|orgmode-org_open_at_point|
+            1.3.5.17. org_edit_special..................|orgmode-org_edit_special|
+            1.3.5.18. org_cycle................................|orgmode-org_cycle|
+            1.3.5.19. org_global_cycle..................|orgmode-org_global_cycle|
+            1.3.5.20. org_archive_subtree............|orgmode-org_archive_subtree|
+            1.3.5.21. org_set_tags_command..........|orgmode-org_set_tags_command|
+            1.3.5.22. org_toggle_archive_tag......|orgmode-org_toggle_archive_tag|
+            1.3.5.23. org_do_promote......................|orgmode-org_do_promote|
+            1.3.5.24. org_do_demote........................|orgmode-org_do_demote|
+            1.3.5.25. org_promote_subtree............|orgmode-org_promote_subtree|
+            1.3.5.26. org_demote_subtree..............|orgmode-org_demote_subtree|
+            1.3.5.27. org_meta_return....................|orgmode-org_meta_return|
+            1.3.5.28. org_insert_heading_respect_content.|orgmode-org_insert_heading_respect_content|
+            1.3.5.29. org_insert_todo_heading....|orgmode-org_insert_todo_heading|
+            1.3.5.30. org_insert_todo_heading_respect_content.|orgmode-org_insert_todo_heading_respect_content|
+            1.3.5.31. org_move_subtree_up............|orgmode-org_move_subtree_up|
+            1.3.5.32. org_move_subtree_down........|orgmode-org_move_subtree_down|
+            1.3.5.33. org_export..............................|orgmode-org_export|
+            1.3.5.34. org_next_visible_heading..|orgmode-org_next_visible_heading|
+            1.3.5.35. org_previous_visible_heading.|orgmode-org_previous_visible_heading|
+            1.3.5.36. org_forward_heading_same_level.|orgmode-org_forward_heading_same_level|
+            1.3.5.37. org_backward_heading_same_level.|orgmode-org_backward_heading_same_level|
+            1.3.5.38. outline_up_heading..............|orgmode-outline_up_heading|
+            1.3.5.39. org_deadline..........................|orgmode-org_deadline|
+            1.3.5.40. org_schedule..........................|orgmode-org_schedule|
+            1.3.5.41. org_time_stamp......................|orgmode-org_time_stamp|
+            1.3.5.42. org_time_stamp_inactive....|orgmode-org_time_stamp_inactive|
+            1.3.5.43. org_clock_in..........................|orgmode-org_clock_in|
+            1.3.5.44. org_clock_out........................|orgmode-org_clock_out|
+            1.3.5.45. org_clock_cancel..................|orgmode-org_clock_cancel|
+            1.3.5.46. org_clock_goto......................|orgmode-org_clock_goto|
+            1.3.5.47. org_set_effort......................|orgmode-org_set_effort|
+            1.3.5.48. org_show_help........................|orgmode-org_show_help|
         1.3.6. Edit Src.........................................|orgmode-edit_src|
             1.3.6.1. org_edit_src_abort...............|orgmode-org_edit_src_abort|
             1.3.6.2. org_edit_src_save.................|orgmode-org_edit_src_save|
@@ -545,6 +551,39 @@ default value: `{ heading = true, plain_list_item = false }`
 Determine if blank line should be prepended when:
 * Adding heading via `org_meta_return` and `org_insert_*` mappings
 * Adding a list item via `org_meta_return`
+
+ORG_ID_UUID_PROGRAM                                  *orgmode-org_id_uuid_program*
+
+type: `string`
+default value: `uuidgen`
+External program used to generate uuid's for id module
+
+ORG_ID_TS_FORMAT                                        *orgmode-org_id_ts_format*
+
+type: `string`
+default value: `%Y%m%d%H%M%S`
+Format of the id generated when org_id_method (#org_id_method) is set to `ts`.
+
+ORG_ID_METHOD                                              *orgmode-org_id_method*
+
+type: `'uuid' | 'ts' | 'org'`
+default value: `uuid`
+What method to use to generate ids via org id module.
+* `uuid` - Use org_id_uuid_program (#org_id_uuid_program) to generate the id
+* `ts` - Generate id from current timestamp using format org_id_ts_format (#org_id_ts_format)
+* `org` - Generate a random 12 digit number and prepend org_id_prefix (#org_id_prefix)
+
+ORG_ID_PREFIX                                              *orgmode-org_id_prefix*
+
+type: `string | nil`
+default value: `nil`
+Prefix added to the generated id when org_id_method (#org_id_method) is set to `org`.
+
+ORG_ID_LINK_TO_ORG_USE_ID                      *orgmode-org_id_link_to_org_use_id*
+
+type: `boolean`
+default value: `false`
+If `true`, generate ID with the Org ID module and append it to the headline as property. More info on org_store_link (#org_store_link)
 
 CALENDAR_WEEK_START_DAY                          *orgmode-calendar_week_start_day*
 
@@ -1206,8 +1245,17 @@ Toggle current line to headline and vice versa. Checkboxes will turn into TODO h
 
 ORG_INSERT_LINK                                          *orgmode-org_insert_link*
 
-mapped to: `<Leader>oil`
+mapped to: `<Leader>oli`
 Insert a hyperlink at cursor position. When the cursor is on a hyperlink, edit that hyperlink.
+If there are any links stored with org_store_link (#org_store_link), pressing `<TAB>` to autocomplete the input
+will show list of all stored links to select. Links generated with ID are properly expanded to valid links after selection.
+
+ORG_STORE_LINK                                            *orgmode-org_store_link*
+
+mapped to: `<Leader>ols`
+Generate a link to the closest headline. If org_id_link_to_org_use_id (#org_id_link_to_org_use_id) is `true`,
+it appends the `ID` property to the headline, and generates link with that id to be inserted via org_insert_link (#org_insert_link).
+When org_id_link_to_org_use_id (#org_id_link_to_org_use_id) is `false`, it generates the standard file::*headline link (example: `file:/path/to/my/todos.org::*My headline`)
 
 ORG_OPEN_AT_POINT                                      *orgmode-org_open_at_point*
 
