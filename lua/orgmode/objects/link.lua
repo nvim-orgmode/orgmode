@@ -43,7 +43,7 @@ function Link.at_pos(line, pos)
   for link in line:gmatch(pattern) do
     local start_from = #links > 0 and links[#links].to or nil
     local from, to = line:find(pattern, start_from)
-    local current_pos = { from = from ,to = to }
+    local current_pos = { from = from, to = to }
     if pos >= from and pos <= to then
       found_link = link
       position = current_pos

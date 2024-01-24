@@ -733,7 +733,7 @@ function OrgMappings:insert_link()
     link_location = id_link
   end
 
-  local link_description = vim.trim(vim.fn.OrgmodeInput('Description: ', desc))
+  local link_description = vim.trim(vim.fn.OrgmodeInput('Description: ', desc or ''))
 
   link_location = '[' .. vim.trim(link_location) .. ']'
 

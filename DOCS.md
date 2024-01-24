@@ -344,6 +344,34 @@ Determine if blank line should be prepended when:
 * Adding heading via `org_meta_return` and `org_insert_*` mappings
 * Adding a list item via `org_meta_return`
 
+#### **org_id_uuid_program**
+*type*: `string`<br />
+*default value*: `uuidgen`<br />
+External program used to generate uuid's for id module
+
+#### **org_id_ts_format**
+*type*: `string`<br />
+*default value*: `%Y%m%d%H%M%S`<br />
+Format of the id generated when [org_id_method](#org_id_method) is set to `ts`.
+
+#### **org_id_method**
+*type*: `'uuid' | 'ts' | 'org'`<br />
+*default value*: `uuid`<br />
+What method to use to generate ids via org id module.
+* `uuid` - Use [org_id_uuid_program](#org_id_uuid_program) to generate the id
+* `ts` - Generate id from current timestamp using format [org_id_ts_format](#org_id_ts_format)
+* `org` - Generate a random 12 digit number and prepend [org_id_prefix](#org_id_prefix)
+
+#### **org_id_prefix**
+*type*: `string | nil`<br />
+*default value*: `nil`<br />
+Prefix added to the generated id when [org_id_method](#org_id_method) is set to `org`.
+
+#### **org_id_link_to_org_use_id**
+*type*: `boolean`<br />
+*default value*: `false`<br />
+If `true`, generate ID with the Org ID module and append it to the headline as property. More info on [org_store_link](#org_store_link)
+
 #### **calendar_week_start_day**
 *type*: `number`<br />
 *default value*: `1`<br />
@@ -896,8 +924,15 @@ Toggle current line checkbox state
 *mapped to*: `<Leader>o*`<br />
 Toggle current line to headline and vice versa. Checkboxes will turn into TODO headlines.
 #### **org_insert_link**
-*mapped to*: `<Leader>oil`<br />
+*mapped to*: `<Leader>oli`<br />
 Insert a hyperlink at cursor position. When the cursor is on a hyperlink, edit that hyperlink.<br />
+If there are any links stored with [org_store_link](#org_store_link), pressing `<TAB>` to autocomplete the input
+will show list of all stored links to select. Links generated with ID are properly expanded to valid links after selection.
+#### **org_store_link**
+*mapped to*: `<Leader>ols`<br />
+Generate a link to the closest headline. If [org_id_link_to_org_use_id](#org_id_link_to_org_use_id) is `true`,
+it appends the `ID` property to the headline, and generates link with that id to be inserted via [org_insert_link](#org_insert_link).
+When [org_id_link_to_org_use_id](#org_id_link_to_org_use_id) is `false`, it generates the standard file::*headline link (example: `file:/path/to/my/todos.org::*My headline`)
 #### **org_open_at_point**
 *mapped to*: `<Leader>oo`<br />
 Open hyperlink or date under cursor. When date is under the cursor, open the agenda for that day.<br />
