@@ -10,6 +10,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GH_TOKEN }}
       - uses: actions/setup-go@v4
         with:
           go-version: '^1.17.1'
@@ -27,12 +29,14 @@ jobs:
           git config user.email github-actions@github.com
           git add doc/orgmode.txt
           # Only commit and push if we have changes
-          git diff --quiet && git diff --staged --quiet || (git commit -m "${COMMIT_MSG}"; git push origin master -u $GH_TOKEN)
+          git diff --quiet && git diff --staged --quiet || (git commit -m "${COMMIT_MSG}"; git push)
 
   api_docgen:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GH_TOKEN }}
       - name: Install Neovim
         uses: rhysd/action-setup-vim@v1
         id: neovim
@@ -55,4 +59,4 @@ jobs:
           git config user.email github-actions@github.com
           git add doc/orgmode_api.txt
           # Only commit and push if we have changes
-          git diff --quiet && git diff --staged --quiet || (git commit -m "${COMMIT_MSG}"; git push origin master -u $GH_TOKEN)
+          git diff --quiet && git diff --staged --quiet || (git commit -m "${COMMIT_MSG}"; git push)
