@@ -101,6 +101,29 @@ OrgHeadline:set_scheduled({date?})                   *OrgHeadline:set_scheduled*
         (Promise)
 
 
+OrgHeadline:set_property({key}, {value})              *OrgHeadline:set_property*
+     Set property on a headline
+
+    Parameters: ~
+        {key}    (string)
+        {value}  (string)
+
+
+OrgHeadline:get_property({key})                       *OrgHeadline:get_property*
+     Get headline property
+
+    Parameters: ~
+        {key}  (string)
+
+    Returns: ~
+        (string|nil)
+
+
+OrgHeadline:id_get_or_create()                    *OrgHeadline:id_get_or_create*
+     Get headline id or create a new one if it doesn't exist
+     @return string
+
+
 OrgAgenda                                                            *OrgAgenda*
 
 
