@@ -23,19 +23,21 @@ CONTENTS                                                        *orgmode-content
             1.2.1.12. org_log_done..........................|orgmode-org_log_done|
             1.2.1.13. org_log_into_drawer............|orgmode-org_log_into_drawer|
             1.2.1.14. org_highlight_latex_and_related.|orgmode-org_highlight_latex_and_related|
-            1.2.1.15. org_indent_mode....................|orgmode-org_indent_mode|
-            1.2.1.16. org_src_window_setup..........|orgmode-org_src_window_setup|
-            1.2.1.17. org_edit_src_content_indentation.|orgmode-org_edit_src_content_indentation|
-            1.2.1.18. org_custom_exports..............|orgmode-org_custom_exports|
-            1.2.1.19. org_time_stamp_rounding_minutes.|orgmode-org_time_stamp_rounding_minutes|
-            1.2.1.20. org_blank_before_new_entry.|orgmode-org_blank_before_new_entry|
-            1.2.1.21. org_id_uuid_program............|orgmode-org_id_uuid_program|
-            1.2.1.22. org_id_ts_format..................|orgmode-org_id_ts_format|
-            1.2.1.23. org_id_method........................|orgmode-org_id_method|
-            1.2.1.24. org_id_prefix........................|orgmode-org_id_prefix|
-            1.2.1.25. org_id_link_to_org_use_id.|orgmode-org_id_link_to_org_use_id|
-            1.2.1.26. calendar_week_start_day....|orgmode-calendar_week_start_day|
-            1.2.1.27. emacs_config..........................|orgmode-emacs_config|
+            1.2.1.15. org_startup_indented..........|orgmode-org_startup_indented|
+            1.2.1.16. org_adapt_indentation........|orgmode-org_adapt_indentation|
+            1.2.1.17. org_indent_mode_turns_off_org_adapt_indentation.|orgmode-org_indent_mode_turns_off_org_adapt_indentation|
+            1.2.1.18. org_src_window_setup..........|orgmode-org_src_window_setup|
+            1.2.1.19. org_edit_src_content_indentation.|orgmode-org_edit_src_content_indentation|
+            1.2.1.20. org_custom_exports..............|orgmode-org_custom_exports|
+            1.2.1.21. org_time_stamp_rounding_minutes.|orgmode-org_time_stamp_rounding_minutes|
+            1.2.1.22. org_blank_before_new_entry.|orgmode-org_blank_before_new_entry|
+            1.2.1.23. org_id_uuid_program............|orgmode-org_id_uuid_program|
+            1.2.1.24. org_id_ts_format..................|orgmode-org_id_ts_format|
+            1.2.1.25. org_id_method........................|orgmode-org_id_method|
+            1.2.1.26. org_id_prefix........................|orgmode-org_id_prefix|
+            1.2.1.27. org_id_link_to_org_use_id.|orgmode-org_id_link_to_org_use_id|
+            1.2.1.28. calendar_week_start_day....|orgmode-calendar_week_start_day|
+            1.2.1.29. emacs_config..........................|orgmode-emacs_config|
         1.2.2. Agenda settings...........................|orgmode-agenda_settings|
             1.2.2.1. org_deadline_warning_days.|orgmode-org_deadline_warning_days|
             1.2.2.2. org_agenda_span.....................|orgmode-org_agenda_span|
@@ -181,8 +183,9 @@ CONTENTS                                                        *orgmode-content
                 1.12.8. Recalculating totals........|orgmode-recalculating_totals|
                 1.12.9. Statusline function..........|orgmode-statusline_function|
     1.13. Changelog............................................|orgmode-changelog|
-            1.13.1. 24 October 2021......................|orgmode-24_october_2021|
-            1.13.2. 10 October 2021......................|orgmode-10_october_2021|
+            1.13.1. 21 January 2024......................|orgmode-21_january_2024|
+            1.13.2. 24 October 2021......................|orgmode-24_october_2021|
+            1.13.3. 10 October 2021......................|orgmode-10_october_2021|
 
 ================================================================================
 TABLE OF CONTENT                                        *orgmode-table_of_content*
@@ -466,13 +469,31 @@ Possible values:
   * between `\[` and `\]` delimiters - example: `\[ a=-\sqrt{2} \]`
   * between `\(` and `\)` delimiters - example: `\( b=2 \)`
 
-ORG_INDENT_MODE                                          *orgmode-org_indent_mode*
+ORG_STARTUP_INDENTED                                *orgmode-org_startup_indented*
 
-type: `string`
-default value: `indent`
+type: `boolean`
+default value: `false`
 Possible values:
-* `indent` - Use default indentation that follows headlines/checkboxes/previous line indent
-* `noindent` - Disable indentation. All lines start from 1st column
+* `true` - Uses Virtual indents to align content visually. The indents are only visual, they are not saved to the file.
+* `false` - Do not add any Virtual indentation.
+
+This feature has no effect when enabled on Neovim versions < 0.10.0
+
+ORG_ADAPT_INDENTATION                              *orgmode-org_adapt_indentation*
+
+type: `boolean`
+default value: `true`
+Possible values:
+* `true` - Use hard indents for content under headlines. Files will save with indents relative to headlines.
+* `false` - Do not add any hard indents. Files will save without indentation relative to headlines.
+
+ORG_INDENT_MODE_TURNS_OFF_ORG_ADAPT_INDENTATION *orgmode-org_indent_mode_turns_off_org_adapt_indentation*
+
+type: `boolean`
+default value: `true`
+Possible values:
+* `true` - Disable `org_adapt_indentation` (#org_adapt_indentation) by default when `org_startup_indented` (#org_startup_indented) is enabled.
+* `false` - Do not disable `org_adapt_indentation` (#org_adapt_indentation) by default when `org_startup_indented` (#org_startup_indented) is enabled.
 
 ORG_SRC_WINDOW_SETUP                                *orgmode-org_src_window_setup*
 
@@ -2005,6 +2026,11 @@ Show the currently clocked in headline (if any), with total clocked time / effor
 CHANGELOG                                                      *orgmode-changelog*
 
 To track breaking changes, subscribe to Notice of breaking changes (https://github.com/nvim-orgmode/orgmode/issues/217) issue where those are announced.
+
+21 JANUARY 2024                                          *orgmode-21_january_2024*
+
+*   Option `org_indent_mode` was deprecated in favor of org_startup_indented (#org_startup_indented). To remove the
+    warning use `org_startup_indented`. This was introduced to support Virtual Indent more in line with Emacs.
 
 24 OCTOBER 2021                                          *orgmode-24_october_2021*
 
