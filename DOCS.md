@@ -265,12 +265,31 @@ Possible values:
   * between `\[` and `\]` delimiters - example: `\[ a=-\sqrt{2} \]`
   * between `\(` and `\)` delimiters - example: `\( b=2 \)`
 
-#### **org_indent_mode**
-*type*: `string`<br />
-*default value*: `indent`<br />
+#### **org_startup_indented**
+
+*type*: `boolean`<br />
+*default value*: `false`<br />
 Possible values:
-* `indent` - Use default indentation that follows headlines/checkboxes/previous line indent
-* `noindent` - Disable indentation. All lines start from 1st column
+* `true` - Uses *Virtual* indents to align content visually. The indents are only visual, they are not saved to the file.
+* `false` - Do not add any *Virtual* indentation.
+
+This feature has no effect when enabled on Neovim versions < 0.10.0
+
+#### **org_adapt_indentation**
+
+*type*: `boolean`<br />
+*default value*: `true`<br />
+Possible values:
+* `true` - Use *hard* indents for content under headlines. Files will save with indents relative to headlines.
+* `false` - Do not add any *hard* indents. Files will save without indentation relative to headlines.
+
+#### **org_indent_mode_turns_off_org_adapt_indentation**
+
+*type*: `boolean`<br />
+*default value*: `true`<br />
+Possible values:
+* `true` - Disable [`org_adapt_indentation`](#org_adapt_indentation) by default when [`org_startup_indented`](#org_startup_indented) is enabled.
+* `false` - Do not disable [`org_adapt_indentation`](#org_adapt_indentation) by default when [`org_startup_indented`](#org_startup_indented) is enabled.
 
 #### **org_src_window_setup**
 *type*: `string|function`<br />
@@ -1584,6 +1603,11 @@ set statusline=%{v:lua.orgmode.statusline()}
 
 ## Changelog
 To track breaking changes, subscribe to [Notice of breaking changes](https://github.com/nvim-orgmode/orgmode/issues/217) issue where those are announced.
+
+#### 21 January 2024
+
+* Option `org_indent_mode` was deprecated in favor of [org_startup_indented](#org_startup_indented). To remove the
+  warning use `org_startup_indented`. This was introduced to support Virtual Indent more in line with Emacs.
 
 #### 24 October 2021
 * Help mapping was changed from `?` to `g?` to avoid conflict with built in backward search. See issue [#106](https://github.com/nvim-orgmode/orgmode/issues/106).

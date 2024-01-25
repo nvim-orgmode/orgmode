@@ -5,6 +5,7 @@ local Date = require('orgmode.objects.date')
 local Range = require('orgmode.parser.range')
 local config = require('orgmode.config')
 local ts = vim.treesitter
+local indent = require('orgmode.org.indent')
 
 ---@class Headline
 ---@field headline TSNode
@@ -62,12 +63,18 @@ function Headline:promote(amount, recursive)
     return utils.echo_warning('Cannot demote top level heading.')
   end
 
-  return self:_handle_promote_demote(recursive, function(lines)
+  return self:_handle_promote_demote(recursive, function(start_line, lines)
     for i, line in ipairs(lines) do
       if line:sub(1, 1) == '*' then
         lines[i] = line:sub(1 + amount)
       elseif vim.trim(line:sub(1, amount)) == '' then
-        lines[i] = line:sub(1 + amount)
+        if config.org_adapt_indentation then
+          lines[i] = line:sub(1 + amount)
+        else
+          line, _ = line:gsub('^%s+', '')
+          local indent_amount = indent.indentexpr(start_line + i)
+          lines[i] = string.rep(' ', indent_amount) .. line
+        end
       end
     end
     return lines
@@ -80,12 +87,18 @@ function Headline:demote(amount, recursive)
   amount = amount or 1
   recursive = recursive or false
 
-  return self:_handle_promote_demote(recursive, function(lines)
+  return self:_handle_promote_demote(recursive, function(start_line, lines)
     for i, line in ipairs(lines) do
       if line:sub(1, 1) == '*' then
         lines[i] = string.rep('*', amount) .. line
       else
-        lines[i] = config:apply_indent(line, amount)
+        if config.org_adapt_indentation then
+          lines[i] = config:apply_indent(line, amount)
+        else
+          line, _ = line:gsub('^%s+', '')
+          local indent_amount = indent.indentexpr(start_line + i)
+          lines[i] = string.rep(' ', indent_amount) .. line
+        end
       end
     end
     return lines
@@ -94,8 +107,10 @@ end
 
 function Headline:_handle_promote_demote(recursive, modifier)
   local whole_subtree = function()
-    local text = ts.get_node_text(self.headline:parent(), 0)
-    local lines = modifier(vim.split(text, '\n', true))
+    local parent = self.headline:parent()
+    local text = ts.get_node_text(parent, 0)
+    local start, _, _ = parent:start()
+    local lines = modifier(start, vim.split(text, '\n', true))
     tree_utils.set_node_lines(self.headline:parent(), lines)
     return self:refresh()
   end
@@ -118,7 +133,7 @@ function Headline:_handle_promote_demote(recursive, modifier)
 
   local start = self.headline:start()
   local end_line = first_child_section:start()
-  local lines = modifier(vim.api.nvim_buf_get_lines(0, start, end_line, false))
+  local lines = modifier(start, vim.api.nvim_buf_get_lines(0, start, end_line, false))
   vim.api.nvim_buf_set_lines(0, start, end_line, false, lines)
   return self:refresh()
 end

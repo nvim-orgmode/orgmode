@@ -1,4 +1,5 @@
 local helpers = require('tests.plenary.ui.helpers')
+local config = require('orgmode.config')
 
 describe('Heading mappings', function()
   after_each(function()
@@ -90,26 +91,52 @@ describe('Heading mappings', function()
       'Content Level 3',
     }, vim.api.nvim_buf_get_lines(0, 2, 8, false))
     vim.fn.cursor(3, 1)
+    local check
+    if config.org_adapt_indentation then
+      check = {
+        '** TODO Test orgmode',
+        '   DEADLINE: <2021-07-21 Wed 22:02>',
+        '*** TODO [#A] Test orgmode level 2 :PRIVATE:',
+        ' Some content for level 2',
+        '**** NEXT [#1] Level 3',
+        ' Content Level 3',
+      }
+    else
+      check = {
+        '** TODO Test orgmode',
+        'DEADLINE: <2021-07-21 Wed 22:02>',
+        '*** TODO [#A] Test orgmode level 2 :PRIVATE:',
+        'Some content for level 2',
+        '**** NEXT [#1] Level 3',
+        'Content Level 3',
+      }
+    end
     vim.cmd([[norm >s]])
-    assert.are.same({
-      '** TODO Test orgmode',
-      '   DEADLINE: <2021-07-21 Wed 22:02>',
-      '*** TODO [#A] Test orgmode level 2 :PRIVATE:',
-      ' Some content for level 2',
-      '**** NEXT [#1] Level 3',
-      ' Content Level 3',
-    }, vim.api.nvim_buf_get_lines(0, 2, 8, false))
+    assert.are.same(check, vim.api.nvim_buf_get_lines(0, 2, 8, false))
 
     -- Support count
+    local check
+    if config.org_adapt_indentation then
+      check = {
+        '****** TODO Test orgmode',
+        '       DEADLINE: <2021-07-21 Wed 22:02>',
+        '******* TODO [#A] Test orgmode level 2 :PRIVATE:',
+        '     Some content for level 2',
+        '******** NEXT [#1] Level 3',
+        '     Content Level 3',
+      }
+    else
+      check = {
+        '****** TODO Test orgmode',
+        'DEADLINE: <2021-07-21 Wed 22:02>',
+        '******* TODO [#A] Test orgmode level 2 :PRIVATE:',
+        'Some content for level 2',
+        '******** NEXT [#1] Level 3',
+        'Content Level 3',
+      }
+    end
     vim.cmd([[norm 4>s]])
-    assert.are.same({
-      '****** TODO Test orgmode',
-      '       DEADLINE: <2021-07-21 Wed 22:02>',
-      '******* TODO [#A] Test orgmode level 2 :PRIVATE:',
-      '     Some content for level 2',
-      '******** NEXT [#1] Level 3',
-      '     Content Level 3',
-    }, vim.api.nvim_buf_get_lines(0, 2, 8, false))
+    assert.are.same(check, vim.api.nvim_buf_get_lines(0, 2, 8, false))
   end)
 
   it('should promote the heading (org_do_promote)', function()
@@ -177,26 +204,52 @@ describe('Heading mappings', function()
     vim.fn.cursor(1, 1)
 
     -- Support count
+    local check
+    if config.org_adapt_indentation then
+      check = {
+        '*** TODO Test orgmode',
+        '    DEADLINE: <2021-07-21 Wed 22:02>',
+        '**** TODO [#A] Test orgmode level 2 :PRIVATE:',
+        '     Some content for level 2',
+        '***** NEXT [#1] Level 3',
+        '      Content Level 3',
+      }
+    else
+      check = {
+        '*** TODO Test orgmode',
+        'DEADLINE: <2021-07-21 Wed 22:02>',
+        '**** TODO [#A] Test orgmode level 2 :PRIVATE:',
+        'Some content for level 2',
+        '***** NEXT [#1] Level 3',
+        'Content Level 3',
+      }
+    end
     vim.cmd([[norm 2<s]])
-    assert.are.same({
-      '*** TODO Test orgmode',
-      '    DEADLINE: <2021-07-21 Wed 22:02>',
-      '**** TODO [#A] Test orgmode level 2 :PRIVATE:',
-      '     Some content for level 2',
-      '***** NEXT [#1] Level 3',
-      '      Content Level 3',
-    }, vim.api.nvim_buf_get_lines(0, 0, 6, false))
+    assert.are.same(check, vim.api.nvim_buf_get_lines(0, 0, 6, false))
 
     -- Handle overflow
+    local check
+    if config.org_adapt_indentation then
+      check = {
+        '* TODO Test orgmode',
+        '  DEADLINE: <2021-07-21 Wed 22:02>',
+        '** TODO [#A] Test orgmode level 2 :PRIVATE:',
+        '   Some content for level 2',
+        '*** NEXT [#1] Level 3',
+        '    Content Level 3',
+      }
+    else
+      check = {
+        '* TODO Test orgmode',
+        'DEADLINE: <2021-07-21 Wed 22:02>',
+        '** TODO [#A] Test orgmode level 2 :PRIVATE:',
+        'Some content for level 2',
+        '*** NEXT [#1] Level 3',
+        'Content Level 3',
+      }
+    end
     vim.cmd([[norm 5<s]])
-    assert.are.same({
-      '* TODO Test orgmode',
-      '  DEADLINE: <2021-07-21 Wed 22:02>',
-      '** TODO [#A] Test orgmode level 2 :PRIVATE:',
-      '   Some content for level 2',
-      '*** NEXT [#1] Level 3',
-      '    Content Level 3',
-    }, vim.api.nvim_buf_get_lines(0, 0, 6, false))
+    assert.are.same(check, vim.api.nvim_buf_get_lines(0, 0, 6, false))
   end)
 
   it('should promote line to (TODO) heading', function()

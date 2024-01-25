@@ -411,7 +411,7 @@ end
 function Section:demote(amount, demote_child_sections, dryRun)
   amount = amount or 1
   demote_child_sections = demote_child_sections or false
-  local should_indent = config.org_indent_mode == 'indent'
+  local should_indent = config.org_adapt_indentation
   local lines = {}
   local headline_line = string.rep('*', amount) .. self.line
   table.insert(lines, headline_line)
@@ -449,7 +449,7 @@ end
 function Section:promote(amount, promote_child_sections, dryRun)
   amount = amount or 1
   promote_child_sections = promote_child_sections or false
-  local should_dedent = config.org_indent_mode == 'indent'
+  local should_dedent = config.org_adapt_indentation
   local lines = {}
   if self.level == 1 then
     utils.echo_warning('Cannot demote top level heading.')
