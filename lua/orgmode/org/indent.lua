@@ -1,12 +1,11 @@
 local config = require('orgmode.config')
-local headline_lib = require('orgmode.treesitter.headline')
+local VirtualIndent = require('orgmode.ui.virtual_indent')
 local ts_utils = require('nvim-treesitter.ts_utils')
 local query = nil
 
 local function get_indent_pad(linenr)
-  local indent_mode = config.org_indent_mode == 'indent'
-  if indent_mode then
-    local headline = headline_lib.from_cursor({ linenr, 0 })
+  if config.org_adapt_indentation then
+    local headline = require('orgmode.treesitter.headline').from_cursor({ linenr, 0 })
     if not headline then
       return 0
     end
@@ -309,7 +308,16 @@ local function foldtext()
   return line .. config.org_ellipsis
 end
 
+local function setup()
+  local v = vim.version()
+
+  if config.org_startup_indented and not vim.version.lt({ v.major, v.minor, v.patch }, { 0, 10, 0 }) then
+    VirtualIndent:new():attach()
+  end
+end
+
 return {
+  setup = setup,
   foldexpr = foldexpr,
   indentexpr = indentexpr,
   foldtext = foldtext,

@@ -40,6 +40,9 @@ function Config:extend(opts)
     opts.org_priority_default = self.opts.org_priority_default
   end
   self.opts = vim.tbl_deep_extend('force', self.opts, opts)
+  if self.org_startup_indented then
+    self.org_adapt_indentation = not self.org_indent_mode_turns_off_org_adapt_indentation
+  end
   return self
 end
 
@@ -141,6 +144,14 @@ function Config:_deprecation_notify(opts)
     if opts.mappings.org.org_decrease_date then
       opts.mappings.org.org_timestamp_down = opts.mappings.org.org_decrease_date
     end
+  end
+
+  if opts.org_indent_mode and type(opts.org_indent_mode) == 'string' then
+    table.insert(
+      messages,
+      '"org_indent_mode" is deprecated in favor of "org_startup_indented". Check the documentation about the new option.'
+    )
+    opts.org_startup_indented = (opts.org_indent_mode == 'indent')
   end
 
   if #messages > 0 then
@@ -406,7 +417,7 @@ end
 ---@param amount number
 ---@return string
 function Config:get_indent(amount)
-  if self.opts.org_indent_mode == 'indent' then
+  if self.org_adapt_indentation then
     return string.rep(' ', amount)
   end
   return ''

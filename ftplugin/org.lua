@@ -10,6 +10,11 @@ config:setup_mappings('org')
 config:setup_mappings('text_objects')
 config:setup_foldlevel()
 
+if config.org_startup_indented then
+  vim.b.org_indent_mode = true
+end
+require("orgmode.org.indent").setup()
+
 vim.bo.modeline = false
 vim.opt_local.fillchars:append('fold: ')
 vim.opt_local.foldmethod = 'expr'
