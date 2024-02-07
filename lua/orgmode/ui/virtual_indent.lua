@@ -5,6 +5,7 @@ local tree_utils = require('orgmode.utils.treesitter')
 ---@field private _attached boolean Whether or not VirtualIndent is attached for its buffer
 ---@field private _bufnrs {integer: boolean} Buffers with VirtualIndent attached
 ---@field private _timer uv_timer_t Timer used for tracking `org_indent_mode`
+---@field private _watcher_running boolean Whether or not VirtualIndent is reacting to `vim.borg_indent_mode`
 local VirtualIndent = {
   _ns_id = vim.api.nvim_create_namespace('orgmode.ui.indent'),
   _bufnrs = {},
@@ -29,6 +30,7 @@ function VirtualIndent:new(bufnr)
   new._bufnr = bufnr
   new._attached = false
   VirtualIndent._bufnrs[new._bufnr] = new
+  new._watcher_running = false
   new._timer = vim.uv.new_timer()
   return new
 end
@@ -92,27 +94,31 @@ function VirtualIndent:set_indent(start_line, end_line, ignore_ts)
   end
 end
 
---- Begins a timer to check `vim.b.org_indent_mode` and correctly attach or detatch VirtualIndent as
---- necessary
+--- Begins a timer to check `vim.b.org_indent_mode` if `vim.b.org_indent_mode` is not already being
+--- monitored
 function VirtualIndent:start_watch_org_indent()
-  self._timer:start(
-    50,
-    50,
-    vim.schedule_wrap(function()
-      local success, indent_mode_enabled = pcall(vim.api.nvim_buf_get_var, self._bufnr, 'org_indent_mode')
-      if success and indent_mode_enabled then
-        if not self._attached then
-          self:attach()
+  if not self._watcher_running then
+    self._watcher_running = true
+    self._timer:start(
+      50,
+      50,
+      vim.schedule_wrap(function()
+        local success, indent_mode_enabled = pcall(vim.api.nvim_buf_get_var, self._bufnr, 'org_indent_mode')
+        if success and indent_mode_enabled then
+          if not self._attached then
+            self:attach()
+          end
+        elseif self._attached then
+          self:detach()
         end
-      elseif self._attached then
-        self:detach()
-      end
-    end)
-  )
+      end)
+    )
+  end
 end
 
 --- Stops the current VirtualIndent instance from reacting to changes in `vim.b.org_indent_mode`
 function VirtualIndent:stop_watch_org_indent()
+  self._watcher_running = false
   self._timer:stop()
 end
 
