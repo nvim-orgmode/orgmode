@@ -314,8 +314,12 @@ end
 local function setup()
   local v = vim.version()
 
-  if config.org_startup_indented and not vim.version.lt({ v.major, v.minor, v.patch }, { 0, 10, 0 }) then
-    VirtualIndent:new():attach()
+  if not vim.version.lt({ v.major, v.minor, v.patch }, { 0, 10, 0 }) then
+    if config.org_startup_indented then
+      VirtualIndent:new():attach()
+    else
+      VirtualIndent:new():start_watch_org_indent()
+    end
   end
 end
 
