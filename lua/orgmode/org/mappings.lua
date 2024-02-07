@@ -594,6 +594,11 @@ function OrgMappings:org_return()
 end
 
 function OrgMappings:handle_return(suffix)
+  vim.deprecate('org_mappings.handle_return', 'org_mappings.meta_return', '0.4', 'orgmode', false)
+  return self:meta_return(suffix)
+end
+
+function OrgMappings:meta_return(suffix)
   suffix = suffix or ''
   local item = ts_utils.get_node_at_cursor()
 
@@ -734,7 +739,7 @@ function OrgMappings:insert_todo_heading()
     return vim.cmd([[startinsert!]])
   else
     vim.fn.cursor(item:get_range().start_line, 1)
-    return self:handle_return(config:get_todo_keywords().TODO[1] .. ' ')
+    return self:meta_return(config:get_todo_keywords().TODO[1] .. ' ')
   end
 end
 

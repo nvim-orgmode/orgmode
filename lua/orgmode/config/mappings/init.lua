@@ -93,7 +93,7 @@ return {
       'org_mappings.do_demote',
       { args = { true }, opts = { desc = 'org demote subtree' } }
     ),
-    org_meta_return = m.action('org_mappings.handle_return', { opts = { desc = 'org meta return' } }),
+    org_meta_return = m.action('org_mappings.meta_return', { opts = { desc = 'org meta return' } }),
     org_insert_heading_respect_content = m.action(
       'org_mappings.insert_heading_respect_content',
       { opts = { desc = 'org insert headline (respect content)' } }
