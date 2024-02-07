@@ -669,7 +669,37 @@ require('orgmode').setup({
 
 You can find the configuration file that holds all default mappings [here](./lua/orgmode/config/mappings/init.lua)
 
-**NOTE**: All mappings are normal mode mappings (`nnoremap`)
+**NOTE**: All mappings are normal mode mappings (`nnoremap`) with exception of `org_return`
+
+### Use Enter in insert mode to add list items/checkboxes/todos
+By default, adding list items/checkboxes/todos is done with [org_meta_return](#org_meta_return) which is a normal mode mapping.
+If you want to have an insert mode mapping there are two options:
+
+1. If your terminal supports it, map a key like `Shift + Enter` to the meta return mapping (Recommended):
+```lua
+vim.api.nvim_create_autocmd('FileType', {
+  pattern = 'org',
+  callback = function()
+    vim.keymap.set('i', '<S-CR>', '<cmd>lua require("orgmode").action("org_mappings.meta_return")<CR>', {
+      silent = true,
+      buffer = true,
+    })
+  end,
+})
+```
+2. If you want to use only enter, enable `org_return_uses_meta_return` option:
+```lua
+require('orgmode').setup({
+  org_agenda_files = {'~/Dropbox/org/*', '~/my-orgs/**/*'},
+  org_default_notes_file = '~/Dropbox/org/refile.org',
+  mappings = {
+    org_return_uses_meta_return = true
+  }
+})
+```
+This will trigger `org_meta_return` if there is no content after the cursor position (either at the end of line or has just trailing spaces).
+Just note that this option always tries to use `meta_return`, which also adds new headlines
+automatically if you are on the headline line, which can give undesired results.
 
 ### Global mappings
 

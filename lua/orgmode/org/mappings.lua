@@ -542,6 +542,17 @@ function OrgMappings:org_return()
       local tbl = Table.from_current_node()
       return tbl and tbl:handle_cr() or false
     end,
+    function()
+      if not config.mappings.org_return_uses_meta_return then
+        return false
+      end
+
+      if vim.trim(vim.fn.getline('.'):sub(vim.fn.col('.'), vim.fn.col('$'))) ~= '' then
+        return false
+      end
+
+      return self:meta_return()
+    end,
   }
 
   for _, action in ipairs(actions) do
@@ -624,7 +635,8 @@ function OrgMappings:meta_return(suffix)
     local content = config:respect_blank_before_new_entry({ ('*'):rep(level) .. ' ' .. suffix })
     vim.fn.append(linenr, content)
     vim.fn.cursor(linenr + #content, 1)
-    return vim.cmd([[startinsert!]])
+    vim.cmd([[startinsert!]])
+    return true
   end
 
   if item:type() == 'list' or item:type() == 'listitem' then
@@ -632,7 +644,7 @@ function OrgMappings:meta_return(suffix)
     item = ts_utils.get_node_at_cursor()
   end
   if not item then
-    return nil
+    return
   end
   local type = item:type()
   if vim.tbl_contains({ 'paragraph', 'bullet', 'checkbox', 'status' }, type) then
@@ -711,6 +723,7 @@ function OrgMappings:meta_return(suffix)
       end
 
       vim.cmd([[startinsert!]])
+      return true
     end
   end
 end

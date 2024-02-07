@@ -64,6 +64,7 @@ local DefaultConfig = {
   },
   mappings = {
     disable_all = false,
+    org_return_uses_meta_return = false,
     prefix = '<Leader>o',
     global = {
       org_agenda = '<prefix>a',
