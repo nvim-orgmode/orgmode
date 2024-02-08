@@ -74,4 +74,22 @@ function OrgFile:reload()
   return OrgFile._build_from_internal_file(self._file:reload_sync())
 end
 
+--- Return closest headline, or nil if there are no headlines found
+--- If cursor is not provided, it will use current cursor position
+--- @param cursor? { line: number, col: number } (1, 0)-indexed cursor position, same as returned from `vim.api.nvim_win_get_cursor(0)`
+--- @return OrgApiHeadline | nil
+function OrgFile:get_closest_headline(cursor)
+  local file = self:reload()
+  local internal_headline = file._file:get_closest_headline_or_nil(cursor)
+  if not internal_headline then
+    return nil
+  end
+  for _, headline in ipairs(file.headlines) do
+    if headline.position.start_line == internal_headline:get_range().start_line then
+      return headline
+    end
+  end
+  return nil
+end
+
 return OrgFile
