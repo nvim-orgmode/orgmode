@@ -442,13 +442,13 @@ end
 ---@return OrgDate | nil
 function Headline:get_scheduled_date()
   local dates = self:get_plan_dates()
-  return dates['SCHEDULED'] or nil
+  return vim.tbl_get(dates, 'SCHEDULED', 1)
 end
 
 ---@return OrgDate | nil
 function Headline:get_deadline_date()
   local dates = self:get_plan_dates()
-  return dates['DEADLINE'] or nil
+  return vim.tbl_get(dates, 'DEADLINE', 1)
 end
 
 memoize('get_tags')
@@ -556,7 +556,7 @@ function Headline:get_append_line()
 end
 
 memoize('get_plan_dates')
----@return OrgTable<OrgPlanDateTypes, OrgDate>,OrgTable<OrgPlanDateTypes, TSNode>
+---@return OrgTable<OrgPlanDateTypes, OrgDate[]>,OrgTable<OrgPlanDateTypes, TSNode>
 function Headline:get_plan_dates()
   local plan = self:node():parent():field('plan')[1]
   local dates = {}
@@ -576,7 +576,7 @@ function Headline:get_plan_dates()
       dates[name:upper()] = Date.from_org_date(self.file:get_node_text(timestamp), {
         range = Range.from_node(timestamp),
         type = name:upper(),
-      })[1]
+      })
       dates_nodes[name:upper()] = node
     end
   end
@@ -588,7 +588,7 @@ memoize('get_all_dates')
 ---@return OrgDate[]
 function Headline:get_all_dates()
   local d = self:get_plan_dates()
-  local plan_dates = vim.tbl_values(d)
+  local plan_dates = utils.flatten(vim.tbl_values(d))
   local body_dates_list = self:get_non_plan_dates()
 
   return vim.list_extend(plan_dates, body_dates_list)
@@ -686,7 +686,7 @@ end
 ---@param date? OrgDate
 function Headline:set_closed_date(date)
   local dates = self:get_plan_dates()
-  if dates['CLOSED'] then
+  if vim.tbl_get(dates, 'CLOSED', 1) then
     return
   end
   return self:_add_date('CLOSED', date or Date.now(), false)
@@ -811,26 +811,26 @@ end
 ---@param active? boolean
 ---@private
 function Headline:_add_date(type, date, active)
-  local _, dates = self:get_plan_dates()
+  local _, date_nodes = self:get_plan_dates()
   local text = type .. ': ' .. date:to_wrapped_string(active)
-  if vim.tbl_isempty(dates) then
+  if vim.tbl_isempty(date_nodes) then
     local indentation = config:get_indent(self:get_level() + 1)
     local start_line = self:node():start()
     vim.fn.append(start_line + 1, ('%s%s'):format(indentation, text))
     return self:refresh()
   end
-  if dates[type] then
-    return self:_set_node_text(dates[type], text, true)
+  if date_nodes[type] then
+    return self:_set_node_text(date_nodes[type], text, true)
   end
 
-  local keys = vim.tbl_keys(dates)
+  local keys = vim.tbl_keys(date_nodes)
   local other_types = vim.tbl_filter(function(t)
     return t ~= type
   end, { 'DEADLINE', 'SCHEDULED', 'CLOSED' })
-  local last_child = dates[keys[#keys]]
+  local last_child = date_nodes[keys[#keys]]
   for _, date_type in ipairs(other_types) do
-    if dates[date_type] then
-      last_child = dates[date_type]
+    if date_nodes[date_type] then
+      last_child = date_nodes[date_type]
       break
     end
   end
@@ -841,12 +841,12 @@ end
 ---@param type OrgPlanDateTypes
 ---@private
 function Headline:_remove_date(type)
-  local _, dates = self:get_plan_dates()
-  if vim.tbl_count(dates) == 0 or not dates[type] then
+  local _, date_nodes = self:get_plan_dates()
+  if vim.tbl_count(date_nodes) == 0 or not date_nodes[type] then
     return
   end
-  local line_nr = dates[type]:start() + 1
-  self.file:set_node_text(dates[type], '', true)
+  local line_nr = date_nodes[type]:start() + 1
+  self.file:set_node_text(date_nodes[type], '', true)
   if vim.trim(vim.fn.getline(line_nr)) == '' then
     vim.fn.deletebufline(vim.api.nvim_get_current_buf(), line_nr)
   end

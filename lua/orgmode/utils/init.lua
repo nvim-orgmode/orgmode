@@ -501,6 +501,25 @@ function utils.pad_right(str, amount)
   return string.format('%s%s', str, string.rep(' ', spaces))
 end
 
+---@param t table List-like table
+---@return table Flattened copy of the given list-like table
+function utils.flatten(t)
+  local result = {}
+  local function _tbl_flatten(_t)
+    local n = #_t
+    for i = 1, n do
+      local v = _t[i]
+      if type(v) == 'table' and vim.tbl_islist(v) then
+        _tbl_flatten(v)
+      elseif v then
+        table.insert(result, v)
+      end
+    end
+  end
+  _tbl_flatten(t)
+  return result
+end
+
 ---@param filename string
 function utils.edit_file(filename)
   local buf_not_already_loaded = vim.fn.bufexists(filename) ~= 1

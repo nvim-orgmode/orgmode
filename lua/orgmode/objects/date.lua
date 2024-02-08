@@ -937,6 +937,10 @@ end
 ---@param lnum number
 ---@return OrgDate[]
 local function parse_all_from_line(line, lnum)
+  local is_comment = line:match('^%s*#[^%+]')
+  if is_comment then
+    return {}
+  end
   local dates = {}
   for open, datetime, close in line:gmatch(pattern) do
     local parsed_date = from_match(line, lnum, open, datetime, close, dates[#dates])
