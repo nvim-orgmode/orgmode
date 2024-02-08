@@ -1,14 +1,15 @@
 local tree_utils = require('orgmode.utils.treesitter')
+local dict_watcher = require('orgmode.utils.dict_watcher')
 ---@class OrgVirtualIndent
 ---@field private _ns_id number extmarks namespace id
 ---@field private _bufnr integer Buffer VirtualIndent is attached to
 ---@field private _attached boolean Whether or not VirtualIndent is attached for its buffer
----@field private _bufnrs {integer: boolean} Buffers with VirtualIndent attached
----@field private _timer uv_timer_t Timer used for tracking `org_indent_mode`
----@field private _watcher_running boolean Whether or not VirtualIndent is reacting to `vim.borg_indent_mode`
+---@field private _bufnrs table<integer, OrgVirtualIndent> Buffers with VirtualIndent attached
+---@field private _watcher_running boolean Whether or not VirtualIndent is reacting to `vim.b.org_indent_mode`
 local VirtualIndent = {
   _ns_id = vim.api.nvim_create_namespace('orgmode.ui.indent'),
   _bufnrs = {},
+  _watcher_running = false,
 }
 
 --- Creates a new instance of VirtualIndent for a given buffer or returns the existing instance if
@@ -24,14 +25,12 @@ function VirtualIndent:new(bufnr)
   end
 
   local new = {}
+  VirtualIndent._bufnrs[bufnr] = new
   setmetatable(new, self)
   self.__index = self
 
   new._bufnr = bufnr
   new._attached = false
-  VirtualIndent._bufnrs[new._bufnr] = new
-  new._watcher_running = false
-  new._timer = vim.uv.new_timer()
   return new
 end
 
@@ -94,32 +93,28 @@ function VirtualIndent:set_indent(start_line, end_line, ignore_ts)
   end
 end
 
---- Begins a timer to check `vim.b.org_indent_mode` if `vim.b.org_indent_mode` is not already being
---- monitored
+--- Make all VirtualIndent instances react to changes in `org_indent_mode`
 function VirtualIndent:start_watch_org_indent()
   if not self._watcher_running then
     self._watcher_running = true
-    self._timer:start(
-      50,
-      50,
-      vim.schedule_wrap(function()
-        local success, indent_mode_enabled = pcall(vim.api.nvim_buf_get_var, self._bufnr, 'org_indent_mode')
-        if success and indent_mode_enabled then
-          if not self._attached then
-            self:attach()
-          end
-        elseif self._attached then
-          self:detach()
-        end
-      end)
-    )
+    dict_watcher.watch_buffer_variable('org_indent_mode', function(indent_mode, _, buf_vars)
+      local vindent = VirtualIndent._bufnrs[buf_vars.org_bufnr]
+      local indent_mode_enabled = indent_mode.new or false
+      ---@diagnostic disable-next-line: invisible
+      if indent_mode_enabled and not vindent._attached then
+        vindent:attach()
+        ---@diagnostic disable-next-line: invisible
+      elseif not indent_mode_enabled and vindent._attached then
+        vindent:detach()
+      end
+    end)
   end
 end
 
---- Stops the current VirtualIndent instance from reacting to changes in `vim.b.org_indent_mode`
+--- Stops VirtualIndent instances from reacting to changes in `vim.b.org_indent_mode`
 function VirtualIndent:stop_watch_org_indent()
   self._watcher_running = false
-  self._timer:stop()
+  dict_watcher.unwatch_buffer_variable('org_indent_mode')
 end
 
 --- Enables virtual indentation in registered buffer
