@@ -315,6 +315,40 @@ describe('Agenda item', function()
 
       config:extend({ org_agenda_skip_deadline_if_done = false })
     end)
+
+    it('should ignore deadline dates that are end dates for a range', function()
+      local today = Date.now()
+      local tomorrow = Date.now():add({ day = 1 })
+      local headline = generate(string.format('DEADLINE: <%s>--<%s>', today:to_string(), tomorrow:to_string()))
+      local start_date = headline:get_all_dates()[1]
+      local end_date = headline:get_all_dates()[2]
+      local agenda_item_start_date = AgendaItem:new(start_date, headline, today)
+      assert.is.True(agenda_item_start_date.is_valid)
+      assert.are.same(
+        { { hlgroup = hl_map.deadline }, { hlgroup = hl_map.TODO, todo_keyword = 'TODO' } },
+        agenda_item_start_date.highlights
+      )
+      local agenda_item_end_date = AgendaItem:new(end_date, headline, today)
+      assert.is.False(agenda_item_end_date.is_valid)
+      assert.are.same({}, agenda_item_end_date.highlights)
+    end)
+
+    it('should ignore scheduled dates that are end dates for a range', function()
+      local today = Date.now()
+      local tomorrow = Date.now():add({ day = 1 })
+      local headline = generate(string.format('SCHEDULED: <%s>--<%s>', today:to_string(), tomorrow:to_string()))
+      local start_date = headline:get_all_dates()[1]
+      local end_date = headline:get_all_dates()[2]
+      local agenda_item_start_date = AgendaItem:new(start_date, headline, today)
+      assert.is.True(agenda_item_start_date.is_valid)
+      assert.are.same(
+        { { hlgroup = hl_map.ok }, { hlgroup = hl_map.TODO, todo_keyword = 'TODO' } },
+        agenda_item_start_date.highlights
+      )
+      local agenda_item_end_date = AgendaItem:new(end_date, headline, today)
+      assert.is.False(agenda_item_end_date.is_valid)
+      assert.are.same({}, agenda_item_end_date.highlights)
+    end)
   end)
 
   describe('for non today date', function()

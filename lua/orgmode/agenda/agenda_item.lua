@@ -26,7 +26,7 @@ local AgendaItem = {}
 ---@param headline_date OrgDate single date in a headline
 ---@param headline OrgHeadline
 ---@param date OrgDate date for which item should be rendered
----@param index number
+---@param index? number
 function AgendaItem:new(headline_date, headline, date, index)
   local opts = {}
   opts.headline_date = headline_date
@@ -97,6 +97,9 @@ function AgendaItem:_is_valid_for_today()
     if self.headline:is_done() and config.org_agenda_skip_deadline_if_done then
       return false
     end
+    if self.headline_date.is_date_range_end then
+      return false
+    end
     if self.is_same_day then
       return true
     end
@@ -140,6 +143,12 @@ function AgendaItem:_is_valid_for_date()
     if self.headline_date:is_scheduled() and config.org_agenda_skip_scheduled_if_done then
       return false
     end
+  end
+
+  if
+    (self.headline_date:is_deadline() or self.headline_date:is_scheduled()) and self.headline_date.is_date_range_end
+  then
+    return false
   end
 
   if not self.headline_date:is_scheduled() or not self.headline_date:get_negative_adjustment() then
