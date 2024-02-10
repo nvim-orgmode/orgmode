@@ -243,7 +243,7 @@ function OrgFile:apply_search(search, todo_only)
 end
 
 ---@param search_term string
----@param no_escape boolean
+---@param no_escape? boolean
 ---@param ignore_archive_flag? boolean
 ---@return OrgHeadline[]
 function OrgFile:find_headlines_matching_search_term(search_term, no_escape, ignore_archive_flag)
@@ -361,37 +361,57 @@ end
 ---@param node? TSNode
 ---@return string[]
 function OrgFile:get_node_text_list(node)
+  local node_text = self:get_node_text(node)
+  if node_text == '' then
+    return {}
+  end
   return vim.split(self:get_node_text(node), '\n', { plain = true })
 end
 
 ---@param node? TSNode
 ---@param text string
----@param front_trim boolean?
+---@param front_trim boolean? If true,trim the text from the front by 1 character
+---@return boolean
 function OrgFile:set_node_text(node, text, front_trim)
   local bufnr = self:bufnr()
   if not node or bufnr < 0 then
-    return
+    return false
   end
-  local sr, sc, er, ec = node:range()
+  local start_row, start_col, end_row, end_col = node:range()
+  local replacement = vim.split(text, '\n', { plain = true })
   if string.len(text) == 0 then
+    replacement = {}
     if front_trim then
-      sc = math.max(sc - 1, 0)
+      start_col = math.max(start_col - 1, 0)
     else
-      ec = ec + 1
+      end_col = end_col + 1
     end
   end
-  pcall(vim.api.nvim_buf_set_text, 0, sr, sc, er, ec, vim.split(text, '\n', { plain = true }))
+  -- Some nodes have end range as row = next_line and col = 0
+  -- for example a single line headline on line 10 gives
+  -- (section: 10, 0, 11, 0) instead of (section: 10, 0, 10, 10)
+  -- If we are setting text at the end of the file it will throw an out of range error
+  -- To avoid that,get the last line number and it's last column
+  local last_line = vim.fn.line('$') - 1
+  if end_row > last_line then
+    end_row = last_line
+    end_col = vim.fn.col({ end_row, '$' }) - 2
+  end
+  local ok = pcall(vim.api.nvim_buf_set_text, 0, start_row, start_col, end_row, end_col, replacement)
+  return ok
 end
 
 ---@param node? TSNode
 ---@param lines string[]
+---@return boolean
 function OrgFile:set_node_lines(node, lines)
   local bufnr = self:bufnr()
   if not node or bufnr < 0 then
-    return
+    return false
   end
   local start_row, _, end_row, _ = node:range()
   vim.api.nvim_buf_set_lines(0, start_row, end_row, false, lines)
+  return true
 end
 
 ---@return number
@@ -405,10 +425,10 @@ function OrgFile:bufnr()
   return -1
 end
 
-memoize('get_tags')
+memoize('get_filetags')
 --- Get tags list applied on file level via #+FILETAGS
 --- @return string[]
-function OrgFile:get_tags()
+function OrgFile:get_filetags()
   return utils.parse_tags_string(self:_get_directive('filetags'))
 end
 
@@ -437,38 +457,12 @@ function OrgFile:get_opened_unfinished_headlines()
   end, self:get_headlines())
 end
 
----@param from OrgDate
----@param to OrgDate
----@return { headlines: OrgHeadline[] ,total_duration: OrgDuration }
-function OrgFile:get_clock_report(from, to)
-  local total_duration = 0
-  local headlines = {}
-  for _, headline in ipairs(self:get_headlines()) do
-    local logbook = headline:get_logbook()
-    if logbook then
-      local minutes = logbook:get_total_minutes(from, to)
-      if minutes > 0 then
-        table.insert(headlines, headline)
-        total_duration = total_duration + minutes
-      end
-    end
-  end
-
-  return {
-    headlines = headlines,
-    total_duration = Duration.from_minutes(total_duration),
-  }
-end
-
 --- Get the archive file location for this file
 --- If this file is an archive file, it returns null
 --- @return string | nil
 function OrgFile:get_archive_file_location()
   local archive_location = self:_get_directive('archive')
-  if archive_location then
-    return archive_location
-  end
-  return config:parse_archive_location(self.filename)
+  return config:parse_archive_location(self.filename, archive_location)
 end
 
 ---@private

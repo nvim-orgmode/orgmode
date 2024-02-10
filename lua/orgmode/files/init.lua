@@ -56,7 +56,7 @@ function OrgFiles:get_tags()
   local tags = {}
   for _, orgfile in ipairs(self:all()) do
     if not orgfile:is_archive_file() then
-      local file_tags = orgfile:get_tags()
+      local file_tags = orgfile:get_filetags()
       if file_tags and #file_tags > 0 then
         for _, tag in ipairs(file_tags) do
           tags[tag] = 1

@@ -1,7 +1,7 @@
 local helpers = require('tests.plenary.helpers')
 local Date = require('orgmode.objects.date')
 
-describe('Refile mappings', function()
+describe('Archive', function()
   it('should refile headline to archive and create archive file', function()
     local file = helpers.load_as_agenda_file({
       '* foobar',
@@ -30,5 +30,4 @@ describe('Refile mappings', function()
       '  :END:'
     }, vim.api.nvim_buf_get_lines(0, 0, -1, false))
   end)
-  -- TODO(refactor): Create more tests
 end)

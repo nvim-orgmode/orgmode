@@ -472,7 +472,7 @@ function Headline:get_tags()
     end
     parent_section = parent_section:parent()
   end
-  local file_tags = self.file:get_tags()
+  local file_tags = self.file:get_filetags()
 
   local all_tags = utils.concat({}, file_tags)
   utils.concat(all_tags, utils.reverse(parent_tags), true)
@@ -820,7 +820,7 @@ function Headline:_add_date(type, date, active)
     return self:refresh()
   end
   if date_nodes[type] then
-    return self:_set_node_text(date_nodes[type], text, true)
+    return self:_set_node_text(date_nodes[type], text)
   end
 
   local keys = vim.tbl_keys(date_nodes)
@@ -869,10 +869,9 @@ end
 
 ---@param node? TSNode
 ---@param text string
----@param front_trim boolean?
 ---@return OrgHeadline
-function Headline:_set_node_text(node, text, front_trim)
-  self.file:set_node_text(node, text, front_trim)
+function Headline:_set_node_text(node, text)
+  self.file:set_node_text(node, text)
   return self:refresh()
 end
 

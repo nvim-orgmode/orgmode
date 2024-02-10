@@ -3,6 +3,7 @@ local utils = require('orgmode.utils')
 local ts_utils = require('orgmode.utils.treesitter')
 local OrgFiles = require('orgmode.files')
 local Listitem = require('orgmode.files.elements.listitem')
+local ClockReport = require('orgmode.clock.report')
 
 ---@class Files
 ---@field orgfiles table<string, OrgFile>
@@ -146,19 +147,11 @@ function Files.get_closest_listitem()
 end
 
 function Files.get_clock_report(from, to)
-  local report = {
-    total = 0,
-    files = {},
-  }
-  for name, orgfile in pairs(Files.all()) do
-    local file_clocks = orgfile:get_clock_report(from, to)
-    if #file_clocks.headlines > 0 then
-      report.total = report.total + file_clocks.total_duration.minutes
-      report.files[name] = file_clocks.headlines
-    end
-  end
-
-  return report
+  return ClockReport:new({
+    from = from,
+    to = to,
+    files = Files.loader(),
+  }):generate_report()
 end
 
 function Files._build_tags()

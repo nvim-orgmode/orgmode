@@ -8,6 +8,8 @@ local Duration = require('orgmode.objects.duration')
 ---@field files OrgFiles
 local ClockReport = {}
 
+---@param opts { from: OrgDate, to: OrgDate, files: OrgFiles }
+---@return OrgClockReport
 function ClockReport:new(opts)
   opts = opts or {}
   local data = {}
