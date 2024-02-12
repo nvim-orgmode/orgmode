@@ -206,7 +206,7 @@ function Org.cron(opts)
   if not config.notifications.cron_enabled then
     return vim.cmd([[qa!]])
   end
-  Org.files:load():next(vim.schedule_wrap(function()
+  Org.instance().files:load():next(vim.schedule_wrap(function()
     ---@diagnostic disable-next-line: inject-field
     instance.notifications = require('orgmode.notifications')
       :new({
