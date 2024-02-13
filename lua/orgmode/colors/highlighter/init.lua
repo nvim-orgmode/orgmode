@@ -1,8 +1,8 @@
 ---@class OrgHighlighter
----@field stars OrgStarsHighlighter
----@field markup OrgMarkupHighlighter
----@field todos OrgTodosHighlighter
 ---@field namespace number
+---@field private stars OrgStarsHighlighter
+---@field private markup OrgMarkupHighlighter
+---@field private todos OrgTodosHighlighter
 ---@field private buffers table<number, { language_tree: LanguageTree, tree: TSTree }>
 local OrgHighlighter = {}
 local config = require('orgmode.config')
@@ -56,14 +56,11 @@ function OrgHighlighter:_on_win(_, _, bufnr, topline, botline)
     parsed_trees = self.buffers[bufnr].language_tree:parse({ topline, botline + 1 })
   end
   self.buffers[bufnr].tree = parsed_trees and parsed_trees[1]
-  if self.buffers[bufnr].tree then
-    self.markup:on_win(bufnr, topline, botline)
-  end
 end
 
 function OrgHighlighter:_on_line(_, _, bufnr, line)
   if self.buffers[bufnr].tree then
-    self.markup:on_line(bufnr, line)
+    self.markup:on_line(bufnr, line, self.buffers[bufnr].tree)
     self.stars:on_line(bufnr, line)
   end
 end
