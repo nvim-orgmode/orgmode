@@ -1,11 +1,9 @@
 local config = require('orgmode.config')
 local namespace = vim.api.nvim_create_namespace('org_custom_highlighter')
-local HideLeadingStars = nil
 local MarkupHighlighter = nil
 
 ---@param bufnr number
 local function apply_highlights(bufnr, line)
-  HideLeadingStars.apply(namespace, bufnr, line)
   MarkupHighlighter.apply(namespace, bufnr, line)
 end
 
@@ -14,8 +12,6 @@ local function setup()
   if not ts_highlights_enabled then
     return
   end
-  require('orgmode.colors.todo_highlighter').add_todo_keyword_highlights()
-  HideLeadingStars = require('orgmode.colors.hide_leading_stars')
   MarkupHighlighter = require('orgmode.colors.markup_highlighter')
 
   MarkupHighlighter.setup()
