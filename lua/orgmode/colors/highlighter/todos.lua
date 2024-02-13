@@ -1,9 +1,20 @@
-local Promise = require('orgmode.utils.promise')
 local highlights = require('orgmode.colors.highlights')
-local tree_utils = require('orgmode.utils.treesitter')
 local utils = require('orgmode.utils')
+local Promise = require('orgmode.utils.promise')
+local tree_utils = require('orgmode.utils.treesitter')
 
-local function add_todo_keyword_highlights()
+---@class OrgTodosHighlighter
+local OrgTodos = {}
+
+function OrgTodos:new()
+  local data = {}
+  setmetatable(data, self)
+  self.__index = self
+  data:_add_highlights()
+  return data
+end
+
+function OrgTodos:_add_highlights()
   local query_files = vim.treesitter.query.get_files('org', 'highlights')
   if not query_files or #query_files == 0 then
     return
@@ -45,6 +56,4 @@ local function add_todo_keyword_highlights()
   end)
 end
 
-return {
-  add_todo_keyword_highlights = add_todo_keyword_highlights,
-}
+return OrgTodos

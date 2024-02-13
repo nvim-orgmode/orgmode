@@ -1,6 +1,7 @@
 ---@class OrgHighlighter
 ---@field stars OrgStarsHighlighter
 ---@field markup OrgMarkupHighlighter
+---@field todos OrgTodosHighlighter
 ---@field namespace number
 ---@field private buffers table<number, { language_tree: LanguageTree, tree: TSTree }>
 local OrgHighlighter = {}
@@ -13,18 +14,19 @@ function OrgHighlighter:new()
   }
   setmetatable(data, self)
   self.__index = self
-  data:_setup_decoration_provider()
+  data:_setup()
   return data
 end
 
 ---@private
-function OrgHighlighter:_setup_decoration_provider()
+function OrgHighlighter:_setup()
   local ts_highlights_enabled = config:ts_highlights_enabled()
   if not ts_highlights_enabled then
     return
   end
   self.stars = require('orgmode.colors.highlighter.stars'):new({ highlighter = self })
   self.markup = require('orgmode.colors.highlighter.markup'):new({ highlighter = self })
+  self.todos = require('orgmode.colors.highlighter.todos'):new()
 
   vim.api.nvim_set_decoration_provider(self.namespace, {
     on_win = function(...)
