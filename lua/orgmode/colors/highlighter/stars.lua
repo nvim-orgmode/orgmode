@@ -14,8 +14,20 @@ function OrgStars:new(opts)
   return data
 end
 
+function OrgStars:_is_enabled(bufnr)
+  if config.org_hide_leading_stars then
+    return true
+  end
+
+  if vim.b[bufnr].org_indent_mode and config.org_indent_mode_turns_on_hiding_stars then
+    return true
+  end
+
+  return false
+end
+
 function OrgStars:on_line(bufnr, line)
-  if not config.org_hide_leading_stars then
+  if not self:_is_enabled(bufnr) then
     return
   end
 
