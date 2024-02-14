@@ -61,7 +61,9 @@ function Org:init()
     files = self.files,
   })
   require('orgmode.org.autocompletion').register()
-  self.statusline_debounced = require('orgmode.utils').debounce('statusline', self.clock.get_statusline, 300)
+  self.statusline_debounced = require('orgmode.utils').debounce('statusline', function()
+    return self.clock:get_statusline()
+  end, 300)
   self.initialized = true
 end
 
