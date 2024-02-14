@@ -102,13 +102,11 @@ function M.define_org_headline_colors(faces)
   for _, face in pairs(faces) do
     table.insert(contains, face)
   end
-  if config.org_hide_leading_stars then
-    if not ts_highlights_enabled then
-      vim.cmd([[syn match OrgHideLeadingStars /^\*\{2,\}/me=e-1 contained]])
-    end
-    vim.cmd([[hi default OrgHideLeadingStars ctermfg=0 guifg=bg]])
-    table.insert(contains, 'OrgHideLeadingStars')
+  if not ts_highlights_enabled then
+    vim.cmd([[syn match OrgHideLeadingStars /^\*\{2,\}/me=e-1 contained]])
   end
+  vim.cmd([[hi default OrgHideLeadingStars ctermfg=0 guifg=bg]])
+  table.insert(contains, 'OrgHideLeadingStars')
   for i, color in ipairs(headline_colors) do
     local j = i
     while j < 40 do
