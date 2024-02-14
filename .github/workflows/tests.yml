@@ -4,11 +4,9 @@ on:
   push:
     branches:
       - master
-      - nightly
   pull_request:
     branches:
       - master
-      - nightly
 
 env:
   CI: true
