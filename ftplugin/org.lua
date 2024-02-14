@@ -15,6 +15,7 @@ if config.org_startup_indented then
 end
 require('orgmode.org.indent').setup()
 
+vim.b.org_bufnr = vim.api.nvim_get_current_buf()
 vim.bo.modeline = false
 vim.opt_local.fillchars:append('fold: ')
 vim.opt_local.foldmethod = 'expr'

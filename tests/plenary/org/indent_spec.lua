@@ -338,4 +338,87 @@ describe('with "indent" and "VirtualIndent" is enabled', function()
       assert.are.equal(content_virtcols[line][2], vim.fn.virtcol('.'))
     end
   end)
+
+  it('Virtual Indent detaches and reattaches in response to toggling `vim.b.org_indent_mode`', function()
+    if not vim.b.org_indent_mode then
+      return
+    end
+
+    local content_virtcols = {
+      { '* TODO First task', 1 },
+      { 'SCHEDULED: <1970-01-01 Thu>', 3 },
+      { '', 2 },
+      { '1. Ordered list', 3 },
+      { '   a) nested list', 3 },
+      { '      over-indented', 3 },
+      { '      over-indented', 3 },
+      { '   b) nested list', 3 },
+      { '      under-indented', 3 },
+      { '2. Ordered list', 3 },
+      { 'Not part of the list', 3 },
+      { '', 2 },
+      { '** Second task', 1 },
+      { 'DEADLINE: <1970-01-01 Thu>', 4 },
+      { '', 3 },
+      { '- Unordered list', 4 },
+      { '  + nested list', 4 },
+      { '    over-indented', 4 },
+      { '    over-indented', 4 },
+      { '  + nested list', 4 },
+      { '    under-indented', 4 },
+      { '- unordered list', 4 },
+      { '  + nested list', 4 },
+      { '    * triple nested list', 4 },
+      { '      continuation', 4 },
+      { '  part of the first-level list', 4 },
+      { 'Not part of the list', 4 },
+      { '', 3 },
+      { '*** Incorrectly indented block', 1 },
+      { '#+BEGIN_SRC json', 5 },
+      { '{', 5 },
+      { '  "key": "value",', 5 },
+      { '  "another key": "another value"', 5 },
+      { '}', 5 },
+      { '#+END_SRC', 5 },
+      { '', 4 },
+      { '- Correctly reindents to list indentation level', 5 },
+      { '  #+BEGIN_SRC json', 5 },
+      { '  {', 5 },
+      { '    "key": "value",', 5 },
+      { '    "another key": "another value"', 5 },
+      { '  }', 5 },
+      { '  #+END_SRC', 5 },
+      { '- Correctly reindents when entire block overindented', 5 },
+      { '  #+BEGIN_SRC json', 5 },
+      { '  {', 5 },
+      { '    "key": "value",', 5 },
+      { '    "another key": "another value"', 5 },
+      { '  }', 5 },
+      { '  #+END_SRC', 5 },
+    }
+    local content = {}
+    for _, content_virtcol in pairs(content_virtcols) do
+      table.insert(content, content_virtcol[1])
+    end
+    helpers.load_file_content(content)
+
+    -- Check if VirtualIndent correctly detaches in response to disabling `vim.b.org_indent_mode`
+    vim.b.org_indent_mode = false
+    -- Give VirtualIndent long enough to react to the change in `vim.b.org_indent_mode`
+    vim.wait(60)
+    for line = 1, vim.api.nvim_buf_line_count(0) do
+      vim.api.nvim_win_set_cursor(0, { line, 0 })
+      assert.are.equal(0, vim.fn.virtcol('.'))
+    end
+
+    -- Check if VirtualIndent correctly attaches in response to disabling `vim.b.org_indent_mode`
+    vim.b.org_indent_mode = true
+    -- Give VirtualIndent long enough to react to the change in `vim.b.org_indent_mode`
+    vim.wait(60)
+    for line = 1, vim.api.nvim_buf_line_count(0) do
+      vim.api.nvim_win_set_cursor(0, { line, 0 })
+      assert.are.same(content_virtcols[line][1], vim.api.nvim_buf_get_lines(0, line - 1, line, false)[1])
+      assert.are.equal(content_virtcols[line][2], vim.fn.virtcol('.'))
+    end
+  end)
 end)

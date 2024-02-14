@@ -6,3 +6,7 @@ function! OrgmodeInput(prompt, default, ...) abort
   endif
   return input(a:prompt, a:default)
 endfunction
+
+function OrgmodeWatchDictChanges(dict, key, change_dict) abort
+  return luaeval('require("orgmode.utils.dict_watcher").dict_changed(_A[1], _A[2], _A[3])', [a:change_dict, a:key, a:dict])
+endfunction
