@@ -301,8 +301,8 @@ Possible values:
 *type*: `boolean`<br />
 *default value*: `true`<br />
 Possible values:
-* `true` - Enable [`org_hide_leading_stars`](#org_hide_leading_stars) by default when [`org_startup_indented`](#org_startup_indented) is enabled.
-* `false` - Do not modify the value in [`org_hide_leading_stars`](#org_hide_leading_stars) by default when [`org_startup_indented`](#org_startup_indented) is enabled.
+* `true` - Enable [`org_hide_leading_stars`](#org_hide_leading_stars) by default when [`org_indent_mode`](#org_startup_indented) is enabled for buffer (`vim.b.org_indent_mode = true`).
+* `false` - Do not modify the value in [`org_hide_leading_stars`](#org_hide_leading_stars) by default when [`.org_indent_mode`](#org_startup_indented) is enabled for buffer (`vim.b.org_indent_mode = true`).
 
 #### **org_src_window_setup**
 *type*: `string|function`<br />
