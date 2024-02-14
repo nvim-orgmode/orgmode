@@ -1,25 +1,46 @@
+OrgApiRefileOpts                                              *OrgApiRefileOpts*
+
+    Fields: ~
+        {source}       (OrgApiHeadline)
+        {destination}  (OrgApiFile|OrgApiHeadline)
+
+
+OrgApi                                                                  *OrgApi*
+
+
 OrgApi.load({name?})                                               *OrgApi.load*
 
     Parameters: ~
         {name?}  (string|string[])  specific file names to return (absolute path). If ommitted, returns all loaded files
 
     Returns: ~
-        (OrgFile|OrgFile[])
+        (OrgApiFile|OrgApiFile[])
 
 
 OrgApi.current()                                                *OrgApi.current*
      Get current org buffer file
 
     Returns: ~
-        (OrgFile)
+        (OrgApiFile)
 
 
-OrgFile                                                                *OrgFile*
+OrgApi.refile({opts})                                            *OrgApi.refile*
+    Refile headline to another file or headline
+    If executed from capture buffer, it will close the capture buffer
+
+    Parameters: ~
+        {opts}  (OrgApiRefileOpts)
+
+    Returns: ~
+        (boolean)
+
+
+OrgApiFile                                                          *OrgApiFile*
 
     Fields: ~
-        {category}         (string)         current file category name. By default it's only filename without extension unless defined differently via #+CATEGORY directive
-        {filename}         (string)         absolute path of the current file
-        {headlines}        (OrgHeadline[])
+        {category}         (string)            current file category name. By default it's only filename without extension unless defined differently via #+CATEGORY directive
+        {filename}         (string)            absolute path of the current file
+        {headlines}        (OrgApiHeadline[])
         {is_archive_file}  (boolean)
 
 
@@ -27,24 +48,44 @@ OrgFile:reload()                                                *OrgFile:reload*
      Return refreshed instance of the file
 
     Returns: ~
-        (OrgFile)
+        (OrgApiFile)
 
 
-OrgHeadline                                                        *OrgHeadline*
+OrgFile:get_closest_headline()                    *OrgFile:get_closest_headline*
+     Return closest headline, or nil if there are no headlines found
+     If cursor is not provided, it will use current cursor position
+     @param cursor? { line: number, col: number } (1, 0)-indexed cursor position, same as returned from `vim.api.nvim_win_get_cursor(0)`
+     @return OrgApiHeadline | nil
+
+
+OrgApiHeadline                                                  *OrgApiHeadline*
 
     Fields: ~
-        {title}        (string)   headline title without todo keyword, tags and priority. Ex. `* TODO I am a headline  :SOMETAG:` returns `I am a headline`
-        {line}         (string)   full headline line
-        {level}        (number)   headline level (number of asterisks). Example: 1
-        {todo_value?}  (string)   todo keyword of the headline (Example: TODO, DONE)
-        {todo_type?}   (string|)
+        {title}        (string)                headline title without todo keyword, tags and priority. Ex. `* TODO I am a headline  :SOMETAG:` returns `I am a headline`
+        {line}         (string)                full headline line
+        {level}        (number)                headline level (number of asterisks). Example: 1
+        {todo_value?}  (string)                todo keyword of the headline (Example: TODO, DONE)
+        {todo_type?}   ("TODO"|"DONE"|"")
+        {tags}         (string[])              List of own tags
+        {deadline}     (OrgDate|nil)
+        {scheduled}    (OrgDate|nil)
+        {properties}   (table<string,string>)  Table containing all properties. All keys are lowercased
+        {closed}       (OrgDate|nil)
+        {dates}        (OrgDate[])             List of all dates that are not "plan" dates
+        {position}     (OrgRange)
+        {all_tags}     (string[])              List of all tags (own + inherited)
+        {file}         (OrgApiFile)
+        {parent}       (OrgApiHeadline|nil)
+        {priority}     (string|nil)
+        {is_archived}  (boolean)               headline marked with the `:ARCHIVE:` tag
+        {headlines}    (OrgApiHeadline[])
 
 
 OrgHeadline:reload()                                        *OrgHeadline:reload*
      Return updated version of headline
 
     Returns: ~
-        (OrgHeadline)
+        (OrgApiHeadline)
 
 
 OrgHeadline:set_tags({tags})                              *OrgHeadline:set_tags*
@@ -54,21 +95,21 @@ OrgHeadline:set_tags({tags})                              *OrgHeadline:set_tags*
         {tags}  (string[])
 
     Returns: ~
-        (Promise)
+        (OrgPromise)
 
 
 OrgHeadline:priority_up()                              *OrgHeadline:priority_up*
      Increase priority on a headline
 
     Returns: ~
-        (Promise)
+        (OrgPromise)
 
 
 OrgHeadline:priority_down()                          *OrgHeadline:priority_down*
      Decrease priority on a headline
 
     Returns: ~
-        (Promise)
+        (OrgPromise)
 
 
 OrgHeadline:set_priority({priority})                  *OrgHeadline:set_priority*
@@ -78,27 +119,27 @@ OrgHeadline:set_priority({priority})                  *OrgHeadline:set_priority*
         {priority}  (string)
 
     Returns: ~
-        (Promise)
+        (OrgPromise)
 
 
 OrgHeadline:set_deadline({date?})                     *OrgHeadline:set_deadline*
      Set deadline date
 
     Parameters: ~
-        {date?}  (Date|string|nil)  If ommited, opens the datepicker. Empty string removes the date. String must follow org date convention (YYYY-MM-DD HH:mm...)
+        {date?}  (OrgDate|string|nil)  If ommited, opens the datepicker. Empty string removes the date. String must follow org date convention (YYYY-MM-DD HH:mm...)
 
     Returns: ~
-        (Promise)
+        (OrgPromise)
 
 
 OrgHeadline:set_scheduled({date?})                   *OrgHeadline:set_scheduled*
      Set scheduled date
 
     Parameters: ~
-        {date?}  (Date|string|nil)  If ommited, opens the datepicker. Empty string removes the date. String must follow org date convention (YYYY-MM-DD HH:mm...)
+        {date?}  (OrgDate|string|nil)  If ommited, opens the datepicker. Empty string removes the date. String must follow org date convention (YYYY-MM-DD HH:mm...)
 
     Returns: ~
-        (Promise)
+        (OrgPromise)
 
 
 OrgHeadline:set_property({key}, {value})              *OrgHeadline:set_property*
@@ -137,7 +178,7 @@ OrgAgendaOptions                                              *OrgAgendaOptions*
 
     Fields: ~
         {filters?}  (OrgAgendaFilter)
-        {from?}     (string|Date)
+        {from?}     (string|OrgDate)
         {span?}     (number|"day"|"week"|"month"|"year")
 
 
