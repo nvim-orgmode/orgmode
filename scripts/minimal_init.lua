@@ -1,4 +1,5 @@
-local nvim_root = '/tmp/nvim_orgmode'
+local tmp_dir = vim.env.TMPDIR or vim.env.TMP or vim.env.TEMP or '/tmp'
+local nvim_root = tmp_dir .. '/nvim_orgmode'
 local lazy_root = nvim_root .. '/lazy'
 local lazypath = lazy_root .. '/lazy.nvim'
 

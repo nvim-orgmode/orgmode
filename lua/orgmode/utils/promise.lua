@@ -28,7 +28,9 @@ function PackedValue.first(self)
   return first
 end
 
---- @class Promise
+--- @generic T : any
+--- @generic V : any
+--- @class OrgPromise<T, V>: { next: fun(self: OrgPromise<T>, resolve:fun(result:T):V), wait: fun(self: OrgPromise<T>, timeout?: number):V }
 local Promise = {}
 Promise.__index = Promise
 
@@ -75,7 +77,7 @@ end
 
 --- Equivalents to JavaScript's Promise.new.
 --- @param executor fun(resolve:fun(...:any),reject:fun(...:any))
---- @return Promise
+--- @return OrgPromise
 function Promise.new(executor)
   vim.validate({ executor = { executor, 'function' } })
 
@@ -106,7 +108,7 @@ end
 --- Returns a fulfilled promise.
 --- But if the first argument is promise, returns the promise.
 --- @param ... any: one promise or non-promises
---- @return Promise
+--- @return OrgPromise
 function Promise.resolve(...)
   local first = ...
   if is_promise(first) then
@@ -121,7 +123,7 @@ end
 --- Returns a rejected promise.
 --- But if the first argument is promise, returns the promise.
 --- @param ... any: one promise or non-promises
---- @return Promise
+--- @return OrgPromise
 function Promise.reject(...)
   local first = ...
   if is_promise(first) then
@@ -215,7 +217,7 @@ end
 --- Equivalents to JavaScript's Promise.then.
 --- @param on_fullfilled (fun(...:any):any)?: A callback on fullfilled.
 --- @param on_rejected (fun(...:any):any)?: A callback on rejected.
---- @return Promise
+--- @return OrgPromise
 function Promise.next(self, on_fullfilled, on_rejected)
   vim.validate({
     on_fullfilled = { on_fullfilled, 'function', true },
@@ -236,14 +238,14 @@ end
 
 --- Equivalents to JavaScript's Promise.catch.
 --- @param on_rejected (fun(...:any):any)?: A callback on rejected.
---- @return Promise
+--- @return OrgPromise
 function Promise.catch(self, on_rejected)
   return self:next(nil, on_rejected)
 end
 
 --- Equivalents to JavaScript's Promise.finally.
 --- @param on_finally fun()
---- @return Promise
+--- @return OrgPromise
 function Promise.finally(self, on_finally)
   vim.validate({ on_finally = { on_finally, 'function', true } })
   return self
@@ -257,10 +259,29 @@ function Promise.finally(self, on_finally)
     end)
 end
 
+--- Equivalents to JavaScript's Promise.then.
+--- @param timeout? number
+--- @return any
+function Promise.wait(self, timeout)
+  local is_done = false
+  local result = nil
+
+  self:next(function(...)
+    result = PackedValue.new(...)
+    is_done = true
+  end)
+
+  vim.wait(timeout or 5000, function()
+    return is_done
+  end, 1)
+
+  return result and result:unpack()
+end
+
 --- Equivalents to JavaScript's Promise.all.
 --- Even if multiple value are resolved, results include only the first value.
 --- @param list any[]: promise or non-promise values
---- @return Promise
+--- @return OrgPromise
 function Promise.all(list)
   vim.validate({ list = { list, 'table' } })
   return Promise.new(function(resolve, reject)
@@ -289,7 +310,7 @@ end
 
 --- Equivalents to JavaScript's Promise.race.
 --- @param list any[]: promise or non-promise values
---- @return Promise
+--- @return OrgPromise
 function Promise.race(list)
   vim.validate({ list = { list, 'table' } })
   return Promise.new(function(resolve, reject)
@@ -308,7 +329,7 @@ end
 --- Equivalents to JavaScript's Promise.any.
 --- Even if multiple value are rejected, errors include only the first value.
 --- @param list any[]: promise or non-promise values
---- @return Promise
+--- @return OrgPromise
 function Promise.any(list)
   vim.validate({ list = { list, 'table' } })
   return Promise.new(function(resolve, reject)
@@ -338,7 +359,7 @@ end
 --- Equivalents to JavaScript's Promise.allSettled.
 --- Even if multiple value are resolved/rejected, value/reason is only the first value.
 --- @param list any[]: promise or non-promise values
---- @return Promise
+--- @return OrgPromise
 function Promise.all_settled(list)
   vim.validate({ list = { list, 'table' } })
   return Promise.new(function(resolve)

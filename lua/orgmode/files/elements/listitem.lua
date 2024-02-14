@@ -1,14 +1,16 @@
-local ts_utils = require('nvim-treesitter.ts_utils')
-local tree_utils = require('orgmode.utils.treesitter')
-local ts = vim.treesitter
-local Headline = require('orgmode.treesitter.headline')
+local ts_utils = require('orgmode.utils.treesitter')
 
----@class Listitem
+---@class OrgListitem
 ---@field listitem TSNode
+---@field file OrgFile
 local Listitem = {}
 
-function Listitem:new(listitem_node)
-  local data = { listitem = listitem_node }
+---@return OrgListitem
+function Listitem:new(listitem_node, file)
+  local data = {
+    listitem = listitem_node,
+    file = file,
+  }
   setmetatable(data, self)
   self.__index = self
   return data
@@ -36,7 +38,7 @@ function Listitem:checkbox()
   if not checkbox then
     return nil
   end
-  local text = ts.get_node_text(checkbox, 0)
+  local text = self.file:get_node_text(checkbox)
   return { text = text, range = { checkbox:range() } }
 end
 
@@ -62,14 +64,14 @@ function Listitem:update_checkbox(action)
 
   self:update_cookie(total_child_checkboxes, checked_child_checkboxes)
 
-  local parent_list = tree_utils.find_parent_type(self.listitem, 'list')
-  local parent_listitem = tree_utils.find_parent_type(parent_list, 'listitem')
+  local parent_list = ts_utils.closest_node(self.listitem, 'list')
+  local parent_listitem = ts_utils.closest_node(parent_list, 'listitem')
   if parent_listitem then
-    Listitem:new(parent_listitem):update_checkbox('children')
+    Listitem:new(parent_listitem, self.file):update_checkbox('children')
   else
-    local parent_headline = tree_utils.closest_headline()
+    local parent_headline = self.file:get_closest_headline_or_nil()
     if parent_headline then
-      Headline:new(parent_headline):update_cookie(parent_list)
+      parent_headline:update_cookie(parent_list)
     end
   end
 end
@@ -79,7 +81,7 @@ function Listitem:child_checkboxes()
   for _, content in ipairs(contents) do
     if content:type() == 'list' then
       return vim.tbl_map(function(node)
-        local text = ts.get_node_text(node, 0)
+        local text = self.file:get_node_text(node)
         return text:match('%[.%]')
       end, ts_utils.get_named_children(content))
     end
@@ -94,7 +96,7 @@ function Listitem:cookie()
     return nil
   end
 
-  local text = ts.get_node_text(cookie_node, 0)
+  local text = self.file:get_node_text(cookie_node)
   if text:match('%[%d*/%d*%]') or text:match('%[%d?%d?%d?%%%]') then
     return cookie_node
   end
@@ -104,12 +106,12 @@ function Listitem:update_cookie(total_child_checkboxes, checked_child_checkboxes
   local cookie = self:cookie()
   if cookie then
     local new_cookie_val
-    if ts.get_node_text(cookie, 0):find('%%') then
+    if self.file:get_node_text(cookie):find('%%') then
       new_cookie_val = ('[%d%%]'):format((#checked_child_checkboxes / #total_child_checkboxes) * 100)
     else
       new_cookie_val = ('[%d/%d]'):format(#checked_child_checkboxes, #total_child_checkboxes)
     end
-    tree_utils.set_node_text(cookie, new_cookie_val)
+    self.file:set_node_text(cookie, new_cookie_val)
   end
 end
 

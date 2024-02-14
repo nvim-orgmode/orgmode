@@ -2,10 +2,10 @@ local instance = {}
 local utils = require('orgmode.utils')
 local fs = require('orgmode.utils.fs')
 local defaults = require('orgmode.config.defaults')
----@type table<string, MapEntry>
+---@type table<string, OrgMapEntry>
 local mappings = require('orgmode.config.mappings')
 
----@class Config:DefaultConfig
+---@class OrgConfig:OrgDefaultConfig
 ---@field opts table
 ---@field todo_keywords table
 local Config = {}
@@ -29,7 +29,7 @@ function Config:__index(key)
 end
 
 ---@param opts table
----@return Config
+---@return OrgConfig
 function Config:extend(opts)
   self.todo_keywords = nil
   opts = opts or {}
@@ -160,37 +160,6 @@ function Config:_deprecation_notify(opts)
       utils.echo_warning(table.concat(messages, '\n'))
     end)
   end
-end
-
----@return string[]
-function Config:get_all_files()
-  local all_filenames = {}
-  if self.opts.org_default_notes_file and self.opts.org_default_notes_file ~= '' then
-    local default_full_path = vim.fn.resolve(vim.fn.fnamemodify(self.opts.org_default_notes_file, ':p'))
-    if vim.loop.fs_stat(default_full_path) then
-      table.insert(all_filenames, default_full_path)
-    end
-  end
-  local files = self.opts.org_agenda_files
-  if not files or files == '' or (type(files) == 'table' and vim.tbl_isempty(files)) then
-    return all_filenames
-  end
-  if type(files) ~= 'table' then
-    files = { files }
-  end
-
-  local all_files = vim.tbl_map(function(file)
-    return vim.tbl_map(function(path)
-      return vim.fn.resolve(path)
-    end, vim.fn.glob(vim.fn.fnamemodify(file, ':p'), 0, 1))
-  end, files)
-
-  all_files = utils.concat(vim.tbl_flatten(all_files), all_filenames, true)
-
-  return vim.tbl_filter(function(file)
-    local ext = vim.fn.fnamemodify(file, ':e')
-    return ext == 'org' or ext == 'org_archive'
-  end, all_files)
 end
 
 ---@return number
@@ -354,6 +323,16 @@ function Config:is_archive_file(file)
   return vim.fn.fnamemodify(file, ':e') == 'org_archive'
 end
 
+function Config:exclude_tags(tags)
+  if vim.tbl_isempty(self.opts.org_tags_exclude_from_inheritance) then
+    return tags
+  end
+
+  return vim.tbl_filter(function(tag)
+    return not vim.tbl_contains(self.opts.org_tags_exclude_from_inheritance, tag)
+  end, tags)
+end
+
 function Config:get_inheritable_tags(headline)
   if not headline.tags or not self.opts.org_use_tag_inheritance then
     return {}
@@ -423,8 +402,9 @@ function Config:get_indent(amount)
   return ''
 end
 
----@param content table|string
+---@param content string|string[]
 ---@param amount number
+---@return string|string[]
 function Config:apply_indent(content, amount)
   local indent = self:get_indent(amount)
 
@@ -442,6 +422,20 @@ function Config:apply_indent(content, amount)
   return content
 end
 
----@type Config
+---@param bufnr number
+---@return boolean
+function Config:hide_leading_stars(bufnr)
+  if self.org_hide_leading_stars then
+    return true
+  end
+
+  if vim.b[bufnr].org_indent_mode and self.org_indent_mode_turns_on_hiding_stars then
+    return true
+  end
+
+  return false
+end
+
+---@type OrgConfig
 instance = Config:new()
 return instance

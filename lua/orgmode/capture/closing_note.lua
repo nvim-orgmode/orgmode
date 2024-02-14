@@ -2,7 +2,7 @@ local utils = require('orgmode.utils')
 local config = require('orgmode.config')
 local Promise = require('orgmode.utils.promise')
 
----@class ClosingNote
+---@class OrgClosingNote
 local ClosingNote = {}
 
 function ClosingNote:new()

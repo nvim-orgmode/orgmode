@@ -1,4 +1,4 @@
----@class MapEntry
+---@class OrgMapEntry
 ---@field handler string
 ---@field handler_cmd string
 ---@field args table[]

@@ -1,10 +1,11 @@
 local utils = require('orgmode.utils')
 ---@type OrgState
 local state = nil
-local cache_path = vim.fs.normalize(vim.fn.stdpath('cache') .. '/org-cache.json', { expand_env = false })
 local spy = require('luassert.spy')
 
 describe('State', function()
+  local cache_path = vim.fs.normalize(vim.fn.stdpath('cache') .. '/org-cache.json', { expand_env = false })
+
   before_each(function()
     -- Ensure the cache file is removed before each run
     state = require('orgmode.state.state')
@@ -107,11 +108,7 @@ describe('State', function()
   end)
 
   it('should be able to self-heal from an invalid state file', function()
-    state:save_sync()
-
-    vim.cmd(('edit %s'):format(cache_path))
-    vim.api.nvim_buf_set_lines(0, 0, -1, false, { '[ invalid json!' })
-    vim.cmd('write')
+    vim.fn.writefile({ '[ invalid json!' }, cache_path)
 
     -- Ensure we reload the state from its cache file (this should also "heal" the cache)
     state._ctx.loaded = false

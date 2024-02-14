@@ -1,14 +1,14 @@
 local Events = require('orgmode.events.types')
 local Listeners = require('orgmode.events.listeners')
 
----@class EventManager
+---@class OrgEventManager
 local EventManager = {
   initialized = false,
   _listeners = {},
   event = Events,
 }
 
----@param event Event
+---@param event OrgEvent
 function EventManager.dispatch(event)
   if EventManager._listeners[event.type] then
     for _, listener in ipairs(EventManager._listeners[event.type]) do
@@ -17,7 +17,7 @@ function EventManager.dispatch(event)
   end
 end
 
----@param event Event
+---@param event OrgEvent
 ---@param listener fun(...)
 function EventManager.listen(event, listener)
   if not EventManager._listeners[event.type] then

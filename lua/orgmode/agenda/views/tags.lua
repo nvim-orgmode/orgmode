@@ -1,19 +1,19 @@
 local AgendaFilter = require('orgmode.agenda.filter')
 local AgendaTodosView = require('orgmode.agenda.views.todos')
-local Search = require('orgmode.parser.search')
-local Files = require('orgmode.parser.files')
-local Range = require('orgmode.parser.range')
+local Search = require('orgmode.files.elements.search')
+local Range = require('orgmode.files.elements.range')
 local utils = require('orgmode.utils')
 
----@class AgendaTagsView
+---@class OrgAgendaTagsView
 ---@field items table[]
 ---@field content table[]
 ---@field highlights table[]
 ---@field header string
 ---@field search string
----@field filters AgendaFilter
+---@field filters OrgAgendaFilter
 ---@field todo_only boolean
 ---@field win_width number
+---@field files OrgFiles
 local AgendaTagsView = {}
 
 function AgendaTagsView:new(opts)
@@ -27,6 +27,7 @@ function AgendaTagsView:new(opts)
     filters = opts.filters or AgendaFilter:new(),
     header = opts.org_agenda_overriding_header,
     win_width = opts.win_width or utils.winwidth(),
+    files = opts.files,
   }
 
   setmetatable(data, self)
@@ -35,13 +36,15 @@ function AgendaTagsView:new(opts)
 end
 
 function AgendaTagsView:build()
-  local tags = vim.fn.OrgmodeInput('Match: ', self.search, Files.autocomplete_tags)
+  local tags = vim.fn.OrgmodeInput('Match: ', self.search, function(arg_lead)
+    utils.prompt_autocomplete(arg_lead, self.files:get_tags())
+  end)
   if vim.trim(tags) == '' then
     return utils.echo_warning('Invalid tag.')
   end
   local search = Search:new(tags)
   self.items = {}
-  for _, orgfile in ipairs(Files.all()) do
+  for _, orgfile in ipairs(self.files:all()) do
     local headlines_filtered = orgfile:apply_search(search, self.todo_only)
     for _, headline in ipairs(headlines_filtered) do
       if self.filters:matches(headline) then

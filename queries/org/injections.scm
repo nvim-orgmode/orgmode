@@ -1,1 +1,1 @@
- (block parameter: (expr) @language (contents) @content)
+ (block parameter: (expr) @injection.language (contents) @injection.content (#set! injection.include-children))

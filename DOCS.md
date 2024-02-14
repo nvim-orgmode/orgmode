@@ -237,14 +237,15 @@ Ensure your `:h conceallevel` is set properly in order for this to function.
 *type*: `string`<br />
 *default value*: `...`<br />
 Marker used to indicate a folded headline.
+Not applicable with new empty `foldtext` options in Neovim
 
 #### **org_log_done**
-*type*: `string|nil`<br />
+*type*: `string|false`<br />
 *default value*: `time`<br />
 Possible values:
 * `time` - adds `CLOSED` date when marking headline as done
 * `note` - adds `CLOSED` date as above, and prompts for closing note via capture window. Confirm note with `org_note_finalize` (Default `<C-c>`), or ignore providing note via `org_note_kill` (Default `<Leader>ok`)
-* `nil|false` - Disable any logging
+* `false` - Disable any logging
 
 #### **org_log_into_drawer**
 *type*: `string|nil`<br />
@@ -273,6 +274,10 @@ Possible values:
 * `true` - Uses *Virtual* indents to align content visually. The indents are only visual, they are not saved to the file.
 * `false` - Do not add any *Virtual* indentation.
 
+You can toggle Virtual indents on the fly by setting `vim.b.org_indent_mode` to either `true` or `false` when in a org
+buffer. For example, if virtual indents were enabled in the current buffer then you could disable them immediately by
+setting `vim.b.org_indent_mode = false`.
+
 This feature has no effect when enabled on Neovim versions < 0.10.0
 
 #### **org_adapt_indentation**
@@ -290,6 +295,14 @@ Possible values:
 Possible values:
 * `true` - Disable [`org_adapt_indentation`](#org_adapt_indentation) by default when [`org_startup_indented`](#org_startup_indented) is enabled.
 * `false` - Do not disable [`org_adapt_indentation`](#org_adapt_indentation) by default when [`org_startup_indented`](#org_startup_indented) is enabled.
+
+#### **org_indent_mode_turns_on_hiding_stars**
+
+*type*: `boolean`<br />
+*default value*: `true`<br />
+Possible values:
+* `true` - Enable [`org_hide_leading_stars`](#org_hide_leading_stars) by default when [`org_indent_mode`](#org_startup_indented) is enabled for buffer (`vim.b.org_indent_mode = true`).
+* `false` - Do not modify the value in [`org_hide_leading_stars`](#org_hide_leading_stars) by default when [`.org_indent_mode`](#org_startup_indented) is enabled for buffer (`vim.b.org_indent_mode = true`).
 
 #### **org_src_window_setup**
 *type*: `string|function`<br />
@@ -668,7 +681,37 @@ require('orgmode').setup({
 
 You can find the configuration file that holds all default mappings [here](./lua/orgmode/config/mappings/init.lua)
 
-**NOTE**: All mappings are normal mode mappings (`nnoremap`)
+**NOTE**: All mappings are normal mode mappings (`nnoremap`) with exception of `org_return`
+
+### Use Enter in insert mode to add list items/checkboxes/todos
+By default, adding list items/checkboxes/todos is done with [org_meta_return](#org_meta_return) which is a normal mode mapping.
+If you want to have an insert mode mapping there are two options:
+
+1. If your terminal supports it, map a key like `Shift + Enter` to the meta return mapping (Recommended):
+```lua
+vim.api.nvim_create_autocmd('FileType', {
+  pattern = 'org',
+  callback = function()
+    vim.keymap.set('i', '<S-CR>', '<cmd>lua require("orgmode").action("org_mappings.meta_return")<CR>', {
+      silent = true,
+      buffer = true,
+    })
+  end,
+})
+```
+2. If you want to use only enter, enable `org_return_uses_meta_return` option:
+```lua
+require('orgmode').setup({
+  org_agenda_files = {'~/Dropbox/org/*', '~/my-orgs/**/*'},
+  org_default_notes_file = '~/Dropbox/org/refile.org',
+  mappings = {
+    org_return_uses_meta_return = true
+  }
+})
+```
+This will trigger `org_meta_return` if there is no content after the cursor position (either at the end of line or has just trailing spaces).
+Just note that this option always tries to use `meta_return`, which also adds new headlines
+automatically if you are on the headline line, which can give undesired results.
 
 ### Global mappings
 

@@ -1,4 +1,4 @@
----@class Range
+---@class OrgRange
 ---@field start_line number
 ---@field start_col number
 ---@field end_line number
@@ -36,13 +36,13 @@ function Range.from_node(node)
 end
 
 ---@param lnum number
----@return Range
+---@return OrgRange
 function Range.from_line(lnum)
   return Range:new({ start_line = lnum, end_line = lnum })
 end
 
----@param lnum string
----@return Range
+---@param lnum number
+---@return OrgRange
 function Range.for_line_hl(lnum)
   return Range:new({ start_line = lnum, end_line = lnum, end_col = 0 })
 end

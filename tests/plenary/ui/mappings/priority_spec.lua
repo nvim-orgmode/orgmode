@@ -1,4 +1,4 @@
-local helpers = require('tests.plenary.ui.helpers')
+local helpers = require('tests.plenary.helpers')
 
 describe('Priority mappings', function()
   after_each(function()

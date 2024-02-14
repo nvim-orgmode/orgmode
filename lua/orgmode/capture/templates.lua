@@ -35,8 +35,8 @@ local expansions = {
 
 ---@see https://orgmode.org/manual/Capture-templates.html
 
----@class Templates
----@field templates table<string, Template>
+---@class OrgCaptureTemplates
+---@field templates table<string, OrgCaptureTemplate>
 local Templates = {}
 
 function Templates:new(templates)

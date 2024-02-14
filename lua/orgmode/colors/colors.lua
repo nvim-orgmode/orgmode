@@ -12,7 +12,7 @@
 
 local M = {}
 
----@class Color
+---@class OrgColor
 local Color = {}
 local Color_mt = { __metatable = {}, __index = Color }
 

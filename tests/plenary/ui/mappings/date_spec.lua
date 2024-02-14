@@ -1,4 +1,4 @@
-local helpers = require('tests.plenary.ui.helpers')
+local helpers = require('tests.plenary.helpers')
 local Date = require('orgmode.objects.date')
 
 describe('Date mappings', function()

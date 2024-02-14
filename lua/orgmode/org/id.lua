@@ -1,6 +1,5 @@
 local config = require('orgmode.config')
 local utils = require('orgmode.utils')
-local state = require('orgmode.state.state')
 
 local OrgId = {
   uuid_pattern = '%x%x%x%x%x%x%x%x%-%x%x%x%x%-%x%x%x%x%-%x%x%x%x%-%x%x%x%x%x%x%x%x%x%x%x%x',

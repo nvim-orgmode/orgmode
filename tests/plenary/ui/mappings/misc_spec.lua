@@ -1,7 +1,5 @@
-local helpers = require('tests.plenary.ui.helpers')
-local org = require('orgmode')
+local helpers = require('tests.plenary.helpers')
 local config = require('orgmode.config')
-local Files = require('orgmode.parser.files')
 
 describe('Mappings', function()
   after_each(function()

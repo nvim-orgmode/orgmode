@@ -1,4 +1,4 @@
-local helpers = require('tests.plenary.ui.helpers')
+local helpers = require('tests.plenary.helpers')
 local config = require('orgmode.config')
 
 describe('Meta return mappings', function()
@@ -7,7 +7,7 @@ describe('Meta return mappings', function()
   end)
 
   it('should add list item with Enter (org_meta_return)', function()
-    helpers.load_file_content({
+    helpers.load_as_agenda_file({
       '#TITLE: Test',
       '',
       '* TODO Test orgmode',
@@ -76,7 +76,7 @@ describe('Meta return mappings', function()
         plain_list_item = true,
       },
     })
-    helpers.load_file_content({
+    helpers.load_as_agenda_file({
       '#TITLE: Test',
       '',
       '* TODO Test orgmode',
@@ -108,7 +108,7 @@ describe('Meta return mappings', function()
   end)
 
   it('should add headline with Enter (org_meta_return)', function()
-    helpers.load_file_content({
+    helpers.load_as_agenda_file({
       '#TITLE: Test',
       '',
       '* DONE top level todo :WORK:',
@@ -139,7 +139,7 @@ describe('Meta return mappings', function()
     config:extend({
       org_blank_before_new_entry = { heading = false, plain_list_item = false },
     })
-    helpers.load_file_content({
+    helpers.load_as_agenda_file({
       '#TITLE: Test',
       '',
       '* DONE top level todo :WORK:',
@@ -169,7 +169,7 @@ describe('Meta return mappings', function()
   end)
 
   it('should add headline with Enter right after the current headline (org_meta_return)', function()
-    helpers.load_file_content({
+    helpers.load_as_agenda_file({
       '#TITLE: Test',
       '',
       '* TODO Test orgmode',
@@ -206,7 +206,7 @@ describe('Meta return mappings', function()
   end)
 
   it('should add checkbox item with Enter (org_meta_return)', function()
-    helpers.load_file_content({
+    helpers.load_as_agenda_file({
       '#TITLE: Test',
       '',
       '* TODO Test orgmode',
@@ -231,7 +231,7 @@ describe('Meta return mappings', function()
   end)
 
   it('should add a list item after a multiline list item with Enter (org_meta_return)', function()
-    helpers.load_file_content({
+    helpers.load_as_agenda_file({
       '#TITLE: Test',
       '',
       '* TODO Test orgmode',
@@ -258,7 +258,7 @@ describe('Meta return mappings', function()
   it(
     'should add a list item with Enter after a multiline list item from anywhere in the list item (org_meta_return)',
     function()
-      helpers.load_file_content({
+      helpers.load_as_agenda_file({
         '#TITLE: Test',
         '',
         '* TODO Test orgmode',
@@ -286,7 +286,7 @@ describe('Meta return mappings', function()
   it(
     'should add a list item with Enter after a multiline list item from anywhere in the list item (org_meta_return)',
     function()
-      helpers.load_file_content({
+      helpers.load_as_agenda_file({
         '#TITLE: Test',
         '',
         '* TODO Test orgmode',
@@ -312,7 +312,7 @@ describe('Meta return mappings', function()
   )
 
   it('should add a list item with Enter from the description of the list item (org_meta_return)', function()
-    helpers.load_file_content({
+    helpers.load_as_agenda_file({
       '#TITLE: Test',
       '',
       '* TODO Test orgmode',
@@ -333,7 +333,7 @@ describe('Meta return mappings', function()
   it(
     'should add a list item with Enter when the cursor is between the bullet and the item (org_meta_return)',
     function()
-      helpers.load_file_content({
+      helpers.load_as_agenda_file({
         '#TITLE: Test',
         '',
         '* TODO Test orgmode',
@@ -353,7 +353,7 @@ describe('Meta return mappings', function()
   )
 
   it('should add a list item with Enter skipping over any nested content (org_meta_return)', function()
-    helpers.load_file_content({
+    helpers.load_as_agenda_file({
       '#TITLE: Test',
       '',
       '* TODO Test orgmode',
@@ -379,7 +379,7 @@ describe('Meta return mappings', function()
   end)
 
   it('should add numbered list item (org_meta_return)', function()
-    helpers.load_file_content({
+    helpers.load_as_agenda_file({
       '#TITLE: Test',
       '',
       '* TODO Test orgmode',
@@ -411,7 +411,7 @@ describe('Meta return mappings', function()
   end)
 
   it('should add numbered list item in the middle of the list (org_meta_return)', function()
-    helpers.load_file_content({
+    helpers.load_as_agenda_file({
       '#TITLE: Test',
       '',
       '* TODO Test orgmode',
@@ -443,7 +443,7 @@ describe('Meta return mappings', function()
   end)
 
   it('should add numbered list at the end of the file (org_meta_return)', function()
-    helpers.load_file_content({
+    helpers.load_as_agenda_file({
       '* TODO Working on this now :OFFICE:NESTED:',
       '   1. First item',
       '   2. Second item',
@@ -458,4 +458,68 @@ describe('Meta return mappings', function()
       '   3. Second item',
     }, vim.api.nvim_buf_get_lines(0, 0, -1, false))
   end)
+
+  it(
+    'should add list item with Enter in insert mode if org_return_uses_meta_return is enabled and cursor is at the end',
+    function()
+      helpers.load_as_agenda_file({
+        '#TITLE: Test',
+        '',
+        '* TODO Test orgmode',
+        '  - Regular item',
+        '  - Second regular item',
+        '    - Nested item',
+        '  - [x] Checkbox item',
+        '  - [x] Second checkbox item',
+        '    - [x] Nested checkbox item',
+      }, {
+        mappings = {
+          org_return_uses_meta_return = true,
+        },
+      })
+      vim.fn.cursor(4, 16)
+      vim.cmd([[exe "norm a\<CR>"]])
+      assert.are.same({
+        '  - Regular item',
+        '  - ',
+        '  - Second regular item',
+        '    - Nested item',
+        '  - [x] Checkbox item',
+        '  - [x] Second checkbox item',
+        '    - [x] Nested checkbox item',
+      }, vim.api.nvim_buf_get_lines(0, 3, 10, false))
+    end
+  )
+
+  it(
+    'should not add list item with Enter in insert mode if org_return_uses_meta_return is enabled and cursor is not at the end',
+    function()
+      helpers.load_as_agenda_file({
+        '#TITLE: Test',
+        '',
+        '* TODO Test orgmode',
+        '  - Regular item',
+        '  - Second regular item',
+        '    - Nested item',
+        '  - [x] Checkbox item',
+        '  - [x] Second checkbox item',
+        '    - [x] Nested checkbox item',
+      }, {
+        mappings = {
+          org_return_uses_meta_return = true,
+        },
+      })
+      vim.fn.cursor(4, 14)
+      vim.cmd([[exe "norm a\<CR>"]])
+      assert.are.same({
+        '  - Regular it',
+        '    em',
+        '  - Second regular item',
+        '    - Nested item',
+        '  - [x] Checkbox item',
+        '  - [x] Second checkbox item',
+        '    - [x] Nested checkbox item',
+      }, vim.api.nvim_buf_get_lines(0, 3, 10, false))
+    end
+  )
 end)

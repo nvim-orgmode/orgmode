@@ -1,6 +1,5 @@
 local AgendaFilter = require('orgmode.agenda.filter')
-local Files = require('orgmode.parser.files')
-local Range = require('orgmode.parser.range')
+local Range = require('orgmode.files.elements.range')
 local utils = require('orgmode.utils')
 local agenda_highlights = require('orgmode.colors.highlights')
 local hl_map = agenda_highlights.get_agenda_hl_map()
@@ -10,19 +9,20 @@ local function sort_todos(todos)
     if a:get_priority_sort_value() ~= b:get_priority_sort_value() then
       return a:get_priority_sort_value() > b:get_priority_sort_value()
     end
-    return a.category < b.category
+    return a:get_category() < b:get_category()
   end)
   return todos
 end
 
----@class AgendaTodosView
+---@class OrgAgendaTodosView
 ---@field items table[]
 ---@field content table[]
 ---@field highlights table[]
 ---@field header string
 ---@field search string
----@field filters AgendaFilter
+---@field filters OrgAgendaFilter
 ---@field win_width number
+---@field files OrgFiles
 local AgendaTodosView = {}
 
 function AgendaTodosView:new(opts)
@@ -35,6 +35,7 @@ function AgendaTodosView:new(opts)
     filters = opts.filters or AgendaFilter:new(),
     header = opts.org_agenda_overriding_header,
     win_width = opts.win_width or utils.winwidth(),
+    files = opts.files,
   }
 
   setmetatable(data, self)
@@ -44,7 +45,7 @@ end
 
 function AgendaTodosView:build()
   self.items = {}
-  for _, orgfile in ipairs(Files.all()) do
+  for _, orgfile in ipairs(self.files:all()) do
     for _, headline in ipairs(orgfile:get_unfinished_todo_entries()) do
       if self.filters:matches(headline) then
         table.insert(self.items, headline)
@@ -64,7 +65,7 @@ function AgendaTodosView.generate_view(items, content, filters, win_width)
   local offset = #content
   local longest_category = utils.reduce(items, function(acc, todo)
     return math.max(acc, vim.api.nvim_strwidth(todo:get_category()))
-  end, 0)
+  end, 0) or 0
 
   for i, headline in ipairs(items) do
     if filters:matches(headline) then
@@ -75,12 +76,18 @@ function AgendaTodosView.generate_view(items, content, filters, win_width)
   return { items = items, content = content }
 end
 
+---@param headline OrgHeadline
+---@param longest_category number
+---@param line_nr number
+---@param win_width number
 function AgendaTodosView.generate_todo_item(headline, longest_category, line_nr, win_width)
   local category = '  ' .. utils.pad_right(string.format('%s:', headline:get_category()), longest_category + 1)
-  local todo_keyword = headline.todo_keyword.value
+  local todo_keyword, _, todo_type = headline:get_todo()
+  todo_keyword = todo_keyword or ''
   local todo_keyword_padding = todo_keyword ~= '' and ' ' or ''
-  local line = string.format('  %s%s%s %s', category, todo_keyword_padding, todo_keyword, headline.title)
-  if #headline.tags > 0 then
+  local line =
+    string.format('  %s%s%s %s', category, todo_keyword_padding, todo_keyword, headline:get_title_with_priority())
+  if #headline:get_tags() > 0 then
     local tags_string = headline:tags_to_string()
     local padding_length = math.max(1, win_width - vim.api.nvim_strwidth(line) - vim.api.nvim_strwidth(tags_string))
     local indent = string.rep(' ', padding_length)
@@ -88,9 +95,9 @@ function AgendaTodosView.generate_todo_item(headline, longest_category, line_nr,
   end
   local todo_keyword_pos = category:len() + 4
   local highlights = {}
-  if headline.todo_keyword.value ~= '' then
+  if todo_keyword ~= '' then
     table.insert(highlights, {
-      hlgroup = hl_map[headline.todo_keyword.value] or hl_map[headline.todo_keyword.type],
+      hlgroup = hl_map[todo_keyword] or hl_map[todo_type],
       range = Range:new({
         start_line = line_nr,
         end_line = line_nr,
@@ -116,8 +123,8 @@ function AgendaTodosView.generate_todo_item(headline, longest_category, line_nr,
     longest_category = longest_category,
     line = line_nr,
     jumpable = true,
-    file = headline.file,
-    file_position = headline.range.start_line,
+    file = headline.file.filename,
+    file_position = headline:get_range().start_line,
     headline = headline,
     highlights = highlights,
   }

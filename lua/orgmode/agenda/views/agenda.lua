@@ -1,6 +1,5 @@
 local Date = require('orgmode.objects.date')
-local Files = require('orgmode.parser.files')
-local Range = require('orgmode.parser.range')
+local Range = require('orgmode.files.elements.range')
 local config = require('orgmode.config')
 local ClockReport = require('orgmode.clock.report')
 local AgendaItem = require('orgmode.agenda.agenda_item')
@@ -17,8 +16,8 @@ local function sort_by_date_or_priority_or_category(a, b)
   return a.index < b.index
 end
 
----@param agenda_items AgendaItem[]
----@return AgendaItem[]
+---@param agenda_items OrgAgendaItem[]
+---@return OrgAgendaItem[]
 local function sort_agenda_items(agenda_items)
   table.sort(agenda_items, function(a, b)
     if a.is_same_day and b.is_same_day then
@@ -51,20 +50,21 @@ local function sort_agenda_items(agenda_items)
   return agenda_items
 end
 
----@class AgendaView
+---@class OrgAgendaView
 ---@field span string|number
----@field from Date
----@field to Date
+---@field from OrgDate
+---@field to OrgDate
 ---@field items table[]
 ---@field content table[]
 ---@field highlights table[]
----@field clock_report ClockReport
+---@field clock_report OrgClockReport
 ---@field show_clock_report boolean
 ---@field start_on_weekday number
 ---@field start_day string
 ---@field header string
----@field filters AgendaFilter
+---@field filters OrgAgendaFilter
 ---@field win_width number
+---@field files OrgFiles
 local AgendaView = {}
 
 function AgendaView:new(opts)
@@ -83,6 +83,7 @@ function AgendaView:new(opts)
     start_day = opts.org_agenda_start_day or config.org_agenda_start_day,
     header = opts.org_agenda_overriding_header,
     win_width = opts.win_width or utils.winwidth(),
+    files = opts.files,
   }
 
   setmetatable(data, self)
@@ -137,7 +138,7 @@ function AgendaView:_build_items()
   local agenda_days = {}
 
   local headline_dates = {}
-  for _, orgfile in ipairs(Files.all()) do
+  for _, orgfile in ipairs(self.files:all()) do
     for _, headline in ipairs(orgfile:get_opened_headlines()) do
       for _, headline_date in ipairs(headline:get_valid_dates_for_agenda()) do
         table.insert(headline_dates, {
@@ -202,8 +203,6 @@ function AgendaView:build()
     local category_len = math.max(11, (longest_items.category + 1))
     local date_len = math.min(11, longest_items.label)
 
-    -- print(win_width)
-
     for _, agenda_item in ipairs(agenda_items) do
       table.insert(
         content,
@@ -216,7 +215,11 @@ function AgendaView:build()
   self.highlights = highlights
   self.active_view = 'agenda'
   if self.show_clock_report then
-    self.clock_report = ClockReport.from_date_range(self.from, self.to)
+    self.clock_report = ClockReport:new({
+      from = self.from,
+      to = self.to,
+      files = self.files,
+    })
     utils.concat(self.content, self.clock_report:draw_for_agenda(#self.content + 1))
   end
   return self
@@ -273,7 +276,7 @@ function AgendaView:after_print(_)
   return vim.fn.search(self:_format_day(Date.now()))
 end
 
----@param agenda_item AgendaItem
+---@param agenda_item OrgAgendaItem
 ---@return table
 function AgendaView.build_agenda_item_content(agenda_item, longest_category, longest_date, line_nr, win_width)
   local headline = agenda_item.headline
@@ -282,15 +285,15 @@ function AgendaView.build_agenda_item_content(agenda_item, longest_category, lon
   if date ~= '' then
     date = ' ' .. utils.pad_right(agenda_item.label, longest_date)
   end
-  local todo_keyword = agenda_item.headline.todo_keyword.value
+  local todo_keyword = agenda_item.headline:get_todo() or ''
   local todo_padding = ''
   if todo_keyword ~= '' and vim.trim(agenda_item.label):find(':$') then
     todo_padding = ' '
   end
   todo_keyword = todo_padding .. todo_keyword
-  local line = string.format('%s%s%s %s', category, date, todo_keyword, headline.title)
+  local line = string.format('%s%s%s %s', category, date, todo_keyword, headline:get_title_with_priority())
   local todo_keyword_pos = string.format('%s%s%s', category, date, todo_padding):len()
-  if #headline.tags > 0 then
+  if #headline:get_tags() > 0 then
     local tags_string = headline:tags_to_string()
     local padding_length = math.max(1, win_width - vim.api.nvim_strwidth(line) - vim.api.nvim_strwidth(tags_string))
     local indent = string.rep(' ', padding_length)
@@ -331,8 +334,8 @@ function AgendaView.build_agenda_item_content(agenda_item, longest_category, lon
     line_content = line,
     line = line_nr,
     jumpable = true,
-    file = headline.file,
-    file_position = headline.range.start_line,
+    file = headline.file.filename,
+    file_position = headline:get_range().start_line,
     highlights = item_highlights,
     longest_date = longest_date,
     longest_category = longest_category,

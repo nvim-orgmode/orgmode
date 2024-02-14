@@ -1,4 +1,4 @@
----@class Event
+---@class OrgEvent
 ---@field type string
 
 return {

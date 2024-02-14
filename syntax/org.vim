@@ -48,8 +48,6 @@ syn match org_timestamp_inactive /\(\[%%(diary-float.\+\]\)/
 hi def link org_timestamp PreProc
 hi def link org_timestamp_inactive Comment
 
-lua require("orgmode.org.syntax").load_code_blocks()
-
 let s:highlight_latex = luaeval('require("orgmode.config").org_highlight_latex_and_related')
 
 if s:highlight_latex == 'native'

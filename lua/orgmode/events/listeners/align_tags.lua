@@ -1,4 +1,4 @@
----@param event TodoChangedEvent | HeadlineDemotedEvent | HeadlinePromotedEvent
+---@param event OrgTodoChangedEvent | OrgHeadlineDemotedEvent | OrgHeadlinePromotedEvent
 return function(event)
   event.headline:align_tags()
 end

@@ -2,7 +2,7 @@ local utils = require('orgmode.utils')
 local config = require('orgmode.config')
 local Menu = require('orgmode.ui.menu')
 
----@class Export
+---@class OrgExport
 local Export = {}
 
 ---@param cmd table

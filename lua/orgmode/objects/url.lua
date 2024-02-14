@@ -1,6 +1,6 @@
 local fs = require('orgmode.utils.fs')
 
----@class Url
+---@class OrgUrl
 ---@field str string
 local Url = {}
 

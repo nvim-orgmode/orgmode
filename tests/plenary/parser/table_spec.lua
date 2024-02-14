@@ -1,5 +1,5 @@
-local Range = require('orgmode.parser.range')
-local Table = require('orgmode.parser.table')
+local Range = require('orgmode.files.elements.range')
+local Table = require('orgmode.files.elements.table')
 
 describe('Table', function()
   it('should calculate column width', function()

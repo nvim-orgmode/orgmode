@@ -1,4 +1,4 @@
-local Files = require('orgmode.parser.files')
+local org = require('orgmode')
 local utils = require('orgmode.utils')
 local fs = require('orgmode.utils.fs')
 local Url = require('orgmode.objects.url')
@@ -7,17 +7,17 @@ local Hyperlinks = {
   stored_links = {},
 }
 
----@param url Url
+---@param url OrgUrl
 local function get_file_from_url(url)
   local file_path = url:get_filepath()
   local canonical_path = file_path and fs.get_real_path(file_path)
-  return canonical_path and Files.get(canonical_path) or Files.get_current_file()
+  return canonical_path and org.files:get(canonical_path) or org.files:get_current_file()
 end
 
----@param url Url
+---@param url OrgUrl
 ---@return string[]
 function Hyperlinks.find_by_filepath(url)
-  local filenames = Files.filenames()
+  local filenames = org.files:filenames()
   local file_base = url:get_filepath()
   if not file_base then
     return {}
@@ -47,8 +47,8 @@ function Hyperlinks.find_by_filepath(url)
   end, valid_filenames)
 end
 
----@param url Url
----@return Section[]
+---@param url OrgUrl
+---@return OrgHeadline[]
 function Hyperlinks.find_by_custom_id_property(url)
   local file = get_file_from_url(url)
   local custom_id = url:get_custom_id()
@@ -59,33 +59,30 @@ function Hyperlinks.find_by_custom_id_property(url)
   return file:find_headlines_with_property_matching('CUSTOM_ID', custom_id)
 end
 
----@param headlines Section[]
+---@param headlines OrgHeadline[]
 ---@return string[]
 function Hyperlinks.as_custom_id_anchors(headlines)
   return vim.tbl_map(function(headline)
-    return type(headline) == 'table'
-      and headline.properties
-      and headline.properties.items
-      and headline.properties.items.custom_id
-      and '#' .. headline.properties.items.custom_id
-  end, headlines)
-end
-
----@param headlines Section[]
----@param omit_prefix? boolean
----@return string[]
-function Hyperlinks.as_headline_anchors(headlines, omit_prefix)
-  return vim.tbl_map(function(headline)
-    if type(headline) == 'table' and headline.title then
-      return omit_prefix and headline.title or '*' .. headline.title
-    else
-      return headline
+    ---@cast headline OrgHeadline
+    local custom_id = headline:get_property('custom_id')
+    if custom_id then
+      return '#' .. custom_id
     end
   end, headlines)
 end
 
----@param url Url
----@return Section[]
+---@param headlines OrgHeadline[]
+---@param omit_prefix? boolean
+---@return string[]
+function Hyperlinks.as_headline_anchors(headlines, omit_prefix)
+  return vim.tbl_map(function(headline)
+    local title = headline:get_title()
+    return omit_prefix and title or '*' .. title
+  end, headlines)
+end
+
+---@param url OrgUrl
+---@return OrgHeadline[]
 function Hyperlinks.find_by_title(url)
   local file = get_file_from_url(url)
   local headline = url:get_headline() or url:get_dedicated_target()
@@ -93,35 +90,35 @@ function Hyperlinks.find_by_title(url)
     error(string.format('Expect an url with a headline: %q', url.str))
     return {}
   end
-  return file:find_headlines_by_title(headline, false)
+  return file:find_headlines_by_title(headline)
 end
 
 local function as_dedicated_anchor_pattern(anchor_str)
   return string.format('<<<?(%s[^>]*)>>>?', anchor_str):lower()
 end
 
----@param url Url
----@return Section[]
+---@param url OrgUrl
+---@return OrgHeadline[]
 function Hyperlinks.find_by_dedicated_target(url)
   local anchor = url and url:get_dedicated_target()
   if anchor then
-    return Files.get_current_file():find_headlines_matching_search_term(as_dedicated_anchor_pattern(anchor), true)
+    return org.files:get_current_file():find_headlines_matching_search_term(as_dedicated_anchor_pattern(anchor), true)
   else
     return {}
   end
 end
 
----@param url Url
----@return fun(headlines: Section[]): string[]
+---@param url OrgUrl
+---@return fun(headlines: OrgHeadline[]): string[]
 function Hyperlinks.as_dedicated_targets(url)
   return function(headlines)
     local targets = {}
     local term = as_dedicated_anchor_pattern(url:get_dedicated_target())
     for _, headline in ipairs(headlines) do
-      for m in headline.title:lower():gmatch(term) do
+      for m in headline:get_title():lower():gmatch(term) do
         table.insert(targets, m)
       end
-      for _, content in ipairs(headline.content) do
+      for _, content in ipairs(headline:content()) do
         for m in content:lower():gmatch(term) do
           table.insert(targets, m)
         end
@@ -131,8 +128,8 @@ function Hyperlinks.as_dedicated_targets(url)
   end
 end
 
----@param url Url
----@return fun(headlines: Section[]): table<string>
+---@param url OrgUrl
+---@return fun(headlines: OrgHeadline[]): table<string>
 function Hyperlinks.as_dedicated_anchors_or_internal_titles(url)
   return function(headlines)
     local dedicated_anchors = Hyperlinks.as_dedicated_targets(url)(headlines)
@@ -141,8 +138,8 @@ function Hyperlinks.as_dedicated_anchors_or_internal_titles(url)
   end
 end
 
----@param url Url
----@return Section[], fun(headline: Section[]): string[]
+---@param url OrgUrl
+---@return OrgHeadline[], fun(headline: OrgHeadline[]): string[]
 function Hyperlinks.find_matching_links(url)
   local result = {}
   local mapper = function(item)
@@ -170,11 +167,11 @@ function Hyperlinks.find_matching_links(url)
   return result, mapper
 end
 
----@param headline Headline
+---@param headline OrgHeadline
 ---@param path? string
 function Hyperlinks.get_link_to_headline(headline, path)
   path = path or utils.current_file_path()
-  local title = headline:title()
+  local title = headline:get_title()
   local id
   if config.org_id_link_to_org_use_id then
     id = headline:id_get_or_create()
@@ -190,9 +187,9 @@ function Hyperlinks._generate_link_to_headline(title, id, path)
   return ('id:%s  %s'):format(id, title)
 end
 
----@param headline Headline
+---@param headline OrgHeadline
 function Hyperlinks.store_link_to_headline(headline)
-  local title = headline:title()
+  local title = headline:get_title()
   Hyperlinks.stored_links[Hyperlinks.get_link_to_headline(headline)] = title
 end
 

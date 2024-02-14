@@ -1,4 +1,4 @@
-local helpers = require('tests.plenary.ui.helpers')
+local helpers = require('tests.plenary.helpers')
 local Date = require('orgmode.objects.date')
 
 describe('Clock', function()
@@ -8,16 +8,16 @@ describe('Clock', function()
   end)
 
   it('should clock in and clock out an entry', function()
-    local first_file = helpers.load_file_content({
+    local first_file = helpers.load_as_agenda_file({
       '#TITLE: First file',
       '',
       '* TODO Test orgmode',
       '  DEADLINE: <2021-07-21 Wed 22:02>',
     })
-    table.insert(files, first_file)
+    table.insert(files, first_file.filename)
     vim.fn.cursor(3, 1)
     vim.cmd([[norm ,oxi]])
-    vim.wait(0) -- wait for promise to fulfill
+    vim.wait(0)
     local now = Date.now({ active = false }):to_wrapped_string()
     assert.are.same('  :LOGBOOK:', vim.fn.getline(5))
     assert.are.same(string.format('  CLOCK: %s', now), vim.fn.getline(6))
@@ -35,7 +35,7 @@ describe('Clock', function()
   end)
 
   it('should clock out first entry from same file once second entry is clocked in', function()
-    local second_file = helpers.load_file_content({
+    local second_file = helpers.load_as_agenda_file({
       '#TITLE: Second file',
       '',
       '* TODO First clocked in',
@@ -45,9 +45,10 @@ describe('Clock', function()
       '  :END:',
       '* TODO Second clocked in',
       '  DEADLINE: <2021-07-21 Wed 22:02>',
+      '',
     })
+    table.insert(files, second_file.filename)
 
-    table.insert(files, second_file)
     vim.fn.cursor(3, 1)
     vim.cmd([[norm ,oxi]])
     vim.wait(0) -- wait for promise to fulfill
@@ -75,14 +76,14 @@ describe('Clock', function()
   end)
 
   it('should clock out entry from another file once entry is clocked in', function()
-    local third_file = helpers.load_file_content({
+    local third_file = helpers.load_as_agenda_file({
       '#TITLE: Third file',
       '',
       '* TODO Third file headline',
       '  DEADLINE: <2021-07-21 Wed 22:02>',
     })
 
-    table.insert(files, third_file)
+    table.insert(files, third_file.filename)
     vim.fn.cursor(3, 1)
     vim.cmd([[norm ,oxi]])
     vim.wait(0) -- wait for promise to fulfill
@@ -97,7 +98,7 @@ describe('Clock', function()
     assert.are.same('  :LOGBOOK:', vim.fn.getline(13))
     assert.are.same(string.format('  CLOCK: %s--%s => 0:00', now, now), vim.fn.getline(14))
     assert.are.same('  :END:', vim.fn.getline(15))
-    helpers.load_file(third_file)
+    helpers.load_file(third_file.filename)
     assert.are.same('(Org) [0:00] (Third file headline)', require('orgmode').action('clock.get_statusline'))
   end)
 
@@ -110,6 +111,7 @@ describe('Clock', function()
   end)
 
   it('should cancel the active clock and remove the clock entry from logbook', function()
+    local o = helpers.setup_org_agenda(files[3])
     helpers.load_file(files[3])
     helpers.load_file(files[1])
     local old_clock_line = vim.fn.getline(6)
