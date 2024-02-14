@@ -139,7 +139,7 @@ function Org.setup(opts)
   config:setup_ts_predicates()
   vim.defer_fn(function()
     if config.notifications.enabled and #vim.api.nvim_list_uis() > 0 then
-      Org.files:load():next(vim.schedule_wrap(function()
+      Org.instance().files:load():next(vim.schedule_wrap(function()
         instance.notifications = require('orgmode.notifications')
           :new({
             files = Org.files,
