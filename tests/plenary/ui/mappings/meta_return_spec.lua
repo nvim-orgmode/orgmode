@@ -459,63 +459,67 @@ describe('Meta return mappings', function()
     }, vim.api.nvim_buf_get_lines(0, 0, -1, false))
   end)
 
-  it('should add list item with Enter in insert mode if org_return_uses_meta_return is enabled and cursor is at the end', function()
-    helpers.load_as_agenda_file({
-      '#TITLE: Test',
-      '',
-      '* TODO Test orgmode',
-      '  - Regular item',
-      '  - Second regular item',
-      '    - Nested item',
-      '  - [x] Checkbox item',
-      '  - [x] Second checkbox item',
-      '    - [x] Nested checkbox item',
-    }, {
-      mappings = {
-        org_return_uses_meta_return = true,
-      },
-    })
-    vim.fn.cursor(4, 16)
-    vim.cmd([[exe "norm a\<CR>"]])
-    assert.are.same({
-      '  - Regular item',
-      '  - ',
-      '  - Second regular item',
-      '    - Nested item',
-      '  - [x] Checkbox item',
-      '  - [x] Second checkbox item',
-      '    - [x] Nested checkbox item',
-    }, vim.api.nvim_buf_get_lines(0, 3, 10, false))
+  it(
+    'should add list item with Enter in insert mode if org_return_uses_meta_return is enabled and cursor is at the end',
+    function()
+      helpers.load_as_agenda_file({
+        '#TITLE: Test',
+        '',
+        '* TODO Test orgmode',
+        '  - Regular item',
+        '  - Second regular item',
+        '    - Nested item',
+        '  - [x] Checkbox item',
+        '  - [x] Second checkbox item',
+        '    - [x] Nested checkbox item',
+      }, {
+        mappings = {
+          org_return_uses_meta_return = true,
+        },
+      })
+      vim.fn.cursor(4, 16)
+      vim.cmd([[exe "norm a\<CR>"]])
+      assert.are.same({
+        '  - Regular item',
+        '  - ',
+        '  - Second regular item',
+        '    - Nested item',
+        '  - [x] Checkbox item',
+        '  - [x] Second checkbox item',
+        '    - [x] Nested checkbox item',
+      }, vim.api.nvim_buf_get_lines(0, 3, 10, false))
+    end
+  )
 
-  end)
-
-  it('should not add list item with Enter in insert mode if org_return_uses_meta_return is enabled and cursor is not at the end', function()
-    helpers.load_as_agenda_file({
-      '#TITLE: Test',
-      '',
-      '* TODO Test orgmode',
-      '  - Regular item',
-      '  - Second regular item',
-      '    - Nested item',
-      '  - [x] Checkbox item',
-      '  - [x] Second checkbox item',
-      '    - [x] Nested checkbox item',
-    }, {
-      mappings = {
-        org_return_uses_meta_return = true,
-      },
-    })
-    vim.fn.cursor(4, 14)
-    vim.cmd([[exe "norm a\<CR>"]])
-    assert.are.same({
-      '  - Regular it',
-      '    em',
-      '  - Second regular item',
-      '    - Nested item',
-      '  - [x] Checkbox item',
-      '  - [x] Second checkbox item',
-      '    - [x] Nested checkbox item',
-    }, vim.api.nvim_buf_get_lines(0, 3, 10, false))
-
-  end)
+  it(
+    'should not add list item with Enter in insert mode if org_return_uses_meta_return is enabled and cursor is not at the end',
+    function()
+      helpers.load_as_agenda_file({
+        '#TITLE: Test',
+        '',
+        '* TODO Test orgmode',
+        '  - Regular item',
+        '  - Second regular item',
+        '    - Nested item',
+        '  - [x] Checkbox item',
+        '  - [x] Second checkbox item',
+        '    - [x] Nested checkbox item',
+      }, {
+        mappings = {
+          org_return_uses_meta_return = true,
+        },
+      })
+      vim.fn.cursor(4, 14)
+      vim.cmd([[exe "norm a\<CR>"]])
+      assert.are.same({
+        '  - Regular it',
+        '    em',
+        '  - Second regular item',
+        '    - Nested item',
+        '  - [x] Checkbox item',
+        '  - [x] Second checkbox item',
+        '    - [x] Nested checkbox item',
+      }, vim.api.nvim_buf_get_lines(0, 3, 10, false))
+    end
+  )
 end)

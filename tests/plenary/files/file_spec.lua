@@ -653,7 +653,7 @@ describe('OrgFile', function()
         '* TODO Headline 1',
       })
       local archive_location = file:get_archive_file_location()
-      assert.are.same(file.filename..'_archive.org_archive', archive_location)
+      assert.are.same(file.filename .. '_archive.org_archive', archive_location)
     end)
 
     it('should return default archive location from config', function()
@@ -661,7 +661,7 @@ describe('OrgFile', function()
         '* TODO Headline 1',
       })
       local archive_location = file:get_archive_file_location()
-      assert.are.same(file.filename..'_archive', archive_location)
+      assert.are.same(file.filename .. '_archive', archive_location)
     end)
   end)
 end)

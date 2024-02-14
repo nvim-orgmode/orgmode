@@ -23,7 +23,7 @@ function OrgMarkup:_init_highlighters()
   self.parsers = {
     emphasis = require('orgmode.colors.highlighter.markup.emphasis'):new({ markup = self }),
     link = require('orgmode.colors.highlighter.markup.link'):new({ markup = self }),
-    latex = require('orgmode.colors.highlighter.markup.latex'):new({ markup = self })
+    latex = require('orgmode.colors.highlighter.markup.latex'):new({ markup = self }),
   }
 end
 
@@ -176,7 +176,7 @@ function OrgMarkup:node_to_range(node)
   return {
     line = start_row,
     start_col = start_col,
-    end_col = end_col
+    end_col = end_col,
   }
 end
 

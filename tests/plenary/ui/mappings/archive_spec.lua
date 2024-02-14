@@ -23,11 +23,11 @@ describe('Archive', function()
     assert.are.same({
       '* foobar',
       '  :PROPERTIES:',
-      '  :ARCHIVE_TIME: '..Date.now():to_string(),
-      '  :ARCHIVE_FILE: '..file.filename,
-      '  :ARCHIVE_CATEGORY: '..file:get_category(),
+      '  :ARCHIVE_TIME: ' .. Date.now():to_string(),
+      '  :ARCHIVE_FILE: ' .. file.filename,
+      '  :ARCHIVE_CATEGORY: ' .. file:get_category(),
       '  :ARCHIVE_TODO: ',
-      '  :END:'
+      '  :END:',
     }, vim.api.nvim_buf_get_lines(0, 0, -1, false))
   end)
 end)
