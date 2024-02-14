@@ -294,7 +294,7 @@ end
 local function foldtext()
   local line = vim.fn.getline(vim.v.foldstart)
 
-  if config.org_hide_leading_stars then
+  if config:hide_leading_stars(vim.api.nvim_get_current_buf()) then
     line = vim.fn.substitute(line, '\\(^\\*\\+\\)', '\\=repeat(" ", len(submatch(0))-1) . "*"', '') or ''
   end
 

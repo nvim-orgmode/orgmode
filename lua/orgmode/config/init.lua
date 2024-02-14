@@ -422,6 +422,20 @@ function Config:apply_indent(content, amount)
   return content
 end
 
+---@param bufnr number
+---@return boolean
+function Config:hide_leading_stars(bufnr)
+  if self.org_hide_leading_stars then
+    return true
+  end
+
+  if vim.b[bufnr].org_indent_mode and self.org_indent_mode_turns_on_hiding_stars then
+    return true
+  end
+
+  return false
+end
+
 ---@type OrgConfig
 instance = Config:new()
 return instance
