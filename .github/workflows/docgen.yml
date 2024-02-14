@@ -37,8 +37,10 @@ jobs:
           COMMIT_MSG: |
             [docgen] Update docs
         run: |
+          rm lemmy-help
           git config user.name github-actions
           git config user.email github-actions@github.com
           git add doc/orgmode.txt
+          git add doc/orgmode_api.txt
           # Only commit and push if we have changes
           git diff --quiet && git diff --staged --quiet || (git commit -m "${COMMIT_MSG}"; git push)
