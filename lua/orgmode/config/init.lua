@@ -358,6 +358,26 @@ function Config:setup_ts_predicates()
 
     return false
   end, true)
+
+  vim.treesitter.query.add_directive('org-set-block-language!', function(match, _, bufnr, pred, metadata)
+    local lang_node = match[pred[2]]
+    if not lang_node then
+      return
+    end
+    local text = vim.treesitter.get_node_text(lang_node, bufnr)
+    if not text or vim.trim(text) == '' then
+      return
+    end
+
+    local map = {
+      ['emacs-lisp'] = 'lisp',
+      ['js'] = 'javascript',
+      ['ts'] = 'typescript',
+      ['md'] = 'markdown',
+    }
+
+    metadata['injection.language'] = map[text] or text
+  end, true)
 end
 
 function Config:ts_highlights_enabled()

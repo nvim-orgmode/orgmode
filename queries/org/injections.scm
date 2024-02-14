@@ -1,1 +1,1 @@
- (block parameter: (expr) @injection.language (contents) @injection.content (#set! injection.include-children))
+ (block parameter: (expr) @_lang (contents) @injection.content (#set! injection.include-children) (#org-set-block-language! @_lang))
