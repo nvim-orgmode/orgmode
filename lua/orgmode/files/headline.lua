@@ -42,9 +42,6 @@ function Headline:node()
   if bufnr < 0 then
     return self.headline
   end
-  if self.headline:has_changes() then
-    return self.headline
-  end
   return self:refresh().headline
 end
 
