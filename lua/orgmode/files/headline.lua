@@ -563,10 +563,11 @@ function Headline:get_plan_dates()
     return dates, dates_nodes
   end
 
-  local valid_plan_types = { 'SCHEDULED', 'DEADLINE', 'CLOSED' }
+  local valid_plan_types = { 'SCHEDULED', 'DEADLINE', 'CLOSED', 'NONE' }
 
   for _, node in ipairs(ts_utils.get_named_children(plan)) do
-    local name = self.file:get_node_text(node:field('name')[1])
+    local name_node = node:field('name')[1]
+    local name = name_node and self.file:get_node_text(name_node) or 'NONE'
     local timestamp = node:field('timestamp')[1]
 
     if vim.tbl_contains(valid_plan_types, name:upper()) then
