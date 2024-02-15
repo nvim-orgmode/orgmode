@@ -545,22 +545,26 @@ function Headline:get_append_line()
   end
   local plan = self:node():parent():field('plan')[1]
   if plan then
-    local row = plan:end_()
-    return row
+    local _, _, has_plan_dates = self:get_plan_dates()
+    if has_plan_dates then
+      local row = plan:end_()
+      return row
+    end
   end
   local row = self:node():end_()
   return row
 end
 
 memoize('get_plan_dates')
----@return OrgTable<OrgPlanDateTypes, OrgDate[]>,OrgTable<OrgPlanDateTypes, TSNode>
+---@return OrgTable<OrgPlanDateTypes, OrgDate[]>,OrgTable<OrgPlanDateTypes, TSNode>, boolean
 function Headline:get_plan_dates()
   local plan = self:node():parent():field('plan')[1]
   local dates = {}
   local dates_nodes = {}
+  local has_plan_dates = false
 
   if not plan then
-    return dates, dates_nodes
+    return dates, dates_nodes, has_plan_dates
   end
 
   local valid_plan_types = { 'SCHEDULED', 'DEADLINE', 'CLOSED', 'NONE' }
@@ -571,6 +575,9 @@ function Headline:get_plan_dates()
     local timestamp = node:field('timestamp')[1]
 
     if vim.tbl_contains(valid_plan_types, name:upper()) then
+      if name_node then
+        has_plan_dates = true
+      end
       dates[name:upper()] = Date.from_org_date(self.file:get_node_text(timestamp), {
         range = Range.from_node(timestamp),
         type = name:upper(),
@@ -578,7 +585,7 @@ function Headline:get_plan_dates()
       dates_nodes[name:upper()] = node
     end
   end
-  return dates, dates_nodes
+  return dates, dates_nodes, has_plan_dates
 end
 
 memoize('get_all_dates')
@@ -809,9 +816,9 @@ end
 ---@param active? boolean
 ---@private
 function Headline:_add_date(type, date, active)
-  local _, date_nodes = self:get_plan_dates()
+  local _, date_nodes, has_plan_dates = self:get_plan_dates()
   local text = type .. ': ' .. date:to_wrapped_string(active)
-  if vim.tbl_isempty(date_nodes) then
+  if not has_plan_dates then
     local indentation = config:get_indent(self:get_level() + 1)
     local start_line = self:node():start()
     vim.fn.append(start_line + 1, ('%s%s'):format(indentation, text))
