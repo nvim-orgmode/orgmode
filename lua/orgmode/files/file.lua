@@ -4,7 +4,6 @@ local ts_utils = require('orgmode.utils.treesitter')
 local Headline = require('orgmode.files.headline')
 local ts = vim.treesitter
 local config = require('orgmode.config')
-local Duration = require('orgmode.objects.duration')
 
 ---@class OrgFileMetadata
 ---@field mtime number

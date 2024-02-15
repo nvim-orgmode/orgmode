@@ -10,7 +10,8 @@ local Listitem = require('orgmode.files.elements.listitem')
 
 ---@class OrgFiles
 ---@field paths string[]
----@field files table<string, OrgFile>
+---@field files table<string, OrgFile> table with files that are part of paths
+---@field all_files table<string, OrgFile> all loaded files, no matter if they are part of paths
 ---@field load_state 'loading' | 'loaded' | nil
 local OrgFiles = {}
 
@@ -19,6 +20,7 @@ function OrgFiles:new(opts)
   local data = {
     paths = opts.paths or {},
     files = {},
+    all_files = {},
     load_state = nil,
   }
   setmetatable(data, self)
@@ -79,6 +81,7 @@ end
 
 function OrgFiles:unload()
   self.files = {}
+  self.all_files = {}
   self.paths = {}
   self.load_state = nil
   return self
@@ -125,12 +128,19 @@ end
 
 ---@return OrgPromise<OrgFile>
 function OrgFiles:load_file(filename)
-  local file = self.files[filename]
+  local file = self.all_files[filename]
   if file then
     return file:reload()
   end
 
-  return OrgFile.load(filename)
+  local promise = OrgFile.load(filename):next(function(orgfile)
+    if orgfile then
+      self.all_files[filename] = orgfile
+    end
+    return orgfile
+  end)
+
+  return promise
 end
 
 ---@return OrgFile | nil
@@ -145,7 +155,6 @@ function OrgFiles:get(filename)
 end
 
 function OrgFiles:reload(filename)
-  local prev_file = self.files[filename]
   self:load_file(filename):next(function(orgfile)
     return orgfile
   end)
