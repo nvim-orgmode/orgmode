@@ -13,6 +13,19 @@ local latex_pairs = {
   [']'] = '[',
 }
 
+local valid_start_ids = {
+  ['latex_('] = true,
+  ['latex_{'] = true,
+  ['latex_['] = true,
+}
+
+local valid_end_ids = {
+  ['latex_)'] = true,
+  ['latex_}'] = true,
+  ['latex_]'] = true,
+  ['latex_str'] = true,
+}
+
 ---@param opts { markup: OrgMarkupHighlighter }
 function OrgLatex:new(opts)
   local data = {
@@ -27,31 +40,20 @@ end
 ---@param entry OrgMarkupNode
 ---@return boolean
 function OrgLatex:is_valid_start_node(entry)
-  local valid_start_chars = {
-    ['('] = true,
-    ['{'] = true,
-    ['['] = true,
-  }
-  return entry.type == 'latex' and valid_start_chars[entry.char]
+  return entry.type == 'latex' and valid_start_ids[entry.id]
 end
 
 ---@param entry OrgMarkupNode
 ---@return boolean
 function OrgLatex:is_valid_end_node(entry)
-  local valid_end_chars = {
-    [')'] = true,
-    ['}'] = true,
-    [']'] = true,
-    str = true,
-  }
-  return entry.type == 'latex' and valid_end_chars[entry.char]
+  return entry.type == 'latex' and valid_end_ids[entry.id]
 end
 
 ---@param node TSNode
 ---@return OrgMarkupNode | false
 function OrgLatex:parse_node(node)
-  local type = node:type()
-  if type ~= 'str' and not latex_pairs[type] then
+  local node_type = node:type()
+  if node_type ~= 'str' and not latex_pairs[node_type] then
     return false
   end
   local prev_sibling = node:prev_sibling()
@@ -60,12 +62,16 @@ function OrgLatex:parse_node(node)
     return false
   end
 
-  local is_self_contained = type == 'str'
+  local is_self_contained = node_type == 'str'
+
+  local id = table.concat({ 'latex', node_type }, '_')
+  local seek_id = table.concat({ 'latex', latex_pairs[node_type] or 'str' }, '_')
 
   local info = {
     type = 'latex',
-    char = type,
-    seek_char = latex_pairs[type] or 'str',
+    char = node_type,
+    id = id,
+    seek_id = seek_id,
     nestable = false,
     self_contained = is_self_contained,
     range = self.markup:node_to_range(node),

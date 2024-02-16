@@ -19,31 +19,58 @@ end
 function OrgLink:parse_node(node)
   local type = node:type()
   if type == '[' then
-    local next_sibling = node:next_sibling()
-    if next_sibling and next_sibling:type() == '[' then
-      return {
-        type = 'link',
-        char = type,
-        seek_char = ']',
-        nestable = false,
-        range = self.markup:node_to_range(node),
-        node = node,
-      }
-    end
+    return self:_parse_start_node(node)
   end
 
   if type == ']' then
-    local prev_sibling = node:prev_sibling()
-    if prev_sibling and prev_sibling:type() == ']' then
-      return {
-        type = 'link',
-        char = type,
-        seek_char = '[',
-        range = self.markup:node_to_range(node),
-        nestable = false,
-        node = node,
-      }
-    end
+    return self:_parse_end_node(node)
+  end
+
+  return false
+end
+
+---@private
+---@param node TSNode
+---@return OrgMarkupNode | false
+function OrgLink:_parse_start_node(node)
+  local node_type = node:type()
+  local next_sibling = node:next_sibling()
+
+  if next_sibling and next_sibling:type() == '[' then
+    local id = table.concat({ 'link', node_type }, '_')
+    local seek_id = table.concat({ 'link', ']' }, '_')
+    return {
+      type = 'link',
+      id = id,
+      char = node_type,
+      seek_id = seek_id,
+      nestable = false,
+      range = self.markup:node_to_range(node),
+      node = node,
+    }
+  end
+
+  return false
+end
+
+---@private
+---@param node TSNode
+---@return OrgMarkupNode | false
+function OrgLink:_parse_end_node(node)
+  local node_type = node:type()
+  local prev_sibling = node:prev_sibling()
+  if prev_sibling and prev_sibling:type() == ']' then
+    local id = table.concat({ 'link', node_type }, '_')
+    local seek_id = table.concat({ 'link', '[' }, '_')
+    return {
+      type = 'link',
+      id = id,
+      char = node_type,
+      seek_id = seek_id,
+      range = self.markup:node_to_range(node),
+      nestable = false,
+      node = node,
+    }
   end
 
   return false
@@ -52,13 +79,13 @@ end
 ---@param entry OrgMarkupNode
 ---@return boolean
 function OrgLink:is_valid_start_node(entry)
-  return entry.type == 'link' and entry.char == '['
+  return entry.type == 'link' and entry.id == 'link_['
 end
 
 ---@param entry OrgMarkupNode
 ---@return boolean
 function OrgLink:is_valid_end_node(entry)
-  return entry.type == 'link' and entry.char == ']'
+  return entry.type == 'link' and entry.id == 'link_]'
 end
 
 ---@param highlights OrgMarkupHighlight[]

@@ -23,6 +23,7 @@ function OrgMarkup:_init_highlighters()
   self.parsers = {
     emphasis = require('orgmode.colors.highlighter.markup.emphasis'):new({ markup = self }),
     link = require('orgmode.colors.highlighter.markup.link'):new({ markup = self }),
+    date = require('orgmode.colors.highlighter.markup.dates'):new({ markup = self }),
     latex = require('orgmode.colors.highlighter.markup.latex'):new({ markup = self }),
   }
 end
@@ -54,6 +55,7 @@ function OrgMarkup:_get_highlights(bufnr, line, tree)
     emphasis = {},
     link = {},
     latex = {},
+    date = {},
   }
   ---@type OrgMarkupNode[]
   local entries = {}
@@ -81,14 +83,14 @@ function OrgMarkup:_get_highlights(bufnr, line, tree)
     if last_seek and not last_seek.nestable then
       return false
     end
-    if not self:has_valid_parent(item.node:parent()) then
+    if not self:has_valid_parent(item) then
       return false
     end
     return self.parsers[item.type]:is_valid_start_node(item, bufnr)
   end
 
   local is_valid_end_item = function(item)
-    if not self:has_valid_parent(item.node:parent()) then
+    if not self:has_valid_parent(item) then
       return false
     end
 
@@ -96,11 +98,11 @@ function OrgMarkup:_get_highlights(bufnr, line, tree)
   end
 
   for _, item in ipairs(entries) do
-    local from = seek[item.seek_char]
+    local from = seek[item.seek_id]
 
     if not from and not item.self_contained then
       if is_valid_start_item(item) then
-        seek[item.char] = item
+        seek[item.id] = item
         last_seek = item
       end
       goto continue
@@ -108,7 +110,8 @@ function OrgMarkup:_get_highlights(bufnr, line, tree)
 
     if is_valid_end_item(item) then
       table.insert(result[item.type], {
-        type = item.char,
+        id = item.id,
+        char = item.char,
         from = item.self_contained and item.range or from.range,
         to = item.range,
       })
@@ -122,7 +125,7 @@ function OrgMarkup:_get_highlights(bufnr, line, tree)
       goto continue
     end
 
-    seek[item.seek_char] = nil
+    seek[item.seek_id] = nil
     for t, pos in pairs(seek) do
       if
         pos.range.line == from.range.line
@@ -180,12 +183,16 @@ function OrgMarkup:node_to_range(node)
   }
 end
 
----@param node? TSNode
-function OrgMarkup:has_valid_parent(node)
-  if not node then
+---@param item OrgMarkupNode
+---@return boolean
+function OrgMarkup:has_valid_parent(item)
+  -- expr
+  local parent = item.node:parent()
+  if not parent then
     return false
   end
-  local parent = node:parent()
+
+  parent = parent:parent()
   if not parent then
     return false
   end
@@ -202,6 +209,10 @@ function OrgMarkup:has_valid_parent(node)
 
   if parent:type() == 'contents' and p then
     return p:type() == 'drawer' or p:type() == 'cell'
+  end
+
+  if self.parsers[item.type].has_valid_parent then
+    return self.parsers[item.type]:has_valid_parent(item)
   end
 
   return false

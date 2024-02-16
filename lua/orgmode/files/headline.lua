@@ -602,9 +602,19 @@ end
 memoize('get_non_plan_dates')
 ---@return OrgDate[]
 function Headline:get_non_plan_dates()
-  local body = self:node():parent():field('body')[1]
+  local section = self:node():parent()
+  local body = section and section:field('body')[1]
   local headline_text = self.file:get_node_text(self:_get_child_node('item')) or ''
   local dates = Date.parse_all_from_line(headline_text, self:node():start() + 1)
+  local properties_node = section and section:field('property_drawer')[1]
+
+  if properties_node then
+    local properties_text = self.file:get_node_text_list(properties_node) or {}
+    local start = properties_node:start()
+    for i, line in ipairs(properties_text) do
+      vim.list_extend(dates, Date.parse_all_from_line(line, start + i))
+    end
+  end
 
   if not body then
     return dates

@@ -68,8 +68,8 @@ function OrgEmphasis:highlight(highlights, bufnr)
     vim.api.nvim_buf_set_extmark(bufnr, namespace, entry.from.line, entry.from.start_col, {
       ephemeral = true,
       end_col = entry.from.start_col + hl_offset,
-      hl_group = markers[entry.type].hl_name .. '_delimiter',
-      spell = markers[entry.type].spell,
+      hl_group = markers[entry.char].hl_name .. '_delimiter',
+      spell = markers[entry.char].spell,
       priority = 110 + entry.from.start_col,
     })
 
@@ -77,8 +77,8 @@ function OrgEmphasis:highlight(highlights, bufnr)
     vim.api.nvim_buf_set_extmark(bufnr, namespace, entry.from.line, entry.to.end_col - hl_offset, {
       ephemeral = true,
       end_col = entry.to.end_col,
-      hl_group = markers[entry.type].hl_name .. '_delimiter',
-      spell = markers[entry.type].spell,
+      hl_group = markers[entry.char].hl_name .. '_delimiter',
+      spell = markers[entry.char].spell,
       priority = 110 + entry.from.start_col,
     })
 
@@ -86,8 +86,8 @@ function OrgEmphasis:highlight(highlights, bufnr)
     vim.api.nvim_buf_set_extmark(bufnr, namespace, entry.from.line, entry.from.start_col + hl_offset, {
       ephemeral = true,
       end_col = entry.to.end_col - hl_offset,
-      hl_group = markers[entry.type].hl_name,
-      spell = markers[entry.type].spell,
+      hl_group = markers[entry.char].hl_name,
+      spell = markers[entry.char].spell,
       priority = 110 + entry.from.start_col,
     })
 
@@ -109,16 +109,19 @@ end
 ---@param node TSNode
 ---@return OrgMarkupNode | false
 function OrgEmphasis:parse_node(node)
-  local type = node:type()
-  if not markers[type] then
+  local node_type = node:type()
+  if not markers[node_type] then
     return false
   end
 
+  local id = table.concat({'emphasis', node_type}, '_')
+
   return {
     type = 'emphasis',
-    char = type,
-    seek_char = type,
-    nestable = markers[type].nestable,
+    char = node_type,
+    id = id,
+    seek_id = id,
+    nestable = markers[node_type].nestable,
     range = self.markup:node_to_range(node),
     node = node,
   }
