@@ -472,6 +472,17 @@ Possible values:
   * between `\[` and `\]` delimiters - example: `\[ a=-\sqrt{2} \]`
   * between `\(` and `\)` delimiters - example: `\( b=2 \)`
 
+This option requires setting `additional_vim_regex_highlighting = {'org'}` in tree-sitter configuration since its old Vim syntax:
+>
+    require('nvim-treesitter.configs').setup {
+      highlight = {
+        enable = true,
+        additional_vim_regex_highlighting = {'org'}, -- This line is needed
+      },
+      ensure_installed = {'org'},
+    }
+<
+
 ORG_STARTUP_INDENTED                                *orgmode-org_startup_indented*
 
 type: `boolean`
