@@ -218,4 +218,9 @@ function OrgMarkup:has_valid_parent(item)
   return false
 end
 
+function OrgMarkup:use_ephemeral()
+  ---@diagnostic disable-next-line: invisible
+  return self.highlighter._ephemeral
+end
+
 return OrgMarkup

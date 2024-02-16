@@ -129,10 +129,11 @@ end
 ---@param bufnr number
 function OrgDates:highlight(highlights, bufnr)
   local namespace = self.markup.highlighter.namespace
+  local ephemeral = self.markup:use_ephemeral()
 
   for _, entry in ipairs(highlights) do
     vim.api.nvim_buf_set_extmark(bufnr, namespace, entry.from.line, entry.from.start_col, {
-      ephemeral = true,
+      ephemeral = ephemeral,
       end_col = entry.to.end_col,
       hl_group = entry.char == '>' and 'OrgTSTimestampActive' or 'OrgTSTimestampInactive',
       priority = 110,

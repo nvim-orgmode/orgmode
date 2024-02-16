@@ -16,6 +16,7 @@ local auto_instance_keys = {
 ---@class Org
 ---@field initialized boolean
 ---@field files OrgFiles
+---@field highlighter OrgHighlighter
 ---@field agenda OrgAgenda
 ---@field capture OrgCapture
 ---@field clock OrgClock
@@ -41,8 +42,8 @@ function Org:init()
   if self.initialized then
     return
   end
-  require('orgmode.colors.highlighter'):new()
   require('orgmode.events').init()
+  self.highlighter = require('orgmode.colors.highlighter'):new()
   self.files = require('orgmode.files'):new({
     paths = require('orgmode.config').org_agenda_files,
   })

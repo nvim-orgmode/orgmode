@@ -92,6 +92,7 @@ end
 ---@param bufnr number
 function OrgLink:highlight(highlights, bufnr)
   local namespace = self.markup.highlighter.namespace
+  local ephemeral = self.markup:use_ephemeral()
 
   for _, entry in ipairs(highlights) do
     local link =
@@ -100,26 +101,26 @@ function OrgLink:highlight(highlights, bufnr)
     local link_end = link:find('%]%[') or (link:len() - 1)
 
     vim.api.nvim_buf_set_extmark(bufnr, namespace, entry.from.line, entry.from.start_col, {
-      ephemeral = true,
+      ephemeral = ephemeral,
       end_col = entry.to.end_col,
       hl_group = 'org_hyperlink',
       priority = 110,
     })
 
     vim.api.nvim_buf_set_extmark(bufnr, namespace, entry.from.line, entry.from.start_col, {
-      ephemeral = true,
+      ephemeral = ephemeral,
       end_col = entry.from.start_col + 1 + alias,
       conceal = '',
     })
 
     vim.api.nvim_buf_set_extmark(bufnr, namespace, entry.from.line, entry.from.start_col + 2, {
-      ephemeral = true,
+      ephemeral = ephemeral,
       end_col = entry.from.start_col - 1 + link_end,
       spell = false,
     })
 
     vim.api.nvim_buf_set_extmark(bufnr, namespace, entry.from.line, entry.to.end_col - 2, {
-      ephemeral = true,
+      ephemeral = ephemeral,
       end_col = entry.to.end_col,
       conceal = '',
     })

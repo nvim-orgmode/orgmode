@@ -96,10 +96,11 @@ end
 ---@param highlights OrgMarkupHighlight[]
 ---@param bufnr number
 function OrgLatex:highlight(highlights, bufnr)
+  local ephemeral = self.markup:use_ephemeral()
   local namespace = self.markup.highlighter.namespace
   for _, entry in ipairs(highlights) do
     vim.api.nvim_buf_set_extmark(bufnr, namespace, entry.from.line, entry.from.start_col - 1, {
-      ephemeral = true,
+      ephemeral = ephemeral,
       end_col = entry.to.end_col,
       hl_group = 'org_latex',
       spell = false,

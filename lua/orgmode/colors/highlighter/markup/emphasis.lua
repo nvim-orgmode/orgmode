@@ -60,49 +60,38 @@ end
 function OrgEmphasis:highlight(highlights, bufnr)
   local namespace = self.markup.highlighter.namespace
   local hide_markers = config.org_hide_emphasis_markers
+  local ephemeral = self.markup:use_ephemeral()
+  local conceal = hide_markers and '' or nil
 
   for _, entry in ipairs(highlights) do
-    local hl_offset = 1
-
     -- Leading delimiter
     vim.api.nvim_buf_set_extmark(bufnr, namespace, entry.from.line, entry.from.start_col, {
-      ephemeral = true,
-      end_col = entry.from.start_col + hl_offset,
+      ephemeral = ephemeral,
+      end_col = entry.from.end_col,
       hl_group = markers[entry.char].hl_name .. '_delimiter',
       spell = markers[entry.char].spell,
       priority = 110 + entry.from.start_col,
+      conceal = conceal,
     })
 
     -- Closing delimiter
-    vim.api.nvim_buf_set_extmark(bufnr, namespace, entry.from.line, entry.to.end_col - hl_offset, {
-      ephemeral = true,
+    vim.api.nvim_buf_set_extmark(bufnr, namespace, entry.from.line, entry.to.start_col, {
+      ephemeral = ephemeral,
       end_col = entry.to.end_col,
       hl_group = markers[entry.char].hl_name .. '_delimiter',
       spell = markers[entry.char].spell,
       priority = 110 + entry.from.start_col,
+      conceal = conceal,
     })
 
     -- Main body highlight
-    vim.api.nvim_buf_set_extmark(bufnr, namespace, entry.from.line, entry.from.start_col + hl_offset, {
-      ephemeral = true,
-      end_col = entry.to.end_col - hl_offset,
+    vim.api.nvim_buf_set_extmark(bufnr, namespace, entry.from.line, entry.from.start_col + 1, {
+      ephemeral = ephemeral,
+      end_col = entry.to.end_col - 1,
       hl_group = markers[entry.char].hl_name,
       spell = markers[entry.char].spell,
       priority = 110 + entry.from.start_col,
     })
-
-    if hide_markers then
-      vim.api.nvim_buf_set_extmark(bufnr, namespace, entry.from.line, entry.from.start_col, {
-        end_col = entry.from.end_col,
-        ephemeral = true,
-        conceal = '',
-      })
-      vim.api.nvim_buf_set_extmark(bufnr, namespace, entry.to.line, entry.to.start_col, {
-        end_col = entry.to.end_col,
-        ephemeral = true,
-        conceal = '',
-      })
-    end
   end
 end
 
@@ -114,7 +103,7 @@ function OrgEmphasis:parse_node(node)
     return false
   end
 
-  local id = table.concat({'emphasis', node_type}, '_')
+  local id = table.concat({ 'emphasis', node_type }, '_')
 
   return {
     type = 'emphasis',
