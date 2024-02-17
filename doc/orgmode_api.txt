@@ -165,19 +165,19 @@ OrgHeadline:id_get_or_create()                    *OrgHeadline:id_get_or_create*
      @return string
 
 
-OrgAgenda                                                            *OrgAgenda*
+OrgApiAgenda                                                      *OrgApiAgenda*
 
 
-OrgAgendaFilter                                                *OrgAgendaFilter*
+OrgApiAgendaFilter                                          *OrgApiAgendaFilter*
 
     Type: ~
         string
 
 
-OrgAgendaOptions                                              *OrgAgendaOptions*
+OrgApiAgendaOptions                                        *OrgApiAgendaOptions*
 
     Fields: ~
-        {filters?}  (OrgAgendaFilter)
+        {filters?}  (OrgApiAgendaFilter)
         {from?}     (string|OrgDate)
         {span?}     (number|"day"|"week"|"month"|"year")
 
@@ -185,13 +185,13 @@ OrgAgendaOptions                                              *OrgAgendaOptions*
 OrgAgenda.agenda({options?})                                  *OrgAgenda.agenda*
 
     Parameters: ~
-        {options?}  (OrgAgendaOptions)
+        {options?}  (OrgApiAgendaOptions)
 
 
 OrgAgendaTodosOptions                                    *OrgAgendaTodosOptions*
 
     Fields: ~
-        {filters?}  (OrgAgendaFilter)
+        {filters?}  (OrgApiAgendaFilter)
 
 
 OrgAgenda.todos({options?})                                    *OrgAgenda.todos*
@@ -203,7 +203,7 @@ OrgAgenda.todos({options?})                                    *OrgAgenda.todos*
 OrgAgendaTagsOptions                                      *OrgAgendaTagsOptions*
 
     Fields: ~
-        {filters?}    (OrgAgendaFilter)
+        {filters?}    (OrgApiAgendaFilter)
         {todo_only?}  (boolean)
 
 
