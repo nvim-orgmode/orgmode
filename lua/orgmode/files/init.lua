@@ -29,9 +29,10 @@ function OrgFiles:new(opts)
   return data
 end
 
+---@param force? boolean Force reload all files
 ---@return OrgPromise
-function OrgFiles:load()
-  if self.load_state then
+function OrgFiles:load(force)
+  if not force and self.load_state then
     if self.load_state == 'loading' then
       self:ensure_loaded()
     end
@@ -185,8 +186,11 @@ function OrgFiles:get_closest_headline_or_nil(cursor)
   return file and file:get_closest_headline_or_nil(cursor)
 end
 
-function OrgFiles:load_sync(timeout)
-  return self:load():wait(timeout)
+---@param force? boolean
+---@param timeout? number
+---@return OrgFiles
+function OrgFiles:load_sync(force, timeout)
+  return self:load(force):wait(timeout)
 end
 
 ---@param title string

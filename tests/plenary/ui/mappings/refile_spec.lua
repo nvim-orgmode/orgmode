@@ -20,11 +20,12 @@ describe('Refile mappings', function()
 
     source_file = org.files:get_current_file()
     local item = source_file:get_closest_headline()
-    org.capture:_refile_to({
-      file = destination_file,
-      lines = item:get_lines(),
-      item = item,
-      headline = 'foo',
+    local dest_file = org.files:get(destination_file)
+    org.capture:process_refile({
+      destination_file = dest_file,
+      source_file = source_file,
+      source_headline = item,
+      destination_headline = dest_file:get_headlines()[3],
     })
     assert.are.same('* not to be refiled', vim.fn.getline(1))
     vim.cmd('edit' .. vim.fn.fnameescape(destination_file))
@@ -50,11 +51,12 @@ describe('Refile mappings', function()
 
     source_file = org.files:get_current_file()
     local item = source_file:get_closest_headline()
-    org.capture:_refile_to({
-      file = destination_file,
-      lines = item:get_lines(),
-      item = item,
-      headline = 'foobar',
+    local dest_file = org.files:get(destination_file)
+    org.capture:process_refile({
+      destination_file = dest_file,
+      source_file = source_file,
+      source_headline = item,
+      destination_headline = dest_file:get_headlines()[1],
     })
     assert.are.same('* not to be refiled', vim.fn.getline(1))
     vim.cmd('edit' .. vim.fn.fnameescape(destination_file))
@@ -80,11 +82,12 @@ describe('Refile mappings', function()
 
     source_file = org.files:get_current_file()
     local item = source_file:get_closest_headline()
-    org.capture:_refile_to({
-      file = destination_file,
-      lines = item:get_lines(),
-      item = item,
-      headline = 'foobar',
+    local dest_file = org.files:get(destination_file)
+    org.capture:process_refile({
+      destination_file = dest_file,
+      source_file = source_file,
+      source_headline = item,
+      destination_headline = dest_file:get_headlines()[1],
     })
     assert.are.same('* not to be refiled', vim.fn.getline(1))
     vim.cmd('edit' .. vim.fn.fnameescape(destination_file))
