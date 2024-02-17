@@ -72,19 +72,20 @@ function OrgApi.refile(opts)
   end
 
   local refile_opts = {
-    item = opts.source._section,
-    lines = opts.source._section:get_lines(),
+    source_file = opts.source._section.file,
+    source_headline = opts.source._section,
   }
 
   if is_file then
-    refile_opts.file = opts.destination.filename
+    refile_opts.destination_file = opts.destination._file
   else
-    refile_opts.file = opts.destination.file.filename
-    refile_opts.headline = opts.destination.title
+    refile_opts.destination_file = opts.destination._section.file
+    refile_opts.destination_headline = opts.destination._section
   end
+
   local source_bufnr = vim.fn.bufnr(opts.source.file.filename) or -1
 
-  orgmode.capture:_refile_to(refile_opts)
+  orgmode.capture:process_refile(refile_opts)
 
   if source_bufnr > -1 and vim.b[source_bufnr].org_capture then
     orgmode.capture:kill()

@@ -184,7 +184,7 @@ function Agenda:reset()
 end
 
 function Agenda:redo(preserve_cursor_pos)
-  self.files:load():next(vim.schedule_wrap(function()
+  self.files:load(true):next(vim.schedule_wrap(function()
     local cursor_view = nil
     if preserve_cursor_pos then
       cursor_view = vim.fn.winsaveview() or {}

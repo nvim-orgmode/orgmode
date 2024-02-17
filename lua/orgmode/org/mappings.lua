@@ -38,56 +38,7 @@ end
 -- Support archiving to headline
 function OrgMappings:archive()
   local headline = self.files:get_closest_headline()
-  local file = headline.file
-
-  if file:is_archive_file() then
-    return utils.echo_warning('This file is already an archive file.')
-  end
-
-  local archive_location = file:get_archive_file_location()
-  if not archive_location then
-    return
-  end
-
-  local archive_directory = vim.fn.fnamemodify(archive_location, ':p:h')
-  if vim.fn.isdirectory(archive_directory) == 0 then
-    vim.fn.mkdir(archive_directory, 'p')
-  end
-  if not vim.loop.fs_stat(archive_location) then
-    vim.fn.writefile({}, archive_location)
-  end
-  local start_line = headline:get_range().start_line
-  local lines = headline:get_lines()
-  local properties_node = headline:get_properties()
-  local append_line = headline:get_append_line() - start_line
-  local indent = headline:get_indent()
-
-  local archive_props = {
-    ('%s:ARCHIVE_TIME: %s'):format(indent, Date.now():to_string()),
-    ('%s:ARCHIVE_FILE: %s'):format(indent, file.filename),
-    ('%s:ARCHIVE_CATEGORY: %s'):format(indent, headline:get_category()),
-    ('%s:ARCHIVE_TODO: %s'):format(indent, headline:get_todo() or ''),
-  }
-
-  if properties_node then
-    local front_lines = { unpack(lines, 1, append_line) }
-    local back_lines = { unpack(lines, append_line + 1, #lines) }
-    lines = vim.list_extend(front_lines, archive_props)
-    lines = vim.list_extend(lines, back_lines)
-  else
-    local front_lines = { unpack(lines, 1, append_line + 1) }
-    local back_lines = { unpack(lines, append_line + 2, #lines) }
-    table.insert(front_lines, ('%s:PROPERTIES:'):format(indent))
-    lines = vim.list_extend(front_lines, archive_props)
-    table.insert(lines, ('%s:END:'):format(indent))
-    lines = vim.list_extend(lines, back_lines)
-  end
-
-  self.capture:refile_file_headline_to_archive({
-    file = archive_location,
-    item = headline,
-    lines = lines,
-  })
+  return self.capture:refile_file_headline_to_archive(self.files:get_closest_headline())
 end
 
 ---@param tags? string|string[]

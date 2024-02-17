@@ -17,7 +17,11 @@ function Templates:new(templates)
   opts.templates = {}
   for key, template in pairs(templates or config.org_capture_templates) do
     if type(template) == 'table' then
-      opts.templates[key] = Template:new(template)
+      local tpl = vim.deepcopy(template)
+      if not tpl.target then
+        tpl.target = config.org_default_notes_file
+      end
+      opts.templates[key] = Template:new(tpl)
     else
       opts.templates[key] = template
     end

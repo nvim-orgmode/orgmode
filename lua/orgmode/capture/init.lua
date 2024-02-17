@@ -1,24 +1,26 @@
 local utils = require('orgmode.utils')
 local config = require('orgmode.config')
 local Templates = require('orgmode.capture.templates')
-local Template = require('orgmode.capture.template')
 local ClosingNote = require('orgmode.capture.closing_note')
 local Menu = require('orgmode.ui.menu')
 local Range = require('orgmode.files.elements.range')
+local CaptureWindow = require('orgmode.capture.window')
+local Date = require('orgmode.objects.date')
 
----@class OrgCaptureOpts
----@field lines string[]
----@field range OrgRange?
----@field file string?
----@field template OrgCaptureTemplate?
----@field headline string?
----@field item OrgHeadline?
----@field message string?
+---@class OrgProcessCaptureOpts
+---@field source_file OrgFile
+---@field source_headline? OrgHeadline
+---@field destination_file OrgFile
+---@field destination_headline? OrgHeadline
+---@field template? OrgCaptureTemplate
+---@field lines? string[]
+---@field message? string
 
 ---@class OrgCapture
 ---@field templates OrgCaptureTemplates
 ---@field closing_note OrgClosingNote
 ---@field files OrgFiles
+---@field _window OrgCaptureWindow
 local Capture = {}
 
 ---@param opts { files: OrgFiles }
@@ -93,18 +95,19 @@ function Capture:prompt()
 end
 
 ---@param template OrgCaptureTemplate
+---@return OrgCaptureWindow
 function Capture:open_template(template)
-  local content = template:compile()
-  local on_close = function()
-    require('orgmode').action('capture.refile', true)
-  end
-  self._close_tmp = utils.open_tmp_org_window(16, config.win_split_mode, config.win_border, on_close)
-  vim.api.nvim_buf_set_lines(0, 0, -1, true, content)
-  template:setup()
+  self._window = CaptureWindow:new({
+    template = template,
+    on_open = function()
+      return config:setup_mappings('capture')
+    end,
+    on_close = function()
+      return self:on_refile_close()
+    end,
+  })
 
-  vim.b.org_template = template
-  vim.b.org_capture = true
-  config:setup_mappings('capture')
+  return self._window:open()
 end
 
 ---@param shortcut string
@@ -116,121 +119,216 @@ function Capture:open_template_by_shortcut(shortcut)
   return self:open_template(template)
 end
 
----Triggered when refiling from capture buffer
----@param confirm? boolean
-function Capture:refile(confirm)
+function Capture:on_refile_close()
   local is_modified = vim.bo.modified
   local opts = self:_get_refile_vars()
-  if not opts.file then
+  if not opts then
     return
   end
-  if confirm and is_modified then
-    local choice = vim.fn.confirm(string.format('Do you want to refile this to %s?', opts.file), '&Yes\n&No')
+  if is_modified then
+    local choice =
+      vim.fn.confirm(string.format('Do you want to refile this to %s?', opts.destination_file.filename), '&Yes\n&No')
     vim.cmd([[redraw!]])
     if choice ~= 1 then
       return utils.echo_info('Canceled.')
     end
   end
-  vim.defer_fn(function()
-    self:_refile_to(opts)
 
-    if not confirm then
-      self:kill()
-    end
+  vim.defer_fn(function()
+    self:process_refile(opts)
+    self._window = nil
   end, 0)
+end
+
+---Triggered when refiling from capture buffer
+function Capture:refile()
+  local opts = self:_get_refile_vars()
+  if not opts then
+    return
+  end
+
+  self:process_refile(opts)
+  self:kill()
 end
 
 ---Triggered when refiling to destination from capture buffer
 function Capture:refile_to_destination()
-  local opts = self:_get_refile_vars()
-  if not opts.file then
-    return
-  end
-  self:_refile_content_with_fallback(opts)
+  local source_file = self.files:get_current_file()
+  local source_headline = source_file:get_headlines()[1]
+  local destination = self:get_destination()
+  self:process_refile({
+    source_file = source_file,
+    source_headline = source_headline,
+    destination_file = destination.file,
+    destination_headline = destination.headline,
+    template = self._window.template,
+  })
   self:kill()
 end
 
 ---@private
----@return OrgCaptureOpts
+---@return OrgProcessCaptureOpts | false
 function Capture:_get_refile_vars()
-  local template = vim.b.org_template
-  assert(template, 'No capture template found')
-  local target = Template:new({ template = template.target or config.org_default_notes_file }):compile()[1]
+  local target = self._window.template.target
   local file = vim.fn.resolve(vim.fn.fnamemodify(target, ':p'))
 
   if vim.fn.filereadable(file) == 0 then
     local choice = vim.fn.confirm(('Refile destination %s does not exist. Create now?'):format(file), '&Yes\n&No')
     if choice ~= 1 then
       utils.echo_error('Cannot proceed without a valid refile destination')
-      return {}
+      return false
     end
     vim.fn.mkdir(vim.fn.fnamemodify(file, ':h'), 'p')
     vim.fn.writefile({}, file)
   end
-  local lines = vim.api.nvim_buf_get_lines(0, 0, -1, true)
-  local org_file = self.files:get_current_file()
-  local item = nil
-  if org_file then
-    item = org_file:get_headlines()[1]
+
+  local source_file = self.files:get_current_file()
+  local source_headline = source_file:get_headlines()[1]
+  local destination_file = self.files:get(file)
+  local destination_headline = nil
+  if self._window.template.headline then
+    destination_headline = destination_file:find_headline_by_title(self._window.template.headline)
+    if not destination_headline then
+      utils.echo_error(('Refile headline "%s" does not exist in "%s"'):format(self._window.template.headline, file))
+      return false
+    end
   end
 
   return {
-    file = file,
-    lines = lines,
-    item = item,
-    template = template,
-    headline = template.headline,
+    source_file = source_file,
+    source_headline = source_headline,
+    destination_file = destination_file,
+    destination_headline = destination_headline,
+    template = self._window.template,
   }
+end
+
+---@param opts OrgProcessCaptureOpts
+function Capture:process_refile(opts)
+  opts.source_file:reload_sync()
+  local is_same_file = opts.source_file.filename == opts.destination_file.filename
+
+  local target_level = 0
+  local target_line = -1
+
+  if opts.destination_headline then
+    target_level = opts.destination_headline:get_level()
+    target_line = opts.destination_headline:get_range().end_line
+  end
+
+  local lines = opts.lines
+
+  if not lines then
+    lines = opts.source_file.lines
+
+    if opts.source_headline then
+      lines = opts.source_headline:get_lines()
+      if opts.destination_headline or opts.source_headline:get_level() > 1 then
+        lines = self:_adapt_headline_level(opts.source_headline, target_level, is_same_file)
+      end
+    end
+  end
+
+  if opts.template then
+    lines = opts.template:apply_properties_to_lines(lines)
+  end
+
+  if is_same_file and not opts.source_headline then
+    utils.echo_error('Cannot refile within a same file without a source headline')
+    return false
+  end
+
+  self.files
+    :update_file(opts.destination_file.filename, function(file)
+      if file.filename == opts.source_file.filename then
+        local item_range = opts.source_headline:get_range()
+        return vim.cmd(string.format('silent! %d,%d move %s', item_range.start_line, item_range.end_line, target_line))
+      end
+
+      local range = self:_get_destination_range_without_empty_lines(Range.from_line(target_line))
+      vim.api.nvim_buf_set_lines(0, range.start_line, range.end_line, false, lines)
+    end)
+    :wait()
+
+  if not is_same_file and opts.source_headline and opts.source_headline.file.filename == utils.current_file_path() then
+    local item_range = opts.source_headline:get_range()
+    vim.api.nvim_buf_set_lines(0, item_range.start_line - 1, item_range.end_line, false, {})
+  end
+
+  utils.echo_info(opts.message or string.format('Wrote %s', opts.destination_file.filename))
+  return true
 end
 
 ---Triggered from org file when we want to refile headline
 function Capture:refile_headline_to_destination()
-  local item = self.files:get_closest_headline()
-  local lines = item:get_lines()
-  return self:_refile_content_with_fallback({
-    lines = lines,
-    item = item,
-    template = Template:new(),
+  local file = self.files:get_current_file()
+  local headline = file:get_closest_headline()
+  local destination = self:get_destination()
+  return self:process_refile({
+    source_file = file,
+    source_headline = headline,
+    destination_file = destination.file,
+    destination_headline = destination.headline,
+    template = self._window.template,
   })
 end
 
----@param opts OrgCaptureOpts
----@return boolean
-function Capture:refile_file_headline_to_archive(opts)
-  opts.message = string.format('Archived to %s', opts.file)
-  return self:_refile_to(opts)
-end
+---@param headline OrgHeadline
+function Capture:refile_file_headline_to_archive(headline)
+  local file = headline.file
 
----@private
----@param opts OrgCaptureOpts
----@return boolean
-function Capture:_refile_content_with_fallback(opts)
-  local default_file = opts.file and opts.file ~= '' and vim.fn.fnamemodify(opts.file, ':p') or nil
-
-  local valid_destinations = {}
-  for _, file in ipairs(self.files:filenames()) do
-    valid_destinations[vim.fn.fnamemodify(file, ':t')] = file
+  if file:is_archive_file() then
+    return utils.echo_warning('This file is already an archive file.')
   end
 
-  local destination = vim.fn.OrgmodeInput('Enter destination: ', '', function(arg_lead)
-    return self:autocomplete_refile(arg_lead)
-  end)
-  destination = vim.split(destination, '/', { plain = true })
-
-  if not valid_destinations[destination[1]] then
-    if not default_file then -- we know that this comes from org_refile and not org_capture_refile
-      utils.echo_error(
-        "'" .. destination[1] .. "' is not a file specified in the 'org_agenda_files' setting. Refiling cancelled."
-      )
-      return false
-    end
-    opts.file = default_file
-    return self:_refile_to(opts)
+  local archive_location = file:get_archive_file_location()
+  if not archive_location then
+    return
   end
 
-  opts.file = valid_destinations[destination[1]]
-  opts.headline = table.concat({ unpack(destination, 2) }, '/')
-  return self:_refile_to(opts)
+  local archive_directory = vim.fn.fnamemodify(archive_location, ':p:h')
+  if vim.fn.isdirectory(archive_directory) == 0 then
+    vim.fn.mkdir(archive_directory, 'p')
+  end
+  if not vim.loop.fs_stat(archive_location) then
+    vim.fn.writefile({}, archive_location)
+  end
+  local start_line = headline:get_range().start_line
+  local lines = headline:get_lines()
+  local properties_node = headline:get_properties()
+  local append_line = headline:get_append_line() - start_line
+  local indent = headline:get_indent()
+
+  local archive_props = {
+    ('%s:ARCHIVE_TIME: %s'):format(indent, Date.now():to_string()),
+    ('%s:ARCHIVE_FILE: %s'):format(indent, file.filename),
+    ('%s:ARCHIVE_CATEGORY: %s'):format(indent, headline:get_category()),
+    ('%s:ARCHIVE_TODO: %s'):format(indent, headline:get_todo() or ''),
+  }
+
+  if properties_node then
+    local front_lines = { unpack(lines, 1, append_line) }
+    local back_lines = { unpack(lines, append_line + 1, #lines) }
+    lines = vim.list_extend(front_lines, archive_props)
+    lines = vim.list_extend(lines, back_lines)
+  else
+    local front_lines = { unpack(lines, 1, append_line + 1) }
+    local back_lines = { unpack(lines, append_line + 2, #lines) }
+    table.insert(front_lines, ('%s:PROPERTIES:'):format(indent))
+    lines = vim.list_extend(front_lines, archive_props)
+    table.insert(lines, ('%s:END:'):format(indent))
+    lines = vim.list_extend(lines, back_lines)
+  end
+
+  local destination_file = self.files:get(archive_location)
+
+  return self:process_refile({
+    source_file = headline.file,
+    source_headline = headline,
+    destination_file = destination_file,
+    lines = lines,
+    message = ('Archived to %s'):format(destination_file.filename),
+  })
 end
 
 ---@param item OrgHeadline
@@ -249,29 +347,22 @@ function Capture:_adapt_headline_level(item, target_level, is_same_file)
   return item:promote(level - target_level - 1, true, not is_same_file)
 end
 
----@param opts OrgCaptureOpts
-local function add_empty_lines(opts)
-  local empty_lines = opts.template.properties.empty_lines
-
-  for _ = 1, empty_lines.before do
-    table.insert(opts.lines, 1, '')
-  end
-
-  for _ = 1, empty_lines.after do
-    table.insert(opts.lines, '')
-  end
-end
-
----@param opts OrgCaptureOpts
-local function apply_properties(opts)
-  if opts.template then
-    add_empty_lines(opts)
-  end
-end
-
-local function remove_buffer_empty_lines(opts)
+--- Modify provided range to overwrite empty lines in the destination range
+--- Example destination file:
+--- ------------
+--- * Headline 1
+---
+---
+--- * Headline 2
+--- ------------
+--- Refiling "Headline 3" to "Headline 1" will remove empty line and we get this:
+--- ------------
+--- * Headline 1
+--- ** Headline 3
+--- * Headline 2
+--- ------------
+function Capture:_get_destination_range_without_empty_lines(range)
   local line_count = vim.api.nvim_buf_line_count(0)
-  local range = opts.range
 
   local end_line = range.end_line
   if end_line < 0 then
@@ -297,86 +388,58 @@ local function remove_buffer_empty_lines(opts)
 
   range.start_line = start_line
   range.end_line = end_line
+  return range
 end
 
---- Checks, if we refile a heading within one file or from one file to another.
----@param opts OrgCaptureOpts
----@return boolean
-local function check_refile_source(opts)
-  local source_file = opts.item and opts.item.file.filename or utils.current_file_path()
-  local target_file = opts.file
-  return source_file == target_file
-end
-
----@private
----@param opts OrgCaptureOpts
----@return boolean
-function Capture:_refile_to(opts)
-  if not opts.file then
-    return false
+--- Prompt for file (and headline) where to refile to
+--- @return { file: OrgFile, headline?: OrgHeadline}
+function Capture:get_destination()
+  ---@type table<string, OrgFile>
+  local valid_destinations = {}
+  for _, file in ipairs(self.files:filenames()) do
+    valid_destinations[vim.fn.fnamemodify(file, ':t')] = file
   end
 
-  local has_headline = opts.headline and opts.headline ~= ''
-  local destination_file = self.files:get(opts.file)
-  local target_level = 0
-  local target_line = -1
-  local should_adapt_headline = has_headline or (opts.item ~= nil and opts.item:get_level() > 1)
-  if has_headline and destination_file then
-    local headline = destination_file:find_headline_by_title(opts.headline)
-    if not headline then
-      utils.echo_error("headline '" .. opts.headline .. "' does not exist in '" .. opts.file .. "'. Aborted refiling.")
-      return false
-    end
-    target_level = headline:get_level()
-    target_line = headline:get_range().end_line
+  local destination = vim.fn.OrgmodeInput('Enter destination: ', '', function(arg_lead)
+    return self:autocomplete_refile(arg_lead)
+  end)
+  destination = vim.split(destination, '/', { plain = true })
+
+  if not valid_destinations[destination[1]] then
+    utils.echo_error(
+      ('"%s" is not a is not a file specified in the "org_agenda_files" setting. Refiling cancelled.'):format(
+        destination[1]
+      )
+    )
+    return {}
   end
 
-  local item = opts.item
-  local is_same_file = check_refile_source(opts)
-  if item and should_adapt_headline then
-    -- Refiling in same file just moves the lines from one position
-    -- to another,so we need to apply demote instantly
-    opts.lines = self:_adapt_headline_level(item, target_level, is_same_file)
+  local destination_file = self.files:get(valid_destinations[destination[1]])
+  local result = {
+    file = destination_file,
+  }
+  local headline_title = table.concat({ unpack(destination, 2) }, '/')
+
+  if not headline_title or vim.trim(headline_title) == '' then
+    return result
   end
 
-  opts.range = Range.from_line(target_line)
+  local headlines = vim.tbl_filter(function(item)
+    local pattern = '^' .. vim.pesc(headline_title:lower()) .. '$'
+    return item:get_title():lower():match(pattern)
+  end, destination_file:get_opened_unfinished_headlines())
 
-  apply_properties(opts)
-
-  if is_same_file and item then
-    local target = opts.range.end_line
-    local view = vim.fn.winsaveview() or {}
-    local item_range = item:get_range()
-    vim.cmd(string.format('silent! %d,%d move %s', item_range.start_line, item_range.end_line, target))
-    vim.fn.winrestview(view)
-
-    utils.echo_info(opts.message or string.format('Wrote %s', opts.file))
-    return true
+  if not headlines[1] then
+    utils.echo_error(
+      ("'%s' is not a valid headline in '%s'. Refiling cancelled."):format(headline_title, destination_file.filename)
+    )
+    return {}
   end
 
-  local edit_file = utils.edit_file(opts.file)
-
-  if not is_same_file then
-    edit_file.open()
-  end
-
-  remove_buffer_empty_lines(opts)
-
-  ---@type OrgRange
-  local range = opts.range
-  vim.api.nvim_buf_set_lines(0, range.start_line, range.end_line, false, opts.lines)
-
-  if not is_same_file then
-    edit_file.close()
-  end
-
-  if item and item.file.filename == utils.current_file_path() then
-    local item_range = item:get_range()
-    vim.api.nvim_buf_set_lines(0, item_range.start_line - 1, item_range.end_line, false, {})
-  end
-
-  utils.echo_info(opts.message or string.format('Wrote %s', opts.file))
-  return true
+  return {
+    file = destination_file,
+    headline = headlines[1],
+  }
 end
 
 ---@param arg_lead string
@@ -416,9 +479,9 @@ function Capture:autocomplete_refile(arg_lead)
 end
 
 function Capture:kill()
-  if self._close_tmp then
-    self._close_tmp()
-    self._close_tmp = nil
+  if self._window then
+    self._window:kill()
+    self._window = nil
   end
 end
 

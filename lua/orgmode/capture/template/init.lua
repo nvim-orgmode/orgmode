@@ -56,7 +56,7 @@ function Template:new(opts)
   local this = {}
   this.description = opts.description or ''
   this.template = opts.template or ''
-  this.target = opts.target
+  this.target = self:_compile(opts.target or '')
   this.headline = opts.headline
   this.properties = TemplateProperties:new(opts.properties)
 
@@ -91,6 +91,22 @@ function Template:compile()
   end
   content = self:_compile(content)
   return vim.split(content, '\n', { plain = true })
+end
+
+---@param lines string[]
+---@return string[]
+function Template:apply_properties_to_lines(lines)
+  local empty_lines = self.properties.empty_lines
+
+  for _ = 1, empty_lines.before do
+    table.insert(lines, 1, '')
+  end
+
+  for _ = 1, empty_lines.after do
+    table.insert(lines, '')
+  end
+
+  return lines
 end
 
 ---@private
