@@ -1,7 +1,7 @@
 _G.orgmode = _G.orgmode or {}
 local ts_revision = 'f8c6b1e72f82f17e41004e04e15f62a83ecc27b0'
 local setup_ts_grammar_used = false
----@type Org
+---@type Org | nil
 local instance = nil
 
 local auto_instance_keys = {
@@ -23,16 +23,16 @@ local auto_instance_keys = {
 ---@field org_mappings OrgMappings
 ---@field notifications OrgNotifications
 local Org = {}
-
-function Org:new()
-  local data = {}
-  setmetatable(data, self)
-  self.__index = function(tbl, key)
-    if auto_instance_keys[key] and not instance then
+setmetatable(Org, {
+  __index = function(tbl, key)
+    if auto_instance_keys[key] then
       Org.instance()
     end
     return rawget(tbl, key)
-  end
+  end,
+})
+
+function Org:new()
   self.initialized = false
   self:setup_autocmds()
   return self
@@ -142,7 +142,7 @@ function Org.setup(opts)
   config:setup_ts_predicates()
   vim.defer_fn(function()
     if config.notifications.enabled and #vim.api.nvim_list_uis() > 0 then
-      Org.instance().files:load():next(vim.schedule_wrap(function()
+      Org.files:load():next(vim.schedule_wrap(function()
         instance.notifications = require('orgmode.notifications')
           :new({
             files = Org.files,
@@ -209,11 +209,11 @@ function Org.cron(opts)
   if not config.notifications.cron_enabled then
     return vim.cmd([[qa!]])
   end
-  Org.instance().files:load():next(vim.schedule_wrap(function()
+  Org.files:load():next(vim.schedule_wrap(function()
     ---@diagnostic disable-next-line: inject-field
     instance.notifications = require('orgmode.notifications')
       :new({
-        files = instance.files,
+        files = Org.files,
       })
       :cron()
   end))
@@ -225,6 +225,13 @@ function Org.instance()
   end
   instance:init()
   return instance
+end
+
+function Org.destroy()
+  if instance then
+    instance = nil
+    collectgarbage()
+  end
 end
 
 function _G.orgmode.statusline()
