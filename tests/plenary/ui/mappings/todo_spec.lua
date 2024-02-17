@@ -185,4 +185,41 @@ describe('Todo mappings', function()
       '  <2021-07-21 Wed 22:02>',
     }, vim.api.nvim_buf_get_lines(0, 2, 5, false))
   end)
+  it('Should reset state to the one defined in the REPEAT_TO_STATE property', function()
+    config:extend({
+      org_todo_keywords = { 'TODO(t)', 'PHONECALL(p)', 'WAITING(w)', '|', 'DONE(d)' },
+      org_log_into_drawer = 'LOGBOOK',
+    })
+    helpers.load_file_content({
+      '#+title: TEST',
+      '',
+      '* PHONECALL Call dad',
+      '  SCHEDULED: <2021-09-07 Tue 12:00 +1d>',
+      '  :PROPERTIES:',
+      '  :REPEAT_TO_STATE: PHONECALL',
+      '  :END:',
+    })
+
+    assert.are.same({
+      '* PHONECALL Call dad',
+      '  SCHEDULED: <2021-09-07 Tue 12:00 +1d>',
+      '  :PROPERTIES:',
+      '  :REPEAT_TO_STATE: PHONECALL',
+      '  :END:',
+    }, vim.api.nvim_buf_get_lines(0, 2, 7, false))
+    vim.fn.cursor(3, 3)
+    vim.cmd([[norm citd]])
+    vim.wait(50)
+    assert.are.same({
+      '* PHONECALL Call dad',
+      '  SCHEDULED: <2021-09-08 Wed 12:00 +1d>',
+      '  :PROPERTIES:',
+      '  :REPEAT_TO_STATE: PHONECALL',
+      '  :LAST_REPEAT: [' .. Date.now():to_string() .. ']',
+      '  :END:',
+      '  :LOGBOOK:',
+      '  - State "DONE" from "PHONECALL" [' .. Date.now():to_string() .. ']',
+      '  :END:',
+    }, vim.api.nvim_buf_get_lines(0, 2, 11, false))
+  end)
 end)

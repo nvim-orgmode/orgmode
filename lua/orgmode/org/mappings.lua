@@ -1022,7 +1022,7 @@ function OrgMappings:_change_todo_state(direction, use_fast_access)
     elseif direction == 'prev' then
       next_state = todo_state:get_prev()
     elseif direction == 'reset' then
-      next_state = todo_state:get_todo()
+      next_state = headline:get_property('REPEAT_TO_STATE') or todo_state:get_todo()
     end
   end
 
