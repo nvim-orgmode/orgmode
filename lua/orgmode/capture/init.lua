@@ -92,15 +92,15 @@ function Capture:prompt()
   self:_create_prompt(self.templates:get_list())
 end
 
----@param template table
+---@param template OrgCaptureTemplate
 function Capture:open_template(template)
-  local content = self.templates:compile(template)
+  local content = template:compile()
   local on_close = function()
     require('orgmode').action('capture.refile', true)
   end
   self._close_tmp = utils.open_tmp_org_window(16, config.win_split_mode, config.win_border, on_close)
   vim.api.nvim_buf_set_lines(0, 0, -1, true, content)
-  self.templates:setup()
+  template:setup()
 
   vim.b.org_template = template
   vim.b.org_capture = true
@@ -153,8 +153,9 @@ end
 ---@private
 ---@return OrgCaptureOpts
 function Capture:_get_refile_vars()
-  local template = vim.b.org_template or {}
-  local target = self.templates:compile_target(template.target or config.org_default_notes_file)
+  local template = vim.b.org_template
+  assert(template, 'No capture template found')
+  local target = Template:new({ template = template.target or config.org_default_notes_file }):compile()[1]
   local file = vim.fn.resolve(vim.fn.fnamemodify(target, ':p'))
 
   if vim.fn.filereadable(file) == 0 then

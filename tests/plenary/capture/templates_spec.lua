@@ -1,12 +1,11 @@
-local Templates = require('orgmode.capture.templates')
+local Template = require('orgmode.capture.template')
 
 describe('Capture template', function()
-  local templates = Templates:new()
   it('should compile expression', function()
     ---Backup and restore the clipboard
     local clip_backup = vim.fn.getreg('+')
     vim.fn.setreg('+', 'test')
-    local result = templates:compile({
+    local template = Template:new({
       template = '* TODO\n%<%Y-%m-%d>\n%t\n%T--%T\n%<%H:%M>\n%<%A>\n%x\n%(return string.format("hello %s", "world"))',
     })
 
@@ -19,7 +18,7 @@ describe('Capture template', function()
       os.date('%A'),
       'test',
       'hello world',
-    }, result)
+    }, template:compile())
 
     vim.fn.setreg('+', clip_backup)
   end)
