@@ -21,7 +21,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           version: latest
             # CLI arguments
-          args: --check lua/ tests/
+          args: make lint
   tests:
     strategy:
       fail-fast: false

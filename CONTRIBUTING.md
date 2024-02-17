@@ -15,6 +15,14 @@ If you're reporting a `core` feature, please be sure to provide a link that desc
 
 If you spot something missing in our [docs](DOCS.md), don't hesitate making a PR. The [wiki](https://github.com/nvim-orgmode/orgmode/wiki) can be edited freely.
 
+## Local dev
+
+Requirements:
+- [StyLua](https://github.com/JohnnyMorganz/StyLua) - For formatting
+
+To set up local development, run `make setup_dev`. This will add a pre-commit hook that will auto format all files before committing them.
+You can always manually format all files with `make format` command
+
 ## Code
 
 You can take a look at our [feature completeness](https://github.com/nvim-orgmode/orgmode/wiki/Feature-Completeness) list and see if any of the missing features catch your interest.
@@ -34,13 +42,6 @@ To run a specific test you can set a `FILE` environment variable to a specific
 spec you want to test. Example:
 ```
 make test FILE=./tests/plenary/api/api_spec.lua
-```
-
-### Formatting
-
-Formatting is done via [StyLua](https://github.com/JohnnyMorganz/StyLua). To format everything run:
-```
-make format
 ```
 
 ### Parser
