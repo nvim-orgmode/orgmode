@@ -394,6 +394,7 @@ function Config:ts_highlights_enabled()
       return false
     end
 
+    ---@diagnostic disable-next-line: param-type-mismatch
     if type(hl_module.disable) == 'table' and vim.tbl_contains(hl_module.disable, 'org') then
       return false
     end
@@ -413,33 +414,26 @@ function Config:respect_blank_before_new_entry(content, option, prepend_content)
   return content
 end
 
----@param amount number
----@return string
-function Config:get_indent(amount)
-  if self.org_adapt_indentation then
-    return string.rep(' ', amount)
+---Check if buffer should apply indentation
+---@param bufnr number
+---@return boolean
+function Config:should_indent(bufnr)
+  if bufnr > -1 and vim.b[bufnr].org_indent_mode then
+    return not self.opts.org_indent_mode_turns_off_org_adapt_indentation
   end
-  return ''
+
+  return self.org_adapt_indentation
 end
 
----@param content string|string[]
 ---@param amount number
----@return string|string[]
-function Config:apply_indent(content, amount)
-  local indent = self:get_indent(amount)
-
-  if indent == '' then
-    return content
+---@param bufnr number
+---@return string
+function Config:get_indent(amount, bufnr)
+  if self:should_indent(bufnr) then
+    return string.rep(' ', amount)
   end
 
-  if type(content) ~= 'table' then
-    return indent .. content
-  end
-
-  for i, line in ipairs(content) do
-    content[i] = indent .. line
-  end
-  return content
+  return ''
 end
 
 ---@param bufnr number

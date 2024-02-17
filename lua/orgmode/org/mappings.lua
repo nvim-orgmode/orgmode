@@ -60,7 +60,7 @@ function OrgMappings:archive()
   local lines = headline:get_lines()
   local properties_node = headline:get_properties()
   local append_line = headline:get_append_line() - start_line
-  local indent = config:get_indent(headline:get_level() + 1)
+  local indent = headline:get_indent()
 
   local archive_props = {
     ('%s:ARCHIVE_TIME: %s'):format(indent, Date.now():to_string()),
@@ -439,7 +439,7 @@ function OrgMappings:_todo_change_state(direction)
   local log_note = config.org_log_done == 'note'
   local log_time = config.org_log_done == 'time'
   local should_log_time = log_note or log_time
-  local indent = config:get_indent(headline:get_level() + 1)
+  local indent = headline:get_indent()
 
   local get_note = function(note)
     if note == nil then
