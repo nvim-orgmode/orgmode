@@ -4,8 +4,8 @@ local ts_utils = require('orgmode.utils.treesitter')
 ---@type Query
 local query = nil
 
-local function get_indent_pad(linenr)
-  if config.org_adapt_indentation then
+local function get_indent_pad(linenr, bufnr)
+  if config:should_indent(bufnr) then
     local headline = ts_utils.closest_headline_node({ linenr, 0 })
     if not headline then
       return 0
@@ -16,7 +16,7 @@ local function get_indent_pad(linenr)
   return 0
 end
 
-local function get_indent_for_match(matches, linenr, mode)
+local function get_indent_for_match(matches, linenr, mode, bufnr)
   linenr = linenr or vim.v.lnum
   mode = mode or vim.fn.mode()
   local prev_linenr = vim.fn.prevnonblank(linenr - 1)
@@ -25,7 +25,7 @@ local function get_indent_for_match(matches, linenr, mode)
   local indent = 0
 
   if not match and not prev_line_match then
-    return indent + get_indent_pad(linenr)
+    return indent + get_indent_pad(linenr, bufnr)
   end
 
   match = match or {}
@@ -50,7 +50,7 @@ local function get_indent_for_match(matches, linenr, mode)
       end
     end
     -- If the first_line_indent wasn't found then this is the root of the list, as such we just pad accordingly
-    indent = first_line_indent or (0 + get_indent_pad(linenr))
+    indent = first_line_indent or (0 + get_indent_pad(linenr, bufnr))
     -- If the current line is hanging content as part of the listitem but not on the same line we want to indent it
     -- such that it's in line with the general content body, not the bullet.
     --
@@ -69,7 +69,7 @@ local function get_indent_for_match(matches, linenr, mode)
     -- After the first line of a listitem, we have to add the overhang to the
     -- listitem's own base indent. After all further lines, we can simply copy
     -- the indentation.
-    indent = get_indent_for_match(matches, prev_linenr)
+    indent = get_indent_for_match(matches, prev_linenr, mode, bufnr)
     if prev_linenr == prev_line_match.line_nr then
       indent = indent + prev_line_match.overhang
     end
@@ -81,7 +81,7 @@ local function get_indent_for_match(matches, linenr, mode)
     return match.indent
   end
 
-  return indent + get_indent_pad(linenr)
+  return indent + get_indent_pad(linenr, bufnr)
 end
 
 local get_matches = ts_utils.memoize_by_buf_tick(function(bufnr)
@@ -90,6 +90,7 @@ local get_matches = ts_utils.memoize_by_buf_tick(function(bufnr)
     return {}
   end
   local matches = {}
+  local mode = vim.fn.mode()
   local root = tree[1]:root()
   for _, match, _ in query:iter_matches(root, bufnr, 0, -1) do
     for id, node in pairs(match) do
@@ -150,13 +151,13 @@ local get_matches = ts_utils.memoize_by_buf_tick(function(bufnr)
         -- block header and footer. This keeps code correctly indented in `BEGIN_SRC` blocks as well as ensuring
         -- `BEGIN_EXAMPLE` blocks don't have their indentation changed inside of them.
         local parent_linenr = parent:start() + 1
-        local parent_indent = get_indent_for_match(matches, parent:start() + 1)
+        local parent_indent = get_indent_for_match(matches, parent:start() + 1, mode, bufnr)
 
         -- We want to align to the listitem body, not the bullet
         if parent:type() == 'listitem' then
           parent_indent = parent_indent + matches[parent_linenr].overhang
         else
-          parent_indent = get_indent_pad(range.start.line + 1)
+          parent_indent = get_indent_pad(range.start.line + 1, bufnr)
         end
 
         local curr_header_indent = vim.fn.indent(range.start.line + 1)
@@ -270,18 +271,18 @@ end
 --
 -- TLDR: The caching avoids some inconsistent race conditions with getting the Treesitter matches.
 local buf_indentexpr_cache = {}
-local function indentexpr(linenr, mode)
+local function indentexpr(linenr, bufnr)
   linenr = linenr or vim.v.lnum
-  mode = mode or vim.fn.mode()
+  local mode = vim.fn.mode()
   query = query or vim.treesitter.query.get('org', 'org_indent')
 
-  local bufnr = vim.api.nvim_get_current_buf()
+  bufnr = bufnr or vim.api.nvim_get_current_buf()
   local indentexpr_cache = buf_indentexpr_cache[bufnr] or { prev_linenr = -1 }
   if indentexpr_cache.prev_linenr ~= linenr - 1 or not mode:lower():find('n') then
-    indentexpr_cache.matches = get_matches(0)
+    indentexpr_cache.matches = get_matches(bufnr)
   end
 
-  local new_indent = get_indent_for_match(indentexpr_cache.matches, linenr, mode)
+  local new_indent = get_indent_for_match(indentexpr_cache.matches, linenr, mode, bufnr)
   local match = indentexpr_cache.matches[linenr]
   if match then
     match.indent = new_indent

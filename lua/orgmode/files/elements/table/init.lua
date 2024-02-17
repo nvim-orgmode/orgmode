@@ -86,7 +86,7 @@ function Table:reformat()
     return false
   end
   local _, start_col = self.node:range()
-  local indent = config:get_indent(start_col)
+  local indent = config:get_indent(start_col, vim.api.nvim_get_current_buf())
   local contents = vim.tbl_map(function(line)
     return ('%s%s'):format(indent, line)
   end, self:draw())
@@ -104,7 +104,7 @@ function Table:handle_cr()
 
   local line = vim.fn.line('.') or 0
   local indent_amount = vim.fn.indent(line) or 0
-  local indent = config:get_indent(indent_amount)
+  local indent = config:get_indent(indent_amount, vim.api.nvim_get_current_buf())
   vim.api.nvim_buf_set_lines(0, line, line, true, { ('%s|'):format(indent) })
   local tbl = Table.from_current_node({ line, vim.fn.col('.') })
   if tbl then

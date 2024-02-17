@@ -159,7 +159,7 @@ end
 ---@param headline OrgHeadline
 function Logbook.new_from_headline(headline)
   local append_line = headline:get_append_line()
-  local indent = config:get_indent(headline:get_level() + 1)
+  local indent = headline:get_indent()
 
   local date = Date.now({ active = false })
   local content = {

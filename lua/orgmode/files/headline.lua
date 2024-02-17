@@ -87,11 +87,11 @@ function Headline:promote(amount, recursive, dryRun)
       if line:sub(1, 1) == '*' then
         lines[i] = line:sub(1 + amount)
       elseif vim.trim(line:sub(1, amount)) == '' then
-        if config.org_adapt_indentation then
+        if config:should_indent(self.file:bufnr()) then
           lines[i] = line:sub(1 + amount)
         else
           line, _ = line:gsub('^%s+', '')
-          local indent_amount = indent.indentexpr(start_line + i)
+          local indent_amount = indent.indentexpr(start_line + i, self.file:bufnr())
           lines[i] = string.rep(' ', indent_amount) .. line
         end
       end
@@ -113,11 +113,11 @@ function Headline:demote(amount, recursive, dryRun)
       if line:sub(1, 1) == '*' then
         lines[i] = string.rep('*', amount) .. line
       else
-        if config.org_adapt_indentation then
-          lines[i] = config:apply_indent(line, amount)
+        if config:should_indent(self.file:bufnr()) then
+          lines[i] = self:_apply_indent(line, amount)
         else
           line, _ = line:gsub('^%s+', '')
-          local indent_amount = indent.indentexpr(start_line + i)
+          local indent_amount = indent.indentexpr(start_line + i, self.file:bufnr())
           lines[i] = string.rep(' ', indent_amount) .. line
         end
       end
@@ -384,7 +384,7 @@ function Headline:set_property(name, value)
   local properties = self:get_properties()
   if not properties then
     local append_line = self:get_append_line()
-    local property_drawer = self:_apply_indent({ ':PROPERTIES:', ':END:' })
+    local property_drawer = self:_apply_indent({ ':PROPERTIES:', ':END:' }) --[[ @as string[] ]]
     vim.api.nvim_buf_set_lines(0, append_line, append_line, false, property_drawer)
     properties = self:refresh():get_properties()
   end
@@ -395,7 +395,9 @@ function Headline:set_property(name, value)
     return self:_set_node_text(property_node, property)
   end
   local property_end = properties and properties:end_()
-  vim.api.nvim_buf_set_lines(0, property_end - 1, property_end - 1, false, self:_apply_indent(property))
+
+  local new_line = self:_apply_indent(property) --[[@as string]]
+  vim.api.nvim_buf_set_lines(0, property_end - 1, property_end - 1, false, { new_line })
   return self:refresh()
 end
 
@@ -782,7 +784,7 @@ function Headline:get_drawer_append_line(name)
 
   if not drawer then
     local append_line = self:get_append_line()
-    local new_drawer = self:_apply_indent({ ':' .. name .. ':', ':END:' })
+    local new_drawer = self:_apply_indent({ ':' .. name .. ':', ':END:' }) --[[ @as string[] ]]
     vim.api.nvim_buf_set_lines(0, append_line, append_line, false, new_drawer)
     drawer = self:get_drawer(name)
   end
@@ -804,6 +806,12 @@ end
 function Headline:get_headline_line_content()
   local line = self.file:get_node_text(self:node()):gsub('\n', '')
   return line
+end
+
+---@param amount? number
+---@return string
+function Headline:get_indent(amount)
+  return config:get_indent(amount or self:get_level() + 1, self.file:bufnr())
 end
 
 function Headline:is_same(other_headline)
@@ -829,9 +837,8 @@ function Headline:_add_date(type, date, active)
   local _, date_nodes, has_plan_dates = self:get_plan_dates()
   local text = type .. ': ' .. date:to_wrapped_string(active)
   if not has_plan_dates then
-    local indentation = config:get_indent(self:get_level() + 1)
     local start_line = self:node():start()
-    vim.fn.append(start_line + 1, ('%s%s'):format(indentation, text))
+    vim.fn.append(start_line + 1, self:_apply_indent(text))
     return self:refresh()
   end
   if date_nodes[type] then
@@ -869,13 +876,23 @@ function Headline:_remove_date(type)
 end
 
 ---@param text string[]|string
----@return string[]
-function Headline:_apply_indent(text)
-  local indented = config:apply_indent(text, self:get_level() + 1)
-  if type(indented) == 'string' then
-    return { indented }
+---@param amount? number
+function Headline:_apply_indent(text, amount)
+  local indent_text = self:get_indent(amount)
+
+  if indent_text == '' then
+    return text
   end
-  return indented
+
+  if type(text) ~= 'table' then
+    return indent_text .. text
+  end
+
+  for i, line in ipairs(text) do
+    text[i] = indent_text .. line
+  end
+
+  return text
 end
 
 function Headline:_get_child_node(name)
