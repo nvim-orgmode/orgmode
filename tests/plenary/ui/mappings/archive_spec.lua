@@ -3,7 +3,7 @@ local Date = require('orgmode.objects.date')
 
 describe('Archive', function()
   it('should refile headline to archive and create archive file', function()
-    local file = helpers.load_as_agenda_file({
+    local file = helpers.create_agenda_file({
       '* foobar',
       '* baz',
       '** foo',

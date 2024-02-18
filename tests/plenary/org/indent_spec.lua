@@ -63,7 +63,7 @@ local function test_full_reindent()
     '         }',
     '         #+END_SRC',
   }
-  helpers.load_file_content(unformatted_file)
+  helpers.create_file(unformatted_file)
   vim.cmd([[silent norm 0gg=G]])
   local expected
   if config.org_adapt_indentation then
@@ -177,7 +177,7 @@ local function test_full_reindent()
 end
 
 local function test_newly_written_list()
-  helpers.load_file_content({})
+  helpers.create_file({})
   local user_input = vim.api.nvim_replace_termcodes('i- new item<CR>second line<CR>third line<Esc>', true, true, true)
   vim.api.nvim_feedkeys(user_input, 'ntix', false)
   local expected = {
@@ -189,7 +189,7 @@ local function test_newly_written_list()
 end
 
 local function test_insertion_to_an_existing_list()
-  helpers.load_file_content({ '- first item', '- third item' })
+  helpers.create_file({ '- first item', '- third item' })
   vim.cmd([[normal! o]])
   local user_input = vim.api.nvim_replace_termcodes('i- new item<CR>second line<CR>third line<Esc>', true, true, true)
   vim.api.nvim_feedkeys(user_input, 'ntix', false)
@@ -204,7 +204,7 @@ local function test_insertion_to_an_existing_list()
 end
 
 local function test_add_line_breaks_to_existing_file()
-  helpers.load_file_content({ '- first item', '- second item' })
+  helpers.create_file({ '- first item', '- second item' })
   local user_input = vim.api.nvim_replace_termcodes('wwi<CR><Esc><Down><Right>i<CR><Esc>', true, true, true)
   vim.api.nvim_feedkeys(user_input, 'ntix', false)
   local expected = {
@@ -330,7 +330,7 @@ describe('with "indent" and "VirtualIndent" is enabled', function()
     for _, content_virtcol in pairs(content_virtcols) do
       table.insert(content, content_virtcol[1])
     end
-    helpers.load_file_content(content)
+    helpers.create_file(content)
 
     for line = 1, vim.api.nvim_buf_line_count(0) do
       vim.api.nvim_win_set_cursor(0, { line, 0 })
@@ -400,7 +400,7 @@ describe('with "indent" and "VirtualIndent" is enabled', function()
     for _, content_virtcol in pairs(content_virtcols) do
       table.insert(content, content_virtcol[1])
     end
-    helpers.load_file_content(content)
+    helpers.create_file(content)
 
     -- Check if VirtualIndent correctly detaches in response to disabling `vim.b.org_indent_mode`
     vim.b.org_indent_mode = false

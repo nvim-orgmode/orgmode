@@ -11,7 +11,7 @@ describe('Api', function()
     return api.current()
   end
   it('should parse current file through api', function()
-    local file = helpers.load_file_content({
+    local file = helpers.create_file({
       '#TITLE: First file',
       '',
       '* TODO Test orgmode :WORK:OFFICE:',
@@ -26,8 +26,8 @@ describe('Api', function()
     assert.is.True(#api.load() > 1)
     local current_file = cur_file()
     assert.are.same(false, current_file.is_archive_file)
-    assert.are.same(file, current_file.filename)
-    assert.are.same(current_file.category, vim.fn.fnamemodify(file, ':p:t:r'))
+    assert.are.same(file.filename, current_file.filename)
+    assert.are.same(current_file.category, vim.fn.fnamemodify(file.filename, ':p:t:r'))
     assert.are.same(3, #current_file.headlines)
     assert.are.same(1, current_file.headlines[1].level)
     assert.are.same('Test orgmode', current_file.headlines[1].title)
@@ -81,7 +81,7 @@ describe('Api', function()
   end)
 
   it('should set provided tags on headline', function()
-    local file = helpers.load_file_content({
+    local file = helpers.create_file({
       '#TITLE: First file',
       '',
       '* TODO Test orgmode :WORK:OFFICE:',
@@ -95,8 +95,8 @@ describe('Api', function()
     assert.is.True(#api.load() > 1)
     local current_file = cur_file()
     assert.are.same(false, current_file.is_archive_file)
-    assert.are.same(file, current_file.filename)
-    assert.are.same(current_file.category, vim.fn.fnamemodify(file, ':p:t:r'))
+    assert.are.same(file.filename, current_file.filename)
+    assert.are.same(current_file.category, vim.fn.fnamemodify(file.filename, ':p:t:r'))
     assert.are.same(3, #current_file.headlines)
     assert.are.same('Second level', current_file.headlines[2].title)
     assert.are.same({ 'WORK', 'OFFICE', 'NESTEDTAG' }, current_file.headlines[2].all_tags)
@@ -109,7 +109,7 @@ describe('Api', function()
   end)
 
   it('should toggle priority up and down', function()
-    helpers.load_file_content({
+    helpers.create_file({
       '#TITLE: First file',
       '',
       '* TODO Test orgmode :WORK:OFFICE:',
@@ -151,7 +151,7 @@ describe('Api', function()
   end)
 
   it('should manipulate deadline date', function()
-    helpers.load_file_content({
+    helpers.create_file({
       '* TODO Test orgmode :WORK:OFFICE:',
       '  DEADLINE: <2021-07-21 Wed 22:02>',
       '** TODO Second level :NESTEDTAG:',
@@ -203,7 +203,7 @@ describe('Api', function()
   end)
 
   it('should manipulate schedule date', function()
-    helpers.load_file_content({
+    helpers.create_file({
       '* TODO Test orgmode :WORK:OFFICE:',
       '  SCHEDULED: <2021-07-21 Wed 22:02>',
       '** TODO Second level :NESTEDTAG:',
@@ -255,7 +255,7 @@ describe('Api', function()
   end)
 
   it('sets the property on the headline', function()
-    helpers.load_file_content({
+    helpers.create_file({
       '* TODO Test orgmode',
       '  SCHEDULED: <2021-07-21 Wed 22:02>',
       '** TODO Second level :NESTEDTAG:',
@@ -278,7 +278,7 @@ describe('Api', function()
   end)
 
   it('sets the id on headline', function()
-    helpers.load_file_content({
+    helpers.create_file({
       '* TODO Test orgmode',
       '  SCHEDULED: <2021-07-21 Wed 22:02>',
       '** TODO Second level :NESTEDTAG:',
@@ -293,7 +293,7 @@ describe('Api', function()
   end)
 
   it('should get closest headline', function()
-    helpers.load_as_agenda_file({
+    helpers.create_agenda_file({
       '* TODO Test orgmode',
       '  SCHEDULED: <2021-07-21 Wed 22:02>',
       '** TODO Second level :NESTEDTAG:',
@@ -312,7 +312,7 @@ describe('Api', function()
     assert(headline_at_cursor)
     assert.are.same('Some task', headline_at_cursor.title)
 
-    helpers.load_as_agenda_file({
+    helpers.create_agenda_file({
       'This file does not have headline',
       'Just some content',
     })
@@ -323,7 +323,7 @@ describe('Api', function()
   end)
 
   it('should refile a headline to another file', function()
-    local destination_file = helpers.load_as_agenda_file({
+    local destination_file = helpers.create_agenda_file({
       '* TODO Test orgmode',
       '  SCHEDULED: <2021-07-21 Wed 22:02>',
       '** TODO Refiled here',
@@ -331,7 +331,7 @@ describe('Api', function()
       '* TODO Some task',
     })
 
-    helpers.load_as_agenda_file({
+    helpers.create_agenda_file({
       '* TODO Test orgmode',
       '  SCHEDULED: <2021-07-21 Wed 22:02>',
       '** TODO Second level :NESTEDTAG:',
@@ -358,7 +358,7 @@ describe('Api', function()
   end)
 
   it('should refile a headline to another headline', function()
-    local destination_file = helpers.load_as_agenda_file({
+    local destination_file = helpers.create_agenda_file({
       '* TODO Test orgmode',
       '  SCHEDULED: <2021-07-21 Wed 22:02>',
       '** TODO Refiled here',
@@ -366,7 +366,7 @@ describe('Api', function()
       '* TODO Some task',
     })
 
-    local source_file = helpers.load_as_agenda_file({
+    local source_file = helpers.create_agenda_file({
       '* TODO Test orgmode',
       '  SCHEDULED: <2021-07-21 Wed 22:02>',
       '** TODO Second level :NESTEDTAG:',

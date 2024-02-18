@@ -8,7 +8,7 @@ describe('Clock', function()
   end)
 
   it('should clock in and clock out an entry', function()
-    local first_file = helpers.load_as_agenda_file({
+    local first_file = helpers.create_agenda_file({
       '#TITLE: First file',
       '',
       '* TODO Test orgmode',
@@ -35,7 +35,7 @@ describe('Clock', function()
   end)
 
   it('should clock out first entry from same file once second entry is clocked in', function()
-    local second_file = helpers.load_as_agenda_file({
+    local second_file = helpers.create_agenda_file({
       '#TITLE: Second file',
       '',
       '* TODO First clocked in',
@@ -76,7 +76,7 @@ describe('Clock', function()
   end)
 
   it('should clock out entry from another file once entry is clocked in', function()
-    local third_file = helpers.load_as_agenda_file({
+    local third_file = helpers.create_agenda_file({
       '#TITLE: Third file',
       '',
       '* TODO Third file headline',
@@ -94,16 +94,16 @@ describe('Clock', function()
     vim.cmd([[silent! write!]])
 
     -- Second clocked out
-    helpers.load_file(files[2])
+    vim.cmd.edit(files[2])
     assert.are.same('  :LOGBOOK:', vim.fn.getline(13))
     assert.are.same(string.format('  CLOCK: %s--%s => 0:00', now, now), vim.fn.getline(14))
     assert.are.same('  :END:', vim.fn.getline(15))
-    helpers.load_file(third_file.filename)
+    vim.cmd.edit(third_file.filename)
     assert.are.same('(Org) [0:00] (Third file headline)', require('orgmode').action('clock.get_statusline'))
   end)
 
   it('should jump to the clocked out headline from anywhere', function()
-    helpers.load_file(files[1])
+    vim.cmd.edit(files[1])
     assert.are.same(files[1], vim.api.nvim_buf_get_name(0))
     vim.cmd([[norm ,oxj]])
     assert.are.same(files[3], vim.api.nvim_buf_get_name(0))
@@ -111,9 +111,7 @@ describe('Clock', function()
   end)
 
   it('should cancel the active clock and remove the clock entry from logbook', function()
-    local o = helpers.setup_org_agenda(files[3])
-    helpers.load_file(files[3])
-    helpers.load_file(files[1])
+    vim.cmd.edit(files[1])
     local old_clock_line = vim.fn.getline(6)
     vim.fn.cursor(3, 1)
     vim.cmd([[norm ,oxi]])
@@ -132,7 +130,7 @@ describe('Clock', function()
   end)
 
   it('should remove the whole logbook drawer when canceling single clock entry', function()
-    helpers.load_file_content({
+    helpers.create_file({
       '#TITLE: Clocked file',
       '',
       '* TODO Test orgmode',

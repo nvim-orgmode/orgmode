@@ -7,7 +7,7 @@ describe('Hyperlink mappings', function()
   end)
 
   it('should follow link to given headline in given org file', function()
-    local orgfile = helpers.load_as_agenda_file({
+    local orgfile = helpers.create_agenda_file({
       '* Test hyperlink',
       ' - some',
       ' - boiler',
@@ -17,7 +17,7 @@ describe('Hyperlink mappings', function()
       '   - boiler',
       '   - plate',
     })
-    helpers.load_as_agenda_file({
+    helpers.create_agenda_file({
       string.format('This link should lead to [[file:%s::*target headline][target]]', orgfile.filename),
     })
     vim.fn.cursor(1, 30)
@@ -26,7 +26,7 @@ describe('Hyperlink mappings', function()
   end)
 
   it('should follow link to headline of given custom_id in given org file', function()
-    local target_path = helpers.load_file_content({
+    local target_file = helpers.create_file({
       '* Test hyperlink',
       ' - some',
       ' - boiler',
@@ -40,8 +40,8 @@ describe('Hyperlink mappings', function()
       '   - plate',
     })
     vim.cmd([[norm w]])
-    helpers.load_file_content({
-      string.format('This link should lead to [[file:%s::#target][target]]', target_path),
+    helpers.create_file({
+      string.format('This link should lead to [[file:%s::#target][target]]', target_file.filename),
     })
     vim.cmd([[norm w]])
     vim.fn.cursor(1, 30)
@@ -50,7 +50,7 @@ describe('Hyperlink mappings', function()
   end)
 
   it('should follow link to id', function()
-    local target_file = helpers.load_as_agenda_file({
+    local target_file = helpers.create_agenda_file({
       '* Test hyperlink',
       ' - some',
       ' - boiler',
@@ -63,7 +63,7 @@ describe('Hyperlink mappings', function()
       '   - boiler',
       '   - plate',
     })
-    helpers.load_as_agenda_file({
+    helpers.create_agenda_file({
       'This link should lead to [[id:8ce79e8c-0b5d-4fd6-9eea-ab47c93398ba][headline of target with id]]',
     })
     vim.fn.cursor(1, 30)
@@ -72,7 +72,7 @@ describe('Hyperlink mappings', function()
   end)
 
   it('should store link to a headline', function()
-    local target_file = helpers.load_as_agenda_file({
+    local target_file = helpers.create_agenda_file({
       '* Test hyperlink',
       ' - some',
       '** headline of target id',
@@ -93,7 +93,7 @@ describe('Hyperlink mappings', function()
     local org = require('orgmode').setup({
       org_id_link_to_org_use_id = true,
     })
-    helpers.load_file_content({
+    helpers.create_file({
       '* Test hyperlink',
       ' - some',
       '** headline of target id',
@@ -115,7 +115,7 @@ describe('Hyperlink mappings', function()
   end)
 
   it('should follow link to headline of given custom_id in given org file (no "file:" prefix)', function()
-    local target_path = helpers.load_file_content({
+    local target_file = helpers.create_file({
       '* Test hyperlink',
       ' - some',
       ' - boiler',
@@ -128,14 +128,10 @@ describe('Hyperlink mappings', function()
       '   - boiler',
       '   - plate',
     })
-    assert.is.truthy(target_path)
-    if not target_path then
-      return
-    end
-    local dir = vim.fs.dirname(target_path)
-    local url = target_path:gsub(dir, '.')
+    local dir = vim.fs.dirname(target_file.filename)
+    local url = target_file.filename:gsub(dir, '.')
     vim.cmd([[norm w]])
-    helpers.load_file_content({
+    helpers.create_file({
       string.format('This link should lead to [[%s::#target][target]]', url),
     })
     vim.cmd([[norm w]])
@@ -145,7 +141,7 @@ describe('Hyperlink mappings', function()
   end)
 
   it('should follow link to headline of given dedicated target', function()
-    local target_path = helpers.load_file_content({
+    helpers.create_file({
       '* Test hyperlink',
       '  an [[target][internal link]]',
       '  - some',
@@ -164,7 +160,7 @@ describe('Hyperlink mappings', function()
   end)
 
   it('should follow link to certain line (orgmode standard notation)', function()
-    local target_path = helpers.load_file_content({
+    local target_file = helpers.create_file({
       '* Test hyperlink',
       '  - some',
       '  - boiler',
@@ -182,13 +178,9 @@ describe('Hyperlink mappings', function()
       ' ->  15 <--',
     })
     vim.cmd([[norm w]])
-    assert.is.truthy(target_path)
-    if not target_path then
-      return
-    end
-    local dir = vim.fs.dirname(target_path)
-    local url = target_path:gsub(dir, '.')
-    helpers.load_file_content({
+    local dir = vim.fs.dirname(target_file.filename)
+    local url = target_file.filename:gsub(dir, '.')
+    helpers.create_file({
       string.format('This [[%s::11][link]] should bring us to the 11th line.', url),
     })
     vim.cmd([[norm w]])
@@ -198,7 +190,7 @@ describe('Hyperlink mappings', function()
   end)
 
   it('should follow link to certain line (nvim-orgmode compatibility)', function()
-    local target_path = helpers.load_file_content({
+    local target_file = helpers.create_file({
       '* Test hyperlink',
       '  - some',
       '  - boiler',
@@ -216,13 +208,13 @@ describe('Hyperlink mappings', function()
       ' ->  15 <--',
     })
     vim.cmd([[norm w]])
-    assert.is.truthy(target_path)
-    if not target_path then
+    assert.is.truthy(target_file)
+    if not target_file then
       return
     end
-    local dir = vim.fs.dirname(target_path)
-    local url = target_path:gsub(dir, '.')
-    helpers.load_file_content({
+    local dir = vim.fs.dirname(target_file.filename)
+    local url = target_file.filename:gsub(dir, '.')
+    helpers.create_file({
       string.format('This [[%s +11][link]] should bring us to the 11th line.', url),
     })
     vim.cmd([[norm w]])

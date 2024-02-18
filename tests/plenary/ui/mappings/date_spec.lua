@@ -7,7 +7,7 @@ describe('Date mappings', function()
   end)
 
   it('should increase the date by provided number of days (org_timestamp_up_day)', function()
-    helpers.load_file_content({
+    helpers.create_file({
       '#TITLE: Test',
       '',
       '* TODO Test orgmode',
@@ -22,7 +22,7 @@ describe('Date mappings', function()
   end)
 
   it('should decrease the date by provided number of days (org_timestamp_down_day)', function()
-    helpers.load_file_content({
+    helpers.create_file({
       '#TITLE: Test',
       '',
       '* TODO Test orgmode',
@@ -37,7 +37,7 @@ describe('Date mappings', function()
   end)
 
   it('should increase year part of the date (org_timestamp_up)', function()
-    helpers.load_file_content({
+    helpers.create_file({
       '#TITLE: Test',
       '',
       '* TODO Test orgmode',
@@ -52,7 +52,7 @@ describe('Date mappings', function()
   end)
 
   it('should increase month part of the date (org_timestamp_up)', function()
-    helpers.load_file_content({
+    helpers.create_file({
       '#TITLE: Test',
       '',
       '* TODO Test orgmode',
@@ -67,7 +67,7 @@ describe('Date mappings', function()
   end)
 
   it('should increase day part of the date (org_timestamp_up)', function()
-    helpers.load_file_content({
+    helpers.create_file({
       '#TITLE: Test',
       '',
       '* TODO Test orgmode',
@@ -82,7 +82,7 @@ describe('Date mappings', function()
   end)
 
   it('should increase hour part of the date (org_timestamp_up)', function()
-    helpers.load_file_content({
+    helpers.create_file({
       '#TITLE: Test',
       '',
       '* TODO Test orgmode',
@@ -97,7 +97,7 @@ describe('Date mappings', function()
   end)
 
   it('should increase minute part of the date (org_timestamp_up)', function()
-    helpers.load_file_content({
+    helpers.create_file({
       '#TITLE: Test',
       '',
       '* TODO Test orgmode',
@@ -112,7 +112,7 @@ describe('Date mappings', function()
   end)
 
   it('should toggle active/inactive state of date (org_timestamp_up)', function()
-    helpers.load_file_content({
+    helpers.create_file({
       '#TITLE: Test',
       '',
       '* TODO Test orgmode',
@@ -128,7 +128,7 @@ describe('Date mappings', function()
   end)
 
   it('should decrease year part of the date (org_timestamp_down)', function()
-    helpers.load_file_content({
+    helpers.create_file({
       '#TITLE: Test',
       '',
       '* TODO Test orgmode',
@@ -143,7 +143,7 @@ describe('Date mappings', function()
   end)
 
   it('should decrease month part of the date (org_timestamp_down)', function()
-    helpers.load_file_content({
+    helpers.create_file({
       '#TITLE: Test',
       '',
       '* TODO Test orgmode',
@@ -158,7 +158,7 @@ describe('Date mappings', function()
   end)
 
   it('should decrease day part of the date (org_timestamp_down)', function()
-    helpers.load_file_content({
+    helpers.create_file({
       '#TITLE: Test',
       '',
       '* TODO Test orgmode',
@@ -173,7 +173,7 @@ describe('Date mappings', function()
   end)
 
   it('should decrease hour part of the date (org_timestamp_down)', function()
-    helpers.load_file_content({
+    helpers.create_file({
       '#TITLE: Test',
       '',
       '* TODO Test orgmode',
@@ -188,7 +188,7 @@ describe('Date mappings', function()
   end)
 
   it('should decrease minute part of the date (org_timestamp_down)', function()
-    helpers.load_file_content({
+    helpers.create_file({
       '#TITLE: Test',
       '',
       '* TODO Test orgmode',
@@ -203,7 +203,7 @@ describe('Date mappings', function()
   end)
 
   it('should add/update deadline date for a headline (org_deadline)', function()
-    helpers.load_file_content({
+    helpers.create_file({
       '#TITLE: Test',
       '',
       '* TODO Test orgmode',
@@ -233,7 +233,7 @@ describe('Date mappings', function()
   end)
 
   it('should add/update schedule date for a headline (org_schedule)', function()
-    helpers.load_file_content({
+    helpers.create_file({
       '#TITLE: Test',
       '',
       '* TODO Test orgmode',
@@ -273,7 +273,7 @@ describe('Date mappings', function()
   end)
 
   it('should insert plain timestamp under cursor (org_time_stamp)', function()
-    helpers.load_file_content({
+    helpers.create_file({
       '#TITLE: Test',
       '',
       '* TODO Test orgmode',
@@ -298,7 +298,7 @@ describe('Date mappings', function()
   end)
 
   it('should append an end date range when plain timestamp is added right after another date', function()
-    helpers.load_file_content({
+    helpers.create_file({
       '#TITLE: Test',
       '',
       '* TODO Test orgmode',
@@ -315,7 +315,7 @@ describe('Date mappings', function()
   end)
 
   it('should insert plain inactive timestamp under cursor (org_time_stamp)', function()
-    helpers.load_file_content({
+    helpers.create_file({
       '#TITLE: Test',
       '',
       '* TODO Test orgmode',
@@ -340,7 +340,7 @@ describe('Date mappings', function()
   end)
 
   it('should append an end date range when inactive plain timestamp is added right after another date', function()
-    helpers.load_file_content({
+    helpers.create_file({
       '#TITLE: Test',
       '',
       '* TODO Test orgmode',

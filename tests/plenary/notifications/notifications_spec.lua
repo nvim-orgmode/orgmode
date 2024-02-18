@@ -18,7 +18,7 @@ describe('Notifications', function()
       '* TODO I am the scheduled task for evening',
       '  SCHEDULED: <2021-07-12 Mon 19:30>',
     }
-    local orgfile = helpers.load_as_agenda_file(lines)
+    local orgfile = helpers.create_agenda_file(lines)
     local notifications = Notifications:new({
       files = org.files,
     })
@@ -73,7 +73,7 @@ describe('Notifications', function()
       '* TODO I am the scheduled task for evening',
       '  SCHEDULED: <2021-07-14 Wed 19:30>',
     }
-    local orgfile = helpers.load_as_agenda_file(lines, {
+    local orgfile = helpers.create_agenda_file(lines, {
       notifications = {
         reminder_time = { 10, 0 },
         deadline_warning_reminder_time = { 10, 5, 0, -5 },

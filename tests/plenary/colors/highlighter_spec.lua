@@ -7,7 +7,7 @@ describe('highlighter', function()
   local ns_id = api.nvim_create_namespace('org_custom_highlighter')
   local get_extmarks = function(content)
     config.ts_hl_enabled = true
-    helpers.load_file_content(content)
+    helpers.create_file(content)
     ---@diagnostic disable-next-line: invisible
     org.highlighter._ephemeral = false
     vim.cmd([[redraw!]])

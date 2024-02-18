@@ -124,26 +124,25 @@ end)
 
 describe('Refile', function()
   it('to empty file', function()
-    local destination_file = helpers.load_file_content({})
+    local destination_file = helpers.create_file({})
 
     local capture_lines = { '* foo' }
-    helpers.load_file_content(capture_lines)
-    local capture_file = helpers.file_from_content(capture_lines)
+    local capture_file = helpers.create_file_instance(capture_lines)
     local source_headline = capture_file:get_headlines()[1]
 
     org.capture:process_refile({
       source_file = capture_file,
       source_headline = source_headline,
-      destination_file = org.files:get(destination_file),
+      destination_file = destination_file,
     })
-    vim.cmd('edit' .. vim.fn.fnameescape(destination_file))
+    vim.cmd('edit' .. vim.fn.fnameescape(destination_file.filename))
     assert.are.same({
       '* foo',
     }, vim.api.nvim_buf_get_lines(0, 0, -1, false))
   end)
 
   it('to end', function()
-    local destination_file = helpers.load_file_content({
+    local destination_file = helpers.create_file({
       '* foobar',
       '        ',
       '',
@@ -152,24 +151,23 @@ describe('Refile', function()
     })
 
     local capture_lines = { '** baz' }
-    helpers.load_file_content(capture_lines)
-    local capture_file = helpers.file_from_content(capture_lines)
+    local capture_file = helpers.create_file_instance(capture_lines)
     assert(capture_file)
     local item = capture_file:get_headlines()[1]
 
     org.capture:process_refile({
-      destination_file = org.files:get(destination_file),
+      destination_file = destination_file,
       source_file = capture_file,
       source_headline = item,
     })
-    vim.cmd('edit' .. vim.fn.fnameescape(destination_file))
+    vim.cmd('edit' .. vim.fn.fnameescape(destination_file.filename))
     assert.are.same({
       '* foobar',
       '* baz',
     }, vim.api.nvim_buf_get_lines(0, 0, -1, false))
   end)
   it('to headline', function()
-    local destination_file = helpers.load_file_content({
+    local destination_file = helpers.create_file({
       '* foobar',
       '        ',
       '',
@@ -182,19 +180,17 @@ describe('Refile', function()
     })
 
     local capture_lines = { '** baz' }
-    helpers.load_file_content(capture_lines)
-    local capture_file = helpers.file_from_content(capture_lines)
+    local capture_file = helpers.create_file_instance(capture_lines)
     assert(capture_file)
     local item = capture_file:get_headlines()[1]
 
-    local dest_file = org.files:get(destination_file)
     org.capture:process_refile({
-      destination_file = dest_file,
+      destination_file = destination_file,
       source_headline = item,
       source_file = capture_file,
-      destination_headline = dest_file:get_headlines()[1],
+      destination_headline = destination_file:get_headlines()[1],
     })
-    vim.cmd('edit' .. vim.fn.fnameescape(destination_file))
+    vim.cmd('edit' .. vim.fn.fnameescape(destination_file.filename))
     assert.are.same({
       '* foobar',
       '** baz',
@@ -208,16 +204,15 @@ end)
 
 describe('Refile with empty lines', function()
   it('to empty file', function()
-    local destination_file = helpers.load_file_content({})
+    local destination_file = helpers.create_file({})
 
     local capture_lines = { '* foo' }
-    helpers.load_file_content(capture_lines)
-    local capture_file = helpers.file_from_content(capture_lines)
+    local capture_file = helpers.create_file_instance(capture_lines)
     assert(capture_file)
     local item = capture_file:get_headlines()[1]
 
     org.capture:process_refile({
-      destination_file = org.files:get(destination_file),
+      destination_file = destination_file,
       source_file = capture_file,
       source_headline = item,
       template = Template:new({
@@ -229,7 +224,7 @@ describe('Refile with empty lines', function()
         },
       }),
     })
-    vim.cmd('edit' .. vim.fn.fnameescape(destination_file))
+    vim.cmd('edit' .. vim.fn.fnameescape(destination_file.filename))
     assert.are.same({
       '',
       '',
@@ -239,7 +234,7 @@ describe('Refile with empty lines', function()
   end)
 
   it('to end', function()
-    local destination_file = helpers.load_file_content({
+    local destination_file = helpers.create_file({
       '* foobar',
       '        ',
       '',
@@ -248,13 +243,12 @@ describe('Refile with empty lines', function()
     })
 
     local capture_lines = { '** baz' }
-    helpers.load_file_content(capture_lines)
-    local capture_file = helpers.file_from_content(capture_lines)
+    local capture_file = helpers.create_file_instance(capture_lines)
     assert(capture_file)
     local item = capture_file:get_headlines()[1]
 
     org.capture:process_refile({
-      destination_file = org.files:get(destination_file),
+      destination_file = destination_file,
       source_file = capture_file,
       source_headline = item,
       template = Template:new({
@@ -266,7 +260,7 @@ describe('Refile with empty lines', function()
         },
       }),
     })
-    vim.cmd('edit' .. vim.fn.fnameescape(destination_file))
+    vim.cmd('edit' .. vim.fn.fnameescape(destination_file.filename))
     assert.are.same({
       '* foobar',
       '',
@@ -276,7 +270,7 @@ describe('Refile with empty lines', function()
     }, vim.api.nvim_buf_get_lines(0, 0, -1, false))
   end)
   it('to headline', function()
-    local destination_file = helpers.load_file_content({
+    local destination_file = helpers.create_file({
       '* foobar',
       '        ',
       '',
@@ -289,15 +283,14 @@ describe('Refile with empty lines', function()
     })
 
     local capture_lines = { '** baz' }
-    local capture_file = helpers.file_from_content(capture_lines)
+    local capture_file = helpers.create_file_instance(capture_lines)
     local item = capture_file:get_headlines()[1]
 
-    local dest_file = org.files:get(destination_file)
     org.capture:process_refile({
-      destination_file = dest_file,
+      destination_file = destination_file,
       source_file = capture_file,
       source_headline = item,
-      destination_headline = dest_file:get_headlines()[1],
+      destination_headline = destination_file:get_headlines()[1],
       template = Template:new({
         properties = {
           empty_lines = {
@@ -307,7 +300,7 @@ describe('Refile with empty lines', function()
         },
       }),
     })
-    vim.cmd('edit' .. vim.fn.fnameescape(destination_file))
+    vim.cmd('edit' .. vim.fn.fnameescape(destination_file.filename))
     assert.are.same({
       '* foobar',
       '',

@@ -6,7 +6,7 @@ describe('Priority mappings', function()
   end)
 
   it('should increase the priority of the current headline', function()
-    helpers.load_file_content({
+    helpers.create_file({
       '* TODO [#B] Test orgmode',
     })
     vim.fn.cursor(1, 1)
@@ -16,7 +16,7 @@ describe('Priority mappings', function()
   end)
 
   it('should decrease the priority of the current headline', function()
-    helpers.load_file_content({
+    helpers.create_file({
       '* TODO [#B] Test orgmode',
     })
     vim.fn.cursor(1, 1)
@@ -26,7 +26,7 @@ describe('Priority mappings', function()
   end)
 
   it('should set the priority based on the input key', function()
-    helpers.load_file_content({
+    helpers.create_file({
       '* TODO [#B] Test orgmode',
     })
     vim.fn.cursor(1, 1)
@@ -36,7 +36,7 @@ describe('Priority mappings', function()
   end)
 
   it('should remove the priority if <Space> is pressed', function()
-    helpers.load_file_content({
+    helpers.create_file({
       '* TODO [#B] Test orgmode',
     })
     vim.fn.cursor(1, 1)
@@ -46,7 +46,7 @@ describe('Priority mappings', function()
   end)
 
   it('should add a priority if the item does not already have one', function()
-    helpers.load_file_content({
+    helpers.create_file({
       '* TODO Test orgmode',
     })
     vim.fn.cursor(1, 1)
@@ -56,7 +56,7 @@ describe('Priority mappings', function()
   end)
 
   it('should add a priority if the item has no todo keyword', function()
-    helpers.load_file_content({
+    helpers.create_file({
       '* Test orgmode',
     })
     vim.fn.cursor(1, 1)

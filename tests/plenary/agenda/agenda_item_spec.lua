@@ -8,7 +8,7 @@ local helpers = require('tests.plenary.helpers')
 local function generate(content_line, keyword)
   keyword = keyword or 'TODO'
 
-  local file = helpers.file_from_content({
+  local file = helpers.create_file_instance({
     '* ' .. keyword .. ' This is some content',
     content_line,
   })

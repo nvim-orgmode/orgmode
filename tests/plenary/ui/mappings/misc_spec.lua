@@ -7,7 +7,7 @@ describe('Mappings', function()
   end)
 
   it('should toggle archive tag on headline (org_toggle_archive_tag)', function()
-    helpers.load_file_content({
+    helpers.create_file({
       '#TITLE: Test',
       '',
       '* TODO Test orgmode',
@@ -31,7 +31,7 @@ describe('Mappings', function()
       },
     })
 
-    helpers.load_file_content({
+    helpers.create_file({
       '* DONE top level todo :WORK:',
       'content for top level todo',
     })

@@ -7,7 +7,7 @@ describe('Edit special operation', function()
   local edit_special_indent = config.org_edit_src_content_indentation
 
   local setup_test = function(o)
-    helpers.load_file_content(o.lines)
+    helpers.create_file(o.lines)
     start_org_bufnr = vim.api.nvim_get_current_buf()
     vim.fn.cursor(unpack(o.startpos))
 

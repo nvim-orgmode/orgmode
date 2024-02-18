@@ -6,7 +6,7 @@ describe('Checkbox mappings', function()
   end)
 
   it('should toggle the checkbox state (org_toggle_checkbox)', function()
-    helpers.load_file_content({
+    helpers.create_file({
       '* TODO top level todo with multiple tags :OFFICE:PROJECT:',
       '  - [ ] The checkbox',
       '  - [X] The checkbox 2',
@@ -24,7 +24,7 @@ describe('Checkbox mappings', function()
   end)
 
   it('should update the checklist cookies on a headline', function()
-    helpers.load_file_content({
+    helpers.create_file({
       '* Test orgmode [/]',
       '- [ ] checkbox item',
       '- [ ] checkbox item',
@@ -35,7 +35,7 @@ describe('Checkbox mappings', function()
   end)
 
   it('should update the checklist cookies on a parent list', function()
-    helpers.load_file_content({
+    helpers.create_file({
       '- Test orgmode [/]',
       '  - [ ] checkbox item',
       '  - [ ] checkbox item',
@@ -46,7 +46,7 @@ describe('Checkbox mappings', function()
   end)
 
   it('should update the checklist cookies with a percentage within a headline', function()
-    helpers.load_file_content({
+    helpers.create_file({
       '* Test orgmode [%]',
       '- [ ] checkbox item',
       '- [ ] checkbox item',
@@ -57,7 +57,7 @@ describe('Checkbox mappings', function()
   end)
 
   it('should update the checklist cookies with a percentage within a nested list', function()
-    helpers.load_file_content({
+    helpers.create_file({
       '- Test orgmode [%]',
       '  - [ ] checkbox item',
       '  - [ ] checkbox item',
@@ -69,7 +69,7 @@ describe('Checkbox mappings', function()
   end)
 
   it('should update the checklist cookies with when the cookie is not the first entry', function()
-    helpers.load_file_content({
+    helpers.create_file({
       '- Test orgmode',
       '- listitem with cookie [%]',
       '  - [ ] checkbox item',
@@ -82,7 +82,7 @@ describe('Checkbox mappings', function()
   end)
 
   it('should update the checklist cookies with when there are more than 9 items', function()
-    helpers.load_file_content({
+    helpers.create_file({
       '- Test orgmode [0/10]',
       '  - [ ] checkbox item',
       '  - [ ] checkbox item',
@@ -101,7 +101,7 @@ describe('Checkbox mappings', function()
   end)
 
   it('should update nested cookies and checkboxes', function()
-    helpers.load_file_content({
+    helpers.create_file({
       '- [ ] Test orgmode [/]',
       '  - [ ] checkbox item',
       '  - [ ] checkbox item [/]',
@@ -132,7 +132,7 @@ describe('Checkbox mappings', function()
   end)
 
   it('should update headline cookies when updating checkboxes', function()
-    helpers.load_file_content({
+    helpers.create_file({
       '* Test orgmode [/]',
       '- [ ] checkbox item',
       '- [-] checkbox item [1/2]',

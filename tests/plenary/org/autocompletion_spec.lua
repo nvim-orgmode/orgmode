@@ -5,7 +5,7 @@ describe('Autocompletion should properly find start offset for omni autocompleti
   local function setup_file(content)
     -- Add space to the end of content because insert mode in
     -- tests doesn't pick up a proper cursor location
-    helpers.load_as_agenda_file({ content .. ' ' })
+    helpers.create_agenda_file({ content .. ' ' })
     vim.cmd('norm!A')
   end
   it('for an empty line', function()
@@ -229,7 +229,7 @@ describe('Autocompletion should properly find start offset for omni autocompleti
   end)
 
   it('should find defined tags', function()
-    local file = helpers.load_as_agenda_file({
+    local file = helpers.create_agenda_file({
       '#+filetags: :OFFICE:PRIVATE:',
     })
     setup_file('* TODO tags go at the end :')
@@ -269,7 +269,7 @@ end)
 
 describe('Autocompletion in hyperlinks', function()
   it('should complete headlines', function()
-    local orgfile = helpers.load_as_agenda_file({
+    local orgfile = helpers.create_agenda_file({
       '* Item for work 1',
       '* Item for work 2',
     })
@@ -277,7 +277,7 @@ describe('Autocompletion in hyperlinks', function()
     local file_path_relative = string.format('./%s', filename)
 
     local line = string.format('  [[%s::* ', file_path_relative)
-    helpers.load_file_content({ line })
+    helpers.create_file({ line })
 
     vim.fn.cursor({ 1, #line })
     local result = Omni.get_completions('')
@@ -288,7 +288,7 @@ describe('Autocompletion in hyperlinks', function()
   end)
 
   it('should complete custom_ids', function()
-    local orgfile = helpers.load_as_agenda_file({
+    local orgfile = helpers.create_agenda_file({
       '* Item for work 1',
       ':PROPERTIES:',
       ':CUSTOM_ID: ID_1',
@@ -302,7 +302,7 @@ describe('Autocompletion in hyperlinks', function()
     local file_path_relative = string.format('./%s', filename)
 
     local line = string.format('  [[%s::# ', file_path_relative)
-    helpers.load_file_content({ line })
+    helpers.create_file({ line })
 
     vim.fn.cursor({ 1, #line })
     local result = Omni.get_completions('')
@@ -313,7 +313,7 @@ describe('Autocompletion in hyperlinks', function()
   end)
 
   it('should complete fuzzy titles', function()
-    helpers.load_as_agenda_file({
+    helpers.create_agenda_file({
       '* Title with an <<some anchor>>',
       'line1',
       'line2',

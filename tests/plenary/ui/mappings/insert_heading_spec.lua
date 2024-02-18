@@ -7,7 +7,7 @@ describe('Insert heading mappings', function()
   end)
 
   it('should insert new heading after current subtree (org_insert_heading_respect_content)', function()
-    helpers.load_file_content({
+    helpers.create_file({
       '#TITLE: Test',
       '',
       '* DONE top level todo :WORK:',
@@ -46,7 +46,7 @@ describe('Insert heading mappings', function()
       config:extend({
         org_blank_before_new_entry = { heading = false, plain_list_item = false },
       })
-      helpers.load_file_content({
+      helpers.create_file({
         '#TITLE: Test',
         '',
         '* DONE top level todo :WORK:',
@@ -83,24 +83,24 @@ describe('Insert heading mappings', function()
   )
 
   it('should insert new todo heading in empty org file', function()
-    helpers.load_file_content({ '' })
+    helpers.create_file({ '' })
     vim.fn.cursor(1, 1)
     vim.cmd([[norm ,oiT]])
     assert.are.same({ '* TODO ' }, vim.api.nvim_buf_get_lines(0, 0, 2, false))
 
-    helpers.load_file_content({ '' })
+    helpers.create_file({ '' })
     vim.fn.cursor(1, 1)
     vim.cmd([[norm ,oit]])
     assert.are.same({ '* TODO ' }, vim.api.nvim_buf_get_lines(0, 0, 2, false))
 
-    helpers.load_file_content({ '' })
+    helpers.create_file({ '' })
     vim.fn.cursor(1, 1)
     vim.cmd([[norm ,oih]])
     assert.are.same({ '* ' }, vim.api.nvim_buf_get_lines(0, 0, 2, false))
   end)
 
   it('should insert new todo heading on root level', function()
-    helpers.load_file_content({
+    helpers.create_file({
       '',
       '* TODO heading',
     })
@@ -112,7 +112,7 @@ describe('Insert heading mappings', function()
       '* TODO heading',
     }, vim.api.nvim_buf_get_lines(0, 0, 3, false))
 
-    helpers.load_file_content({
+    helpers.create_file({
       '',
       '* TODO heading',
     })
@@ -124,7 +124,7 @@ describe('Insert heading mappings', function()
       '* TODO heading',
     }, vim.api.nvim_buf_get_lines(0, 0, 3, false))
 
-    helpers.load_file_content({
+    helpers.create_file({
       '',
       '* TODO heading',
     })
@@ -138,7 +138,7 @@ describe('Insert heading mappings', function()
   end)
 
   it('should insert new todo heading after current one (org_insert_todo_heading)', function()
-    helpers.load_file_content({
+    helpers.create_file({
       '#TITLE: Test',
       '',
       '* DONE top level todo :WORK:',
@@ -177,7 +177,7 @@ describe('Insert heading mappings', function()
     config:extend({
       org_blank_before_new_entry = { heading = false, plain_list_item = false },
     })
-    helpers.load_file_content({
+    helpers.create_file({
       '#TITLE: Test',
       '',
       '* DONE top level todo :WORK:',
@@ -215,7 +215,7 @@ describe('Insert heading mappings', function()
   end)
 
   it('should insert new todo heading after current subtree (org_insert_todo_heading_respect_content)', function()
-    helpers.load_file_content({
+    helpers.create_file({
       '#TITLE: Test',
       '',
       '* DONE top level todo :WORK:',
@@ -254,7 +254,7 @@ describe('Insert heading mappings', function()
       config:extend({
         org_blank_before_new_entry = { heading = false, plain_list_item = false },
       })
-      helpers.load_file_content({
+      helpers.create_file({
         '#TITLE: Test',
         '',
         '* DONE top level todo :WORK:',

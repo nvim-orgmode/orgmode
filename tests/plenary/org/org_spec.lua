@@ -4,7 +4,7 @@ local org = require('orgmode')
 
 describe('Org file', function()
   it('should properly add new properties to a section', function()
-    helpers.load_file_content({
+    helpers.create_file({
       '* TODO Test orgmode :WORK:',
       'DEADLINE: <2021-05-10 11:00 +1w>',
       '* TODO Another todo',
@@ -25,7 +25,7 @@ describe('Org file', function()
   end)
 
   it('should properly append to existing properties', function()
-    helpers.load_file_content({
+    helpers.create_file({
       '* TODO Test orgmode :WORK:',
       'DEADLINE: <2021-05-10 11:00 +1w>',
       '  :PROPERTIES:',
@@ -49,7 +49,7 @@ describe('Org file', function()
   end)
   --
   it('should properly update existing property', function()
-    helpers.load_file_content({
+    helpers.create_file({
       '* TODO Test orgmode :WORK:',
       'DEADLINE: <2021-05-10 11:00 +1w>',
       '  :PROPERTIES:',
@@ -75,7 +75,7 @@ describe('Org file', function()
 
   it('should add closed date to section if it does not exist', function()
     local now = Date.now()
-    local lines = helpers.load_file_content({
+    helpers.create_file({
       '* TODO Test orgmode :WORK:',
       'DEADLINE: <2021-05-10 11:00>',
       '* TODO Another todo',
@@ -101,7 +101,7 @@ describe('Org file', function()
 
   it('should remove closed date from section if it exists', function()
     local now = Date.now()
-    helpers.load_file_content({
+    helpers.create_file({
       '* TODO Test orgmode :WORK:',
       'DEADLINE: <2021-05-10 11:00> CLOSED: ' .. now:to_wrapped_string(false),
       '* TODO Another todo',
@@ -115,7 +115,7 @@ describe('Org file', function()
       '* TODO Another todo',
     }, vim.api.nvim_buf_get_lines(0, 0, 3, false))
 
-    helpers.load_file_content({
+    helpers.create_file({
       '* TODO Test orgmode only closed :WORK:',
       'CLOSED: ' .. now:to_wrapped_string(false),
       '* TODO Another todo',
@@ -132,7 +132,7 @@ describe('Org file', function()
 
   it('should add and update deadline date', function()
     local deadline_date = Date.from_string('2021-08-18 Wed')
-    helpers.load_file_content({
+    helpers.create_file({
       '* TODO Test orgmode :WORK:',
       '* TODO Another todo',
     })
@@ -156,7 +156,7 @@ describe('Org file', function()
 
   it('should add, update and remove scheduled date', function()
     local scheduled_date = Date.from_string('2021-08-18 Wed')
-    helpers.load_file_content({
+    helpers.create_file({
       '* TODO Test orgmode :WORK:',
       '* TODO Another todo',
     })
@@ -169,7 +169,7 @@ describe('Org file', function()
       '* TODO Another todo',
     }, vim.api.nvim_buf_get_lines(0, 0, 3, false))
 
-    helpers.load_file_content({
+    helpers.create_file({
       '* TODO Test orgmode :WORK:',
       '  DEADLINE: <2021-08-18 Wed>',
       '* TODO Another todo',

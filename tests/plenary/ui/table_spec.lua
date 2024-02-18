@@ -6,14 +6,14 @@ describe('Tables', function()
   end)
 
   it('should generate basic table structure from pipe or hr line', function()
-    helpers.load_file_content({
+    helpers.create_file({
       '|',
     })
     vim.fn.cursor({ 1, 1 })
     vim.cmd([[norm gqgq]])
     assert.are.same({ '|  |' }, vim.api.nvim_buf_get_lines(0, 0, -1, false))
 
-    helpers.load_file_content({
+    helpers.create_file({
       '|-',
     })
 
@@ -22,7 +22,7 @@ describe('Tables', function()
   end)
 
   it('should format the table', function()
-    helpers.load_file_content({
+    helpers.create_file({
       '  |head1 |  ',
       '  |-  ',
       '  |content|  ',
@@ -38,7 +38,7 @@ describe('Tables', function()
   end)
 
   it('should format multi column table', function()
-    helpers.load_file_content({
+    helpers.create_file({
       '|first|second|',
       '|-',
       '|third cell| fourth cell|',
@@ -55,7 +55,7 @@ describe('Tables', function()
   end)
 
   it('should add new row on enter', function()
-    helpers.load_file_content({
+    helpers.create_file({
       '| test |',
     })
     vim.fn.cursor({ 1, 6 })
@@ -65,7 +65,7 @@ describe('Tables', function()
       '|      |',
     }, vim.api.nvim_buf_get_lines(0, 0, -1, false))
 
-    helpers.load_file_content({
+    helpers.create_file({
       '| test | col |',
       '|      | value',
     })
@@ -79,7 +79,7 @@ describe('Tables', function()
   end)
 
   it('should add new row on enter in list item', function()
-    helpers.load_file_content({
+    helpers.create_file({
       '* TODO Test',
       '  DEADLINE: <2021-07-21 Wed 22:02>',
       '  - Some list item',
