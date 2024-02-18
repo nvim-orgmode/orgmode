@@ -1,7 +1,7 @@
 local utils = require('orgmode.utils')
 local config = require('orgmode.config')
 local Templates = require('orgmode.capture.templates')
-local ClosingNote = require('orgmode.capture.closing_note')
+local Template = require('orgmode.capture.template')
 local Menu = require('orgmode.ui.menu')
 local Range = require('orgmode.files.elements.range')
 local CaptureWindow = require('orgmode.capture.window')
@@ -18,21 +18,39 @@ local Date = require('orgmode.objects.date')
 
 ---@class OrgCapture
 ---@field templates OrgCaptureTemplates
----@field closing_note OrgClosingNote
+---@field closing_note OrgCaptureWindow
 ---@field files OrgFiles
 ---@field _window OrgCaptureWindow
 local Capture = {}
+Capture.__index = Capture
 
 ---@param opts { files: OrgFiles }
 function Capture:new(opts)
-  opts = opts or {}
-  local data = {}
-  data.files = opts.files
-  data.templates = Templates:new()
-  data.closing_note = ClosingNote:new()
-  setmetatable(data, self)
-  self.__index = self
-  return data
+  local this = setmetatable({}, self)
+  this.files = opts.files
+  this.templates = Templates:new()
+  this.closing_note = this:_setup_closing_note()
+  return this
+end
+
+function Capture:_setup_closing_note()
+  return CaptureWindow:new({
+    template = Template:new({
+      template = '# Insert note for closed todo item\n\n%?',
+    }),
+    on_finish = function(content)
+      if content[1] and content[1]:match('#%s+') then
+        content = { unpack(content, 2) }
+      end
+      if content[1] and vim.trim(content[1]) == '' then
+        content = { unpack(content, 2) }
+      end
+      return content
+    end,
+    on_open = function()
+      config:setup_mappings('note')
+    end,
+  })
 end
 
 ---@param base_key string
@@ -95,7 +113,7 @@ function Capture:prompt()
 end
 
 ---@param template OrgCaptureTemplate
----@return OrgCaptureWindow
+---@return OrgPromise<OrgCaptureWindow>
 function Capture:open_template(template)
   self._window = CaptureWindow:new({
     template = template,

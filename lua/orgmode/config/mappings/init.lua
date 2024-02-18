@@ -49,7 +49,7 @@ return {
     org_capture_show_help = m.action('org_mappings.show_help', { opts = { desc = 'org show help' } }),
   },
   note = {
-    org_note_finalize = m.action('capture.closing_note.refile', { opts = { desc = 'org finalize note' } }),
+    org_note_finalize = m.action('capture.closing_note.finish', { opts = { desc = 'org finalize note' } }),
     org_note_kill = m.action('capture.closing_note.kill', { opts = { desc = 'org kill note' } }),
     org_note_show_help = m.action('org_mappings.show_help', { opts = { desc = 'org show help' } }),
   },
