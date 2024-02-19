@@ -593,4 +593,9 @@ function utils.memoize(class, key_getter)
   end
 end
 
+function utils.has_version_10()
+  local v = vim.version()
+  return not vim.version.lt({ v.major, v.minor, v.patch }, { 0, 10, 0 })
+end
+
 return utils

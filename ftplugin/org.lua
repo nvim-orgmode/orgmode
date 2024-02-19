@@ -5,6 +5,7 @@ end
 vim.b.did_ftplugin = true
 
 local config = require('orgmode.config')
+local utils = require('orgmode.utils')
 
 config:setup_mappings('org')
 config:setup_mappings('text_objects')
@@ -20,7 +21,11 @@ vim.bo.modeline = false
 vim.opt_local.fillchars:append('fold: ')
 vim.opt_local.foldmethod = 'expr'
 vim.opt_local.foldexpr = 'nvim_treesitter#foldexpr()'
-vim.opt_local.foldtext = 'v:lua.require("orgmode.org.indent").foldtext()'
+if utils.has_version_10() then
+  vim.opt_local.foldtext = ''
+else
+  vim.opt_local.foldtext = 'v:lua.require("orgmode.org.indent").foldtext()'
+end
 vim.opt_local.formatexpr = 'v:lua.require("orgmode.org.format")()'
 vim.opt_local.omnifunc = 'v:lua.orgmode.omnifunc'
 vim.opt_local.commentstring = '# %s'
