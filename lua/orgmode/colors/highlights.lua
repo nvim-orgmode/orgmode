@@ -2,42 +2,69 @@ local config = require('orgmode.config')
 local colors = require('orgmode.colors')
 local M = {}
 
-function M.link_ts_highlights()
-  local links = {
-    OrgTSTimestampActive = 'PreProc',
-    OrgTSTimestampInactive = 'Comment',
-    OrgTSHeadlineLevel1 = 'OrgHeadlineLevel1',
-    OrgTSHeadlineLevel2 = 'OrgHeadlineLevel2',
-    OrgTSHeadlineLevel3 = 'OrgHeadlineLevel3',
-    OrgTSHeadlineLevel4 = 'OrgHeadlineLevel4',
-    OrgTSHeadlineLevel5 = 'OrgHeadlineLevel5',
-    OrgTSHeadlineLevel6 = 'OrgHeadlineLevel6',
-    OrgTSHeadlineLevel7 = 'OrgHeadlineLevel7',
-    OrgTSHeadlineLevel8 = 'OrgHeadlineLevel8',
-    OrgTSBullet = 'Identifier',
-    OrgTSCheckbox = 'PreProc',
-    OrgTSCheckboxHalfChecked = 'OrgTSCheckbox',
-    OrgTSCheckboxUnchecked = 'OrgTSCheckbox',
-    OrgTSCheckboxChecked = 'OrgTSCheckbox',
-    OrgTSPropertyDrawer = 'Constant',
-    OrgTSDrawer = 'Constant',
-    OrgTSTag = 'Function',
-    OrgTSPlan = 'Constant',
-    OrgTSComment = 'Comment',
-    OrgTSDirective = 'Comment',
-    OrgTSBlock = 'Comment',
-    OrgTSLatex = 'Statement',
-  }
-
-  for src, def in pairs(links) do
-    vim.cmd(string.format([[hi link @%s %s]], src, src))
-    vim.cmd(string.format([[hi def link %s %s]], src, def))
-  end
+function M.define_highlights()
+  M.link_highlights()
+  M.define_agenda_colors()
+  M.define_org_todo_keyword_colors()
+  M.define_todo_keyword_faces()
 end
 
 function M.link_highlights()
   local links = {
-    OrgEditSrcHighlight = 'Visual',
+    -- Headlines
+    ['@org.headline.level1'] = 'Title',
+    ['@org.headline.level2'] = 'Constant',
+    ['@org.headline.level3'] = 'Identifier',
+    ['@org.headline.level4'] = 'Statement',
+    ['@org.headline.level5'] = 'PreProc',
+    ['@org.headline.level6'] = 'Type',
+    ['@org.headline.level7'] = 'Special',
+    ['@org.headline.level8'] = 'String',
+
+    -- Headline tags
+    ['@org.tag'] = '@tag.attribute',
+
+    -- Headline plan
+    ['@org.plan'] = 'Constant',
+
+    -- Timestamps
+    ['@org.timestamp.active'] = '@keyword',
+    ['@org.timestamp.inactive'] = '@comment',
+    -- Lists/Checkboxes
+    ['@org.bullet'] = '@markup.list',
+    ['@org.checkbox'] = '@markup.list.unchecked',
+    ['@org.checkbox.halfchecked'] = '@markup.list.unchecked',
+    ['@org.checkbox.checked'] = '@markup.list.checked',
+
+    -- Drawers
+    ['@org.properties'] = '@property',
+    ['@org.properties.name'] = '@property',
+    ['@org.drawer'] = '@property',
+
+    ['@org.comment'] = '@comment',
+    ['@org.directive'] = '@comment',
+    ['@org.block'] = '@comment',
+
+    -- Markup
+    ['@org.bold'] = '@markup.strong',
+    ['@org.bold.delimiter'] = '@markup.strong',
+    ['@org.italic'] = '@markup.italic',
+    ['@org.italic.delimiter'] = '@markup.italic',
+    ['@org.strikethrough'] = '@markup.strikethrough',
+    ['@org.strikethrough.delimiter'] = '@markup.strikethrough',
+    ['@org.underline'] = '@markup.underline',
+    ['@org.underline.delimiter'] = '@markup.underline',
+    ['@org.code'] = '@markup.raw',
+    ['@org.code.delimiter'] = '@markup.raw',
+    ['@org.verbatim'] = '@markup.raw',
+    ['@org.verbatim.delimiter'] = '@markup.raw',
+    ['@org.hyperlink'] = '@markup.link.url',
+    ['@org.latex'] = '@markup.math',
+    ['@org.latex_env'] = '@markup.environment',
+    -- Other
+    ['@org.table.delimiter'] = '@punctuation.special',
+    ['@org.table.heading'] = '@markup.heading',
+    ['@org.edit_src'] = 'Visual',
   }
 
   for src, def in pairs(links) do
@@ -48,98 +75,38 @@ end
 function M.define_agenda_colors()
   local keyword_colors = colors.get_todo_keywords_colors()
   local c = {
-    deadline = 'OrgAgendaDeadline',
-    ok = 'OrgAgendaScheduled',
-    warning = 'OrgAgendaScheduledPast',
+    deadline = '@org.agenda.deadline',
+    ok = '@org.agenda.scheduled',
+    warning = '@org.agenda.scheduled_past',
   }
   for type, hlname in pairs(c) do
     vim.cmd(
-      string.format('hi %s_builtin guifg=%s ctermfg=%s', hlname, keyword_colors[type].gui, keyword_colors[type].cterm)
+      string.format('hi default %s guifg=%s ctermfg=%s', hlname, keyword_colors[type].gui, keyword_colors[type].cterm)
     )
-    vim.cmd(string.format('hi default link %s %s_builtin', hlname, hlname))
   end
+
   M.define_org_todo_keyword_colors()
 end
 
-function M.define_org_todo_keyword_colors(do_syn_match)
+function M.define_org_todo_keyword_colors()
   local keyword_colors = colors.get_todo_keywords_colors()
-  local ts_highlights_enabled = config:ts_highlights_enabled()
-  if not ts_highlights_enabled and do_syn_match then
-    local todo_keywords = config:get_todo_keywords()
-    vim.cmd(string.format([[syn match OrgTODO "\<\(%s\)\>" contained]], table.concat(todo_keywords.TODO, [[\|]])))
-    vim.cmd(string.format([[syn match OrgDONE "\<\(%s\)\>" contained]], table.concat(todo_keywords.DONE, [[\|]])))
-  end
   vim.cmd(
-    string.format(
-      'hi OrgTODO_builtin guifg=%s ctermfg=%s gui=bold cterm=bold',
+    ('hi default @org.keyword.todo guifg=%s ctermfg=%s gui=bold cterm=bold'):format(
       keyword_colors.TODO.gui,
       keyword_colors.TODO.cterm
     )
   )
-  vim.cmd('hi default link OrgTODO OrgTODO_builtin')
-  vim.cmd('hi link @OrgTODO OrgTODO')
+
   vim.cmd(
-    string.format(
-      'hi OrgDONE_builtin guifg=%s ctermfg=%s gui=bold cterm=bold',
+    ('hi default @org.keyword.done guifg=%s ctermfg=%s gui=bold cterm=bold'):format(
       keyword_colors.DONE.gui,
       keyword_colors.DONE.cterm
     )
   )
-  vim.cmd('hi default link OrgDONE OrgDONE_builtin')
-  vim.cmd('hi link @OrgDONE OrgDONE')
-  return M.parse_todo_keyword_faces(do_syn_match)
+  vim.cmd([[hi default @org.leading_stars ctermfg=0 guifg=bg]])
 end
 
-function M.define_org_headline_colors(faces)
-  local headline_colors = { 'Title', 'Constant', 'Identifier', 'Statement', 'PreProc', 'Type', 'Special', 'String' }
-  local ts_highlights_enabled = config:ts_highlights_enabled()
-  local all_keywords = ''
-  if not ts_highlights_enabled then
-    local todo_keywords = config:get_todo_keywords()
-    all_keywords = table.concat(todo_keywords.ALL, [[\|]])
-  end
-  local contains = { 'OrgTODO', 'OrgDONE' }
-  for _, face in pairs(faces) do
-    table.insert(contains, face)
-  end
-  if not ts_highlights_enabled then
-    vim.cmd([[syn match OrgHideLeadingStars /^\*\{2,\}/me=e-1 contained]])
-  end
-  vim.cmd([[hi default OrgHideLeadingStars ctermfg=0 guifg=bg]])
-  table.insert(contains, 'OrgHideLeadingStars')
-  for i, color in ipairs(headline_colors) do
-    local j = i
-    while j < 40 do
-      if not ts_highlights_enabled then
-        vim.cmd(
-          string.format(
-            [[syn match OrgHeadlineLevel%d "^\*\{%d}\s\+\(\<\(%s\)\>\)\?.*$" contains=%s]],
-            j,
-            j,
-            all_keywords,
-            table.concat(contains, ',')
-          )
-        )
-      end
-      vim.cmd(string.format('hi default link OrgHeadlineLevel%d %s', j, color))
-      j = j + 8
-    end
-  end
-end
-
-function M.define_highlights()
-  if config:ts_highlights_enabled() then
-    M.link_ts_highlights()
-  end
-
-  M.link_highlights()
-
-  local faces = M.define_org_todo_keyword_colors(true)
-  return M.define_org_headline_colors(faces)
-end
-
-function M.parse_todo_keyword_faces(do_syn_match)
-  local ts_highlights_enabled = config:ts_highlights_enabled()
+function M.define_todo_keyword_faces()
   local opts = {
     underline = {
       type = vim.o.termguicolors and 'gui' or 'cterm',
@@ -165,7 +132,7 @@ function M.parse_todo_keyword_faces(do_syn_match)
   local result = {}
 
   for name, values in pairs(config.org_todo_keyword_faces) do
-    local parts = vim.split(values, ':', true)
+    local parts = vim.split(values, ':', { plain = true })
     local hl_opts = {}
     for _, part in ipairs(parts) do
       local faces = vim.split(vim.trim(part), ' ')
@@ -183,16 +150,12 @@ function M.parse_todo_keyword_faces(do_syn_match)
       end
     end
     if not vim.tbl_isempty(hl_opts) then
-      local hl_name = 'OrgKeywordFace' .. name:gsub('%-', '')
+      local hl_name = '@org.keyword.face.' .. name:gsub('%-', '')
       local hl = ''
       for hl_item, hl_values in pairs(hl_opts) do
         hl = hl .. ' ' .. hl_item .. '=' .. table.concat(hl_values, ',')
       end
-      if not ts_highlights_enabled and do_syn_match then
-        vim.cmd(string.format([[syn match %s "\<%s\>" contained]], hl_name, name))
-      end
-      vim.cmd(string.format('hi %s %s', hl_name, hl))
-      vim.cmd(string.format([[hi link @%s %s]], hl_name, hl_name))
+      vim.cmd(string.format('hi default %s %s', hl_name, hl))
       result[name] = hl_name
     end
   end
@@ -202,13 +165,13 @@ end
 
 ---@return table<string, string>
 function M.get_agenda_hl_map()
-  local faces = M.parse_todo_keyword_faces()
+  local faces = M.define_todo_keyword_faces()
   return vim.tbl_extend('force', {
-    TODO = 'OrgTODO',
-    DONE = 'OrgDONE',
-    deadline = 'OrgAgendaDeadline',
-    ok = 'OrgAgendaScheduled',
-    warning = 'OrgAgendaScheduledPast',
+    TODO = '@org.keyword.todo',
+    DONE = '@org.keyword.done',
+    deadline = '@org.agenda.deadline',
+    ok = '@org.agenda.scheduled',
+    warning = '@org.agenda.scheduled_past',
   }, faces)
 end
 

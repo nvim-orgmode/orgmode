@@ -11,34 +11,28 @@ local valid_post_marker_chars =
 
 local markers = {
   ['*'] = {
-    hl_name = 'org_bold',
-    hl_cmd = 'hi def %s term=bold cterm=bold gui=bold',
+    hl_name = '@org.bold',
     nestable = true,
   },
   ['/'] = {
-    hl_name = 'org_italic',
-    hl_cmd = 'hi def %s term=italic cterm=italic gui=italic',
+    hl_name = '@org.italic',
     nestable = true,
   },
   ['_'] = {
-    hl_name = 'org_underline',
-    hl_cmd = 'hi def %s term=underline cterm=underline gui=underline',
+    hl_name = '@org.underline',
     nestable = true,
   },
   ['+'] = {
-    hl_name = 'org_strikethrough',
-    hl_cmd = 'hi def %s term=strikethrough cterm=strikethrough gui=strikethrough',
+    hl_name = '@org.strikethrough',
     nestable = true,
   },
   ['~'] = {
-    hl_name = 'org_code',
-    hl_cmd = 'hi def link %s String',
+    hl_name = '@org.code',
     nestable = false,
     spell = false,
   },
   ['='] = {
-    hl_name = 'org_verbatim',
-    hl_cmd = 'hi def link %s String',
+    hl_name = '@org.verbatim',
     nestable = false,
     spell = false,
   },
@@ -51,7 +45,6 @@ function OrgEmphasis:new(opts)
   }
   setmetatable(data, self)
   self.__index = self
-  data:_add_hl_groups()
   return data
 end
 
@@ -68,7 +61,7 @@ function OrgEmphasis:highlight(highlights, bufnr)
     vim.api.nvim_buf_set_extmark(bufnr, namespace, entry.from.line, entry.from.start_col, {
       ephemeral = ephemeral,
       end_col = entry.from.end_col,
-      hl_group = markers[entry.char].hl_name .. '_delimiter',
+      hl_group = markers[entry.char].hl_name .. '.delimiter',
       spell = markers[entry.char].spell,
       priority = 110 + entry.from.start_col,
       conceal = conceal,
@@ -78,7 +71,7 @@ function OrgEmphasis:highlight(highlights, bufnr)
     vim.api.nvim_buf_set_extmark(bufnr, namespace, entry.from.line, entry.to.start_col, {
       ephemeral = ephemeral,
       end_col = entry.to.end_col,
-      hl_group = markers[entry.char].hl_name .. '_delimiter',
+      hl_group = markers[entry.char].hl_name .. '.delimiter',
       spell = markers[entry.char].spell,
       priority = 110 + entry.from.start_col,
       conceal = conceal,
@@ -134,16 +127,6 @@ function OrgEmphasis:is_valid_end_node(entry, bufnr)
   local end_text = self.markup:get_node_text(entry.node, bufnr, -1, 1)
   return (end_text:len() < 3 or vim.tbl_contains(valid_post_marker_chars, end_text:sub(3, 3)))
     and end_text:sub(1, 1) ~= ' '
-end
-
-function OrgEmphasis:_add_hl_groups()
-  for _, marker in pairs(markers) do
-    vim.cmd(string.format(marker.hl_cmd, marker.hl_name))
-    if marker.delimiter_hl then
-      vim.cmd(string.format(marker.hl_cmd, marker.hl_name .. '_delimiter'))
-    end
-  end
-  vim.cmd('hi def link org_hyperlink Underlined')
 end
 
 return OrgEmphasis

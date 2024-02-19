@@ -33,7 +33,7 @@ function OrgStars:on_line(bufnr, line)
   vim.api.nvim_buf_set_extmark(bufnr, self.highlighter.namespace, line, 0, {
     end_line = line,
     end_col = end_col - 1,
-    hl_group = 'OrgHideLeadingStars',
+    hl_group = '@org.leading_stars',
     ephemeral = true,
   })
 end

@@ -33,7 +33,6 @@ function OrgLatex:new(opts)
   }
   setmetatable(data, self)
   self.__index = self
-  data:_add_hl_groups()
   return data
 end
 
@@ -89,10 +88,6 @@ function OrgLatex:parse_node(node)
   return info
 end
 
-function OrgLatex:_add_hl_groups()
-  vim.cmd('hi def link org_latex OrgTSLatex')
-end
-
 ---@param highlights OrgMarkupHighlight[]
 ---@param bufnr number
 function OrgLatex:highlight(highlights, bufnr)
@@ -102,7 +97,7 @@ function OrgLatex:highlight(highlights, bufnr)
     vim.api.nvim_buf_set_extmark(bufnr, namespace, entry.from.line, entry.from.start_col - 1, {
       ephemeral = ephemeral,
       end_col = entry.to.end_col,
-      hl_group = 'org_latex',
+      hl_group = '@org.latex',
       spell = false,
       priority = 110 + entry.from.start_col,
     })

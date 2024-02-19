@@ -56,7 +56,7 @@ function ClockReport:draw_for_agenda(start_line)
         range.start_col = range.start_col + 1
         range.end_col = range.end_col + 2
         table.insert(highlights, {
-          hlgroup = 'OrgBold',
+          hlgroup = '@org.bold',
           range = range,
         })
       end
@@ -67,7 +67,7 @@ function ClockReport:draw_for_agenda(start_line)
           range.start_col = range.start_col + 1
           range.end_col = range.end_col + 2
           table.insert(highlights, {
-            hlgroup = 'OrgUnderline',
+            hlgroup = '@org.hyperlink',
             range = range,
           })
         end

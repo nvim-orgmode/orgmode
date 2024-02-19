@@ -1,14 +1,5 @@
-" Bigger part of syntax borrowed from https://github.com/jceb/vim-orgmode
-
 if exists('b:current_syntax')
   finish
-endif
-
-lua require('orgmode.colors.highlights').define_highlights()
-let s:ts_highlight = luaeval('require("orgmode.config"):ts_highlights_enabled()')
-if !s:ts_highlight
-  lua require('orgmode.org.syntax').add_todo_keywords_to_spellgood()
-  runtime syntax/org_legacy.vim
 endif
 
 let s:highlight_latex = luaeval('require("orgmode.config").org_highlight_latex_and_related')

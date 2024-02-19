@@ -44,6 +44,7 @@ function Org:init()
   end
   require('orgmode.events').init()
   self.highlighter = require('orgmode.colors.highlighter'):new()
+  require('orgmode.colors.highlights').define_highlights()
   self.files = require('orgmode.files'):new({
     paths = require('orgmode.config').org_agenda_files,
   })

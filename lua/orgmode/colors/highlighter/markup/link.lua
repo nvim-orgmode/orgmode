@@ -103,7 +103,7 @@ function OrgLink:highlight(highlights, bufnr)
     vim.api.nvim_buf_set_extmark(bufnr, namespace, entry.from.line, entry.from.start_col, {
       ephemeral = ephemeral,
       end_col = entry.to.end_col,
-      hl_group = 'org_hyperlink',
+      hl_group = '@org.hyperlink',
       priority = 110,
     })
 
