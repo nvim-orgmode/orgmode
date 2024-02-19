@@ -3,6 +3,7 @@
 ---@field private stars OrgStarsHighlighter
 ---@field private markup OrgMarkupHighlighter
 ---@field private todos OrgTodosHighlighter
+---@field private foldtext OrgFoldtextHighlighter
 ---@field private _ephemeral boolean
 ---@field private buffers table<number, { language_tree: LanguageTree, tree: TSTree }>
 local OrgHighlighter = {}
@@ -30,6 +31,7 @@ function OrgHighlighter:_setup()
   self.stars = require('orgmode.colors.highlighter.stars'):new({ highlighter = self })
   self.markup = require('orgmode.colors.highlighter.markup'):new({ highlighter = self })
   self.todos = require('orgmode.colors.highlighter.todos'):new()
+  self.foldtext = require('orgmode.colors.highlighter.foldtext'):new({ highlighter = self })
 
   vim.api.nvim_set_decoration_provider(self.namespace, {
     on_win = function(...)
@@ -65,11 +67,13 @@ function OrgHighlighter:_on_line(_, _, bufnr, line)
   if self.buffers[bufnr].tree then
     self.markup:on_line(bufnr, line, self.buffers[bufnr].tree)
     self.stars:on_line(bufnr, line)
+    self.foldtext:on_line(bufnr, line)
   end
 end
 
 function OrgHighlighter:_on_detach(bufnr)
   self.markup:on_detach(bufnr)
+  self.foldtext:on_detach(bufnr)
   self.buffers[bufnr] = nil
 end
 

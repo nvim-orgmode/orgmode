@@ -91,45 +91,50 @@ function OrgMappings:cycle()
     return vim.cmd([[silent! norm!zo]])
   end
   local section = file:get_closest_headline_or_nil({ line, 0 })
-  if section then
-    local is_expandable = function(headline)
-      return headline:has_child_headlines() or not headline:is_one_line()
-    end
-    -- Skip one liner
-    if not is_expandable(section) then
-      return
-    end
-    local children = section:get_child_headlines()
-    local close = #children == 0
 
-    if not close then
-      local has_nested_children = false
-      for _, child in ipairs(children) do
-        local is_child_expandable = is_expandable(child)
-        if not has_nested_children and is_child_expandable then
-          has_nested_children = true
-        end
-        local child_range = child:get_range()
-        if is_child_expandable and vim.fn.foldclosed(child_range.start_line) == -1 then
-          vim.cmd(string.format('silent! keepjumps norm!%dggzc', child_range.start_line))
-          close = true
-        end
+  if not section then
+    -- Toggle drawers
+    if vim.fn.getline(line):match('^%s*:[^:]*:%s*$') then
+      vim.cmd([[silent! norm!za]])
+    end
+    return
+  end
+
+  local is_expandable = function(headline)
+    return headline:has_child_headlines() or not headline:is_one_line()
+  end
+
+  -- Skip one liner
+  if not is_expandable(section) then
+    return
+  end
+
+  local children = section:get_child_headlines()
+  local close = #children == 0
+
+  if not close then
+    local has_nested_children = false
+    for _, child in ipairs(children) do
+      local is_child_expandable = is_expandable(child)
+      if not has_nested_children and is_child_expandable then
+        has_nested_children = true
       end
-      vim.cmd(string.format('silent! keepjumps norm!%dgg', line))
-      if not close and not has_nested_children then
+      local child_range = child:get_range()
+      if is_child_expandable and vim.fn.foldclosed(child_range.start_line) == -1 then
+        vim.cmd(string.format('silent! keepjumps norm!%dggzc', child_range.start_line))
         close = true
       end
     end
-
-    if close then
-      return vim.cmd([[silent! norm!zc]])
+    vim.cmd(string.format('silent! keepjumps norm!%dgg', line))
+    if not close and not has_nested_children then
+      close = true
     end
-    return vim.cmd([[silent! norm!zczO]])
   end
 
-  if vim.fn.getline(line):match('^%s*:[^:]*:%s*$') then
-    return vim.cmd([[silent! norm!za]])
+  if close then
+    return vim.cmd([[silent! norm!zc]])
   end
+  return vim.cmd([[silent! norm!zczO]])
 end
 
 function OrgMappings:global_cycle()

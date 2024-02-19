@@ -1,6 +1,7 @@
 local config = require('orgmode.config')
 local VirtualIndent = require('orgmode.ui.virtual_indent')
 local ts_utils = require('orgmode.utils.treesitter')
+local utils = require('orgmode.utils')
 ---@type Query
 local query = nil
 
@@ -313,14 +314,14 @@ local function foldtext()
 end
 
 local function setup()
-  local v = vim.version()
+  if not utils.has_version_10() then
+    return
+  end
 
-  if not vim.version.lt({ v.major, v.minor, v.patch }, { 0, 10, 0 }) then
-    if config.org_startup_indented then
-      VirtualIndent:new():attach()
-    else
-      VirtualIndent:new():start_watch_org_indent()
-    end
+  if config.org_startup_indented then
+    VirtualIndent:new():attach()
+  else
+    VirtualIndent:new():start_watch_org_indent()
   end
 end
 
