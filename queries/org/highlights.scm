@@ -31,3 +31,11 @@
 (plan) @OrgTSPlan
 (comment) @OrgTSComment @spell
 (directive) @OrgTSDirective
+(row
+  "|" @punctuation.special)
+(cell
+  "|" @punctuation.special)
+(table
+  (row
+    (cell (contents) @markup.heading))
+  (hr) @punctuation.special)
