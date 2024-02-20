@@ -135,7 +135,7 @@ function OrgDates:highlight(highlights, bufnr)
     vim.api.nvim_buf_set_extmark(bufnr, namespace, entry.from.line, entry.from.start_col, {
       ephemeral = ephemeral,
       end_col = entry.to.end_col,
-      hl_group = entry.char == '>' and 'OrgTSTimestampActive' or 'OrgTSTimestampInactive',
+      hl_group = entry.char == '>' and '@org.timestamp.active' or '@org.timestamp.inactive',
       priority = 110,
     })
   end

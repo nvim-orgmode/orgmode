@@ -19,7 +19,7 @@ function OrgTodos:_add_highlights()
   if not query_files or #query_files == 0 then
     return
   end
-  local faces = highlights.parse_todo_keyword_faces()
+  local faces = highlights.define_todo_keyword_faces()
   if not faces or vim.tbl_isempty(faces) then
     return
   end
@@ -35,7 +35,7 @@ function OrgTodos:_add_highlights()
           for face_name, face_hl in pairs(faces) do
             table.insert(
               lines,
-              string.format([[(item . (expr) @%s @nospell (#eq? @%s %s))]], face_hl, face_hl, face_name)
+              string.format([[(item . (expr) %s @nospell (#eq? %s %s))]], face_hl, face_hl, face_name)
             )
           end
           return lines

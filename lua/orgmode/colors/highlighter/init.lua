@@ -24,10 +24,6 @@ end
 
 ---@private
 function OrgHighlighter:_setup()
-  local ts_highlights_enabled = config:ts_highlights_enabled()
-  if not ts_highlights_enabled then
-    return
-  end
   self.stars = require('orgmode.colors.highlighter.stars'):new({ highlighter = self })
   self.markup = require('orgmode.colors.highlighter.markup'):new({ highlighter = self })
   self.todos = require('orgmode.colors.highlighter.todos'):new()

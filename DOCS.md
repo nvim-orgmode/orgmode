@@ -224,7 +224,7 @@ Enabled:
 If this highlight group does not suit you, you can apply different highlight group to it:
 
 ```lua
-vim.cmd[[autocmd ColorScheme * hi link OrgHideLeadingStars MyCustomHlGroup]]
+vim.cmd[[autocmd ColorScheme * hi link @org.leading.stars MyCustomHlGroup]]
 ```
 
 #### **org_hide_emphasis_markers**
@@ -1315,66 +1315,90 @@ Currently, these things are formatted:
 ## User interface
 
 ### Colors
+Most of the highlight groups are linked to treesitter highlights where applicable (see `:h treesitter-highlight`).
+
+The following highlight groups are used:
+
+  * `@org.headline.level.1`: Headline at level 1 - `linked to Title`
+  * `@org.headline.level.2`: Headline at level 2 - `linked to Constant`
+  * `@org.headline.level.3`: Headline at level 3 - `linked to Identifier`
+  * `@org.headline.level.4`: Headline at level 4 - `linked to Statement`
+  * `@org.headline.level.5`: Headline at level 5 - `linked to PreProc`
+  * `@org.headline.level.6`: Headline at level 6 - `linked to Type`
+  * `@org.headline.level.7`: Headline at level 7 - `linked to Special`
+  * `@org.headline.level.8`: Headline at level 8 - `linked to String`
+  * `@org.timestamp.active`: An active timestamp - linked to `@keyword`
+  * `@org.timestamp.inactive`: An inactive timestamp - linked to `@comment`
+  * `@org.keyword.todo`: TODO keywords color - Parsed from `Error` (see note below)
+  * `@org.keyword.done`: DONE keywords color - Parsed from `DiffAdd` (see note below)
+  * `@org.bullet`: A normal bullet under a header item - linked to `@markup.list`
+  * `@org.properties`: Property drawer start/end delimiters - linked to `@property`
+  * `@org.drawer`: Drawer start/end delimiters - linked to `@property`
+  * `@org.tag`: A tag for a headline item, shown on the righthand side like `:foo:` - linked to `@tag.attribute`
+  * `@org.plan`: `SCHEDULED`, `DEADLINE`, `CLOSED`, etc. keywords - linked to `Constant`
+  * `@org.comment`: A comment block - linked to `@comment`
+  * `@org.latex_env`: LaTeX block - linked to `@markup.environment`
+  * `@org.directive`: Blocks starting with `#+` - linked to `@comment`
+  * `@org.checkbox`: The default checkbox highlight, including square brackets - linked to `@markup.list.unchecked`
+  * `@org.checkbox.halfchecked`: A checkbox status (marker between `[]`) checked with `[-]` - linked to `@markup.list.unchecked`
+  * `@org.checkbox.checked`: A checkbox status (marker between `[]`) checked with either `[x]` or `[X]` - linked to `@markup.list.checked`
+  * `@org.bold`: **bold** text - linked to `@markup.strong`,
+  * `@org.bold.delimiter`: bold text delimiter `*` - linked to `@markup.strong`,
+  * `@org.italic`: *italic* text - linked to `@markup.italic`,
+  * `@org.italic.delimiter`: italic text delimiter `/` - linked to `@markup.italic`,
+  * `@org.strikethrough`: ~strikethrough~ text - linked to `@markup.strikethrough`,
+  * `@org.strikethrough.delimiter`: strikethrough text delimiter `+` - linked to `@markup.strikethrough`,
+  * `@org.underline`: <u>underline<u/> text - linked to `@markup.underline`,
+  * `@org.underline.delimiter`: underline text delimiter `_` - linked to `@markup.underline`,
+  * `@org.code`: `code` text - linked to `@markup.raw`,
+  * `@org.code.delimiter`: code text delimiter `~` - linked to `@markup.raw`,
+  * `@org.verbatim`: `verbatim` text - linked to `@markup.raw`,
+  * `@org.verbatim.delimiter`: verbatim text delimiter `=` - linked to `@markup.raw`,
+  * `@org.hyperlink`: [link](link) text - linked to `@markup.link.url`,
+  * `@org.latex`: Inline latex - linked to `@markup.math`,
+  * `@org.table.delimiter` - `|` and `-` delimiters in tables - linked to `@punctuation.special`,
+  * `@org.table.heading` - Table headings - linked to `@markup.heading`,
+  * `@org.edit_src` - The highlight for the source content in an _Org_ buffer while it is being edited in an edit special buffer - linked to `Visual`,
+  * `@org.agenda.deadline`: A item deadline in the agenda view - Parsed from `Error` (see note below)
+  * `@org.agenda.scheduled`: A scheduled item in the agenda view - Parsed from `DiffAdd` (see note dbelow)
+  * `@org.agenda.scheduled_past`: A item past its scheduled date in the agenda view - Parsed from `WarningMsg` (see note below)
+
+Note:
+
 Colors used for todo keywords and agenda states (deadline, schedule ok, schedule warning)
-are parsed from the current colorsheme from several highlight groups (Error, WarningMsg, DiffAdd, etc.).
-If those colors are not suitable you can override them like this:
+are parsed from the current colorscheme from several highlight groups (Error, WarningMsg, DiffAdd, etc.).
+
+
+#### Overriding colors
+All colors can be overridden by either setting new values or linking to another highlight group:
+```lua
+vim.api.nvim_create_autocmd('ColorScheme', {
+  pattern = '*',
+  callback = function()
+    -- Define own colors
+    vim.api.nvim_set_hl(0, '@org.agenda.deadline', { fg = '#FFAAAA' })
+    vim.api.nvim_set_hl(0, '@org.agenda.scheduled', { fg = '#AAFFAA' })
+    -- Link to another highlight group
+    vim.api.nvim_set_hl(0, '@org.agenda.scheduled_past', { link = 'Statement' })
+  end
+})
+```
+
+Or in Vimscript:
 
 ```vim
 autocmd ColorScheme * call s:setup_org_colors()
 
 function! s:setup_org_colors() abort
-  hi OrgAgendaDeadline guifg=#FFAAAA
-  hi OrgAgendaScheduled guifg=#AAFFAA
-  hi OrgAgendaScheduledPast guifg=Orange
-endfunction
-```
-
-or you can link it to another highlight group:
-
-```vim
-function! s:setup_org_colors() abort
-  hi link OrgAgendaDeadline Error
-  hi link OrgAgendaScheduled DiffAdd
-  hi link OrgAgendaScheduledPast Statement
+  " Define own colors
+  hi @org.agenda.deadline guifg=#FFAAAA
+  hi @org.agenda.scheduled guifg=#AAFFAA
+  " Link to another highlight group
+  hi link @org.agenda.scheduled_past Statement
 endfunction
 ```
 
 For adding/changing TODO keyword colors see [org-todo-keyword-faces](#org_todo_keyword_faces)
-
-#### Highlight Groups
-
-* The following highlight groups are based on _Treesitter_ query results, hence when setting up _Orgmode_ these
-  highlights must be enabled by removing `disable = {'org'}` from the default recommended _Treesitter_ configuration.
-
-  * `OrgTSTimestampActive`: An active timestamp
-  * `OrgTSTimestampInactive`: An inactive timestamp
-  * `OrgTSBullet`: A normal bullet under a header item
-  * `OrgTSPropertyDrawer`: Property drawer start/end delimiters
-  * `OrgTSDrawer`: Drawer start/end delimiters
-  * `OrgTSTag`: A tag for a headline item, shown on the righthand side like `:foo:`
-  * `OrgTSPlan`: `SCHEDULED`, `DEADLINE`, `CLOSED`, etc. keywords
-  * `OrgTSComment`: A comment block
-  * `OrgTSLatex`: LaTeX block
-  * `OrgTSDirective`: Blocks starting with `#+`
-  * `OrgTSCheckbox`: The default checkbox highlight, overridden if any of the below groups are specified
-  * `OrgTSCheckboxChecked`: A checkbox checked with either `[x]` or `[X]`
-  * `OrgTSCheckboxHalfChecked`: A checkbox checked with `[-]`
-  * `OrgTSCheckboxUnchecked`: A empty checkbox
-  * `OrgTSHeadlineLevel1`: Headline at level 1
-  * `OrgTSHeadlineLevel2`: Headline at level 2
-  * `OrgTSHeadlineLevel3`: Headline at level 3
-  * `OrgTSHeadlineLevel4`: Headline at level 4
-  * `OrgTSHeadlineLevel5`: Headline at level 5
-  * `OrgTSHeadlineLevel6`: Headline at level 6
-  * `OrgTSHeadlineLevel7`: Headline at level 7
-  * `OrgTSHeadlineLevel8`: Headline at level 8
-
-* The following use vanilla _Vim_ syntax matching, and will work without _Treesitter_ highlighting enabled.
-
-  * `OrgEditSrcHighlight`: The highlight for the source content in an _Org_ buffer while it is being edited in an edit special buffer
-  * `OrgAgendaDeadline`: A item deadline in the agenda view
-  * `OrgAgendaScheduled`: A scheduled item in the agenda view
-  * `OrgAgendaScheduledPast`: A item past its scheduled date in the agenda view
 
 ### Menu
 

@@ -380,29 +380,6 @@ function Config:setup_ts_predicates()
   end, true)
 end
 
-function Config:ts_highlights_enabled()
-  if self.ts_hl_enabled ~= nil then
-    return self.ts_hl_enabled
-  end
-  self.ts_hl_enabled = false
-  local hl_module = require('nvim-treesitter.configs').get_module('highlight')
-  if not hl_module or not hl_module.enable then
-    return false
-  end
-  if hl_module.disable then
-    if type(hl_module.disable) == 'function' and hl_module.disable('org', vim.api.nvim_get_current_buf()) then
-      return false
-    end
-
-    ---@diagnostic disable-next-line: param-type-mismatch
-    if type(hl_module.disable) == 'table' and vim.tbl_contains(hl_module.disable, 'org') then
-      return false
-    end
-  end
-  self.ts_hl_enabled = true
-  return self.ts_hl_enabled
-end
-
 ---@param content table
 ---@param option? string
 ---@param prepend_content? any

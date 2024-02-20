@@ -1,41 +1,39 @@
-(timestamp "<") @OrgTSTimestampActive
-(timestamp "[") @OrgTSTimestampInactive
-(headline (stars) @stars (#eq? @stars "*")) @OrgTSHeadlineLevel1
-(headline (stars) @stars (#eq? @stars "**")) @OrgTSHeadlineLevel2
-(headline (stars) @stars (#eq? @stars "***")) @OrgTSHeadlineLevel3
-(headline (stars) @stars (#eq? @stars "****")) @OrgTSHeadlineLevel4
-(headline (stars) @stars (#eq? @stars "*****")) @OrgTSHeadlineLevel5
-(headline (stars) @stars (#eq? @stars "******")) @OrgTSHeadlineLevel6
-(headline (stars) @stars (#eq? @stars "*******")) @OrgTSHeadlineLevel7
-(headline (stars) @stars (#eq? @stars "********")) @OrgTSHeadlineLevel8
+(timestamp "<") @org.timestamp.active
+(timestamp "[") @org.timestamp.inactive
+(headline (stars) @stars (#eq? @stars "*")) @org.headline.level1
+(headline (stars) @stars (#eq? @stars "**")) @org.headline.level2
+(headline (stars) @stars (#eq? @stars "***")) @org.headline.level3
+(headline (stars) @stars (#eq? @stars "****")) @org.headline.level4
+(headline (stars) @stars (#eq? @stars "*****")) @org.headline.level5
+(headline (stars) @stars (#eq? @stars "******")) @org.headline.level6
+(headline (stars) @stars (#eq? @stars "*******")) @org.headline.level7
+(headline (stars) @stars (#eq? @stars "********")) @org.headline.level8
 (headline (item) @spell)
-(item . (expr) @OrgTODO @nospell (#org-is-todo-keyword? @OrgTODO "TODO"))
-(item . (expr) @OrgDONE @nospell (#org-is-todo-keyword? @OrgDONE "DONE"))
+(item . (expr) @org.keyword.todo @nospell (#org-is-todo-keyword? @org.keyword.todo "TODO"))
+(item . (expr) @org.keyword.done @nospell (#org-is-todo-keyword? @org.keyword.done "DONE"))
 (list (listitem (paragraph) @spell))
 (body (paragraph) @spell)
-(bullet) @OrgTSBullet
-(checkbox) @OrgTSCheckbox
-(checkbox status: (expr "-") @OrgTSCheckboxHalfChecked)
-(checkbox status: (expr "str") @OrgTSCheckboxChecked (#any-of? @OrgTSCheckboxChecked "x" "X"))
-(block "#+begin_" @OrgTSBlock "#+end_" @OrgTSBlock)
-(block name: (expr) @OrgTSBlock)
-(block end_name: (expr) @OrgTSBlock)
-(block parameter: (expr) @OrgTSBlock)
-(dynamic_block name: (expr) @OrgTSBlock)
-(dynamic_block end_name: (expr) @OrgTSBlock)
-(dynamic_block parameter: (expr) @OrgTSBlock)
-(property_drawer) @OrgTSPropertyDrawer
-(latex_env) @OrgTSLatex
-(drawer) @OrgTSDrawer
-(tag_list) @OrgTSTag
-(plan) @OrgTSPlan
-(comment) @OrgTSComment @spell
-(directive) @OrgTSDirective
-(row
-  "|" @punctuation.special)
-(cell
-  "|" @punctuation.special)
+(bullet) @org.bullet
+(checkbox) @org.checkbox
+(checkbox status: (expr "-") @org.checkbox.halfchecked)
+(checkbox status: (expr "str") @org.checkbox.checked (#any-of? @org.checkbox.checked "x" "X"))
+(block "#+begin_" @org.block "#+end_" @org.block)
+(block name: (expr) @org.block)
+(block end_name: (expr) @org.block)
+(block parameter: (expr) @org.block)
+(dynamic_block name: (expr) @org.block)
+(dynamic_block end_name: (expr) @org.block)
+(dynamic_block parameter: (expr) @org.block)
+(property_drawer (property name: (expr) @org.properties.name)) @org.properties
+(latex_env) @org.latex_env
+(drawer) @org.drawer
+(tag_list) @org.tag
+(plan) @org.plan
+(comment) @org.comment @spell
+(directive) @org.directive
+(row "|" @org.table.delimiter)
+(cell "|" @org.table.delimiter)
 (table
-  (row
-    (cell (contents) @markup.heading))
-  (hr) @punctuation.special)
+  (row (cell (contents) @org.table.heading))
+  (hr) @org.table.delimiter
+)
