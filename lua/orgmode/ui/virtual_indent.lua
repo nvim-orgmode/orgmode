@@ -9,7 +9,6 @@ local dict_watcher = require('orgmode.utils.dict_watcher')
 local VirtualIndent = {
   _ns_id = vim.api.nvim_create_namespace('orgmode.ui.indent'),
   _bufnrs = {},
-  _watcher_running = false,
 }
 
 --- Creates a new instance of VirtualIndent for a given buffer or returns the existing instance if
@@ -31,6 +30,7 @@ function VirtualIndent:new(bufnr)
 
   new._bufnr = bufnr
   new._attached = false
+  new._watcher_running = false
   return new
 end
 
@@ -100,31 +100,31 @@ end
 
 --- Make all VirtualIndent instances react to changes in `org_indent_mode`
 function VirtualIndent:start_watch_org_indent()
-  if not self._watcher_running then
-    self._watcher_running = true
-    dict_watcher.watch_buffer_variable('org_indent_mode', function(indent_mode, _, buf_vars)
-      local vindent = VirtualIndent._bufnrs[buf_vars.org_bufnr]
-      local indent_mode_enabled = indent_mode.new or false
-      ---@diagnostic disable-next-line: invisible
-      if indent_mode_enabled and not vindent._attached then
-        vindent:attach()
-        ---@diagnostic disable-next-line: invisible
-      elseif not indent_mode_enabled and vindent._attached then
-        vindent:detach()
-      end
-    end)
+  if self._watcher_running then
+    return
   end
+  dict_watcher.watch_buffer_variable('org_indent_mode', function(indent_mode, _, buf_vars)
+    local vindent = VirtualIndent._bufnrs[buf_vars.org_bufnr]
+    local indent_mode_enabled = indent_mode.new or false
+    if indent_mode_enabled then
+      return vindent:attach()
+    end
+    return vindent:detach()
+  end)
+  self._watcher_running = true
 end
 
 --- Stops VirtualIndent instances from reacting to changes in `vim.b.org_indent_mode`
 function VirtualIndent:stop_watch_org_indent()
-  self._watcher_running = false
   dict_watcher.unwatch_buffer_variable('org_indent_mode')
+  self._watcher_running = false
 end
 
 --- Enables virtual indentation in registered buffer
 function VirtualIndent:attach()
-  self._attached = true
+  if self._attached then
+    return
+  end
   self:set_indent(0, vim.api.nvim_buf_line_count(self._bufnr) - 1, true)
   self:start_watch_org_indent()
 
@@ -139,12 +139,15 @@ function VirtualIndent:attach()
       end)
     end,
   })
+  self._attached = true
 end
 
 function VirtualIndent:detach()
-  self._attached = false
-  vim.api.nvim_buf_set_var(self._bufnr, 'org_indent_mode', false)
+  if not self._attached then
+    return
+  end
   self:_delete_old_extmarks(0, vim.api.nvim_buf_line_count(self._bufnr) - 1)
+  self._attached = false
 end
 
 return VirtualIndent

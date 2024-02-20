@@ -14,7 +14,7 @@ config:setup_foldlevel()
 if config.org_startup_indented then
   vim.b.org_indent_mode = true
 end
-require('orgmode.org.indent').setup()
+require('orgmode.org.indent').setup_virtual_indent()
 
 vim.b.org_bufnr = vim.api.nvim_get_current_buf()
 vim.bo.modeline = false

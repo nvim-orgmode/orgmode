@@ -313,20 +313,22 @@ local function foldtext()
   return line .. config.org_ellipsis
 end
 
-local function setup()
+local function setup_virtual_indent()
   if not utils.has_version_10() then
     return
   end
 
+  local virtualIndent = VirtualIndent:new()
+
   if config.org_startup_indented then
-    VirtualIndent:new():attach()
-  else
-    VirtualIndent:new():start_watch_org_indent()
+    return virtualIndent:attach()
   end
+
+  return virtualIndent:start_watch_org_indent()
 end
 
 return {
-  setup = setup,
+  setup_virtual_indent = setup_virtual_indent,
   foldexpr = foldexpr,
   indentexpr = indentexpr,
   foldtext = foldtext,
