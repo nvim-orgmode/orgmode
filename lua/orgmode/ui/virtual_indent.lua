@@ -35,13 +35,17 @@ function VirtualIndent:new(bufnr)
 end
 
 function VirtualIndent:_delete_old_extmarks(start_line, end_line)
-  local old_extmarks = vim.api.nvim_buf_get_extmarks(
+  local ok, old_extmarks = pcall(
+    vim.api.nvim_buf_get_extmarks,
     self._bufnr,
     self._ns_id,
     { start_line, 0 },
     { end_line, 0 },
     { type = 'virt_text' }
   )
+  if not ok then
+    old_extmarks = {}
+  end
   for _, ext in ipairs(old_extmarks) do
     vim.api.nvim_buf_del_extmark(self._bufnr, self._ns_id, ext[1])
   end
