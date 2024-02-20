@@ -287,7 +287,6 @@ function Capture:refile_headline_to_destination()
     source_headline = headline,
     destination_file = destination.file,
     destination_headline = destination.headline,
-    template = self._window.template,
   })
 end
 
