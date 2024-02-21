@@ -1248,15 +1248,6 @@ By default, `omnifunc` is provided in `org` files that autocompletes these types
 * Orgfile special keywords (`#+TITLE`, `#+BEGIN_SRC`, `#+ARCHIVE`, etc.)
 * Hyperlinks (`* - headlines`, `# - headlines with CUSTOM_ID property`, `headlines matching title`)
 
-If you use [nvim-compe](https://github.com/hrsh7th/nvim-compe) add this to compe setup:
-```lua
-  require'compe'.setup({
-    source = {
-      orgmode = true
-    }
-  })
-```
-
 For [nvim-cmp](https://github.com/hrsh7th/nvim-cmp), add `orgmode` to list of sources:
 ```lua
 require'cmp'.setup({

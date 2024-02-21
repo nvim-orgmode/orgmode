@@ -133,20 +133,6 @@ EOF
 #### Completion
 
 <details>
-  <summary><a href="https://github.com/hrsh7th/nvim-compe"><b>nvim-compe</b></a></summary>
-  </br>
-
-```lua
-require('compe').setup({
-  source = {
-    orgmode = true
-  }
-})
-```
-
-</details>
-
-<details>
   <summary><a href="https://github.com/hrsh7th/nvim-cmp"><b>nvim-cmp</b></a></summary>
   </br>
 

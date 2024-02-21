@@ -36,7 +36,7 @@ end
 function M.get_current_file_dir()
   local current_file = utils.current_file_path()
   local current_dir = vim.fn.fnamemodify(current_file, ':p:h')
-  return current_dir
+  return current_dir or ''
 end
 
 return M
