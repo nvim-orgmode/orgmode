@@ -31,7 +31,7 @@ vim.opt_local.omnifunc = 'v:lua.orgmode.omnifunc'
 vim.opt_local.commentstring = '# %s'
 
 _G.orgmode.omnifunc = function(findstart, base)
-  return require('orgmode.org.autocompletion.omni').omnifunc(findstart, base)
+  return require('orgmode').completion:omnifunc(findstart, base)
 end
 
 local abbreviations = {

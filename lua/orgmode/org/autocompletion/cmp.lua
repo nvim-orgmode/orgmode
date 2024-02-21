@@ -3,7 +3,7 @@ if not has_cmp then
   return
 end
 
-local Omni = require('orgmode.org.autocompletion.omni')
+local org = require('orgmode')
 
 local Source = {}
 
@@ -25,9 +25,12 @@ function Source:get_trigger_characters(_)
 end
 
 function Source:complete(params, callback)
-  local offset = Omni.find_start() + 1
-  local input = string.sub(params.context.cursor_before_line, offset)
-  local results = Omni.get_completions(input)
+  local offset = org.completion:get_start({ line = params.context.cursor_before_line }) + 1
+  local base = string.sub(params.context.cursor_before_line, offset)
+  local results = org.completion:complete({
+    line = params.context.cursor_before_line,
+    base = base,
+  })
   local items = {}
   for _, item in ipairs(results) do
     table.insert(items, {

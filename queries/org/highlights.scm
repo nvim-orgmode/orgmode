@@ -28,6 +28,7 @@
 (latex_env) @org.latex_env
 (drawer) @org.drawer
 (tag_list) @org.tag
+(directive name: (expr) @_directive_name value: (value) @org.tag (#match? @_directive_name "\\c^filetags$"))
 (plan) @org.plan
 (comment) @org.comment @spell
 (directive) @org.directive

@@ -23,9 +23,9 @@ function Hyperlinks.find_by_filepath(url)
     return {}
   end
   --TODO integrate with orgmode.utils.fs or orgmode.objects.url
-  local file_base_no_start_path = file_base:gsub('^%./', '') .. ''
+  local file_base_no_start_path = vim.pesc(file_base:gsub('^%./', '') .. '')
   local is_relative_path = file_base:match('^%./')
-  local current_file_directory = fs.get_current_file_dir()
+  local current_file_directory = vim.pesc(fs.get_current_file_dir())
   local valid_filenames = {}
   for _, f in ipairs(filenames) do
     if is_relative_path then
@@ -40,10 +40,11 @@ function Hyperlinks.find_by_filepath(url)
     end
   end
 
-  -- Outer checks already filter cases where `ctx.skip_add_prefix` is truthy,
-  -- so no need to check it here
+  local protocol = url:get_protocol()
+  local prefix = protocol and protocol == 'file' and 'file:' or ''
+
   return vim.tbl_map(function(path)
-    return 'file:' .. path
+    return prefix .. path
   end, valid_filenames)
 end
 
@@ -59,26 +60,30 @@ function Hyperlinks.find_by_custom_id_property(url)
   return file:find_headlines_with_property_matching('CUSTOM_ID', custom_id)
 end
 
----@param headlines OrgHeadline[]
----@return string[]
-function Hyperlinks.as_custom_id_anchors(headlines)
-  return vim.tbl_map(function(headline)
-    ---@cast headline OrgHeadline
-    local custom_id = headline:get_property('custom_id')
-    if custom_id then
-      return '#' .. custom_id
-    end
-  end, headlines)
+---@param url OrgUrl
+---@return fun(headlines: OrgHeadline[]): string[]
+function Hyperlinks.as_custom_id_anchors(url)
+  local prefix = url:is_file_custom_id() and url:get_file() .. '::' or ''
+  return function(headlines)
+    return vim.tbl_map(function(headline)
+      ---@cast headline OrgHeadline
+      local custom_id = headline:get_property('custom_id')
+      return ('%s#%s'):format(prefix, custom_id)
+    end, headlines)
+  end
 end
 
----@param headlines OrgHeadline[]
+---@param url OrgUrl
 ---@param omit_prefix? boolean
----@return string[]
-function Hyperlinks.as_headline_anchors(headlines, omit_prefix)
-  return vim.tbl_map(function(headline)
-    local title = headline:get_title()
-    return omit_prefix and title or '*' .. title
-  end, headlines)
+---@return fun(headlines: OrgHeadline[]): string[]
+function Hyperlinks.as_headline_anchors(url, omit_prefix)
+  local prefix = url:is_file_headline() and url:get_file() .. '::' or ''
+  return function(headlines)
+    return vim.tbl_map(function(headline)
+      local title = (omit_prefix and '' or '*') .. headline:get_title()
+      return ('%s%s'):format(prefix, title)
+    end, headlines)
+  end
 end
 
 ---@param url OrgUrl
@@ -101,11 +106,10 @@ end
 ---@return OrgHeadline[]
 function Hyperlinks.find_by_dedicated_target(url)
   local anchor = url and url:get_dedicated_target()
-  if anchor then
-    return org.files:get_current_file():find_headlines_matching_search_term(as_dedicated_anchor_pattern(anchor), true)
-  else
+  if not anchor then
     return {}
   end
+  return org.files:get_current_file():find_headlines_matching_search_term(as_dedicated_anchor_pattern(anchor), true)
 end
 
 ---@param url OrgUrl
@@ -133,7 +137,7 @@ end
 function Hyperlinks.as_dedicated_anchors_or_internal_titles(url)
   return function(headlines)
     local dedicated_anchors = Hyperlinks.as_dedicated_targets(url)(headlines)
-    local fuzzy_titles = Hyperlinks.as_headline_anchors(headlines, true)
+    local fuzzy_titles = Hyperlinks.as_headline_anchors(url, true)(headlines)
     return utils.concat(dedicated_anchors, fuzzy_titles, true)
   end
 end
@@ -151,10 +155,10 @@ function Hyperlinks.find_matching_links(url)
     result = Hyperlinks.find_by_filepath(url)
   elseif url:is_custom_id() then
     result = Hyperlinks.find_by_custom_id_property(url)
-    mapper = Hyperlinks.as_custom_id_anchors
+    mapper = Hyperlinks.as_custom_id_anchors(url)
   elseif url:is_headline() then
     result = Hyperlinks.find_by_title(url)
-    mapper = Hyperlinks.as_headline_anchors
+    mapper = Hyperlinks.as_headline_anchors(url)
   elseif url:is_dedicated_anchor_or_internal_title() then
     result = utils.concat(
       Hyperlinks.find_by_dedicated_target(url),
@@ -199,16 +203,8 @@ function Hyperlinks.autocomplete_links(arg_lead)
   local url = Url.new(arg_lead)
   local result, mapper = Hyperlinks.find_matching_links(url)
 
-  if url:is_file_plain() then
+  if url:is_file_plain() or url:is_custom_id() or url:is_headline() then
     return mapper(result)
-  end
-
-  if url:is_custom_id() or url:is_headline() then
-    local file = get_file_from_url(url)
-    local results = mapper(result)
-    return vim.tbl_map(function(value)
-      return ('file:%s::%s'):format(file.filename, value)
-    end, results)
   end
 
   return vim.tbl_keys(Hyperlinks.stored_links)

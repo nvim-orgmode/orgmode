@@ -3,15 +3,10 @@ local fs = require('orgmode.utils.fs')
 ---@class OrgUrl
 ---@field str string
 local Url = {}
-
-function Url:init(str)
-  self.str = str
-end
+Url.__index = Url
 
 function Url.new(str)
-  local self = setmetatable({}, { __index = Url })
-  self:init(str)
-  return self
+  return setmetatable({ str = str }, Url)
 end
 
 ---@return boolean
@@ -45,11 +40,6 @@ function Url:is_file_custom_id()
 end
 
 ---@return boolean
-function Url:is_file_anchor()
-  return self:get_dedicated_target() and true
-end
-
----@return boolean
 function Url:is_org_link()
   return (self:get_dedicated_target() or self:get_custom_id() or self:get_headline()) and true
 end
@@ -77,7 +67,7 @@ function Url:is_internal_custom_id()
 end
 
 function Url:is_dedicated_anchor_or_internal_title()
-  return self:get_dedicated_target() ~= nil
+  return self:get_dedicated_target()
 end
 
 ---@return string | false
@@ -146,6 +136,11 @@ function Url:get_linenumber()
 end
 
 ---@return string | false
+function Url:get_protocol()
+  return self.str:match('^([%w]+):')
+end
+
+---@return string | false
 function Url:get_filepath()
   return
     -- for backwards compatibility
@@ -159,6 +154,27 @@ function Url:get_filepath()
       or self.str:match('^(%./[^:]+)::')
       or self.str:match('^(/[^:]+)::')
       or self.str:match('^file:([^:]+)$')
+      or self.str:match('^(%.%./[^:]+)$')
+      or self.str:match('^(%./[^:]+)$')
+      or self.str:match('^(/[^:]+)$')
+      or self.str:match('^(%.%./)$')
+      or self.str:match('^(%./)$')
+      or self.str:match('^(/)$')
+end
+
+function Url:get_file()
+  return
+    -- for backwards compatibility
+    self.str:match('^(file:[^:]+) %+%d+')
+      or self.str:match('^(%.%./[^:]+) %+%d+')
+      or self.str:match('^(%./[^:]+) %+%d+')
+      or self.str:match('^(/[^:]+) %+%d+')
+      -- official orgmode convention
+      or self.str:match('^(file:[^:]+)::')
+      or self.str:match('^(%.%./[^:]+)::')
+      or self.str:match('^(%./[^:]+)::')
+      or self.str:match('^(/[^:]+)::')
+      or self.str:match('^(file:[^:]+)$')
       or self.str:match('^(%.%./[^:]+)$')
       or self.str:match('^(%./[^:]+)$')
       or self.str:match('^(/[^:]+)$')
