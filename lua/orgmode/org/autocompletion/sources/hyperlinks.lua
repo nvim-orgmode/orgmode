@@ -1,6 +1,5 @@
 local Hyperlinks = require('orgmode.org.hyperlinks')
-local Url = require('orgmode.objects.url')
-local Link = require('orgmode.objects.link')
+local Link = require('orgmode.org.hyperlinks.link')
 ---@class OrgCompletionHyperlinks:OrgCompletionSource
 ---@field completion OrgCompletion
 ---@field private pattern vim.regex
@@ -27,7 +26,7 @@ end
 
 ---@return string[]
 function OrgCompletionHyperlinks:get_results(context)
-  local link = Link.new(context.base)
+  local link = Link:new(context.base)
   local result, mapper = Hyperlinks.find_matching_links(link.url)
   return mapper(result)
 end

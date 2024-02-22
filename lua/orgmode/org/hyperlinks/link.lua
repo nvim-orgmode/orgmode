@@ -1,5 +1,4 @@
-local Url = require('orgmode.objects.url')
-local utils = require('orgmode.utils')
+local Url = require('orgmode.org.hyperlinks.url')
 
 ---@class OrgLink
 ---@field url OrgUrl
@@ -7,27 +6,22 @@ local utils = require('orgmode.utils')
 local Link = {}
 
 ---@param str string
-function Link:init(str)
+---@return OrgLink
+function Link:new(str)
+  local this = setmetatable({}, { __index = Link })
   local parts = vim.split(str, '][', { plain = true })
-  self.url = Url.new(parts[1] or '')
-  self.desc = parts[2]
-  return self
+  this.url = Url:new(parts[1] or '')
+  this.desc = parts[2]
+  return this
 end
 
 ---@return string
 function Link:to_str()
   if self.desc then
-    return string.format('[[%s][%s]]', self.url.str, self.desc)
+    return string.format('[[%s][%s]]', self.url.url, self.desc)
   else
-    return string.format('[[%s]]', self.url.str)
+    return string.format('[[%s]]', self.url.url)
   end
-end
-
----@param str string
----@return OrgLink
-function Link.new(str)
-  local self = setmetatable({}, { __index = Link })
-  return self:init(str)
 end
 
 ---@param line string
@@ -52,7 +46,7 @@ function Link.at_pos(line, pos)
   if not found_link then
     return nil, nil
   end
-  return Link.new(found_link), position
+  return Link:new(found_link), position
 end
 
 return Link

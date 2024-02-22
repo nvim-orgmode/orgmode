@@ -14,7 +14,7 @@ local Table = require('orgmode.files.elements.table')
 local EventManager = require('orgmode.events')
 local Promise = require('orgmode.utils.promise')
 local events = EventManager.event
-local Link = require('orgmode.objects.link')
+local Link = require('orgmode.org.hyperlinks.link')
 
 ---@class OrgMappings
 ---@field capture OrgCapture
@@ -729,8 +729,8 @@ function OrgMappings:insert_link()
     return
   end
 
-  local selected_link = Link.new(link_location)
-  local desc = selected_link.url:extract_target()
+  local selected_link = Link:new(link_location)
+  local desc = selected_link.url.target.value
   if selected_link.url:is_id() then
     local id_link = ('id:%s'):format(selected_link.url:get_id())
     desc = link_location:gsub('^' .. vim.pesc(id_link) .. '%s+', '')
@@ -826,21 +826,9 @@ function OrgMappings:open_at_point()
   end
 
   -- handle external links (non-org or without org-specific line target)
-  local url = link.url.str
-  if link.url:is_file_plain() then
-    local file_path = link.url:get_filepath()
-    local cmd = file_path and string.format('edit %s', fs.get_real_path(file_path)) or ''
-    vim.cmd(cmd)
-    vim.cmd([[normal! zv]])
-    return
-  elseif link.url:is_file_line_number() then
-    local line_number = link.url:get_linenumber() or 0
-    local file_path = link.url:get_filepath() or utils.current_file_path()
-    local cmd = string.format('edit +%s %s', line_number, fs.get_real_path(file_path))
-    vim.cmd(cmd)
-    return vim.cmd([[normal! zv]])
-  elseif link.url:is_id() then
-    local id = link.url:get_id()
+
+  if link.url:is_id() then
+    local id = link.url:get_id() or ''
     local headlines = self.files:find_headlines_with_property_matching('id', id)
     if #headlines == 0 then
       return utils.echo_warning(string.format('No headline found with id: %s', id))
@@ -850,13 +838,32 @@ function OrgMappings:open_at_point()
     end
     local headline = headlines[1]
     return self:_goto_headline(headline)
-  elseif link.url:is_http_url() then
+  end
+
+  if link.url:is_file_line_number() then
+    local line_number = link.url:get_line_number() or 0
+    local file_path = link.url:get_file() or utils.current_file_path()
+    local cmd = string.format('edit +%s %s', line_number, fs.get_real_path(file_path))
+    vim.cmd(cmd)
+    return vim.cmd([[normal! zv]])
+  end
+
+  if link.url:is_external_url() then
     if not vim.g.loaded_netrwPlugin then
       return utils.echo_warning('Netrw plugin must be loaded in order to open urls.')
     end
-    return vim.fn['netrw#BrowseX'](url, vim.fn['netrw#CheckIfRemote']())
-  elseif not link.url:is_org_link() then
-    utils.echo_warning(string.format('Unsupported link format: %q', url))
+    return vim.fn['netrw#BrowseX'](link.url.url, vim.fn['netrw#CheckIfRemote']())
+  end
+
+  if link.url:is_file_only() then
+    local file_path = link.url:get_file()
+    local cmd = file_path and string.format('edit %s', fs.get_real_path(file_path)) or ''
+    vim.cmd(cmd)
+    vim.cmd([[normal! zv]])
+  end
+
+  if link.url.protocol and not link.url:is_supported_protocol() then
+    utils.echo_warning(string.format('Unsupported link protocol: %q', link.url.protocol))
     return
   end
 

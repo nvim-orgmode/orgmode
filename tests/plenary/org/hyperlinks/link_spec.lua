@@ -1,4 +1,4 @@
-local Link = require('orgmode.objects.link')
+local Link = require('orgmode.org.hyperlinks.link')
 
 describe('Link.at_pos', function()
   ---@param obj any sut
@@ -40,7 +40,7 @@ describe('Link.at_pos', function()
         return
       end
       assert_valid_link_property_at('url', link.url, pos)
-      assert_valid_link_property_at('url', link.url.str, pos, opt and opt.url)
+      assert_valid_link_property_at('url', link.url.url, pos, opt and opt.url)
       if not opt or not opt.desc then
         assert_empty_link_property_at('desc', link.desc, pos)
       elseif opt and opt.desc then
@@ -82,7 +82,6 @@ describe('Link.at_pos', function()
   it('should parse valid [[somefile][Some Description]]', function()
     local line = '[[somefile][Some Description]]'
     assert_link_in_range(line, 1, #line, { url = 'somefile', desc = 'Some Description' })
-    --assert(Link.at_pos(line, 1):to_str() == line)
   end)
   it('should find link at valid positions in "1...5[[u_1][desc_1]]21.[[u_2]]...35[[u_3][desc_2]]51......60"', function()
     local line = '1...5[[u_1][desc_1]]21.[[u_2]]...35[[u_3][desc_2]]51......60'
