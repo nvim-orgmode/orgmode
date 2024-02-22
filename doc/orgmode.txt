@@ -1638,11 +1638,13 @@ The format for links is either `[[LINK]]` or `[[LINK][DESCRIPTION]]`. If a descr
 
 Hyperlink types supported:
 * URL (http://, https://)
-* File (starts with `file:`. Example: `file:/home/user/.config/nvim/init.lua`) Optionally, a line number can be specified
-using the '+' character (Example: `file:/home/user/.config/nvim/init.lua +10`) or a headline within the specified file using '::' (Example: `file:/home/user/org/file.org::*Specific Headline`)
-* Headline title target within the same file (starts with `*`)
-* Headline with `CUSTOM_ID` property within the same file (starts with `#`)
-* Fallback: If file path, opens the file, otherwise, tries to find the headline title.
+* File (starts with `file:`. Example: `file:/home/user/.config/nvim/init.lua`) Optionally, target can be specified:
+  * Headline - It needs to start with `*` (Example: `file:/home/user/org/file.org::*Specific Headline`)
+  * Custom id - It needs to start with `#` (Example: `file:/home/user/org/file.org::#my-custom-id`)
+  * Line number - It needs to be a number (Example: `file:/home/user/org/file.org::235`)
+* Headline title target within the same file (starts with `*`) (Example: `*Specific headline`)
+* Headline with `CUSTOM_ID` property within the same file (starts with `#`) (Example: `#my-custom-id`)
+* Fallback: If file path, opens the file, otherwise, tries to find the headline title in the current file.
 
 --------------------------------------------------------------------------------
 AUTOCOMPLETION                                            *orgmode-autocompletion*
