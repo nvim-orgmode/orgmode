@@ -251,7 +251,7 @@ function Config:setup_mappings(category, buffer)
     vim.b.org_old_cr_mapping = utils.get_keymap({
       mode = 'i',
       lhs = '<CR>',
-      buffer = buffer,
+      buffer = buffer or vim.api.nvim_get_current_buf(),
     })
   end
   if self.opts.mappings.disable_all then

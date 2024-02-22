@@ -196,7 +196,7 @@ function utils.concat(first, second, unique)
 end
 
 ---@class OrgKeymapData
----@field mode string|table
+---@field mode string
 ---@field lhs string
 ---@field buffer integer?
 
