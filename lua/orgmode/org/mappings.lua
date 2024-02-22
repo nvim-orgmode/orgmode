@@ -730,7 +730,7 @@ function OrgMappings:insert_link()
   end
 
   local selected_link = Link:new(link_location)
-  local desc = selected_link.url.target.value
+  local desc = selected_link.url:get_target_value()
   if selected_link.url:is_id() then
     local id_link = ('id:%s'):format(selected_link.url:get_id())
     desc = link_location:gsub('^' .. vim.pesc(id_link) .. '%s+', '')
@@ -852,7 +852,7 @@ function OrgMappings:open_at_point()
     if not vim.g.loaded_netrwPlugin then
       return utils.echo_warning('Netrw plugin must be loaded in order to open urls.')
     end
-    return vim.fn['netrw#BrowseX'](link.url.url, vim.fn['netrw#CheckIfRemote']())
+    return vim.fn['netrw#BrowseX'](link.url:to_string(), vim.fn['netrw#CheckIfRemote']())
   end
 
   if link.url:is_file_only() then
@@ -862,8 +862,8 @@ function OrgMappings:open_at_point()
     vim.cmd([[normal! zv]])
   end
 
-  if link.url.protocol and not link.url:is_supported_protocol() then
-    utils.echo_warning(string.format('Unsupported link protocol: %q', link.url.protocol))
+  if link.url._parse and not link.url:is_supported_protocol() then
+    utils.echo_warning(string.format('Unsupported link protocol: %q', link.url._parse))
     return
   end
 

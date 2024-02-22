@@ -15,8 +15,18 @@ function Url:new(url)
   local this = setmetatable({
     url = url or '',
   }, Url)
-  this:parse()
+  this:_parse()
   return this
+end
+
+---@return string
+function Url:to_string()
+  return self.url
+end
+
+---@return string | number | nil
+function Url:get_target_value()
+  return self.target and self.target.value
 end
 
 ---@return boolean
@@ -55,6 +65,7 @@ function Url:is_id()
   return self.protocol == 'id'
 end
 
+---@return string | nil
 function Url:get_id()
   if not self:is_id() then
     return nil
@@ -72,6 +83,7 @@ function Url:is_file_headline()
   return self:is_file() and self.target and self.target.type == 'headline' or false
 end
 
+---@return boolean
 function Url:is_plain()
   return self.path_type == 'plain'
 end
@@ -134,6 +146,7 @@ function Url:is_file()
   return self.path_type == 'file'
 end
 
+---@return boolean
 function Url:is_file_only()
   return self:is_file() and not self.target
 end
@@ -143,6 +156,7 @@ function Url:is_external_url()
   return self:get_external_url() and true or false
 end
 
+---@return string | nil
 function Url:get_external_url()
   if self.path_type == 'external-url' then
     return self.path
@@ -150,6 +164,7 @@ function Url:get_external_url()
   return nil
 end
 
+---@return boolean
 function Url:is_supported_protocol()
   if not self.protocol then
     return true
@@ -157,13 +172,15 @@ function Url:is_supported_protocol()
   return self.protocol == 'file' or self.protocol == 'id' or self.protocol:match('https?')
 end
 
-function Url:parse()
+---@private
+function Url:_parse()
   local path_and_target = vim.split(self.url, '::', { plain = true })
 
   self:_parse_path_and_protocol(path_and_target[1])
   self:_parse_target(path_and_target[2])
 end
 
+---@private
 ---@param value string
 function Url:_parse_path_and_protocol(value)
   local path_and_protocol = vim.split(value, ':', { plain = true })

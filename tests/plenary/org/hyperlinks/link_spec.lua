@@ -40,7 +40,7 @@ describe('Link.at_pos', function()
         return
       end
       assert_valid_link_property_at('url', link.url, pos)
-      assert_valid_link_property_at('url', link.url.url, pos, opt and opt.url)
+      assert_valid_link_property_at('url', link.url:to_string(), pos, opt and opt.url)
       if not opt or not opt.desc then
         assert_empty_link_property_at('desc', link.desc, pos)
       elseif opt and opt.desc then

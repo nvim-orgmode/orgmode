@@ -18,9 +18,9 @@ end
 ---@return string
 function Link:to_str()
   if self.desc then
-    return string.format('[[%s][%s]]', self.url.url, self.desc)
+    return string.format('[[%s][%s]]', self.url:to_string(), self.desc)
   else
-    return string.format('[[%s]]', self.url.url)
+    return string.format('[[%s]]', self.url:to_string())
   end
 end
 
