@@ -1,6 +1,8 @@
 local TemplateProperties = require('orgmode.capture.template.template_properties')
 local Date = require('orgmode.objects.date')
 local utils = require('orgmode.utils')
+local Calendar = require('orgmode.objects.calendar')
+local Promise = require('orgmode.utils.promise')
 
 local expansions = {
   ['%f'] = function()
@@ -32,15 +34,20 @@ local expansions = {
   end,
 }
 
+---@alias OrgCaptureTemplateDatetree boolean | { time_prompt: boolean, date?: OrgDate }
+
 ---@class OrgCaptureTemplate
----@field description string
----@field template string|string[]
----@field target string?
----@field headline string?
----@field properties OrgCaptureTemplateProperties
----@field subtemplates table<string, OrgCaptureTemplate>
+---@field description? string
+---@field template? string|string[]
+---@field target? string
+---@field datetree? OrgCaptureTemplateDatetree
+---@field headline? string
+---@field properties? OrgCaptureTemplateProperties
+---@field subtemplates? table<string, OrgCaptureTemplate>
 local Template = {}
 
+---@param opts OrgCaptureTemplate
+---@return OrgCaptureTemplate
 function Template:new(opts)
   opts = opts or {}
 
@@ -51,6 +58,7 @@ function Template:new(opts)
     headline = { opts.headline, 'string', true },
     properties = { opts.properties, 'table', true },
     subtemplates = { opts.subtemplates, 'table', true },
+    datetree = { opts.datetree, { 'boolean', 'table' }, true },
   })
 
   local this = {}
@@ -59,6 +67,7 @@ function Template:new(opts)
   this.target = self:_compile(opts.target or '')
   this.headline = opts.headline
   this.properties = TemplateProperties:new(opts.properties)
+  this.datetree = opts.datetree
 
   this.subtemplates = {}
   for key, subtemplate in pairs(opts.subtemplates or {}) do
@@ -89,8 +98,37 @@ function Template:compile()
   if type(content) == 'table' then
     content = table.concat(content, '\n')
   end
-  content = self:_compile(content)
+  content = self:_compile(content or '')
   return vim.split(content, '\n', { plain = true })
+end
+
+function Template:has_input_prompts()
+  return self.datetree and type(self.datetree) == 'table' and self.datetree.time_prompt
+end
+
+function Template:prompt_for_inputs()
+  if not self:has_input_prompts() then
+    return Promise.resolve(true)
+  end
+  return Calendar.new({ date = Date.now() }):open():next(function(date)
+    if date then
+      self.datetree.date = date
+      return true
+    end
+    return false
+  end)
+end
+
+function Template:get_datetree_date()
+  if self:has_input_prompts() then
+    return self.datetree.date
+  end
+  return Date.today()
+end
+
+---@return string
+function Template:get_target()
+  return vim.fn.resolve(vim.fn.fnamemodify(self.target, ':p'))
 end
 
 ---@param lines string[]

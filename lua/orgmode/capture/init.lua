@@ -6,6 +6,7 @@ local Menu = require('orgmode.ui.menu')
 local Range = require('orgmode.files.elements.range')
 local CaptureWindow = require('orgmode.capture.window')
 local Date = require('orgmode.objects.date')
+local Datetree = require('orgmode.capture.template.datetree')
 
 ---@class OrgProcessRefileOpts
 ---@field source_headline OrgHeadline
@@ -18,7 +19,7 @@ local Date = require('orgmode.objects.date')
 ---@field template OrgCaptureTemplate
 ---@field source_file OrgFile
 ---@field source_headline? OrgHeadline
----@field destination_file? OrgFile
+---@field destination_file OrgFile
 ---@field destination_headline? OrgHeadline
 
 ---@class OrgCapture
@@ -54,6 +55,15 @@ function Capture:open_template(template)
       return self:on_refile_close()
     end,
   })
+
+  if template:has_input_prompts() then
+    return template:prompt_for_inputs():next(function(proceed)
+      if not proceed then
+        return utils.echo_info('Canceled.')
+      end
+      return self._window:open()
+    end)
+  end
 
   return self._window:open()
 end
@@ -124,17 +134,23 @@ end
 function Capture:_refile_from_capture_buffer(opts)
   local target_level = 0
   local target_line = -1
+  local destination_file = opts.destination_file
+  local destination_headline = opts.destination_headline
 
-  if opts.destination_headline then
-    target_level = opts.destination_headline:get_level()
-    target_line = opts.destination_headline:get_range().end_line
+  if opts.template.datetree then
+    destination_headline = Datetree:new({ files = self.files }):create(opts.template)
+  end
+
+  if destination_headline then
+    target_level = destination_headline:get_level()
+    target_line = destination_headline:get_range().end_line
   end
 
   local lines = opts.source_file.lines
 
   if opts.source_headline then
     lines = opts.source_headline:get_lines()
-    if opts.destination_headline or opts.source_headline:get_level() > 1 then
+    if destination_headline or opts.source_headline:get_level() > 1 then
       lines = self:_adapt_headline_level(opts.source_headline, target_level, false)
     end
   end
@@ -142,13 +158,13 @@ function Capture:_refile_from_capture_buffer(opts)
   lines = opts.template:apply_properties_to_lines(lines)
 
   self.files
-    :update_file(opts.destination_file.filename, function(file)
+    :update_file(destination_file.filename, function(file)
       local range = self:_get_destination_range_without_empty_lines(Range.from_line(target_line))
       vim.api.nvim_buf_set_lines(file:bufnr(), range.start_line, range.end_line, false, lines)
     end)
     :wait()
 
-  utils.echo_info(('Wrote %s'):format(opts.destination_file.filename))
+  utils.echo_info(('Wrote %s'):format(destination_file.filename))
   self:kill()
   return true
 end
@@ -413,8 +429,7 @@ end
 ---@private
 ---@return OrgProcessCaptureOpts | false
 function Capture:_get_refile_vars()
-  local target = self._window.template.target
-  local file = vim.fn.resolve(vim.fn.fnamemodify(target, ':p'))
+  local file = self._window.template:get_target()
 
   if vim.fn.filereadable(file) == 0 then
     local choice = vim.fn.confirm(('Refile destination %s does not exist. Create now?'):format(file), '&Yes\n&No')

@@ -166,11 +166,11 @@ function Headline:get_logbook()
   return nil
 end
 
----@return OrgDate
+---@return OrgDate | nil
 function Headline:get_closed_date()
-  return vim.tbl_filter(function(date)
+  return utils.find(self:get_all_dates(), function(date)
     return date:is_closed()
-  end, self:get_all_dates())[1]
+  end)
 end
 
 function Headline:get_priority_sort_value()

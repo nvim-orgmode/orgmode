@@ -131,9 +131,13 @@ describe('Refile', function()
   it('to empty file', function()
     local destination_file = helpers.create_file({})
 
-    local capture_lines = { '* foo' }
-    local capture_file = helpers.create_file_instance(capture_lines)
-    local source_headline = capture_file:get_headlines()[1]
+    local capture_lines = {
+      '* bar',
+      '* foo',
+      '* baz',
+    }
+    local capture_file = helpers.create_file(capture_lines)
+    local source_headline = capture_file:get_headlines()[2]
 
     ---@diagnostic disable-next-line: invisible
     org.capture:_refile_from_org_file({
@@ -155,10 +159,14 @@ describe('Refile', function()
       '',
     })
 
-    local capture_lines = { '** baz' }
-    local capture_file = helpers.create_file_instance(capture_lines)
+    local capture_lines = {
+      '* foo',
+      '** baz',
+      '* bar',
+    }
+    local capture_file = helpers.create_file(capture_lines)
     assert(capture_file)
-    local item = capture_file:get_headlines()[1]
+    local item = capture_file:get_headlines()[2]
 
     ---@diagnostic disable-next-line: invisible
     org.capture:_refile_from_org_file({
@@ -207,7 +215,7 @@ describe('Refile', function()
   end)
 end)
 
-describe('Refile with empty lines', function()
+describe('Capture with empty lines', function()
   it('to empty file', function()
     local destination_file = helpers.create_file({})
 

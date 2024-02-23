@@ -598,4 +598,17 @@ function utils.has_version_10()
   return not vim.version.lt({ v.major, v.minor, v.patch }, { 0, 10, 0 })
 end
 
+---@generic EntryType : any
+---@param entries EntryType[]
+---@param check_fn fun(entry: EntryType, index: number): boolean
+---@return EntryType | nil
+function utils.find(entries, check_fn)
+  for i, entry in ipairs(entries) do
+    if check_fn(entry, i) then
+      return entry
+    end
+  end
+  return nil
+end
+
 return utils

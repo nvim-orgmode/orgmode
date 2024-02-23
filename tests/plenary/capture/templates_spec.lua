@@ -1,4 +1,5 @@
 local Template = require('orgmode.capture.template')
+local Date = require('orgmode.objects.date')
 
 describe('Capture template', function()
   it('should compile expression', function()
@@ -21,5 +22,27 @@ describe('Capture template', function()
     }, template:compile())
 
     vim.fn.setreg('+', clip_backup)
+  end)
+
+  it('gets current date for datetree enabled with true', function()
+    local template = Template:new({
+      template = '* %?',
+      datetree = true,
+    })
+
+    assert.are.same(Date.today():to_string(), template:get_datetree_date():to_string())
+  end)
+
+  it('gets a proper date for datetree enabled as time prompt', function()
+    local date = Date.today():subtract({ month = 2 })
+    local template = Template:new({
+      template = '* %?',
+      datetree = {
+        time_prompt = true,
+        date = date,
+      },
+    })
+
+    assert.are.same(date:to_string(), template:get_datetree_date():to_string())
   end)
 end)
