@@ -15,7 +15,6 @@ function Config:new(opts)
   local data = {
     opts = vim.tbl_deep_extend('force', defaults, opts or {}),
     todo_keywords = nil,
-    ts_hl_enabled = nil,
   }
   setmetatable(data, self)
   return data

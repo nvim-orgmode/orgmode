@@ -37,6 +37,7 @@ setmetatable(Org, {
 function Org:new()
   self.initialized = false
   self:setup_autocmds()
+  require('orgmode.config'):setup_ts_predicates()
   return self
 end
 
@@ -142,7 +143,6 @@ function Org.setup(opts)
   Org._check_ts_grammar()
   local config = require('orgmode.config'):extend(opts)
   instance = Org:new()
-  config:setup_ts_predicates()
   vim.defer_fn(function()
     if config.notifications.enabled and #vim.api.nvim_list_uis() > 0 then
       Org.files:load():next(vim.schedule_wrap(function()
