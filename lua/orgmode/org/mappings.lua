@@ -37,7 +37,6 @@ end
 -- TODO:
 -- Support archiving to headline
 function OrgMappings:archive()
-  local headline = self.files:get_closest_headline()
   return self.capture:refile_file_headline_to_archive(self.files:get_closest_headline())
 end
 
@@ -865,8 +864,8 @@ function OrgMappings:open_at_point()
     vim.cmd([[normal! zv]])
   end
 
-  if link.url._parse and not link.url:is_supported_protocol() then
-    utils.echo_warning(string.format('Unsupported link protocol: %q', link.url._parse))
+  if link.url.protocol and not link.url:is_supported_protocol() then
+    utils.echo_warning(string.format('Unsupported link protocol: %q', link.url.protocol))
     return
   end
 
