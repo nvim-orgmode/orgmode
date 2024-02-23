@@ -849,6 +849,9 @@ function OrgMappings:open_at_point()
   end
 
   if link.url:is_external_url() then
+    if vim.ui['open'] then
+      return vim.ui.open(link.url:to_string())
+    end
     if not vim.g.loaded_netrwPlugin then
       return utils.echo_warning('Netrw plugin must be loaded in order to open urls.')
     end
