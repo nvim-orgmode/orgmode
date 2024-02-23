@@ -17,6 +17,7 @@ describe('Menu Items', function()
         description = 'file update',
       },
     })
+    ---@diagnostic disable-next-line: invisible
     local menu_items = Capture:_create_menu_items(templates:get_list())
     assert.are.same(#menu_items, 3)
     assert.are.same(
@@ -41,6 +42,7 @@ describe('Menu Items', function()
         description = 'file bookmark',
       },
     })
+    ---@diagnostic disable-next-line: invisible
     local menu_items = Capture:_create_menu_items(multikey_templates:get_list())
     assert.are.same(#menu_items, 1)
     assert.are.same(
@@ -65,6 +67,7 @@ describe('Menu Items', function()
         description = 'file bookmark',
       },
     })
+    ---@diagnostic disable-next-line: invisible
     local sub_template_items = Capture:_get_subtemplates('k', multikey_templates:get_list())
     local expected = Templates:new({
       b = 'multikey bookmark',
@@ -103,6 +106,7 @@ describe('Menu Items', function()
         },
       },
     })
+    ---@diagnostic disable-next-line: invisible
     local menu_items = Capture:_create_menu_items(multikey_templates:get_list())
     assert.are.same(#menu_items, 1)
     assert.are.same(
@@ -117,6 +121,7 @@ describe('Menu Items', function()
     local templates = Templates:new({
       k = 'Multikey template',
     })
+    ---@diagnostic disable-next-line: invisible
     local menu_item = Capture:_create_menu_items(templates:get_list())
     assert.are.same('Multikey template...', menu_item[1].label)
   end)
@@ -130,8 +135,8 @@ describe('Refile', function()
     local capture_file = helpers.create_file_instance(capture_lines)
     local source_headline = capture_file:get_headlines()[1]
 
-    org.capture:process_refile({
-      source_file = capture_file,
+    ---@diagnostic disable-next-line: invisible
+    org.capture:_refile_from_org_file({
       source_headline = source_headline,
       destination_file = destination_file,
     })
@@ -155,9 +160,9 @@ describe('Refile', function()
     assert(capture_file)
     local item = capture_file:get_headlines()[1]
 
-    org.capture:process_refile({
+    ---@diagnostic disable-next-line: invisible
+    org.capture:_refile_from_org_file({
       destination_file = destination_file,
-      source_file = capture_file,
       source_headline = item,
     })
     vim.cmd('edit' .. vim.fn.fnameescape(destination_file.filename))
@@ -184,10 +189,10 @@ describe('Refile', function()
     assert(capture_file)
     local item = capture_file:get_headlines()[1]
 
-    org.capture:process_refile({
+    ---@diagnostic disable-next-line: invisible
+    org.capture:_refile_from_org_file({
       destination_file = destination_file,
       source_headline = item,
-      source_file = capture_file,
       destination_headline = destination_file:get_headlines()[1],
     })
     vim.cmd('edit' .. vim.fn.fnameescape(destination_file.filename))
@@ -211,7 +216,8 @@ describe('Refile with empty lines', function()
     assert(capture_file)
     local item = capture_file:get_headlines()[1]
 
-    org.capture:process_refile({
+    ---@diagnostic disable-next-line: invisible
+    org.capture:_refile_from_capture_buffer({
       destination_file = destination_file,
       source_file = capture_file,
       source_headline = item,
@@ -243,11 +249,12 @@ describe('Refile with empty lines', function()
     })
 
     local capture_lines = { '** baz' }
-    local capture_file = helpers.create_file_instance(capture_lines)
+    local capture_file = helpers.create_file(capture_lines)
     assert(capture_file)
     local item = capture_file:get_headlines()[1]
 
-    org.capture:process_refile({
+    ---@diagnostic disable-next-line: invisible
+    org.capture:_refile_from_capture_buffer({
       destination_file = destination_file,
       source_file = capture_file,
       source_headline = item,
@@ -286,7 +293,8 @@ describe('Refile with empty lines', function()
     local capture_file = helpers.create_file_instance(capture_lines)
     local item = capture_file:get_headlines()[1]
 
-    org.capture:process_refile({
+    ---@diagnostic disable-next-line: invisible
+    org.capture:_refile_from_capture_buffer({
       destination_file = destination_file,
       source_file = capture_file,
       source_headline = item,

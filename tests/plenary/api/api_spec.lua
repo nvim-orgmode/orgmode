@@ -2,6 +2,7 @@ local helpers = require('tests.plenary.helpers')
 local api = require('orgmode.api')
 local Date = require('orgmode.objects.date')
 local OrgId = require('orgmode.org.id')
+local orgmode = require('orgmode')
 
 describe('Api', function()
   ---@return OrgApiFile
@@ -322,73 +323,154 @@ describe('Api', function()
     assert.is.Nil(closest_headline)
   end)
 
-  it('should refile a headline to another file', function()
-    local destination_file = helpers.create_agenda_file({
-      '* TODO Test orgmode',
-      '  SCHEDULED: <2021-07-21 Wed 22:02>',
-      '** TODO Refiled here',
-      '   DEADLINE: <2021-07-21 Wed 22:02>',
-      '* TODO Some task',
-    })
+  describe('Refile', function()
+    describe('from org file', function()
+      it('should refile a headline to another file', function()
+        local destination_file = helpers.create_agenda_file({
+          '* TODO Test orgmode',
+          '  SCHEDULED: <2021-07-21 Wed 22:02>',
+          '** TODO Refiled here',
+          '   DEADLINE: <2021-07-21 Wed 22:02>',
+          '* TODO Some task',
+        })
 
-    helpers.create_agenda_file({
-      '* TODO Test orgmode',
-      '  SCHEDULED: <2021-07-21 Wed 22:02>',
-      '** TODO Second level :NESTEDTAG:',
-      '   DEADLINE: <2021-07-21 Wed 22:02>',
-      '* TODO Some task',
-    })
+        local source_file = helpers.create_agenda_file({
+          '* TODO Test orgmode',
+          '  SCHEDULED: <2021-07-21 Wed 22:02>',
+          '** TODO Second level :NESTEDTAG:',
+          '   DEADLINE: <2021-07-21 Wed 22:02>',
+          '* TODO Some task',
+        })
 
-    api.refile({
-      source = api.current().headlines[2],
-      destination = api.load(destination_file.filename),
-    })
+        api.refile({
+          source = api.current().headlines[2],
+          destination = api.load(destination_file.filename),
+        })
 
-    vim.cmd('e' .. destination_file.filename)
+        assert.are.same(vim.api.nvim_buf_get_name(0), source_file.filename)
+        vim.cmd('e' .. destination_file.filename)
 
-    assert.are.same({
-      '* TODO Test orgmode',
-      '  SCHEDULED: <2021-07-21 Wed 22:02>',
-      '** TODO Refiled here',
-      '   DEADLINE: <2021-07-21 Wed 22:02>',
-      '* TODO Some task',
-      '* TODO Second level :NESTEDTAG:',
-      '  DEADLINE: <2021-07-21 Wed 22:02>',
-    }, vim.api.nvim_buf_get_lines(0, 0, -1, false))
-  end)
+        assert.are.same({
+          '* TODO Test orgmode',
+          '  SCHEDULED: <2021-07-21 Wed 22:02>',
+          '** TODO Refiled here',
+          '   DEADLINE: <2021-07-21 Wed 22:02>',
+          '* TODO Some task',
+          '* TODO Second level :NESTEDTAG:',
+          '  DEADLINE: <2021-07-21 Wed 22:02>',
+        }, vim.api.nvim_buf_get_lines(0, 0, -1, false))
+      end)
 
-  it('should refile a headline to another headline', function()
-    local destination_file = helpers.create_agenda_file({
-      '* TODO Test orgmode',
-      '  SCHEDULED: <2021-07-21 Wed 22:02>',
-      '** TODO Refiled here',
-      '   DEADLINE: <2021-07-21 Wed 22:02>',
-      '* TODO Some task',
-    })
+      it('should refile a headline to another headline', function()
+        local destination_file = helpers.create_agenda_file({
+          '* TODO Test orgmode',
+          '  SCHEDULED: <2021-07-21 Wed 22:02>',
+          '** TODO Refiled here',
+          '   DEADLINE: <2021-07-21 Wed 22:02>',
+          '* TODO Some task',
+        })
 
-    local source_file = helpers.create_agenda_file({
-      '* TODO Test orgmode',
-      '  SCHEDULED: <2021-07-21 Wed 22:02>',
-      '** TODO Second level :NESTEDTAG:',
-      '   DEADLINE: <2021-07-21 Wed 22:02>',
-      '* TODO Some task',
-    })
+        local source_file = helpers.create_agenda_file({
+          '* TODO Test orgmode',
+          '  SCHEDULED: <2021-07-21 Wed 22:02>',
+          '** TODO Second level :NESTEDTAG:',
+          '   DEADLINE: <2021-07-21 Wed 22:02>',
+          '* TODO Some task',
+        })
 
-    api.refile({
-      source = api.current().headlines[2],
-      destination = api.load(destination_file.filename).headlines[2],
-    })
+        assert.are.same(vim.api.nvim_buf_get_name(0), source_file.filename)
 
-    vim.cmd('e' .. destination_file.filename)
+        api.refile({
+          source = api.current().headlines[2],
+          destination = api.load(destination_file.filename).headlines[2],
+        })
 
-    assert.are.same({
-      '* TODO Test orgmode',
-      '  SCHEDULED: <2021-07-21 Wed 22:02>',
-      '** TODO Refiled here',
-      '   DEADLINE: <2021-07-21 Wed 22:02>',
-      '*** TODO Second level :NESTEDTAG:',
-      '    DEADLINE: <2021-07-21 Wed 22:02>',
-      '* TODO Some task',
-    }, vim.api.nvim_buf_get_lines(0, 0, -1, false))
+        vim.cmd('e' .. destination_file.filename)
+
+        assert.are.same({
+          '* TODO Test orgmode',
+          '  SCHEDULED: <2021-07-21 Wed 22:02>',
+          '** TODO Refiled here',
+          '   DEADLINE: <2021-07-21 Wed 22:02>',
+          '*** TODO Second level :NESTEDTAG:',
+          '    DEADLINE: <2021-07-21 Wed 22:02>',
+          '* TODO Some task',
+        }, vim.api.nvim_buf_get_lines(0, 0, -1, false))
+      end)
+    end)
+
+    describe('from org capture buffer', function()
+      it('should refile a headline to another file', function()
+        local destination_file = helpers.create_agenda_file({
+          '* TODO Test orgmode',
+          '  SCHEDULED: <2021-07-21 Wed 22:02>',
+          '** TODO Refiled here',
+          '   DEADLINE: <2021-07-21 Wed 22:02>',
+          '* TODO Some task',
+        })
+
+        orgmode.capture:open_template_by_shortcut('t')
+        local source_file = vim.api.nvim_buf_get_name(0)
+        vim.api.nvim_buf_set_lines(0, 0, -1, false, {
+          '* TODO Second level :NESTEDTAG:',
+          '  DEADLINE: <2021-07-21 Wed 22:02>',
+        })
+
+        api.refile({
+          source = api.current().headlines[1],
+          destination = api.load(destination_file.filename),
+        })
+
+        assert.are.Not.same(vim.api.nvim_buf_get_name(0), source_file)
+
+        vim.cmd('e' .. destination_file.filename)
+
+        assert.are.same({
+          '* TODO Test orgmode',
+          '  SCHEDULED: <2021-07-21 Wed 22:02>',
+          '** TODO Refiled here',
+          '   DEADLINE: <2021-07-21 Wed 22:02>',
+          '* TODO Some task',
+          '* TODO Second level :NESTEDTAG:',
+          '  DEADLINE: <2021-07-21 Wed 22:02>',
+        }, vim.api.nvim_buf_get_lines(0, 0, -1, false))
+      end)
+
+      it('should refile a headline to another headline', function()
+        local destination_file = helpers.create_agenda_file({
+          '* TODO Test orgmode',
+          '  SCHEDULED: <2021-07-21 Wed 22:02>',
+          '** TODO Refiled here',
+          '   DEADLINE: <2021-07-21 Wed 22:02>',
+          '* TODO Some task',
+        })
+
+        orgmode.capture:open_template_by_shortcut('t')
+        local source_file = vim.api.nvim_buf_get_name(0)
+        vim.api.nvim_buf_set_lines(0, 0, -1, false, {
+          '* TODO Second level :NESTEDTAG:',
+          '  DEADLINE: <2021-07-21 Wed 22:02>',
+        })
+
+        api.refile({
+          source = api.current().headlines[1],
+          destination = api.load(destination_file.filename).headlines[2],
+        })
+
+        assert.are.Not.same(vim.api.nvim_buf_get_name(0), source_file)
+
+        vim.cmd('e' .. destination_file.filename)
+
+        assert.are.same({
+          '* TODO Test orgmode',
+          '  SCHEDULED: <2021-07-21 Wed 22:02>',
+          '** TODO Refiled here',
+          '   DEADLINE: <2021-07-21 Wed 22:02>',
+          '*** TODO Second level :NESTEDTAG:',
+          '    DEADLINE: <2021-07-21 Wed 22:02>',
+          '* TODO Some task',
+        }, vim.api.nvim_buf_get_lines(0, 0, -1, false))
+      end)
+    end)
   end)
 end)

@@ -55,7 +55,7 @@ function AgendaItem:new(headline_date, headline, date, index)
   return opts
 end
 
----@param headline Section
+---@param headline OrgHeadline
 function AgendaItem:set_headline(headline)
   self.headline = headline
   if self.is_valid then

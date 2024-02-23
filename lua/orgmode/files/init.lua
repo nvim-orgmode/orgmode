@@ -235,7 +235,7 @@ function OrgFiles:find_headlines_matching_search_term(term, no_escape, search_ex
 end
 
 ---@param filename string
----@param action fun(...:any):any
+---@param action fun(...:OrgFile):any
 function OrgFiles:update_file(filename, action)
   local file = self:load_file_sync(filename)
   if not file then

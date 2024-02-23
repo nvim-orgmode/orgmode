@@ -19,9 +19,9 @@ describe('Refile mappings', function()
     })
 
     local item = source_file:get_closest_headline()
-    org.capture:process_refile({
+    ---@diagnostic disable-next-line: invisible
+    org.capture:_refile_from_org_file({
       destination_file = destination_file,
-      source_file = source_file,
       source_headline = item,
       destination_headline = destination_file:get_headlines()[3],
     })
@@ -48,9 +48,9 @@ describe('Refile mappings', function()
     })
 
     local item = source_file:get_closest_headline()
-    org.capture:process_refile({
+    ---@diagnostic disable-next-line: invisible
+    org.capture:_refile_from_org_file({
       destination_file = destination_file,
-      source_file = source_file,
       source_headline = item,
       destination_headline = destination_file:get_headlines()[1],
     })
@@ -77,9 +77,9 @@ describe('Refile mappings', function()
     })
 
     local item = source_file:get_closest_headline()
-    org.capture:process_refile({
+    ---@diagnostic disable-next-line: invisible
+    org.capture:_refile_from_org_file({
       destination_file = destination_file,
-      source_file = source_file,
       source_headline = item,
       destination_headline = destination_file:get_headlines()[1],
     })

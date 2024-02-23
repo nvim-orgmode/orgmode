@@ -43,8 +43,8 @@ function AgendaFilter:matches(headline)
   local tag_cat_match_empty = #self.tags == 0 and #self.categories == 0
 
   if not term_match then
-    local rgx = vim.regex(self.term)
-    term_match = rgx:match_str(headline:get_title())
+    local rgx = vim.regex(self.term) --[[@as vim.regex]]
+    term_match = rgx:match_str(headline:get_title()) and true or false
   end
 
   if tag_cat_match_empty then

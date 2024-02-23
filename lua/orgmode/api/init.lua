@@ -84,15 +84,16 @@ function OrgApi.refile(opts)
   end
 
   local source_bufnr = vim.fn.bufnr(opts.source.file.filename) or -1
+  local is_capture = source_bufnr > -1 and vim.b[source_bufnr].org_capture
 
-  if orgmode.capture._window then
+  if is_capture and orgmode.capture._window then
     refile_opts.template = orgmode.capture._window.template
   end
 
-  orgmode.capture:process_refile(refile_opts)
-
-  if source_bufnr > -1 and vim.b[source_bufnr].org_capture then
-    orgmode.capture:kill()
+  if is_capture then
+    orgmode.capture:_refile_from_capture_buffer(refile_opts)
+  else
+    orgmode.capture:_refile_from_org_file(refile_opts)
   end
 
   return true
