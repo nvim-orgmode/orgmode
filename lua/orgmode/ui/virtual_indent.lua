@@ -52,6 +52,11 @@ function VirtualIndent:_delete_old_extmarks(start_line, end_line)
 end
 
 function VirtualIndent:_get_indent_size(line)
+  local line_content = vim.api.nvim_buf_get_lines(self._bufnr, line, line + 1, false)[1] or ''
+  if line_content == '' then
+    return 0
+  end
+
   local headline = tree_utils.closest_headline_node({ line + 1, 1 })
 
   if headline then
