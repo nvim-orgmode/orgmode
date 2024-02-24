@@ -488,6 +488,8 @@ Templates have the following fields:
   * `template` (`string|string[]`) — body of the template that will be used when creating capture
   * `target` (`string?`) — name of the file to which the capture content will be added. If the target is not specified, the content will be added to the [`org_default_notes_file`](#orgdefaultnotesfile) file
   * `headline` (`string?`) — title of the headline after which the capture content will be added. If no headline is specified, the content will be appended to the end of the file
+  * `datetree (boolean | { time_prompt: boolean })` — Create a [date tree](https://orgmode.org/manual/Template-elements.html#FOOT84) with current day in the target file and put the capture content there.
+    When `time_prompt = true`, open up a date picker to select a date before opening up a capture buffer.
   * `properties` (`table?`):
     * `empty_lines` (`table|number?`) — if the value is a number, then empty lines are added before and after the content. If the value is a table, then the following fields are expected:
       * `before` (`integer?`) — add empty lines to the beginning of the content

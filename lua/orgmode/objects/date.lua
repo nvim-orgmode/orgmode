@@ -1,5 +1,6 @@
 -- TODO
 -- Support diary format and format without short date name
+---@type table<string, OrgDateSpan>
 local spans = { d = 'day', m = 'month', y = 'year', h = 'hour', w = 'week', M = 'min' }
 local config = require('orgmode.config')
 local utils = require('orgmode.utils')
@@ -7,6 +8,8 @@ local Range = require('orgmode.files.elements.range')
 local pattern = '([<%[])(%d%d%d%d%-%d?%d%-%d%d[^>%]]*)([>%]])'
 local date_format = '%Y-%m-%d'
 local time_format = '%H:%M'
+
+---@alias OrgDateSpan 'minute' | 'hour' | 'day' | 'week' | 'month' | 'year'
 
 ---@class OrgDate
 ---@field type string
@@ -184,7 +187,8 @@ end
 ---@param data? table
 ---@return OrgDate
 local function today(data)
-  local opts = vim.tbl_deep_extend('force', os.date('*t', os.time()), data or {})
+  local date = os.date('*t', os.time()) --[[@as osdate]]
+  local opts = vim.tbl_deep_extend('force', date, data or {})
   opts.date_only = true
   return Date:new(opts)
 end
@@ -198,7 +202,8 @@ end
 ---@param data? table
 ---@return OrgDate
 local function now(data)
-  local opts = vim.tbl_deep_extend('force', os.date('*t', os.time()), data or {})
+  local date = os.date('*t', os.time()) --[[@as osdate]]
+  local opts = vim.tbl_deep_extend('force', date, data or {})
   return Date:new(opts)
 end
 
@@ -403,7 +408,7 @@ function Date:without_adjustments()
   return self:clone({ adjustments = {} })
 end
 
----@param span string
+---@param span OrgDateSpan
 ---@return OrgDate
 function Date:start_of(span)
   if #span == 1 then
@@ -651,7 +656,7 @@ end
 ---@param format string
 ---@return string
 function Date:format(format)
-  return os.date(format, self.timestamp)
+  return tostring(os.date(format, self.timestamp))
 end
 
 ---@param from OrgDate
@@ -956,10 +961,23 @@ local function is_date_instance(value)
   return getmetatable(value) == Date
 end
 
+---@param opts { year: number, month?: number, day?: number, hour?: number, min?: number, sec?: number }
+---@return OrgDate
+local function from_table(opts)
+  return Date:from_time_table({
+    year = opts.year,
+    month = opts.month or 1,
+    day = opts.day or 1,
+    hour = opts.hour or 0,
+    min = opts.min or 0,
+    sec = opts.sec or 0,
+  })
+end
 return {
   parse_parts = parse_parts,
   from_org_date = from_org_date,
   from_string = from_string,
+  from_table = from_table,
   now = now,
   today = today,
   tomorrow = tomorrow,

@@ -138,6 +138,9 @@ function VirtualIndent:attach()
         self:set_indent(start_line, end_line)
       end)
     end,
+    on_reload = function()
+      self:set_indent(0, vim.api.nvim_buf_line_count(self._bufnr) - 1, true)
+    end,
   })
   self._attached = true
 end

@@ -281,7 +281,7 @@ function OrgFiles:_files()
   local all_files = vim.tbl_map(function(file)
     return vim.tbl_map(function(path)
       return vim.fn.resolve(path)
-    end, vim.fn.glob(vim.fn.fnamemodify(file, ':p'), 0, 1))
+    end, vim.fn.glob(vim.fn.fnamemodify(file, ':p'), false, true))
   end, files)
 
   all_files = utils.concat(vim.tbl_flatten(all_files), all_filenames, true)

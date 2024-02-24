@@ -170,6 +170,18 @@ function OrgFile:get_headlines()
   end, matches)
 end
 
+memoize('get_top_level_headlines')
+---@return OrgHeadline[]
+function OrgFile:get_top_level_headlines()
+  if self:is_archive_file() then
+    return {}
+  end
+  local matches = self:get_ts_matches('(document (section (headline) @headline))')
+  return vim.tbl_map(function(match)
+    return Headline:new(match.headline.node, self)
+  end, matches)
+end
+
 memoize('get_headlines_including_archived')
 ---@return OrgHeadline[]
 function OrgFile:get_headlines_including_archived()
@@ -181,8 +193,9 @@ end
 
 ---@param title string
 ---@param exact? boolean
+---@param search_from_end? boolean
 ---@return OrgHeadline[]
-function OrgFile:find_headlines_by_title(title, exact)
+function OrgFile:find_headlines_by_title(title, exact, search_from_end)
   return vim.tbl_filter(function(item)
     local pattern = '^' .. vim.pesc(title:lower())
     if exact then
@@ -195,7 +208,9 @@ end
 ---@param title string
 ---@return OrgHeadline | nil
 function OrgFile:find_headline_by_title(title)
-  return self:find_headlines_by_title(title, true)[1]
+  return utils.find(self:get_headlines(), function(item)
+    return item:get_title():lower() == title:lower()
+  end)
 end
 
 ---@return OrgHeadline[]
