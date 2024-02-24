@@ -4,6 +4,7 @@ local ts_utils = require('orgmode.utils.treesitter')
 local Headline = require('orgmode.files.headline')
 local ts = vim.treesitter
 local config = require('orgmode.config')
+local Block = require('orgmode.files.elements.block')
 
 ---@class OrgFileMetadata
 ---@field mtime number
@@ -32,6 +33,7 @@ end)
 ---@field bufnr? number
 ---Constructor function, should not be used directly
 ---@param opts OrgFileOpts
+---@return OrgFile
 function OrgFile:new(opts)
   local stat = vim.loop.fs_stat(opts.filename)
   local data = {
@@ -56,7 +58,7 @@ function OrgFile.load(filename)
   end
   local bufnr = vim.fn.bufnr(filename) or -1
 
-  if bufnr > -1 and vim.fn.bufloaded(bufnr) == 1 then
+  if bufnr > -1 and vim.api.nvim_buf_is_loaded(bufnr) then
     return Promise.resolve(OrgFile:new({
       filename = filename,
       lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false),
@@ -193,9 +195,8 @@ end
 
 ---@param title string
 ---@param exact? boolean
----@param search_from_end? boolean
 ---@return OrgHeadline[]
-function OrgFile:find_headlines_by_title(title, exact, search_from_end)
+function OrgFile:find_headlines_by_title(title, exact)
   return vim.tbl_filter(function(item)
     local pattern = '^' .. vim.pesc(title:lower())
     if exact then
@@ -245,7 +246,7 @@ function OrgFile:apply_search(search, todo_only)
 
     return search:check({
       props = vim.tbl_extend('keep', {}, properties, {
-        category = item.get_category,
+        category = item:get_category(),
         deadline = deadline and deadline:to_wrapped_string(true),
         scheduled = scheduled and scheduled:to_wrapped_string(true),
         closed = closed and closed:to_wrapped_string(false),
@@ -364,22 +365,31 @@ function OrgFile:get_node_at_cursor(cursor)
 end
 
 ---@param node? TSNode
+---@param range? number[]
 ---@return string
-function OrgFile:get_node_text(node)
+function OrgFile:get_node_text(node, range)
   if not node then
     return ''
+  end
+  if range then
+    return ts.get_node_text(node, self:_get_source(), {
+      metadata = {
+        range = range,
+      },
+    })
   end
   return ts.get_node_text(node, self:_get_source())
 end
 
 ---@param node? TSNode
+---@param range? number[]
 ---@return string[]
-function OrgFile:get_node_text_list(node)
-  local node_text = self:get_node_text(node)
+function OrgFile:get_node_text_list(node, range)
+  local node_text = self:get_node_text(node, range)
   if node_text == '' then
     return {}
   end
-  return vim.split(self:get_node_text(node), '\n', { plain = true })
+  return vim.split(self:get_node_text(node, range), '\n', { plain = true })
 end
 
 ---@param node? TSNode
@@ -433,7 +443,7 @@ function OrgFile:bufnr()
   local bufnr = vim.fn.bufnr(self.filename) or -1
   -- Do not consider unloaded buffers as valid
   -- Treesitter is not working in them
-  if bufnr > -1 and vim.fn.bufloaded(bufnr) > 0 then
+  if bufnr > -1 and vim.api.nvim_buf_is_loaded(bufnr) then
     return bufnr
   end
   return -1
@@ -444,6 +454,64 @@ memoize('get_filetags')
 --- @return string[]
 function OrgFile:get_filetags()
   return utils.parse_tags_string(self:_get_directive('filetags'))
+end
+
+memoize('get_blocks')
+--- @return OrgBlock[]
+function OrgFile:get_blocks()
+  local matches = self:get_ts_matches('(block) @block')
+  return vim.tbl_map(function(match)
+    return Block:new(match.block.node, self)
+  end, matches)
+end
+
+function OrgFile:get_header_args()
+  local header_args_prop = self:get_property('header-args')
+  if not header_args_prop then
+    return vim.tbl_extend('force', {}, config.org_babel_default_header_args)
+  end
+  local header_args = config:parse_header_args(header_args_prop)
+  return vim.tbl_extend('force', config.org_babel_default_header_args, header_args)
+end
+
+memoize('get_property')
+--- @param name string
+--- @return string | nil
+function OrgFile:get_property(name)
+  local properties = self:get_properties()
+  return properties[name:lower()]
+end
+
+memoize('get_properties')
+---@return table<string, string>
+function OrgFile:get_properties()
+  self:parse(true)
+  local properties = {}
+  local directives_body = self.root:field('body')[1]
+  if not directives_body then
+    return properties
+  end
+  local directives = directives_body:field('directive')
+  if not directives or #directives == 0 then
+    return properties
+  end
+
+  for _, directive in ipairs(directives) do
+    local name = directive:field('name')[1]
+    local value = directive:field('value')[1]
+
+    if name and value then
+      local name_text = self:get_node_text(name)
+      if name_text:lower() == 'property' then
+        local value_items = vim.split(self:get_node_text(value), '%s+')
+        if #value_items > 1 then
+          properties[value_items[1]:lower()] = table.concat({ unpack(value_items, 2) }, ' ')
+        end
+      end
+    end
+  end
+
+  return properties
 end
 
 memoize('get_category')

@@ -621,4 +621,22 @@ function utils.find(entries, check_fn)
   return nil
 end
 
+function utils.detect_filetype(name)
+  local map = {
+    ['emacs-lisp'] = 'lisp',
+    ['js'] = 'javascript',
+    ['ts'] = 'typescript',
+    ['md'] = 'markdown',
+  }
+  local filename = '__org__detect_filetype__.' .. (map[name] or name)
+  local ft = vim.filetype.match({ filename = filename })
+  if ft then
+    return ft
+  end
+  if map[name] then
+    return map[name]
+  end
+  return nil
+end
+
 return utils

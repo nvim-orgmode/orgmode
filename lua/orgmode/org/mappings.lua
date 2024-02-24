@@ -15,6 +15,7 @@ local EventManager = require('orgmode.events')
 local Promise = require('orgmode.utils.promise')
 local events = EventManager.event
 local Link = require('orgmode.org.hyperlinks.link')
+local Babel = require('orgmode.babel')
 
 ---@class OrgMappings
 ---@field capture OrgCapture
@@ -151,6 +152,10 @@ function OrgMappings:global_cycle()
   utils.echo_info(self.global_cycle_mode)
   vim.wo.foldlevel = 1
   return vim.cmd([[silent! norm!zx]])
+end
+
+function OrgMappings:org_babel_tangle()
+  return Babel.tangle(self.files:get_current_file())
 end
 
 function OrgMappings:toggle_checkbox()

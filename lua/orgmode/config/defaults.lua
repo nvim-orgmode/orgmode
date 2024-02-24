@@ -52,6 +52,10 @@ local DefaultConfig = {
   org_id_method = 'uuid',
   org_id_prefix = nil,
   org_id_link_to_org_use_id = false,
+  org_babel_default_header_args = {
+    [':tangle'] = 'no',
+    [':noweb'] = 'no',
+  },
   win_split_mode = 'horizontal',
   win_border = 'single',
   notifications = {
@@ -163,6 +167,7 @@ local DefaultConfig = {
       org_clock_goto = '<prefix>xj',
       org_set_effort = '<prefix>xe',
       org_show_help = 'g?',
+      org_babel_tangle = '<prefix>bt',
     },
     edit_src = {
       org_edit_src_abort = '<prefix>k',

@@ -367,15 +367,7 @@ function Config:setup_ts_predicates()
     if not text or vim.trim(text) == '' then
       return
     end
-
-    local map = {
-      ['emacs-lisp'] = 'lisp',
-      ['js'] = 'javascript',
-      ['ts'] = 'typescript',
-      ['md'] = 'markdown',
-    }
-
-    metadata['injection.language'] = map[text] or text
+    metadata['injection.language'] = utils.detect_filetype(text)
   end, true)
 end
 
@@ -424,6 +416,29 @@ function Config:hide_leading_stars(bufnr)
   end
 
   return false
+end
+
+---@param args string
+---@return table<string, string[]>
+function Config:parse_header_args(args)
+  local results = {}
+  local current_argument = nil
+  local list = vim.split(args, '%s+')
+  for _, param in ipairs(list) do
+    local is_header_argument = param:sub(1, 1) == ':'
+    if is_header_argument then
+      results[param:lower()] = {}
+      current_argument = param:lower()
+    elseif current_argument then
+      table.insert(results[current_argument], param)
+    end
+  end
+
+  for name, value in pairs(results) do
+    results[name] = table.concat(value, ' ')
+  end
+
+  return results
 end
 
 ---@type OrgConfig

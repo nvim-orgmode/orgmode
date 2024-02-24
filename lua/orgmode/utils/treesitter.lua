@@ -1,5 +1,5 @@
 local M = {}
----@type table<string, Query>
+---@type table<string, vim.treesitter.Query>
 local query_cache = {}
 
 -- Reload treesitter highlighter without triggering FileType autocommands that include reloading entire file
@@ -81,7 +81,7 @@ function M.get_named_children(node)
   return nodes
 end
 
----@return Query
+---@return vim.treesitter.Query
 function M.get_query(query)
   local ts_query = query_cache[query]
   if not ts_query then
