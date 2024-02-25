@@ -304,7 +304,8 @@ function Headline:get_todo()
   local keywords_info = todo_keywords.KEYS
 
   -- A valid keyword can only be the first child
-  local todo_node = self:_get_child_node('item'):named_child(0)
+  local first_item_node = self:_get_child_node('item')
+  local todo_node = first_item_node and first_item_node:named_child(0)
   if not todo_node then
     return nil, nil, nil
   end

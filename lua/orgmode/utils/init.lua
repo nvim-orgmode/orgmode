@@ -79,6 +79,16 @@ function utils.writefile(file, data)
   end)
 end
 
+function utils.system_notification(message)
+  if vim.fn.executable('notify-send') == 1 then
+    vim.loop.spawn('notify-send', { args = { message } })
+  end
+
+  if vim.fn.executable('terminal-notifier') == 1 then
+    vim.loop.spawn('terminal-notifier', { args = { '-message', message } })
+  end
+end
+
 function utils.open(target)
   if vim.fn.executable('xdg-open') == 1 then
     return vim.fn.system(string.format('xdg-open %s', target))

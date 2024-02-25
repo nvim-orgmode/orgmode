@@ -264,18 +264,31 @@ end
 --- @return any
 function Promise.wait(self, timeout)
   local is_done = false
+  local has_error = false
   local result = nil
 
-  self:next(function(...)
-    result = PackedValue.new(...)
-    is_done = true
-  end)
+  self
+    :next(function(...)
+      result = PackedValue.new(...)
+      is_done = true
+    end)
+    :catch(function(...)
+      has_error = true
+      result = PackedValue.new(...)
+      is_done = true
+    end)
 
   vim.wait(timeout or 5000, function()
     return is_done
   end, 1)
 
-  return result and result:unpack()
+  local value = result and result:unpack()
+
+  if has_error then
+    return error(value)
+  end
+
+  return value
 end
 
 --- Equivalents to JavaScript's Promise.all.

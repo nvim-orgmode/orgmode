@@ -208,18 +208,23 @@ function Org.action(cmd, opts)
 end
 
 function Org.cron(opts)
-  local config = require('orgmode.config'):extend(opts or {})
-  if not config.notifications.cron_enabled then
-    return vim.cmd([[qa!]])
-  end
-  Org.files:load():next(vim.schedule_wrap(function()
-    ---@diagnostic disable-next-line: inject-field
+  local ok, result = pcall(function()
+    local config = require('orgmode.config'):extend(opts or {})
+    if not config.notifications.cron_enabled then
+      return vim.cmd([[qa!]])
+    end
+    Org.files:load_sync(true, 20000)
     instance.notifications = require('orgmode.notifications')
       :new({
         files = Org.files,
       })
       :cron()
-  end))
+  end)
+
+  if not ok then
+    require('orgmode.utils').system_notification('Orgmode failed to run cron: ' .. tostring(result))
+    return vim.cmd([[qa!]])
+  end
 end
 
 function Org.instance()
