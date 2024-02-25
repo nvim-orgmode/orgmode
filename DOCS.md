@@ -25,7 +25,8 @@
 10. [Advanced search](#advanced-search)
 11. [Notifications (experimental)](#notifications-experimental)
 12. [Clocking](#clocking)
-13. [Changelog](#changelog)
+13. [Extract source code (tangle)](#extract-source-code-tangle)
+14. [Changelog](#changelog)
 
 ## Getting started with Orgmode
 To get a basic idea how Orgmode works, look at this screencast from [@dhruvasagar](https://github.com/dhruvasagar)
@@ -414,6 +415,11 @@ Prefix added to the generated id when [org_id_method](#org_id_method) is set to 
 *type*: `boolean`<br />
 *default value*: `false`<br />
 If `true`, generate ID with the Org ID module and append it to the headline as property. More info on [org_store_link](#org_store_link)
+
+#### **org_babel_default_header_args**
+*type*: `table<string, string>`<br />
+*default value*: `{ [':tangle'] = 'no', [':noweb']  = no }`<br />
+Default header args for extracting source code. See [Extract source code (tangle)](#extract-source-code-tangle) for more details.
 
 #### **calendar_week_start_day**
 *type*: `number`<br />
@@ -1113,6 +1119,9 @@ See [Clocking](#clocking) for more details.
 *mapped to*: `<Leader>oxe`<br />
 Set effort estimate property on for current headline.<br />
 See [Clocking](#clocking) for more details.
+#### **org_babel_tangle**
+*mapped to*: `<leader>obt`<br />
+Tangle current file. See [Extract source code (tangle)](#extract-source-code-tangle) for more details.
 #### **org_show_help**
 *mapped to*: `g?`<br />
 Show help popup with mappings
@@ -1686,8 +1695,95 @@ Show the currently clocked in headline (if any), with total clocked time / effor
 set statusline=%{v:lua.orgmode.statusline()}
 ```
 
+## Extract source code (tangle)
+There is basic support for extracting source code with `tangle` and `noweb` (Orgmode link: [Extracting source code](https://orgmode.org/manual/Extracting-Source-Code.html)).
+These options are supported:
+
+1. Setting `header-args` on multiple levels:
+   1. Configuration ([org_babel_default_header_args](#org_babel_default_header_args))
+   2. File level property (`#+property: header-args :tangle yes`)
+   3. Headline level property
+      ```org
+      * Headline
+        :PROPERTIES:
+        :header-args: :tangle yes
+        :END:
+      ```
+   4. Block level argument
+      ```org
+      #+begin_src lua :tangle yes
+      print('test')
+      #+end_src
+      ```
+2. Tangling all blocks with these options:
+   1. `:tangle no` - Do not tangle
+   2. `:tangle yes` - Tangle to same filename as current org file, with different extension (If org file is `~/org/todo.org` and block is `#+block_src lua`, tangles to `/org/todo.lua`)
+   3. `:tangle path` - Tangle to given filename. It can be absolute (`:tangle /path/to/file.ext`) or relative to current file (either `:tangle ./file.ext` or `:tangle file.ext`)
+
+3. Basic `:noweb` syntax (See [Noweb Reference Syntax](https://orgmode.org/manual/Noweb-Reference-Syntax.html)):
+   1. `:noweb no` - Do not expand any references
+   2. `:noweb yes` - Expand references via `#+name` directive on block. See example below.
+   3. `:noweb tangle` - Same as `:noweb yes`
+
+Example: Having this file in `~/org/todos.org`
+```org
+* Headline 1
+  Content
+  Block below will pick up reference from the 2nd block name
+
+  #+begin_src lua :tangle yes :noweb yes
+  <<headline2block>>
+  print('Headline 1')
+  #+end_src
+
+* Headline 2
+  Content
+  #+name: headline2block
+  #+begin_src lua :tangle yes
+  print('Headline 2')
+  #+end_src
+```
+
+Running [org_babel_tangle](#org_babel_tangle) will create file `~/org/todos.lua` with this content:
+```lua
+print('Headline 2')
+print('Headline 1')
+
+print('Headline 2')
+```
+
+To extract blocks to specific file, you can set file level property with default path, and maybe exclude 2nd block to not be repeated:
+
+```org
+#+property: header-args :tangle ./my_tangled_file.lua
+* Headline 1
+  Content
+  #+begin_src lua :noweb yes
+  <<headline2block>>
+  print('Headline 1')
+  #+end_src
+
+* Headline 2
+  Content
+  Here we disable tangling, so only first block will give results with the noweb
+  #+name: headline2block
+  #+begin_src lua :tangle no
+  print('Headline 2')
+  #+end_src
+```
+
+Running [org_babel_tangle](#org_babel_tangle) will create file `~/org/my_tangled_file.lua` with this content:
+```lua
+print('Headline 2')
+print('Headline 1')
+```
+
 ## Changelog
 To track breaking changes, subscribe to [Notice of breaking changes](https://github.com/nvim-orgmode/orgmode/issues/217) issue where those are announced.
+
+#### 25 February 2024
+
+* Add support for extracting source code [Extract source code (tangle)](#extract-source-code-tangle)
 
 #### 21 January 2024
 

@@ -199,22 +199,10 @@ end
 memoize('get_category')
 --- @return string
 function Headline:get_category()
-  local prop_category = self:get_property('category')
-  if prop_category then
-    return prop_category
-  end
+  local category = self:get_property('category', true)
 
-  local parent_section = self:node():parent():parent()
-  while parent_section do
-    local headline_node = parent_section:field('headline')[1]
-    if headline_node then
-      local headline = Headline:new(headline_node, self.file)
-      local category = headline:get_property('category')
-      if category then
-        return category
-      end
-    end
-    parent_section = parent_section:parent()
+  if category then
+    return category
   end
 
   return self.file:get_category()
@@ -403,20 +391,38 @@ function Headline:set_property(name, value)
 end
 
 ---@param property_name string
----@return string | nil, TSNode | nil, string | nil
-function Headline:get_property(property_name)
+---@param search_parents? boolean
+---@return string | nil, TSNode | nil
+function Headline:get_property(property_name, search_parents)
   local properties = self:get_properties()
-  if not properties then
-    return nil
-  end
-
-  for _, node in ipairs(ts_utils.get_named_children(properties)) do
-    local name = node:field('name')[1]
-    local value = node:field('value')[1]
-    if name and self.file:get_node_text(name):lower() == property_name:lower() then
-      return value and self.file:get_node_text(value), node
+  if properties then
+    for _, node in ipairs(ts_utils.get_named_children(properties)) do
+      local name = node:field('name')[1]
+      local value = node:field('value')[1]
+      if name and self.file:get_node_text(name):lower() == property_name:lower() then
+        return value and self.file:get_node_text(value), node
+      end
     end
   end
+
+  if not search_parents then
+    return nil, nil
+  end
+
+  local parent_section = self:node():parent():parent()
+  while parent_section do
+    local headline_node = parent_section:field('headline')[1]
+    if headline_node then
+      local headline = Headline:new(headline_node, self.file)
+      local property, property_node = headline:get_property(property_name)
+      if property then
+        return property, property_node
+      end
+    end
+    parent_section = parent_section:parent()
+  end
+
+  return nil, nil
 end
 
 function Headline:matches_search_term(term)

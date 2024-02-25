@@ -27,10 +27,12 @@ end
 
 ---@return OrgFile
 local function create_file_instance(lines, filename)
-  return OrgFile:new({
+  local file = OrgFile:new({
     filename = filename or vim.fn.tempname() .. '.org',
     lines = lines,
   })
+  file:parse()
+  return file
 end
 
 return {

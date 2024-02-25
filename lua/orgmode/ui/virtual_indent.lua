@@ -141,6 +141,12 @@ function VirtualIndent:attach()
     on_reload = function()
       self:set_indent(0, vim.api.nvim_buf_line_count(self._bufnr) - 1, true)
     end,
+    -- Also triggered when buffer is force reloaded with `:edit!`
+    on_detach = function()
+      if vim.api.nvim_buf_is_loaded(self._bufnr) then
+        self:set_indent(0, vim.api.nvim_buf_line_count(self._bufnr) - 1, true)
+      end
+    end,
   })
   self._attached = true
 end

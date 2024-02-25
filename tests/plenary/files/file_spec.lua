@@ -1,20 +1,13 @@
 local OrgFile = require('orgmode.files.file')
+local config = require('orgmode.config')
 
 describe('OrgFile', function()
+  ---@return OrgFile
   local load_file_sync = function(content, filename)
     content = content or {}
     filename = filename or vim.fn.tempname() .. '.org'
     vim.fn.writefile(content, filename)
-    ---@type OrgFile
-    local file = nil
-    local co = coroutine.running()
-    OrgFile.load(filename):next(function(orgfile)
-      file = orgfile
-      coroutine.resume(co)
-      return orgfile
-    end)
-    coroutine.yield()
-    return file
+    return OrgFile.load(filename):wait()
   end
   describe('load', function()
     it('should load a file', function()
@@ -662,6 +655,60 @@ describe('OrgFile', function()
       })
       local archive_location = file:get_archive_file_location()
       assert.are.same(file.filename .. '_archive', archive_location)
+    end)
+  end)
+
+  describe('get_properties', function()
+    it('should return all properties in a file', function()
+      local file = load_file_sync({
+        '#+property: header-args :tangle no',
+        '#+property: todo-keywords todo ok done',
+        '* TODO Headline 1',
+      })
+      local properties = file:get_properties()
+      assert.are.same({
+        ['header-args'] = ':tangle no',
+        ['todo-keywords'] = 'todo ok done',
+      }, properties)
+    end)
+
+    it('should return single property from a file', function()
+      local file = load_file_sync({
+        '#+property: header-args :tangle no',
+        '#+property: todo-keywords todo ok done',
+        '* TODO Headline 1',
+      })
+      local property = file:get_property('header-args')
+      assert.are.same(':tangle no', property)
+    end)
+  end)
+
+  describe('get_header_args', function()
+    it('should get config header args if file does no have any', function()
+      config:extend({
+        org_babel_default_header_args = {
+          [':tangle'] = 'no',
+          [':noweb'] = 'yes',
+        },
+      })
+      local file = load_file_sync({
+        '* TODO Headline 1',
+      })
+      assert.are.same({ [':tangle'] = 'no', [':noweb'] = 'yes' }, file:get_header_args())
+    end)
+
+    it('should get config header args if file does no have any', function()
+      config:extend({
+        org_babel_default_header_args = {
+          [':tangle'] = 'no',
+          [':noweb'] = 'no',
+        },
+      })
+      local file = load_file_sync({
+        '#+property: header-args :tangle yes',
+        '* TODO Headline 1',
+      })
+      assert.are.same({ [':tangle'] = 'yes', [':noweb'] = 'no' }, file:get_header_args())
     end)
   end)
 end)

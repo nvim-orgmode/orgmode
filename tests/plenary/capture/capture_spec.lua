@@ -194,7 +194,6 @@ describe('Refile', function()
 
     local capture_lines = { '** baz' }
     local capture_file = helpers.create_file_instance(capture_lines)
-    assert(capture_file)
     local item = capture_file:get_headlines()[1]
 
     ---@diagnostic disable-next-line: invisible
@@ -221,7 +220,6 @@ describe('Capture with empty lines', function()
 
     local capture_lines = { '* foo' }
     local capture_file = helpers.create_file_instance(capture_lines)
-    assert(capture_file)
     local item = capture_file:get_headlines()[1]
 
     ---@diagnostic disable-next-line: invisible
