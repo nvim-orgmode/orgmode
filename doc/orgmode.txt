@@ -1999,6 +1999,13 @@ In order to trigger notifications via cron, job needs to be added to the crontab
 This is currently possible only on Linux and MacOS, since I don't know how would this be done on Windows. Any help on this topic is appreciated.
 This works by starting the headless Neovim instance, running one off function inside orgmode, and quitting the Neovim.
 
+First try to see if you can run this command:
+>
+    nvim --headless -c 'lua require("orgmode").cron()'
+<
+
+If it exits without errors, you are ready!
+
 Here's maximum simplified Linux example (Tested on Manjaro/Arch/Ubuntu), but least optimized:
 
 Run this to open crontab:
@@ -2008,30 +2015,33 @@ Run this to open crontab:
 
 Then add this (Ensure path to `nvim` is correct):
 >
-    * * * * * DISPLAY=:0 DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/1000/bus /usr/local/bin/nvim --headless --noplugin -c 'lua require("orgmode").cron()'
+    * * * * * DISPLAY=:0 DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/1000/bus /usr/local/bin/nvim --headless -c 'lua require("orgmode").cron()'
 <
 
-More optimized way would be to extract all your orgmode config to a separate file in your neovim configuration:
+More optimized version would be to create a lua file that has only necessary plugins loaded:
 >
-    -- ~/.config/nvim/lua/partials/my_org_config.lua
-    return {
+    -- ~/.config/nvim/lua/partials/org_cron.lua
+    -- If you are using lazy.vim do this:
+    local treesitter = vim.fn.stdpath('data') .. '/lazy/nvim-treesitter'
+    local orgmode = vim.fn.stdpath('data') .. '/lazy/orgmode'
+    vim.opt.runtimepath:append(orgmode)
+    vim.opt.runtimepath:append(treesitter)
+    -- If you are using Packer or any other package manager that uses built-in package manager, do this:
+    vim.cmd('packadd nvim-treesitter')
+    vim.cmd('packadd orgmode')
+    -- Run the orgmode cron
+    require('orgmode').cron({
       org_agenda_files = '~/orgmode/*',
       org_default_notes_file = '~/orgmode/notes.org',
       notifications = {
         reminder_time = {0, 5, 10},
       },
-      -- etc.
-    }
-<
-
-Have your default setup load this configuration:
->
-    require('orgmode').setup(require('partials.my_org_config'))
+    })
 <
 
 And update cron job to this:
 >
-    * * * * * DISPLAY=:0 DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/1000/bus /usr/local/bin/nvim -u NONE --noplugin --headless -c 'lua require("orgmode").cron(require("partials.my_org_config"))'
+    * * * * * DISPLAY=:0 DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/1000/bus /usr/local/bin/nvim -u NONE --noplugin --headless -c 'lua require("partials.org_cron")'
 <
 
 This option is most optimized because it doesn't load plugins and your init.vim
