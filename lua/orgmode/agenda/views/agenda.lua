@@ -293,12 +293,6 @@ function AgendaView.build_agenda_item_content(agenda_item, longest_category, lon
   todo_keyword = todo_padding .. todo_keyword
   local line = string.format('%s%s%s %s', category, date, todo_keyword, headline:get_title_with_priority())
   local todo_keyword_pos = string.format('%s%s%s', category, date, todo_padding):len()
-  if #headline:get_tags() > 0 then
-    local tags_string = headline:tags_to_string()
-    local padding_length = math.max(1, win_width - vim.api.nvim_strwidth(line) - vim.api.nvim_strwidth(tags_string))
-    local indent = string.rep(' ', padding_length)
-    line = string.format('%s%s%s', line, indent, tags_string)
-  end
 
   local item_highlights = {}
   if #agenda_item.highlights then

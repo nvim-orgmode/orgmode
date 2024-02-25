@@ -17,7 +17,9 @@ local Promise = require('orgmode.utils.promise')
 ---@field views table[]
 ---@field filters OrgAgendaFilter
 ---@field files OrgFiles
-local Agenda = {}
+local Agenda = {
+  _ns_id = vim.api.nvim_create_namespace('orgmode.ui.agenda'),
+}
 
 ---@param opts? table
 function Agenda:new(opts)
@@ -161,11 +163,24 @@ function Agenda:_render(skip_rebuild)
       vim.w.org_window_pos = nil
     end
   end
-  local lines = vim.tbl_map(function(item)
-    return item.line_content
-  end, self.content)
   vim.bo.modifiable = true
-  vim.api.nvim_buf_set_lines(0, 0, -1, true, lines)
+  for index, item in ipairs(self.content) do
+    vim.api.nvim_buf_set_lines(0, index - 1, -1, true, { item.line_content })
+    if item.headline and #item.headline:get_tags() > 0 then
+      -- Get the first highlight group from the given item and apply it to the tag if available. If
+      -- not use the generic `Normal` hl group
+      local extmark_hls = {
+        (item.highlights and item.highlights[1] and item.highlights[1].hlgroup) and item.highlights[1].hlgroup
+          or 'Normal',
+        '@org.agenda.tag',
+      }
+      vim.api.nvim_buf_set_extmark(0, self._ns_id, index - 1, 0, {
+        virt_text = { { item.headline:tags_to_string(), extmark_hls } },
+        virt_text_pos = 'right_align',
+        hl_mode = 'combine',
+      })
+    end
+  end
   vim.bo.modifiable = false
   vim.bo.modified = false
   colors.highlight(self.highlights, true)
