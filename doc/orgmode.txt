@@ -37,8 +37,9 @@ CONTENTS                                                        *orgmode-content
             1.2.1.26. org_id_method........................|orgmode-org_id_method|
             1.2.1.27. org_id_prefix........................|orgmode-org_id_prefix|
             1.2.1.28. org_id_link_to_org_use_id.|orgmode-org_id_link_to_org_use_id|
-            1.2.1.29. calendar_week_start_day....|orgmode-calendar_week_start_day|
-            1.2.1.30. emacs_config..........................|orgmode-emacs_config|
+            1.2.1.29. org_babel_default_header_args.|orgmode-org_babel_default_header_args|
+            1.2.1.30. calendar_week_start_day....|orgmode-calendar_week_start_day|
+            1.2.1.31. emacs_config..........................|orgmode-emacs_config|
         1.2.2. Agenda settings...........................|orgmode-agenda_settings|
             1.2.2.1. org_deadline_warning_days.|orgmode-org_deadline_warning_days|
             1.2.2.2. org_agenda_span.....................|orgmode-org_agenda_span|
@@ -147,7 +148,8 @@ CONTENTS                                                        *orgmode-content
             1.3.6.45. org_clock_cancel..................|orgmode-org_clock_cancel|
             1.3.6.46. org_clock_goto......................|orgmode-org_clock_goto|
             1.3.6.47. org_set_effort......................|orgmode-org_set_effort|
-            1.3.6.48. org_show_help........................|orgmode-org_show_help|
+            1.3.6.48. org_babel_tangle..................|orgmode-org_babel_tangle|
+            1.3.6.49. org_show_help........................|orgmode-org_show_help|
         1.3.7. Edit Src.........................................|orgmode-edit_src|
             1.3.7.1. org_edit_src_abort...............|orgmode-org_edit_src_abort|
             1.3.7.2. org_edit_src_save.................|orgmode-org_edit_src_save|
@@ -184,10 +186,12 @@ CONTENTS                                                        *orgmode-content
                 1.12.7. Automatic updates of totals.|orgmode-automatic_updates_of_totals|
                 1.12.8. Recalculating totals........|orgmode-recalculating_totals|
                 1.12.9. Statusline function..........|orgmode-statusline_function|
-    1.13. Changelog............................................|orgmode-changelog|
-            1.13.1. 21 January 2024......................|orgmode-21_january_2024|
-            1.13.2. 24 October 2021......................|orgmode-24_october_2021|
-            1.13.3. 10 October 2021......................|orgmode-10_october_2021|
+    1.13. Extract source code (tangle)......|orgmode-extract_source_code_(tangle)|
+    1.14. Changelog............................................|orgmode-changelog|
+            1.14.1. 25 February 2024....................|orgmode-25_february_2024|
+            1.14.2. 21 January 2024......................|orgmode-21_january_2024|
+            1.14.3. 24 October 2021......................|orgmode-24_october_2021|
+            1.14.4. 10 October 2021......................|orgmode-10_october_2021|
 
 ================================================================================
 TABLE OF CONTENT                                        *orgmode-table_of_content*
@@ -217,7 +221,8 @@ TABLE OF CONTENT                                        *orgmode-table_of_conten
 10. Advanced search (#advanced-search)
 11. Notifications (experimental) (#notifications-experimental)
 12. Clocking (#clocking)
-13. Changelog (#changelog)
+13. Extract source code (tangle) (#extract-source-code-tangle)
+14. Changelog (#changelog)
 
 --------------------------------------------------------------------------------
 GETTING STARTED WITH ORGMODE                *orgmode-getting_started_with_orgmode*
@@ -631,6 +636,12 @@ ORG_ID_LINK_TO_ORG_USE_ID                      *orgmode-org_id_link_to_org_use_i
 type: `boolean`
 default value: `false`
 If `true`, generate ID with the Org ID module and append it to the headline as property. More info on org_store_link (#org_store_link)
+
+ORG_BABEL_DEFAULT_HEADER_ARGS              *orgmode-org_babel_default_header_args*
+
+type: `table<string, string>`
+default value: `{ [':tangle'] = 'no', [':noweb']  = no }`
+Default header args for extracting source code. See Extract source code (tangle) (#extract-source-code-tangle) for more details.
 
 CALENDAR_WEEK_START_DAY                          *orgmode-calendar_week_start_day*
 
@@ -1506,6 +1517,11 @@ mapped to: `<Leader>oxe`
 Set effort estimate property on for current headline.
 See Clocking (#clocking) for more details.
 
+ORG_BABEL_TANGLE                                        *orgmode-org_babel_tangle*
+
+mapped to: `<leader>obt`
+Tangle current file. See Extract source code (tangle) (#extract-source-code-tangle) for more details.
+
 ORG_SHOW_HELP                                              *orgmode-org_show_help*
 
 mapped to: `g?`
@@ -2113,9 +2129,92 @@ Show the currently clocked in headline (if any), with total clocked time / effor
 <
 
 --------------------------------------------------------------------------------
+EXTRACT SOURCE CODE (TANGLE)                *orgmode-extract_source_code_(tangle)*
+
+There is basic support for extracting source code with `tangle` and `noweb` (Orgmode link: Extracting source code (https://orgmode.org/manual/Extracting-Source-Code.html)).
+These options are supported:
+
+1.  Setting `header-args` on multiple levels:
+    1.  Configuration (org_babel_default_header_args (#org_babel_default_header_args))
+    2.  File level property (`#+property: header-args :tangle yes`)
+    3.  Headline level property
+>
+            * Headline
+            :PROPERTIES:
+            :header-args: :tangle yes
+            :END:
+<
+    4.  Block level argument
+>
+            #+begin_src lua :tangle yes
+            print('test')
+            #+end_src
+<
+2.  Tangling all blocks with these options:
+    1.  `:tangle no` - Do not tangle
+    2.  `:tangle yes` - Tangle to same filename as current org file, with different extension (If org file is `~/org/todo.org` and block is `#+block_src lua`, tangles to `/org/todo.lua`)
+    3.  `:tangle path` - Tangle to given filename. It can be absolute (`:tangle /path/to/file.ext`) or relative to current file (either `:tangle ./file.ext` or `:tangle file.ext`)
+3.  Basic `:noweb` syntax (See Noweb Reference Syntax (https://orgmode.org/manual/Noweb-Reference-Syntax.html)):
+    1.  `:noweb no` - Do not expand any references
+    2.  `:noweb yes` - Expand references via `#+name` directive on block. See example below.
+    3.  `:noweb tangle` - Same as `:noweb yes`
+
+Example: Having this file in `~/org/todos.org`
+>
+    * Headline 1
+      Content
+      Block below will pick up reference from the 2nd block name
+      #+begin_src lua :tangle yes :noweb yes
+      <<headline2block>>
+      print('Headline 1')
+      #+end_src
+    * Headline 2
+      Content
+      #+name: headline2block
+      #+begin_src lua :tangle yes
+      print('Headline 2')
+      #+end_src
+<
+
+Running org_babel_tangle (#org_babel_tangle) will create file `~/org/todos.lua` with this content:
+>
+    print('Headline 2')
+    print('Headline 1')
+    print('Headline 2')
+<
+
+To extract blocks to specific file, you can set file level property with default path, and maybe exclude 2nd block to not be repeated:
+>
+    #+property: header-args :tangle ./my_tangled_file.lua
+    * Headline 1
+      Content
+      #+begin_src lua :noweb yes
+      <<headline2block>>
+      print('Headline 1')
+      #+end_src
+    * Headline 2
+      Content
+      Here we disable tangling, so only first block will give results with the noweb
+      #+name: headline2block
+      #+begin_src lua :tangle no
+      print('Headline 2')
+      #+end_src
+<
+
+Running org_babel_tangle (#org_babel_tangle) will create file `~/org/my_tangled_file.lua` with this content:
+>
+    print('Headline 2')
+    print('Headline 1')
+<
+
+--------------------------------------------------------------------------------
 CHANGELOG                                                      *orgmode-changelog*
 
 To track breaking changes, subscribe to Notice of breaking changes (https://github.com/nvim-orgmode/orgmode/issues/217) issue where those are announced.
+
+25 FEBRUARY 2024                                        *orgmode-25_february_2024*
+
+*   Add support for extracting source code Extract source code (tangle) (#extract-source-code-tangle)
 
 21 JANUARY 2024                                          *orgmode-21_january_2024*
 
