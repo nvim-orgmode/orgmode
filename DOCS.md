@@ -1212,6 +1212,12 @@ require('orgmode').setup({
 })
 ```
 
+#### **markup text objects**
+Mappings to select inner/outer markup entries. For example, having `This is *bold*`, and if cursor is in middle of `*bold*`, doing `ci*` changes only inner text,
+and doing `ca*` changes outer text.
+These are supported: `*`, `_`, `/`, `+`, `~`, `=`
+These cannot be changed.
+
 ### Dot repeat
 To make all mappings dot repeatable, install [vim-repeat](https://github.com/tpope/vim-repeat) plugin.
 
@@ -1366,6 +1372,9 @@ The following highlight groups are used:
   * `@org.agenda.deadline`: A item deadline in the agenda view - Parsed from `Error` (see note below)
   * `@org.agenda.scheduled`: A scheduled item in the agenda view - Parsed from `DiffAdd` (see note dbelow)
   * `@org.agenda.scheduled_past`: A item past its scheduled date in the agenda view - Parsed from `WarningMsg` (see note below)
+  * `@org.agenda.day`: Highlight for all days in Agenda view - linked to `Statement`
+  * `@org.agenda.today`: Highlight for today in Agenda view - linked to `@org.bold`
+  * `@org.agenda.weekend`: Highlight for weekend days in Agenda view - linked to `@org.bold`
 
 Note:
 

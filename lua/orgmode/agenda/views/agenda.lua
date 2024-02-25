@@ -178,7 +178,7 @@ function AgendaView:build()
 
     if is_today or is_weekend then
       table.insert(highlights, {
-        hlgroup = '@org.bold',
+        hlgroup = is_today and '@org.agenda.today' or '@org.agenda.weekend',
         range = Range:new({
           start_line = #content + 1,
           end_line = #content + 1,
