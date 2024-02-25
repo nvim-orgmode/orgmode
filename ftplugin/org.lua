@@ -44,3 +44,10 @@ local abbreviations = {
 for abbrev, cmd in pairs(abbreviations) do
   vim.cmd.inoreabbrev(('<silent><buffer> %s <C-R>=luaeval("%s")<CR>'):format(abbrev, cmd))
 end
+
+for _, char in ipairs({ '*', '=', '/', '+', '~', '_' }) do
+  vim.keymap.set('x', 'i' .. char, ':<C-u>normal! T' .. char .. 'vt' .. char .. '<CR>')
+  vim.keymap.set('o', 'i' .. char, ':normal vi' .. char .. '<CR>')
+  vim.keymap.set('x', 'a' .. char, ':<C-u>normal! F' .. char .. 'vf' .. char .. '<CR>')
+  vim.keymap.set('o', 'a' .. char, ':normal va' .. char .. '<CR>')
+end
