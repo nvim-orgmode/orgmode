@@ -80,7 +80,7 @@ M.highlight = function(highlights, clear)
   for _, hl in ipairs(highlights) do
     if hl.whole_line then
       vim.api.nvim_buf_set_extmark(0, namespace, hl.range.start_line - 1, hl.range.start_col - 1, {
-        hl_group = hl.hl_group,
+        hl_group = hl.hlgroup,
         end_line = hl.range.start_line,
         hl_eol = true,
       })

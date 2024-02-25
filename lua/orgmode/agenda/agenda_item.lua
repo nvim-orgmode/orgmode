@@ -83,6 +83,7 @@ function AgendaItem:_generate_data()
     table.insert(self.highlights, highlight)
   end
   self:_add_keyword_highlight()
+  self:_add_priority_highlight()
 end
 
 function AgendaItem:_is_valid_for_today()
@@ -258,6 +259,24 @@ function AgendaItem:_add_keyword_highlight()
       todo_keyword = todo_keyword,
     })
   end
+end
+
+function AgendaItem:_add_priority_highlight()
+  local priority, priority_node = self.headline:get_priority()
+  if not priority_node then
+    return
+  end
+  local hlgroup = hl_map.priority[priority].hl_group
+  local last_hl = self.highlights[#self.highlights]
+  local start_col = 2
+  if last_hl and last_hl.todo_keyword then
+    start_col = start_col + last_hl.todo_keyword:len()
+  end
+  table.insert(self.highlights, {
+    hlgroup = hlgroup,
+    priority = priority,
+    start_col = start_col,
+  })
 end
 
 return AgendaItem

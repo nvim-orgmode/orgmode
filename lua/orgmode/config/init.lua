@@ -345,8 +345,17 @@ function Config:get_inheritable_tags(headline)
   end, headline.tags)
 end
 
+function Config:get_priorities()
+  return {
+    [self.opts.org_priority_highest] = { type = 'highest', hl_group = '@org.priority.highest' },
+    [self.opts.org_priority_default] = { type = 'default', hl_group = '@org.priority.default' },
+    [self.opts.org_priority_lowest] = { type = 'lowest', hl_group = '@org.priority.lowest' },
+  }
+end
+
 function Config:setup_ts_predicates()
   local todo_keywords = self:get_todo_keywords().KEYS
+  local valid_priorities = self:get_priorities()
 
   vim.treesitter.query.add_predicate('org-is-todo-keyword?', function(match, _, source, predicate)
     local node = match[predicate[2]]
@@ -356,6 +365,41 @@ function Config:setup_ts_predicates()
     end
 
     return false
+  end, true)
+
+  vim.treesitter.query.add_predicate('org-is-valid-priority?', function(match, _, source, predicate)
+    local node = match[predicate[2]]
+    local type = predicate[3]
+    if not node then
+      return false
+    end
+
+    local text = vim.treesitter.get_node_text(node, source)
+    local is_valid = valid_priorities[text] and valid_priorities[text].type == type
+    if not is_valid then
+      return false
+    end
+    local priority_text = '[#' .. text .. ']'
+    local full_node_text = vim.treesitter.get_node_text(node:parent(), source)
+    if priority_text ~= full_node_text then
+      return false
+    end
+
+    local prev_sibling = node:parent():prev_sibling()
+    -- If first child, consider it valid
+    if not prev_sibling then
+      return true
+    end
+
+    -- If prev sibling has more prev siblings, it means that the prev_sibling is not a todo keyword
+    -- so this priority is not valid
+    if prev_sibling:prev_sibling() then
+      return false
+    end
+
+    local todo_text = vim.treesitter.get_node_text(prev_sibling, source)
+    local is_prev_sibling_todo_keyword = todo_keywords[todo_text] and true or false
+    return is_prev_sibling_todo_keyword
   end, true)
 
   vim.treesitter.query.add_directive('org-set-block-language!', function(match, _, bufnr, pred, metadata)
