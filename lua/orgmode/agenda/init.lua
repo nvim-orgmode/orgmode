@@ -27,7 +27,6 @@ function Agenda:new(opts)
     views = {},
     content = {},
     highlights = {},
-    win_width = utils.winwidth(),
     files = opts.files,
   }
   setmetatable(data, self)
@@ -40,10 +39,8 @@ end
 ---@param opts? table
 function Agenda:open_agenda_view(View, type, opts)
   self:open_window()
-  self.win_width = utils.winwidth()
   local view = View:new(vim.tbl_deep_extend('force', opts or {}, {
     filters = self.filters,
-    win_width = self.win_width,
     files = self.files,
   })):build()
   self.views = { view }
@@ -205,9 +202,10 @@ function Agenda:change_span(span)
 end
 
 function Agenda:open_day(day)
-  local view = AgendaView:new({ span = 'day', from = day }):build()
-  self.views = { view }
-  return self:_render()
+  return self:open_agenda_view(AgendaView, 'agenda', {
+    span = 'day',
+    from = day,
+  })
 end
 
 function Agenda:goto_date()
@@ -432,16 +430,10 @@ function Agenda:_remote_edit(opts)
     end
     if item.agenda_item then
       item.agenda_item:set_headline(headline)
-      self.content[line] = AgendaView.build_agenda_item_content(
-        item.agenda_item,
-        item.longest_category,
-        item.longest_date,
-        item.line,
-        self.win_width
-      )
-    else
       self.content[line] =
-        AgendaTodosView.generate_todo_item(headline, item.longest_category, item.line, self.win_width)
+        AgendaView.build_agenda_item_content(item.agenda_item, item.longest_category, item.longest_date, item.line)
+    else
+      self.content[line] = AgendaTodosView.generate_todo_item(headline, item.longest_category, item.line)
     end
     return self:_render(true)
   end)

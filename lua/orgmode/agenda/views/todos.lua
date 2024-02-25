@@ -21,7 +21,6 @@ end
 ---@field header string
 ---@field search string
 ---@field filters OrgAgendaFilter
----@field win_width number
 ---@field files OrgFiles
 local AgendaTodosView = {}
 
@@ -34,7 +33,6 @@ function AgendaTodosView:new(opts)
     search = opts.search or '',
     filters = opts.filters or AgendaFilter:new(),
     header = opts.org_agenda_overriding_header,
-    win_width = opts.win_width or utils.winwidth(),
     files = opts.files,
   }
 
@@ -56,11 +54,11 @@ function AgendaTodosView:build()
   self.content = { { line_content = 'Global list of TODO items of type: ALL' } }
   self.highlights = {}
   self.active_view = 'todos'
-  self.generate_view(self.items, self.content, self.filters, self.win_width)
+  self.generate_view(self.items, self.content, self.filters)
   return self
 end
 
-function AgendaTodosView.generate_view(items, content, filters, win_width)
+function AgendaTodosView.generate_view(items, content, filters)
   items = sort_todos(items)
   local offset = #content
   local longest_category = utils.reduce(items, function(acc, todo)
@@ -69,7 +67,7 @@ function AgendaTodosView.generate_view(items, content, filters, win_width)
 
   for i, headline in ipairs(items) do
     if filters:matches(headline) then
-      table.insert(content, AgendaTodosView.generate_todo_item(headline, longest_category, i + offset, win_width))
+      table.insert(content, AgendaTodosView.generate_todo_item(headline, longest_category, i + offset))
     end
   end
 
@@ -79,8 +77,7 @@ end
 ---@param headline OrgHeadline
 ---@param longest_category number
 ---@param line_nr number
----@param win_width number
-function AgendaTodosView.generate_todo_item(headline, longest_category, line_nr, win_width)
+function AgendaTodosView.generate_todo_item(headline, longest_category, line_nr)
   local category = '  ' .. utils.pad_right(string.format('%s:', headline:get_category()), longest_category + 1)
   local todo_keyword, _, todo_type = headline:get_todo()
   todo_keyword = todo_keyword or ''
@@ -89,7 +86,8 @@ function AgendaTodosView.generate_todo_item(headline, longest_category, line_nr,
     string.format('  %s%s%s %s', category, todo_keyword_padding, todo_keyword, headline:get_title_with_priority())
   if #headline:get_tags() > 0 then
     local tags_string = headline:tags_to_string()
-    local padding_length = math.max(1, win_width - vim.api.nvim_strwidth(line) - vim.api.nvim_strwidth(tags_string))
+    local padding_length =
+      math.max(1, utils.winwidth() - vim.api.nvim_strwidth(line) - vim.api.nvim_strwidth(tags_string))
     local indent = string.rep(' ', padding_length)
     line = string.format('%s%s%s', line, indent, tags_string)
   end

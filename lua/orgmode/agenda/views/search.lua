@@ -10,7 +10,6 @@ local utils = require('orgmode.utils')
 ---@field header string
 ---@field search string
 ---@field filters OrgAgendaFilter
----@field win_width number
 ---@field files OrgFiles
 local AgendaSearchView = {}
 
@@ -23,7 +22,6 @@ function AgendaSearchView:new(opts)
     search = opts.search or '',
     filters = opts.filters or AgendaFilter:new(),
     header = opts.org_agenda_overriding_header,
-    win_width = opts.win_width or utils.winwidth(),
     files = opts.files,
   }
 
@@ -55,7 +53,7 @@ function AgendaSearchView:build()
   }
 
   self.active_view = 'search'
-  AgendaTodosView.generate_view(self.items, self.content, self.filters, self.win_width)
+  AgendaTodosView.generate_view(self.items, self.content, self.filters)
   return self
 end
 
