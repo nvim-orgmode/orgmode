@@ -645,7 +645,7 @@ function OrgMappings:meta_return(suffix)
     end
 
     if #text_edits > 0 then
-      vim.lsp.util.apply_text_edits(text_edits, 0, constants.default_offset_encoding)
+      vim.lsp.util.apply_text_edits(text_edits, vim.api.nvim_get_current_buf(), constants.default_offset_encoding)
 
       vim.fn.cursor(end_row + 1 + (add_empty_line and 1 or 0), 1) -- +1 for next line
 
