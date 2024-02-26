@@ -1752,14 +1752,17 @@ Most of the highlight groups are linked to treesitter highlights where applicabl
 
 The following highlight groups are used:
 
-*   `@org.headline.level1`: Headline at level 1 - `linked to Title`
-*   `@org.headline.level2`: Headline at level 2 - `linked to Constant`
-*   `@org.headline.level3`: Headline at level 3 - `linked to Identifier`
-*   `@org.headline.level4`: Headline at level 4 - `linked to Statement`
-*   `@org.headline.level5`: Headline at level 5 - `linked to PreProc`
-*   `@org.headline.level6`: Headline at level 6 - `linked to Type`
-*   `@org.headline.level7`: Headline at level 7 - `linked to Special`
-*   `@org.headline.level8`: Headline at level 8 - `linked to String`
+*   `@org.headline.level1`: Headline at level 1 - linked to `Title`
+*   `@org.headline.level2`: Headline at level 2 - linked to `Constant`
+*   `@org.headline.level3`: Headline at level 3 - linked to `Identifier`
+*   `@org.headline.level4`: Headline at level 4 - linked to `Statement`
+*   `@org.headline.level5`: Headline at level 5 - linked to `PreProc`
+*   `@org.headline.level6`: Headline at level 6 - linked to `Type`
+*   `@org.headline.level7`: Headline at level 7 - linked to `Special`
+*   `@org.headline.level8`: Headline at level 8 - linked to `String`
+*   `@org.priority.highest`: Highest priority marker - linked to `@comment.error`
+*   `@org.priority.default`: Default priority marker - Not linked to anything, defaults to normal text
+*   `@org.priority.lowest`: Lowest priority marker - Not linked to anything, defaults to normal text
 *   `@org.timestamp.active`: An active timestamp - linked to `@keyword`
 *   `@org.timestamp.inactive`: An inactive timestamp - linked to `@comment`
 *   `@org.keyword.todo`: TODO keywords color - Parsed from `Error` (see note below)
