@@ -21,6 +21,8 @@ function M.link_highlights()
     ['@org.headline.level7'] = 'Special',
     ['@org.headline.level8'] = 'String',
 
+    ['@org.priority.highest'] = '@comment.error',
+
     -- Headline tags
     ['@org.tag'] = '@tag.attribute',
 
@@ -172,6 +174,7 @@ function M.get_agenda_hl_map()
     deadline = '@org.agenda.deadline',
     ok = '@org.agenda.scheduled',
     warning = '@org.agenda.scheduled_past',
+    priority = config:get_priorities(),
   }, faces)
 end
 

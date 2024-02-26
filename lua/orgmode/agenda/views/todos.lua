@@ -82,8 +82,9 @@ function AgendaTodosView.generate_todo_item(headline, longest_category, line_nr)
   local todo_keyword, _, todo_type = headline:get_todo()
   todo_keyword = todo_keyword or ''
   local todo_keyword_padding = todo_keyword ~= '' and ' ' or ''
-  local line =
-    string.format('  %s%s%s %s', category, todo_keyword_padding, todo_keyword, headline:get_title_with_priority())
+  local title_with_priority = headline:get_title_with_priority()
+  local todo_keyword_len = todo_keyword:len()
+  local line = string.format('  %s%s%s %s', category, todo_keyword_padding, todo_keyword, title_with_priority)
   if #headline:get_tags() > 0 then
     local tags_string = headline:tags_to_string()
     local padding_length =
@@ -100,7 +101,20 @@ function AgendaTodosView.generate_todo_item(headline, longest_category, line_nr)
         start_line = line_nr,
         end_line = line_nr,
         start_col = todo_keyword_pos,
-        end_col = todo_keyword_pos + todo_keyword:len(),
+        end_col = todo_keyword_pos + todo_keyword_len,
+      }),
+    })
+  end
+  local priority = headline:get_priority()
+  if priority and hl_map.priority[priority] then
+    local col_start = todo_keyword_pos + (todo_keyword_len > 0 and todo_keyword_len + 1 or 0)
+    table.insert(highlights, {
+      hlgroup = hl_map.priority[priority].hl_group,
+      range = Range:new({
+        start_line = line_nr,
+        end_line = line_nr,
+        start_col = col_start,
+        end_col = col_start + 4,
       }),
     })
   end
@@ -112,7 +126,7 @@ function AgendaTodosView.generate_todo_item(headline, longest_category, line_nr)
         start_col = 1,
         end_col = 0,
       }),
-      hl_group = 'Visual',
+      hlgroup = 'Visual',
       whole_line = true,
     })
   end

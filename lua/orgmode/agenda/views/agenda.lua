@@ -309,6 +309,10 @@ function AgendaView.build_agenda_item_content(agenda_item, longest_category, lon
         hl.range.start_col = todo_keyword_pos + 1
         hl.range.end_col = todo_keyword_pos + hl.todo_keyword:len() + 1
       end
+      if hl.priority then
+        hl.range.start_col = todo_keyword_pos + hl.start_col
+        hl.range.end_col = todo_keyword_pos + hl.start_col + 4
+      end
       return hl
     end, agenda_item.highlights)
   end
@@ -321,7 +325,7 @@ function AgendaView.build_agenda_item_content(agenda_item, longest_category, lon
         start_col = 1,
         end_col = 0,
       }),
-      hl_group = 'Visual',
+      hlgroup = 'Visual',
       whole_line = true,
     })
   end

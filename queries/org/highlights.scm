@@ -11,6 +11,9 @@
 (headline (item) @spell)
 (item . (expr) @org.keyword.todo @nospell (#org-is-todo-keyword? @org.keyword.todo "TODO"))
 (item . (expr) @org.keyword.done @nospell (#org-is-todo-keyword? @org.keyword.done "DONE"))
+(item (expr "[" "#" "str" @_priority "]") @org.priority.highest (#org-is-valid-priority? @_priority "highest"))
+(item (expr "[" "#" "str" @_priority "]") @org.priority.default (#org-is-valid-priority? @_priority "default"))
+(item (expr "[" "#" "str" @_priority "]") @org.priority.lowest (#org-is-valid-priority? @_priority "lowest"))
 (list (listitem (paragraph) @spell))
 (body (paragraph) @spell)
 (bullet) @org.bullet

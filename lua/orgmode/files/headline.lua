@@ -66,8 +66,26 @@ end
 memoize('get_priority')
 ---@return string, TSNode | nil
 function Headline:get_priority()
-  local node, priority = self:_parse_title_part('%[#(%w+)%]')
-  return priority, node
+  local _, todo_node = self:get_todo()
+  local item = self:_get_child_node('item')
+
+  local priority_node = item and item:named_child(1)
+
+  if not todo_node then
+    priority_node = item and item:named_child(0)
+  end
+
+  if priority_node then
+    local text = self.file:get_node_text(priority_node)
+    local priority = text:match('%[#(%w+)%]')
+    if priority then
+      local priorities = config:get_priorities()
+      if priorities[priority] then
+        return priority, priority_node
+      end
+    end
+  end
+  return '', nil
 end
 
 ---@param amount number
