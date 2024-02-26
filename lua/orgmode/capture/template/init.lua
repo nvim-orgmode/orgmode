@@ -42,6 +42,7 @@ local expansions = {
 ---@field target? string
 ---@field datetree? OrgCaptureTemplateDatetree
 ---@field headline? string
+---@field regexp? string
 ---@field properties? OrgCaptureTemplateProperties
 ---@field subtemplates? table<string, OrgCaptureTemplate>
 local Template = {}
@@ -55,6 +56,7 @@ function Template:new(opts)
     description = { opts.description, 'string', true },
     template = { opts.template, { 'string', 'table' }, true },
     target = { opts.target, 'string', true },
+    regexp = { opts.regexp, 'string', true },
     headline = { opts.headline, 'string', true },
     properties = { opts.properties, 'table', true },
     subtemplates = { opts.subtemplates, 'table', true },
@@ -68,6 +70,7 @@ function Template:new(opts)
   this.headline = opts.headline
   this.properties = TemplateProperties:new(opts.properties)
   this.datetree = opts.datetree
+  this.regexp = opts.regexp
 
   this.subtemplates = {}
   for key, subtemplate in pairs(opts.subtemplates or {}) do
@@ -93,7 +96,15 @@ function Template:setup()
   end
 end
 
+function Template:validate_options()
+  if self.headline and self.regexp then
+    local desc = self.description ~= '' and self.description or self.template
+    utils.echo_error(('Cannot use both headline and regexp options in the same capture template "%s"'):format(desc))
+  end
+end
+
 function Template:compile()
+  self:validate_options()
   local content = self.template
   if type(content) == 'table' then
     content = table.concat(content, '\n')

@@ -214,7 +214,7 @@ describe('Refile', function()
   end)
 end)
 
-describe('Capture with empty lines', function()
+describe('Capture', function()
   it('to empty file', function()
     local destination_file = helpers.create_file({})
 
@@ -325,6 +325,39 @@ describe('Capture with empty lines', function()
       '',
       '        ',
       '',
+    }, vim.api.nvim_buf_get_lines(0, 0, -1, false))
+  end)
+
+  it('to regex', function()
+    local destination_file = helpers.create_file({
+      '#+title foo',
+      'appendhere',
+      '',
+      '* foobar',
+      '* barbar',
+    })
+
+    local capture_lines = { '** baz' }
+    local capture_file = helpers.create_file_instance(capture_lines)
+    local item = capture_file:get_headlines()[1]
+
+    ---@diagnostic disable-next-line: invisible
+    org.capture:_refile_from_capture_buffer({
+      destination_file = destination_file,
+      source_file = capture_file,
+      source_headline = item,
+      template = Template:new({
+        regexp = 'appendhere',
+      }),
+    })
+    vim.cmd('edit' .. vim.fn.fnameescape(destination_file.filename))
+    assert.are.same({
+      '#+title foo',
+      'appendhere',
+      '* baz',
+      '',
+      '* foobar',
+      '* barbar',
     }, vim.api.nvim_buf_get_lines(0, 0, -1, false))
   end)
 end)

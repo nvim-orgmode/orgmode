@@ -159,6 +159,13 @@ function Capture:_refile_from_capture_buffer(opts)
 
   self.files
     :update_file(destination_file.filename, function(file)
+      if not destination_headline and opts.template.regexp then
+        local line = vim.fn.search(opts.template.regexp, 'ncw')
+        if line > 0 then
+          return vim.api.nvim_buf_set_lines(file:bufnr(), line, line, false, lines)
+        end
+      end
+
       local range = self:_get_destination_range_without_empty_lines(Range.from_line(target_line))
       vim.api.nvim_buf_set_lines(file:bufnr(), range.start_line, range.end_line, false, lines)
     end)

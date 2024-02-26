@@ -496,6 +496,8 @@ Templates have the following fields:
   * `headline` (`string?`) — title of the headline after which the capture content will be added. If no headline is specified, the content will be appended to the end of the file
   * `datetree (boolean | { time_prompt: boolean })` — Create a [date tree](https://orgmode.org/manual/Template-elements.html#FOOT84) with current day in the target file and put the capture content there.
     When `time_prompt = true`, open up a date picker to select a date before opening up a capture buffer.
+  * `regexp (string)` — Search for specific line in the target file via regex (same as searching through file from command), and append the content after that line.
+    For example, if you have line `appendhere` in target file, put this option to `^appendhere$` to add headlines after that line
   * `properties` (`table?`):
     * `empty_lines` (`table|number?`) — if the value is a number, then empty lines are added before and after the content. If the value is a table, then the following fields are expected:
       * `before` (`integer?`) — add empty lines to the beginning of the content
