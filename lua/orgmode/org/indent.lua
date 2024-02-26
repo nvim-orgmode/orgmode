@@ -150,11 +150,12 @@ local get_matches = ts_utils.memoize_by_buf_tick(function(bufnr)
       -- If the item is in the block, we shouldn't change the indentation beyond how much we modify the indent of the
       -- block header and footer. This keeps code correctly indented in `BEGIN_SRC` blocks as well as ensuring
       -- `BEGIN_EXAMPLE` blocks don't have their indentation changed inside of them.
-      local parent_linenr = parent:start() + 1
-      local parent_indent = get_indent_for_match(matches, parent:start() + 1, mode, bufnr)
+      local start = (parent and parent:start() or node:start()) + 1
+      local parent_indent = get_indent_for_match(matches, start, mode, bufnr)
 
       -- We want to align to the listitem body, not the bullet
-      if parent:type() == 'listitem' then
+      if parent and parent:type() == 'listitem' then
+        local parent_linenr = parent:start() + 1
         parent_indent = parent_indent + matches[parent_linenr].overhang
       else
         parent_indent = get_indent_pad(range.start.line + 1, bufnr)
