@@ -88,11 +88,14 @@ end
 local get_matches = ts_utils.memoize_by_buf_tick(function(bufnr)
   local tree = vim.treesitter.get_parser(bufnr, 'org', {}):parse()
   if not tree or not #tree then
-    return {}
+    return false
   end
   local matches = {}
   local mode = vim.fn.mode()
   local root = tree[1]:root()
+  if root:has_error() then
+    return false
+  end
   for id, node in query:iter_captures(root, bufnr, 0, -1) do
     local range = ts_utils.node_to_lsp_range(node)
     local type = node:type()
@@ -280,6 +283,12 @@ local function indentexpr(linenr, bufnr)
   local indentexpr_cache = buf_indentexpr_cache[bufnr] or { prev_linenr = -1 }
   if indentexpr_cache.prev_linenr ~= linenr - 1 or not mode:lower():find('n') then
     indentexpr_cache.matches = get_matches(bufnr)
+  end
+
+  -- Treesitter failed to parse the document (due to errors or missing tree)
+  -- So we just fallback to autoindent
+  if indentexpr_cache.matches == false then
+    return -1
   end
 
   local new_indent = get_indent_for_match(indentexpr_cache.matches, linenr, mode, bufnr)
