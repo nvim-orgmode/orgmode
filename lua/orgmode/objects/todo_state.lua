@@ -2,10 +2,17 @@ local config = require('orgmode.config')
 local highlights = require('orgmode.colors.highlights')
 local utils = require('orgmode.utils')
 
+---@class OrgTodoStates
+---@field TODO string[] Keywords for the TODO items
+---@field DONE string[] Keywords for the DONE items
+---@field ALL string[] TODO + DONE
+---@field has_fast_access boolean
+---@field FAST_ACCESS table
+
 ---@class OrgTodoState
 ---@field current_state string
 ---@field hl_map table
----@field todos table
+---@field todos OrgTodoStates
 local TodoState = {}
 
 ---@param data table
@@ -98,6 +105,22 @@ end
 function TodoState:get_todo()
   local first = self.todos.TODO[1]
   return { value = first, type = 'TODO', hl = self.hl_map[first] or self.hl_map.TODO }
+end
+
+---@param headline OrgHeadline|nil
+---@return table
+function TodoState:get_reset_todo(headline)
+  local search_value = (headline and headline:get_property('REPEAT_TO_STATE')) or config.opts.org_todo_repeat_to_state
+  local reset_todo = vim.tbl_filter(function(t)
+    return search_value and t == search_value
+  end, self.todos.ALL)
+
+  if search_value and #reset_todo > 0 then
+    local type = self.todos.TODO[reset_todo[1]] and 'TODO' or 'DONE'
+    return { value = reset_todo[1], type = type, hl = self.hl_map[reset_todo] or self.hl_map[type] }
+  else
+    return self:get_todo()
+  end
 end
 
 return TodoState

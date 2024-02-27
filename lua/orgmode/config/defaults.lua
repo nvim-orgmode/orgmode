@@ -5,6 +5,7 @@ local DefaultConfig = {
   org_agenda_files = '',
   org_default_notes_file = '',
   org_todo_keywords = { 'TODO', '|', 'DONE' },
+  org_todo_repeat_to_state = nil,
   org_todo_keyword_faces = {},
   org_deadline_warning_days = 14,
   org_agenda_min_height = 16,

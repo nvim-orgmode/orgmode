@@ -75,6 +75,13 @@ Examples (With fast access):
 
 NOTE: Make sure fast access keys do not overlap. If that happens, first entry in list gets it.
 
+#### **org_todo_repeat_to_state**
+*type*: `string|nil`<br />
+*default value*: `nil`<br />
+Set a [org_todo_keyword](#org-todo-keywords) to use as the "starting" state for repeatable todos.<br />
+
+The keyword set here **must** exist in the [org_todo_keywords](#org-todo-keywords) list, otherwise the first one defined will be used.
+
 #### **win_split_mode**
 *type*: `string|function|table`<br />
 *default value*: `horizontal`<br />
