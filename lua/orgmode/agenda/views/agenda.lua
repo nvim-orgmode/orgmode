@@ -100,7 +100,7 @@ function AgendaView:_get_title()
   end
   local span_number = ''
   if span == 'week' then
-    span_number = string.format(' (W%d)', self.from:get_week_number())
+    span_number = string.format(' (W%s)', self.from:get_week_number())
   end
   return utils.capitalize(span) .. '-agenda' .. span_number .. ':'
 end

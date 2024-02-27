@@ -784,30 +784,30 @@ describe('Date object', function()
 
   it('should properly calculate week number', function()
     local first = Date.from_string('2021-09-19')
-    assert.are.same(37, first:get_week_number())
+    assert.are.same('37', first:get_week_number())
 
     local start_of_2020 = Date.from_string('2020-01-01')
-    assert.are.same(1, start_of_2020:get_week_number())
+    assert.are.same('01', start_of_2020:get_week_number())
 
     local february_2020 = Date.from_string('2020-02-28')
-    assert.are.same(9, february_2020:get_week_number())
+    assert.are.same('09', february_2020:get_week_number())
 
     local november_2020 = Date.from_string('2020-11-30')
-    assert.are.same(49, november_2020:get_week_number())
+    assert.are.same('49', november_2020:get_week_number())
 
     local end_of_2020 = Date.from_string('2020-12-31')
-    assert.are.same(53, end_of_2020:get_week_number())
+    assert.are.same('53', end_of_2020:get_week_number())
 
     local start_of_2021 = Date.from_string('2021-01-01')
-    assert.are.same(53, start_of_2021:get_week_number())
+    assert.are.same('53', start_of_2021:get_week_number())
 
     local february_2021 = Date.from_string('2021-02-28')
-    assert.are.same(8, february_2021:get_week_number())
+    assert.are.same('08', february_2021:get_week_number())
 
     local august_2021 = Date.from_string('2021-08-31')
-    assert.are.same(35, august_2021:get_week_number())
+    assert.are.same('35', august_2021:get_week_number())
 
     local end_of_2021 = Date.from_string('2021-12-31')
-    assert.are.same(52, end_of_2021:get_week_number())
+    assert.are.same('52', end_of_2021:get_week_number())
   end)
 end)

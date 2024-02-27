@@ -890,24 +890,9 @@ function Date:get_adjusted_date()
   return self:add({ [adj.span] = adj.amount })
 end
 
----@return number
+---@return string
 function Date:get_week_number()
-  local first_week_start = self:start_of('year')
-  local is_first_week = self:is_same(first_week_start, 'week')
-  if is_first_week then
-    if first_week_start:get_isoweekday() <= 4 then
-      return 1
-    end
-    first_week_start = first_week_start:subtract({ year = 1 })
-  end
-  -- If there are no at least 4 days in the first week, it belongs to previous year
-  if first_week_start:get_isoweekday() > 4 then
-    first_week_start = first_week_start:add({ week = 1 })
-  end
-  first_week_start = first_week_start:start_of('week')
-  local this_week_start = self:start_of('week')
-  local number_of_days = math.ceil((this_week_start.timestamp - first_week_start.timestamp) / (24 * 60 * 60))
-  return math.floor(number_of_days / 7) + 1
+  return self:format('%V')
 end
 
 ---@param line string
