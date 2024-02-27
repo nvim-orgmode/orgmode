@@ -185,4 +185,157 @@ describe('Todo mappings', function()
       '  <2021-07-21 Wed 22:02>',
     }, vim.api.nvim_buf_get_lines(0, 2, 5, false))
   end)
+  it('Should reset state to the one defined in the REPEAT_TO_STATE property', function()
+    config:extend({
+      org_todo_keywords = { 'TODO(t)', 'PHONECALL(p)', 'WAITING(w)', '|', 'DONE(d)' },
+      org_log_into_drawer = 'LOGBOOK',
+    })
+    helpers.create_agenda_file({
+      '#+title: REPEAT_TO_STATE_PROPERTY',
+      '',
+      '* PHONECALL Call dad',
+      '  SCHEDULED: <2021-09-07 Tue 12:00 +1d>',
+      '  :PROPERTIES:',
+      '  :REPEAT_TO_STATE: PHONECALL',
+      '  :END:',
+    })
+
+    assert.are.same({
+      '* PHONECALL Call dad',
+      '  SCHEDULED: <2021-09-07 Tue 12:00 +1d>',
+      '  :PROPERTIES:',
+      '  :REPEAT_TO_STATE: PHONECALL',
+      '  :END:',
+    }, vim.api.nvim_buf_get_lines(0, 2, 7, false))
+    vim.fn.cursor(3, 3)
+    vim.cmd([[norm citd]])
+    vim.wait(50)
+    assert.are.same({
+      '* PHONECALL Call dad',
+      '  SCHEDULED: <2021-09-08 Wed 12:00 +1d>',
+      '  :PROPERTIES:',
+      '  :REPEAT_TO_STATE: PHONECALL',
+      '  :LAST_REPEAT: [' .. Date.now():to_string() .. ']',
+      '  :END:',
+      '  :LOGBOOK:',
+      '  - State "DONE" from "PHONECALL" [' .. Date.now():to_string() .. ']',
+      '  :END:',
+    }, vim.api.nvim_buf_get_lines(0, 2, 11, false))
+  end)
+  it('Should reset state to the one defined in the org_todo_repeat_to_state config value', function()
+    config:extend({
+      org_todo_keywords = { 'TODO(t)', 'MEET(m)', '|', 'DONE(d)' },
+      org_log_into_drawer = 'LOGBOOK',
+      org_todo_repeat_to_state = 'MEET',
+    })
+
+    helpers.create_agenda_file({
+      '#+title: REPEAT_TO_STATE_CONFIG',
+      '',
+      '* MEET Daily stand-up with the team',
+      '  SCHEDULED: <2021-09-07 Tue 09:00 +1d>',
+    })
+
+    assert.are.same({
+      '* MEET Daily stand-up with the team',
+      '  SCHEDULED: <2021-09-07 Tue 09:00 +1d>',
+    }, vim.api.nvim_buf_get_lines(0, 2, 4, false))
+
+    vim.fn.cursor(3, 3)
+    vim.cmd([[norm citd]])
+    vim.wait(50)
+
+    assert.are.same({
+      '* MEET Daily stand-up with the team',
+      '  SCHEDULED: <2021-09-08 Wed 09:00 +1d>',
+      '  :PROPERTIES:',
+      '  :LAST_REPEAT: [' .. Date.now():to_string() .. ']',
+      '  :END:',
+      '  :LOGBOOK:',
+      '  - State "DONE" from "MEET" [' .. Date.now():to_string() .. ']',
+      '  :END:',
+    }, vim.api.nvim_buf_get_lines(0, 2, 10, false))
+  end)
+  it('Should prefer reading the property from the DRAWER than the one in the config', function()
+    config:extend({
+      org_todo_keywords = { 'TODO(t)', 'MEET(m)', 'PHONECALL(p)', '|', 'DONE(d)' },
+      org_log_into_drawer = 'LOGBOOK',
+      org_todo_repeat_to_state = 'MEET',
+    })
+
+    helpers.create_agenda_file({
+      '#+title: REPEAT_TO_STATE_CONFIG',
+      '',
+      '* MEET Daily stand-up with the team',
+      '  SCHEDULED: <2021-09-07 Tue 09:00 +1d>',
+      '  :PROPERTIES:',
+      '  :REPEAT_TO_STATE: PHONECALL',
+      '  :END:',
+    })
+
+    assert.are.same({
+      '* MEET Daily stand-up with the team',
+      '  SCHEDULED: <2021-09-07 Tue 09:00 +1d>',
+      '  :PROPERTIES:',
+      '  :REPEAT_TO_STATE: PHONECALL',
+      '  :END:',
+    }, vim.api.nvim_buf_get_lines(0, 2, 7, false))
+
+    vim.fn.cursor(3, 3)
+    vim.cmd([[norm citd]])
+    vim.wait(50)
+
+    assert.are.same({
+      '* PHONECALL Daily stand-up with the team',
+      '  SCHEDULED: <2021-09-08 Wed 09:00 +1d>',
+      '  :PROPERTIES:',
+      '  :REPEAT_TO_STATE: PHONECALL',
+      '  :LAST_REPEAT: [' .. Date.now():to_string() .. ']',
+      '  :END:',
+      '  :LOGBOOK:',
+      '  - State "DONE" from "MEET" [' .. Date.now():to_string() .. ']',
+      '  :END:',
+    }, vim.api.nvim_buf_get_lines(0, 2, 11, false))
+  end)
+  it('If the keyword does not exist in the list of known keywords, default to the first one', function()
+    config:extend({
+      org_todo_keywords = { 'TODO(t)', 'MEET(m)', '|', 'DONE(d)' },
+      org_log_into_drawer = 'LOGBOOK',
+      org_todo_repeat_to_state = 'MEET',
+    })
+
+    helpers.create_agenda_file({
+      '#+title: REPEAT_TO_STATE_CONFIG',
+      '',
+      '* MEET Daily stand-up with the team',
+      '  SCHEDULED: <2021-09-07 Tue 09:00 +1d>',
+      '  :PROPERTIES:',
+      '  :REPEAT_TO_STATE: PHONECALL',
+      '  :END:',
+    })
+
+    assert.are.same({
+      '* MEET Daily stand-up with the team',
+      '  SCHEDULED: <2021-09-07 Tue 09:00 +1d>',
+      '  :PROPERTIES:',
+      '  :REPEAT_TO_STATE: PHONECALL',
+      '  :END:',
+    }, vim.api.nvim_buf_get_lines(0, 2, 7, false))
+
+    vim.fn.cursor(3, 3)
+    vim.cmd([[norm citd]])
+    vim.wait(50)
+
+    assert.are.same({
+      '* TODO Daily stand-up with the team',
+      '  SCHEDULED: <2021-09-08 Wed 09:00 +1d>',
+      '  :PROPERTIES:',
+      '  :REPEAT_TO_STATE: PHONECALL',
+      '  :LAST_REPEAT: [' .. Date.now():to_string() .. ']',
+      '  :END:',
+      '  :LOGBOOK:',
+      '  - State "DONE" from "MEET" [' .. Date.now():to_string() .. ']',
+      '  :END:',
+    }, vim.api.nvim_buf_get_lines(0, 2, 11, false))
+  end)
 end)
