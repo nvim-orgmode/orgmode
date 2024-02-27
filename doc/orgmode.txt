@@ -12,34 +12,35 @@ CONTENTS                                                        *orgmode-content
             1.2.1.1. org_agenda_files...................|orgmode-org_agenda_files|
             1.2.1.2. org_default_notes_file.......|orgmode-org_default_notes_file|
             1.2.1.3. org_todo_keywords.................|orgmode-org_todo_keywords|
-            1.2.1.4. win_split_mode.......................|orgmode-win_split_mode|
-            1.2.1.5. win_border...............................|orgmode-win_border|
-            1.2.1.6. org_startup_folded...............|orgmode-org_startup_folded|
-            1.2.1.7. org_todo_keyword_faces.......|orgmode-org_todo_keyword_faces|
-            1.2.1.8. org_archive_location...........|orgmode-org_archive_location|
-            1.2.1.9. org_hide_leading_stars.......|orgmode-org_hide_leading_stars|
-            1.2.1.10. org_hide_emphasis_markers.|orgmode-org_hide_emphasis_markers|
-            1.2.1.11. org_ellipsis..........................|orgmode-org_ellipsis|
-            1.2.1.12. org_log_done..........................|orgmode-org_log_done|
-            1.2.1.13. org_log_into_drawer............|orgmode-org_log_into_drawer|
-            1.2.1.14. org_highlight_latex_and_related.|orgmode-org_highlight_latex_and_related|
-            1.2.1.15. org_startup_indented..........|orgmode-org_startup_indented|
-            1.2.1.16. org_adapt_indentation........|orgmode-org_adapt_indentation|
-            1.2.1.17. org_indent_mode_turns_off_org_adapt_indentation.|orgmode-org_indent_mode_turns_off_org_adapt_indentation|
-            1.2.1.18. org_indent_mode_turns_on_hiding_stars.|orgmode-org_indent_mode_turns_on_hiding_stars|
-            1.2.1.19. org_src_window_setup..........|orgmode-org_src_window_setup|
-            1.2.1.20. org_edit_src_content_indentation.|orgmode-org_edit_src_content_indentation|
-            1.2.1.21. org_custom_exports..............|orgmode-org_custom_exports|
-            1.2.1.22. org_time_stamp_rounding_minutes.|orgmode-org_time_stamp_rounding_minutes|
-            1.2.1.23. org_blank_before_new_entry.|orgmode-org_blank_before_new_entry|
-            1.2.1.24. org_id_uuid_program............|orgmode-org_id_uuid_program|
-            1.2.1.25. org_id_ts_format..................|orgmode-org_id_ts_format|
-            1.2.1.26. org_id_method........................|orgmode-org_id_method|
-            1.2.1.27. org_id_prefix........................|orgmode-org_id_prefix|
-            1.2.1.28. org_id_link_to_org_use_id.|orgmode-org_id_link_to_org_use_id|
-            1.2.1.29. org_babel_default_header_args.|orgmode-org_babel_default_header_args|
-            1.2.1.30. calendar_week_start_day....|orgmode-calendar_week_start_day|
-            1.2.1.31. emacs_config..........................|orgmode-emacs_config|
+            1.2.1.4. org_todo_repeat_to_state...|orgmode-org_todo_repeat_to_state|
+            1.2.1.5. win_split_mode.......................|orgmode-win_split_mode|
+            1.2.1.6. win_border...............................|orgmode-win_border|
+            1.2.1.7. org_startup_folded...............|orgmode-org_startup_folded|
+            1.2.1.8. org_todo_keyword_faces.......|orgmode-org_todo_keyword_faces|
+            1.2.1.9. org_archive_location...........|orgmode-org_archive_location|
+            1.2.1.10. org_hide_leading_stars......|orgmode-org_hide_leading_stars|
+            1.2.1.11. org_hide_emphasis_markers.|orgmode-org_hide_emphasis_markers|
+            1.2.1.12. org_ellipsis..........................|orgmode-org_ellipsis|
+            1.2.1.13. org_log_done..........................|orgmode-org_log_done|
+            1.2.1.14. org_log_into_drawer............|orgmode-org_log_into_drawer|
+            1.2.1.15. org_highlight_latex_and_related.|orgmode-org_highlight_latex_and_related|
+            1.2.1.16. org_startup_indented..........|orgmode-org_startup_indented|
+            1.2.1.17. org_adapt_indentation........|orgmode-org_adapt_indentation|
+            1.2.1.18. org_indent_mode_turns_off_org_adapt_indentation.|orgmode-org_indent_mode_turns_off_org_adapt_indentation|
+            1.2.1.19. org_indent_mode_turns_on_hiding_stars.|orgmode-org_indent_mode_turns_on_hiding_stars|
+            1.2.1.20. org_src_window_setup..........|orgmode-org_src_window_setup|
+            1.2.1.21. org_edit_src_content_indentation.|orgmode-org_edit_src_content_indentation|
+            1.2.1.22. org_custom_exports..............|orgmode-org_custom_exports|
+            1.2.1.23. org_time_stamp_rounding_minutes.|orgmode-org_time_stamp_rounding_minutes|
+            1.2.1.24. org_blank_before_new_entry.|orgmode-org_blank_before_new_entry|
+            1.2.1.25. org_id_uuid_program............|orgmode-org_id_uuid_program|
+            1.2.1.26. org_id_ts_format..................|orgmode-org_id_ts_format|
+            1.2.1.27. org_id_method........................|orgmode-org_id_method|
+            1.2.1.28. org_id_prefix........................|orgmode-org_id_prefix|
+            1.2.1.29. org_id_link_to_org_use_id.|orgmode-org_id_link_to_org_use_id|
+            1.2.1.30. org_babel_default_header_args.|orgmode-org_babel_default_header_args|
+            1.2.1.31. calendar_week_start_day....|orgmode-calendar_week_start_day|
+            1.2.1.32. emacs_config..........................|orgmode-emacs_config|
         1.2.2. Agenda settings...........................|orgmode-agenda_settings|
             1.2.2.1. org_deadline_warning_days.|orgmode-org_deadline_warning_days|
             1.2.2.2. org_agenda_span.....................|orgmode-org_agenda_span|
@@ -278,6 +279,14 @@ Examples (With fast access):
   * `{'TODO(t)', 'NEXT', '|', 'DONE'}` - will work same as above. Only one todo keyword needs to have fast access key, others will be parsed from first char.
 
 NOTE: Make sure fast access keys do not overlap. If that happens, first entry in list gets it.
+
+ORG_TODO_REPEAT_TO_STATE                        *orgmode-org_todo_repeat_to_state*
+
+type: `string|nil`
+default value: `nil`
+Set a org_todo_keyword (#org-todo-keywords) to use as the "starting" state for repeatable todos.
+
+The keyword set here must exist in the org_todo_keywords (#org-todo-keywords) list, otherwise the first one defined will be used.
 
 WIN_SPLIT_MODE                                            *orgmode-win_split_mode*
 
