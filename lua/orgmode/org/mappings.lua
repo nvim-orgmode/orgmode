@@ -1022,7 +1022,20 @@ function OrgMappings:_change_todo_state(direction, use_fast_access)
     elseif direction == 'prev' then
       next_state = todo_state:get_prev()
     elseif direction == 'reset' then
-      next_state = headline:get_property('REPEAT_TO_STATE') or todo_state:get_todo()
+      local repeat_to_state = headline:get_property('REPEAT_TO_STATE')
+      if repeat_to_state ~= nil then
+        -- Check that a todo with that keyword exists
+        local filtered_todo = vim.tbl_filter(function(t)
+          return t == repeat_to_state
+        end, todo_state.todos.TODO)
+        if #filtered_todo > 0 then
+          next_state = { value = filtered_todo[1] }
+        else
+          next_state = todo_state:get_todo()
+        end
+      else
+        next_state = todo_state:get_todo()
+      end
     end
   end
 

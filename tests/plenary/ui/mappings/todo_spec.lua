@@ -190,7 +190,7 @@ describe('Todo mappings', function()
       org_todo_keywords = { 'TODO(t)', 'PHONECALL(p)', 'WAITING(w)', '|', 'DONE(d)' },
       org_log_into_drawer = 'LOGBOOK',
     })
-    helpers.load_file_content({
+    helpers.create_agenda_file({
       '#+title: TEST',
       '',
       '* PHONECALL Call dad',
