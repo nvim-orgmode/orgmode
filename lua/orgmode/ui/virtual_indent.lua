@@ -51,7 +51,20 @@ function VirtualIndent:_delete_old_extmarks(start_line, end_line)
   end
 end
 
-function VirtualIndent:_get_indent_size(line)
+function VirtualIndent:_get_indent_size(line, tree_has_errors)
+  -- If tree has errors, we can't rely on treesitter to get the correct indentation
+  -- Fallback to searching closest headline by checking each previous line
+  if tree_has_errors then
+    local linenr = line
+    while linenr > 0 do
+      local _, level = vim.fn.getline(linenr):find('^%*+')
+      if level then
+        return level + 1
+      end
+      linenr = linenr - 1
+    end
+  end
+
   local headline = tree_utils.closest_headline_node({ line + 1, 1 })
 
   if headline then
@@ -82,9 +95,16 @@ function VirtualIndent:set_indent(start_line, end_line, ignore_ts)
   if start_line > 0 then
     start_line = start_line - 1
   end
+
+  local node_at_cursor = vim.treesitter.get_node()
+  local tree_has_errors = false
+  if node_at_cursor then
+    tree_has_errors = node_at_cursor:tree():root():has_error()
+  end
+
   self:_delete_old_extmarks(start_line, end_line)
   for line = start_line, end_line do
-    local indent = self:_get_indent_size(line)
+    local indent = self:_get_indent_size(line, tree_has_errors)
 
     if indent > 0 then
       -- NOTE: `ephemeral = true` is not implemented for `inline` virt_text_pos :(
