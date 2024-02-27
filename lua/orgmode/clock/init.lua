@@ -4,11 +4,13 @@ local Promise = require('orgmode.utils.promise')
 
 ---@class OrgClock
 ---@field files OrgFiles
+---@field clocked_headline OrgHeadline|nil
 local Clock = {}
 
 function Clock:new(opts)
   local data = {
     files = opts.files,
+    clocked_headline = nil,
   }
   setmetatable(data, self)
   self.__index = self
@@ -35,6 +37,7 @@ function Clock:org_clock_in()
 
   return promise:next(function()
     item:clock_in()
+    self.clocked_headline = item
   end)
 end
 
@@ -45,6 +48,7 @@ function Clock:org_clock_out()
   end
 
   item:clock_out()
+  self.clocked_headline = nil
 end
 
 function Clock:org_clock_cancel()
@@ -53,6 +57,7 @@ function Clock:org_clock_cancel()
     return utils.echo_info('No active clock')
   end
   item:cancel_active_clock()
+  self.clocked_headline = nil
   utils.echo_info('Clock canceled')
 end
 
@@ -85,17 +90,16 @@ function Clock:org_set_effort()
 end
 
 function Clock:get_statusline()
-  local clocked_headline = self.files:get_clocked_headline()
-  if not clocked_headline or not clocked_headline:is_clocked_in() then
+  if not self.clocked_headline or not self.clocked_headline:is_clocked_in() then
     return ''
   end
 
-  local effort = clocked_headline:get_property('effort')
-  local total = clocked_headline:get_logbook():get_total_with_active():to_string()
+  local effort = self.clocked_headline:get_property('effort')
+  local total = self.clocked_headline:get_logbook():get_total_with_active():to_string()
   if effort then
-    return string.format('(Org) [%s/%s] (%s)', total, effort or '', clocked_headline:get_title())
+    return string.format('(Org) [%s/%s] (%s)', total, effort or '', self.clocked_headline:get_title())
   end
-  return string.format('(Org) [%s] (%s)', total, clocked_headline:get_title())
+  return string.format('(Org) [%s] (%s)', total, self.clocked_headline:get_title())
 end
 
 return Clock
