@@ -198,6 +198,7 @@ function Config:get_agenda_span()
   return span
 end
 
+---@return OrgTodoKeywords
 function Config:get_todo_keywords()
   if self.todo_keywords then
     return vim.deepcopy(self.todo_keywords)
@@ -212,6 +213,7 @@ function Config:get_todo_keywords()
   local types = { TODO = {}, DONE = {}, ALL = {}, KEYS = {}, FAST_ACCESS = {}, has_fast_access = false }
   local type = 'TODO'
   local has_separator = vim.tbl_contains(self.opts.org_todo_keywords, '|')
+  local index = 1
   for i, word in ipairs(self.opts.org_todo_keywords) do
     if word == '|' then
       type = 'DONE'
@@ -220,7 +222,7 @@ function Config:get_todo_keywords()
         type = 'DONE'
       end
       local data = parse_todo(word)
-      if not types.has_fast_access and data.custom_shortcut then
+      if data.custom_shortcut then
         types.has_fast_access = true
       end
       table.insert(types[type], data.value)
@@ -229,12 +231,14 @@ function Config:get_todo_keywords()
         type = type,
         shortcut = data.shortcut,
         len = data.value:len(),
+        index = index,
       }
       table.insert(types.FAST_ACCESS, {
         value = data.value,
         type = type,
         shortcut = data.shortcut,
       })
+      index = index + 1
     end
   end
   self.todo_keywords = types

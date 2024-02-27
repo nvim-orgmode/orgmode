@@ -2,31 +2,17 @@ local config = require('orgmode.config')
 local highlights = require('orgmode.colors.highlights')
 local utils = require('orgmode.utils')
 
----@class OrgTodoStates
----@field TODO string[] Keywords for the TODO items
----@field DONE string[] Keywords for the DONE items
----@field ALL string[] TODO + DONE
----@field has_fast_access boolean
----@field FAST_ACCESS table
-
 ---@class OrgTodoState
 ---@field current_state string
 ---@field hl_map table
----@field todos OrgTodoStates
+---@field todos OrgTodoKeywords
 local TodoState = {}
 
 ---@param data table
 function TodoState:new(data)
   local opts = {}
   opts.current_state = data.current_state or ''
-  local todo_keywords = config:get_todo_keywords()
-  opts.todos = {
-    TODO = vim.tbl_add_reverse_lookup({ unpack(todo_keywords.TODO) }),
-    DONE = vim.tbl_add_reverse_lookup({ unpack(todo_keywords.DONE) }),
-    ALL = vim.tbl_add_reverse_lookup({ unpack(todo_keywords.ALL) }),
-    FAST_ACCESS = todo_keywords.FAST_ACCESS,
-    has_fast_access = todo_keywords.has_fast_access,
-  }
+  opts.todos = config:get_todo_keywords()
   opts.hl_map = highlights.get_agenda_hl_map()
   setmetatable(opts, self)
   self.__index = self
@@ -71,14 +57,14 @@ function TodoState:get_next()
     local val = self.todos.ALL[1]
     return { value = val, type = 'TODO', hl = self.hl_map[val] or self.hl_map.TODO }
   end
-  local current_item_index = self.todos.ALL[self.current_state]
+  local current_item_index = self.todos.KEYS[self.current_state].index
   local next_state = self.todos.ALL[current_item_index + 1]
   if not next_state then
     self.current_state = ''
     return { value = '', type = '' }
   end
   self.current_state = next_state
-  local type = self.todos.TODO[next_state] and 'TODO' or 'DONE'
+  local type = self.todos.KEYS[next_state].type
 
   return { value = next_state, type = type, hl = self.hl_map[next_state] or self.hl_map[type] }
 end
@@ -90,37 +76,33 @@ function TodoState:get_prev()
     self.current_state = last_item
     return { value = last_item, type = 'DONE', hl = self.hl_map[last_item] or self.hl_map.DONE }
   end
-  local current_item_index = self.todos.ALL[self.current_state]
+
+  local current_item_index = self.todos.KEYS[self.current_state].index
   local prev_state = self.todos.ALL[current_item_index - 1]
   if not prev_state then
     self.current_state = ''
     return { value = '', type = '' }
   end
   self.current_state = prev_state
-  local type = self.todos.TODO[prev_state] and 'TODO' or 'DONE'
+  local type = self.todos.KEYS[prev_state].type
 
   return { value = prev_state, type = type, hl = self.hl_map[prev_state] or self.hl_map[type] }
-end
-
-function TodoState:get_todo()
-  local first = self.todos.TODO[1]
-  return { value = first, type = 'TODO', hl = self.hl_map[first] or self.hl_map.TODO }
 end
 
 ---@param headline OrgHeadline|nil
 ---@return table
 function TodoState:get_reset_todo(headline)
-  local search_value = (headline and headline:get_property('REPEAT_TO_STATE')) or config.opts.org_todo_repeat_to_state
-  local reset_todo = vim.tbl_filter(function(t)
-    return search_value and t == search_value
-  end, self.todos.ALL)
+  local repeat_to_state = (headline and headline:get_property('REPEAT_TO_STATE'))
+    or config.opts.org_todo_repeat_to_state
+  local todo_keyword = self.todos.KEYS[repeat_to_state]
 
-  if search_value and #reset_todo > 0 then
-    local type = self.todos.TODO[reset_todo[1]] and 'TODO' or 'DONE'
-    return { value = reset_todo[1], type = type, hl = self.hl_map[reset_todo] or self.hl_map[type] }
-  else
-    return self:get_todo()
+  if todo_keyword then
+    local type = todo_keyword.type
+    return { value = repeat_to_state, type = todo_keyword.type, hl = self.hl_map[repeat_to_state] or self.hl_map[type] }
   end
+
+  local first = self.todos.TODO[1]
+  return { value = first, type = 'TODO', hl = self.hl_map[first] or self.hl_map.TODO }
 end
 
 return TodoState
