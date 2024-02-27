@@ -14,11 +14,10 @@ function Datetree:new(opts)
 end
 
 ---@param template OrgCaptureTemplate
----@return OrgHeadline
+---@return OrgHeadline, number
 function Datetree:create(template)
-  local date = template:get_datetree_date()
   local destination_file = self.files:get(template:get_target())
-  local result = self:_get_datetree_destination(destination_file, date)
+  local result = self:_get_datetree_destination(destination_file, template)
 
   if result.create then
     self.files
@@ -29,14 +28,23 @@ function Datetree:create(template)
     destination_file = destination_file:reload_sync()
   end
 
-  return destination_file:get_closest_headline({ result.headline_at, 0 })
+  local headline = destination_file:get_closest_headline({ result.headline_at, 0 })
+  local opts = template:get_datetree_opts()
+  local target_line = headline:get_range().end_line
+  if opts.reversed then
+    target_line = headline:get_range().start_line
+  end
+  return headline, target_line
 end
 
 ---@private
 ---@param destination_file OrgFile
----@param date OrgDate
+---@param template OrgCaptureTemplate
 ---@return { create: boolean, target_line: number, content: string[], headline_at: number }
-function Datetree:_get_datetree_destination(destination_file, date)
+function Datetree:_get_datetree_destination(destination_file, template)
+  local opts = template:get_datetree_opts()
+  local date = opts.date
+  assert(date)
   local year_date = date:format('%Y')
   local month_date = date:start_of('month')
   local month_date_str = date:format('%Y-%m %B')
@@ -46,7 +54,7 @@ function Datetree:_get_datetree_destination(destination_file, date)
   end)
 
   if not year_headline then
-    local target_line = self:_get_insert_year_at(destination_file, year_date)
+    local target_line = self:_get_insert_year_at(destination_file, year_date, opts.reversed)
     return {
       create = true,
       target_line = target_line,
@@ -64,7 +72,7 @@ function Datetree:_get_datetree_destination(destination_file, date)
   end)
 
   if not month_headline then
-    local target_line = self:_get_insert_month_at(year_headline, month_date)
+    local target_line = self:_get_insert_month_at(year_headline, month_date, opts.reversed)
     return {
       create = true,
       target_line = target_line,
@@ -82,7 +90,7 @@ function Datetree:_get_datetree_destination(destination_file, date)
   end)
 
   if not day_headline then
-    local target_line = self:_get_insert_day_at(month_headline, date)
+    local target_line = self:_get_insert_day_at(month_headline, date, opts.reversed)
 
     return {
       create = true,
@@ -103,15 +111,22 @@ end
 ---@private
 ---@param destination_file OrgFile
 ---@param year_date string -- year in format YYYY
+---@param is_reversed boolean
 ---@return number
-function Datetree:_get_insert_year_at(destination_file, year_date)
-  local future_year_headline = utils.find(destination_file:get_top_level_headlines(), function(headline)
+function Datetree:_get_insert_year_at(destination_file, year_date, is_reversed)
+  local target_year_headline = utils.find(destination_file:get_top_level_headlines(), function(headline)
     local get_year = headline:get_title():match('^%d%d%d%d$')
-    return get_year and tonumber(get_year) > tonumber(year_date)
+    if not get_year then
+      return false
+    end
+    if is_reversed then
+      return tonumber(get_year) < tonumber(year_date)
+    end
+    return tonumber(get_year) > tonumber(year_date)
   end)
 
-  if future_year_headline then
-    return future_year_headline:get_range().start_line - 1
+  if target_year_headline then
+    return target_year_headline:get_range().start_line - 1
   end
 
   return #destination_file.lines
@@ -120,19 +135,24 @@ end
 ---@private
 ---@param year_headline OrgHeadline
 ---@param month_date OrgDate
+---@param is_reversed boolean
 ---@return number
-function Datetree:_get_insert_month_at(year_headline, month_date)
-  local future_month_headline = utils.find(year_headline:get_child_headlines(), function(headline)
+function Datetree:_get_insert_month_at(year_headline, month_date, is_reversed)
+  local target_month_headline = utils.find(year_headline:get_child_headlines(), function(headline)
     local year_num, month_num = headline:get_title():match('^(%d%d%d%d)%-(%d%d)%s+%w+$')
-    if year_num and month_num then
-      local timestamp = os.time({ year = year_num, month = month_num, day = 1 })
-      return timestamp > month_date.timestamp
+    if not year_num then
+      return false
     end
-    return false
+
+    local timestamp = os.time({ year = year_num, month = month_num, day = 1 })
+    if is_reversed then
+      return timestamp < month_date.timestamp
+    end
+    return timestamp > month_date.timestamp
   end)
 
-  if future_month_headline then
-    return future_month_headline:get_range().start_line - 1
+  if target_month_headline then
+    return target_month_headline:get_range().start_line - 1
   end
 
   return year_headline:get_range().end_line
@@ -141,20 +161,29 @@ end
 ---@private
 ---@param month_headline OrgHeadline
 ---@param date OrgDate
+---@param is_reversed boolean
 ---@return number
-function Datetree:_get_insert_day_at(month_headline, date)
-  local future_day_headline = utils.find(month_headline:get_child_headlines(), function(headline)
+function Datetree:_get_insert_day_at(month_headline, date, is_reversed)
+  local target_day_headline = utils.find(month_headline:get_child_headlines(), function(headline)
     local year_num, month_num, day_num = headline:get_title():match('^(%d%d%d%d)%-(%d%d)%-(%d%d)%s+%w+$')
-    return year_num
-      and Date.from_table({
-        year = year_num,
-        month = month_num,
-        day = day_num,
-      }):is_after(date, 'day')
+    if not year_num then
+      return false
+    end
+
+    local headline_date = Date.from_table({
+      year = year_num,
+      month = month_num,
+      day = day_num,
+    })
+
+    if is_reversed then
+      return headline_date:is_before(date, 'day')
+    end
+    return headline_date:is_after(date, 'day')
   end)
 
-  if future_day_headline then
-    return future_day_headline:get_range().start_line - 1
+  if target_day_headline then
+    return target_day_headline:get_range().start_line - 1
   end
 
   return month_headline:get_range().end_line

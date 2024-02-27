@@ -34,7 +34,7 @@ local expansions = {
   end,
 }
 
----@alias OrgCaptureTemplateDatetree boolean | { time_prompt: boolean, date?: OrgDate }
+---@alias OrgCaptureTemplateDatetree boolean | { time_prompt: boolean, date?: OrgDate, reversed?: boolean }
 
 ---@class OrgCaptureTemplate
 ---@field description? string
@@ -130,11 +130,14 @@ function Template:prompt_for_inputs()
   end)
 end
 
-function Template:get_datetree_date()
-  if self:has_input_prompts() then
-    return self.datetree.date
+function Template:get_datetree_opts()
+  if self.datetree and type(self.datetree) == 'table' then
+    self.datetree.date = self.datetree.date or Date.today()
+    return self.datetree
   end
-  return Date.today()
+  return {
+    date = Date.today(),
+  }
 end
 
 ---@return string

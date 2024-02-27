@@ -501,8 +501,10 @@ Templates have the following fields:
   * `template` (`string|string[]`) — body of the template that will be used when creating capture
   * `target` (`string?`) — name of the file to which the capture content will be added. If the target is not specified, the content will be added to the [`org_default_notes_file`](#orgdefaultnotesfile) file
   * `headline` (`string?`) — title of the headline after which the capture content will be added. If no headline is specified, the content will be appended to the end of the file
-  * `datetree (boolean | { time_prompt: boolean })` — Create a [date tree](https://orgmode.org/manual/Template-elements.html#FOOT84) with current day in the target file and put the capture content there.
-    When `time_prompt = true`, open up a date picker to select a date before opening up a capture buffer.
+  * `datetree (boolean | { time_prompt?: boolean, reversed?: boolean })` — Create a [date tree](https://orgmode.org/manual/Template-elements.html#FOOT84) with current day in the target file and put the capture content there.
+    * `true` - Create ascending datetree (newer dates go to end) with the current date
+    * `{ time_prompt = true, reversed?: boolean }` - open up a date picker to select a date before opening up a capture buffer
+    * `{ time_prompt?: boolean, reversed: true }` - add entries in reversed order (newer dates comes first)
   * `regexp (string)` — Search for specific line in the target file via regex (same as searching through file from command), and append the content after that line.
     For example, if you have line `appendhere` in target file, put this option to `^appendhere$` to add headlines after that line
   * `properties` (`table?`):

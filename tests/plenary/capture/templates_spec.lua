@@ -30,7 +30,7 @@ describe('Capture template', function()
       datetree = true,
     })
 
-    assert.are.same(Date.today():to_string(), template:get_datetree_date():to_string())
+    assert.are.same(Date.today():to_string(), template:get_datetree_opts().date:to_string())
   end)
 
   it('gets a proper date for datetree enabled as time prompt', function()
@@ -43,6 +43,6 @@ describe('Capture template', function()
       },
     })
 
-    assert.are.same(date:to_string(), template:get_datetree_date():to_string())
+    assert.are.same(date:to_string(), template:get_datetree_opts().date:to_string())
   end)
 end)

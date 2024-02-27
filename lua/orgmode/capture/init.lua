@@ -137,13 +137,16 @@ function Capture:_refile_from_capture_buffer(opts)
   local destination_file = opts.destination_file
   local destination_headline = opts.destination_headline
 
+  if destination_headline then
+    target_line = destination_headline:get_range().end_line
+  end
+
   if opts.template.datetree then
-    destination_headline = Datetree:new({ files = self.files }):create(opts.template)
+    destination_headline, target_line = Datetree:new({ files = self.files }):create(opts.template)
   end
 
   if destination_headline then
     target_level = destination_headline:get_level()
-    target_line = destination_headline:get_range().end_line
   end
 
   local lines = opts.source_file.lines
