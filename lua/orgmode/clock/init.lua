@@ -17,20 +17,27 @@ function Clock:new(opts)
   return data
 end
 
+-- When first loading, check if there are active clocks
+function Clock:init()
+  local last_clocked_headline = self.files:get_clocked_headline()
+  if last_clocked_headline and last_clocked_headline:is_clocked_in() then
+    self.clocked_headline = last_clocked_headline
+  end
+end
+
 function Clock:org_clock_in()
   local item = self.files:get_closest_headline()
-  local last_clocked_headline = self.files:get_clocked_headline()
   if item:is_clocked_in() then
     return utils.echo_info(string.format('Clock continues in "%s"', item:get_title()))
   end
 
   local promise = Promise.resolve()
 
-  if last_clocked_headline and last_clocked_headline:is_clocked_in() then
-    local filename = last_clocked_headline.file.filename
+  if self.clocked_headline and self.clocked_headline:is_clocked_in() then
+    local filename = self.clocked_headline.file.filename
     promise = self.files:update_file(filename, function()
       local clocked_item =
-        self.files:get(filename):get_closest_headline({ last_clocked_headline:get_range().start_line, 0 })
+        self.files:get(filename):get_closest_headline({ self.clocked_headline:get_range().start_line, 0 })
       clocked_item:clock_out()
     end)
   end
@@ -42,39 +49,37 @@ function Clock:org_clock_in()
 end
 
 function Clock:org_clock_out()
-  local item = self.files:get_closest_headline()
-  if not item:is_clocked_in() then
+  if not self.clocked_headline or not self.clocked_headline:is_clocked_in() then
     return
   end
 
-  item:clock_out()
+  self.clocked_headline:clock_out()
   self.clocked_headline = nil
 end
 
 function Clock:org_clock_cancel()
-  local item = self.files:get_closest_headline()
-  if not item:is_clocked_in() then
+  if not self.clocked_headline or not self.clocked_headline:is_clocked_in() then
     return utils.echo_info('No active clock')
   end
-  item:cancel_active_clock()
+
+  self.clocked_headline:cancel_active_clock()
   self.clocked_headline = nil
   utils.echo_info('Clock canceled')
 end
 
 function Clock:org_clock_goto()
-  local active_headline = self.files:get_clocked_headline()
-  if not active_headline then
+  if not self.clocked_headline then
     return utils.echo_info('No active or recent clock task')
   end
 
-  if not active_headline:is_clocked_in() then
+  if not self.clocked_headline:is_clocked_in() then
     utils.echo_info('No running clock, this is the most recently clocked task')
   end
 
-  if utils.current_file_path() ~= active_headline.file then
-    vim.cmd('edit ' .. vim.fn.fnameescape(active_headline.file.filename))
+  if utils.current_file_path() ~= self.clocked_headline.file then
+    vim.cmd('edit ' .. vim.fn.fnameescape(self.clocked_headline.file.filename))
   end
-  vim.fn.cursor({ active_headline:get_range().start_line, 1 })
+  vim.fn.cursor({ self.clocked_headline:get_range().start_line, 1 })
 end
 
 function Clock:org_set_effort()

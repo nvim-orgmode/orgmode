@@ -65,6 +65,7 @@ function Org:init()
   self.clock = require('orgmode.clock'):new({
     files = self.files,
   })
+  self.clock:init()
   self.completion = require('orgmode.org.autocompletion'):new({ files = self.files })
   self.statusline_debounced = require('orgmode.utils').debounce('statusline', function()
     return self.clock:get_statusline()
