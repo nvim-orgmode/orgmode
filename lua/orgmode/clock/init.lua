@@ -25,6 +25,10 @@ function Clock:init()
   end
 end
 
+function Clock:has_clocked_headline()
+  return self.clocked_headline ~= nil
+end
+
 function Clock:org_clock_in()
   local item = self.files:get_closest_headline()
   if item:is_clocked_in() then
