@@ -14,6 +14,7 @@ function Clock:new(opts)
   }
   setmetatable(data, self)
   self.__index = self
+  data:init()
   return data
 end
 
