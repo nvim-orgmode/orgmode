@@ -90,8 +90,9 @@ CONTENTS                                                        *orgmode-content
             1.3.3.24. org_agenda_set_tags............|orgmode-org_agenda_set_tags|
             1.3.3.25. org_agenda_deadline............|orgmode-org_agenda_deadline|
             1.3.3.26. org_agenda_schedule............|orgmode-org_agenda_schedule|
-            1.3.3.27. org_agenda_filter................|orgmode-org_agenda_filter|
-            1.3.3.28. org_agenda_show_help..........|orgmode-org_agenda_show_help|
+            1.3.3.27. org_agenda_refile................|orgmode-org_agenda_refile|
+            1.3.3.28. org_agenda_filter................|orgmode-org_agenda_filter|
+            1.3.3.29. org_agenda_show_help..........|orgmode-org_agenda_show_help|
         1.3.4. Capture mappings.........................|orgmode-capture_mappings|
             1.3.4.1. org_capture_finalize...........|orgmode-org_capture_finalize|
             1.3.4.2. org_capture_refile...............|orgmode-org_capture_refile|
@@ -1190,6 +1191,12 @@ ORG_AGENDA_SCHEDULE                                  *orgmode-org_agenda_schedul
 
 mapped to: `<Leader>ois`
 Insert/Update scheduled date on current headline item.
+
+ORG_AGENDA_REFILE                                      *orgmode-org_agenda_refile*
+
+mapped to: `<Leader>or`
+Refile current headline to a destination org-file.
+Same as org_refile (#org_refile) but from agenda view.
 
 ORG_AGENDA_FILTER                                      *orgmode-org_agenda_filter*
 
