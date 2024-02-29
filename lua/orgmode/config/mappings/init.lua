@@ -117,6 +117,12 @@ return {
         help_desc = 'Open prompt that allows filtering by category, tags and title(vim regex)',
       },
     }),
+    org_agenda_refile = m.action('agenda.refile', {
+      opts = {
+        desc = 'org refile',
+        help_desc = 'Refile headline to specific destination',
+      },
+    }),
     org_agenda_show_help = m.action(
       'org_mappings.show_help',
       { args = { 'agenda' }, opts = { desc = 'org show help', help_desc = 'Show this help' } }

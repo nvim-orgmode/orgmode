@@ -255,6 +255,13 @@ function Agenda:clock_in()
   })
 end
 
+function Agenda:refile()
+  return self:_remote_edit({
+    action = 'capture.refile_headline_to_destination',
+    redo = true,
+  })
+end
+
 function Agenda:clock_out()
   return self:_remote_edit({
     action = 'clock.org_clock_out',

@@ -896,6 +896,10 @@ Insert/Update deadline date on current headline item.<br />
 #### **org_agenda_schedule**
 *mapped to*: `<Leader>ois`<br />
 Insert/Update scheduled date on current headline item.<br />
+#### **org_agenda_refile**
+*mapped to*: `<Leader>or`<br />
+Refile current headline to a destination org-file.
+Same as [org_refile](#org_refile) but from agenda view.
 #### **org_agenda_filter**
 *mapped to*: `/`<br />
 Open prompt that allows filtering current agenda view by category, tags and title (vim regex, see `:help vim.regex()`)<br />
