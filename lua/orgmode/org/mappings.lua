@@ -806,8 +806,8 @@ function OrgMappings:move_subtree_down()
   vim.cmd(string.format(':%d,%dmove %d', range.start_line, range.end_line, next_headline:get_range().end_line))
 end
 
-function OrgMappings:show_help()
-  return Help.show()
+function OrgMappings:show_help(type)
+  return Help.show(type)
 end
 
 function OrgMappings:edit_special()

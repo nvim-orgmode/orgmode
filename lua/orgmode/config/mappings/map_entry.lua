@@ -6,6 +6,7 @@
 ---@field opts table
 ---@field type table
 ---@field desc string
+---@field help_desc? string
 local MapEntry = {}
 
 ---@param handler string
@@ -26,8 +27,9 @@ function MapEntry.action(handler, opts)
   return MapEntry:new(formatted_action, opts)
 end
 
-function MapEntry.text_object(handler)
+function MapEntry.text_object(handler, opts)
   return MapEntry:new((':<C-U>lua require("orgmode.org.text_objects").%s()<CR>'):format(handler), {
+    opts = opts,
     type = 'operator',
     modes = { 'x' },
   })
@@ -45,6 +47,7 @@ function MapEntry:new(handler, opts)
     handler = { handler, { 'string', 'function' } },
     modes = { opts.modes, 'table', true },
     desc = { opts.desc, 'string', true },
+    help_desc = { opts.help_desc, 'string', true },
     type = { opts.type, 'string', true },
   })
   local data = {}
@@ -54,6 +57,8 @@ function MapEntry:new(handler, opts)
     silent = true,
     buffer = true,
   })
+  data.help_desc = data.opts.help_desc
+  data.opts.help_desc = nil
   data.modes = opts.modes or { 'n' }
   data.type = opts.type or 'action'
   setmetatable(data, self)

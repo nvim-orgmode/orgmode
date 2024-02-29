@@ -180,10 +180,6 @@ function EditSpecial:_get_nearest_block_node()
   }
 end
 
-EditSpecial.show_help = function()
-  Help.show_help()
-end
-
 EditSpecial.abort = function()
   vim.b[EditSpecial.aborted_var] = true
   vim.cmd([[q!]])
