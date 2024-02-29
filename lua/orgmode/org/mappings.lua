@@ -675,8 +675,9 @@ function OrgMappings:insert_heading_respect_content(suffix)
     self:_insert_heading_from_plain_line(suffix)
   else
     local line = config:respect_blank_before_new_entry({ string.rep('*', item:get_level()) .. ' ' .. suffix })
-    vim.fn.append(item:get_range().end_line, line)
-    vim.fn.cursor(item:get_range().end_line + #line, 1)
+    local end_line = item:get_range().end_line
+    vim.fn.append(end_line, line)
+    vim.fn.cursor(end_line + #line, 1)
   end
   return vim.cmd([[startinsert!]])
 end
