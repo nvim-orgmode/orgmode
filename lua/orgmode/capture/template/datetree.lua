@@ -17,7 +17,7 @@ end
 ---@return OrgHeadline, number
 function Datetree:create(template)
   local destination_file = self.files:get(template:get_target())
-  local result = self:_get_datetree_destination(destination_file, template)
+  local result = self:_get_datetree_destination(template)
 
   if result.create then
     self.files
@@ -37,156 +37,197 @@ function Datetree:create(template)
   return headline, target_line
 end
 
----@private
----@param destination_file OrgFile
 ---@param template OrgCaptureTemplate
----@return { create: boolean, target_line: number, content: string[], headline_at: number }
-function Datetree:_get_datetree_destination(destination_file, template)
+function Datetree:_get_datetree_destination(template)
+  local destination_file = self.files:get(template:get_target())
   local opts = template:get_datetree_opts()
   local date = opts.date
-  assert(date)
-  local year_date = date:format('%Y')
-  local month_date = date:start_of('month')
-  local month_date_str = date:format('%Y-%m %B')
-  local day_date = date:format('%Y-%m-%d %A')
-  local year_headline = utils.find(destination_file:get_top_level_headlines(), function(headline)
-    return headline:get_title() == year_date
-  end)
+  local tree = self:_get_tree_by_type(opts)
 
-  if not year_headline then
-    local target_line = self:_get_insert_year_at(destination_file, year_date, opts.reversed)
+  local top_level_headlines = destination_file:get_top_level_headlines()
+  ---@type OrgHeadline[]
+  local result = {}
+
+  local create_levels = function(append_line)
+    local target_line = append_line
+    if not target_line then
+      target_line = #destination_file.lines
+      if #result > 0 then
+        target_line = result[#result]:get_range().end_line
+      end
+    end
+    local content = {}
+    for i = (#result + 1), #tree do
+      table.insert(content, string.rep('*', i) .. ' ' .. date:format(tree[i].format))
+    end
+
     return {
       create = true,
       target_line = target_line,
-      headline_at = target_line + 3,
-      content = {
-        '* ' .. year_date,
-        '** ' .. month_date_str,
-        '*** ' .. day_date,
-      },
+      headline_at = target_line + (#tree - #result),
+      content = content,
     }
   end
 
-  local month_headline = utils.find(year_headline:get_child_headlines(), function(month)
-    return month:get_title() == month_date_str
-  end)
+  for i, item in ipairs(tree) do
+    local headlines = top_level_headlines
+    if i > 1 then
+      headlines = result[i - 1]:get_child_headlines()
+    end
 
-  if not month_headline then
-    local target_line = self:_get_insert_month_at(year_headline, month_date, opts.reversed)
-    return {
-      create = true,
-      target_line = target_line,
-      headline_at = target_line + 2,
-      content = {
-        '** ' .. month_date_str,
-        '*** ' .. day_date,
-      },
-    }
-  end
+    local date_str = date:format(item.format)
 
-  local month_headlines = month_headline:get_child_headlines()
-  local day_headline = utils.find(month_headlines, function(day)
-    return day:get_title() == day_date
-  end)
+    local existing_headline = utils.find(headlines, function(headline)
+      return headline:get_title() == date_str
+    end)
 
-  if not day_headline then
-    local target_line = self:_get_insert_day_at(month_headline, date, opts.reversed)
+    if not existing_headline then
+      local target_line = self:_find_target_line(headlines, item, date, opts.reversed)
+      return create_levels(target_line)
+    end
 
-    return {
-      create = true,
-      target_line = target_line,
-      headline_at = target_line + 1,
-      content = {
-        '*** ' .. day_date,
-      },
-    }
+    table.insert(result, existing_headline)
   end
 
   return {
     create = false,
-    headline_at = day_headline:get_range().start_line,
+    headline_at = result[#result]:get_range().start_line,
   }
 end
 
----@private
----@param destination_file OrgFile
----@param year_date string -- year in format YYYY
----@param is_reversed boolean
----@return number
-function Datetree:_get_insert_year_at(destination_file, year_date, is_reversed)
-  local target_year_headline = utils.find(destination_file:get_top_level_headlines(), function(headline)
-    local get_year = headline:get_title():match('^%d%d%d%d$')
-    if not get_year then
-      return false
+function Datetree:_find_target_line(headlines, tree_item, date, is_reversed)
+  local sort_matches = function(matches)
+    if not matches[1] then
+      return nil
     end
-    if is_reversed then
-      return tonumber(get_year) < tonumber(year_date)
+    local sorted_matches = {}
+    for k, i in ipairs(tree_item.order) do
+      sorted_matches[k] = matches[i]
     end
-    return tonumber(get_year) > tonumber(year_date)
-  end)
-
-  if target_year_headline then
-    return target_year_headline:get_range().start_line - 1
+    return sorted_matches
   end
 
-  return #destination_file.lines
+  local date_str = date:format(tree_item.format)
+  local date_matches = sort_matches({ date_str:match(tree_item.pattern) })
+  assert(date_matches)
+
+  local target_headline = utils.find(headlines, function(headline)
+    local matches = sort_matches({ headline:get_title():match(tree_item.pattern) })
+    if not matches then
+      return false
+    end
+
+    for i = 1, #date_matches - 1 do
+      if date_matches[i] ~= matches[i] then
+        return false
+      end
+    end
+
+    if is_reversed then
+      return tonumber(matches[#matches]) < tonumber(date_matches[#date_matches])
+    end
+    return tonumber(matches[#matches]) > tonumber(date_matches[#date_matches])
+  end)
+
+  if target_headline then
+    return target_headline:get_range().start_line - 1
+  end
+
+  return nil
 end
 
 ---@private
----@param year_headline OrgHeadline
----@param month_date OrgDate
----@param is_reversed boolean
----@return number
-function Datetree:_get_insert_month_at(year_headline, month_date, is_reversed)
-  local target_month_headline = utils.find(year_headline:get_child_headlines(), function(headline)
-    local year_num, month_num = headline:get_title():match('^(%d%d%d%d)%-(%d%d)%s+%w+$')
-    if not year_num then
-      return false
-    end
+---@param opts OrgCaptureTemplateDatetreeOpts
+---@return OrgDatetreeTreeItem[]
+function Datetree:_get_tree_by_type(opts)
+  local trees = {
+    -- Each entry in the tree is considered a headline.
+    -- For example, this tree has 3 entries, and the result of it is:
+    -- * YEAR
+    -- ** MONTH
+    -- *** DAY
+    -- Level (stars) is determined by the index of the tree item.
+    -- You can create any tree you want, but it must have at least one item,
+    -- and have fields explained below
+    --
+    -- format: string
+    -- The lua date format to use for the tree item. This will be used to create the headline.
+    -- In this example, the format is '%Y', and it will create a year (example: 2024)
+    --
+    -- pattern: string
+    -- The lua pattern used to parse important date parts from the formatted date.
+    -- For example, if `format` is set to `%Y-%m-%d %A`, it will generate something like this:
+    -- 2024-02-25 Sunday
+    -- To be able to compare the dates in the datetree and figure out where to put the new entries,
+    -- We need to parse the date parts from the formatted date. That's where the pattern comes in.
+    -- With the lua pattern `^(%d%d%d%d)%-(%d%d)%-(%d%d).*$`, we parse year, month and day.
+    -- Later, datetree can figure out where to put the new entry by comparing the parsed date parts.
+    --
+    -- order: number[]
+    -- This is the array of numbers that works in conjuction with the pattern.
+    -- It needs to contain the order of parsed date parts ordered by importance.
+    -- For example, if the pattern is `^(%d%d%d%d)%-(%d%d)%-(%d%d).*$`, and the order is { 1, 2, 3 },
+    -- This means that comparator will first check the year (first pattern match), then month (second pattern) and then day (last pattern).
+    -- If we would want to use a date format DD.MM.YYYY, we would set all options like this:
+    -- format = '%d.%m.%Y'
+    -- pattern = '^(%d%d)%.(%d%d)%.(%d%d%d%d)$'
+    -- order = { 3, 2, 1 }
+    --
+    -- Order is now 3, 2, 1 because we want to compare year first, which is the 3rd match,
+    -- then month, which is 2nd match, and then day, which is first.
+    day = {
+      {
+        format = '%Y',
+        pattern = '^(%d%d%d%d)$',
+        order = { 1 },
+      },
+      {
+        format = '%Y-%m %B',
+        pattern = '^(%d%d%d%d)%-(%d%d).*$',
+        order = { 1, 2 },
+      },
+      {
+        format = '%Y-%m-%d %A',
+        pattern = '^(%d%d%d%d)%-(%d%d)%-(%d%d).*$',
+        order = { 1, 2, 3 },
+      },
+    },
+    month = {
+      {
+        format = '%Y',
+        pattern = '^(%d%d%d%d)$',
+        order = { 1 },
+      },
+      {
+        format = '%Y-%m %B',
+        pattern = '^(%d%d%d%d)%-(%d%d).*$',
+        order = { 1, 2 },
+      },
+    },
+    week = {
+      {
+        format = '%Y',
+        pattern = '^(%d%d%d%d)$',
+        order = { 1 },
+      },
+      {
+        format = '%Y-W%V',
+        pattern = '^(%d%d%d%d)%-W(%d%d).*$',
+        order = { 1, 2 },
+      },
+      {
+        format = '%Y-%m-%d %A',
+        pattern = '^(%d%d%d%d)%-(%d%d)%-(%d%d).*$',
+        order = { 1, 2, 3 },
+      },
+    },
+  }
 
-    local timestamp = os.time({ year = year_num, month = month_num, day = 1 })
-    if is_reversed then
-      return timestamp < month_date.timestamp
-    end
-    return timestamp > month_date.timestamp
-  end)
-
-  if target_month_headline then
-    return target_month_headline:get_range().start_line - 1
+  if opts.tree_type == 'custom' and opts.tree then
+    return opts.tree
   end
 
-  return year_headline:get_range().end_line
-end
-
----@private
----@param month_headline OrgHeadline
----@param date OrgDate
----@param is_reversed boolean
----@return number
-function Datetree:_get_insert_day_at(month_headline, date, is_reversed)
-  local target_day_headline = utils.find(month_headline:get_child_headlines(), function(headline)
-    local year_num, month_num, day_num = headline:get_title():match('^(%d%d%d%d)%-(%d%d)%-(%d%d)%s+%w+$')
-    if not year_num then
-      return false
-    end
-
-    local headline_date = Date.from_table({
-      year = year_num,
-      month = month_num,
-      day = day_num,
-    })
-
-    if is_reversed then
-      return headline_date:is_before(date, 'day')
-    end
-    return headline_date:is_after(date, 'day')
-  end)
-
-  if target_day_headline then
-    return target_day_headline:get_range().start_line - 1
-  end
-
-  return month_headline:get_range().end_line
+  return trees[opts.tree_type]
 end
 
 return Datetree

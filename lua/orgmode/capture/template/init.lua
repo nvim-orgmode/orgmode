@@ -34,7 +34,19 @@ local expansions = {
   end,
 }
 
----@alias OrgCaptureTemplateDatetree boolean | { time_prompt: boolean, date?: OrgDate, reversed?: boolean }
+---@class OrgDatetreeTreeItem
+---@field format string - The lua date format to use for the tree item
+---@field pattern string - Pattern to match important date parts the date format
+---@field order number[] - Order of checking the date parts matched from the pattern
+
+---@class OrgCaptureTemplateDatetreeOpts
+---@field date OrgDate
+---@field time_prompt? boolean
+---@field reversed? boolean
+---@field tree? OrgDatetreeTreeItem[]
+---@field tree_type? 'day' | 'week' | 'month' | 'custom'
+
+---@alias OrgCaptureTemplateDatetree boolean | OrgCaptureTemplateDatetreeOpts
 
 ---@class OrgCaptureTemplate
 ---@field description? string
@@ -97,9 +109,46 @@ function Template:setup()
 end
 
 function Template:validate_options()
+  self:_validate_regexp()
+  if self.datetree then
+    if type(self.datetree) == 'table' then
+      if self.datetree.tree_type == 'custom' and not self.datetree.tree then
+        utils.echo_error('Custom datetree type requires a tree option')
+      end
+    end
+  end
+end
+
+function Template:_validate_regexp()
   if self.headline and self.regexp then
     local desc = self.description ~= '' and self.description or self.template
     utils.echo_error(('Cannot use both headline and regexp options in the same capture template "%s"'):format(desc))
+  end
+end
+
+function Template:_validate_datetree()
+  if not self.datetree or self.datetree == true then
+    return
+  end
+  if type(self.datetree) ~= 'table' then
+    return utils.echo_error('Datetree option must be a table or a boolean')
+  end
+  if self.datetree.tree_type then
+    local valid_tree_types = { 'day', 'week', 'month', 'custom' }
+    if not vim.tbl_contains(valid_tree_types, self.datetree.tree_type) then
+      return utils.echo_error(('Invalid tree type "%s"'):format(self.datetree.tree_type))
+    end
+
+    if self.datetree.tree_type == 'custom' then
+      if not self.datetree.tree or type(self.datetree.tree) ~= 'table' then
+        return utils.echo_error('Custom tree type requires a tree option to be a table (array of OrgDatetreeTreeItem)')
+      end
+      if #self.datetree.tree == 0 then
+        return utils.echo_error(
+          'Custom tree type requires a tree option to be a non-empty table (array of OrgDatetreeTreeItem)'
+        )
+      end
+    end
   end
 end
 
@@ -130,14 +179,14 @@ function Template:prompt_for_inputs()
   end)
 end
 
+---@return OrgCaptureTemplateDatetreeOpts
 function Template:get_datetree_opts()
-  if self.datetree and type(self.datetree) == 'table' then
-    self.datetree.date = self.datetree.date or Date.today()
-    return self.datetree
-  end
-  return {
-    date = Date.today(),
-  }
+  ---@diagnostic disable-next-line: param-type-mismatch
+  local datetree = vim.deepcopy(self.datetree)
+  datetree = (type(datetree) == 'table' and datetree) or {}
+  datetree.date = datetree.date or Date.today()
+  datetree.tree_type = datetree.tree_type or 'day'
+  return datetree
 end
 
 ---@return string
