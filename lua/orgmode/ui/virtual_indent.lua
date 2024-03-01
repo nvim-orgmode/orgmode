@@ -10,6 +10,7 @@ local VirtualIndent = {
   _ns_id = vim.api.nvim_create_namespace('orgmode.ui.indent'),
   _bufnrs = {},
 }
+VirtualIndent.__index = VirtualIndent
 
 --- Creates a new instance of VirtualIndent for a given buffer or returns the existing instance if
 --- one exists
@@ -17,21 +18,16 @@ local VirtualIndent = {
 ---@return OrgVirtualIndent
 function VirtualIndent:new(bufnr)
   bufnr = bufnr or vim.api.nvim_get_current_buf()
-
-  local curr_instance = VirtualIndent._bufnrs[bufnr]
-  if curr_instance then
-    return curr_instance
+  if self._bufnrs[bufnr] then
+    return self._bufnrs[bufnr]
   end
-
-  local new = {}
-  VirtualIndent._bufnrs[bufnr] = new
-  setmetatable(new, self)
-  self.__index = self
-
-  new._bufnr = bufnr
-  new._attached = false
-  new._watcher_running = false
-  return new
+  local this = setmetatable({
+    _bufnr = bufnr,
+    _watcher_running = false,
+    _attached = false,
+  }, self)
+  self._bufnrs[bufnr] = this
+  return this
 end
 
 function VirtualIndent:_delete_old_extmarks(start_line, end_line)
@@ -124,20 +120,17 @@ function VirtualIndent:start_watch_org_indent()
     return
   end
   dict_watcher.watch_buffer_variable('org_indent_mode', function(indent_mode, _, buf_vars)
-    local vindent = VirtualIndent._bufnrs[buf_vars.org_bufnr]
+    local instance = self._bufnrs[buf_vars.org_bufnr]
+    if not instance then
+      return
+    end
     local indent_mode_enabled = indent_mode.new or false
     if indent_mode_enabled then
-      return vindent:attach()
+      return instance:attach()
     end
-    return vindent:detach()
+    return instance:detach()
   end)
   self._watcher_running = true
-end
-
---- Stops VirtualIndent instances from reacting to changes in `vim.b.org_indent_mode`
-function VirtualIndent:stop_watch_org_indent()
-  dict_watcher.unwatch_buffer_variable('org_indent_mode')
-  self._watcher_running = false
 end
 
 --- Enables virtual indentation in registered buffer
@@ -161,11 +154,9 @@ function VirtualIndent:attach()
     on_reload = function()
       self:set_indent(0, vim.api.nvim_buf_line_count(self._bufnr) - 1, true)
     end,
-    -- Also triggered when buffer is force reloaded with `:edit!`
-    on_detach = function()
-      if vim.api.nvim_buf_is_loaded(self._bufnr) then
-        self:set_indent(0, vim.api.nvim_buf_line_count(self._bufnr) - 1, true)
-      end
+    on_detach = function(_, bufnr)
+      self:detach()
+      self._bufnrs[bufnr] = nil
     end,
   })
   self._attached = true

@@ -216,7 +216,7 @@ function Capture:_refile_from_org_file(opts)
   end
 
   self.files
-    :update_file(destination_file.filename, function(file)
+    :update_file(destination_file.filename, function()
       if is_same_file then
         local item_range = source_headline:get_range()
         return vim.cmd(string.format('silent! %d,%d move %s', item_range.start_line, item_range.end_line, target_line))

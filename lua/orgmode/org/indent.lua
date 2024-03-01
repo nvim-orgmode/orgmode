@@ -328,7 +328,7 @@ local function setup_virtual_indent()
 
   local virtualIndent = VirtualIndent:new()
 
-  if config.org_startup_indented then
+  if config.org_startup_indented or vim.b.org_indent_mode then
     return virtualIndent:attach()
   end
 

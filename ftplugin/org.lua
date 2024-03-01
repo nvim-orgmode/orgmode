@@ -1,4 +1,4 @@
-if vim.b.did_ftplugin then
+if vim.b.did_ftplugin or vim.b.org_tmp_edit_window then
   return
 end
 ---@diagnostic disable-next-line: inject-field
@@ -46,8 +46,21 @@ for abbrev, cmd in pairs(abbreviations) do
 end
 
 for _, char in ipairs({ '*', '=', '/', '+', '~', '_' }) do
-  vim.keymap.set('x', 'i' .. char, ':<C-u>normal! T' .. char .. 'vt' .. char .. '<CR>')
-  vim.keymap.set('o', 'i' .. char, ':normal vi' .. char .. '<CR>')
-  vim.keymap.set('x', 'a' .. char, ':<C-u>normal! F' .. char .. 'vf' .. char .. '<CR>')
-  vim.keymap.set('o', 'a' .. char, ':normal va' .. char .. '<CR>')
+  vim.keymap.set('x', 'i' .. char, ':<C-u>normal! T' .. char .. 'vt' .. char .. '<CR>', { buffer = true })
+  vim.keymap.set('o', 'i' .. char, ':normal vi' .. char .. '<CR>', { buffer = true })
+  vim.keymap.set('x', 'a' .. char, ':<C-u>normal! F' .. char .. 'vf' .. char .. '<CR>', { buffer = true })
+  vim.keymap.set('o', 'a' .. char, ':normal va' .. char .. '<CR>', { buffer = true })
 end
+
+vim.b.undo_ftplugin = table.concat({
+  'setlocal',
+  'commentstring<',
+  'foldmethod<',
+  'modeline<',
+  'foldtext<',
+  'foldlevel<',
+  'foldexpr<',
+  'formatexpr<',
+  'omnifunc<',
+  '| unlet! b:org_bufnr'
+}, ' ')

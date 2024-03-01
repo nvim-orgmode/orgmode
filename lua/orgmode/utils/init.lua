@@ -536,6 +536,7 @@ function utils.edit_file(filename)
   return {
     open = function()
       local bufnr = vim.fn.bufadd(filename) or -1
+      vim.api.nvim_buf_set_var(bufnr, 'org_tmp_edit_window', true)
       vim.api.nvim_open_win(bufnr, true, {
         relative = 'editor',
         width = 1,
