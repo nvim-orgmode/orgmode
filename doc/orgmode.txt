@@ -307,7 +307,7 @@ Here are few examples:
 Open in float window:
 >
     win_split_mode = function(name)
-      local bufnr = vim.api.nvim_create_buf(false, true)
+      local bufnr = vim.api.nvim_create_buf(false, false)
       --- Setting buffer name is required
       vim.api.nvim_buf_set_name(bufnr, name)
       local fill = 0.8

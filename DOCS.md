@@ -99,7 +99,8 @@ Here are few examples:<br />
 Open in float window:
 ```lua
 win_split_mode = function(name)
-  local bufnr = vim.api.nvim_create_buf(false, true)
+  -- Make sure it's not a scratch buffer by passing false as 2nd argument
+  local bufnr = vim.api.nvim_create_buf(false, false)
   --- Setting buffer name is required
   vim.api.nvim_buf_set_name(bufnr, name)
 

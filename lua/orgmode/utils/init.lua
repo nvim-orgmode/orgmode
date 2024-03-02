@@ -465,7 +465,7 @@ function utils.open_tmp_org_window(height, split_mode, border, on_close)
 
   return function()
     vim.api.nvim_create_augroup('OrgTmpWindow', { clear = true })
-    vim.api.nvim_win_close(0, true)
+    pcall(vim.api.nvim_win_close, 0, true)
     if prev_winnr and vim.api.nvim_win_is_valid(prev_winnr) then
       vim.api.nvim_set_current_win(prev_winnr)
     end
@@ -480,7 +480,7 @@ function utils.open_float(name, opts)
   opts.border = opts.border or 'single'
   -- Make sure number is between 0 and 1
   local scale = math.min(math.max(0, opts.scale), 1)
-  local bufnr = vim.api.nvim_create_buf(false, true)
+  local bufnr = vim.api.nvim_create_buf(false, false)
   vim.api.nvim_buf_set_name(bufnr, name)
 
   local width = math.floor((vim.o.columns * scale))
