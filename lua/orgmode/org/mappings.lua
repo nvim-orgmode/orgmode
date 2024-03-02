@@ -984,6 +984,7 @@ end
 ---@param inactive boolean
 function OrgMappings:org_time_stamp(inactive)
   local date = self:_get_date_under_cursor()
+
   if date then
     return Calendar.new({ date = date }).open():next(function(new_date)
       if not new_date then
@@ -1002,8 +1003,9 @@ function OrgMappings:org_time_stamp(inactive)
     local date_string = new_date:to_wrapped_string(not inactive)
     if date_start then
       date_string = '--' .. date_string
+      vim.cmd('norm!x')
     end
-    vim.cmd(string.format('norm!i%s', date_string))
+    vim.cmd(string.format('norm!a%s', date_string))
   end)
 end
 
