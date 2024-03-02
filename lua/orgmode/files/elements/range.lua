@@ -63,6 +63,17 @@ function Range:is_in_line_range(line)
   return line >= self.start_line and line <= self.end_line
 end
 
+function Range:is_same_line_range(range)
+  return self.start_line == range.start_line and self.end_line == range.end_line
+end
+
+function Range:is_same(range)
+  return self.start_line == range.start_line
+    and self.end_line == range.end_line
+    and self.start_col == range.start_col
+    and self.end_col == range.end_col
+end
+
 function Range:clone()
   return Range:new({
     start_line = self.start_line,

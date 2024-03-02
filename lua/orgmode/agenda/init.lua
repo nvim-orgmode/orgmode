@@ -181,7 +181,7 @@ function Agenda:reset()
 end
 
 function Agenda:redo(preserve_cursor_pos)
-  self.files:load(true):next(vim.schedule_wrap(function()
+  return self.files:load(true):next(vim.schedule_wrap(function()
     local cursor_view = nil
     if preserve_cursor_pos then
       cursor_view = vim.fn.winsaveview() or {}
@@ -435,14 +435,33 @@ function Agenda:_remote_edit(opts)
     if not opts.update_in_place or not headline then
       return
     end
-    if item.agenda_item then
-      item.agenda_item:set_headline(headline)
-      self.content[line] =
-        AgendaView.build_agenda_item_content(item.agenda_item, item.longest_category, item.longest_date, item.line)
-    else
-      self.content[line] = AgendaTodosView.generate_todo_item(headline, item.longest_category, item.line)
+    local line_range_same = headline:get_range():is_same_line_range(item.headline:get_range())
+
+    local update_item_inline = function()
+      if item.agenda_item then
+        item.agenda_item:set_headline(headline)
+        self.content[line] =
+          AgendaView.build_agenda_item_content(item.agenda_item, item.longest_category, item.longest_date, item.line)
+      else
+        self.content[line] = AgendaTodosView.generate_todo_item(headline, item.longest_category, item.line)
+      end
+      return self:_render(true)
     end
-    return self:_render(true)
+
+    if line_range_same then
+      return update_item_inline()
+    end
+
+    -- If line range was changed, some other agenda items might have outdated position
+    -- In that case, we need to reload the agenda and try to find the same headline to update it in place
+    return self:redo(true):next(function()
+      for content_line, content_item in pairs(self.content) do
+        if content_item.headline and content_item.headline:is_same(headline) then
+          item = self.content[content_line]
+          return update_item_inline()
+        end
+      end
+    end)
   end)
 end
 
