@@ -465,7 +465,11 @@ function utils.open_tmp_org_window(height, split_mode, border, on_close)
 
   return function()
     vim.api.nvim_create_augroup('OrgTmpWindow', { clear = true })
-    pcall(vim.api.nvim_win_close, 0, true)
+    if #vim.api.nvim_list_wins() == 1 then
+      vim.cmd('q!')
+    else
+      pcall(vim.api.nvim_win_close, 0, true)
+    end
     if prev_winnr and vim.api.nvim_win_is_valid(prev_winnr) then
       vim.api.nvim_set_current_win(prev_winnr)
     end

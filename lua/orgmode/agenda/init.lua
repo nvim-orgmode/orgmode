@@ -69,7 +69,7 @@ function Agenda:tags_todo()
   return self:tags({ todo_only = true })
 end
 
----@return number|nil, number window id nand buffer id
+---@return number buffer number
 function Agenda:open_window()
   -- if an agenda window is already open, return it
   for _, win in ipairs(vim.api.nvim_list_wins()) do
@@ -78,7 +78,7 @@ function Agenda:open_window()
       buf = buf,
     })
     if ft == 'orgagenda' then
-      return win, buf
+      return buf
     end
   end
 
@@ -88,7 +88,7 @@ function Agenda:open_window()
   vim.cmd([[setlocal buftype=nofile bufhidden=wipe nobuflisted nolist noswapfile nowrap nospell]])
   vim.w.org_window_pos = vim.fn.win_screenpos(0)
   config:setup_mappings('agenda')
-  return vim.fn.win_getid(), vim.fn.bufnr()
+  return vim.fn.bufnr()
 end
 
 function Agenda:prompt()
@@ -148,7 +148,7 @@ function Agenda:_render(skip_rebuild)
       utils.concat(self.highlights, view.highlights)
     end
   end
-  local win, bufnr = self:open_window()
+  local bufnr = self:open_window()
   if vim.w.org_window_split_mode == 'horizontal' then
     local win_height = math.max(math.min(34, #self.content), config.org_agenda_min_height)
     if vim.w.org_window_pos and vim.deep_equal(vim.fn.win_screenpos(0), vim.w.org_window_pos) then
