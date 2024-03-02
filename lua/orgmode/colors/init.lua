@@ -73,20 +73,21 @@ end
 ---@param highlights table[]
 ---@param clear? boolean
 ---@return string
-M.highlight = function(highlights, clear)
+M.highlight = function(highlights, clear, bufnr)
+  bufnr = bufnr or 0
   if clear then
-    vim.api.nvim_buf_clear_namespace(0, namespace, 0, -1)
+    vim.api.nvim_buf_clear_namespace(bufnr, namespace, 0, -1)
   end
   for _, hl in ipairs(highlights) do
     if hl.whole_line then
-      vim.api.nvim_buf_set_extmark(0, namespace, hl.range.start_line - 1, hl.range.start_col - 1, {
+      vim.api.nvim_buf_set_extmark(bufnr, namespace, hl.range.start_line - 1, hl.range.start_col - 1, {
         hl_group = hl.hlgroup,
         end_line = hl.range.start_line,
         hl_eol = true,
       })
     else
       vim.api.nvim_buf_add_highlight(
-        0,
+        bufnr,
         namespace,
         hl.hlgroup,
         hl.range.start_line - 1,

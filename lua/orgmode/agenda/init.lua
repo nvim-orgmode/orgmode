@@ -69,15 +69,16 @@ function Agenda:tags_todo()
   return self:tags({ todo_only = true })
 end
 
----@return number|nil window id
+---@return number|nil, number window id nand buffer id
 function Agenda:open_window()
   -- if an agenda window is already open, return it
   for _, win in ipairs(vim.api.nvim_list_wins()) do
+    local buf = vim.api.nvim_win_get_buf(win)
     local ft = vim.api.nvim_get_option_value('filetype', {
-      buf = vim.api.nvim_win_get_buf(win),
+      buf = buf,
     })
     if ft == 'orgagenda' then
-      return win
+      return win, buf
     end
   end
 
@@ -87,7 +88,7 @@ function Agenda:open_window()
   vim.cmd([[setlocal buftype=nofile bufhidden=wipe nobuflisted nolist noswapfile nowrap nospell]])
   vim.w.org_window_pos = vim.fn.win_screenpos(0)
   config:setup_mappings('agenda')
-  return vim.fn.win_getid()
+  return vim.fn.win_getid(), vim.fn.bufnr()
 end
 
 function Agenda:prompt()
@@ -147,8 +148,7 @@ function Agenda:_render(skip_rebuild)
       utils.concat(self.highlights, view.highlights)
     end
   end
-  local win = self:open_window()
-  vim.cmd(vim.fn.win_id2win(win) .. 'wincmd w')
+  local win, bufnr = self:open_window()
   if vim.w.org_window_split_mode == 'horizontal' then
     local win_height = math.max(math.min(34, #self.content), config.org_agenda_min_height)
     if vim.w.org_window_pos and vim.deep_equal(vim.fn.win_screenpos(0), vim.w.org_window_pos) then
@@ -161,14 +161,14 @@ function Agenda:_render(skip_rebuild)
   local lines = vim.tbl_map(function(item)
     return item.line_content
   end, self.content)
-  vim.bo.modifiable = true
-  vim.api.nvim_buf_set_lines(0, 0, -1, true, lines)
-  vim.bo.modifiable = false
-  vim.bo.modified = false
-  colors.highlight(self.highlights, true)
+  vim.bo[bufnr].modifiable = true
+  vim.api.nvim_buf_set_lines(bufnr, 0, -1, true, lines)
+  vim.bo[bufnr].modifiable = false
+  vim.bo[bufnr].modified = false
+  colors.highlight(self.highlights, true, bufnr)
   vim.tbl_map(function(item)
     if item.highlights then
-      return colors.highlight(item.highlights)
+      return colors.highlight(item.highlights, false, bufnr)
     end
   end, self.content)
   if not skip_rebuild then
