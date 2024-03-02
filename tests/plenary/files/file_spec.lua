@@ -665,11 +665,11 @@ describe('OrgFile', function()
         '#+property: todo-keywords todo ok done',
         '* TODO Headline 1',
       })
-      local properties = file:get_properties()
+      local directive_properties = file:get_directive_properties()
       assert.are.same({
         ['header-args'] = ':tangle no',
         ['todo-keywords'] = 'todo ok done',
-      }, properties)
+      }, directive_properties)
     end)
 
     it('should return single property from a file', function()
@@ -678,8 +678,8 @@ describe('OrgFile', function()
         '#+property: todo-keywords todo ok done',
         '* TODO Headline 1',
       })
-      local property = file:get_property('header-args')
-      assert.are.same(':tangle no', property)
+      local directive_property = file:get_directive_property('header-args')
+      assert.are.same(':tangle no', directive_property)
     end)
   end)
 
@@ -709,6 +709,33 @@ describe('OrgFile', function()
         '* TODO Headline 1',
       })
       assert.are.same({ [':tangle'] = 'yes', [':noweb'] = 'no' }, file:get_header_args())
+    end)
+  end)
+
+  describe('get_properties', function()
+    it('should get file level properties', function()
+      local file = load_file_sync({
+        ':PROPERTIES:',
+        ':ID: 443355',
+        ':END:',
+        '#+title: test',
+        '* TODO Headline 1',
+      })
+      assert.are.same({
+        id = '443355',
+      }, file:get_properties())
+    end)
+
+    it('should get file level property', function()
+      local file = load_file_sync({
+        ':PROPERTIES:',
+        ':ID: 443355',
+        ':CUSTOM_ID: 112233',
+        ':END:',
+        '#+title: test',
+        '* TODO Headline 1',
+      })
+      assert.are.same('112233', file:get_property('custom_id'))
     end)
   end)
 end)

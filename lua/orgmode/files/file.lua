@@ -466,7 +466,7 @@ function OrgFile:get_blocks()
 end
 
 function OrgFile:get_header_args()
-  local header_args_prop = self:get_property('header-args')
+  local header_args_prop = self:get_directive_property('header-args')
   if not header_args_prop then
     return vim.tbl_extend('force', {}, config.org_babel_default_header_args)
   end
@@ -474,17 +474,17 @@ function OrgFile:get_header_args()
   return vim.tbl_extend('force', config.org_babel_default_header_args, header_args)
 end
 
-memoize('get_property')
+memoize('get_directive_property')
 --- @param name string
 --- @return string | nil
-function OrgFile:get_property(name)
-  local properties = self:get_properties()
+function OrgFile:get_directive_property(name)
+  local properties = self:get_directive_properties()
   return properties[name:lower()]
 end
 
-memoize('get_properties')
+memoize('get_directive_properties')
 ---@return table<string, string>
-function OrgFile:get_properties()
+function OrgFile:get_directive_properties()
   self:parse(true)
   local properties = {}
   local directives_body = self.root:field('body')[1]
@@ -512,6 +512,57 @@ function OrgFile:get_properties()
   end
 
   return properties
+end
+
+memoize('get_drawer')
+---@return table<string, string> | nil
+function OrgFile:get_drawer(name)
+  self:parse(true)
+  local document_body = self.root:field('body')[1]
+  if not document_body then
+    return nil
+  end
+
+  local drawer = utils.find(ts_utils.get_named_children(document_body), function(node)
+    if node:type() == 'drawer' then
+      local drawer_name = node:field('name')[1]
+      if drawer_name and self:get_node_text(drawer_name):lower() == name:lower() then
+        return true
+      end
+    end
+    return false
+  end)
+
+  if not drawer or #drawer:field('contents') == 0 then
+    return nil
+  end
+
+  return drawer
+end
+
+memoize('get_properties')
+---@return table<string, string>
+function OrgFile:get_properties()
+  local property_drawer = self:get_drawer('properties')
+  if not property_drawer then
+    return {}
+  end
+  local properties = {}
+  local contents = self:get_node_text_list(property_drawer:field('contents')[1])
+  for _, line in ipairs(contents) do
+    local property_name, property_value = line:match('^%s*:([^:]-):%s*(.*)$')
+    if property_name and property_value then
+      properties[property_name:lower()] = property_value
+    end
+  end
+  return properties
+end
+
+memoize('get_property')
+---@return string | nil
+function OrgFile:get_property(name)
+  local property_drawer = self:get_properties()
+  return property_drawer[name:lower()]
 end
 
 memoize('get_category')
