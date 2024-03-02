@@ -5,6 +5,8 @@ local Url = require('orgmode.org.hyperlinks.url')
 ---@field desc string | nil
 local Link = {}
 
+local pattern = '%[%[([^%]]+.-)%]%]'
+
 ---@param str string
 ---@return OrgLink
 function Link:new(str)
@@ -30,7 +32,6 @@ end
 function Link.at_pos(line, pos)
   local links = {}
   local found_link = nil
-  local pattern = '%[%[([^%]]+.-)%]%]'
   local position
   for link in line:gmatch(pattern) do
     local start_from = #links > 0 and links[#links].to or nil
@@ -47,6 +48,19 @@ function Link.at_pos(line, pos)
     return nil, nil
   end
   return Link:new(found_link), position
+end
+
+function Link.all_from_line(line)
+  local links = {}
+  for link in line:gmatch(pattern) do
+    local start_from = #links > 0 and links[#links].to or nil
+    local from, to = line:find(pattern, start_from)
+    if from and to then
+      table.insert(links, Link:new(link))
+    end
+  end
+
+  return links
 end
 
 return Link

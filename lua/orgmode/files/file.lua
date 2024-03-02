@@ -5,6 +5,7 @@ local Headline = require('orgmode.files.headline')
 local ts = vim.treesitter
 local config = require('orgmode.config')
 local Block = require('orgmode.files.elements.block')
+local Link = require('orgmode.org.hyperlinks.link')
 
 ---@class OrgFileMetadata
 ---@field mtime number
@@ -596,6 +597,23 @@ end
 function OrgFile:get_archive_file_location()
   local archive_location = self:_get_directive('archive')
   return config:parse_archive_location(self.filename, archive_location)
+end
+
+memoize('get_links')
+---@return OrgLink[]
+function OrgFile:get_links()
+  self:parse(true)
+  local ts_query = ts_utils.get_query([[
+      (paragraph (expr) @links)
+      (drawer (contents (expr) @links))
+      (headline (item (expr)) @links)
+  ]])
+
+  local links = {}
+  for _, match in ts_query:iter_captures(self.root, self:_get_source()) do
+    vim.list_extend(links, Link.all_from_line(self:get_node_text(match)))
+  end
+  return links
 end
 
 ---@private

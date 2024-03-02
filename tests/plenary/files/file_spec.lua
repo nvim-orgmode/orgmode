@@ -738,4 +738,45 @@ describe('OrgFile', function()
       assert.are.same('112233', file:get_property('custom_id'))
     end)
   end)
+
+  describe('get_links', function()
+    it('should get all links from a file', function()
+      local file = load_file_sync({
+        'Top level [[https://google.com]]',
+        '',
+        '* TODO Headline link to file [[./some-file.org]]',
+        '  - list item link to [[https://duckduckgo.com][duck]]',
+        '',
+        '  :LOGBOOK:',
+        '  :TEST: And link in drawer [[https://github.com][github]]',
+        '  :END:',
+      })
+      local links = file:get_links()
+
+      assert.are.same(4, #links)
+      assert.are.same('https://google.com', links[1].url:to_string())
+      assert.is.Nil(links[1].desc)
+
+      assert.are.same('./some-file.org', links[2].url:to_string())
+      assert.is.Nil(links[2].desc)
+
+      assert.are.same('https://duckduckgo.com', links[3].url:to_string())
+      assert.are.same('duck', links[3].desc)
+
+      assert.are.same('https://github.com', links[4].url:to_string())
+      assert.are.same('github', links[4].desc)
+    end)
+
+    it('should get file level property', function()
+      local file = load_file_sync({
+        ':PROPERTIES:',
+        ':ID: 443355',
+        ':CUSTOM_ID: 112233',
+        ':END:',
+        '#+title: test',
+        '* TODO Headline 1',
+      })
+      assert.are.same('112233', file:get_property('custom_id'))
+    end)
+  end)
 end)
