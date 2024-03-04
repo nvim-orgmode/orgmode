@@ -85,7 +85,7 @@ function OrgFile:reload()
   local bufnr = self:bufnr()
 
   if bufnr > -1 then
-    local updated_file = self:_update_lines(vim.api.nvim_buf_get_lines(bufnr, 0, -1, false))
+    local updated_file = self:_update_lines(vim.api.nvim_buf_get_lines(bufnr, 0, -1, false), bufnr)
     return Promise.resolve(updated_file)
   end
 
@@ -109,17 +109,13 @@ function OrgFile:is_modified()
   local bufnr = self:bufnr()
   if bufnr > -1 then
     local cur_changedtick = vim.api.nvim_buf_get_changedtick(bufnr)
-    local is_changed = cur_changedtick ~= self.metadata.changedtick
-    self.metadata.changedtick = cur_changedtick
-    return is_changed
+    return cur_changedtick ~= self.metadata.changedtick
   end
   local stat = vim.loop.fs_stat(self.filename)
   if not stat then
     return false
   end
-  local is_changed = stat.mtime.nsec ~= self.metadata.mtime
-  self.metadata.mtime = stat.mtime.nsec
-  return is_changed
+  return stat.mtime.nsec ~= self.metadata.mtime
 end
 
 ---Parse the file and update the root node
@@ -646,10 +642,16 @@ end
 
 ---@private
 ---@param lines string[]
-function OrgFile:_update_lines(lines)
+---@param bufnr? number
+function OrgFile:_update_lines(lines, bufnr)
   self.lines = lines
   self.content = table.concat(lines, '\n')
   self:parse()
+  if bufnr then
+    self.metadata.changedtick = vim.api.nvim_buf_get_changedtick(bufnr)
+  else
+    self.metadata.mtime = vim.loop.fs_stat(self.filename).mtime.nsec
+  end
   return self
 end
 
