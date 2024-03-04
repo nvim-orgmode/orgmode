@@ -55,7 +55,7 @@ function TableCell:to_string()
   return self.content
 end
 
----@param data table
+---@param data table | string
 ---@param col_number number
 ---@param row OrgTableRow
 ---@return OrgTableCell

@@ -8,20 +8,6 @@ local CaptureWindow = require('orgmode.capture.window')
 local Date = require('orgmode.objects.date')
 local Datetree = require('orgmode.capture.template.datetree')
 
----@class OrgProcessRefileOpts
----@field source_headline OrgHeadline
----@field destination_file? OrgFile
----@field destination_headline? OrgHeadline
----@field lines? string[]
----@field message? string
-
----@class OrgProcessCaptureOpts
----@field template OrgCaptureTemplate
----@field source_file OrgFile
----@field source_headline? OrgHeadline
----@field destination_file OrgFile
----@field destination_headline? OrgHeadline
-
 ---@class OrgCapture
 ---@field templates OrgCaptureTemplates
 ---@field closing_note OrgCaptureWindow
@@ -30,11 +16,11 @@ local Datetree = require('orgmode.capture.template.datetree')
 local Capture = {}
 Capture.__index = Capture
 
----@param opts { files: OrgFiles }
+---@param opts { files: OrgFiles, templates?: OrgCaptureTemplates }
 function Capture:new(opts)
   local this = setmetatable({}, self)
   this.files = opts.files
-  this.templates = Templates:new()
+  this.templates = opts.templates or Templates:new()
   this.closing_note = this:_setup_closing_note()
   return this
 end

@@ -16,7 +16,7 @@ local Link = require('orgmode.org.hyperlinks.link')
 ---@field lines string[]
 ---@field content string
 ---@field metadata OrgFileMetadata
----@field parser LanguageTree
+---@field parser vim.treesitter.LanguageTree
 ---@field root TSNode
 local OrgFile = {}
 

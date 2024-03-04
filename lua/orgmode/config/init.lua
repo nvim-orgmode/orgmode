@@ -127,24 +127,6 @@ end
 
 function Config:_deprecation_notify(opts)
   local messages = {}
-  if
-    opts.mappings
-    and opts.mappings.org
-    and (opts.mappings.org.org_increase_date or opts.mappings.org.org_decrease_date)
-  then
-    table.insert(
-      messages,
-      'org_increase_date/org_decrease_date mappings are deprecated in favor of org_timestamp_up/org_timestamp_down (More granular increase/decrease).'
-    )
-    table.insert(messages, 'See https://github.com/nvim-orgmode/orgmode/blob/tree-sitter/DOCS.md#changelog')
-    if opts.mappings.org.org_increase_date then
-      opts.mappings.org.org_timestamp_up = opts.mappings.org.org_increase_date
-    end
-    if opts.mappings.org.org_decrease_date then
-      opts.mappings.org.org_timestamp_down = opts.mappings.org.org_decrease_date
-    end
-  end
-
   if opts.org_indent_mode and type(opts.org_indent_mode) == 'string' then
     table.insert(
       messages,
@@ -369,7 +351,7 @@ function Config:setup_ts_predicates()
     end
 
     return false
-  end, true)
+  end, { force = true })
 
   vim.treesitter.query.add_predicate('org-is-valid-priority?', function(match, _, source, predicate)
     local node = match[predicate[2]]
@@ -404,7 +386,7 @@ function Config:setup_ts_predicates()
     local todo_text = vim.treesitter.get_node_text(prev_sibling, source)
     local is_prev_sibling_todo_keyword = todo_keywords[todo_text] and true or false
     return is_prev_sibling_todo_keyword
-  end, true)
+  end, { force = true })
 
   vim.treesitter.query.add_directive('org-set-block-language!', function(match, _, bufnr, pred, metadata)
     local lang_node = match[pred[2]]
@@ -416,7 +398,7 @@ function Config:setup_ts_predicates()
       return
     end
     metadata['injection.language'] = utils.detect_filetype(text) or text
-  end, true)
+  end, { force = true })
 end
 
 ---@param content table

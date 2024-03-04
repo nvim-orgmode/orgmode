@@ -1,4 +1,3 @@
-local Help = require('orgmode.objects.help')
 local config = require('orgmode.config')
 local ts_utils = require('orgmode.utils.treesitter')
 local utils = require('orgmode.utils')
