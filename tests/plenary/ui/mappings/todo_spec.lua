@@ -185,6 +185,30 @@ describe('Todo mappings', function()
       '  <2021-07-21 Wed 22:02>',
     }, vim.api.nvim_buf_get_lines(0, 2, 5, false))
   end)
+
+  it('Should remove todo keyword when space is pressed in fast access', function()
+    config:extend({
+      org_todo_keywords = { 'TODO(t)', 'PHONECALL(p)', 'WAITING(w)', '|', 'DONE(d)' },
+      org_log_into_drawer = 'LOGBOOK',
+    })
+    helpers.create_agenda_file({
+      '* PHONECALL Call dad',
+      '  SCHEDULED: <2021-09-07 Tue 12:00 +1d>',
+    })
+
+    assert.are.same({
+      '* PHONECALL Call dad',
+      '  SCHEDULED: <2021-09-07 Tue 12:00 +1d>',
+    }, vim.api.nvim_buf_get_lines(0, 0, -1, false))
+    vim.fn.cursor(1, 3)
+    vim.cmd([[exe "norm cit\<Space>"]])
+    vim.wait(50)
+    assert.are.same({
+      '* Call dad',
+      '  SCHEDULED: <2021-09-07 Tue 12:00 +1d>',
+    }, vim.api.nvim_buf_get_lines(0, 0, -1, false))
+  end)
+
   it('Should reset state to the one defined in the REPEAT_TO_STATE property', function()
     config:extend({
       org_todo_keywords = { 'TODO(t)', 'PHONECALL(p)', 'WAITING(w)', '|', 'DONE(d)' },
@@ -222,6 +246,7 @@ describe('Todo mappings', function()
       '  :END:',
     }, vim.api.nvim_buf_get_lines(0, 2, 11, false))
   end)
+
   it('Should reset state to the one defined in the org_todo_repeat_to_state config value', function()
     config:extend({
       org_todo_keywords = { 'TODO(t)', 'MEET(m)', '|', 'DONE(d)' },
@@ -256,6 +281,7 @@ describe('Todo mappings', function()
       '  :END:',
     }, vim.api.nvim_buf_get_lines(0, 2, 10, false))
   end)
+
   it('Should prefer reading the property from the DRAWER than the one in the config', function()
     config:extend({
       org_todo_keywords = { 'TODO(t)', 'MEET(m)', 'PHONECALL(p)', '|', 'DONE(d)' },
@@ -297,6 +323,7 @@ describe('Todo mappings', function()
       '  :END:',
     }, vim.api.nvim_buf_get_lines(0, 2, 11, false))
   end)
+
   it('If the keyword does not exist in the list of known keywords, default to the first one', function()
     config:extend({
       org_todo_keywords = { 'TODO(t)', 'MEET(m)', '|', 'DONE(d)' },

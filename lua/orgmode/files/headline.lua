@@ -306,9 +306,6 @@ memoize('get_todo')
 --- and it's type (todo or done)
 --- @return string | nil, TSNode | nil, string | nil
 function Headline:get_todo()
-  local todo_keywords = config:get_todo_keywords()
-  local keywords_info = todo_keywords.KEYS
-
   -- A valid keyword can only be the first child
   local first_item_node = self:_get_child_node('item')
   local todo_node = first_item_node and first_item_node:named_child(0)
@@ -316,12 +313,15 @@ function Headline:get_todo()
     return nil, nil, nil
   end
 
+  local todo_keywords = config:get_todo_keywords()
+
   local text = self.file:get_node_text(todo_node)
-  if not keywords_info[text] then
+  local keyword_by_value = todo_keywords:find(text)
+  if not keyword_by_value then
     return nil, nil, nil
   end
 
-  return text, todo_node, keywords_info[text].type
+  return text, todo_node, keyword_by_value.type
 end
 
 ---@return boolean
