@@ -24,7 +24,7 @@ end
 
 ---@return string[]
 function OrgCompletionTodoKeywords:get_results(_)
-  return config:get_todo_keywords().ALL
+  return config:get_todo_keywords():all_values()
 end
 
 return OrgCompletionTodoKeywords

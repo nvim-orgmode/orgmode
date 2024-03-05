@@ -4,10 +4,11 @@ local fs = require('orgmode.utils.fs')
 local defaults = require('orgmode.config.defaults')
 ---@type table<string, OrgMapEntry>
 local mappings = require('orgmode.config.mappings')
+local TodoKeywords = require('orgmode.objects.todo_keywords')
 
 ---@class OrgConfig:OrgDefaultConfig
 ---@field opts table
----@field todo_keywords table
+---@field todo_keywords OrgTodoKeywords
 local Config = {}
 
 ---@param opts? table
@@ -183,48 +184,13 @@ end
 ---@return OrgTodoKeywords
 function Config:get_todo_keywords()
   if self.todo_keywords then
-    return vim.deepcopy(self.todo_keywords)
+    return self.todo_keywords
   end
-  local parse_todo = function(val)
-    local value, shortcut = val:match('(.*)%((.)[^%)]*%)$')
-    if value and shortcut then
-      return { value = value, shortcut = shortcut, custom_shortcut = true }
-    end
-    return { value = val, shortcut = val:sub(1, 1):lower(), custom_shortcut = false }
-  end
-  local types = { TODO = {}, DONE = {}, ALL = {}, KEYS = {}, FAST_ACCESS = {}, has_fast_access = false }
-  local type = 'TODO'
-  local has_separator = vim.tbl_contains(self.opts.org_todo_keywords, '|')
-  local index = 1
-  for i, word in ipairs(self.opts.org_todo_keywords) do
-    if word == '|' then
-      type = 'DONE'
-    else
-      if not has_separator and i == #self.opts.org_todo_keywords then
-        type = 'DONE'
-      end
-      local data = parse_todo(word)
-      if data.custom_shortcut then
-        types.has_fast_access = true
-      end
-      table.insert(types[type], data.value)
-      table.insert(types.ALL, data.value)
-      types.KEYS[data.value] = {
-        type = type,
-        shortcut = data.shortcut,
-        len = data.value:len(),
-        index = index,
-      }
-      table.insert(types.FAST_ACCESS, {
-        value = data.value,
-        type = type,
-        shortcut = data.shortcut,
-      })
-      index = index + 1
-    end
-  end
-  self.todo_keywords = types
-  return types
+  self.todo_keywords = TodoKeywords:new({
+    org_todo_keywords = self.opts.org_todo_keywords,
+    org_todo_keyword_faces = self.opts.org_todo_keyword_faces,
+  })
+  return self.todo_keywords
 end
 
 --- Setup mappings for a given category and buffer
@@ -340,7 +306,7 @@ function Config:get_priorities()
 end
 
 function Config:setup_ts_predicates()
-  local todo_keywords = self:get_todo_keywords().KEYS
+  local todo_keywords = self:get_todo_keywords():keys()
   local valid_priorities = self:get_priorities()
 
   vim.treesitter.query.add_predicate('org-is-todo-keyword?', function(match, _, source, predicate)
