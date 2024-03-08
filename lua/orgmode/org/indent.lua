@@ -175,7 +175,7 @@ local get_matches = ts_utils.memoize_by_buf_tick(function(bufnr)
         indent = new_header_indent,
       })
 
-      local content_indent_pad = 0
+      local content_indent_pad
       -- Only include the header line and the content. Do not include the footer in the loop.
       for i = range.start.line + 1, range['end'].line - 2 do
         local curr_indent = vim.fn.indent(i + 1)
@@ -184,15 +184,16 @@ local get_matches = ts_utils.memoize_by_buf_tick(function(bufnr)
         -- If the current content indentaion is less than the new header indent we want to increase all of the
         -- content by the largest difference in indentation between a given content line and the new header indent.
         if curr_indent < new_header_indent then
-          content_indent_pad = math.max(new_indent_pad, content_indent_pad)
+          -- We do a comparison against 0 if the indent pad isn't set to ensure we aren't over or
+          -- underindenting. We only opt for the `new_indent_pad` if it's more than 0 basically as
+          -- that means we need to increase the indentation of the items in the block to align them
+          -- with the header/footer.
+          content_indent_pad = math.max(new_indent_pad, content_indent_pad or 0)
         else
-          -- If the current content indentation is more than the new header indentation, but it was the current
-          -- content indentation was less than the current header indent then we want to add some indentation onto
-          -- the content by the largest negative difference (meaning -1 > -2 > -3 so take -1 as the pad).
+          -- If there hasn't been an indent padding assigned, assign it now.
           --
-          -- We do a check for 0 here as we don't want to do a max of neg number against 0. 0 will always win. As
-          -- such if the current pad is 0 just set to the new calculated pad.
-          if content_indent_pad == 0 then
+          -- Otherwise use the largest amount of padding to ensure alignment to the block.
+          if not content_indent_pad then
             content_indent_pad = new_indent_pad
           else
             content_indent_pad = math.max(new_indent_pad, content_indent_pad)
