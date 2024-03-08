@@ -69,6 +69,16 @@ local function test_full_reindent()
     '           "another key": "another value"',
     '               }',
     '      #+END_SRC',
+    '    - Correctly ignores blank lines for calculating indentation',
+    '      #+BEGIN_SRC json',
+    '',
+    '          {',
+    '            "key": "value",',
+    '',
+    '            "another key": "another value"',
+    '          }',
+    '',
+    '      #+END_SRC',
   }
   helpers.create_file(unformatted_file)
   vim.cmd([[silent norm 0gg=G]])
@@ -132,6 +142,16 @@ local function test_full_reindent()
       '           "another key": "another value"',
       '               }',
       '      #+END_SRC',
+      '    - Correctly ignores blank lines for calculating indentation',
+      '      #+BEGIN_SRC json',
+      '',
+      '      {',
+      '        "key": "value",',
+      '',
+      '        "another key": "another value"',
+      '      }',
+      '',
+      '      #+END_SRC',
     }
   else
     expected = {
@@ -191,6 +211,16 @@ local function test_full_reindent()
       '       "key": "value",',
       '       "another key": "another value"',
       '           }',
+      '  #+END_SRC',
+      '- Correctly ignores blank lines for calculating indentation',
+      '  #+BEGIN_SRC json',
+      '',
+      '  {',
+      '    "key": "value",',
+      '',
+      '    "another key": "another value"',
+      '  }',
+      '',
       '  #+END_SRC',
     }
   end
