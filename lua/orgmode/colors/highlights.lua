@@ -94,14 +94,14 @@ function M.link_highlights()
       ['@org.code.delimiter'] = 'String',
       ['@org.verbatim'] = 'String',
       ['@org.verbatim.delimiter'] = 'String',
-      ['@org.bold'] = { bold = true, default = true },
-      ['@org.bold.delimiter'] = { bold = true, default = true },
-      ['@org.italic'] = { italic = true, default = true },
-      ['@org.italic.delimiter'] = { italic = true, default = true },
-      ['@org.strikethrough'] = { strikethrough = true, default = true },
-      ['@org.strikethrough.delimiter'] = { strikethrough = true, default = true },
-      ['@org.underline'] = { underline = true, default = true },
-      ['@org.underline.delimiter'] = { underline = true, default = true },
+      ['@org.bold'] = { bold = true },
+      ['@org.bold.delimiter'] = { bold = true },
+      ['@org.italic'] = { italic = true },
+      ['@org.italic.delimiter'] = { italic = true },
+      ['@org.strikethrough'] = { strikethrough = true },
+      ['@org.strikethrough.delimiter'] = { strikethrough = true },
+      ['@org.underline'] = { underline = true },
+      ['@org.underline.delimiter'] = { underline = true },
       ['@org.table.delimiter'] = '@punctuation',
       ['@org.table.heading'] = '@function',
     })
@@ -109,9 +109,10 @@ function M.link_highlights()
 
   for src, def in pairs(links) do
     if type(def) == 'table' then
+      def.default = true
       vim.api.nvim_set_hl(0, src, def)
     else
-      vim.api.nvim_set_hl(0, src, { link = def })
+      vim.api.nvim_set_hl(0, src, { link = def, default = true })
     end
   end
 end
