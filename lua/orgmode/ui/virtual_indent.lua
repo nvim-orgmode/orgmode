@@ -84,8 +84,8 @@ function VirtualIndent:set_indent(start_line, end_line, ignore_ts)
   if headline and not ignore_ts then
     local parent = headline:parent()
     if parent then
-      start_line = parent:start()
-      end_line = parent:end_()
+      start_line = math.min(parent:start(), start_line)
+      end_line = math.max(parent:end_(), end_line)
     end
   end
   if start_line > 0 then
