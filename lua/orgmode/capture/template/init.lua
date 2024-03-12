@@ -213,7 +213,7 @@ function Template:_compile_expansions(content, found_expansions)
   found_expansions = found_expansions or expansions
   for expansion, compiler in pairs(found_expansions) do
     if content:match(vim.pesc(expansion)) then
-      content = content:gsub(vim.pesc(expansion), compiler())
+      content = content:gsub(vim.pesc(expansion), vim.pesc(compiler()))
     end
   end
   return content
