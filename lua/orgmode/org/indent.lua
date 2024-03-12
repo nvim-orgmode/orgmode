@@ -175,27 +175,34 @@ local get_matches = ts_utils.memoize_by_buf_tick(function(bufnr)
         indent = new_header_indent,
       })
 
-      local content_indent_pad = 0
+      local content_indent_pad
       -- Only include the header line and the content. Do not include the footer in the loop.
       for i = range.start.line + 1, range['end'].line - 2 do
-        local curr_indent = vim.fn.indent(i + 1)
-        -- Correctly align the pad to the new header position if it was underindented
-        local new_indent_pad = new_header_indent - curr_indent
-        -- If the current content indentaion is less than the new header indent we want to increase all of the
-        -- content by the largest difference in indentation between a given content line and the new header indent.
-        if curr_indent < new_header_indent then
-          content_indent_pad = math.max(new_indent_pad, content_indent_pad)
-        else
-          -- If the current content indentation is more than the new header indentation, but it was the current
-          -- content indentation was less than the current header indent then we want to add some indentation onto
-          -- the content by the largest negative difference (meaning -1 > -2 > -3 so take -1 as the pad).
-          --
-          -- We do a check for 0 here as we don't want to do a max of neg number against 0. 0 will always win. As
-          -- such if the current pad is 0 just set to the new calculated pad.
-          if content_indent_pad == 0 then
-            content_indent_pad = new_indent_pad
+        local linenr = i + 1
+        local line_content = vim.api.nvim_buf_get_lines(bufnr, linenr - 1, linenr, true)[1]
+        -- If the line is blank, we should ignore it as `vim.fn.indent` will return a 0 indent for
+        -- it which may be less indented than the header indentation. We shouldn't factor in blank
+        -- lines for indentation.
+        if not line_content:match('^$') then
+          local curr_indent = vim.fn.indent(linenr)
+          -- Correctly align the pad to the new header position if it was underindented
+          local new_indent_pad = new_header_indent - curr_indent
+          -- If the current content indentaion is less than the new header indent we want to increase all of the
+          -- content by the largest difference in indentation between a given content line and the new header indent.
+          if curr_indent < new_header_indent then
+            content_indent_pad = math.max(new_indent_pad, content_indent_pad or 0)
           else
-            content_indent_pad = math.max(new_indent_pad, content_indent_pad)
+            -- If the current content indentation is more than the new header indentation, but it was the current
+            -- content indentation was less than the current header indent then we want to add some indentation onto
+            -- the content by the largest negative difference (meaning -1 > -2 > -3 so take -1 as the pad).
+            --
+            -- We do a check for 0 here as we don't want to do a max of neg number against 0. 0 will always win. As
+            -- such if the current pad is 0 just set to the new calculated pad.
+            if not content_indent_pad then
+              content_indent_pad = new_indent_pad
+            else
+              content_indent_pad = math.max(new_indent_pad, content_indent_pad)
+            end
           end
         end
       end
