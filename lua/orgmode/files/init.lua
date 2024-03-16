@@ -208,6 +208,7 @@ end
 
 ---@param property_name string
 ---@param term string
+---@return OrgHeadline[]
 function OrgFiles:find_headlines_with_property_matching(property_name, term)
   local headlines = {}
   for _, orgfile in ipairs(self:all()) do
@@ -216,6 +217,33 @@ function OrgFiles:find_headlines_with_property_matching(property_name, term)
     end
   end
   return headlines
+end
+
+---@param property_name string
+---@param term string
+---@return OrgHeadline[]
+function OrgFiles:find_headlines_with_property(property_name, term)
+  local headlines = {}
+  for _, orgfile in ipairs(self:all()) do
+    for _, headline in ipairs(orgfile:find_headlines_with_property(property_name, term)) do
+      table.insert(headlines, headline)
+    end
+  end
+  return headlines
+end
+
+---@param property_name string
+---@param term string
+---@return OrgFile[]
+function OrgFiles:find_files_with_property(property_name, term)
+  local files = {}
+  for _, orgfile in ipairs(self:all()) do
+    local property = orgfile:get_property(property_name)
+    if property and property:lower() == term:lower() then
+      table.insert(files, orgfile)
+    end
+  end
+  return files
 end
 
 ---@param term string

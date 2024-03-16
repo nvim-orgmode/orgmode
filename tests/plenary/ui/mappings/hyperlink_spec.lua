@@ -49,7 +49,7 @@ describe('Hyperlink mappings', function()
     assert.is.same('** headline of target custom_id', vim.api.nvim_get_current_line())
   end)
 
-  it('should follow link to id', function()
+  it('should follow link to id in headline', function()
     local target_file = helpers.create_agenda_file({
       '* Test hyperlink',
       ' - some',
@@ -69,6 +69,25 @@ describe('Hyperlink mappings', function()
     vim.fn.cursor(1, 30)
     vim.cmd([[norm ,oo]])
     assert.is.same('** headline of target id', vim.api.nvim_get_current_line())
+  end)
+
+  it('should follow link to id in file', function()
+    local target_file = helpers.create_agenda_file({
+      ':PROPERTIES:',
+      ':ID: add6b93c-9e0e-4922-a4f5-c00926787197',
+      ':END:',
+      '* Test hyperlink to file',
+      ' - some',
+      ' - boiler',
+      ' - plate',
+    })
+    helpers.create_agenda_file({
+      'This link should lead to [[id:add6b93c-9e0e-4922-a4f5-c00926787197][target file]]',
+    })
+    vim.fn.cursor(1, 30)
+    vim.cmd([[norm ,oo]])
+    assert.are.same(target_file.filename, vim.api.nvim_buf_get_name(0))
+    assert.is.same(':PROPERTIES:', vim.api.nvim_get_current_line())
   end)
 
   it('should store link to a headline', function()

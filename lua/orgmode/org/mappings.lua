@@ -836,7 +836,16 @@ function OrgMappings:open_at_point()
 
   if link.url:is_id() then
     local id = link.url:get_id() or ''
-    local headlines = self.files:find_headlines_with_property_matching('id', id)
+    local files = self.files:find_files_with_property('id', id)
+    if #files > 0 then
+      if #files > 1 then
+        utils.echo_warning(string.format('Multiple files found with id: %s, jumping to first one found', id))
+      end
+      vim.cmd(('edit %s'):format(files[1].filename))
+      return
+    end
+
+    local headlines = self.files:find_headlines_with_property('id', id)
     if #headlines == 0 then
       return utils.echo_warning(string.format('No headline found with id: %s', id))
     end
