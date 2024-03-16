@@ -1,5 +1,6 @@
 local OrgFile = require('orgmode.files.file')
 local config = require('orgmode.config')
+local Range = require('orgmode.files.elements.range')
 
 describe('OrgFile', function()
   ---@return OrgFile
@@ -748,23 +749,59 @@ describe('OrgFile', function()
         '  - list item link to [[https://duckduckgo.com][duck]]',
         '',
         '  :LOGBOOK:',
-        '  :TEST: And link in drawer [[https://github.com][github]]',
+        '  :TEST: And link in drawer [[https://github.com][github link]]',
         '  :END:',
       })
       local links = file:get_links()
 
       assert.are.same(4, #links)
       assert.are.same('https://google.com', links[1].url:to_string())
+      assert.are.same(
+        Range:new({
+          start_line = 1,
+          end_line = 1,
+          start_col = 11,
+          end_col = 32,
+        }),
+        links[1].range
+      )
       assert.is.Nil(links[1].desc)
 
       assert.are.same('./some-file.org', links[2].url:to_string())
       assert.is.Nil(links[2].desc)
+      assert.are.same(
+        Range:new({
+          start_line = 3,
+          end_line = 3,
+          start_col = 30,
+          end_col = 48,
+        }),
+        links[2].range
+      )
 
       assert.are.same('https://duckduckgo.com', links[3].url:to_string())
       assert.are.same('duck', links[3].desc)
+      assert.are.same(
+        Range:new({
+          start_line = 4,
+          end_line = 4,
+          start_col = 23,
+          end_col = 54,
+        }),
+        links[3].range
+      )
 
       assert.are.same('https://github.com', links[4].url:to_string())
-      assert.are.same('github', links[4].desc)
+      assert.are.same('github link', links[4].desc)
+      assert.are.same(
+        Range:new({
+          start_line = 7,
+          end_line = 7,
+          start_col = 29,
+          end_col = 63,
+        }),
+        links[4].range
+      )
     end)
 
     it('should get file level property', function()

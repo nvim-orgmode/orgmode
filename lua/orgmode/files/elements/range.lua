@@ -5,7 +5,7 @@
 ---@field end_col number
 local Range = {}
 
----@param data table
+---@param data { start_line?: number, end_line?: number, start_col?: number, end_col?: number }
 function Range:new(data)
   local opts = {}
   opts.start_line = data.start_line

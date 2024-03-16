@@ -1,19 +1,23 @@
 local Url = require('orgmode.org.hyperlinks.url')
+local Range = require('orgmode.files.elements.range')
 
 ---@class OrgLink
 ---@field url OrgUrl
 ---@field desc string | nil
+---@field range? OrgRange
 local Link = {}
 
 local pattern = '%[%[([^%]]+.-)%]%]'
 
 ---@param str string
+---@param range? OrgRange
 ---@return OrgLink
-function Link:new(str)
+function Link:new(str, range)
   local this = setmetatable({}, { __index = Link })
   local parts = vim.split(str, '][', { plain = true })
   this.url = Url:new(parts[1] or '')
   this.desc = parts[2]
+  this.range = range
   return this
 end
 
@@ -50,13 +54,16 @@ function Link.at_pos(line, pos)
   return Link:new(found_link), position
 end
 
-function Link.all_from_line(line)
+function Link.all_from_line(line, line_number)
   local links = {}
   for link in line:gmatch(pattern) do
     local start_from = #links > 0 and links[#links].to or nil
     local from, to = line:find(pattern, start_from)
     if from and to then
-      table.insert(links, Link:new(link))
+      local range = Range.from_line(line_number)
+      range.start_col = from
+      range.end_col = to
+      table.insert(links, Link:new(link, range))
     end
   end
 

@@ -606,8 +606,13 @@ function OrgFile:get_links()
   ]])
 
   local links = {}
+  local processed_lines = {}
   for _, match in ts_query:iter_captures(self.root, self:_get_source()) do
-    vim.list_extend(links, Link.all_from_line(self:get_node_text(match)))
+    local line = match:start()
+    if not processed_lines[line] then
+      vim.list_extend(links, Link.all_from_line(self.lines[line + 1], line + 1))
+      processed_lines[line] = true
+    end
   end
   return links
 end
