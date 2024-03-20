@@ -34,7 +34,7 @@ local expansions = {
   end,
 }
 
----@class OrgCaptureTemplate
+---@class OrgCaptureTemplateOpts
 ---@field description? string
 ---@field template? string|string[]
 ---@field target? string
@@ -43,9 +43,12 @@ local expansions = {
 ---@field regexp? string
 ---@field properties? OrgCaptureTemplateProperties
 ---@field subtemplates? table<string, OrgCaptureTemplate>
+
+---@class OrgCaptureTemplate:OrgCaptureTemplateOpts
+---@field private _compile_hooks (fun(content:string):string)[]
 local Template = {}
 
----@param opts OrgCaptureTemplate
+---@param opts OrgCaptureTemplateOpts
 ---@return OrgCaptureTemplate
 function Template:new(opts)
   opts = opts or {}
@@ -92,6 +95,12 @@ function Template:setup()
       vim.cmd([[startinsert]])
     end
   end
+end
+
+function Template:on_compile(hook)
+  self._compile_hooks = self._compile_hooks or {}
+  table.insert(self._compile_hooks, hook)
+  return self
 end
 
 function Template:validate_options()
@@ -204,6 +213,11 @@ function Template:_compile(content)
   content = self:_compile_expansions(content)
   content = self:_compile_expressions(content)
   content = self:_compile_prompts(content)
+  if self._compile_hooks then
+    for _, hook in ipairs(self._compile_hooks) do
+      content = hook(content)
+    end
+  end
   return content
 end
 

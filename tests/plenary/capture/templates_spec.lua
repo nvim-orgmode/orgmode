@@ -60,4 +60,16 @@ describe('Capture template', function()
 
     assert.are.same(date:to_string(), template:get_datetree_opts().date:to_string())
   end)
+
+  it('should process custom compile hooks', function()
+    local template = Template:new({
+      template = '* This is a test {title} and {slug} in headline',
+    })
+    template:on_compile(function(content)
+      content = content:gsub('{title}', 'Org Test')
+      content = content:gsub('{slug}', 'org-test')
+      return content
+    end)
+    assert.are.same({ '* This is a test Org Test and org-test in headline' }, template:compile())
+  end)
 end)
