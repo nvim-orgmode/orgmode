@@ -46,10 +46,20 @@ for abbrev, cmd in pairs(abbreviations) do
 end
 
 for _, char in ipairs({ '*', '=', '/', '+', '~', '_' }) do
-  vim.keymap.set('x', 'i' .. char, ':<C-u>normal! T' .. char .. 'vt' .. char .. '<CR>', { buffer = true })
-  vim.keymap.set('o', 'i' .. char, ':normal vi' .. char .. '<CR>', { buffer = true })
-  vim.keymap.set('x', 'a' .. char, ':<C-u>normal! F' .. char .. 'vf' .. char .. '<CR>', { buffer = true })
-  vim.keymap.set('o', 'a' .. char, ':normal va' .. char .. '<CR>', { buffer = true })
+  vim.keymap.set(
+    'x',
+    'i' .. char,
+    ([[:<C-u>silent! lua require('orgmode.org.text_objects').select_nearest_token_pair('%s')<CR>]]):format(char),
+    { buffer = true, silent = true }
+  )
+  vim.keymap.set('o', 'i' .. char, ':silent! normal vi' .. char .. '<CR>', { buffer = true, silent = true })
+  vim.keymap.set(
+    'x',
+    'a' .. char,
+    ([[:<C-u>silent! lua require('orgmode.org.text_objects').select_nearest_token_pair('%s', true)<CR>]]):format(char),
+    { buffer = true, silent = true }
+  )
+  vim.keymap.set('o', 'a' .. char, ':normal va' .. char .. '<CR>', { buffer = true, silent = true })
 end
 
 vim.b.undo_ftplugin = table.concat({
@@ -62,5 +72,5 @@ vim.b.undo_ftplugin = table.concat({
   'foldexpr<',
   'formatexpr<',
   'omnifunc<',
-  '| unlet! b:org_bufnr'
+  '| unlet! b:org_bufnr',
 }, ' ')
