@@ -95,21 +95,27 @@ end
 ---@param time table
 ---@return OrgDate
 function Date:from_time_table(time)
-  local range_diff = self.timestamp_end and self.timestamp_end - self.timestamp or 0
-  local timestamp = os.time(set_date_opts(time, {}, true))
+  local timestamp_end = time.timestamp_end or self.timestamp_end
+  local timestamp = time.timestamp or self.timestamp
+  local range_diff = timestamp_end and timestamp_end - timestamp or 0
+  timestamp = os.time(set_date_opts(time, {}, true))
   local opts = set_date_opts(os.date('*t', timestamp))
-  opts.date_only = self.date_only
-  opts.dayname = self.dayname
-  opts.adjustments = self.adjustments
-  opts.type = self.type
-  opts.active = self.active
-  opts.range = self.range
-  if self.timestamp_end then
+  if time.date_only ~= nil then
+    opts.date_only = time.date_only
+  else
+    opts.date_only = self.date_only
+  end
+  opts.dayname = time.dayname or self.dayname
+  opts.adjustments = time.adjustments or self.adjustments
+  opts.type = time.type or self.type
+  opts.active = time.active or self.active
+  opts.range = time.range or self.range
+  if time.timestamp_end or self.timestamp_end then
     opts.timestamp_end = timestamp + range_diff
   end
-  opts.is_date_range_start = self.is_date_range_start
-  opts.is_date_range_end = self.is_date_range_end
-  opts.related_date_range = self.related_date_range
+  opts.is_date_range_start = time.is_date_range_start or self.is_date_range_start
+  opts.is_date_range_end = time.is_date_range_end or self.is_date_range_end
+  opts.related_date_range = time.related_date_range or self.related_date_range
   return Date:new(opts)
 end
 
