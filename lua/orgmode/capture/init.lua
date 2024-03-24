@@ -8,18 +8,22 @@ local CaptureWindow = require('orgmode.capture.window')
 local Date = require('orgmode.objects.date')
 local Datetree = require('orgmode.capture.template.datetree')
 
+---@alias OrgOnCaptureClose fun(capture:OrgCapture, opts:OrgProcessCaptureOpts)
+
 ---@class OrgCapture
 ---@field templates OrgCaptureTemplates
 ---@field closing_note OrgCaptureWindow
 ---@field files OrgFiles
+---@field on_close OrgOnCaptureClose
 ---@field _window OrgCaptureWindow
 local Capture = {}
 Capture.__index = Capture
 
----@param opts { files: OrgFiles, templates?: OrgCaptureTemplates }
+---@param opts { files: OrgFiles, templates?: OrgCaptureTemplates, on_close?: OrgOnCaptureClose }
 function Capture:new(opts)
   local this = setmetatable({}, self)
   this.files = opts.files
+  this.on_close = opts.on_close
   this.templates = opts.templates or Templates:new()
   this.closing_note = this:_setup_closing_note()
   return this
@@ -68,6 +72,9 @@ function Capture:on_refile_close()
   local opts = self:_get_refile_vars()
   if not opts then
     return
+  end
+  if self.on_close then
+    self.on_close(self, opts)
   end
   if is_modified then
     local choice =
