@@ -161,6 +161,7 @@ local DefaultConfig = {
       org_schedule = '<prefix>is',
       org_time_stamp = '<prefix>i.',
       org_time_stamp_inactive = '<prefix>i!',
+      org_toggle_timestamp_type = '<prefix>d!',
       org_insert_link = '<prefix>li',
       org_store_link = '<prefix>ls',
       org_clock_in = '<prefix>xi',
