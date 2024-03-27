@@ -223,47 +223,6 @@ local get_matches = ts_utils.memoize_by_buf_tick(function(bufnr)
   return matches
 end)
 
-local prev_section = nil
-local function foldexpr()
-  query = query or vim.treesitter.query.get('org', 'org_indent')
-  local matches = get_matches(0)
-  local match = matches[vim.v.lnum]
-  local next_match = matches[vim.v.lnum + 1]
-  if not match and not next_match then
-    return '='
-  end
-  match = match or {}
-
-  if match.type == 'headline' then
-    prev_section = match
-    if
-      match.parent:parent():type() ~= 'section'
-      and match.stars > 1
-      and match.parent:named_child_count('section') == 0
-    then
-      return 0
-    end
-    return '>' .. match.stars
-  end
-
-  if match.type == 'drawer' or match.type == 'property_drawer' or match.type == 'block' then
-    if match.line_nr == vim.v.lnum then
-      return 'a1'
-    end
-    if match.line_end_nr == vim.v.lnum then
-      return 's1'
-    end
-  end
-
-  if next_match and next_match.type == 'headline' and prev_section then
-    if next_match.stars <= prev_section.stars then
-      return '<' .. prev_section.stars
-    end
-  end
-
-  return '='
-end
-
 -- Some explanation as to the caching insanity inside of this function. The `get_matches` function
 -- is memoized, but that only goes so far. When a user wants to indent a large region, say with
 -- `norm! 0gg=G` every indent operation will call `get_matches` and get *new* matches. For the most
@@ -344,7 +303,6 @@ end
 
 return {
   setup_virtual_indent = setup_virtual_indent,
-  foldexpr = foldexpr,
   indentexpr = indentexpr,
   foldtext = foldtext,
 }

@@ -5,7 +5,8 @@ local query_cache = {}
 -- Reload treesitter highlighter without triggering FileType autocommands that include reloading entire file
 function M.restart_highlights(bufnr)
   bufnr = bufnr or 0
-  require('nvim-treesitter.configs').reattach_module('highlight', bufnr, 'org')
+  vim.treesitter.stop(bufnr)
+  vim.treesitter.start(bufnr)
 end
 
 function M.parse_current_file()
