@@ -73,9 +73,6 @@ function Capture:on_refile_close()
   if not opts then
     return
   end
-  if self.on_close then
-    self.on_close(self, opts)
-  end
   if is_modified then
     local choice =
       vim.fn.confirm(string.format('Do you want to refile this to %s?', opts.destination_file.filename), '&Yes\n&No')
@@ -167,6 +164,9 @@ function Capture:_refile_from_capture_buffer(opts)
     end)
     :wait()
 
+  if self.on_close then
+    self.on_close(self, opts)
+  end
   utils.echo_info(('Wrote %s'):format(destination_file.filename))
   self:kill()
   return true
