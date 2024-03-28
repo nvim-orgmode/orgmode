@@ -445,7 +445,10 @@ function Capture:_get_refile_vars()
   end
 
   local source_file = self.files:get_current_file()
-  local source_headline = source_file:get_headlines()[1]
+  local source_headline = nil
+  if not self._window.template.whole_file then
+    source_headline = source_file:get_headlines()[1]
+  end
   local destination_file = self.files:get(file)
   local destination_headline = nil
   if self._window.template.headline then

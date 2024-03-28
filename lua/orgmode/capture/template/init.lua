@@ -43,6 +43,7 @@ local expansions = {
 ---@field regexp? string
 ---@field properties? OrgCaptureTemplateProperties
 ---@field subtemplates? table<string, OrgCaptureTemplate>
+---@field whole_file? boolean
 
 ---@class OrgCaptureTemplate:OrgCaptureTemplateOpts
 ---@field private _compile_hooks (fun(content:string):string)[]
@@ -62,6 +63,7 @@ function Template:new(opts)
     properties = { opts.properties, 'table', true },
     subtemplates = { opts.subtemplates, 'table', true },
     datetree = { opts.datetree, { 'boolean', 'table' }, true },
+    whole_file = { opts.whole_file, 'boolean', true },
   })
 
   local this = {}
@@ -72,6 +74,7 @@ function Template:new(opts)
   this.properties = TemplateProperties:new(opts.properties)
   this.datetree = opts.datetree
   this.regexp = opts.regexp
+  this.whole_file = opts.whole_file
 
   this.subtemplates = {}
   for key, subtemplate in pairs(opts.subtemplates or {}) do
