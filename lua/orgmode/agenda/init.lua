@@ -87,7 +87,7 @@ function Agenda:open_window()
   vim.cmd([[setf orgagenda]])
   vim.cmd([[setlocal buftype=nofile bufhidden=wipe nobuflisted nolist noswapfile nowrap nospell]])
   vim.w.org_window_pos = vim.fn.win_screenpos(0)
-  config:setup_mappings('agenda')
+  config:setup_mappings('agenda', vim.api.nvim_get_current_buf())
   return vim.fn.bufnr()
 end
 

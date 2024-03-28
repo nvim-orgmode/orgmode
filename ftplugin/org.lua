@@ -7,8 +7,10 @@ vim.b.did_ftplugin = true
 local config = require('orgmode.config')
 local utils = require('orgmode.utils')
 
-config:setup_mappings('org')
-config:setup_mappings('text_objects')
+vim.b.org_bufnr = vim.api.nvim_get_current_buf()
+
+config:setup_mappings('org', vim.b.org_bufnr)
+config:setup_mappings('text_objects', vim.b.org_bufnr)
 config:setup_foldlevel()
 
 if config.org_startup_indented then
@@ -16,7 +18,6 @@ if config.org_startup_indented then
 end
 require('orgmode.org.indent').setup_virtual_indent()
 
-vim.b.org_bufnr = vim.api.nvim_get_current_buf()
 vim.bo.modeline = false
 vim.opt_local.fillchars:append('fold: ')
 vim.opt_local.foldmethod = 'expr'
@@ -62,5 +63,5 @@ vim.b.undo_ftplugin = table.concat({
   'foldexpr<',
   'formatexpr<',
   'omnifunc<',
-  '| unlet! b:org_bufnr'
+  '| unlet! b:org_bufnr',
 }, ' ')

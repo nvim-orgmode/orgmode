@@ -1,4 +1,5 @@
 ---@class OrgMapEntry
+---@field provided_opts table
 ---@field handler string
 ---@field handler_cmd string
 ---@field args table[]
@@ -39,6 +40,12 @@ function MapEntry.custom(handler, opts)
   return MapEntry:new(handler, opts)
 end
 
+function MapEntry:with_handler(handler)
+  local map_entry = MapEntry:new(self.handler, self.provided_opts)
+  map_entry.handler = handler
+  return map_entry
+end
+
 ---@param handler string|function
 ---@param opts? table<string, any>
 function MapEntry:new(handler, opts)
@@ -51,6 +58,7 @@ function MapEntry:new(handler, opts)
     type = { opts.type, 'string', true },
   })
   local data = {}
+  data.provided_opts = opts
   data.handler = handler
   data.opts = vim.tbl_extend('keep', opts.opts or {}, {
     nowait = true,
@@ -85,7 +93,9 @@ function MapEntry:attach(default_mapping, user_mapping, opts)
   end
 
   if type(mapping) ~= 'table' then
-    error('Invalid mapping provided for ' .. self.handler .. '. Only string and array of strings can be provided')
+    error(
+      'Invalid mapping provided for ' .. tostring(self.handler) .. '. Only string and array of strings can be provided'
+    )
   end
 
   local map_opts = vim.tbl_extend('force', self.opts, opts or {})

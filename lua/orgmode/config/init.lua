@@ -205,6 +205,17 @@ function Config:setup_mappings(category, buffer)
       buffer = buffer or vim.api.nvim_get_current_buf(),
     })
   end
+  local maps = self:get_mappings(category, buffer)
+  if not maps then
+    return
+  end
+
+  for _, map in pairs(maps) do
+    map.map_entry:attach(map.default_map, map.user_map, map.opts)
+  end
+end
+
+function Config:get_mappings(category, buffer)
   if self.opts.mappings.disable_all then
     return
   end
@@ -221,9 +232,16 @@ function Config:setup_mappings(category, buffer)
     opts.prefix = self.opts.mappings.prefix
   end
 
+  local result = {}
   for name, map_entry in pairs(map_entries) do
-    map_entry:attach(default_mappings[name], user_mappings[name], opts)
+    result[name] = {
+      map_entry = map_entry,
+      default_map = default_mappings[name],
+      user_map = user_mappings[name],
+      opts = opts,
+    }
   end
+  return result
 end
 
 --- Setup the foldlevel for a given org file

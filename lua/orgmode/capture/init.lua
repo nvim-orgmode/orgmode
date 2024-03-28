@@ -33,13 +33,41 @@ function Capture:prompt()
   self:_create_prompt(self.templates:get_list())
 end
 
+---@private
+function Capture:setup_mappings()
+  local maps = config:get_mappings('capture', vim.api.nvim_get_current_buf())
+  if not maps then
+    return
+  end
+  local capture_map = maps.org_capture_finalize
+  capture_map.map_entry
+    :with_handler(function()
+      return self:refile()
+    end)
+    :attach(capture_map.default_map, capture_map.user_map, capture_map.opts)
+
+  local refile_map = maps.org_capture_refile
+  refile_map.map_entry
+    :with_handler(function()
+      return self:refile_to_destination()
+    end)
+    :attach(refile_map.default_map, refile_map.user_map, refile_map.opts)
+
+  local kill_map = maps.org_capture_kill
+  kill_map.map_entry
+    :with_handler(function()
+      return self:kill()
+    end)
+    :attach(kill_map.default_map, kill_map.user_map, kill_map.opts)
+end
+
 ---@param template OrgCaptureTemplate
 ---@return OrgPromise<OrgCaptureWindow>
 function Capture:open_template(template)
   self._window = CaptureWindow:new({
     template = template,
     on_open = function()
-      return config:setup_mappings('capture')
+      return self:setup_mappings()
     end,
     on_close = function()
       return self:on_refile_close()
@@ -484,7 +512,7 @@ function Capture:_setup_closing_note()
       return content
     end,
     on_open = function()
-      config:setup_mappings('note')
+      config:setup_mappings('note', vim.api.nvim_get_current_buf())
     end,
   })
 end
