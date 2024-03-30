@@ -25,18 +25,17 @@ function OrgFiles:new(opts)
   }
   setmetatable(data, self)
   self.__index = self
-  data:load_sync()
   return data
 end
 
 ---@param force? boolean Force reload all files
----@return OrgPromise
+---@return OrgPromise<OrgFiles>
 function OrgFiles:load(force)
   if not force and self.load_state then
     if self.load_state == 'loading' then
       self:ensure_loaded()
     end
-    return Promise.resolve(self.files)
+    return Promise.resolve(self)
   end
 
   self.load_state = 'loading'
@@ -51,7 +50,7 @@ function OrgFiles:load(force)
 
   return Promise.all(actions):next(function()
     self.load_state = 'loaded'
-    return self.files
+    return self
   end)
 end
 

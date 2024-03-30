@@ -26,7 +26,7 @@ end
 
 function Files.load(callback)
   Files.loader():load():next(function(files)
-    Files.orgfiles = files
+    Files.orgfiles = Files.loader().files
     Files._build_tags()
     if callback then
       callback()
