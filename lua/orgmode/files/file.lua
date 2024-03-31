@@ -629,6 +629,13 @@ function OrgFile:get_links()
   return links
 end
 
+memoize('get_directive')
+---@param directive_name string
+---@return string | nil
+function OrgFile:get_directive(directive_name)
+  return self:_get_directive(directive_name)
+end
+
 ---@private
 ---@return string | nil
 function OrgFile:_get_directive(directive_name)

@@ -815,5 +815,18 @@ describe('OrgFile', function()
       })
       assert.are.same('112233', file:get_property('custom_id'))
     end)
+
+    it('should get directive', function()
+      local file = load_file_sync({
+        ':PROPERTIES:',
+        ':ID: 443355',
+        ':CUSTOM_ID: 112233',
+        ':END:',
+        '#+somedirective: somevalue',
+        '#+title: test',
+        '* TODO Headline 1',
+      })
+      assert.are.same('somevalue', file:get_directive('somedirective'))
+    end)
   end)
 end)
