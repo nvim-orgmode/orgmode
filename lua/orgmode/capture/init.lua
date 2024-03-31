@@ -14,16 +14,18 @@ local Datetree = require('orgmode.capture.template.datetree')
 ---@field templates OrgCaptureTemplates
 ---@field closing_note OrgCaptureWindow
 ---@field files OrgFiles
----@field on_close OrgOnCaptureClose
+---@field on_pre_refile OrgOnCaptureClose
+---@field on_post_refile OrgOnCaptureClose
 ---@field _window OrgCaptureWindow
 local Capture = {}
 Capture.__index = Capture
 
----@param opts { files: OrgFiles, templates?: OrgCaptureTemplates, on_close?: OrgOnCaptureClose }
+---@param opts { files: OrgFiles, templates?: OrgCaptureTemplates, on_pre_refile?: OrgOnCaptureClose, on_post_refile?: OrgOnCaptureClose }
 function Capture:new(opts)
   local this = setmetatable({}, self)
   this.files = opts.files
-  this.on_close = opts.on_close
+  this.on_pre_refile = opts.on_pre_refile
+  this.on_post_refile = opts.on_post_refile
   this.templates = opts.templates or Templates:new()
   this.closing_note = this:_setup_closing_note()
   return this
@@ -150,6 +152,9 @@ end
 ---@private
 ---@param opts OrgProcessCaptureOpts
 function Capture:_refile_from_capture_buffer(opts)
+  if self.on_pre_refile then
+    self.on_pre_refile(self, opts)
+  end
   local target_level = 0
   local target_line = -1
   local destination_file = opts.destination_file
@@ -192,8 +197,8 @@ function Capture:_refile_from_capture_buffer(opts)
     end)
     :wait()
 
-  if self.on_close then
-    self.on_close(self, opts)
+  if self.on_post_refile then
+    self.on_post_refile(self, opts)
   end
   utils.echo_info(('Wrote %s'):format(destination_file.filename))
   self:kill()
