@@ -85,7 +85,6 @@ end
 
 M.setup({
   plenary = 'https://github.com/nvim-lua/plenary.nvim.git',
-  treesitter = 'https://github.com/nvim-treesitter/nvim-treesitter',
 })
 -- WARN: Do all plugin setup, test runs, reproductions, etc. AFTER calling setup with a list of plugins!
 -- Basically, do all that stuff AFTER this line.
@@ -124,12 +123,6 @@ if vim.env.CI == 'true' then
     },
   }
 end
-
-require('orgmode').setup_ts_grammar()
-require('nvim-treesitter.configs').setup({
-  ensure_installed = { 'org' },
-  sync_install = true,
-})
 
 require('orgmode').setup({
   org_agenda_files = { base_root_path .. '/plenary/fixtures/*' },

@@ -28,6 +28,19 @@ function Config:__index(key)
   return rawget(getmetatable(self), key)
 end
 
+function Config:install_grammar()
+  local ok = pcall(vim.treesitter.language.add, 'org')
+  if ok then
+    return
+  end
+  require('orgmode.utils.treesitter.install').run()
+end
+
+---@param url? string
+function Config:reinstall_grammar(url)
+  return require('orgmode.utils.treesitter.install').run(url)
+end
+
 ---@param opts table
 ---@return OrgConfig
 function Config:extend(opts)

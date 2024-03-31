@@ -1676,12 +1676,9 @@ More optimized version would be to create a lua file that has only necessary plu
 -- ~/.config/nvim/lua/partials/org_cron.lua
 
 -- If you are using lazy.vim do this:
-local treesitter = vim.fn.stdpath('data') .. '/lazy/nvim-treesitter'
 local orgmode = vim.fn.stdpath('data') .. '/lazy/orgmode'
 vim.opt.runtimepath:append(orgmode)
-vim.opt.runtimepath:append(treesitter)
 -- If you are using Packer or any other package manager that uses built-in package manager, do this:
-vim.cmd('packadd nvim-treesitter')
 vim.cmd('packadd orgmode')
 
 -- Run the orgmode cron

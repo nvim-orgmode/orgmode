@@ -1,6 +1,4 @@
 _G.orgmode = _G.orgmode or {}
-local ts_revision = 'f8c6b1e72f82f17e41004e04e15f62a83ecc27b0'
-local setup_ts_grammar_used = false
 ---@type Org | nil
 local instance = nil
 
@@ -98,52 +96,18 @@ function Org:setup_autocmds()
   })
 end
 
---- @param revision string?
-function Org.setup_ts_grammar(revision)
-  setup_ts_grammar_used = true
-  local parser_config = require('nvim-treesitter.parsers').get_parser_configs()
-  ---@diagnostic disable-next-line: inject-field
-  parser_config.org = {
-    install_info = {
-      url = 'https://github.com/nvim-orgmode/tree-sitter-org',
-      revision = revision or ts_revision,
-      files = { 'src/parser.c', 'src/scanner.c' },
-    },
-    filetype = 'org',
-  }
-end
-
----@private
-function Org._check_ts_grammar()
-  vim.defer_fn(function()
-    if setup_ts_grammar_used then
-      return
-    end
-    local parser_config = require('nvim-treesitter.parsers').get_parser_configs()
-    if parser_config and parser_config.org and parser_config.org.install_info.revision then
-      if parser_config.org.install_info.revision ~= ts_revision then
-        require('orgmode.utils').echo_error({
-          'You are using outdated version of tree-sitter grammar for Orgmode.',
-          'To use latest version, replace current grammar installation with "require(\'orgmode\').setup_ts_grammar()" and run :TSUpdate org.',
-          'More info in setup section of readme: https://github.com/nvim-orgmode/orgmode#setup',
-        })
-      end
-    else
-      require('orgmode.utils').echo_error({
-        'Cannot detect parser revision.',
-        "Please check your org grammar's install info.",
-        'Maybe you forgot to call "require(\'orgmode\').setup_ts_grammar()" before setup.',
-      })
-    end
-  end, 200)
+function Org.setup_ts_grammar()
+  require('orgmode.utils').echo_info(
+    'calling require("orgmode").setup_ts_grammar() is no longer necessary. Dependency on nvim-treesitter was removed'
+  )
 end
 
 ---@param opts? OrgDefaultConfig
 ---@return Org
 function Org.setup(opts)
   opts = opts or {}
-  Org._check_ts_grammar()
   local config = require('orgmode.config'):extend(opts)
+  config:install_grammar()
   instance = Org:new()
   vim.defer_fn(function()
     if config.notifications.enabled and #vim.api.nvim_list_uis() > 0 then

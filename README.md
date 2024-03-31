@@ -20,7 +20,6 @@
 ### Requirements
 
 * Neovim 0.9.2 or later
-* [nvim-treesitter](https://github.com/nvim-treesitter/nvim-treesitter)
 
 ### Installation
 
@@ -33,39 +32,31 @@ Use your favourite package manager:
 ```lua
 {
   'nvim-orgmode/orgmode',
-  dependencies = {
-    { 'nvim-treesitter/nvim-treesitter', lazy = true },
-  },
   event = 'VeryLazy',
   config = function()
-    -- Load treesitter grammar for org
-    require('orgmode').setup_ts_grammar()
-
-    -- Setup treesitter
-    require('nvim-treesitter.configs').setup({
-      highlight = {
-        enable = true,
-      },
-      ensure_installed = { 'org' },
-    })
-
     -- Setup orgmode
     require('orgmode').setup({
       org_agenda_files = '~/orgfiles/**/*',
       org_default_notes_file = '~/orgfiles/refile.org',
     })
+
+    -- NOTE: If you are using nvim-treesitter with `ensure_installed = "all"` option
+    -- add `org` to ignore_install
+    -- require('nvim-treesitter.configs').setup({
+    --   ensure_installed = 'all',
+    --   ignore_install = { 'org' },
+    -- })
   end,
 }
 ```
 
 </details>
 
-<details open>
+<details>
   <summary><b><a href="https://github.com/wbthomason/packer.nvim">packer.nvim</a></b></summary>
   </br>
 
 ```lua
-use {'nvim-treesitter/nvim-treesitter'}
 use {'nvim-orgmode/orgmode', config = function()
   require('orgmode').setup{}
 end
@@ -79,7 +70,6 @@ end
   </br>
 
 ```vim
-Plug 'nvim-treesitter/nvim-treesitter'
 Plug 'nvim-orgmode/orgmode'
 ```
 
@@ -90,7 +80,6 @@ Plug 'nvim-orgmode/orgmode'
   </br>
 
 ```vim
-call dein#add('nvim-treesitter/nvim-treesitter')
 call dein#add('nvim-orgmode/orgmode')
 ```
 
@@ -104,29 +93,27 @@ since instructions above covers full setup
 ```lua
 -- init.lua
 
--- Load custom treesitter grammar for org filetype
-require('orgmode').setup_ts_grammar()
-
--- Treesitter configuration
-require('nvim-treesitter.configs').setup {
-  highlight = {
-    enable = true,
-  },
-  ensure_installed = {'org'}, -- Or run :TSUpdate org
-}
-
 require('orgmode').setup({
   org_agenda_files = {'~/Dropbox/org/*', '~/my-orgs/**/*'},
   org_default_notes_file = '~/Dropbox/org/refile.org',
 })
-```
+
+-- NOTE: If you are using nvim-treesitter with `ensure_installed = "all"` option
+-- add `org` to ignore_install
+-- require('nvim-treesitter.configs').setup({
+--   ensure_installed = 'all',
+--   ignore_install = { 'org' },
+-- })
 
 Or if you are using `init.vim`, wrap the above snippet like so:
 ```vim
 " init.vim
 lua << EOF
 
-require('orgmode').setup_ts_grammar() ...
+require('orgmode').setup({
+  org_agenda_files = {'~/Dropbox/org/*', '~/my-orgs/**/*'},
+  org_default_notes_file = '~/Dropbox/org/refile.org',
+})
 
 EOF
 ```
@@ -191,29 +178,17 @@ or a hands-on [tutorial](https://github.com/nvim-orgmode/orgmode/wiki/Getting-St
 
 ## Treesitter Info
 The built-in treesitter parser is used for parsing the org files.
-Highlights are experimental and partially supported.
-
-### Advantages of treesitter over built in parsing/syntax:
-* More reliable, since parsing is done with a proper parsing tool
-* Better highlighting (Experimental, still requires improvements)
-* Future features will be easier to implement because the grammar already parses some things that were not parsed before (tables, latex, etc.)
-* Allows for easier hacking (custom motions that can work with TS nodes, etc.)
 
 ### Known highlighting issues and limitations
 * LaTex is still highlighted through syntax file
-
-### Improvements over Vim's syntax highlighting
-* Better highlighting of certain parts (tags, deadline/schedule/closed dates)
-* [Treesitter highlight injections](https://github.com/nvim-treesitter/nvim-treesitter/blob/4f2265632becabcd2c5b1791fa31ef278f1e496c/CONTRIBUTING.md#injections) through `#BEGIN_SRC filetype` blocks
-* Headline markup highlighting (https://github.com/nvim-orgmode/orgmode/issues/67)
 
 ## Troubleshoot
 ### Indentation is not working
 Make sure you are not overriding indentexpr in Org buffers with [nvim-treesitter indentation](https://github.com/nvim-treesitter/nvim-treesitter#indentation)
 
 ### I get `treesitter/query.lua` errors when opening agenda/capture prompt or org files
-Make sure you are using latest changes from [tree-sitter-org](https://github.com/milisims/tree-sitter-org) grammar.<br />
-by running `:TSUpdate org` and restarting the editor.
+Tree-sitter parser might not be installed.
+Try running `:lua require('orgmode.config'):reinstall_grammar()` to reinstall it.
 
 ### Dates are not in English
 Dates are generated with Lua native date support, and it reads your current locale when creating them.<br />
