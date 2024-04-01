@@ -14,17 +14,17 @@ local Listitem = require('orgmode.files.elements.listitem')
 ---@field all_files table<string, OrgFile> all loaded files, no matter if they are part of paths
 ---@field load_state 'loading' | 'loaded' | nil
 local OrgFiles = {}
+OrgFiles.__index = OrgFiles
 
 ---@param opts OrgFilesOpts
 function OrgFiles:new(opts)
   local data = {
-    paths = opts.paths or {},
     files = {},
     all_files = {},
     load_state = nil,
   }
   setmetatable(data, self)
-  self.__index = self
+  self.paths = self:_setup_paths(opts.paths)
   return data
 end
 
@@ -52,6 +52,36 @@ function OrgFiles:load(force)
     self.load_state = 'loaded'
     return self
   end)
+end
+
+---@param filename string
+---@return OrgPromise<OrgFile>
+function OrgFiles:add_to_paths(filename)
+  filename = vim.fs.normalize(filename)
+
+  if self.files[filename] then
+    return self.files[filename]:reload()
+  end
+
+  local promise = self:load_file(filename):next(function(orgfile)
+    if orgfile then
+      self.files[filename] = orgfile
+      local all_paths = self:_files()
+      if not vim.tbl_contains(all_paths, filename) then
+        table.insert(self.paths, filename)
+      end
+    end
+    return orgfile
+  end)
+
+  return promise
+end
+
+---@param filename string
+---@param timeout? number
+---@return OrgFile
+function OrgFiles:add_to_paths_sync(filename, timeout)
+  return self:add_to_paths(filename):wait(timeout)
 end
 
 function OrgFiles:get_tags()
@@ -295,23 +325,29 @@ function OrgFiles:ensure_loaded()
 end
 
 ---@private
-function OrgFiles:_files()
-  local all_filenames = {}
-  local files = self.paths
-  if not files or files == '' or (type(files) == 'table' and vim.tbl_isempty(files)) then
-    return all_filenames
-  end
-  if type(files) ~= 'table' then
-    files = { files }
+---@param paths string | string[] | nil
+---@return string[]
+function OrgFiles:_setup_paths(paths)
+  if not paths or paths == '' or (type(paths) == 'table' and vim.tbl_isempty(paths)) then
+    return {}
   end
 
+  if type(paths) ~= 'table' then
+    return { paths }
+  end
+
+  return paths
+end
+
+---@private
+function OrgFiles:_files()
   local all_files = vim.tbl_map(function(file)
     return vim.tbl_map(function(path)
       return vim.fn.resolve(path)
     end, vim.fn.glob(vim.fn.fnamemodify(file, ':p'), false, true))
-  end, files)
+  end, self.paths)
 
-  all_files = utils.concat(vim.tbl_flatten(all_files), all_filenames, true)
+  all_files = vim.tbl_flatten(all_files)
 
   return vim.tbl_filter(function(file)
     local ext = vim.fn.fnamemodify(file, ':e')
