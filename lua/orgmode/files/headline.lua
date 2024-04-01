@@ -598,19 +598,21 @@ function Headline:get_plan_dates()
 
   for _, node in ipairs(ts_utils.get_named_children(plan)) do
     local name_node = node:field('name')[1]
-    local name = name_node and self.file:get_node_text(name_node) or 'NONE'
+    local name = name_node and self.file:get_node_text(name_node)
     local timestamp = node:field('timestamp')[1]
 
-    if vim.tbl_contains(valid_plan_types, name:upper()) then
-      if name_node then
-        has_plan_dates = true
-      end
-      dates[name:upper()] = Date.from_org_date(self.file:get_node_text(timestamp), {
-        range = Range.from_node(timestamp),
-        type = name:upper(),
-      })
-      dates_nodes[name:upper()] = node
+    if not name or not vim.tbl_contains(valid_plan_types, name:upper()) then
+      name = 'NONE'
     end
+
+    if name ~= 'NONE' then
+      has_plan_dates = true
+    end
+    dates[name:upper()] = Date.from_org_date(self.file:get_node_text(timestamp), {
+      range = Range.from_node(timestamp),
+      type = name:upper(),
+    })
+    dates_nodes[name:upper()] = node
   end
   return dates, dates_nodes, has_plan_dates
 end
