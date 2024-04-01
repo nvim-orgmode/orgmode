@@ -465,8 +465,25 @@ end
 ---@private
 ---@return OrgProcessCaptureOpts | false
 function Capture:_get_refile_vars()
-  local file = self._window.template:get_target()
+  local source_file = self.files:get_current_file()
+  local source_headline = nil
+  if not self._window.template.whole_file then
+    source_headline = source_file:get_headlines()[1]
+  end
 
+  local opts = {
+    source_file = source_file,
+    source_headline = source_headline,
+    destination_file = nil,
+    destination_headline = nil,
+    template = self._window.template,
+  }
+
+  if self.on_pre_refile then
+    self.on_pre_refile(self, opts)
+  end
+
+  local file = opts.template:get_target()
   if vim.fn.filereadable(file) == 0 then
     local choice = vim.fn.confirm(('Refile destination %s does not exist. Create now?'):format(file), '&Yes\n&No')
     if choice ~= 1 then
@@ -477,28 +494,16 @@ function Capture:_get_refile_vars()
     vim.fn.writefile({}, file)
   end
 
-  local source_file = self.files:get_current_file()
-  local source_headline = nil
-  if not self._window.template.whole_file then
-    source_headline = source_file:get_headlines()[1]
-  end
-  local destination_file = self.files:get(file)
-  local destination_headline = nil
-  if self._window.template.headline then
-    destination_headline = destination_file:find_headline_by_title(self._window.template.headline)
-    if not destination_headline then
-      utils.echo_error(('Refile headline "%s" does not exist in "%s"'):format(self._window.template.headline, file))
+  opts.destination_file = self.files:get(file)
+  if opts.template.headline then
+    opts.destination_headline = opts.destination_file:find_headline_by_title(opts.template.headline)
+    if not opts.destination_headline then
+      utils.echo_error(('Refile headline "%s" does not exist in "%s"'):format(opts.template.headline, file))
       return false
     end
   end
 
-  return {
-    source_file = source_file,
-    source_headline = source_headline,
-    destination_file = destination_file,
-    destination_headline = destination_headline,
-    template = self._window.template,
-  }
+  return opts
 end
 
 ---@private
