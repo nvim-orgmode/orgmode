@@ -63,7 +63,7 @@ function OrgFiles:add_to_paths(filename)
     return self.files[filename]:reload()
   end
 
-  local promise = self:load_file(filename):next(function(orgfile)
+  return self:load_file(filename):next(function(orgfile)
     if orgfile then
       self.files[filename] = orgfile
       local all_paths = self:_files()
@@ -73,8 +73,6 @@ function OrgFiles:add_to_paths(filename)
     end
     return orgfile
   end)
-
-  return promise
 end
 
 ---@param filename string
@@ -163,14 +161,12 @@ function OrgFiles:load_file(filename)
     return file:reload()
   end
 
-  local promise = OrgFile.load(filename):next(function(orgfile)
+  return OrgFile.load(filename):next(function(orgfile)
     if orgfile then
       self.all_files[filename] = orgfile
     end
     return orgfile
   end)
-
-  return promise
 end
 
 ---@return OrgFile | nil
