@@ -30,7 +30,7 @@ end
 
 --- @generic T : any
 --- @generic V : any
---- @class OrgPromise<T, V>: { next: fun(self: OrgPromise<T>, resolve:fun(result:T):V), wait: fun(self: OrgPromise<T>, timeout?: number):V }
+--- @class OrgPromise<T, V>: { next: fun(self: OrgPromise<T>, resolve:fun(result:T):V), catch: fun(self: OrgPromise<T>, reject:fun(err:any)), wait: fun(self: OrgPromise<T>, timeout?: number):V }
 local Promise = {}
 Promise.__index = Promise
 

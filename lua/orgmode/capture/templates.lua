@@ -7,6 +7,8 @@ local Template = require('orgmode.capture.template')
 ---@field templates table<string, OrgCaptureTemplate>
 local Templates = {}
 
+---@param templates table<string, OrgCaptureTemplate>
+---@return OrgCaptureTemplates
 function Templates:new(templates)
   local opts = {}
 

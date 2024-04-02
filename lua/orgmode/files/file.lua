@@ -11,6 +11,11 @@ local Link = require('orgmode.org.hyperlinks.link')
 ---@field mtime number
 ---@field changedtick number
 
+---@class OrgFileOpts
+---@field filename string
+---@field lines string[]
+---@field bufnr? number
+
 ---@class OrgFile
 ---@field filename string
 ---@field lines string[]
@@ -28,10 +33,6 @@ local memoize = utils.memoize(OrgFile, function(self)
   }, '_')
 end)
 
----@class OrgFileOpts
----@field filename string
----@field lines string[]
----@field bufnr? number
 ---Constructor function, should not be used directly
 ---@param opts OrgFileOpts
 ---@return OrgFile
@@ -680,7 +681,7 @@ function OrgFile:_update_lines(lines, bufnr)
 end
 
 ---@private
----@return LanguageTree
+---@return vim.treesitter.LanguageTree
 function OrgFile:_get_parser()
   local bufnr = self:bufnr()
 
