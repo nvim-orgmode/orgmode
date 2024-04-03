@@ -42,11 +42,11 @@ function OrgFiles:load(force)
   local actions = vim.tbl_map(function(filename)
     return self:load_file(filename):next(function(orgfile)
       if orgfile then
-        self.files[filename] = orgfile
+        self.files[orgfile.filename] = orgfile
       end
       return orgfile
     end)
-  end, self:_files())
+  end, self:_files(true))
 
   return Promise.all(actions):next(function()
     self.load_state = 'loaded'
@@ -156,6 +156,7 @@ end
 
 ---@return OrgPromise<OrgFile>
 function OrgFiles:load_file(filename)
+  filename = vim.fn.resolve(vim.fs.normalize(filename))
   local file = self.all_files[filename]
   if file then
     return file:reload()
@@ -181,9 +182,7 @@ function OrgFiles:get(filename)
 end
 
 function OrgFiles:reload(filename)
-  self:load_file(filename):next(function(orgfile)
-    return orgfile
-  end)
+  return self:load_file(filename)
 end
 
 ---@param cursor? table (1, 0) indexed base position tuple
@@ -336,9 +335,13 @@ function OrgFiles:_setup_paths(paths)
 end
 
 ---@private
-function OrgFiles:_files()
+---@param skip_resolve? boolean
+function OrgFiles:_files(skip_resolve)
   local all_files = vim.tbl_map(function(file)
     return vim.tbl_map(function(path)
+      if skip_resolve then
+        return path
+      end
       return vim.fn.resolve(path)
     end, vim.fn.glob(vim.fn.fnamemodify(file, ':p'), false, true))
   end, self.paths)

@@ -91,7 +91,7 @@ function Org:setup_autocmds()
     pattern = 'org',
     group = org_augroup,
     callback = function()
-      return self:reload(vim.fn.expand('<afile>:p'))
+      self:reload(vim.fn.expand('<afile>:p'))
     end,
   })
 end
