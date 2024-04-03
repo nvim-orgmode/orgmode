@@ -17,7 +17,7 @@ describe('Clock', function()
     table.insert(files, first_file.filename)
     vim.fn.cursor(3, 1)
     vim.cmd([[norm ,oxi]])
-    vim.wait(0)
+    vim.wait(100)
     local now = Date.now({ active = false }):to_wrapped_string()
     assert.are.same('  :LOGBOOK:', vim.fn.getline(5))
     assert.are.same(string.format('  CLOCK: %s', now), vim.fn.getline(6))
@@ -51,7 +51,7 @@ describe('Clock', function()
 
     vim.fn.cursor(3, 1)
     vim.cmd([[norm ,oxi]])
-    vim.wait(0) -- wait for promise to fulfill
+    vim.wait(100) -- wait for promise to fulfill
     local now = Date.now({ active = false }):to_wrapped_string()
     assert.are.same('  :LOGBOOK:', vim.fn.getline(8))
     assert.are.same(string.format('  CLOCK: %s', now), vim.fn.getline(9))
@@ -61,7 +61,7 @@ describe('Clock', function()
     vim.fn.cursor(11, 1)
     local new_now = Date.now({ active = false }):to_wrapped_string()
     vim.cmd([[norm ,oxi]])
-    vim.wait(0) -- wait for promise to fulfill
+    vim.wait(100) -- wait for promise to fulfill
     -- First clocked out
     assert.are.same('  :LOGBOOK:', vim.fn.getline(8))
     assert.are.same(string.format('  CLOCK: %s--%s => 0:00', now, new_now), vim.fn.getline(9))
@@ -86,7 +86,7 @@ describe('Clock', function()
     table.insert(files, third_file.filename)
     vim.fn.cursor(3, 1)
     vim.cmd([[norm ,oxi]])
-    vim.wait(0) -- wait for promise to fulfill
+    vim.wait(100) -- wait for promise to fulfill
     local now = Date.now({ active = false }):to_wrapped_string()
     assert.are.same('  :LOGBOOK:', vim.fn.getline(5))
     assert.are.same(string.format('  CLOCK: %s', now), vim.fn.getline(6))
@@ -115,7 +115,7 @@ describe('Clock', function()
     local old_clock_line = vim.fn.getline(6)
     vim.fn.cursor(3, 1)
     vim.cmd([[norm ,oxi]])
-    vim.wait(0) -- wait for promise to fulfill
+    vim.wait(100) -- wait for promise to fulfill
     local now = Date.now({ active = false }):to_wrapped_string()
     assert.are.same('  :LOGBOOK:', vim.fn.getline(5))
     assert.are.same(string.format('  CLOCK: %s', now), vim.fn.getline(6))
@@ -138,7 +138,7 @@ describe('Clock', function()
     })
     vim.fn.cursor(3, 1)
     vim.cmd([[norm ,oxi]])
-    vim.wait(0) -- wait for promise to fulfill
+    vim.wait(100) -- wait for promise to fulfill
     local now = Date.now({ active = false }):to_wrapped_string()
     assert.are.same('  :LOGBOOK:', vim.fn.getline(5))
     assert.are.same(string.format('  CLOCK: %s', now), vim.fn.getline(6))

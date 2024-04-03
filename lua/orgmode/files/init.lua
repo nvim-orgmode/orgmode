@@ -306,7 +306,9 @@ function OrgFiles:update_file(filename, action)
 
   return Promise.resolve(action(file)):next(function(result)
     edit_file.close()
-    return result
+    return file:reload():next(function()
+      return result
+    end)
   end)
 end
 
