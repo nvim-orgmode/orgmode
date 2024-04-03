@@ -33,7 +33,9 @@ function utils.readfile(file, opts)
               result = data
             else
               local lines = vim.split(data, '\n')
-              table.remove(lines, #lines)
+              if lines[#lines] == '' then
+                table.remove(lines, #lines)
+              end
               result = lines
             end
 
