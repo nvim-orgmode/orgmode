@@ -20,7 +20,7 @@ local folds_levels = ts_utils.memoize_by_buf_tick(function(bufnr)
   end
 
   query = query or vim.treesitter.query.get('org', 'folds')
-  local trees = vim.treesitter.get_parser(bufnr):parse()
+  local trees = vim.treesitter.get_parser(bufnr, 'org'):parse()
   local root = trees[1]:root()
 
   local matches = {}
