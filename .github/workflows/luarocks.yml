@@ -1,0 +1,42 @@
+name: Push to Luarocks
+
+on:
+  push:
+    tags:
+      - '*'
+  release:
+    types:
+      - created
+  pull_request: # Runs test install without uploading
+  workflow_dispatch: # Allows to trigger manually
+
+jobs:
+  luarocks-upload:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Required to count the commits
+      - name: Get Version
+        run: echo "LUAROCKS_VERSION=$(git describe --abbrev=0 --tags)" >> $GITHUB_ENV
+      - name: Install C/C++ Compiler
+        uses: rlalik/setup-cpp-compiler@master
+        with:
+          compiler: clang-latest
+      - name: Install Lua
+        uses: leso-kn/gh-actions-lua@master
+        with:
+          luaVersion: "5.1"
+      - name: Install Luarocks
+        uses: hishamhm/gh-actions-luarocks@master
+      - name: Install `luarocks-build-treesitter-parser` Package
+        run: |
+          luarocks --verbose --local --lua-version=5.1 install luarocks-build-treesitter-parser
+      - name: LuaRocks Upload
+        uses: nvim-neorocks/luarocks-tag-release@v5
+        env:
+          LUAROCKS_API_KEY: ${{ secrets.LUAROCKS_API_KEY }}
+        with:
+          version: ${{ env.LUAROCKS_VERSION }}
+          dependencies: |
+            tree-sitter-orgmode ~> 1
