@@ -39,4 +39,4 @@ jobs:
         with:
           version: ${{ env.LUAROCKS_VERSION }}
           dependencies: |
-            tree-sitter-orgmode == ${{ env.LUAROCKS_VERSION }}
+            tree-sitter-orgmode ~> 1
