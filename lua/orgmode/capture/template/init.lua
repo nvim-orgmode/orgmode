@@ -5,31 +5,71 @@ local Calendar = require('orgmode.objects.calendar')
 local Promise = require('orgmode.utils.promise')
 
 local expansions = {
-  ['%f'] = function()
+  ['%%f'] = function()
     return vim.fn.expand('%')
   end,
-  ['%F'] = function()
+  ['%%F'] = function()
     return vim.fn.expand('%:p')
   end,
-  ['%n'] = function()
+  ['%%n'] = function()
     return os.getenv('USER')
   end,
-  ['%x'] = function()
+  ['%%x'] = function()
     return vim.fn.getreg('+')
   end,
-  ['%t'] = function()
+  ['%%t'] = function()
     return string.format('<%s>', Date.today():to_string())
   end,
-  ['%T'] = function()
+  ['%%%^t'] = function()
+    return Calendar.new({ date = Date.today() }):open():next(function(date)
+      return date and string.format('<%s>', date:to_string()) or nil
+    end)
+  end,
+  ['%%%^%{([^%}]*)%}t'] = function(title)
+    return Calendar.new({ date = Date.today(), title = title }):open():next(function(date)
+      return date and string.format('<%s>', date:to_string()) or nil
+    end)
+  end,
+  ['%%T'] = function()
     return string.format('<%s>', Date.now():to_string())
   end,
-  ['%u'] = function()
+  ['%%%^T'] = function()
+    return Calendar.new({ date = Date.now() }):open():next(function(date)
+      return date and string.format('<%s>', date:to_string()) or nil
+    end)
+  end,
+  ['%%%^%{([^%}]*)%}T'] = function(title)
+    return Calendar.new({ date = Date.now(), title = title }):open():next(function(date)
+      return date and string.format('<%s>', date:to_string()) or nil
+    end)
+  end,
+  ['%%u'] = function()
     return string.format('[%s]', Date.today():to_string())
   end,
-  ['%U'] = function()
+  ['%%%^u'] = function()
+    return Calendar.new({ date = Date.today() }):open():next(function(date)
+      return date and string.format('[%s]', date:to_string()) or nil
+    end)
+  end,
+  ['%%%^%{([^%}]*)%}u'] = function(title)
+    return Calendar.new({ date = Date.today(), title = title }):open():next(function(date)
+      return date and string.format('[%s]', date:to_string()) or nil
+    end)
+  end,
+  ['%%U'] = function()
     return string.format('[%s]', Date.now():to_string())
   end,
-  ['%a'] = function()
+  ['%%%^U'] = function()
+    return Calendar.new({ date = Date.now() }):open():next(function(date)
+      return date and string.format('[%s]', date:to_string()) or nil
+    end)
+  end,
+  ['%%%^%{([^%}]*)%}U'] = function(title)
+    return Calendar.new({ date = Date.now(), title = title }):open():next(function(date)
+      return date and string.format('[%s]', date:to_string()) or nil
+    end)
+  end,
+  ['%%a'] = function()
     return string.format('[[file:%s::%s]]', utils.current_file_path(), vim.api.nvim_win_get_cursor(0)[1])
   end,
 }
@@ -210,11 +250,10 @@ end
 ---@return OrgPromise<string | nil>
 function Template:_compile(content, content_type)
   content = self:_compile_dates(content)
-  content = self:_compile_prompts(content)
   content = self:_compile_expressions(content)
   if self._compile_hooks then
     for _, hook in ipairs(self._compile_hooks) do
-      content = hook(content, content_type)
+      content = hook(content, content_type) --[[@as string]]
       if not content then
         return Promise.resolve(nil)
       end
@@ -224,7 +263,12 @@ function Template:_compile(content, content_type)
     if not compiled_content then
       return nil
     end
-    return self:_compile_expansions(compiled_content)
+    return self:_compile_expansions(compiled_content):next(function(cnt)
+      if not cnt then
+        return nil
+      end
+      return self:_compile_prompts(cnt)
+    end)
   end)
 end
 
@@ -241,7 +285,7 @@ function Template:_compile_datetree(content, content_type)
     return Promise.resolve(content)
   end
 
-  return Calendar.new({ date = Date.now() }):open():next(function(date)
+  return Calendar.new({ date = Date.now(), title = 'Select datetree date' }):open():next(function(date)
     if date then
       self.datetree.date = date
       return content
@@ -252,34 +296,50 @@ end
 
 ---@param content string
 ---@return OrgPromise<string | nil>
-function Template:_compile_expansions(content, found_expansions)
-  found_expansions = found_expansions or expansions
-  local promises = {}
+function Template:_compile_expansions(content)
+  local compiled_expansions = {}
   local proceed = true
-  for expansion, compiler in pairs(found_expansions) do
-    if content:match(vim.pesc(expansion)) then
-      table.insert(
-        promises,
-        Promise.resolve()
-          :next(function()
-            return compiler()
-          end)
-          :next(function(replacement)
+  for exp in content:gmatch('%%([^%%]*)') do
+    for expansion, compiler in pairs(expansions) do
+      local match = ('%' .. exp):match(expansion)
+      if match then
+        table.insert(compiled_expansions, function()
+          return Promise.resolve(compiler(match)):next(function(replacement)
             if not proceed or not replacement then
-              proceed = false
-              return
+              return Promise.reject('canceled')
             end
-            content = content:gsub(vim.pesc(expansion), vim.pesc(replacement))
+            content = content:gsub(expansion, vim.pesc(replacement))
+            return content
           end)
-      )
+        end)
+      end
     end
   end
-  return Promise.all(promises):next(function()
-    if not proceed then
-      return nil
-    end
-    return content
-  end)
+
+  if #compiled_expansions == 0 then
+    return Promise.resolve(content)
+  end
+
+  local result = Promise.resolve()
+  for _, value in ipairs(compiled_expansions) do
+    result = result:next(function()
+      return value()
+    end)
+  end
+
+  return result
+    :next(function()
+      if not proceed then
+        return nil
+      end
+      return content
+    end)
+    :catch(function(err)
+      if err == 'canceled' then
+        return
+      end
+      error(err)
+    end)
 end
 
 ---@param content string
