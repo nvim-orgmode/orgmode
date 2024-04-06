@@ -46,7 +46,7 @@ local expansions = {
 ---@field whole_file? boolean
 
 ---@class OrgCaptureTemplate:OrgCaptureTemplateOpts
----@field private _compile_hooks (fun(content:string):string)[]
+---@field private _compile_hooks (fun(content:string, type: 'target' | 'content'):string)[]
 local Template = {}
 
 ---@param opts OrgCaptureTemplateOpts
@@ -69,7 +69,7 @@ function Template:new(opts)
   local this = {}
   this.description = opts.description or ''
   this.template = opts.template or ''
-  this.target = self:_compile(opts.target or '')
+  this.target = opts.target or ''
   this.headline = opts.headline
   this.properties = TemplateProperties:new(opts.properties)
   this.datetree = opts.datetree
@@ -156,7 +156,7 @@ function Template:compile()
   if type(content) == 'table' then
     content = table.concat(content, '\n')
   end
-  content = self:_compile(content or '')
+  content = self:_compile(content or '', 'content')
   return vim.split(content, '\n', { plain = true })
 end
 
@@ -189,7 +189,7 @@ end
 
 ---@return string
 function Template:get_target()
-  return vim.fn.resolve(vim.fn.fnamemodify(self.target, ':p'))
+  return vim.fn.resolve(vim.fn.fnamemodify(self:_compile(self.target, 'target'), ':p'))
 end
 
 ---@param lines string[]
@@ -210,15 +210,16 @@ end
 
 ---@private
 ---@param content string
+---@param type 'target' | 'content'
 ---@return string
-function Template:_compile(content)
+function Template:_compile(content, type)
   content = self:_compile_dates(content)
   content = self:_compile_expansions(content)
   content = self:_compile_expressions(content)
   content = self:_compile_prompts(content)
   if self._compile_hooks then
     for _, hook in ipairs(self._compile_hooks) do
-      content = hook(content)
+      content = hook(content, type)
     end
   end
   return content
