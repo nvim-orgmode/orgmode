@@ -410,6 +410,7 @@ describe('Api', function()
         })
 
         orgmode.capture:open_template_by_shortcut('t')
+        vim.wait(10)
         local source_file = vim.api.nvim_buf_get_name(0)
         vim.api.nvim_buf_set_lines(0, 0, -1, false, {
           '* TODO Second level :NESTEDTAG:',
@@ -446,6 +447,7 @@ describe('Api', function()
         })
 
         orgmode.capture:open_template_by_shortcut('t')
+        vim.wait(10)
         local source_file = vim.api.nvim_buf_get_name(0)
         vim.api.nvim_buf_set_lines(0, 0, -1, false, {
           '* TODO Second level :NESTEDTAG:',

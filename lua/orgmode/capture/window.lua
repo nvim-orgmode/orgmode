@@ -31,19 +31,23 @@ function CaptureWindow:open()
     return self:focus()
   end
   self._resolve_fn = nil
-  local content = self.template:compile()
-  self._window = utils.open_tmp_org_window(16, config.win_split_mode, config.win_border, self.on_close)
-  vim.api.nvim_buf_set_lines(0, 0, -1, true, content)
-  self.template:setup()
-  vim.b.org_capture = true
-  self._bufnr = vim.api.nvim_get_current_buf()
+  return self.template:compile():next(function(content)
+    if not content then
+      return utils.echo_info('Canceled.')
+    end
+    self._window = utils.open_tmp_org_window(16, config.win_split_mode, config.win_border, self.on_close)
+    vim.api.nvim_buf_set_lines(0, 0, -1, true, content)
+    self.template:setup()
+    vim.b.org_capture = true
+    self._bufnr = vim.api.nvim_get_current_buf()
 
-  if self.on_open then
-    self.on_open()
-  end
+    if self.on_open then
+      self.on_open()
+    end
 
-  return Promise.new(function(resolve)
-    self._resolve_fn = resolve
+    return Promise.new(function(resolve)
+      self._resolve_fn = resolve
+    end)
   end)
 end
 

@@ -76,15 +76,6 @@ function Capture:open_template(template)
     end,
   })
 
-  if template:has_input_prompts() then
-    return template:prompt_for_inputs():next(function(proceed)
-      if not proceed then
-        return utils.echo_info('Canceled.')
-      end
-      return self._window:open()
-    end)
-  end
-
   return self._window:open()
 end
 

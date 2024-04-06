@@ -46,7 +46,7 @@ local expansions = {
 ---@field whole_file? boolean
 
 ---@class OrgCaptureTemplate:OrgCaptureTemplateOpts
----@field private _compile_hooks (fun(content:string, type: 'target' | 'content'):string)[]
+---@field private _compile_hooks (fun(content:string, content_type: 'target' | 'content'):string | nil)[]
 local Template = {}
 
 ---@param opts OrgCaptureTemplateOpts
@@ -156,25 +156,21 @@ function Template:compile()
   if type(content) == 'table' then
     content = table.concat(content, '\n')
   end
-  content = self:_compile(content or '', 'content')
-  return vim.split(content, '\n', { plain = true })
-end
-
-function Template:has_input_prompts()
-  return self.datetree and type(self.datetree) == 'table' and self.datetree.time_prompt
-end
-
-function Template:prompt_for_inputs()
-  if not self:has_input_prompts() then
-    return Promise.resolve(true)
-  end
-  return Calendar.new({ date = Date.now() }):open():next(function(date)
-    if date then
-      self.datetree.date = date
-      return true
-    end
-    return false
-  end)
+  return self
+    :_compile(self.target, 'target')
+    :next(function(target)
+      if not target then
+        return nil
+      end
+      self.target = target
+      return self:_compile(content or '', 'content')
+    end)
+    :next(function(compiled_content)
+      if not compiled_content then
+        return nil
+      end
+      return vim.split(compiled_content, '\n', { plain = true })
+    end)
 end
 
 ---@return OrgCaptureTemplateDatetreeOpts
@@ -189,7 +185,7 @@ end
 
 ---@return string
 function Template:get_target()
-  return vim.fn.resolve(vim.fn.fnamemodify(self:_compile(self.target, 'target'), ':p'))
+  return vim.fn.resolve(vim.fn.fnamemodify(self.target, ':p'))
 end
 
 ---@param lines string[]
@@ -210,31 +206,80 @@ end
 
 ---@private
 ---@param content string
----@param type 'target' | 'content'
----@return string
-function Template:_compile(content, type)
+---@param content_type 'target' | 'content'
+---@return OrgPromise<string | nil>
+function Template:_compile(content, content_type)
   content = self:_compile_dates(content)
-  content = self:_compile_expansions(content)
-  content = self:_compile_expressions(content)
   content = self:_compile_prompts(content)
+  content = self:_compile_expressions(content)
   if self._compile_hooks then
     for _, hook in ipairs(self._compile_hooks) do
-      content = hook(content, type)
+      content = hook(content, content_type)
+      if not content then
+        return Promise.resolve(nil)
+      end
     end
   end
-  return content
+  return self:_compile_datetree(content, content_type):next(function(compiled_content)
+    if not compiled_content then
+      return nil
+    end
+    return self:_compile_expansions(compiled_content)
+  end)
 end
 
 ---@param content string
----@return string
+---@param content_type 'target' | 'content'
+---@return OrgPromise<string | nil>
+function Template:_compile_datetree(content, content_type)
+  if
+    not self.datetree
+    or type(self.datetree) ~= 'table'
+    or not self.datetree.time_prompt
+    or content_type ~= 'target'
+  then
+    return Promise.resolve(content)
+  end
+
+  return Calendar.new({ date = Date.now() }):open():next(function(date)
+    if date then
+      self.datetree.date = date
+      return content
+    end
+    return nil
+  end)
+end
+
+---@param content string
+---@return OrgPromise<string | nil>
 function Template:_compile_expansions(content, found_expansions)
   found_expansions = found_expansions or expansions
+  local promises = {}
+  local proceed = true
   for expansion, compiler in pairs(found_expansions) do
     if content:match(vim.pesc(expansion)) then
-      content = content:gsub(vim.pesc(expansion), vim.pesc(compiler()))
+      table.insert(
+        promises,
+        Promise.resolve()
+          :next(function()
+            return compiler()
+          end)
+          :next(function(replacement)
+            if not proceed or not replacement then
+              proceed = false
+              return
+            end
+            content = content:gsub(vim.pesc(expansion), vim.pesc(replacement))
+          end)
+      )
     end
   end
-  return content
+  return Promise.all(promises):next(function()
+    if not proceed then
+      return nil
+    end
+    return content
+  end)
 end
 
 ---@param content string
