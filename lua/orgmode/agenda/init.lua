@@ -220,9 +220,9 @@ function Agenda:goto_date()
     return utils.echo_error('No available views to jump to date.')
   end
 
-  return Calendar.new({ date = Date.now() }).open():next(function(date)
+  return Calendar.new({ date = Date.now(), title = 'Go to agenda date' }):open():next(function(date)
     if not date then
-      return
+      return nil
     end
     for _, view in ipairs(views) do
       view:goto_date(date)

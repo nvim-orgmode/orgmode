@@ -303,7 +303,7 @@ function OrgMappings:change_date()
   if not date then
     return
   end
-  return Calendar.new({ date = date }).open():next(function(new_date)
+  return Calendar.new({ date = date, title = 'Change date' }):open():next(function(new_date)
     if new_date then
       self:_replace_date(new_date)
     end
@@ -961,14 +961,14 @@ end
 function OrgMappings:org_deadline()
   local headline = self.files:get_closest_headline()
   local deadline_date = headline:get_deadline_date()
-  return Calendar.new({ date = deadline_date or Date.today(), clearable = true })
-    .open()
+  return Calendar.new({ date = deadline_date or Date.today(), clearable = true, title = 'Set deadline' })
+    :open()
     :next(function(new_date, cleared)
       if cleared then
         return headline:remove_deadline_date()
       end
       if not new_date then
-        return
+        return nil
       end
       headline:remove_closed_date()
       headline:set_deadline_date(new_date)
@@ -978,14 +978,14 @@ end
 function OrgMappings:org_schedule()
   local headline = self.files:get_closest_headline()
   local scheduled_date = headline:get_scheduled_date()
-  return Calendar.new({ date = scheduled_date or Date.today(), clearable = true })
-    .open()
+  return Calendar.new({ date = scheduled_date or Date.today(), clearable = true, title = 'Set schedule' })
+    :open()
     :next(function(new_date, cleared)
       if cleared then
         return headline:remove_scheduled_date()
       end
       if not new_date then
-        return
+        return nil
       end
       headline:remove_closed_date()
       headline:set_scheduled_date(new_date)
@@ -997,7 +997,7 @@ function OrgMappings:org_time_stamp(inactive)
   local date = self:_get_date_under_cursor()
 
   if date then
-    return Calendar.new({ date = date }).open():next(function(new_date)
+    return Calendar.new({ date = date, title = 'Replace date' }):open():next(function(new_date)
       if not new_date then
         return
       end
@@ -1007,9 +1007,9 @@ function OrgMappings:org_time_stamp(inactive)
 
   local date_start = self:_get_date_under_cursor(-1)
 
-  return Calendar.new({ date = Date.today() }).open():next(function(new_date)
+  return Calendar.new({ date = Date.today() }):open():next(function(new_date)
     if not new_date then
-      return
+      return nil
     end
     local date_string = new_date:to_wrapped_string(not inactive)
     if date_start then

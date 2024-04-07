@@ -145,8 +145,8 @@ function OrgHeadline:set_deadline(date)
     local headline = org.files:get_closest_headline()
     local deadline_date = headline:get_deadline_date()
     if not date then
-      return Calendar.new({ date = deadline_date or Date.today(), clearable = true })
-        .open()
+      return Calendar.new({ date = deadline_date or Date.today(), clearable = true, title = 'Set deadline' })
+        :open()
         :next(function(new_date, cleared)
           if cleared then
             return headline:remove_deadline_date()
@@ -185,8 +185,8 @@ function OrgHeadline:set_scheduled(date)
     local headline = org.files:get_closest_headline()
     local scheduled_date = headline:get_scheduled_date()
     if not date then
-      return Calendar.new({ date = scheduled_date or Date.today(), clearable = true })
-        .open()
+      return Calendar.new({ date = scheduled_date or Date.today(), clearable = true, title = 'Set schedule' })
+        :open()
         :next(function(new_date, cleared)
           if cleared then
             return headline:remove_scheduled_date()

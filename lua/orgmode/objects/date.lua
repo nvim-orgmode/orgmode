@@ -340,6 +340,15 @@ function Date:to_string()
   return date
 end
 
+---@return string
+function Date:to_date_string()
+  local old_date_only = self.date_only
+  self.date_only = true
+  local result = self:to_string()
+  self.date_only = old_date_only
+  return result
+end
+
 ---@param active boolean|nil
 ---@return string
 function Date:to_wrapped_string(active)
