@@ -57,7 +57,7 @@ end
 ---@param filename string
 ---@return OrgPromise<OrgFile>
 function OrgFiles:add_to_paths(filename)
-  filename = vim.fn.resolve(vim.fs.normalize(filename))
+  filename = vim.fn.resolve(vim.fn.fnamemodify(filename, ':p'))
 
   if self.files[filename] then
     return self.files[filename]:reload()
@@ -156,7 +156,7 @@ end
 
 ---@return OrgPromise<OrgFile>
 function OrgFiles:load_file(filename)
-  filename = vim.fn.resolve(vim.fs.normalize(filename))
+  filename = vim.fn.resolve(vim.fn.fnamemodify(filename, ':p'))
   local file = self.all_files[filename]
   if file then
     return file:reload()
