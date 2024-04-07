@@ -352,7 +352,14 @@ function OrgFiles:_files(skip_resolve)
 
   return vim.tbl_filter(function(file)
     local ext = vim.fn.fnamemodify(file, ':e')
-    return ext == 'org' or ext == 'org_archive'
+    local is_org = ext == 'org' or ext == 'org_archive'
+
+    if not is_org then
+      return false
+    end
+
+    local stat = vim.loop.fs_stat(file)
+    return stat and stat.type == 'file' or false
   end, all_files)
 end
 
