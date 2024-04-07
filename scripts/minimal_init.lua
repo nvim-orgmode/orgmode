@@ -20,9 +20,10 @@ require('lazy').setup({
   {
     'nvim-orgmode/orgmode',
     event = 'VeryLazy',
+    ft = { 'org' },
     config = function()
       require('orgmode').setup()
-    end
+    end,
   },
 }, {
   root = lazy_root,
