@@ -415,7 +415,6 @@ end
 function utils.open_tmp_org_window(height, split_mode, border, on_close)
   local prev_winnr = vim.api.nvim_get_current_win()
   utils.open_window(vim.fn.tempname() .. '.org', height or 16, split_mode, border)
-  vim.cmd([[setf org]])
   vim.cmd([[setlocal bufhidden=wipe nobuflisted nolist noswapfile nofoldenable]])
   local bufnr = vim.api.nvim_get_current_buf()
 

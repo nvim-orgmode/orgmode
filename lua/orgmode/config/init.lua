@@ -211,11 +211,11 @@ end
 ---@param buffer number? Buffer id
 ---@see orgmode.config.mappings
 function Config:setup_mappings(category, buffer)
-  if category == 'org' and vim.bo.filetype == 'org' and not vim.b.org_old_cr_mapping then
-    vim.b.org_old_cr_mapping = utils.get_keymap({
+  if category == 'org' and vim.bo.filetype == 'org' and not vim.b[buffer].org_old_cr_mapping then
+    vim.b[buffer].org_old_cr_mapping = utils.get_keymap({
       mode = 'i',
       lhs = '<CR>',
-      buffer = buffer or vim.api.nvim_get_current_buf(),
+      buffer = buffer,
     })
   end
   local maps = self:get_mappings(category, buffer)
