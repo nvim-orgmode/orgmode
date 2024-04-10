@@ -53,9 +53,12 @@ function VirtualIndent:_get_indent_size(line, tree_has_errors)
   if tree_has_errors then
     local linenr = line
     while linenr > 0 do
-      local _, level = vim.fn.getline(linenr):find('^%*+')
+      -- We offset `linenr` by 1 because it's 0-indexed and `getline` is 1-indexed
+      local _, level = vim.fn.getline(linenr + 1):find('^%*+')
       if level then
-        return level + 1
+        -- If the current line is a headline we should return no virtual indentation, otherwise
+        -- return virtual indentation
+        return (linenr == line and 0 or level + 1)
       end
       linenr = linenr - 1
     end
