@@ -142,12 +142,13 @@ OrgHeadline:set_scheduled({date?})                   *OrgHeadline:set_scheduled*
         (OrgPromise)
 
 
-OrgHeadline:set_property({key}, {value})              *OrgHeadline:set_property*
-     Set property on a headline
+                                                      *OrgHeadline:set_property*
+OrgHeadline:set_property({key}, {value?})
+     Set property on a headline. Setting value to nil removes the property
 
     Parameters: ~
-        {key}    (string)
-        {value}  (string)
+        {key}     (string)
+        {value?}  (string)
 
 
 OrgHeadline:get_property({key})                       *OrgHeadline:get_property*
