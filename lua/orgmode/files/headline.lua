@@ -890,13 +890,13 @@ function Headline:id_get_or_create()
   return org_id
 end
 
----@param type OrgPlanDateTypes
+---@param date_type OrgPlanDateTypes
 ---@param date OrgDate
 ---@param active? boolean
 ---@private
-function Headline:_add_date(type, date, active)
+function Headline:_add_date(date_type, date, active)
   local _, date_nodes, has_plan_dates = self:get_plan_dates()
-  local text = type .. ': ' .. date:to_wrapped_string(active)
+  local text = date_type .. ': ' .. date:to_wrapped_string(active)
   if not has_plan_dates then
     local start_line = self:node():start()
 
@@ -914,18 +914,18 @@ function Headline:_add_date(type, date, active)
 
     return self:refresh()
   end
-  if date_nodes[type] then
-    return self:_set_node_text(date_nodes[type], text)
+  if date_nodes[date_type] then
+    return self:_set_node_text(date_nodes[date_type], text)
   end
 
   local keys = vim.tbl_keys(date_nodes)
   local other_types = vim.tbl_filter(function(t)
-    return t ~= type
+    return t ~= date_type
   end, { 'DEADLINE', 'SCHEDULED', 'CLOSED' })
   local last_child = date_nodes[keys[#keys]]
-  for _, date_type in ipairs(other_types) do
-    if date_nodes[date_type] then
-      last_child = date_nodes[date_type]
+  for _, other_date_type in ipairs(other_types) do
+    if date_nodes[other_date_type] then
+      last_child = date_nodes[other_date_type]
       break
     end
   end
