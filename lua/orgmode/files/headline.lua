@@ -404,7 +404,7 @@ function Headline:set_property(name, value)
   if not value then
     local existing_property, property_node = self:get_property(name)
     if existing_property and property_node then
-      vim.fn.deletebufline(vim.api.nvim_get_current_buf(), property_node:start() + 1)
+      vim.fn.deletebufline(bufnr, property_node:start() + 1)
     end
     self:refresh()
     local properties_node, properties = self:get_properties()
@@ -931,7 +931,10 @@ function Headline:_remove_date(type)
   local line_nr = date_nodes[type]:start() + 1
   self.file:set_node_text(date_nodes[type], '', true)
   if vim.trim(vim.fn.getline(line_nr)) == '' then
-    vim.fn.deletebufline(vim.api.nvim_get_current_buf(), line_nr)
+    local bufnr = self.file:bufnr()
+    if bufnr >= 0 then
+      vim.fn.deletebufline(bufnr, line_nr)
+    end
   end
   return self:refresh()
 end
