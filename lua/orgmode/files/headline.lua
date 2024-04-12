@@ -247,7 +247,7 @@ function Headline:set_tags(tags)
 
   local txt = self.file:get_node_text(predecessor)
   local pred_end_row, pred_end_col, _ = predecessor:end_()
-  local line = vim.fn.getline(pred_end_row + 1)
+  local line = vim.api.nvim_buf_get_lines(bufnr, pred_end_row, pred_end_row + 1, true)[1]
   local stars = line:match('^%*+%s*')
   local end_col = line:len()
 
@@ -899,7 +899,17 @@ function Headline:_add_date(type, date, active)
   local text = type .. ': ' .. date:to_wrapped_string(active)
   if not has_plan_dates then
     local start_line = self:node():start()
-    vim.fn.append(start_line + 1, self:_apply_indent(text))
+
+    local bufnr = self.file:bufnr()
+    if bufnr < 0 then
+      return
+    end
+
+    -- Append after starting line
+    local replacement = self:_apply_indent(text)
+    if type(replacement) == "string" then replacement = { replacement } end
+    vim.api.nvim_buf_set_lines(bufnr, start_line + 1, start_line + 1, true, replacement)
+
     return self:refresh()
   end
   if date_nodes[type] then
@@ -930,11 +940,15 @@ function Headline:_remove_date(type)
   end
   local line_nr = date_nodes[type]:start() + 1
   self.file:set_node_text(date_nodes[type], '', true)
-  if vim.trim(vim.fn.getline(line_nr)) == '' then
-    local bufnr = self.file:bufnr()
-    if bufnr >= 0 then
-      vim.fn.deletebufline(bufnr, line_nr)
-    end
+
+  local bufnr = self.file:bufnr()
+  if bufnr < 0 then
+    return
+  end
+
+  local line_text = vim.api.nvim_buf_get_lines(bufnr, line_nr - 1, line_nr, true)[1]
+  if vim.trim(line_text) == '' then
+    vim.fn.deletebufline(bufnr, line_nr)
   end
   return self:refresh()
 end
