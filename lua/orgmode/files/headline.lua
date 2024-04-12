@@ -228,6 +228,11 @@ end
 
 ---@param tags string
 function Headline:set_tags(tags)
+  local bufnr = self.file:bufnr()
+  if bufnr < 0 then
+    return nil
+  end
+
   ---@type TSNode
   local predecessor = nil
   for _, node in ipairs(ts_utils.get_named_children(self:node())) do
@@ -261,7 +266,7 @@ function Headline:set_tags(tags)
     text = string.rep(' ', spaces) .. tags
   end
 
-  vim.api.nvim_buf_set_text(0, pred_end_row, pred_end_col, pred_end_row, end_col, { text })
+  vim.api.nvim_buf_set_text(bufnr, pred_end_row, pred_end_col, pred_end_row, end_col, { text })
 end
 
 function Headline:align_tags()
@@ -389,6 +394,13 @@ end
 ---@param value? string
 ---@return OrgHeadline
 function Headline:set_property(name, value)
+  local bufnr = self.file:bufnr()
+  if bufnr < 0 then
+    -- TODO: No indication that this fails, just that it doesn't happen.
+    --       Is this an okay way to do this?
+    return self
+  end
+
   if not value then
     local existing_property, property_node = self:get_property(name)
     if existing_property and property_node then
@@ -406,7 +418,7 @@ function Headline:set_property(name, value)
   if not properties then
     local append_line = self:get_append_line()
     local property_drawer = self:_apply_indent({ ':PROPERTIES:', ':END:' }) --[[ @as string[] ]]
-    vim.api.nvim_buf_set_lines(0, append_line, append_line, false, property_drawer)
+    vim.api.nvim_buf_set_lines(bufnr, append_line, append_line, false, property_drawer)
     properties = self:refresh():get_properties()
   end
 
@@ -418,7 +430,7 @@ function Headline:set_property(name, value)
   local property_end = properties and properties:end_()
 
   local new_line = self:_apply_indent(property) --[[@as string]]
-  vim.api.nvim_buf_set_lines(0, property_end - 1, property_end - 1, false, { new_line })
+  vim.api.nvim_buf_set_lines(bufnr, property_end - 1, property_end - 1, false, { new_line })
   return self:refresh()
 end
 
@@ -822,11 +834,18 @@ end
 ---@return number
 function Headline:get_drawer_append_line(name)
   local drawer = self:get_drawer(name)
+  local bufnr = self.file:bufnr()
+  if bufnr < 0 then
+    -- TODO: I don't really know what to put here. The default value for
+    --       name_row is 0, and then you add 1, so I just put it as 1.
+    --       Maybe this should be -1 because nothing was appended?
+    return 1
+  end
 
   if not drawer then
     local append_line = self:get_append_line()
     local new_drawer = self:_apply_indent({ ':' .. name .. ':', ':END:' }) --[[ @as string[] ]]
-    vim.api.nvim_buf_set_lines(0, append_line, append_line, false, new_drawer)
+    vim.api.nvim_buf_set_lines(bufnr, append_line, append_line, false, new_drawer)
     drawer = self:get_drawer(name)
   end
   local name_row = drawer and drawer:field('name')[1]:end_() or 0
@@ -857,8 +876,8 @@ end
 
 function Headline:is_same(other_headline)
   return self.file.filename == other_headline.filename
-    and self:get_range():is_same(other_headline:get_range())
-    and self:get_headline_line_content() == other_headline:get_headline_line_content()
+      and self:get_range():is_same(other_headline:get_range())
+      and self:get_headline_line_content() == other_headline:get_headline_line_content()
 end
 
 function Headline:id_get_or_create()
@@ -975,6 +994,7 @@ end
 ---@param recursive? boolean
 ---@param modifier function
 ---@param dryRun? boolean
+---@return string[] lines
 function Headline:_handle_promote_demote(recursive, modifier, dryRun)
   local whole_subtree = function()
     local parent = self:node():parent()
@@ -1009,7 +1029,16 @@ function Headline:_handle_promote_demote(recursive, modifier, dryRun)
   if dryRun then
     return lines
   end
-  vim.api.nvim_buf_set_lines(0, start, end_line, false, lines)
+
+  local bufnr = self.file:bufnr()
+  if bufnr < 0 then
+    -- TODO: What do we return here?? Empty lines? All lines?
+    return lines
+  end
+
+  vim.api.nvim_buf_set_lines(bufnr, start, end_line, false, lines)
+
+  -- TODO: This returns OrgHeadline, but we want string[]??
   return self:refresh()
 end
 

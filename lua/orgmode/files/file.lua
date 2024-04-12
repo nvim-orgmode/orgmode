@@ -445,7 +445,7 @@ function OrgFile:set_node_lines(node, lines)
     return false
   end
   local start_row, _, end_row, _ = node:range()
-  vim.api.nvim_buf_set_lines(0, start_row, end_row, false, lines)
+  vim.api.nvim_buf_set_lines(bufnr, start_row, end_row, false, lines)
   return true
 end
 
