@@ -427,10 +427,12 @@ function OrgFile:set_node_text(node, text, front_trim)
   -- (section: 10, 0, 11, 0) instead of (section: 10, 0, 10, 10)
   -- If we are setting text at the end of the file it will throw an out of range error
   -- To avoid that,get the last line number and it's last column
-  local last_line = vim.fn.line('$') - 1
+  local last_line = vim.api.nvim_buf_line_count(bufnr) - 1
   if end_row > last_line then
     end_row = last_line
-    end_col = vim.fn.col({ end_row, '$' }) - 2
+
+    local end_row_text = vim.api.nvim_buf_get_lines(bufnr, end_row, end_row + 1, true)[1]
+    end_col = string.len(end_row_text) - 2
   end
   local ok = pcall(vim.api.nvim_buf_set_text, bufnr, start_row, start_col, end_row, end_col, replacement)
   return ok
