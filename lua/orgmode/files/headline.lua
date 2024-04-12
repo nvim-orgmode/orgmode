@@ -876,8 +876,8 @@ end
 
 function Headline:is_same(other_headline)
   return self.file.filename == other_headline.filename
-      and self:get_range():is_same(other_headline:get_range())
-      and self:get_headline_line_content() == other_headline:get_headline_line_content()
+    and self:get_range():is_same(other_headline:get_range())
+    and self:get_headline_line_content() == other_headline:get_headline_line_content()
 end
 
 function Headline:id_get_or_create()
@@ -907,7 +907,9 @@ function Headline:_add_date(type, date, active)
 
     -- Append after starting line
     local replacement = self:_apply_indent(text)
-    if type(replacement) == "string" then replacement = { replacement } end
+    if type(replacement) == "string" then
+      replacement = { replacement }
+    end
     vim.api.nvim_buf_set_lines(bufnr, start_line + 1, start_line + 1, true, replacement)
 
     return self:refresh()
