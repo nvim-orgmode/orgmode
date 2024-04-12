@@ -907,7 +907,7 @@ function Headline:_add_date(date_type, date, active)
 
     -- Append after starting line
     local replacement = self:_apply_indent(text)
-    if type(replacement) == "string" then
+    if type(replacement) == 'string' then
       replacement = { replacement }
     end
     vim.api.nvim_buf_set_lines(bufnr, start_line + 1, start_line + 1, true, replacement)
