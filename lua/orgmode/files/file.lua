@@ -432,7 +432,7 @@ function OrgFile:set_node_text(node, text, front_trim)
     end_row = last_line
 
     local end_row_text = vim.api.nvim_buf_get_lines(bufnr, end_row, end_row + 1, true)[1]
-    end_col = string.len(end_row_text) - 2
+    end_col = string.len(end_row_text)
   end
   local ok = pcall(vim.api.nvim_buf_set_text, bufnr, start_row, start_col, end_row, end_col, replacement)
   return ok
