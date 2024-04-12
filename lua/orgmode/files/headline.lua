@@ -1023,16 +1023,16 @@ function Headline:_handle_promote_demote(recursive, modifier, dryRun)
     return whole_subtree()
   end
 
-  local start = self:node():start()
-  local end_line = first_child_section:start()
-  local lines = modifier(start, vim.api.nvim_buf_get_lines(0, start, end_line, false))
-  if dryRun then
-    return lines
-  end
-
   local bufnr = self.file:bufnr()
   if bufnr < 0 then
     -- TODO: What do we return here?? Empty lines? All lines?
+    return {}
+  end
+
+  local start = self:node():start()
+  local end_line = first_child_section:start()
+  local lines = modifier(start, vim.api.nvim_buf_get_lines(bufnr, start, end_line, false))
+  if dryRun then
     return lines
   end
 
