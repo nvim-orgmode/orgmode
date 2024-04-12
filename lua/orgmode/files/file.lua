@@ -6,6 +6,7 @@ local ts = vim.treesitter
 local config = require('orgmode.config')
 local Block = require('orgmode.files.elements.block')
 local Link = require('orgmode.org.hyperlinks.link')
+local Range = require('orgmode.files.elements.range')
 
 ---@class OrgFileMetadata
 ---@field mtime number
@@ -431,7 +432,7 @@ function OrgFile:set_node_text(node, text, front_trim)
     end_row = last_line
     end_col = vim.fn.col({ end_row, '$' }) - 2
   end
-  local ok = pcall(vim.api.nvim_buf_set_text, 0, start_row, start_col, end_row, end_col, replacement)
+  local ok = pcall(vim.api.nvim_buf_set_text, bufnr, start_row, start_col, end_row, end_col, replacement)
   return ok
 end
 
@@ -543,7 +544,7 @@ function OrgFile:get_drawer(name)
     return false
   end)
 
-  if not drawer or #drawer:field('contents') == 0 then
+  if not drawer then
     return nil
   end
 
@@ -551,28 +552,81 @@ function OrgFile:get_drawer(name)
 end
 
 memoize('get_properties')
----@return table<string, string>
+---@return table<string, string>, table<string, OrgRange>, TSNode | nil
 function OrgFile:get_properties()
   local property_drawer = self:get_drawer('properties')
   if not property_drawer then
-    return {}
+    return {}, {}, nil
   end
   local properties = {}
-  local contents = self:get_node_text_list(property_drawer:field('contents')[1])
-  for _, line in ipairs(contents) do
+  local properties_ranges = {}
+  local contents_node = property_drawer:field('contents')[1]
+  local contents = self:get_node_text_list(contents_node)
+  local start_line = contents_node and contents_node:start() or 0
+  for i, line in ipairs(contents) do
     local property_name, property_value = line:match('^%s*:([^:]-):%s*(.*)$')
     if property_name and property_value then
       properties[property_name:lower()] = property_value
+      properties_ranges[property_name:lower()] = Range.from_line(start_line + i)
     end
   end
-  return properties
+  return properties, properties_ranges, property_drawer
 end
 
 memoize('get_property')
----@return string | nil
+---@return string | nil, OrgRange
 function OrgFile:get_property(name)
-  local property_drawer = self:get_properties()
-  return property_drawer[name:lower()]
+  local property_drawer, properties_ranges = self:get_properties()
+  return property_drawer[name:lower()], properties_ranges[name:lower()]
+end
+
+---@param name string
+---@param value? string
+---@return OrgFile
+function OrgFile:set_property(name, value)
+  local bufnr = self:bufnr()
+  if bufnr < 0 then
+    return self
+  end
+
+  if not value then
+    local existing_property, property_range = self:get_property(name)
+    if existing_property and property_range then
+      vim.fn.deletebufline(bufnr, property_range.start_line)
+    end
+    self:parse()
+    local properties, _, properties_drawer = self:get_properties()
+    if vim.tbl_isempty(properties) then
+      self:set_node_lines(properties_drawer, {})
+      self:parse()
+    end
+    return self
+  end
+
+  local _, _, properties_drawer = self:get_properties()
+  local property = (':%s: %s'):format(name, value)
+
+  if not properties_drawer then
+    vim.api.nvim_buf_set_lines(bufnr, 0, 0, false, {
+      ':PROPERTIES:',
+      property,
+      ':END:',
+    })
+    self:parse()
+    return self
+  end
+
+  local existing_property, property_range = self:get_property(name)
+  if existing_property then
+    vim.api.nvim_buf_set_lines(bufnr, property_range.start_line - 1, property_range.start_line, false, { property })
+    self:parse()
+    return self
+  end
+
+  local property_end = properties_drawer and properties_drawer:end_()
+  vim.api.nvim_buf_set_lines(bufnr, property_end - 1, property_end - 1, false, { property })
+  self:parse()
+  return self
 end
 
 memoize('get_category')

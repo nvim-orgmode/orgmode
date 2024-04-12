@@ -376,8 +376,8 @@ function Headline:get_properties()
       local name = node:field('name')[1]
       local value = node:field('value')[1]
 
-      if name and value then
-        properties[self.file:get_node_text(name):lower()] = self.file:get_node_text(value)
+      if name then
+        properties[self.file:get_node_text(name):lower()] = self.file:get_node_text(value) or ''
       end
     end
   end
@@ -386,8 +386,22 @@ function Headline:get_properties()
 end
 
 ---@param name string
----@param value string
+---@param value? string
+---@return OrgHeadline
 function Headline:set_property(name, value)
+  if not value then
+    local existing_property, property_node = self:get_property(name)
+    if existing_property and property_node then
+      vim.fn.deletebufline(vim.api.nvim_get_current_buf(), property_node:start() + 1)
+    end
+    self:refresh()
+    local properties_node, properties = self:get_properties()
+    if vim.tbl_isempty(properties) then
+      self:_set_node_lines(properties_node, {})
+    end
+    return self:refresh()
+  end
+
   local properties = self:get_properties()
   if not properties then
     local append_line = self:get_append_line()
@@ -418,7 +432,7 @@ function Headline:get_property(property_name, search_parents)
       local name = node:field('name')[1]
       local value = node:field('value')[1]
       if name and self.file:get_node_text(name):lower() == property_name:lower() then
-        return value and self.file:get_node_text(value), node
+        return value and self.file:get_node_text(value) or '', node
       end
     end
   end

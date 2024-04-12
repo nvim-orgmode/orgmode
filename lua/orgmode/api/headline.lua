@@ -217,9 +217,9 @@ function OrgHeadline:set_scheduled(date)
   end)
 end
 
---- Set property on a headline
+--- Set property on a headline. Setting value to nil removes the property
 ---@param key string
----@param value string
+---@param value? string
 function OrgHeadline:set_property(key, value)
   return self:_do_action(function()
     local headline = org.files:get_closest_headline()

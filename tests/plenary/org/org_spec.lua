@@ -3,6 +3,115 @@ local Date = require('orgmode.objects.date')
 local org = require('orgmode')
 
 describe('Org file', function()
+  it('should properly add new properties to a file', function()
+    helpers.create_file({
+      '* TODO Test orgmode :WORK:',
+      'DEADLINE: <2021-05-10 11:00 +1w>',
+      '* TODO Another todo',
+    })
+
+    local file = org.files:get_current_file()
+    file:set_property('CATEGORY', 'testing')
+
+    assert.are.same({
+      ':PROPERTIES:',
+      ':CATEGORY: testing',
+      ':END:',
+      '* TODO Test orgmode :WORK:',
+      'DEADLINE: <2021-05-10 11:00 +1w>',
+      '* TODO Another todo',
+    }, vim.api.nvim_buf_get_lines(0, 0, 8, false))
+  end)
+
+  it('should append to existing file properties', function()
+    helpers.create_file({
+      ':PROPERTIES:',
+      ':CATEGORY: Testing',
+      ':END:',
+      '* TODO Test orgmode :WORK:',
+      'DEADLINE: <2021-05-10 11:00 +1w>',
+      '* TODO Another todo',
+    })
+    local file = org.files:get_current_file()
+    file:set_property('CUSTOM_ID', '1')
+
+    assert.are.same({
+      ':PROPERTIES:',
+      ':CATEGORY: Testing',
+      ':CUSTOM_ID: 1',
+      ':END:',
+      '* TODO Test orgmode :WORK:',
+      'DEADLINE: <2021-05-10 11:00 +1w>',
+      '* TODO Another todo',
+    }, vim.api.nvim_buf_get_lines(0, 0, 8, false))
+  end)
+  --
+  it('should update existing file property', function()
+    helpers.create_file({
+      ':PROPERTIES:',
+      ':CATEGORY: Testing',
+      ':CUSTOM_ID: 1',
+      ':END:',
+      '* TODO Test orgmode :WORK:',
+      'DEADLINE: <2021-05-10 11:00 +1w>',
+      '* TODO Another todo',
+    })
+    local file = org.files:get_current_file()
+    file:set_property('CATEGORY', 'Updated')
+
+    assert.are.same({
+      ':PROPERTIES:',
+      ':CATEGORY: Updated',
+      ':CUSTOM_ID: 1',
+      ':END:',
+      '* TODO Test orgmode :WORK:',
+      'DEADLINE: <2021-05-10 11:00 +1w>',
+      '* TODO Another todo',
+    }, vim.api.nvim_buf_get_lines(0, 0, 8, false))
+  end)
+
+  it('should remove existing file property', function()
+    helpers.create_file({
+      ':PROPERTIES:',
+      ':CATEGORY: Testing',
+      ':CUSTOM_ID: 1',
+      ':END:',
+      '* TODO Test orgmode :WORK:',
+      'DEADLINE: <2021-05-10 11:00 +1w>',
+      '* TODO Another todo',
+    })
+    local file = org.files:get_current_file()
+    file:set_property('CATEGORY', nil)
+
+    assert.are.same({
+      ':PROPERTIES:',
+      ':CUSTOM_ID: 1',
+      ':END:',
+      '* TODO Test orgmode :WORK:',
+      'DEADLINE: <2021-05-10 11:00 +1w>',
+      '* TODO Another todo',
+    }, vim.api.nvim_buf_get_lines(0, 0, 8, false))
+  end)
+
+  it('should remove existing file property and whole drawer if its only property', function()
+    helpers.create_file({
+      ':PROPERTIES:',
+      ':CATEGORY: Testing',
+      ':END:',
+      '* TODO Test orgmode :WORK:',
+      'DEADLINE: <2021-05-10 11:00 +1w>',
+      '* TODO Another todo',
+    })
+    local file = org.files:get_current_file()
+    file:set_property('CATEGORY', nil)
+
+    assert.are.same({
+      '* TODO Test orgmode :WORK:',
+      'DEADLINE: <2021-05-10 11:00 +1w>',
+      '* TODO Another todo',
+    }, vim.api.nvim_buf_get_lines(0, 0, 8, false))
+  end)
+
   it('should properly add new properties to a section', function()
     helpers.create_file({
       '* TODO Test orgmode :WORK:',
@@ -69,6 +178,50 @@ describe('Org file', function()
       '  :CATEGORY: Updated',
       '  :CUSTOM_ID: 1',
       '  :END:',
+      '* TODO Another todo',
+    }, vim.api.nvim_buf_get_lines(0, 0, 8, false))
+  end)
+
+  it('should remove existing property', function()
+    helpers.create_file({
+      '* TODO Test orgmode :WORK:',
+      'DEADLINE: <2021-05-10 11:00 +1w>',
+      '  :PROPERTIES:',
+      '  :CATEGORY: Testing',
+      '  :CUSTOM_ID: 1',
+      '  :END:',
+      '* TODO Another todo',
+    })
+    local headline = org.files:get_closest_headline({ 1, 0 })
+    assert.are.same('Test orgmode', headline:get_title())
+    headline:set_property('CATEGORY', nil)
+
+    assert.are.same({
+      '* TODO Test orgmode :WORK:',
+      'DEADLINE: <2021-05-10 11:00 +1w>',
+      '  :PROPERTIES:',
+      '  :CUSTOM_ID: 1',
+      '  :END:',
+      '* TODO Another todo',
+    }, vim.api.nvim_buf_get_lines(0, 0, 8, false))
+  end)
+
+  it('should remove existing property and whole drawer if its only property', function()
+    helpers.create_file({
+      '* TODO Test orgmode :WORK:',
+      'DEADLINE: <2021-05-10 11:00 +1w>',
+      '  :PROPERTIES:',
+      '  :CATEGORY: Testing',
+      '  :END:',
+      '* TODO Another todo',
+    })
+    local headline = org.files:get_closest_headline({ 1, 0 })
+    assert.are.same('Test orgmode', headline:get_title())
+    headline:set_property('CATEGORY', nil)
+
+    assert.are.same({
+      '* TODO Test orgmode :WORK:',
+      'DEADLINE: <2021-05-10 11:00 +1w>',
       '* TODO Another todo',
     }, vim.api.nvim_buf_get_lines(0, 0, 8, false))
   end)
