@@ -408,10 +408,10 @@ end
 ---@param front_trim boolean? If true,trim the text from the front by 1 character
 ---@return boolean
 function OrgFile:set_node_text(node, text, front_trim)
-  local bufnr = self:bufnr()
-  if not node or bufnr < 0 then
+  if not node then
     return false
   end
+  local bufnr = self:get_valid_bufnr()
   local start_row, start_col, end_row, end_col = node:range()
   local replacement = vim.split(text, '\n', { plain = true })
   if string.len(text) == 0 then
@@ -427,10 +427,10 @@ function OrgFile:set_node_text(node, text, front_trim)
   -- (section: 10, 0, 11, 0) instead of (section: 10, 0, 10, 10)
   -- If we are setting text at the end of the file it will throw an out of range error
   -- To avoid that,get the last line number and it's last column
-  local last_line = vim.fn.line('$') - 1
+  local last_line = vim.api.nvim_buf_line_count(bufnr) - 1
   if end_row > last_line then
     end_row = last_line
-    end_col = vim.fn.col({ end_row, '$' }) - 2
+    end_col = vim.api.nvim_buf_get_lines(bufnr, end_row, end_row + 1, false)[1]:len()
   end
   local ok = pcall(vim.api.nvim_buf_set_text, bufnr, start_row, start_col, end_row, end_col, replacement)
   return ok
@@ -440,12 +440,12 @@ end
 ---@param lines string[]
 ---@return boolean
 function OrgFile:set_node_lines(node, lines)
-  local bufnr = self:bufnr()
-  if not node or bufnr < 0 then
+  if not node then
     return false
   end
+  local bufnr = self:get_valid_bufnr()
   local start_row, _, end_row, _ = node:range()
-  vim.api.nvim_buf_set_lines(0, start_row, end_row, false, lines)
+  vim.api.nvim_buf_set_lines(bufnr, start_row, end_row, false, lines)
   return true
 end
 
@@ -458,6 +458,21 @@ function OrgFile:bufnr()
     return bufnr
   end
   return -1
+end
+
+---Return valid buffer handle or throw an error if it's not valid
+---@return number
+function OrgFile:get_valid_bufnr()
+  local bufnr = vim.fn.bufnr(self.filename) or -1
+  if bufnr < 0 then
+    error('[orgmode] No valid buffer for file ' .. self.filename .. ' to edit')
+  end
+  -- Do not consider unloaded buffers as valid
+  -- Treesitter is not working in them
+  if not vim.api.nvim_buf_is_loaded(bufnr) then
+    error('[orgmode] Cannot edit buffer ' .. tostring(bufnr) .. ' for file ' .. self.filename .. ', it is not loaded')
+  end
+  return bufnr
 end
 
 memoize('get_filetags')
@@ -584,10 +599,7 @@ end
 ---@param value? string
 ---@return OrgFile
 function OrgFile:set_property(name, value)
-  local bufnr = self:bufnr()
-  if bufnr < 0 then
-    return self
-  end
+  local bufnr = self:get_valid_bufnr()
 
   if not value then
     local existing_property, property_range = self:get_property(name)

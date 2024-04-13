@@ -466,15 +466,16 @@ describe('OrgFile', function()
   end)
 
   describe('set_node_text', function()
-    it('should not do anything if file is not loaded in buffer', function()
+    it('should throw an error if file is not loaded in buffer', function()
       local file = load_file_sync({
         '* Headline 1 :TAG:',
         '  The content',
         '  Multi line',
       })
       local paragraph_node = file:get_node_at_cursor():parent()
-      local result = file:set_node_text(paragraph_node, 'New Text')
-      assert.is.False(result)
+      assert.is.error_matches(function()
+        return file:set_node_text(paragraph_node, 'New Text')
+      end, '%[orgmode%] No valid buffer for file ' .. file.filename .. ' to edit')
     end)
 
     it('should set node text', function()

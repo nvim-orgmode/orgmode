@@ -24,7 +24,7 @@ function OrgFiles:new(opts)
     load_state = nil,
   }
   setmetatable(data, self)
-  self.paths = self:_setup_paths(opts.paths)
+  data.paths = self:_setup_paths(opts.paths)
   return data
 end
 

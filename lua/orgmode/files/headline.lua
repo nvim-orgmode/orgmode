@@ -240,9 +240,10 @@ function Headline:set_tags(tags)
     return nil
   end
 
+  local bufnr = self.file:get_valid_bufnr()
   local txt = self.file:get_node_text(predecessor)
   local pred_end_row, pred_end_col, _ = predecessor:end_()
-  local line = vim.fn.getline(pred_end_row + 1)
+  local line = vim.api.nvim_buf_get_lines(bufnr, pred_end_row, pred_end_row + 1, false)[1]
   local stars = line:match('^%*+%s*')
   local end_col = line:len()
 
@@ -261,7 +262,7 @@ function Headline:set_tags(tags)
     text = string.rep(' ', spaces) .. tags
   end
 
-  vim.api.nvim_buf_set_text(0, pred_end_row, pred_end_col, pred_end_row, end_col, { text })
+  vim.api.nvim_buf_set_text(bufnr, pred_end_row, pred_end_col, pred_end_row, end_col, { text })
 end
 
 function Headline:align_tags()
@@ -389,10 +390,11 @@ end
 ---@param value? string
 ---@return OrgHeadline
 function Headline:set_property(name, value)
+  local bufnr = self.file:get_valid_bufnr()
   if not value then
     local existing_property, property_node = self:get_property(name)
     if existing_property and property_node then
-      vim.fn.deletebufline(vim.api.nvim_get_current_buf(), property_node:start() + 1)
+      vim.fn.deletebufline(bufnr, property_node:start() + 1)
     end
     self:refresh()
     local properties_node, properties = self:get_properties()
@@ -406,7 +408,7 @@ function Headline:set_property(name, value)
   if not properties then
     local append_line = self:get_append_line()
     local property_drawer = self:_apply_indent({ ':PROPERTIES:', ':END:' }) --[[ @as string[] ]]
-    vim.api.nvim_buf_set_lines(0, append_line, append_line, false, property_drawer)
+    vim.api.nvim_buf_set_lines(bufnr, append_line, append_line, false, property_drawer)
     properties = self:refresh():get_properties()
   end
 
@@ -418,7 +420,7 @@ function Headline:set_property(name, value)
   local property_end = properties and properties:end_()
 
   local new_line = self:_apply_indent(property) --[[@as string]]
-  vim.api.nvim_buf_set_lines(0, property_end - 1, property_end - 1, false, { new_line })
+  vim.api.nvim_buf_set_lines(bufnr, property_end - 1, property_end - 1, false, { new_line })
   return self:refresh()
 end
 
@@ -824,9 +826,10 @@ function Headline:get_drawer_append_line(name)
   local drawer = self:get_drawer(name)
 
   if not drawer then
+    local bufnr = self.file:get_valid_bufnr()
     local append_line = self:get_append_line()
     local new_drawer = self:_apply_indent({ ':' .. name .. ':', ':END:' }) --[[ @as string[] ]]
-    vim.api.nvim_buf_set_lines(0, append_line, append_line, false, new_drawer)
+    vim.api.nvim_buf_set_lines(bufnr, append_line, append_line, false, new_drawer)
     drawer = self:get_drawer(name)
   end
   local name_row = drawer and drawer:field('name')[1]:end_() or 0
@@ -880,7 +883,7 @@ function Headline:_add_date(type, date, active)
   local text = type .. ': ' .. date:to_wrapped_string(active)
   if not has_plan_dates then
     local start_line = self:node():start()
-    vim.fn.append(start_line + 1, self:_apply_indent(text))
+    vim.fn.appendbufline(self.file:get_valid_bufnr(), start_line + 1, self:_apply_indent(text) --[[@as string]])
     return self:refresh()
   end
   if date_nodes[type] then
@@ -909,10 +912,12 @@ function Headline:_remove_date(type)
   if vim.tbl_count(date_nodes) == 0 or not date_nodes[type] then
     return
   end
-  local line_nr = date_nodes[type]:start() + 1
+  local line_nr = date_nodes[type]:start()
   self.file:set_node_text(date_nodes[type], '', true)
-  if vim.trim(vim.fn.getline(line_nr)) == '' then
-    vim.fn.deletebufline(vim.api.nvim_get_current_buf(), line_nr)
+  local bufnr = self.file:get_valid_bufnr()
+  local cur_line = vim.api.nvim_buf_get_lines(bufnr, line_nr, line_nr + 1, false)[1]
+  if vim.trim(cur_line) == '' then
+    vim.fn.deletebufline(bufnr, line_nr + 1)
   end
   return self:refresh()
 end
@@ -1005,11 +1010,12 @@ function Headline:_handle_promote_demote(recursive, modifier, dryRun)
 
   local start = self:node():start()
   local end_line = first_child_section:start()
-  local lines = modifier(start, vim.api.nvim_buf_get_lines(0, start, end_line, false))
+  local bufnr = self.file:get_valid_bufnr()
+  local lines = modifier(start, vim.api.nvim_buf_get_lines(bufnr, start, end_line, false))
   if dryRun then
     return lines
   end
-  vim.api.nvim_buf_set_lines(0, start, end_line, false, lines)
+  vim.api.nvim_buf_set_lines(bufnr, start, end_line, false, lines)
   return self:refresh()
 end
 
