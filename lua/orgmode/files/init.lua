@@ -55,7 +55,7 @@ function OrgFiles:load(force)
 end
 
 ---@param filename string
----@return OrgPromise<OrgFile>
+---@return OrgPromise<OrgFile | false>
 function OrgFiles:add_to_paths(filename)
   filename = vim.fn.resolve(vim.fn.fnamemodify(filename, ':p'))
 
@@ -77,11 +77,12 @@ end
 
 ---@param filename string
 ---@param timeout? number
----@return OrgFile
+---@return OrgFile | false
 function OrgFiles:add_to_paths_sync(filename, timeout)
   return self:add_to_paths(filename):wait(timeout)
 end
 
+---@return string[]
 function OrgFiles:get_tags()
   local tags = {}
   for _, orgfile in ipairs(self:all()) do
@@ -154,7 +155,7 @@ function OrgFiles:filenames()
   end, self:all())
 end
 
----@return OrgPromise<OrgFile>
+---@return OrgPromise<OrgFile | false>
 function OrgFiles:load_file(filename)
   filename = vim.fn.resolve(vim.fn.fnamemodify(filename, ':p'))
   local file = self.all_files[filename]
@@ -170,11 +171,13 @@ function OrgFiles:load_file(filename)
   end)
 end
 
----@return OrgFile | nil
+---@return OrgFile | false
 function OrgFiles:load_file_sync(filename, timeout)
   return self:load_file(filename):wait(timeout)
 end
 
+---@param filename string
+---@return OrgFile
 function OrgFiles:get(filename)
   local file = self:load_file_sync(filename)
   assert(file, 'File ' .. filename .. ' not found or is in invalid format')
@@ -207,7 +210,7 @@ end
 ---@return OrgHeadline | nil
 function OrgFiles:get_closest_headline_or_nil(cursor)
   local file = self:load_file_sync(utils.current_file_path())
-  return file and file:get_closest_headline_or_nil(cursor)
+  return file and file:get_closest_headline_or_nil(cursor) or nil
 end
 
 ---@param force? boolean

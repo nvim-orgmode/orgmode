@@ -53,7 +53,7 @@ function OrgFile:new(opts)
 end
 
 ---Load the file
----@return OrgPromise<OrgFile>
+---@return OrgPromise<OrgFile | false>
 function OrgFile.load(filename)
   local ext = vim.fn.fnamemodify(filename, ':e')
   if ext ~= 'org' and ext ~= 'org_archive' then
