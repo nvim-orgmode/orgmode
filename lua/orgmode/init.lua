@@ -94,6 +94,15 @@ function Org:setup_autocmds()
       self:reload(vim.fn.expand('<afile>:p'))
     end,
   })
+  vim.api.nvim_create_autocmd('ColorScheme', {
+    pattern = '*',
+    group = org_augroup,
+    callback = function()
+      if self.initialized then
+        require('orgmode.colors.highlights').define_highlights()
+      end
+    end,
+  })
 end
 
 function Org.setup_ts_grammar()
