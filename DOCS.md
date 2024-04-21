@@ -256,7 +256,7 @@ Possible values:
 * `note` - adds `CLOSED` date as above, and prompts for closing note via capture window. Confirm note with `org_note_finalize` (Default `<C-c>`), or ignore providing note via `org_note_kill` (Default `<Leader>ok`)
 * `false` - Disable any logging
 
-#### org_log_repeat
+#### **org_log_repeat**
 *type*: `string|false`<br />
 *default value*: `time`<br />
 Possible values:
