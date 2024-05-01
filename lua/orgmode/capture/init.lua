@@ -9,6 +9,7 @@ local Date = require('orgmode.objects.date')
 local Datetree = require('orgmode.capture.template.datetree')
 
 ---@alias OrgOnCaptureClose fun(capture:OrgCapture, opts:OrgProcessCaptureOpts)
+---@alias OrgOnCaptureCancel fun(capture:OrgCapture)
 
 ---@class OrgCapture
 ---@field templates OrgCaptureTemplates
@@ -16,16 +17,18 @@ local Datetree = require('orgmode.capture.template.datetree')
 ---@field files OrgFiles
 ---@field on_pre_refile OrgOnCaptureClose
 ---@field on_post_refile OrgOnCaptureClose
+---@field on_cancel_refile OrgOnCaptureCancel
 ---@field _window OrgCaptureWindow
 local Capture = {}
 Capture.__index = Capture
 
----@param opts { files: OrgFiles, templates?: OrgCaptureTemplates, on_pre_refile?: OrgOnCaptureClose, on_post_refile?: OrgOnCaptureClose }
+---@param opts { files: OrgFiles, templates?: OrgCaptureTemplates, on_pre_refile?: OrgOnCaptureClose, on_post_refile?: OrgOnCaptureClose, on_cancel_refile?: OrgOnCaptureCancel }
 function Capture:new(opts)
   local this = setmetatable({}, self)
   this.files = opts.files
   this.on_pre_refile = opts.on_pre_refile
   this.on_post_refile = opts.on_post_refile
+  this.on_cancel_refile = opts.on_cancel_refile
   this.templates = opts.templates or Templates:new()
   this.closing_note = this:_setup_closing_note()
   return this
@@ -58,7 +61,7 @@ function Capture:setup_mappings()
   local kill_map = maps.org_capture_kill
   kill_map.map_entry
     :with_handler(function()
-      return self:kill()
+      return self:kill(true)
     end)
     :attach(kill_map.default_map, kill_map.user_map, kill_map.opts)
 end
@@ -99,6 +102,9 @@ function Capture:on_refile_close()
       vim.fn.confirm(string.format('Do you want to refile this to %s?', opts.destination_file.filename), '&Yes\n&No')
     vim.cmd([[redraw!]])
     if choice ~= 1 then
+      if self.on_cancel_refile then
+        self.on_cancel_refile(self)
+      end
       return utils.echo_info('Canceled.')
     end
   end
@@ -446,8 +452,12 @@ function Capture:autocomplete_refile(arg_lead)
   end, result)
 end
 
-function Capture:kill()
+---@param from_mapping? boolean
+function Capture:kill(from_mapping)
   if self._window then
+    if from_mapping and self.on_cancel_refile then
+      self.on_cancel_refile(self)
+    end
     self._window:kill()
     self._window = nil
   end
