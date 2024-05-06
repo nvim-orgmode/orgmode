@@ -87,12 +87,12 @@ function Promise.new(executor)
     local first = ...
     if is_promise(first) then
       first
-          :next(function(...)
-            self:_resolve(...)
-          end)
-          :catch(function(...)
-            self:_reject(...)
-          end)
+        :next(function(...)
+          self:_resolve(...)
+        end)
+        :catch(function(...)
+          self:_reject(...)
+        end)
       return
     end
     self:_resolve(...)
@@ -166,12 +166,12 @@ function Promise._start_resolve(self, value)
     end)
   end
   first
-      :next(function(...)
-        self:_resolve(...)
-      end)
-      :catch(function(...)
-        self:_reject(...)
-      end)
+    :next(function(...)
+      self:_resolve(...)
+    end)
+    :catch(function(...)
+      self:_reject(...)
+    end)
 end
 
 function Promise._reject(self, ...)
@@ -206,12 +206,12 @@ function Promise._start_reject(self, value)
     end)
   end
   first
-      :next(function(...)
-        self:_resolve(...)
-      end)
-      :catch(function(...)
-        self:_reject(...)
-      end)
+    :next(function(...)
+      self:_resolve(...)
+    end)
+    :catch(function(...)
+      self:_reject(...)
+    end)
 end
 
 --- Equivalents to JavaScript's Promise.then.
@@ -249,14 +249,14 @@ end
 function Promise.finally(self, on_finally)
   vim.validate({ on_finally = { on_finally, 'function', true } })
   return self
-      :next(function(...)
-        on_finally()
-        return ...
-      end)
-      :catch(function(...)
-        on_finally()
-        return Promise.reject(...)
-      end)
+    :next(function(...)
+      on_finally()
+      return ...
+    end)
+    :catch(function(...)
+      on_finally()
+      return Promise.reject(...)
+    end)
 end
 
 --- Equivalents to JavaScript's Promise.then.
@@ -269,15 +269,15 @@ function Promise.wait(self, timeout)
   local result = nil
 
   self
-      :next(function(...)
-        result = PackedValue.new(...)
-        is_done = true
-      end)
-      :catch(function(...)
-        has_error = true
-        result = PackedValue.new(...)
-        is_done = true
-      end)
+    :next(function(...)
+      result = PackedValue.new(...)
+      is_done = true
+    end)
+    :catch(function(...)
+      has_error = true
+      result = PackedValue.new(...)
+      is_done = true
+    end)
 
   local success, code = vim.wait(timeout, function()
     return is_done
@@ -315,17 +315,17 @@ function Promise.all(list)
     local results = {}
     for i, e in ipairs(list) do
       Promise.resolve(e)
-          :next(function(...)
-            local first = ...
-            results[i] = first
-            if remain == 1 then
-              return resolve(results)
-            end
-            remain = remain - 1
-          end)
-          :catch(function(...)
-            reject(...)
-          end)
+        :next(function(...)
+          local first = ...
+          results[i] = first
+          if remain == 1 then
+            return resolve(results)
+          end
+          remain = remain - 1
+        end)
+        :catch(function(...)
+          reject(...)
+        end)
     end
   end)
 end
@@ -338,12 +338,12 @@ function Promise.race(list)
   return Promise.new(function(resolve, reject)
     for _, e in ipairs(list) do
       Promise.resolve(e)
-          :next(function(...)
-            resolve(...)
-          end)
-          :catch(function(...)
-            reject(...)
-          end)
+        :next(function(...)
+          resolve(...)
+        end)
+        :catch(function(...)
+          reject(...)
+        end)
     end
   end)
 end
@@ -363,17 +363,17 @@ function Promise.any(list)
     local errs = {}
     for i, e in ipairs(list) do
       Promise.resolve(e)
-          :next(function(...)
-            resolve(...)
-          end)
-          :catch(function(...)
-            local first = ...
-            errs[i] = first
-            if remain == 1 then
-              return reject(errs)
-            end
-            remain = remain - 1
-          end)
+        :next(function(...)
+          resolve(...)
+        end)
+        :catch(function(...)
+          local first = ...
+          errs[i] = first
+          if remain == 1 then
+            return reject(errs)
+          end
+          remain = remain - 1
+        end)
     end
   end)
 end
@@ -393,20 +393,20 @@ function Promise.all_settled(list)
     local results = {}
     for i, e in ipairs(list) do
       Promise.resolve(e)
-          :next(function(...)
-            local first = ...
-            results[i] = { status = PromiseStatus.Fulfilled, value = first }
-          end)
-          :catch(function(...)
-            local first = ...
-            results[i] = { status = PromiseStatus.Rejected, reason = first }
-          end)
-          :finally(function()
-            if remain == 1 then
-              return resolve(results)
-            end
-            remain = remain - 1
-          end)
+        :next(function(...)
+          local first = ...
+          results[i] = { status = PromiseStatus.Fulfilled, value = first }
+        end)
+        :catch(function(...)
+          local first = ...
+          results[i] = { status = PromiseStatus.Rejected, reason = first }
+        end)
+        :finally(function()
+          if remain == 1 then
+            return resolve(results)
+          end
+          remain = remain - 1
+        end)
     end
   end)
 end
