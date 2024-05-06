@@ -263,6 +263,7 @@ end
 --- @param timeout? number
 --- @return any
 function Promise.wait(self, timeout)
+  timeout = timeout or 5000
   local is_done = false
   local has_error = false
   local result = nil
@@ -278,7 +279,7 @@ function Promise.wait(self, timeout)
       is_done = true
     end)
 
-  vim.wait(timeout or 5000, function()
+  local success, code = vim.wait(timeout, function()
     return is_done
   end, 1)
 
@@ -288,7 +289,17 @@ function Promise.wait(self, timeout)
     return error(value)
   end
 
-  return value
+  if success then
+    return value
+  end
+
+  if code == -1 then
+    return error('promise timeout of ' .. tostring(timeout) .. 'ms reached')
+  elseif code == -2 then
+    return error('promise interrupted')
+  end
+
+  return error('promise failed with unknown reason')
 end
 
 --- Equivalents to JavaScript's Promise.all.
