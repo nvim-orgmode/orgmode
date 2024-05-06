@@ -290,11 +290,11 @@ function Promise.wait(self, timeout)
   end
 
   if not success and code == -1 then
-    return error("promise timeout of " .. tostring(timeout) .. "ms reached")
+    return error('promise timeout of ' .. tostring(timeout) .. 'ms reached')
   elseif not success and code == -2 then
-    return error("promise interrupted")
+    return error('promise interrupted')
   elseif not success then
-    return error("promise failed with unknown reason")
+    return error('promise failed with unknown reason')
   end
 
   return value
