@@ -3,6 +3,10 @@ local utils = require('orgmode.utils')
 local Promise = require('orgmode.utils.promise')
 local config = require('orgmode.config')
 local namespace = vim.api.nvim_create_namespace('org_calendar')
+
+---@alias OrgCalendarOnRenderDayOpts { line: number, from: number, to: number, buf: number, namespace: number }
+---@alias OrgCalendarOnRenderDay fun(day: OrgDate, opts: OrgCalendarOnRenderDayOpts)
+
 ---@class OrgCalendar
 ---@field win number
 ---@field buf number
@@ -11,6 +15,7 @@ local namespace = vim.api.nvim_create_namespace('org_calendar')
 ---@field date OrgDate
 ---@field month OrgDate
 ---@field title? string
+---@field on_day? OrgCalendarOnRenderDay
 
 local Calendar = {
   win = nil,
@@ -22,12 +27,13 @@ Calendar.__index = Calendar
 
 vim.cmd([[hi default OrgCalendarToday gui=reverse cterm=reverse]])
 
----@param data { date?: OrgDate, clearable?: boolean, title?: string }
+---@param data { date?: OrgDate, clearable?: boolean, title?: string, on_day?: OrgCalendarOnRenderDay }
 function Calendar.new(data)
   data = data or {}
   local this = setmetatable({}, Calendar)
   this.clearable = data.clearable
   this.title = data.title
+  this.on_day = data.on_day
   if data.date then
     this.date = data.date
     this.month = this.date:set({ day = 1 })
@@ -186,20 +192,45 @@ function Calendar:render()
   vim.api.nvim_buf_add_highlight(self.buf, namespace, 'Comment', #content - 2, 0, -1)
   vim.api.nvim_buf_add_highlight(self.buf, namespace, 'Comment', #content - 1, 0, -1)
 
-  -- highlight the cell of the current day
-  local today = Date.today()
-  local is_today_month = today:is_same(self.month, 'month')
-  if is_today_month then
-    local day_formatted = today:format('%d')
-    for i, line in ipairs(content) do
-      local from, to = line:find('%s' .. day_formatted .. '%s')
+  for i, line in ipairs(content) do
+    local from = 0
+    local to, num
+
+    while true do
+      from, to, num = line:find('%s(%d%d?)%s', from + 1)
+      if from == nil then
+        break
+      end
       if from and to then
-        vim.api.nvim_buf_add_highlight(self.buf, namespace, 'OrgCalendarToday', i - 1, from - 1, to)
+        local date = self.month:set({ day = num })
+        self:on_render_day(date, {
+          from = from,
+          to = to,
+          line = i,
+        })
       end
     end
   end
 
   vim.api.nvim_set_option_value('modifiable', false, { buf = self.buf })
+end
+
+---@param day OrgDate
+---@param opts { from: number, to: number, line: number}
+function Calendar:on_render_day(day, opts)
+  local is_today = day:is_today()
+  if is_today then
+    vim.api.nvim_buf_add_highlight(self.buf, namespace, 'OrgCalendarToday', opts.line - 1, opts.from - 1, opts.to)
+  end
+  if self.on_day then
+    self.on_day(
+      day,
+      vim.tbl_extend('force', opts, {
+        buf = self.buf,
+        namespace = namespace,
+      })
+    )
+  end
 end
 
 function Calendar:forward()
@@ -303,8 +334,7 @@ function Calendar:get_selected_date()
   if line < 3 or not char:match('%d') then
     return utils.echo_warning('Please select valid day number.', nil, false)
   end
-  day = tonumber(day)
-  return self.month:set({ day = day })
+  return self.month:set({ day = tonumber(day) })
 end
 
 function Calendar:select()
