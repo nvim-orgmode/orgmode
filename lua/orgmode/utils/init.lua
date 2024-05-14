@@ -608,6 +608,7 @@ function utils.detect_filetype(name)
     ['js'] = 'javascript',
     ['ts'] = 'typescript',
     ['md'] = 'markdown',
+    ['R'] = 'r',
   }
   local filename = '__org__detect_filetype__.' .. (map[name] or name)
   local ft = vim.filetype.match({ filename = filename })
