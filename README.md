@@ -313,6 +313,7 @@ More info on issue [#281](https://github.com/nvim-orgmode/orgmode/issues/281#iss
 Link to detailed documentation: [DOCS](DOCS.md)
 
 ## Plugins
+* [org-roam.nvim](https://github.com/chipsenkbeil/org-roam.nvim) - Implementation of [Org-roam](https://www.orgroam.com/) knowledge management system
 * [org-bullets.nvim](https://github.com/akinsho/org-bullets.nvim) - Show org mode bullets as UTF-8 characters
 * [headlines.nvim](https://github.com/lukas-reineke/headlines.nvim) - Add few highlight options for code blocks and headlines
 * [sniprun](https://github.com/michaelb/sniprun) - For code evaluation in blocks
