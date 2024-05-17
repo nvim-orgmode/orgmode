@@ -397,7 +397,7 @@ function Config:setup_ts_predicates()
     if not text or vim.trim(text) == '' then
       return
     end
-    metadata['injection.language'] = utils.detect_filetype(text) or text
+    metadata['injection.language'] = utils.detect_filetype(text) or text:lower()
   end, { force = true })
 end
 
