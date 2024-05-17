@@ -489,6 +489,13 @@ function utils.pad_right(str, amount)
   return string.format('%s%s', str, string.rep(' ', spaces))
 end
 
+function utils.is_list(value)
+  if vim.islist then
+    return vim.islist(value)
+  end
+  return vim.tbl_islist(value)
+end
+
 ---@param t table List-like table
 ---@return table Flattened copy of the given list-like table
 function utils.flatten(t)
@@ -497,7 +504,7 @@ function utils.flatten(t)
     local n = #_t
     for i = 1, n do
       local v = _t[i]
-      if type(v) == 'table' and vim.tbl_islist(v) then
+      if type(v) == 'table' and utils.is_list(v) then
         _tbl_flatten(v)
       elseif v then
         table.insert(result, v)
