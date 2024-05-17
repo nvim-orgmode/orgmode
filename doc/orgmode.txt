@@ -442,7 +442,7 @@ Enabled:
 NOTE: Stars are hidden by applying highlight group that masks them with color that's same as background color.
 If this highlight group does not suit you, you can apply different highlight group to it:
 >
-    vim.cmd[[autocmd ColorScheme * hi link @org.leading_stars MyCustomHlGroup]]
+    vim.cmd[[autocmd ColorScheme * hi link @org.leading.stars MyCustomHlGroup]]
 <
 
 ORG_HIDE_EMPHASIS_MARKERS                      *orgmode-org_hide_emphasis_markers*
