@@ -2,6 +2,7 @@ local org = require('orgmode')
 local utils = require('orgmode.utils')
 local fs = require('orgmode.utils.fs')
 local Url = require('orgmode.org.hyperlinks.url')
+local Link = require('orgmode.org.hyperlinks.link')
 local config = require('orgmode.config')
 local Hyperlinks = {
   stored_links = {},
@@ -203,6 +204,13 @@ function Hyperlinks.autocomplete_links(arg_lead)
   end
 
   return vim.tbl_keys(Hyperlinks.stored_links)
+end
+--
+---@return OrgLink|nil, table | nil
+function Hyperlinks.get_link_under_cursor()
+  local line = vim.fn.getline('.')
+  local col = vim.fn.col('.') or 0
+  return Link.at_pos(line, col)
 end
 
 return Hyperlinks
