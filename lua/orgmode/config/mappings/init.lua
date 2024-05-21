@@ -351,6 +351,10 @@ return {
       'org_mappings.org_babel_tangle',
       { opts = { desc = 'org tangle', help_desc = 'Tangle current file' } }
     ),
+    org_toggle_timestamp_type = m.action(
+      'org_mappings.org_toggle_timestamp_type',
+      { opts = { desc = 'org toggle timestamp type', help_desc = 'Toggle timestamp active/inactive type' } }
+    ),
   },
   edit_src = {
     org_edit_src_abort = m.custom(

@@ -1020,6 +1020,16 @@ function OrgMappings:org_time_stamp(inactive)
   end)
 end
 
+function OrgMappings:org_toggle_timestamp_type()
+  local date = self:_get_date_under_cursor()
+  if not date then
+    return
+  end
+
+  date.active = not date.active
+  self:_replace_date(date)
+end
+
 ---@param direction string
 ---@param use_fast_access? boolean
 ---@return boolean

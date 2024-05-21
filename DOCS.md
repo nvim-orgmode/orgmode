@@ -1031,6 +1031,9 @@ Decrease date under cursor by 1 or "count" day(s) (Example count: `5<S-UP>`).
 #### **org_change_date**
 *mapped to*: `cid`<br />
 Change date under cursor. Opens calendar to select new date
+#### **org_toggle_timestamp_type**
+*mapped to*: `<Leader>od!`<br />
+Switches the timestamp under the cursor between inactive and active.
 #### **org_priority**
 *mapped to*: `<Leader>o,`<br />
 Choose the priority of a headline item.
