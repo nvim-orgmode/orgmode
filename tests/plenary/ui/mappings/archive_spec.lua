@@ -11,6 +11,8 @@ describe('Archive', function()
     assert.are.same(vim.fn.glob(vim.fn.fnamemodify(file.filename, ':p:h') .. '/**/*.org_archive', false, 1, 1), {})
 
     vim.cmd([[exe "norm ,o$"]])
+    -- Pause to finish the archiving
+    vim.wait(50)
     assert.are.same({
       '* baz',
       '** foo',

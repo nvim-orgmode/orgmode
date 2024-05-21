@@ -4,7 +4,6 @@
 ---@field source_headline OrgHeadline
 ---@field destination_file? OrgFile
 ---@field destination_headline? OrgHeadline
----@field lines? string[]
 ---@field message? string
 
 ---@class OrgProcessCaptureOpts

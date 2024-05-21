@@ -228,11 +228,7 @@ function Capture:_refile_from_org_file(opts)
     target_line = destination_headline:get_range().end_line
   end
 
-  local lines = opts.lines
-
-  if not lines then
-    lines = source_headline:get_lines()
-  end
+  local lines = source_headline:get_lines()
 
   if destination_headline or source_headline:get_level() > 1 then
     lines = self:_adapt_headline_level(source_headline, target_level, is_same_file)
@@ -279,41 +275,24 @@ function Capture:refile_file_headline_to_archive(headline)
   if not vim.loop.fs_stat(archive_location) then
     vim.fn.writefile({}, archive_location)
   end
-  local start_line = headline:get_range().start_line
-  local lines = headline:get_lines()
-  local properties_node = headline:get_properties()
-  local append_line = headline:get_append_line() - start_line
-  local indent = headline:get_indent()
-
-  local archive_props = {
-    ('%s:ARCHIVE_TIME: %s'):format(indent, Date.now():to_string()),
-    ('%s:ARCHIVE_FILE: %s'):format(indent, file.filename),
-    ('%s:ARCHIVE_CATEGORY: %s'):format(indent, headline:get_category()),
-    ('%s:ARCHIVE_TODO: %s'):format(indent, headline:get_todo() or ''),
-  }
-
-  if properties_node then
-    local front_lines = { unpack(lines, 1, append_line) }
-    local back_lines = { unpack(lines, append_line + 1, #lines) }
-    lines = vim.list_extend(front_lines, archive_props)
-    lines = vim.list_extend(lines, back_lines)
-  else
-    local front_lines = { unpack(lines, 1, append_line + 1) }
-    local back_lines = { unpack(lines, append_line + 2, #lines) }
-    table.insert(front_lines, ('%s:PROPERTIES:'):format(indent))
-    lines = vim.list_extend(front_lines, archive_props)
-    table.insert(lines, ('%s:END:'):format(indent))
-    lines = vim.list_extend(lines, back_lines)
-  end
 
   local destination_file = self.files:get(archive_location)
 
-  return self:_refile_from_org_file({
+  self:_refile_from_org_file({
     source_headline = headline,
     destination_file = destination_file,
-    lines = lines,
     message = ('Archived to %s'):format(destination_file.filename),
   })
+
+  destination_file = self.files:get(archive_location)
+  self.files:update_file(destination_file.filename, function(archive_file)
+    local headlines = archive_file:get_headlines_including_archived()
+    local last_headline = headlines[#headlines]
+    last_headline:set_property('ARCHIVE_TIME', Date.now():to_string())
+    last_headline:set_property('ARCHIVE_FILE', file.filename)
+    last_headline:set_property('ARCHIVE_CATEGORY', headline:get_category())
+    last_headline:set_property('ARCHIVE_TODO', headline:get_todo() or '')
+  end)
 end
 
 ---@param item OrgHeadline
