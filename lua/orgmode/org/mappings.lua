@@ -737,7 +737,7 @@ function OrgMappings:insert_link()
     return
   end
 
-  OrgApi.insert_link(link_location)
+  Hyperlinks.insert_link(link_location)
 end
 
 function OrgMappings:store_link()
