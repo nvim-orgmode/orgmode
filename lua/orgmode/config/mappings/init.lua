@@ -353,7 +353,7 @@ return {
     ),
     org_toggle_timestamp_type = m.action(
       'org_mappings.org_toggle_timestamp_type',
-      { opts = { desc = 'org toggle timestamp type' } }
+      { opts = { desc = 'org toggle timestamp type', help_desc = 'Toggle timestamp active/inactive type' } }
     ),
   },
   edit_src = {
