@@ -16,6 +16,7 @@ local Promise = require('orgmode.utils.promise')
 local events = EventManager.event
 local Link = require('orgmode.org.hyperlinks.link')
 local Babel = require('orgmode.babel')
+local OrgApi = require('orgmode.api')
 
 ---@class OrgMappings
 ---@field capture OrgCapture
@@ -736,50 +737,7 @@ function OrgMappings:insert_link()
     return
   end
 
-  local selected_link = Link:new(link_location)
-  local desc = selected_link.url:get_target_value()
-  if selected_link.url:is_id() then
-    local id_link = ('id:%s'):format(selected_link.url:get_id())
-    desc = link_location:gsub('^' .. vim.pesc(id_link) .. '%s+', '')
-    link_location = id_link
-  end
-
-  local link_description = vim.trim(vim.fn.OrgmodeInput('Description: ', desc or ''))
-
-  link_location = '[' .. vim.trim(link_location) .. ']'
-
-  if link_description ~= '' then
-    link_description = '[' .. link_description .. ']'
-  end
-
-  local insert_from
-  local insert_to
-  local target_col = #link_location + #link_description + 2
-
-  -- check if currently on link
-  local link, position = self:_get_link_under_cursor()
-  if link and position then
-    insert_from = position.from - 1
-    insert_to = position.to + 1
-    target_col = target_col + position.from
-  else
-    local colnr = vim.fn.col('.')
-    insert_from = colnr
-    insert_to = colnr + 1
-    target_col = target_col + colnr
-  end
-
-  local linenr = vim.fn.line('.') or 0
-  local curr_line = vim.fn.getline(linenr)
-  local new_line = string.sub(curr_line, 0, insert_from)
-    .. '['
-    .. link_location
-    .. link_description
-    .. ']'
-    .. string.sub(curr_line, insert_to, #curr_line)
-
-  vim.fn.setline(linenr, new_line)
-  vim.fn.cursor(linenr, target_col)
+  Hyperlinks.insert_link(link_location)
 end
 
 function OrgMappings:store_link()
@@ -823,7 +781,7 @@ function OrgMappings:_edit_special_callback()
 end
 
 function OrgMappings:open_at_point()
-  local link = self:_get_link_under_cursor()
+  local link = Hyperlinks.get_link_under_cursor()
   if not link then
     local date = self:_get_date_under_cursor()
     if date then
@@ -1136,13 +1094,6 @@ function OrgMappings:_adjust_date(amount, span, fallback)
   end
 
   return vim.api.nvim_feedkeys(utils.esc(fallback), 'n', true)
-end
-
----@return OrgLink|nil, table | nil
-function OrgMappings:_get_link_under_cursor()
-  local line = vim.fn.getline('.')
-  local col = vim.fn.col('.') or 0
-  return Link.at_pos(line, col)
 end
 
 ---@param headline OrgHeadline
