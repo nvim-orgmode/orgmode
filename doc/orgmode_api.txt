@@ -35,6 +35,12 @@ OrgApi.refile({opts})                                            *OrgApi.refile*
         (boolean)
 
 
+OrgApi.insert_link()                                        *OrgApi.insert_link*
+     Insert a link to a given location at the current cursor position
+     @param link_location string
+     @return boolean
+
+
 OrgApiFile                                                          *OrgApiFile*
 
     Fields: ~
