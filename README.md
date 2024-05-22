@@ -105,8 +105,10 @@ require('orgmode').setup({
 --   ensure_installed = 'all',
 --   ignore_install = { 'org' },
 -- })
+```
 
 Or if you are using `init.vim`, wrap the above snippet like so:
+
 ```vim
 " init.vim
 lua << EOF

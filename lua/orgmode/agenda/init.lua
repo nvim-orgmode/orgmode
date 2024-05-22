@@ -244,7 +244,7 @@ end
 function Agenda:change_todo_state()
   return self:_remote_edit({
     action = 'org_mappings.todo_next_state',
-    update_in_place = true,
+    redo = true,
   })
 end
 

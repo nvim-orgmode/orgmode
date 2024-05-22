@@ -400,7 +400,10 @@ function OrgMappings:_todo_change_state(direction)
 
   local log_note = config.org_log_done == 'note'
   local log_time = config.org_log_done == 'time'
+  local log_note_repeat = config.org_log_repeat == 'note'
+  local log_time_repeat = config.org_log_repeat == 'time'
   local should_log_time = log_note or log_time
+  local should_log_time_repeat = log_note_repeat or log_time_repeat
   local indent = headline:get_indent()
 
   local get_note = function(note)
@@ -452,7 +455,7 @@ function OrgMappings:_todo_change_state(direction)
   dispatchEvent()
   return Promise.resolve()
     :next(function()
-      if not log_note then
+      if not log_note_repeat then
         return state_change
       end
 
@@ -461,6 +464,10 @@ function OrgMappings:_todo_change_state(direction)
       end)
     end)
     :next(function(note)
+      if not should_log_time_repeat then
+        return
+      end
+
       headline:set_property('LAST_REPEAT', Date.now():to_wrapped_string(false))
       if not note then
         return
