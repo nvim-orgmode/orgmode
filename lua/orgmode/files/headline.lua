@@ -226,6 +226,32 @@ function Headline:get_category()
   return self.file:get_category()
 end
 
+memoize('get_outline_path')
+--- @return string
+function Headline:get_outline_path()
+  local inner_to_outer_parent_headlines = {}
+  local parent_section = self:node():parent():parent()
+
+  while parent_section do
+    local headline_node = parent_section:field('headline')[1]
+    if headline_node then
+      local headline = Headline:new(headline_node, self.file)
+      local headline_title = headline:get_title()
+      table.insert(inner_to_outer_parent_headlines, headline_title)
+    end
+    parent_section = parent_section:parent()
+  end
+
+  -- reverse headline order
+  local outer_to_inner_parent_headlines = {}
+  for i = #inner_to_outer_parent_headlines, 1, -1 do
+    table.insert(outer_to_inner_parent_headlines, inner_to_outer_parent_headlines[i])
+  end
+
+  local outline_path = table.concat(outer_to_inner_parent_headlines, '/')
+  return outline_path
+end
+
 ---@param tags string
 function Headline:set_tags(tags)
   ---@type TSNode
