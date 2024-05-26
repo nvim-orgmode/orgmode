@@ -205,6 +205,7 @@ end
 ---Refile a headline from a regular org file (non-capture)
 ---@private
 ---@param opts OrgProcessRefileOpts
+---@return number
 function Capture:_refile_from_org_file(opts)
   local source_headline = opts.source_headline
   local source_file = source_headline.file
@@ -242,6 +243,7 @@ function Capture:_refile_from_org_file(opts)
       end
 
       local range = self:_get_destination_range_without_empty_lines(Range.from_line(target_line))
+      target_line = range.start_line
       vim.api.nvim_buf_set_lines(0, range.start_line, range.end_line, false, lines)
     end)
     :wait()
@@ -252,7 +254,7 @@ function Capture:_refile_from_org_file(opts)
   end
 
   utils.echo_info(opts.message or ('Wrote %s'):format(destination_file.filename))
-  return true
+  return target_line + 1
 end
 
 ---@param headline OrgHeadline
@@ -278,7 +280,7 @@ function Capture:refile_file_headline_to_archive(headline)
 
   local destination_file = self.files:get(archive_location)
 
-  self:_refile_from_org_file({
+  local target_line = self:_refile_from_org_file({
     source_headline = headline,
     destination_file = destination_file,
     message = ('Archived to %s'):format(destination_file.filename),
@@ -286,12 +288,11 @@ function Capture:refile_file_headline_to_archive(headline)
 
   destination_file = self.files:get(archive_location)
   self.files:update_file(destination_file.filename, function(archive_file)
-    local headlines = archive_file:get_headlines_including_archived()
-    local last_headline = headlines[#headlines]
-    last_headline:set_property('ARCHIVE_TIME', Date.now():to_string())
-    last_headline:set_property('ARCHIVE_FILE', file.filename)
-    last_headline:set_property('ARCHIVE_CATEGORY', headline:get_category())
-    last_headline:set_property('ARCHIVE_TODO', headline:get_todo() or '')
+    local archived_headline = archive_file:get_closest_headline({ target_line, 0 })
+    archived_headline:set_property('ARCHIVE_TIME', Date.now():to_string())
+    archived_headline:set_property('ARCHIVE_FILE', file.filename)
+    archived_headline:set_property('ARCHIVE_CATEGORY', headline:get_category())
+    archived_headline:set_property('ARCHIVE_TODO', headline:get_todo() or '')
   end)
 end
 
