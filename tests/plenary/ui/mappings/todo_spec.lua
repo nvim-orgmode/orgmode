@@ -72,6 +72,38 @@ describe('Todo mappings', function()
       '* TODO Another task',
     }, vim.api.nvim_buf_get_lines(0, 2, 10, false))
   end)
+
+  it('should change todo state of repeatable task and not log last repeat date if disabled', function()
+    helpers.create_agenda_file({
+      '#TITLE: Test',
+      '',
+      '* TODO Test orgmode',
+      '  DEADLINE: <2021-09-07 Tue 12:00 +1w>',
+      '',
+      '* TODO Another task',
+    }, {
+      org_log_repeat = false,
+    })
+
+    assert.are.same({
+      '* TODO Test orgmode',
+      '  DEADLINE: <2021-09-07 Tue 12:00 +1w>',
+      '',
+      '* TODO Another task',
+    }, vim.api.nvim_buf_get_lines(0, 2, 6, false))
+    vim.fn.cursor(3, 1)
+    vim.cmd([[norm cit]])
+    vim.wait(50)
+    assert.are.same({
+      '* TODO Test orgmode',
+      '  DEADLINE: <2021-09-14 Tue 12:00 +1w>',
+      '',
+      '* TODO Another task',
+    }, vim.api.nvim_buf_get_lines(0, 2, 10, false))
+
+    config.org_log_repeat = 'time'
+  end)
+
   it('should add last repeat property and state change to drawer (org_log_into_drawer)', function()
     config:extend({
       org_log_into_drawer = 'LOGBOOK',
@@ -125,6 +157,7 @@ describe('Todo mappings', function()
       '* TODO Another task',
     }, vim.api.nvim_buf_get_lines(0, 2, 13, false))
   end)
+
   it('should change todo state of a headline backward (org_todo_prev)', function()
     helpers.create_agenda_file({
       '#TITLE: Test',

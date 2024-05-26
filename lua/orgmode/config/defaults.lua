@@ -1,6 +1,7 @@
 ---@class OrgDefaultConfig
 ---@field org_id_method 'uuid' | 'ts' | 'org'
 ---@field org_agenda_span 'day' | 'week' | 'month' | 'year' | number
+---@field org_log_repeat 'time' | 'note' | false
 ---@field calendar { round_min_with_hours: boolean, min_big_step: number, min_small_step: number? }
 local DefaultConfig = {
   org_agenda_files = '',
@@ -39,6 +40,7 @@ local DefaultConfig = {
   org_hide_emphasis_markers = false,
   org_ellipsis = '...',
   org_log_done = 'time',
+  org_log_repeat = 'time',
   org_log_into_drawer = nil,
   org_highlight_latex_and_related = nil,
   org_custom_exports = {},
