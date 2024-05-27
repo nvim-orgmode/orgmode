@@ -54,7 +54,7 @@ function Calendar.new(data)
 end
 
 local width = 36
-local height = 13
+local height = 14
 local x_offset = 1 -- one border cell
 local y_offset = 2 -- one border cell and one padding cell
 
@@ -63,7 +63,7 @@ function Calendar:open()
   local opts = {
     relative = 'editor',
     width = width,
-    height = self.clearable and height + 1 or height,
+    height = height,
     style = 'minimal',
     border = config.win_border,
     row = vim.o.lines / 2 - (y_offset + height) / 2,
