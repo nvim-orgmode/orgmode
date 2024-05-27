@@ -202,9 +202,12 @@ function Calendar:render()
     table.insert(content, ' [i] - enter date')
   end
 
-  -- FIXME this line is currently not shown because of a bug.
-  if self:has_time() then
-    table.insert(content, ' [t] - enter time  [T] - clear time')
+  if self:has_time() or self.select_state ~= SelState.DAY then
+    if self.select_state == SelState.DAY then
+      table.insert(content, ' [t] - enter time  [T] - clear time')
+    else
+      table.insert(content, ' [d] - enter time  [T] - clear time')
+    end
   else
     table.insert(content, ' [t] - enter time')
   end
@@ -279,6 +282,32 @@ function Calendar:render_time()
   local hour_str = self:has_time() and Calendar.left_pad(self.date.hour) or '--'
   local min_str = self:has_time() and Calendar.left_pad(self.date.min) or '--'
   return l_pad .. hour_str .. ':' .. min_str .. r_pad
+end
+
+function Calendar:rerender_time()
+  vim.api.nvim_set_option_value('modifiable', true, { buf = self.buf })
+  vim.api.nvim_buf_set_lines(self.buf, 8, 9, true, { self:render_time() })
+  if self:has_time() then
+    local map_opts = { buffer = self.buf, silent = true, nowait = true }
+    vim.keymap.set('n', 'T', function()
+      self:clear_time()
+    end, map_opts)
+    vim.keymap.set('n', 'd', function()
+      self:set_day()
+    end, map_opts)
+    if self.select_state == SelState.DAY then
+      vim.api.nvim_buf_set_lines(self.buf, 13, 14, true, { ' [t] - select day  [T] - clear time' })
+    else
+      vim.api.nvim_buf_set_lines(self.buf, 13, 14, true, { ' [d] - select day  [T] - clear time' })
+    end
+    vim.api.nvim_buf_add_highlight(self.buf, namespace, 'Normal', 8, 0, -1)
+    vim.api.nvim_buf_add_highlight(self.buf, namespace, 'Comment', 13, 0, -1)
+  else
+    vim.api.nvim_buf_set_lines(self.buf, 13, 14, true, { ' [t] - enter time' })
+    vim.api.nvim_buf_add_highlight(self.buf, namespace, 'Comment', 8, 0, -1)
+    vim.api.nvim_buf_add_highlight(self.buf, namespace, 'Comment', 13, 0, -1)
+  end
+  vim.api.nvim_set_option_value('modifiable', false, { buf = self.buf })
 end
 
 function Calendar:has_time()
@@ -548,32 +577,19 @@ function Calendar:set_time()
   self.date = self:get_selected_date()
   self.date = self.date:set({ date_only = false })
   --self:rerender_time()
-  self:render() -- because we want to highlight the currently selected date, we have to render everything
   self:set_sel_hour()
+  self:render() -- because we want to highlight the currently selected date, we have to render everything
 end
 
-function Calendar:rerender_time()
-  vim.api.nvim_set_option_value('modifiable', true, { buf = self.buf })
-  vim.api.nvim_buf_set_lines(self.buf, 8, 9, true, { self:render_time() })
-  if self:has_time() then
-    vim.keymap.set('n', 'T', function()
-      self:clear_time()
-    end, { buffer = self.buf, silent = true, nowait = true })
-    vim.api.nvim_buf_set_lines(self.buf, 13, 14, true, { ' [t] - enter time  [T] - clear time' })
-    vim.api.nvim_buf_add_highlight(self.buf, namespace, 'Normal', 8, 0, -1)
-    vim.api.nvim_buf_add_highlight(self.buf, namespace, 'Comment', 13, 0, -1)
-  else
-    vim.api.nvim_buf_set_lines(self.buf, 13, 14, true, { ' [t] - enter time' })
-    vim.api.nvim_buf_add_highlight(self.buf, namespace, 'Comment', 8, 0, -1)
-    vim.api.nvim_buf_add_highlight(self.buf, namespace, 'Comment', 13, 0, -1)
-  end
-  vim.api.nvim_set_option_value('modifiable', false, { buf = self.buf })
+function Calendar:set_day()
+  self:set_sel_day()
+  self:rerender_time()
 end
 
 function Calendar:clear_time()
   self.date = self.date:set({ hour = 0, min = 0, date_only = true })
-  self:rerender_time()
   self:set_sel_day()
+  self:rerender_time()
 end
 
 function Calendar:set_sel_hour()
