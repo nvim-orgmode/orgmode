@@ -1735,7 +1735,7 @@ This option is most optimized because it doesn't load plugins and your init.vim
 For **MacOS**, things should be very similar, but I wasn't able to test it. Any help on this is appreciated.
 
 ## Clocking
-There is partial suport for [Clocking work time](https://orgmode.org/manual/Clocking-Work-Time.html).<br />
+There is partial support for [Clocking work time](https://orgmode.org/manual/Clocking-Work-Time.html).<br />
 Supported actions:
 ##### Clock in
 Org file mapping: `<leader>oxi`<br />
