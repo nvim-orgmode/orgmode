@@ -54,10 +54,14 @@ CONTENTS                                                        *orgmode-content
             1.2.2.10. org_agenda_skip_scheduled_if_done.|orgmode-org_agenda_skip_scheduled_if_done|
             1.2.2.11. org_agenda_skip_deadline_if_done.|orgmode-org_agenda_skip_deadline_if_done|
             1.2.2.12. org_agenda_text_search_extra_files.|orgmode-org_agenda_text_search_extra_files|
-        1.2.3. Tags settings...............................|orgmode-tags_settings|
-            1.2.3.1. org_tags_column.....................|orgmode-org_tags_column|
-            1.2.3.2. org_use_tag_inheritance.....|orgmode-org_use_tag_inheritance|
-            1.2.3.3. org_tags_exclude_from_inheritance.|orgmode-org_tags_exclude_from_inheritance|
+        1.2.3. Calendar settings.......................|orgmode-calendar_settings|
+            1.2.3.1. calendar.round_min_with_hours.|orgmode-calendar.round_min_with_hours|
+            1.2.3.2. calendar.min_big_step.........|orgmode-calendar.min_big_step|
+            1.2.3.3. calendar.min_small_step.....|orgmode-calendar.min_small_step|
+        1.2.4. Tags settings...............................|orgmode-tags_settings|
+            1.2.4.1. org_tags_column.....................|orgmode-org_tags_column|
+            1.2.4.2. org_use_tag_inheritance.....|orgmode-org_use_tag_inheritance|
+            1.2.4.3. org_tags_exclude_from_inheritance.|orgmode-org_tags_exclude_from_inheritance|
     1.3. Mappings...............................................|orgmode-mappings|
         1.3.1. Use Enter in insert mode to add list items/checkboxes/todos.|orgmode-use_enter_in_insert_mode_to_add_list_items/checkboxes/todos|
         1.3.2. Global mappings...........................|orgmode-global_mappings|
@@ -204,7 +208,8 @@ TABLE OF CONTENT                                        *orgmode-table_of_conten
 2.  Settings (#settings)
     1.  Global settings (#global-settings)
     2.  Agenda settings (#agenda-settings)
-    3.  Tags settings (#tags-settings)
+    3.  Calendar settings (#calendar-settings)
+    4.  Tags settings (#tags-settings)
 3.  Mappings (#mappings)
     1.  Global mappings (#global-mappings)
     2.  Agenda mappings (#agenda-mappings)
@@ -916,6 +921,28 @@ default value: `{}`
 Additional files to search from agenda search prompt.
 Currently it accepts only a single value: `agenda-archives`.
 Example value: `{'agenda-archives'}`
+
+CALENDAR SETTINGS                                      *orgmode-calendar_settings*
+
+Adjust behavior of the calendar modal (ex: changing the date under cursor (#org_change_date)).
+
+CALENDAR.ROUND_MIN_WITH_HOURS              *orgmode-calendar.round_min_with_hours*
+
+type: `boolean`
+default: `true`
+Should minutes be rounded, when the hour is changed. It behaves more fluently when changing the hours, especially when scheduling from the current time (which can be something odd). If set to false, the minutes are unchanged while changing the hours.
+
+CALENDAR.MIN_BIG_STEP                              *orgmode-calendar.min_big_step*
+
+type: `number`
+default: `15`
+The step size for changing the minutes while the cursor is on the first digit.
+
+CALENDAR.MIN_SMALL_STEP                          *orgmode-calendar.min_small_step*
+
+type: `number`
+default: same as [](#org_time_stamp_rounding_minutes)
+The step size for changing the minutes while the cursor is on the second digit.
 
 TAGS SETTINGS                                              *orgmode-tags_settings*
 
@@ -2137,7 +2164,7 @@ For MacOS, things should be very similar, but I wasn't able to test it. Any help
 --------------------------------------------------------------------------------
 CLOCKING                                                        *orgmode-clocking*
 
-There is partial suport for Clocking work time (https://orgmode.org/manual/Clocking-Work-Time.html).
+There is partial support for Clocking work time (https://orgmode.org/manual/Clocking-Work-Time.html).
 Supported actions:
 
 CLOCK IN                                                        *orgmode-clock_in*
