@@ -224,12 +224,6 @@ function Calendar:render()
   vim.api.nvim_buf_add_highlight(self.buf, namespace, 'Comment', #content - 2, 0, -1)
   vim.api.nvim_buf_add_highlight(self.buf, namespace, 'Comment', #content - 1, 0, -1)
 
-  -- highlight the cell of the current day
-  self:highlight_day(content, Date.today(), 'OrgCalendarToday')
-  -- highlight selected day
-  self:highlight_day(content, self.date, 'OrgCalendarSelected')
-
-  -- TODO this new loop (after Kristjans refactoring) is currently not fully understood.
   for i, line in ipairs(content) do
     local from = 0
     local to, num
@@ -256,9 +250,11 @@ end
 ---@param day OrgDate
 ---@param opts { from: number, to: number, line: number}
 function Calendar:on_render_day(day, opts)
-  local is_today = day:is_today()
-  if is_today then
+  if day:is_today() then
     vim.api.nvim_buf_add_highlight(self.buf, namespace, 'OrgCalendarToday', opts.line - 1, opts.from - 1, opts.to)
+  end
+  if day:is_same_day(self.date) then
+    vim.api.nvim_buf_add_highlight(self.buf, namespace, 'OrgCalendarSelected', opts.line - 1, opts.from - 1, opts.to)
   end
   if self.on_day then
     self.on_day(
@@ -271,26 +267,6 @@ function Calendar:on_render_day(day, opts)
   end
 
   vim.api.nvim_set_option_value('modifiable', false, { buf = self.buf })
-end
-
----@param day OrgDate?
----@param hl_group string
-function Calendar:highlight_day(content, day, hl_group)
-  if not day then
-    return
-  end
-
-  if not day:is_same(self.month, 'month') then
-    return
-  end
-
-  local day_formatted = day:format('%d')
-  for i, line in ipairs(content) do
-    local from, to = line:find('%s' .. day_formatted .. '%s')
-    if from and to then
-      vim.api.nvim_buf_add_highlight(self.buf, namespace, hl_group, i - 1, from - 1, to)
-    end
-  end
 end
 
 function Calendar.left_pad(time_part)
