@@ -39,3 +39,6 @@ luac.out
 
 # Directory containing testing dependencies downloaded during test run
 .deps/
+
+# Auto-generated vim helptags
+doc/tags
