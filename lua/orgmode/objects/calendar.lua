@@ -8,8 +8,8 @@ local namespace = vim.api.nvim_create_namespace('org_calendar')
 ---@alias OrgCalendarOnRenderDay fun(day: OrgDate, opts: OrgCalendarOnRenderDayOpts)
 
 local SelState = { DAY = 0, HOUR = 1, MIN_BIG = 2, MIN_SMALL = 3 }
-local big_minute_step = config.org_time_picker_min_big
-local small_minute_step = config.org_time_stamp_rounding_minutes
+local big_minute_step = config.calendar.min_big_step
+local small_minute_step = config.calendar.min_small_step or config.org_time_stamp_rounding_minutes
 
 ---@class OrgCalendar
 ---@field win number?
@@ -388,13 +388,13 @@ local function step_minute(direction, step_size, current, count)
 end
 
 --- Controls, how the hours are adjusted. The rounding the minutes can be disabled
---- by the user, so adjusting the hours just moves the time 1 our back or forth
+--- by the user, so adjusting the hours would just move the time 1 hour back or forth
 ---@param direction string
 ---@param current OrgDate
 ---@param count number
 ---@return table
 local function step_hour(direction, current, count)
-  if not config.org_time_picker_round_min_with_hours or current.min % big_minute_step == 0 then
+  if not config.calendar.round_min_with_hours or current.min % big_minute_step == 0 then
     return { hour = count, min = 0 }
   end
 

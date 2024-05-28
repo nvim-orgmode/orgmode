@@ -1,6 +1,7 @@
 ---@class OrgDefaultConfig
 ---@field org_id_method 'uuid' | 'ts' | 'org'
 ---@field org_agenda_span 'day' | 'week' | 'month' | 'year' | number
+---@field calendar { round_min_with_hours: boolean, min_big_step: number, min_small_step: number? }
 local DefaultConfig = {
   org_agenda_files = '',
   org_default_notes_file = '',
@@ -13,6 +14,10 @@ local DefaultConfig = {
   org_agenda_start_on_weekday = 1,
   org_agenda_start_day = nil, -- start from today + this modifier
   calendar_week_start_day = 1,
+  calendar = {
+    round_min_with_hours = true,
+    min_big_step = 15,
+  },
   org_capture_templates = {
     t = {
       description = 'Task',
@@ -41,8 +46,6 @@ local DefaultConfig = {
   org_startup_indented = false,
   org_indent_mode_turns_off_org_adapt_indentation = true,
   org_indent_mode_turns_on_hiding_stars = true,
-  org_time_picker_min_big = 15,
-  org_time_picker_round_min_with_hours = true,
   org_time_stamp_rounding_minutes = 5,
   org_blank_before_new_entry = {
     heading = true,
