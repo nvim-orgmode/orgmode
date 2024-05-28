@@ -4,7 +4,8 @@
 2. [Settings](#settings)
    1. [Global settings](#global-settings)
    2. [Agenda settings](#agenda-settings)
-   3. [Tags settings](#tags-settings)
+   3. [Calendar settings](#calendar-settings)
+   4. [Tags settings](#tags-settings)
 3. [Mappings](#mappings)
    1. [Global mappings](#global-mappings)
    2. [Agenda mappings](#agenda-mappings)
@@ -676,6 +677,28 @@ Hide deadline entries from agenda if they are in a "DONE" state.
 Additional files to search from agenda search prompt.<br />
 Currently it accepts only a single value: `agenda-archives`.<br />
 Example value: `{'agenda-archives'}`
+
+### Calendar settings
+
+Adjust behavior of the calendar modal (ex: [changing the date under cursor](#org_change_date)).
+
+#### **calendar.round_min_with_hours**
+
+_type_: `boolean`<br />
+_default_: `true`<br />
+Should minutes be rounded, when the hour is changed. It behaves more fluently when changing the hours, especially when scheduling from the current time (which can be something odd). If set to false, the minutes are unchanged while changing the hours.
+
+#### **calendar.min_big_step**
+
+_type_: `number`<br />
+_default_: `15`<br />
+The step size for changing the minutes while the cursor is on the first digit.
+
+#### **calendar.min_small_step**
+
+_type_: `number`<br />
+_default_: same as [](#org_time_stamp_rounding_minutes)<br />
+The step size for changing the minutes while the cursor is on the second digit.
 
 ### Tags settings
 
