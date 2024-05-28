@@ -135,7 +135,6 @@ function Calendar:open()
     self:set_time()
   end, map_opts)
   if self:has_time() then
-    print('apply clear_time')
     vim.keymap.set('n', 'T', function()
       self:clear_time()
     end, map_opts)
@@ -206,7 +205,7 @@ function Calendar:render()
     if self.select_state == SelState.DAY then
       table.insert(content, ' [t] - enter time  [T] - clear time')
     else
-      table.insert(content, ' [d] - enter time  [T] - clear time')
+      table.insert(content, ' [d] - select day  [T] - clear time')
     end
   else
     table.insert(content, ' [t] - enter time')
@@ -314,7 +313,15 @@ function Calendar:has_time()
   return not self.date.date_only
 end
 
+---@private
+function Calendar:_ensure_day()
+  if self.select_state ~= SelState.DAY then
+    self:set_day()
+  end
+end
+
 function Calendar:forward()
+  self:_ensure_day()
   self.month = self.month:add({ month = vim.v.count1 })
   self:render()
   vim.fn.cursor(2, 1)
@@ -323,6 +330,7 @@ function Calendar:forward()
 end
 
 function Calendar:backward()
+  self:_ensure_day()
   self.month = self.month:subtract({ month = vim.v.count1 })
   self:render()
   vim.fn.cursor(vim.fn.line('$'), 0)
@@ -490,6 +498,7 @@ function Calendar:cursor_down()
 end
 
 function Calendar:reset()
+  self:_ensure_day()
   local today = self.month:set_todays_date()
   self.month = today:set({ day = 1 })
   self:render()
@@ -556,12 +565,13 @@ function Calendar:clear_date()
 end
 
 function Calendar:read_date()
-  local default = self:get_selected_date():to_string()
-  vim.ui.input({ prompt = 'Enter date: ', default = default }, function(result)
+  self:_ensure_day()
+  local current_date = self:get_selected_date()
+  vim.ui.input({ prompt = 'Enter date: ', default = current_date:to_string() }, function(result)
     if result then
       local date = Date.from_string(result)
       if not date then
-        date = self:get_selected_date():adjust(result)
+        date = current_date:adjust(result)
       end
 
       self.date = date
