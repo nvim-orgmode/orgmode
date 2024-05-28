@@ -7,25 +7,35 @@ local namespace = vim.api.nvim_create_namespace('org_calendar')
 ---@alias OrgCalendarOnRenderDayOpts { line: number, from: number, to: number, buf: number, namespace: number }
 ---@alias OrgCalendarOnRenderDay fun(day: OrgDate, opts: OrgCalendarOnRenderDayOpts)
 
+local SelState = { DAY = 0, HOUR = 1, MIN_BIG = 2, MIN_SMALL = 3 }
+local big_minute_step = config.calendar.min_big_step
+local small_minute_step = config.calendar.min_small_step or config.org_time_stamp_rounding_minutes
+
 ---@class OrgCalendar
----@field win number
----@field buf number
+---@field win number?
+---@field buf number?
 ---@field callback fun(date: OrgDate | nil, cleared?: boolean)
 ---@field namespace function
----@field date OrgDate
+---@field date OrgDate?
 ---@field month OrgDate
 ---@field title? string
 ---@field on_day? OrgCalendarOnRenderDay
-
+---@field selected OrgDate?
+---@field select_state integer
+---@field clearable boolean
 local Calendar = {
   win = nil,
   buf = nil,
   date = nil,
+  month = Date.today():start_of('month'),
+  selected = nil,
+  select_state = SelState.DAY,
   clearable = false,
 }
 Calendar.__index = Calendar
 
 vim.cmd([[hi default OrgCalendarToday gui=reverse cterm=reverse]])
+vim.cmd([[hi default OrgCalendarSelected gui=underline cterm=underline]])
 
 ---@param data { date?: OrgDate, clearable?: boolean, title?: string, on_day?: OrgCalendarOnRenderDay }
 function Calendar.new(data)
@@ -44,7 +54,7 @@ function Calendar.new(data)
 end
 
 local width = 36
-local height = 10
+local height = 14
 local x_offset = 1 -- one border cell
 local y_offset = 2 -- one border cell and one padding cell
 
@@ -53,7 +63,7 @@ function Calendar:open()
   local opts = {
     relative = 'editor',
     width = width,
-    height = self.clearable and height + 1 or height,
+    height = height,
     style = 'minimal',
     border = config.win_border,
     row = vim.o.lines / 2 - (y_offset + height) / 2,
@@ -121,12 +131,16 @@ function Calendar:open()
       return self:clear_date()
     end, map_opts)
   end
-  local search_day = Date.today():format('%d')
-  if self.date then
-    search_day = self.date:format('%d')
+  vim.keymap.set('n', 't', function()
+    self:set_time()
+  end, map_opts)
+  if self:has_time() then
+    print('apply clear_time')
+    vim.keymap.set('n', 'T', function()
+      self:clear_time()
+    end, map_opts)
   end
-  vim.fn.cursor(2, 1)
-  vim.fn.search(search_day, 'W')
+  self:jump_day()
   return Promise.new(function(resolve)
     self.callback = resolve
   end)
@@ -175,6 +189,10 @@ function Calendar:render()
   -- put it all together
   table.insert(content, 1, ' ' .. table.concat(weekday_row, '  '))
   table.insert(content, 1, title)
+
+  table.insert(content, self:render_time())
+  table.insert(content, '')
+
   -- TODO: redundant, since it's static data
   table.insert(content, ' [<] - prev month  [>] - next month')
   table.insert(content, ' [.] - today   [Enter] - select day')
@@ -184,11 +202,28 @@ function Calendar:render()
     table.insert(content, ' [i] - enter date')
   end
 
+  if self:has_time() or self.select_state ~= SelState.DAY then
+    if self.select_state == SelState.DAY then
+      table.insert(content, ' [t] - enter time  [T] - clear time')
+    else
+      table.insert(content, ' [d] - enter time  [T] - clear time')
+    end
+  else
+    table.insert(content, ' [t] - enter time')
+  end
+
   vim.api.nvim_buf_set_lines(self.buf, 0, -1, true, content)
   vim.api.nvim_buf_clear_namespace(self.buf, namespace, 0, -1)
   if self.clearable then
     vim.api.nvim_buf_add_highlight(self.buf, namespace, 'Comment', #content - 3, 0, -1)
   end
+
+  if not self:has_time() then
+    vim.api.nvim_buf_add_highlight(self.buf, namespace, 'Comment', 8, 0, -1)
+  end
+
+  vim.api.nvim_buf_add_highlight(self.buf, namespace, 'Comment', #content - 4, 0, -1)
+  vim.api.nvim_buf_add_highlight(self.buf, namespace, 'Comment', #content - 3, 0, -1)
   vim.api.nvim_buf_add_highlight(self.buf, namespace, 'Comment', #content - 2, 0, -1)
   vim.api.nvim_buf_add_highlight(self.buf, namespace, 'Comment', #content - 1, 0, -1)
 
@@ -218,9 +253,11 @@ end
 ---@param day OrgDate
 ---@param opts { from: number, to: number, line: number}
 function Calendar:on_render_day(day, opts)
-  local is_today = day:is_today()
-  if is_today then
+  if day:is_today() then
     vim.api.nvim_buf_add_highlight(self.buf, namespace, 'OrgCalendarToday', opts.line - 1, opts.from - 1, opts.to)
+  end
+  if day:is_same_day(self.date) then
+    vim.api.nvim_buf_add_highlight(self.buf, namespace, 'OrgCalendarSelected', opts.line - 1, opts.from - 1, opts.to)
   end
   if self.on_day then
     self.on_day(
@@ -231,6 +268,50 @@ function Calendar:on_render_day(day, opts)
       })
     )
   end
+
+  vim.api.nvim_set_option_value('modifiable', false, { buf = self.buf })
+end
+
+function Calendar.left_pad(time_part)
+  return time_part < 10 and '0' .. time_part or time_part
+end
+
+function Calendar:render_time()
+  local l_pad = '               '
+  local r_pad = '              '
+  local hour_str = self:has_time() and Calendar.left_pad(self.date.hour) or '--'
+  local min_str = self:has_time() and Calendar.left_pad(self.date.min) or '--'
+  return l_pad .. hour_str .. ':' .. min_str .. r_pad
+end
+
+function Calendar:rerender_time()
+  vim.api.nvim_set_option_value('modifiable', true, { buf = self.buf })
+  vim.api.nvim_buf_set_lines(self.buf, 8, 9, true, { self:render_time() })
+  if self:has_time() then
+    local map_opts = { buffer = self.buf, silent = true, nowait = true }
+    vim.keymap.set('n', 'T', function()
+      self:clear_time()
+    end, map_opts)
+    vim.keymap.set('n', 'd', function()
+      self:set_day()
+    end, map_opts)
+    if self.select_state == SelState.DAY then
+      vim.api.nvim_buf_set_lines(self.buf, 13, 14, true, { ' [t] - select day  [T] - clear time' })
+    else
+      vim.api.nvim_buf_set_lines(self.buf, 13, 14, true, { ' [d] - select day  [T] - clear time' })
+    end
+    vim.api.nvim_buf_add_highlight(self.buf, namespace, 'Normal', 8, 0, -1)
+    vim.api.nvim_buf_add_highlight(self.buf, namespace, 'Comment', 13, 0, -1)
+  else
+    vim.api.nvim_buf_set_lines(self.buf, 13, 14, true, { ' [t] - enter time' })
+    vim.api.nvim_buf_add_highlight(self.buf, namespace, 'Comment', 8, 0, -1)
+    vim.api.nvim_buf_add_highlight(self.buf, namespace, 'Comment', 13, 0, -1)
+  end
+  vim.api.nvim_set_option_value('modifiable', false, { buf = self.buf })
+end
+
+function Calendar:has_time()
+  return not self.date.date_only
 end
 
 function Calendar:forward()
@@ -238,6 +319,7 @@ function Calendar:forward()
   self:render()
   vim.fn.cursor(2, 1)
   vim.fn.search('01')
+  self:render()
 end
 
 function Calendar:backward()
@@ -245,10 +327,21 @@ function Calendar:backward()
   self:render()
   vim.fn.cursor(vim.fn.line('$'), 0)
   vim.fn.search([[\d\d]], 'b')
+  self:render()
 end
 
 function Calendar:cursor_right()
-  for i = 1, vim.v.count1 do
+  if self.select_state ~= SelState.DAY then
+    if self.select_state == SelState.HOUR then
+      self:set_min_big()
+    elseif self.select_state == SelState.MIN_BIG then
+      self:set_min_small()
+    elseif self.select_state == SelState.MIN_SMALL then
+      self:set_sel_hour()
+    end
+    return
+  end
+  for _ = 1, vim.v.count1 do
     local line, col = vim.fn.line('.'), vim.fn.col('.')
     local curr_line = vim.fn.getline('.')
     local offset = curr_line:sub(col + 1, #curr_line):find('%d%d')
@@ -256,10 +349,22 @@ function Calendar:cursor_right()
       vim.fn.cursor(line, col + offset)
     end
   end
+  self.date = self:get_selected_date()
+  self:render()
 end
 
 function Calendar:cursor_left()
-  for i = 1, vim.v.count1 do
+  if self.select_state ~= SelState.DAY then
+    if self.select_state == SelState.HOUR then
+      self:set_min_small()
+    elseif self.select_state == SelState.MIN_BIG then
+      self:set_sel_hour()
+    elseif self.select_state == SelState.MIN_SMALL then
+      self:set_min_big()
+    end
+    return
+  end
+  for _ = 1, vim.v.count1 do
     local line, col = vim.fn.line('.'), vim.fn.col('.')
     local curr_line = vim.fn.getline('.')
     local _, offset = curr_line:sub(1, col - 1):find('.*%d%d')
@@ -267,10 +372,59 @@ function Calendar:cursor_left()
       vim.fn.cursor(line, offset)
     end
   end
+  self.date = self:get_selected_date()
+  self:render()
+end
+
+---@param direction string
+---@param step_size number
+---@param current number
+---@param count number
+local function step_minute(direction, step_size, current, count)
+  local sign = direction == 'up' and -1 or 1
+  local residual = current % step_size
+  local factor = (residual == 0 or direction == 'up') and count or count - 1
+  return factor * step_size + sign * residual
+end
+
+--- Controls, how the hours are adjusted. The rounding the minutes can be disabled
+--- by the user, so adjusting the hours would just move the time 1 hour back or forth
+---@param direction string
+---@param current OrgDate
+---@param count number
+---@return table
+local function step_hour(direction, current, count)
+  if not config.calendar.round_min_with_hours or current.min % big_minute_step == 0 then
+    return { hour = count, min = 0 }
+  end
+
+  -- if adjusting the mins would land on a full hour, we don't step a full hour,
+  -- otherwise we do and round the minutes
+  local sign = direction == 'up' and 1 or -1
+  local min = step_minute(direction, big_minute_step, current.min, 1)
+  local min_new = current.min + sign * min
+  local hour = min_new % 60 ~= 0 and count or count - 1
+  return { hour = hour, min = min }
 end
 
 function Calendar:cursor_up()
-  for i = 1, vim.v.count1 do
+  if self.select_state ~= SelState.DAY then
+    -- to avoid unexpectedly changing the day we cache it ...
+    local day = self.date.day
+    if self.select_state == SelState.HOUR then
+      self.date = self.date:add(step_hour('up', self.date, vim.v.count1))
+    elseif self.select_state == SelState.MIN_BIG then
+      self.date = self.date:add({ min = step_minute('up', big_minute_step, self.date.min, vim.v.count1) })
+    elseif self.select_state == SelState.MIN_SMALL then
+      self.date = self.date:add({ min = step_minute('up', small_minute_step, self.date.min, vim.v.count1) })
+    end
+    -- and restore the cached day after adjusting the time
+    self.date = self.date:set({ day = day })
+    self:rerender_time()
+    return
+  end
+
+  for _ = 1, vim.v.count1 do
     local line, col = vim.fn.line('.'), vim.fn.col('.')
     if line > 9 then
       vim.fn.cursor(line - 1, col)
@@ -291,10 +445,26 @@ function Calendar:cursor_up()
     end
     vim.fn.cursor(line - 1, move_to)
   end
+  self.date = self:get_selected_date()
+  self:render()
 end
 
 function Calendar:cursor_down()
-  for i = 1, vim.v.count1 do
+  if self.select_state ~= SelState.DAY then
+    local day = self.date.day
+    if self.select_state == SelState.HOUR then
+      self.date = self.date:subtract(step_hour('down', self.date, vim.v.count1))
+    elseif self.select_state == SelState.MIN_BIG then
+      self.date = self.date:subtract({ min = step_minute('down', big_minute_step, self.date.min, vim.v.count1) })
+    elseif self.select_state == SelState.MIN_SMALL then
+      self.date = self.date:subtract({ min = step_minute('down', small_minute_step, self.date.min, vim.v.count1) })
+    end
+    -- and restore the cached day after adjusting the time
+    self.date = self.date:set({ day = day })
+    self:rerender_time()
+    return
+  end
+  for _ = 1, vim.v.count1 do
     local line, col = vim.fn.line('.'), vim.fn.col('.')
     if line <= 1 then
       vim.fn.cursor(line + 1, col)
@@ -315,6 +485,8 @@ function Calendar:cursor_down()
     end
     vim.fn.cursor(line + 1, move_to)
   end
+  self.date = self:get_selected_date()
+  self:render()
 end
 
 function Calendar:reset()
@@ -326,21 +498,40 @@ function Calendar:reset()
 end
 
 function Calendar:get_selected_date()
+  if self.select_state ~= SelState.DAY then
+    return self.date
+  end
   local col = vim.fn.col('.')
   local char = vim.fn.getline('.'):sub(col, col)
-  local day = vim.trim(vim.fn.expand('<cword>'))
+  local day = tonumber(vim.trim(vim.fn.expand('<cword>')))
   local line = vim.fn.line('.')
   vim.cmd([[redraw!]])
   if line < 3 or not char:match('%d') then
     return utils.echo_warning('Please select valid day number.', nil, false)
   end
-  return self.month:set({ day = tonumber(day) })
+  return self.date:set({
+    month = self.month.month,
+    day = day,
+    date_only = self.date.date_only,
+  })
 end
 
 function Calendar:select()
-  local selected_date = self:get_selected_date()
+  local selected_date
+  if self.select_state == SelState.DAY then
+    selected_date = self:get_selected_date()
+  else
+    selected_date = self.date:set({
+      day = self.date.day,
+      hour = self.date.hour,
+      min = self.date.min,
+      date_only = false,
+    })
+    self.select_state = SelState.DAY
+  end
   local cb = self.callback
   self.callback = nil
+
   vim.cmd([[echon]])
   vim.api.nvim_win_close(0, true)
   return cb(selected_date)
@@ -365,7 +556,8 @@ function Calendar:clear_date()
 end
 
 function Calendar:read_date()
-  vim.ui.input({ prompt = 'Enter date: ' }, function(result)
+  local default = self:get_selected_date():to_string()
+  vim.ui.input({ prompt = 'Enter date: ', default = default }, function(result)
     if result then
       local date = Date.from_string(result)
       if not date then
@@ -379,6 +571,51 @@ function Calendar:read_date()
       vim.fn.search(date:format('%d'), 'W')
     end
   end)
+end
+
+function Calendar:set_time()
+  self.date = self:get_selected_date()
+  self.date = self.date:set({ date_only = false })
+  --self:rerender_time()
+  self:set_sel_hour()
+  self:render() -- because we want to highlight the currently selected date, we have to render everything
+end
+
+function Calendar:set_day()
+  self:set_sel_day()
+  self:rerender_time()
+end
+
+function Calendar:clear_time()
+  self.date = self.date:set({ hour = 0, min = 0, date_only = true })
+  self:set_sel_day()
+  self:rerender_time()
+end
+
+function Calendar:set_sel_hour()
+  self.select_state = SelState.HOUR
+  vim.fn.cursor({ 9, 16 })
+end
+
+function Calendar:set_sel_day()
+  self.select_state = SelState.DAY
+  self:jump_day()
+end
+
+function Calendar:set_min_big()
+  self.select_state = SelState.MIN_BIG
+  vim.fn.cursor({ 9, 19 })
+end
+
+function Calendar:set_min_small()
+  self.select_state = SelState.MIN_SMALL
+  vim.fn.cursor({ 9, 20 })
+end
+
+function Calendar:jump_day()
+  local search_day = (self.date or Date.today()):format('%d')
+  vim.fn.cursor(2, 1)
+  vim.fn.search(search_day, 'W')
 end
 
 return Calendar
