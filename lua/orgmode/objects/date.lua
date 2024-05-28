@@ -95,10 +95,16 @@ end
 ---@param time table
 ---@return OrgDate
 function Date:from_time_table(time)
-  local range_diff = self.timestamp_end and self.timestamp_end - self.timestamp or 0
-  local timestamp = os.time(set_date_opts(time, {}, true))
+  local timestamp_end = self.timestamp_end
+  local timestamp = self.timestamp
+  local range_diff = timestamp_end and timestamp_end - timestamp or 0
+  timestamp = os.time(set_date_opts(time, {}, true))
   local opts = set_date_opts(os.date('*t', timestamp))
-  opts.date_only = self.date_only
+  if time.date_only ~= nil then
+    opts.date_only = time.date_only
+  else
+    opts.date_only = self.date_only
+  end
   opts.dayname = self.dayname
   opts.adjustments = self.adjustments
   opts.type = self.type
