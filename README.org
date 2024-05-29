@@ -5,17 +5,14 @@
 * nvim-orgmode
 
 #+HTML:<a href="/LICENSE">
-#+NAME: License
 #+CAPTION: License
 [[https://img.shields.io/badge/license-MIT-brightgreen?style=flat-square]]
 #+HTML:</a>
 #+HTML:<a href="https://ko-fi.com/kristijanhusak">
-#+NAME: Kofi
 #+CAPTION: Kofi
 [[https://img.shields.io/badge/support-kofi-00b9fe?style=flat-square&logo=kofi]]
 #+HTML:</a>
 #+HTML:<a href="https://matrix.to/#/#neovim-orgmode:matrix.org">
-#+NAME: Chat
 #+CAPTION: Chat
 [[https://img.shields.io/matrix/neovim-orgmode:matrix.org?logo=matrix&server_fqdn=matrix.org&style=flat-square]]
 #+HTML:</a>
@@ -150,13 +147,13 @@ vim.cmd[[autocmd FileType org setlocal iskeyword+=:,#,+]]
 
 #+HTML:</details>
 
-Or just use ~omnifunc~ via <kbd>\<C-x\>\<C-o\></kbd>
+Or just use ~omnifunc~ via =\<C-x\>\<C-o\>=
 
 *** Usage
 
-- **Open agenda prompt**: <kbd>\<Leader\>oa</kbd>
-- **Open capture prompt**: <kbd>\<Leader\>oc</kbd>
-- In any orgmode buffer press <kbd>g?</kbd> for help
+- **Open agenda prompt**: =\<Leader\>oa=
+- **Open capture prompt**: =\<Leader\>oc=
+- In any orgmode buffer press =g?= for help
 
 If you are new to Orgmode, see [[/DOCS.md#getting-started-with-orgmode][Getting started]] section in the Docs
 or a hands-on [[https://github.com/nvim-orgmode/orgmode/wiki/Getting-Started][tutorial]] in our wiki.
@@ -283,8 +280,8 @@ More info on issue [[https://github.com/nvim-orgmode/orgmode/issues/281#issuecom
 *** Detailed breakdown
 
 - Agenda prompt:
-  - Agenda view (<kbd>a</kbd>):
-    - Ability to show daily(<kbd>vd</kbd>)/weekly(<kbd>vw</kbd>)/monthly(<kbd>vm</kbd>)/yearly(<kbd>vy</kbd>) agenda
+  - Agenda view (=a=):
+    - Ability to show daily(=vd=)/weekly(=vw=)/monthly(=vm=)/yearly(=vy=) agenda
     - Support for various date settings:
       - DEADLINE: Warning settings - example: ~<2021-06-11 Fri 11:00 -1d>~
       - SCHEDULED: Delay setting - example: ~<2021-06-11 Fri 11:00 -2d>~
@@ -295,44 +292,44 @@ More info on issue [[https://github.com/nvim-orgmode/orgmode/issues/281#issuecom
       - Time ranges - example: ~<2021-06-11 Fri 11:00-12:30>~
       - Date ranges - example: ~<2021-06-11 Fri 11:00-12:30>--<2021-06-13 Sun 22:00>~
     - Properly lists tasks according to defined dates (DEADLINE,SCHEDULED,Plain date)
-    - Navigate forward (<kbd>f</kbd>)/backward(<kbd>b</kbd>) or jump to specific date (<kbd>J</kbd>)
-    - Go to task under cursor in current window(<kbd>\<CR\></kbd>) or other window(<kbd>\<TAB\></kbd>)
+    - Navigate forward (=f=)/backward(=b=) or jump to specific date (=J=)
+    - Go to task under cursor in current window(=\<CR\>=) or other window(=\<TAB\>=)
     - Print category from ":CATEGORY:" property if defined
-  - List tasks that have "TODO" state (<kbd>t</kbd>):
-  - Find headlines matching tag(s) (<kbd>m</kbd>):
-  - Search for headlines (and it's content) for a query (<kbd>s</kbd>):
+  - List tasks that have "TODO" state (=t=):
+  - Find headlines matching tag(s) (=m=):
+  - Search for headlines (and it's content) for a query (=s=):
   - [[DOCS.md#advanced-search][Advanced search]] for tags/todo kewords/properties
   - Notifications (experimental, see [[https://github.com/nvim-orgmode/orgmode/issues/49)][Issue #49]]
   - Clocking time
 - Capture:
   - Define custom templates
-  - Fast capturing to default notes file via <kbd>\<C-c\></kbd>
-  - Capturing to specific destination <kbd>\<Leader\>or</kbd>
-  - Abort capture with <kbd>\<Leader\>ok</kbd>
+  - Fast capturing to default notes file via =\<C-c\>=
+  - Capturing to specific destination =\<Leader\>or=
+  - Abort capture with =\<Leader\>ok=
 - Org files
   - Clocking time
-  - Refile to destination/headline: <kbd>\<Leader\>or</kbd>
-  - Increase/Decrease date under cursor: <kbd>\<C-a\></kbd>/<kbd>\<C-x\></kbd>
-  - Change date under cursor via calendar popup: <kbd>cid</kbd>
-  - Change headline TODO state: forward<kbd>cit</kbd> or backward<kbd>ciT</kbd>
-  - Open hyperlink or date under cursor: <kbd>\<Leader\>oo</kbd>
-  - Toggle checkbox: <kbd>\<C-space\></kbd>
-  - Toggle current line to headline and vice versa: <kbd>\<Leader\>o\*</kbd>
-  - Toggle folding of current headline: <kbd>\<TAB\></kbd>
-  - Toggle folding in whole file: <kbd>\<S-TAB\></kbd>
-  - Archive headline: <kbd>\<Leader\>o$</kbd>
-  - Add archive tag: <kbd>\<Leader\>oA</kbd>
-  - Change tags: <kbd>\<Leader\>ot</kbd>
-  - Promote headline: <kbd><<</kbd>
-  - Demote headline: <kbd>>></kbd>
-  - Promote subtree: <kbd>\<s</kbd>
-  - Demote subtree: <kbd>\>s</kbd>
-  - Add headline/list item/checkbox: <kbd>\<Leader\>\<CR\></kbd>
-  - Insert heading after current heading and it's content: <kbd>\<Leader\>oih</kbd>
-  - Insert TODO heading after current line: <kbd>\<Leader\>oiT</kbd>
-  - Insert TODO heading after current heading and it's content: <kbd>\<Leader\>oit</kbd>
-  - Move headline up: <kbd>\<Leader\>oK</kb>
-  - Move headline down: <kbd>\<Leader\>oJ</kb>
+  - Refile to destination/headline: =\<Leader\>or=
+  - Increase/Decrease date under cursor: =\<C-a\>=/=\<C-x\>=
+  - Change date under cursor via calendar popup: =cid=
+  - Change headline TODO state: forward=cit= or backward=ciT=
+  - Open hyperlink or date under cursor: =\<Leader\>oo=
+  - Toggle checkbox: =\<C-space\>=
+  - Toggle current line to headline and vice versa: =\<Leader\>o\*=
+  - Toggle folding of current headline: =\<TAB\>=
+  - Toggle folding in whole file: =\<S-TAB\>=
+  - Archive headline: =\<Leader\>o$=
+  - Add archive tag: =\<Leader\>oA=
+  - Change tags: =\<Leader\>ot=
+  - Promote headline: =<<=
+  - Demote headline: =>>=
+  - Promote subtree: =\<s=
+  - Demote subtree: =\>s=
+  - Add headline/list item/checkbox: =\<Leader\>\<CR\>=
+  - Insert heading after current heading and it's content: =\<Leader\>oih=
+  - Insert TODO heading after current line: =\<Leader\>oiT=
+  - Insert TODO heading after current heading and it's content: =\<Leader\>oit=
+  - Move headline up: =\<Leader\>oK</kb>
+  - Move headline down: =\<Leader\>oJ</kb>
   - Highlighted code blocks (~#+BEGIN_SRC filetype~)
    Exporting (via ~emacs~, ~pandoc~ and custom export options)
 
