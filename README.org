@@ -4,6 +4,8 @@
 
 * nvim-orgmode
 
+** TODO: Logos add image alt text to links
+
 #+HTML:<a href="/LICENSE">
 #+HTML:<img alt="logo_desc" src="https://img.shields.io/badge/license-MIT-brightgreen?style=flat-square">
 #+HTML:</a>
@@ -144,12 +146,12 @@ vim.cmd[[autocmd FileType org setlocal iskeyword+=:,#,+]]
 
 #+HTML:</details>
 
-Or just use ~omnifunc~ via =\<C-x\>\<C-o\>=
+Or just use ~omnifunc~ via =<C-x><C-o>=
 
 *** Usage
 
-- **Open agenda prompt**: =\<Leader\>oa=
-- **Open capture prompt**: =\<Leader\>oc=
+- *Open agenda prompt*: =<Leader>oa=
+- *Open capture prompt*: =<Leader>oc=
 - In any orgmode buffer press =g?= for help
 
 If you are new to Orgmode, see [[/DOCS.md#getting-started-with-orgmode][Getting started]] section in the Docs
@@ -238,7 +240,8 @@ set concealcursor=nc
 *** Jumping to file path is not working for paths with forward slash
 
 If you are using Windows, paths are by default written with backslashes.
-To use forward slashes, you must enable ~shellslash~ option (see ~:help 'shellslash'~).
+To use forward slashes, you must enable ~shellslash~ option
+(see ~:help 'shellslash'~).
 
 #+BEGIN_SRC lua
 vim.opt.shellslash = true
@@ -335,7 +338,7 @@ Link to detailed documentation: [[DOCS.md][DOCS]]
 
 ** Plugins
 
-- [[https://www.orgroam.com/][org-roam.nvim](https://github.com/chipsenkbeil/org-roam.nvim) - Implementation of [Org-roam]] knowledge management system
+- [[https://github.com/chipsenkbeil/org-roam.nvim][https://www.orgroam.com/org-roam.nvim]] - Implementation of [[https://orgroam.com][Org-roam]] knowledge management system
 - [[https://github.com/akinsho/org-bullets.nvim][org-bullets.nvim]] - Show org mode bullets as UTF-8 characters
 - [[https://github.com/lukas-reineke/headlines.nvim][headlines.nvim]] - Add few highlight options for code blocks and headlines
 - [[https://github.com/michaelb/sniprun][sniprun]] - For code evaluation in blocks
