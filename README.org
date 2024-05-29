@@ -369,15 +369,15 @@ Hosted documentation is on: [[https://nvim-orgmode.github.io/][https://nvim-orgm
 ** Roadmap
 
 - :white_check_mark: Support searching by properties
-- :X: Improve checkbox hierarchy
+- :white_square_button: Improve checkbox hierarchy
 - :white_check_mark: Support todo keyword faces
 - :white_check_mark: Support clocking work time
 - :white_check_mark: Improve folding
 - :white_check_mark: Support exporting (via existing emacs tools)
-- :X: Support archiving to specific headline
+- :white_square_button: Support archiving to specific headline
 - :white_check_mark: Support tables
-- :X: Support diary format dates
-- :X: Support evaluating code blocks
+- :white_square_button: Support diary format dates
+- :white_square_button: Support evaluating code blocks
 
 ** Thanks to
 
