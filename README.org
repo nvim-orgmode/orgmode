@@ -36,7 +36,7 @@ Use your favourite package manager:
 
 #+HTML:<details open><summary><b><a href="https://github.com/folke/lazy.nvim">lazy.nvim</a> (recommended)</b></summary></br>
 
-#+begin_src lua
+#+BEGIN_SRC lua
 {
   'nvim-orgmode/orgmode',
   event = 'VeryLazy',
@@ -56,34 +56,34 @@ Use your favourite package manager:
     -- })
   end,
 }
-#+end_src
+#+END_SRC
 
 #+HTML:</details>
 
 #+HTML:<details> <summary><b><a href="https://github.com/wbthomason/packer.nvim">packer.nvim</a></b></summary> </br>
 
-#+begin_src lua
+#+BEGIN_SRC lua
 use {'nvim-orgmode/orgmode', config = function()
   require('orgmode').setup{}
 end
 }
-#+end_src
+#+END_SRC
 
 #+HTML:</details>
 
 #+HTML:<details> <summary><a href="https://github.com/junegunn/vim-plug"><b>vim-plug</b></a></summary> </br>
 
-#+begin_src vim
+#+BEGIN_SRC vim
 Plug 'nvim-orgmode/orgmode'
-#+end_src
+#+END_SRC
 
 #+HTML:</details>
 
 #+HTML:<details> <summary><a href="https://github.com/Shougo/dein.vim"><b>dein.vim</b></a></summary> </br>
 
-#+begin_src vim
+#+BEGIN_SRC vim
 call dein#add('nvim-orgmode/orgmode')
-#+end_src
+#+END_SRC
 
 #+HTML:</details>
 
@@ -92,7 +92,7 @@ call dein#add('nvim-orgmode/orgmode')
 Note that this setup is not needed for [[https://github.com/folke/lazy.nvim][lazy.nvim]]
 since instructions above covers full setup
 
-#+begin_src ~lua
+#+BEGIN_SRC lua
 -- init.lua
 
 require('orgmode').setup({
@@ -108,7 +108,7 @@ require('orgmode').setup({
 -- })
 
 Or if you are using ~init.vim~, wrap the above snippet like so:
-#+begin_src vim
+#+BEGIN_SRC vim
 " init.vim
 lua << EOF
 
@@ -118,24 +118,24 @@ require('orgmode').setup({
 })
 
 EOF
-#+begin_src ~
+#+END_SRC
 
 **** Completion
 
 #+HTML:<details> <summary><a href="https://github.com/hrsh7th/nvim-cmp"><b>nvim-cmp</b></a></summary> </br>
-#+begin_src lua
+#+BEGIN_SRC lua
 require('cmp').setup({
   sources = {
     { name = 'orgmode' }
   }
 })
-#+end_src
+#+END_SRC
 
 #+HTML:</details>
 
 #+HTML:<details> <summary><a href="https://github.com/nvim-lua/completion-nvim"><b>completion-nvim</b></a></summary> </br>
 
-#+begin_src lua
+#+BEGIN_SRC lua
 vim.g.completion_chain_complete_list = {
   org = {
     { mode = 'omni'},
@@ -143,7 +143,7 @@ vim.g.completion_chain_complete_list = {
 }
 -- add additional keyword chars
 vim.cmd[[autocmd FileType org setlocal iskeyword+=:,#,+]]
-#+end_src
+#+END_SRC
 
 #+HTML:</details>
 
@@ -208,15 +208,15 @@ Try running ~:lua require('orgmode.config'):reinstall_grammar()~ to reinstall it
 Dates are generated with Lua native date support, and it reads your current locale when creating them.<br />
 To use different locale you can add this to your ~init.lua~:
 
-#+begin_src lua
+#+BEGIN_SRC lua
 vim.cmd('language en_US.utf8')
-#+end_src
+#+END_SRC
 
 or ~init.vim~
 
-#+end_src
+#+END_SRC
 language en_US.utf8
-#+end_src
+#+END_SRC
 
 Just make sure you have ~en_US~ locale installed on your system. To see what you have available on the system you can
 start the command ~:language ~ and press ~<TAB>~ to autocomplete possible options.
@@ -225,32 +225,32 @@ start the command ~:language ~ and press ~<TAB>~ to autocomplete possible option
 
 Links are concealed with Vim's conceal feature (see ~:help conceal~). To enable concealing, add this to your ~init.lua~:
 
-#+begin_src lua
+#+BEGIN_SRC lua
 vim.opt.conceallevel = 2
 vim.opt.concealcursor = 'nc'
-#+end_src
+#+END_SRC
 
 Or if you are using ~init.vim~:
 
-#+begin_src vim
+#+BEGIN_SRC vim
 set conceallevel=2
 set concealcursor=nc
-#+end_src
+#+END_SRC
 
 *** Jumping to file path is not working for paths with forward slash
 
 If you are using Windows, paths are by default written with backslashes.
 To use forward slashes, you must enable ~shellslash~ option (see ~:help 'shellslash'~).
 
-#+begin_src lua
+#+BEGIN_SRC lua
 vim.opt.shellslash = true
-#+end_src
+#+END_SRC
 
 Or if you are using ~init.vim~:
 
-#+begin_src vim
+#+BEGIN_SRC vim
 set shellslash
-#+end_src
+#+END_SRC
 
 More info on issue [[https://github.com/nvim-orgmode/orgmode/issues/281#issuecomment-1120200775][#281]]
 
