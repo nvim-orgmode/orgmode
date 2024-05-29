@@ -10,9 +10,7 @@
 
 Use your favourite package manager:
 
-<details open>
-  <summary><b><a href="https://github.com/folke/lazy.nvim">lazy.nvim</a> (recommended)</b></summary>
-  </br>
+#+HTML:<details open><summary><b><a href="https://github.com/folke/lazy.nvim">lazy.nvim</a> (recommended)</b></summary></br>
 
 #+begin_src lua
 {
@@ -36,11 +34,9 @@ Use your favourite package manager:
 }
 #+end_src
 
-</details>
+#+HTML:</details>
 
-<details>
-  <summary><b><a href="https://github.com/wbthomason/packer.nvim">packer.nvim</a></b></summary>
-  </br>
+#+HTML:<details> <summary><b><a href="https://github.com/wbthomason/packer.nvim">packer.nvim</a></b></summary> </br>
 
 #+begin_src lua
 use {'nvim-orgmode/orgmode', config = function()
@@ -49,27 +45,23 @@ end
 }
 #+end_src
 
-</details>
+#+HTML:</details>
 
-<details>
-  <summary><a href="https://github.com/junegunn/vim-plug"><b>vim-plug</b></a></summary>
-  </br>
+#+HTML:<details> <summary><a href="https://github.com/junegunn/vim-plug"><b>vim-plug</b></a></summary> </br>
 
 #+begin_src vim
 Plug 'nvim-orgmode/orgmode'
 #+end_src
 
-</details>
+#+HTML:</details>
 
-<details>
-  <summary><a href="https://github.com/Shougo/dein.vim"><b>dein.vim</b></a></summary>
-  </br>
+#+HTML:<details> <summary><a href="https://github.com/Shougo/dein.vim"><b>dein.vim</b></a></summary> </br>
 
 #+begin_src vim
 call dein#add('nvim-orgmode/orgmode')
 #+end_src
 
-</details>
+#+HTML:</details>
 
 *** Setup
 
@@ -106,10 +98,7 @@ EOF
 
 **** Completion
 
-<details>
-  <summary><a href="https://github.com/hrsh7th/nvim-cmp"><b>nvim-cmp</b></a></summary>
-  </br>
-
+#+HTML:<details> <summary><a href="https://github.com/hrsh7th/nvim-cmp"><b>nvim-cmp</b></a></summary> </br>
 #+begin_src lua
 require('cmp').setup({
   sources = {
@@ -118,11 +107,9 @@ require('cmp').setup({
 })
 #+end_src
 
-</details>
+#+HTML:</details>
 
-<details>
-  <summary><a href="https://github.com/nvim-lua/completion-nvim"><b>completion-nvim</b></a></summary>
-  </br>
+#+HTML:<details> <summary><a href="https://github.com/nvim-lua/completion-nvim"><b>completion-nvim</b></a></summary> </br>
 
 #+begin_src lua
 vim.g.completion_chain_complete_list = {
@@ -134,7 +121,7 @@ vim.g.completion_chain_complete_list = {
 vim.cmd[[autocmd FileType org setlocal iskeyword+=:,#,+]]
 #+end_src
 
-</details>
+#+HTML:</details>
 
 Or just use ~omnifunc~ via <kbd>\<C-x\>\<C-o\></kbd>
 
