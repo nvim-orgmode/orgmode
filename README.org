@@ -211,7 +211,7 @@ language en_US.utf8
 #+END_SRC
 
 Just make sure you have ~en_US~ locale installed on your system. To see what you have available on the system you can
-start the command ~:language ~ and press ~<TAB>~ to autocomplete possible options.
+start the command ~:language~ and press ~<TAB>~ to autocomplete possible options.
 
 *** Links are not concealed
 
@@ -233,7 +233,7 @@ set concealcursor=nc
 
 If you are using Windows, paths are by default written with backslashes.
 To use forward slashes, you must enable ~shellslash~ option
-(see ~:help 'shellslash'~).
+(see ~:help shellslash~).
 
 #+BEGIN_SRC lua
 vim.opt.shellslash = true
@@ -302,12 +302,12 @@ More info on issue [[https://github.com/nvim-orgmode/orgmode/issues/281#issuecom
 - Org files
   - Clocking time
   - Refile to destination/headline: =<Leader>or=
-  - Increase/Decrease date under cursor: =<C-a>=/=<C-x>=
+  - Increase/Decrease date under cursor: =<C-a>= / =<C-x>=
   - Change date under cursor via calendar popup: =cid=
   - Change headline TODO state: forward=cit= or backward=ciT=
   - Open hyperlink or date under cursor: =<Leader>oo=
   - Toggle checkbox: =<C-space>=
-  - Toggle current line to headline and vice versa: =<Leader>o\*=
+  - Toggle current line to headline and vice versa: =<Leader>o*=
   - Toggle folding of current headline: =<TAB>=
   - Toggle folding in whole file: =<S-TAB>=
   - Archive headline: =<Leader>o$=
@@ -321,14 +321,14 @@ More info on issue [[https://github.com/nvim-orgmode/orgmode/issues/281#issuecom
   - Insert heading after current heading and it's content: =<Leader>oih=
   - Insert TODO heading after current line: =<Leader>oiT=
   - Insert TODO heading after current heading and it's content: =<Leader>oit=
-  - Move headline up: =<Leader>oK</kb>
-  - Move headline down: =<Leader>oJ</kb>
+  - Move headline up: =<Leader>oK=
+  - Move headline down: =<Leader>oJ=
   - Highlighted code blocks (~#+BEGIN_SRC filetype~)
    Exporting (via ~emacs~, ~pandoc~ and custom export options)
 
 Link to detailed documentation: [[DOCS.md][DOCS]]
 
-** Plugins
+** Pluginsa
 
 - [[https://github.com/chipsenkbeil/org-roam.nvim][org-roam.nvim]] - Implementation of [[https://orgroam.com][Org-roam]] knowledge management system
 - [[https://github.com/akinsho/org-bullets.nvim][org-bullets.nvim]] - Show org mode bullets as UTF-8 characters
@@ -338,13 +338,15 @@ Link to detailed documentation: [[DOCS.md][DOCS]]
 
 See all available plugins on [[https://github.com/topics/orgmode-nvim][orgmode-nvim]]
 
-***If you built a plugin please add "orgmode-nvim" topic to it.**
+*If you built a plugin please add "orgmode-nvim" topic to it.*
 
+#+BEGIN_QUOTE
 *NOTE*: None of the Emacs Orgmode plugins will be built into nvim-orgmode.
 Anything that's a separate plugin in Emacs Orgmode should be a separate plugin in here.
 The point of this plugin is to provide functionality that's built into Emacs Orgmode core,
 and a good foundation for external plugins.
-#+HTML:<br/>
+#+END_QUOTE
+
 If you want to build a plugin, post suggestions and improvements on [[https://github.com/nvim-orgmode/orgmode/issues/26][Plugins infrastructure]]
 issue.
 
