@@ -26,8 +26,8 @@ Use your favourite package manager:
       org_default_notes_file = '~/orgfiles/refile.org',
     })
 
-    -- NOTE: If you are using nvim-treesitter with `ensure_installed = "all"` option
-    -- add `org` to ignore_install
+    -- NOTE: If you are using nvim-treesitter with ~ensure_installed = "all"~ option
+    -- add ~org~ to ignore_install
     -- require('nvim-treesitter.configs').setup({
     --   ensure_installed = 'all',
     --   ignore_install = { 'org' },
@@ -76,7 +76,7 @@ call dein#add('nvim-orgmode/orgmode')
 Note that this setup is not needed for [lazy.nvim](https://github.com/folke/lazy.nvim)
 since instructions above covers full setup
 
-#+begin_src `lua
+#+begin_src ~lua
 -- init.lua
 
 require('orgmode').setup({
@@ -84,14 +84,14 @@ require('orgmode').setup({
   org_default_notes_file = '~/Dropbox/org/refile.org',
 })
 
--- NOTE: If you are using nvim-treesitter with `ensure_installed = "all"` option
--- add `org` to ignore_install
+-- NOTE: If you are using nvim-treesitter with ~ensure_installed = "all"~ option
+-- add ~org~ to ignore_install
 -- require('nvim-treesitter.configs').setup({
 --   ensure_installed = 'all',
 --   ignore_install = { 'org' },
 -- })
 
-Or if you are using `init.vim`, wrap the above snippet like so:
+Or if you are using ~init.vim~, wrap the above snippet like so:
 #+begin_src vim
 " init.vim
 lua << EOF
@@ -102,7 +102,7 @@ require('orgmode').setup({
 })
 
 EOF
-#+begin_src `
+#+begin_src ~
 
 *** Completion
 
@@ -136,7 +136,7 @@ vim.cmd[[autocmd FileType org setlocal iskeyword+=:,#,+]]
 
 </details>
 
-Or just use `omnifunc` via <kbd>\<C-x\>\<C-o\></kbd>
+Or just use ~omnifunc~ via <kbd>\<C-x\>\<C-o\></kbd>
 
 ** Usage
 
@@ -179,39 +179,39 @@ The built-in treesitter parser is used for parsing the org files.
 
 Make sure you are not overriding indentexpr in Org buffers with [nvim-treesitter indentation](https://github.com/nvim-treesitter/nvim-treesitter#indentation)
 
-** I get `treesitter/query.lua` errors when opening agenda/capture prompt or org files
+** I get ~treesitter/query.lua~ errors when opening agenda/capture prompt or org files
 
 Tree-sitter parser might not be installed.
-Try running `:lua require('orgmode.config'):reinstall_grammar()` to reinstall it.
+Try running ~:lua require('orgmode.config'):reinstall_grammar()~ to reinstall it.
 
 ** Dates are not in English
 
 Dates are generated with Lua native date support, and it reads your current locale when creating them.<br />
-To use different locale you can add this to your `init.lua`:
+To use different locale you can add this to your ~init.lua~:
 
 #+begin_src lua
 vim.cmd('language en_US.utf8')
 #+end_src
 
-or `init.vim`
+or ~init.vim~
 
 #+end_src
 language en_US.utf8
 #+end_src
 
-Just make sure you have `en_US` locale installed on your system. To see what you have available on the system you can
-start the command `:language ` and press `<TAB>` to autocomplete possible options.
+Just make sure you have ~en_US~ locale installed on your system. To see what you have available on the system you can
+start the command ~:language ~ and press ~<TAB>~ to autocomplete possible options.
 
 ** Links are not concealed
 
-Links are concealed with Vim's conceal feature (see `:help conceal`). To enable concealing, add this to your `init.lua`:
+Links are concealed with Vim's conceal feature (see ~:help conceal~). To enable concealing, add this to your ~init.lua~:
 
 #+begin_src lua
 vim.opt.conceallevel = 2
 vim.opt.concealcursor = 'nc'
 #+end_src
 
-Or if you are using `init.vim`:
+Or if you are using ~init.vim~:
 
 #+begin_src vim
 set conceallevel=2
@@ -221,13 +221,13 @@ set concealcursor=nc
 ** Jumping to file path is not working for paths with forward slash
 
 If you are using Windows, paths are by default written with backslashes.
-To use forward slashes, you must enable `shellslash` option (see `:help 'shellslash'`).
+To use forward slashes, you must enable ~shellslash~ option (see ~:help 'shellslash'~).
 
 #+begin_src lua
 vim.opt.shellslash = true
 #+end_src
 
-Or if you are using `init.vim`:
+Or if you are using ~init.vim~:
 
 #+begin_src vim
 set shellslash
@@ -245,7 +245,7 @@ More info on issue [#281](https://github.com/nvim-orgmode/orgmode/issues/281#iss
 - Repeatable dates, date and time ranges
 - Capturing to default notes file/destination
 - Archiving (archive file or ARCHIVE tag)
-- Exporting (via `emacs`, `pandoc` and custom export options)
+- Exporting (via ~emacs~, ~pandoc~ and custom export options)
 - Notifications (experimental, see [Issue #49](https://github.com/nvim-orgmode/orgmode/issues/49))
 - Calendar popup for easier navigation and date updates
 - Various org file mappings:
@@ -264,14 +264,14 @@ More info on issue [#281](https://github.com/nvim-orgmode/orgmode/issues/281#iss
   - Agenda view (<kbd>a</kbd>):
     - Ability to show daily(<kbd>vd</kbd>)/weekly(<kbd>vw</kbd>)/monthly(<kbd>vm</kbd>)/yearly(<kbd>vy</kbd>) agenda
     - Support for various date settings:
-      - DEADLINE: Warning settings - example: `<2021-06-11 Fri 11:00 -1d>`
-      - SCHEDULED: Delay setting - example: `<2021-06-11 Fri 11:00 -2d>`
+      - DEADLINE: Warning settings - example: ~<2021-06-11 Fri 11:00 -1d>~
+      - SCHEDULED: Delay setting - example: ~<2021-06-11 Fri 11:00 -2d>~
       - All dates - Repeater settings:
-        - Cumulate type: `<2021-06-11 Fri 11:00 +1w>`
-        - Catch-up type: `<2021-06-11 Fri 11:00 ++1w>`
-        - Restart type: `<2021-06-11 Fri 11:00 .+1w>`
-      - Time ranges - example: `<2021-06-11 Fri 11:00-12:30>`
-      - Date ranges - example: `<2021-06-11 Fri 11:00-12:30>--<2021-06-13 Sun 22:00>`
+        - Cumulate type: ~<2021-06-11 Fri 11:00 +1w>~
+        - Catch-up type: ~<2021-06-11 Fri 11:00 ++1w>~
+        - Restart type: ~<2021-06-11 Fri 11:00 .+1w>~
+      - Time ranges - example: ~<2021-06-11 Fri 11:00-12:30>~
+      - Date ranges - example: ~<2021-06-11 Fri 11:00-12:30>--<2021-06-13 Sun 22:00>~
     - Properly lists tasks according to defined dates (DEADLINE,SCHEDULED,Plain date)
     - Navigate forward (<kbd>f</kbd>)/backward(<kbd>b</kbd>) or jump to specific date (<kbd>J</kbd>)
     - Go to task under cursor in current window(<kbd>\<CR\></kbd>) or other window(<kbd>\<TAB\></kbd>)
@@ -311,8 +311,8 @@ More info on issue [#281](https://github.com/nvim-orgmode/orgmode/issues/281#iss
   - Insert TODO heading after current heading and it's content: <kbd>\<Leader\>oit</kbd>
   - Move headline up: <kbd>\<Leader\>oK</kb>
   - Move headline down: <kbd>\<Leader\>oJ</kb>
-  - Highlighted code blocks (`#+BEGIN_SRC filetype`)
-  - Exporting (via `emacs`, `pandoc` and custom export options)
+  - Highlighted code blocks (~#+BEGIN_SRC filetype~)
+  - Exporting (via ~emacs~, ~pandoc~ and custom export options)
 
 Link to detailed documentation: [DOCS](DOCS.md)
 
