@@ -1,7 +1,8 @@
-#+TITLE: nvim-orgmode
 #+HTML: <div align="center">
 
 #+HTML: <img alt="A blend of the Neovim (shape) and Org-mode (colours) logos" src="assets/nvim-orgmode.svg" width="250" /><br/>
+
+* nvim-orgmode
 
 #+HTML:<a href="/LICENSE">![License](https://img.shields.io/badge/license-MIT-brightgreen?style=flat-square)</a>
 #+HTML:<a href="https://ko-fi.com/kristijanhusak"> ![Kofi](https://img.shields.io/badge/support-kofi-00b9fe?style=flat-square&logo=kofi)</a>
