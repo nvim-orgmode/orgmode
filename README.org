@@ -368,14 +368,14 @@ Hosted documentation is on: [[https://nvim-orgmode.github.io/][https://nvim-orgm
 
 ** Roadmap
 
-- [x] Support searching by properties
+- [X] Support searching by properties
 - [ ] Improve checkbox hierarchy
-- [x] Support todo keyword faces
-- [x] Support clocking work time
-- [x] Improve folding
-- [x] Support exporting (via existing emacs tools)
+- [X] Support todo keyword faces
+- [X] Support clocking work time
+- [X] Improve folding
+- [X] Support exporting (via existing emacs tools)
 - [ ] Support archiving to specific headline
-- [x] Support tables
+- [X] Support tables
 - [ ] Support diary format dates
 - [ ] Support evaluating code blocks
 
