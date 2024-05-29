@@ -22,25 +22,26 @@ CONTENTS                                                        *orgmode-content
             1.2.1.11. org_hide_emphasis_markers.|orgmode-org_hide_emphasis_markers|
             1.2.1.12. org_ellipsis..........................|orgmode-org_ellipsis|
             1.2.1.13. org_log_done..........................|orgmode-org_log_done|
-            1.2.1.14. org_log_into_drawer............|orgmode-org_log_into_drawer|
-            1.2.1.15. org_highlight_latex_and_related.|orgmode-org_highlight_latex_and_related|
-            1.2.1.16. org_startup_indented..........|orgmode-org_startup_indented|
-            1.2.1.17. org_adapt_indentation........|orgmode-org_adapt_indentation|
-            1.2.1.18. org_indent_mode_turns_off_org_adapt_indentation.|orgmode-org_indent_mode_turns_off_org_adapt_indentation|
-            1.2.1.19. org_indent_mode_turns_on_hiding_stars.|orgmode-org_indent_mode_turns_on_hiding_stars|
-            1.2.1.20. org_src_window_setup..........|orgmode-org_src_window_setup|
-            1.2.1.21. org_edit_src_content_indentation.|orgmode-org_edit_src_content_indentation|
-            1.2.1.22. org_custom_exports..............|orgmode-org_custom_exports|
-            1.2.1.23. org_time_stamp_rounding_minutes.|orgmode-org_time_stamp_rounding_minutes|
-            1.2.1.24. org_blank_before_new_entry.|orgmode-org_blank_before_new_entry|
-            1.2.1.25. org_id_uuid_program............|orgmode-org_id_uuid_program|
-            1.2.1.26. org_id_ts_format..................|orgmode-org_id_ts_format|
-            1.2.1.27. org_id_method........................|orgmode-org_id_method|
-            1.2.1.28. org_id_prefix........................|orgmode-org_id_prefix|
-            1.2.1.29. org_id_link_to_org_use_id.|orgmode-org_id_link_to_org_use_id|
-            1.2.1.30. org_babel_default_header_args.|orgmode-org_babel_default_header_args|
-            1.2.1.31. calendar_week_start_day....|orgmode-calendar_week_start_day|
-            1.2.1.32. emacs_config..........................|orgmode-emacs_config|
+            1.2.1.14. org_log_repeat......................|orgmode-org_log_repeat|
+            1.2.1.15. org_log_into_drawer............|orgmode-org_log_into_drawer|
+            1.2.1.16. org_highlight_latex_and_related.|orgmode-org_highlight_latex_and_related|
+            1.2.1.17. org_startup_indented..........|orgmode-org_startup_indented|
+            1.2.1.18. org_adapt_indentation........|orgmode-org_adapt_indentation|
+            1.2.1.19. org_indent_mode_turns_off_org_adapt_indentation.|orgmode-org_indent_mode_turns_off_org_adapt_indentation|
+            1.2.1.20. org_indent_mode_turns_on_hiding_stars.|orgmode-org_indent_mode_turns_on_hiding_stars|
+            1.2.1.21. org_src_window_setup..........|orgmode-org_src_window_setup|
+            1.2.1.22. org_edit_src_content_indentation.|orgmode-org_edit_src_content_indentation|
+            1.2.1.23. org_custom_exports..............|orgmode-org_custom_exports|
+            1.2.1.24. org_time_stamp_rounding_minutes.|orgmode-org_time_stamp_rounding_minutes|
+            1.2.1.25. org_blank_before_new_entry.|orgmode-org_blank_before_new_entry|
+            1.2.1.26. org_id_uuid_program............|orgmode-org_id_uuid_program|
+            1.2.1.27. org_id_ts_format..................|orgmode-org_id_ts_format|
+            1.2.1.28. org_id_method........................|orgmode-org_id_method|
+            1.2.1.29. org_id_prefix........................|orgmode-org_id_prefix|
+            1.2.1.30. org_id_link_to_org_use_id.|orgmode-org_id_link_to_org_use_id|
+            1.2.1.31. org_babel_default_header_args.|orgmode-org_babel_default_header_args|
+            1.2.1.32. calendar_week_start_day....|orgmode-calendar_week_start_day|
+            1.2.1.33. emacs_config..........................|orgmode-emacs_config|
         1.2.2. Agenda settings...........................|orgmode-agenda_settings|
             1.2.2.1. org_deadline_warning_days.|orgmode-org_deadline_warning_days|
             1.2.2.2. org_agenda_span.....................|orgmode-org_agenda_span|
@@ -477,6 +478,16 @@ Possible values:
 *   `time` - adds `CLOSED` date when marking headline as done
 *   `note` - adds `CLOSED` date as above, and prompts for closing note via capture window. Confirm note with `org_note_finalize` (Default `<C-c>`), or ignore providing note via `org_note_kill` (Default `<Leader>ok`)
 *   `false` - Disable any logging
+
+ORG_LOG_REPEAT                                            *orgmode-org_log_repeat*
+
+type: `string|false`
+default value: `time`
+Possible values:
+
+*   `time` - adds `LAST_REPEAT` date to properties when marking headline with a repeater date as done
+*   `note` - adds `LAST_REPEAT` date as above, and prompts for closing note via capture window. Confirm note with `org_note_finalize` (Default `<C-c>`), or ignore providing note via `org_note_kill` (Default `<Leader>ok`)
+*   `false` - Disable logging the `LAST_REPEAT` date
 
 ORG_LOG_INTO_DRAWER                                  *orgmode-org_log_into_drawer*
 
