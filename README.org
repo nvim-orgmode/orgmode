@@ -1,4 +1,4 @@
-+title: nvim-orgmode
+#+TITLE: nvim-orgmode
 
 * Quickstart
 
