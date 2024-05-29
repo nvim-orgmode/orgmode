@@ -18,6 +18,7 @@ If you spot something missing in our [docs](DOCS.md), don't hesitate making a PR
 ## Local dev
 
 Requirements:
+
 - [StyLua](https://github.com/JohnnyMorganz/StyLua) - For formatting
 
 To set up local development, run `make setup_dev`. This will add a pre-commit hook that will auto format all files before committing them.
@@ -33,13 +34,15 @@ Please document any new code you add with [emmylua annotations](https://emmylua.
 
 ### Tests
 
- To run tests run `make test` in the nvim-orgmode directory:
+To run tests run `make test` in the nvim-orgmode directory:
+
 ```
 make test
 ```
 
 To run a specific test you can set a `FILE` environment variable to a specific
 spec you want to test. Example:
+
 ```
 make test FILE=./tests/plenary/api/api_spec.lua
 ```
