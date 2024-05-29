@@ -205,7 +205,8 @@ Try running ~:lua require('orgmode.config'):reinstall_grammar()~ to reinstall it
 
 *** Dates are not in English
 
-Dates are generated with Lua native date support, and it reads your current locale when creating them.<br />
+Dates are generated with Lua native date support, and it reads your current locale when creating them.
+#+HTML: <br/>
 To use different locale you can add this to your ~init.lua~:
 
 #+BEGIN_SRC lua
