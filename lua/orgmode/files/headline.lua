@@ -424,6 +424,23 @@ function Headline:set_property(name, value)
   return self:refresh()
 end
 
+---@param note string[] | nil
+---@return OrgHeadline
+function Headline:add_note(note)
+  if not note then
+    return self
+  end
+  local drawer = config.org_log_into_drawer
+  local append_line
+  if drawer ~= nil then
+    append_line = self:get_drawer_append_line(drawer)
+  else
+    append_line = self:get_append_line()
+  end
+  vim.api.nvim_buf_set_lines(self.file:get_valid_bufnr(), append_line, append_line, false, note)
+  return self:refresh()
+end
+
 ---@param property_name string
 ---@param search_parents? boolean
 ---@return string | nil, TSNode | nil

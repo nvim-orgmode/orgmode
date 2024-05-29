@@ -22,7 +22,7 @@ function Config:new(opts)
 end
 
 function Config:__index(key)
-  if self.opts[key] then
+  if self.opts[key] ~= nil then
     return self.opts[key]
   end
   return rawget(getmetatable(self), key)

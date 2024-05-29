@@ -283,6 +283,16 @@ Possible values:
 - `note` - adds `CLOSED` date as above, and prompts for closing note via capture window. Confirm note with `org_note_finalize` (Default `<C-c>`), or ignore providing note via `org_note_kill` (Default `<Leader>ok`)
 - `false` - Disable any logging
 
+#### **org_log_repeat**
+
+_type_: `string|false`<br />
+_default value_: `time`<br />
+Possible values:
+
+- `time` - adds `LAST_REPEAT` date to properties when marking headline with a repeater date as done
+- `note` - adds `LAST_REPEAT` date as above, and prompts for closing note via capture window. Confirm note with `org_note_finalize` (Default `<C-c>`), or ignore providing note via `org_note_kill` (Default `<Leader>ok`)
+- `false` - Disable logging the `LAST_REPEAT` date
+
 #### **org_log_into_drawer**
 
 _type_: `string|nil`<br />

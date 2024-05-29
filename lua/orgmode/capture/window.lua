@@ -25,7 +25,6 @@ function CaptureWindow:new(opts)
   return setmetatable(data, CaptureWindow)
 end
 
----
 function CaptureWindow:open()
   if self._window then
     return self:focus()

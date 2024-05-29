@@ -12,11 +12,8 @@ local utils = require('orgmode.utils')
 local fs = require('orgmode.utils.fs')
 local Table = require('orgmode.files.elements.table')
 local EventManager = require('orgmode.events')
-local Promise = require('orgmode.utils.promise')
 local events = EventManager.event
-local Link = require('orgmode.org.hyperlinks.link')
 local Babel = require('orgmode.babel')
-local OrgApi = require('orgmode.api')
 
 ---@class OrgMappings
 ---@field capture OrgCapture
@@ -384,96 +381,103 @@ function OrgMappings:_todo_change_state(direction)
   local old_state = headline:get_todo()
   local was_done = headline:is_done()
   local changed = self:_change_todo_state(direction, true)
+
   if not changed then
     return
   end
-  local item = self.files:get_closest_headline()
 
-  local dispatchEvent = function()
-    EventManager.dispatch(events.TodoChanged:new(item, old_state, was_done))
+  local item = self.files:get_closest_headline()
+  EventManager.dispatch(events.TodoChanged:new(item, old_state, was_done))
+
+  local is_done = item:is_done() and not was_done
+  local is_undone = not item:is_done() and was_done
+
+  -- State was changed in the same group (TODO NEXT | DONE)
+  -- For example: Changed from TODO to NEXT
+  if not is_done and not is_undone then
     return item
   end
 
-  if not item:is_done() and not was_done then
-    return dispatchEvent()
-  end
-
-  local log_note = config.org_log_done == 'note'
-  local log_time = config.org_log_done == 'time'
-  local should_log_time = log_note or log_time
+  local prompt_done_note = config.org_log_done == 'note'
+  local log_closed_time = config.org_log_done == 'time'
   local indent = headline:get_indent()
 
-  local get_note = function(note)
-    if note == nil then
-      return
-    end
+  local closing_note_text = ('%s- CLOSING NOTE %s \\\\'):format(indent, Date.now():to_wrapped_string(false))
 
-    for i, line in ipairs(note) do
-      note[i] = indent .. '  ' .. line
-    end
+  local get_note = function(template)
+    return self.capture.closing_note:open():next(function(closing_note)
+      if closing_note == nil then
+        return
+      end
 
-    table.insert(note, 1, ('%s- CLOSING NOTE %s \\\\'):format(indent, Date.now():to_wrapped_string(false)))
-    return note
+      for i, line in ipairs(closing_note) do
+        closing_note[i] = indent .. '  ' .. line
+      end
+
+      return vim.list_extend({ template }, closing_note)
+    end)
   end
 
   local repeater_dates = item:get_repeater_dates()
-  if #repeater_dates == 0 then
-    if should_log_time and item:is_done() and not was_done then
-      headline:set_closed_date()
-      item = self.files:get_closest_headline()
 
-      if log_note then
-        dispatchEvent()
-        return self.capture.closing_note:open():next(function(note)
-          local valid_note = get_note(note)
-          if valid_note then
-            local append_line = headline:get_append_line()
-            vim.api.nvim_buf_set_lines(0, append_line, append_line, false, valid_note)
-          end
-        end)
+  -- No dates with a repeater. Add closed date and note if enabled.
+  if #repeater_dates == 0 then
+    local set_closed_date = prompt_done_note or log_closed_time
+    if set_closed_date then
+      if is_done then
+        headline:set_closed_date()
+      elseif is_undone then
+        headline:remove_closed_date()
       end
+      item = self.files:get_closest_headline()
     end
-    if should_log_time and not item:is_done() and was_done then
-      headline:remove_closed_date()
+
+    if is_undone or not prompt_done_note then
+      return item
     end
-    return dispatchEvent()
+
+    return get_note(closing_note_text):next(function(closing_note)
+      return item:add_note(closing_note)
+    end)
   end
 
   for _, date in ipairs(repeater_dates) do
     self:_replace_date(date:apply_repeater())
   end
-
   local new_todo = item:get_todo()
   self:_change_todo_state('reset')
-  local state_change = {
-    string.format('%s- State "%s" from "%s" [%s]', indent, new_todo, old_state, Date.now():to_string()),
-  }
 
-  dispatchEvent()
-  return Promise.resolve()
-    :next(function()
-      if not log_note then
-        return state_change
-      end
+  local prompt_repeat_note = config.org_log_repeat == 'note'
+  local log_repeat_enabled = config.org_log_repeat ~= false
+  local repeat_note_template = ('%s- State "%s" from "%s" [%s]'):format(
+    indent,
+    new_todo,
+    old_state,
+    Date.now():to_string()
+  )
 
-      return self.capture.closing_note:open():next(function(closing_note)
-        return get_note(closing_note)
-      end)
+  if log_repeat_enabled then
+    headline:set_property('LAST_REPEAT', Date.now():to_wrapped_string(false))
+  end
+
+  if not prompt_repeat_note and not prompt_done_note then
+    -- If user is not prompted for a note, use a default repeat note
+    if log_repeat_enabled then
+      return item:add_note({ repeat_note_template })
+    end
+    return item
+  end
+
+  -- Done note has precedence over repeat note
+  if prompt_done_note then
+    return get_note(closing_note_text):next(function(closing_note)
+      return item:add_note(closing_note)
     end)
-    :next(function(note)
-      headline:set_property('LAST_REPEAT', Date.now():to_wrapped_string(false))
-      if not note then
-        return
-      end
-      local drawer = config.org_log_into_drawer
-      local append_line
-      if drawer ~= nil then
-        append_line = headline:get_drawer_append_line(drawer)
-      else
-        append_line = headline:get_append_line()
-      end
-      vim.api.nvim_buf_set_lines(0, append_line, append_line, false, note)
-    end)
+  end
+
+  return get_note(repeat_note_template .. ' \\\\'):next(function(closing_note)
+    return item:add_note(closing_note)
+  end)
 end
 
 function OrgMappings:do_promote(whole_subtree)
