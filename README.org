@@ -4,17 +4,9 @@
 
 * nvim-orgmode
 
-** TODO: Logos add image alt text to links
-
-#+HTML:<a href="/LICENSE">
-#+HTML:<img alt="logo_desc" src="https://img.shields.io/badge/license-MIT-brightgreen?style=flat-square">
-#+HTML:</a>
-#+HTML:<a href="https://ko-fi.com/kristijanhusak">
-#+HTML:<img alt="logo_desc" src="https://img.shields.io/badge/support-kofi-00b9fe?style=flat-square&logo=kofi">
-#+HTML:</a>
-#+HTML:<a href="https://matrix.to/#/#neovim-orgmode:matrix.org">
-#+HTML:<img alt="logo_desc" src="https://img.shields.io/matrix/neovim-orgmode:matrix.org?logo=matrix&server_fqdn=matrix.org&style=flat-square">
-#+HTML:</a>
+#+HTML:<a href="/LICENSE"><img alt="License" src="https://img.shields.io/badge/license-MIT-brightgreen?style=flat-square"></a>
+#+HTML:<a href="https://ko-fi.com/kristijanhusak"><img alt="Kofi" src="https://img.shields.io/badge/support-kofi-00b9fe?style=flat-square&logo=kofi"></a>
+#+HTML:<a href="https://matrix.to/#/#neovim-orgmode:matrix.org"><img alt="Chat" src="https://img.shields.io/matrix/neovim-orgmode:matrix.org?logo=matrix&server_fqdn=matrix.org&style=flat-square"></a>
 
 Orgmode clone written in Lua for Neovim 0.9.2+
 
