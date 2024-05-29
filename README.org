@@ -5,13 +5,13 @@
 * nvim-orgmode
 
 #+HTML:<a href="/LICENSE">
-[[https://img.shields.io/badge/license-MIT-brightgreen?style=flat-square]]
+#+HTML:<img alt="logo_desc" src="https://img.shields.io/badge/license-MIT-brightgreen?style=flat-square">
 #+HTML:</a>
 #+HTML:<a href="https://ko-fi.com/kristijanhusak">
-[[https://img.shields.io/badge/support-kofi-00b9fe?style=flat-square&logo=kofi]]
+#+HTML:<img alt="logo_desc" src="https://img.shields.io/badge/support-kofi-00b9fe?style=flat-square&logo=kofi">
 #+HTML:</a>
 #+HTML:<a href="https://matrix.to/#/#neovim-orgmode:matrix.org">
-[[https://img.shields.io/matrix/neovim-orgmode:matrix.org?logo=matrix&server_fqdn=matrix.org&style=flat-square]]
+#+HTML:<img alt="logo_desc" src="https://img.shields.io/matrix/neovim-orgmode:matrix.org?logo=matrix&server_fqdn=matrix.org&style=flat-square">
 #+HTML:</a>
 
 Orgmode clone written in Lua for Neovim 0.9.2+
