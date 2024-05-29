@@ -215,7 +215,7 @@ vim.cmd('language en_US.utf8')
 
 or ~init.vim~
 
-#+END_SRC
+#+BEGIN_SRC vim
 language en_US.utf8
 #+END_SRC
 
