@@ -338,7 +338,7 @@ Link to detailed documentation: [[DOCS.md][DOCS]]
 
 ** Plugins
 
-- [[https://github.com/chipsenkbeil/org-roam.nvim][https://www.orgroam.com/org-roam.nvim]] - Implementation of [[https://orgroam.com][Org-roam]] knowledge management system
+- [[https://github.com/chipsenkbeil/org-roam.nvim][org-roam.nvim]] - Implementation of [[https://orgroam.com][Org-roam]] knowledge management system
 - [[https://github.com/akinsho/org-bullets.nvim][org-bullets.nvim]] - Show org mode bullets as UTF-8 characters
 - [[https://github.com/lukas-reineke/headlines.nvim][headlines.nvim]] - Add few highlight options for code blocks and headlines
 - [[https://github.com/michaelb/sniprun][sniprun]] - For code evaluation in blocks
@@ -348,10 +348,11 @@ See all available plugins on [[https://github.com/topics/orgmode-nvim][orgmode-n
 
 ***If you built a plugin please add "orgmode-nvim" topic to it.**
 
-***NOTE**: None of the Emacs Orgmode plugins will be built into nvim-orgmode.
+*NOTE*: None of the Emacs Orgmode plugins will be built into nvim-orgmode.
 Anything that's a separate plugin in Emacs Orgmode should be a separate plugin in here.
 The point of this plugin is to provide functionality that's built into Emacs Orgmode core,
-and a good foundation for external plugins.<br />
+and a good foundation for external plugins.
+#+HTML:<br/>
 If you want to build a plugin, post suggestions and improvements on [[https://github.com/nvim-orgmode/orgmode/issues/26][Plugins infrastructure]]
 issue.
 
@@ -367,7 +368,7 @@ See [[CONTRIBUTING.md][CONTRIBUTING.md]]
 
 If you are just starting out with orgmode, have a look at the [[https://github.com/nvim-orgmode/orgmode/wiki/Getting-Started][Getting Started]] section in our wiki.
 
-Vim documentation is auto generated from [[https://github.com/FooSoft/md2vim][DOCS.md](DOCS.md) file with [md2vim]].
+Vim documentation is auto generated from [[DOCS.md][DOCS.md]] file with [[https://github.com/FooSoft/md2vim][md2vim]].
 
 Hosted documentation is on: [[https://nvim-orgmode.github.io/][https://nvim-orgmode.github.io/]]
 
@@ -386,7 +387,7 @@ Hosted documentation is on: [[https://nvim-orgmode.github.io/][https://nvim-orgm
 
 ** Thanks to
 
-- [[https://github.com/dhruvasagar/vim-dotoo][@dhruvasagar](https://github.com/dhruvasagar) and his [vim-dotoo]] plugin
+- [[https://github.com/dhruvasagar][@dhruvasagar]] and his [[https://github.com/dhruvasagar/vim-dotoo][vim-dotoo]] plugin
   that got me started using orgmode. Without him this plugin would not happen.
 - [[https://github.com/milisims][@milisims]] for writing a treesitter parser for org
-- [[https://github.com/jceb/vim-orgmode) for some parts of the code (mostly syntax][vim-orgmode]]
+- [[https://github.com/jceb/vim-orgmode][vim-orgmode]] for some parts of the code (mostly syntax)
