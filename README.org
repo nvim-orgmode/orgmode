@@ -73,7 +73,7 @@ call dein#add('nvim-orgmode/orgmode')
 
 ** Setup
 
-Note that this setup is not needed for [lazy.nvim](https://github.com/folke/lazy.nvim)
+Note that this setup is not needed for [[https://github.com/folke/lazy.nvim][lazy.nvim]]
 since instructions above covers full setup
 
 #+begin_src ~lua
@@ -144,26 +144,34 @@ Or just use ~omnifunc~ via <kbd>\<C-x\>\<C-o\></kbd>
 - **Open capture prompt**: <kbd>\<Leader\>oc</kbd>
 - In any orgmode buffer press <kbd>g?</kbd> for help
 
-If you are new to Orgmode, see [Getting started](/DOCS.md#getting-started-with-orgmode) section in the Docs
-or a hands-on [tutorial](https://github.com/nvim-orgmode/orgmode/wiki/Getting-Started) in our wiki.
+If you are new to Orgmode, see [[/DOCS.md#getting-started-with-orgmode][Getting started]] section in the Docs
+or a hands-on [[https://github.com/nvim-orgmode/orgmode/wiki/Getting-Started][tutorial]] in our wiki.
 
 * Showcase
 
 ** Agenda
 
-![agenda](https://user-images.githubusercontent.com/1782860/123549968-8521f600-d76b-11eb-9a93-02bad08b37ce.gif)
+#+CAPTION: agenda
+#+NAME: agenda
+[[https://user-images.githubusercontent.com/1782860/123549968-8521f600-d76b-11eb-9a93-02bad08b37ce.gif]]
 
 ** Org file
 
-![orgfile](https://user-images.githubusercontent.com/1782860/123549982-90752180-d76b-11eb-8828-9edf9f76af08.gif)
+#+CAPTION: orgfile
+#+NAME: orgfile
+[[https://user-images.githubusercontent.com/1782860/123549982-90752180-d76b-11eb-8828-9edf9f76af08.gif]]
 
 ** Capturing and refiling
 
-![capture](https://user-images.githubusercontent.com/1782860/123549993-9a972000-d76b-11eb-814b-b348a93df08a.gif)
+#+CAPTION: capture
+#+NAME: capture
+[[https://user-images.githubusercontent.com/1782860/123549993-9a972000-d76b-11eb-814b-b348a93df08a.gif]]
 
 ** Autocompletion
 
-![autocomplete](https://user-images.githubusercontent.com/1782860/123550227-e8605800-d76c-11eb-96f6-c0a677d562d4.gif)
+#+CAPTION: autocomplete
+#+NAME: autocomplete
+[[https://user-images.githubusercontent.com/1782860/123550227-e8605800-d76c-11eb-96f6-c0a677d562d4.gif]]
 
 * Treesitter Info
 
@@ -177,7 +185,7 @@ The built-in treesitter parser is used for parsing the org files.
 
 ** Indentation is not working
 
-Make sure you are not overriding indentexpr in Org buffers with [nvim-treesitter indentation](https://github.com/nvim-treesitter/nvim-treesitter#indentation)
+Make sure you are not overriding indentexpr in Org buffers with [[https://github.com/nvim-treesitter/nvim-treesitter#indentation][nvim-treesitter indentation]]
 
 ** I get ~treesitter/query.lua~ errors when opening agenda/capture prompt or org files
 
@@ -233,7 +241,7 @@ Or if you are using ~init.vim~:
 set shellslash
 #+end_src
 
-More info on issue [#281](https://github.com/nvim-orgmode/orgmode/issues/281#issuecomment-1120200775)
+More info on issue [[https://github.com/nvim-orgmode/orgmode/issues/281#issuecomment-1120200775][#281]]
 
 * Features
 
@@ -246,7 +254,7 @@ More info on issue [#281](https://github.com/nvim-orgmode/orgmode/issues/281#iss
 - Capturing to default notes file/destination
 - Archiving (archive file or ARCHIVE tag)
 - Exporting (via ~emacs~, ~pandoc~ and custom export options)
-- Notifications (experimental, see [Issue #49](https://github.com/nvim-orgmode/orgmode/issues/49))
+- Notifications (experimental, see [[https://github.com/nvim-orgmode/orgmode/issues/49)][Issue #49]]
 - Calendar popup for easier navigation and date updates
 - Various org file mappings:
   - Promote/Demote
@@ -256,7 +264,7 @@ More info on issue [#281](https://github.com/nvim-orgmode/orgmode/issues/281#iss
   - Change tags
   - Toggle checkbox state
 - Remote editing from agenda view
-- Repeatable mapping via [vim-repeat](https://github.com/tpope/vim-repeat)
+- Repeatable mapping via [[https://github.com/tpope/vim-repeat][vim-repeat]]
 
 ** Detailed breakdown
 
@@ -279,8 +287,8 @@ More info on issue [#281](https://github.com/nvim-orgmode/orgmode/issues/281#iss
   - List tasks that have "TODO" state (<kbd>t</kbd>):
   - Find headlines matching tag(s) (<kbd>m</kbd>):
   - Search for headlines (and it's content) for a query (<kbd>s</kbd>):
-  - [Advanced search](DOCS.md#advanced-search) for tags/todo kewords/properties
-  - Notifications (experimental, see [Issue #49](https://github.com/nvim-orgmode/orgmode/issues/49))
+  - [[DOCS.md#advanced-search][Advanced search]] for tags/todo kewords/properties
+  - Notifications (experimental, see [[https://github.com/nvim-orgmode/orgmode/issues/49)][Issue #49]]
   - Clocking time
 - Capture:
   - Define custom templates
@@ -312,19 +320,19 @@ More info on issue [#281](https://github.com/nvim-orgmode/orgmode/issues/281#iss
   - Move headline up: <kbd>\<Leader\>oK</kb>
   - Move headline down: <kbd>\<Leader\>oJ</kb>
   - Highlighted code blocks (~#+BEGIN_SRC filetype~)
-  - Exporting (via ~emacs~, ~pandoc~ and custom export options)
+   Exporting (via ~emacs~, ~pandoc~ and custom export options)
 
-Link to detailed documentation: [DOCS](DOCS.md)
+Link to detailed documentation: [[DOCS.md][DOCS]]
 
 * Plugins
 
-- [org-roam.nvim](https://github.com/chipsenkbeil/org-roam.nvim) - Implementation of [Org-roam](https://www.orgroam.com/) knowledge management system
-- [org-bullets.nvim](https://github.com/akinsho/org-bullets.nvim) - Show org mode bullets as UTF-8 characters
-- [headlines.nvim](https://github.com/lukas-reineke/headlines.nvim) - Add few highlight options for code blocks and headlines
-- [sniprun](https://github.com/michaelb/sniprun) - For code evaluation in blocks
-- [vim-table-mode](https://github.com/dhruvasagar/vim-table-mode) - For table support
+- [[https://www.orgroam.com/][org-roam.nvim](https://github.com/chipsenkbeil/org-roam.nvim) - Implementation of [Org-roam]] knowledge management system
+- [[https://github.com/akinsho/org-bullets.nvim][org-bullets.nvim]] - Show org mode bullets as UTF-8 characters
+- [[https://github.com/lukas-reineke/headlines.nvim][headlines.nvim]] - Add few highlight options for code blocks and headlines
+- [[https://github.com/michaelb/sniprun][sniprun]] - For code evaluation in blocks
+- [[https://github.com/dhruvasagar/vim-table-mode][vim-table-mode]] - For table support
 
-See all available plugins on [orgmode-nvim](https://github.com/topics/orgmode-nvim)
+See all available plugins on [[https://github.com/topics/orgmode-nvim][orgmode-nvim]]
 
 **If you built a plugin please add "orgmode-nvim" topic to it.**
 
@@ -332,24 +340,24 @@ See all available plugins on [orgmode-nvim](https://github.com/topics/orgmode-nv
 Anything that's a separate plugin in Emacs Orgmode should be a separate plugin in here.
 The point of this plugin is to provide functionality that's built into Emacs Orgmode core,
 and a good foundation for external plugins.<br />
-If you want to build a plugin, post suggestions and improvements on [Plugins infrastructure](https://github.com/nvim-orgmode/orgmode/issues/26)
+If you want to build a plugin, post suggestions and improvements on [[https://github.com/nvim-orgmode/orgmode/issues/26][Plugins infrastructure]]
 issue.
 
 ** :wrench: API
 
-Documentation for our work-in-progress API can be found [here](doc/orgmode_api.txt)
+Documentation for our work-in-progress API can be found [[doc/orgmode_api.txt][here]]
 
 * Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md)
+See [[CONTRIBUTING.md][CONTRIBUTING.md]]
 
 * Documentation
 
-If you are just starting out with orgmode, have a look at the [Getting Started](https://github.com/nvim-orgmode/orgmode/wiki/Getting-Started) section in our wiki.
+If you are just starting out with orgmode, have a look at the [[https://github.com/nvim-orgmode/orgmode/wiki/Getting-Started][Getting Started]] section in our wiki.
 
-Vim documentation is auto generated from [DOCS.md](DOCS.md) file with [md2vim](https://github.com/FooSoft/md2vim).
+Vim documentation is auto generated from [[https://github.com/FooSoft/md2vim][DOCS.md](DOCS.md) file with [md2vim]].
 
-Hosted documentation is on: [https://nvim-orgmode.github.io/](https://nvim-orgmode.github.io/)
+Hosted documentation is on: [[https://nvim-orgmode.github.io/][https://nvim-orgmode.github.io/]]
 
 * Roadmap
 
@@ -366,7 +374,7 @@ Hosted documentation is on: [https://nvim-orgmode.github.io/](https://nvim-orgmo
 
 * Thanks to
 
-- [@dhruvasagar](https://github.com/dhruvasagar) and his [vim-dotoo](https://github.com/dhruvasagar/vim-dotoo) plugin
+- [[https://github.com/dhruvasagar/vim-dotoo][@dhruvasagar](https://github.com/dhruvasagar) and his [vim-dotoo]] plugin
   that got me started using orgmode. Without him this plugin would not happen.
-- [@milisims](https://github.com/milisims) for writing a treesitter parser for org
-- [vim-orgmode](https://github.com/jceb/vim-orgmode) for some parts of the code (mostly syntax)
+- [[https://github.com/milisims][@milisims]] for writing a treesitter parser for org
+- [[https://github.com/jceb/vim-orgmode) for some parts of the code (mostly syntax][vim-orgmode]]
