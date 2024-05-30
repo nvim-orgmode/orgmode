@@ -304,7 +304,7 @@ More info on issue [[https://github.com/nvim-orgmode/orgmode/issues/281#issuecom
   - Refile to destination/headline: =<Leader>or=
   - Increase/Decrease date under cursor: =<C-a>= / =<C-x>=
   - Change date under cursor via calendar popup: =cid=
-  - Change headline TODO state: forward=cit= or backward=ciT=
+  - Change headline TODO state: forward =cit= or backward =ciT=
   - Open hyperlink or date under cursor: =<Leader>oo=
   - Toggle checkbox: =<C-space>=
   - Toggle current line to headline and vice versa: =<Leader>o*=
