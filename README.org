@@ -328,7 +328,7 @@ More info on issue [[https://github.com/nvim-orgmode/orgmode/issues/281#issuecom
 
 Link to detailed documentation: [[DOCS.md][DOCS]]
 
-** Pluginsa
+** Plugins
 
 - [[https://github.com/chipsenkbeil/org-roam.nvim][org-roam.nvim]] - Implementation of [[https://orgroam.com][Org-roam]] knowledge management system
 - [[https://github.com/akinsho/org-bullets.nvim][org-bullets.nvim]] - Show org mode bullets as UTF-8 characters
