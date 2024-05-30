@@ -1,0 +1,387 @@
+#+HTML: <div align="center">
+
+#+HTML: <img alt="A blend of the Neovim (shape) and Org-mode (colours) logos" src="assets/nvim-orgmode.svg" width="250" /><br/>
+
+* nvim-orgmode
+
+#+HTML:<a href="/LICENSE"><img alt="License" src="https://img.shields.io/badge/license-MIT-brightgreen?style=flat-square"></a>
+#+HTML:<a href="https://ko-fi.com/kristijanhusak"><img alt="Kofi" src="https://img.shields.io/badge/support-kofi-00b9fe?style=flat-square&logo=kofi"></a>
+#+HTML:<a href="https://matrix.to/#/#neovim-orgmode:matrix.org"><img alt="Chat" src="https://img.shields.io/matrix/neovim-orgmode:matrix.org?logo=matrix&server_fqdn=matrix.org&style=flat-square"></a>
+
+Orgmode clone written in Lua for Neovim 0.9.2+
+
+[[#setup][Setup]] • [[/DOCS.md][Docs]] • [[#showcase][Showcase]] • [[#treesitter-info][Treesitter]] • [[#troubleshoot][Troubleshoot]] • [[#plugins][Plugins]] • [[CONTRIBUTING.md][Contributing]] • [[#thanks-to][Kudos]]
+
+#+HTML:</div>
+
+
+** Quickstart
+
+*** Requirements
+
+- Neovim 0.9.2 or later
+
+*** Installation
+
+Use your favourite package manager:
+
+#+HTML:<details open><summary><b><a href="https://github.com/folke/lazy.nvim">lazy.nvim</a> (recommended)</b></summary></br>
+
+#+BEGIN_SRC lua
+{
+  'nvim-orgmode/orgmode',
+  event = 'VeryLazy',
+  ft = { 'org' },
+  config = function()
+    -- Setup orgmode
+    require('orgmode').setup({
+      org_agenda_files = '~/orgfiles/**/*',
+      org_default_notes_file = '~/orgfiles/refile.org',
+    })
+
+    -- NOTE: If you are using nvim-treesitter with ~ensure_installed = "all"~ option
+    -- add ~org~ to ignore_install
+    -- require('nvim-treesitter.configs').setup({
+    --   ensure_installed = 'all',
+    --   ignore_install = { 'org' },
+    -- })
+  end,
+}
+#+END_SRC
+
+#+HTML:</details>
+
+#+HTML:<details> <summary><b><a href="https://github.com/wbthomason/packer.nvim">packer.nvim</a></b></summary> </br>
+
+#+BEGIN_SRC lua
+use {'nvim-orgmode/orgmode', config = function()
+  require('orgmode').setup{}
+end
+}
+#+END_SRC
+
+#+HTML:</details>
+
+#+HTML:<details> <summary><a href="https://github.com/junegunn/vim-plug"><b>vim-plug</b></a></summary> </br>
+
+#+BEGIN_SRC vim
+Plug 'nvim-orgmode/orgmode'
+#+END_SRC
+
+#+HTML:</details>
+
+#+HTML:<details> <summary><a href="https://github.com/Shougo/dein.vim"><b>dein.vim</b></a></summary> </br>
+
+#+BEGIN_SRC vim
+call dein#add('nvim-orgmode/orgmode')
+#+END_SRC
+
+#+HTML:</details>
+
+*** Setup
+
+Note that this setup is not needed for [[https://github.com/folke/lazy.nvim][lazy.nvim]]
+since instructions above covers full setup
+
+#+BEGIN_SRC lua
+-- init.lua
+
+require('orgmode').setup({
+  org_agenda_files = {'~/Dropbox/org/*', '~/my-orgs/**/*'},
+  org_default_notes_file = '~/Dropbox/org/refile.org',
+})
+
+-- NOTE: If you are using nvim-treesitter with ~ensure_installed = "all"~ option
+-- add ~org~ to ignore_install
+-- require('nvim-treesitter.configs').setup({
+--   ensure_installed = 'all',
+--   ignore_install = { 'org' },
+-- })
+
+Or if you are using ~init.vim~, wrap the above snippet like so:
+#+BEGIN_SRC vim
+" init.vim
+lua << EOF
+
+require('orgmode').setup({
+  org_agenda_files = {'~/Dropbox/org/*', '~/my-orgs/**/*'},
+  org_default_notes_file = '~/Dropbox/org/refile.org',
+})
+
+EOF
+#+END_SRC
+
+**** Completion
+
+#+HTML:<details> <summary><a href="https://github.com/hrsh7th/nvim-cmp"><b>nvim-cmp</b></a></summary> </br>
+#+BEGIN_SRC lua
+require('cmp').setup({
+  sources = {
+    { name = 'orgmode' }
+  }
+})
+#+END_SRC
+
+#+HTML:</details>
+
+#+HTML:<details> <summary><a href="https://github.com/nvim-lua/completion-nvim"><b>completion-nvim</b></a></summary> </br>
+
+#+BEGIN_SRC lua
+vim.g.completion_chain_complete_list = {
+  org = {
+    { mode = 'omni'},
+  },
+}
+-- add additional keyword chars
+vim.cmd[[autocmd FileType org setlocal iskeyword+=:,#,+]]
+#+END_SRC
+
+#+HTML:</details>
+
+Or just use ~omnifunc~ via =<C-x><C-o>=
+
+*** Usage
+
+- *Open agenda prompt*: =<Leader>oa=
+- *Open capture prompt*: =<Leader>oc=
+- In any orgmode buffer press =g?= for help
+
+If you are new to Orgmode, see [[/DOCS.md#getting-started-with-orgmode][Getting started]] section in the Docs
+or a hands-on [[https://github.com/nvim-orgmode/orgmode/wiki/Getting-Started][tutorial]] in our wiki.
+
+** Showcase
+
+*** Agenda
+
+#+CAPTION: agenda
+#+NAME: agenda
+[[https://user-images.githubusercontent.com/1782860/123549968-8521f600-d76b-11eb-9a93-02bad08b37ce.gif]]
+
+*** Org file
+
+#+CAPTION: orgfile
+#+NAME: orgfile
+[[https://user-images.githubusercontent.com/1782860/123549982-90752180-d76b-11eb-8828-9edf9f76af08.gif]]
+
+*** Capturing and refiling
+
+#+CAPTION: capture
+#+NAME: capture
+[[https://user-images.githubusercontent.com/1782860/123549993-9a972000-d76b-11eb-814b-b348a93df08a.gif]]
+
+*** Autocompletion
+
+#+CAPTION: autocomplete
+#+NAME: autocomplete
+[[https://user-images.githubusercontent.com/1782860/123550227-e8605800-d76c-11eb-96f6-c0a677d562d4.gif]]
+
+** Treesitter Info
+
+The built-in treesitter parser is used for parsing the org files.
+
+*** Known highlighting issues and limitations
+
+- LaTex is still highlighted through syntax file
+
+** Troubleshoot
+
+*** Indentation is not working
+
+Make sure you are not overriding indentexpr in Org buffers with [[https://github.com/nvim-treesitter/nvim-treesitter#indentation][nvim-treesitter indentation]]
+
+*** I get ~treesitter/query.lua~ errors when opening agenda/capture prompt or org files
+
+Tree-sitter parser might not be installed.
+Try running ~:lua require('orgmode.config'):reinstall_grammar()~ to reinstall it.
+
+*** Dates are not in English
+
+Dates are generated with Lua native date support, and it reads your current locale when creating them.
+#+HTML: <br/>
+To use different locale you can add this to your ~init.lua~:
+
+#+BEGIN_SRC lua
+vim.cmd('language en_US.utf8')
+#+END_SRC
+
+or ~init.vim~
+
+#+BEGIN_SRC vim
+language en_US.utf8
+#+END_SRC
+
+Just make sure you have ~en_US~ locale installed on your system. To see what you have available on the system you can
+start the command ~:language~ and press ~<TAB>~ to autocomplete possible options.
+
+*** Links are not concealed
+
+Links are concealed with Vim's conceal feature (see ~:help conceal~). To enable concealing, add this to your ~init.lua~:
+
+#+BEGIN_SRC lua
+vim.opt.conceallevel = 2
+vim.opt.concealcursor = 'nc'
+#+END_SRC
+
+Or if you are using ~init.vim~:
+
+#+BEGIN_SRC vim
+set conceallevel=2
+set concealcursor=nc
+#+END_SRC
+
+*** Jumping to file path is not working for paths with forward slash
+
+If you are using Windows, paths are by default written with backslashes.
+To use forward slashes, you must enable ~shellslash~ option
+(see ~:help shellslash~).
+
+#+BEGIN_SRC lua
+vim.opt.shellslash = true
+#+END_SRC
+
+Or if you are using ~init.vim~:
+
+#+BEGIN_SRC vim
+set shellslash
+#+END_SRC
+
+More info on issue [[https://github.com/nvim-orgmode/orgmode/issues/281#issuecomment-1120200775][#281]]
+
+** Features
+
+*** TL;DR
+
+- Agenda view
+- Search by tags/keyword
+- Clocking time
+- Repeatable dates, date and time ranges
+- Capturing to default notes file/destination
+- Archiving (archive file or ARCHIVE tag)
+- Exporting (via ~emacs~, ~pandoc~ and custom export options)
+- Notifications (experimental, see [[https://github.com/nvim-orgmode/orgmode/issues/49)][Issue #49]]
+- Calendar popup for easier navigation and date updates
+- Various org file mappings:
+  - Promote/Demote
+  - Change TODO state
+  - Change dates
+  - Insert/Move/Refile headlines
+  - Change tags
+  - Toggle checkbox state
+- Remote editing from agenda view
+- Repeatable mapping via [[https://github.com/tpope/vim-repeat][vim-repeat]]
+
+*** Detailed breakdown
+
+- Agenda prompt:
+  - Agenda view (=a=):
+    - Ability to show daily(=vd=)/weekly(=vw=)/monthly(=vm=)/yearly(=vy=) agenda
+    - Support for various date settings:
+      - DEADLINE: Warning settings - example: ~<2021-06-11 Fri 11:00 -1d>~
+      - SCHEDULED: Delay setting - example: ~<2021-06-11 Fri 11:00 -2d>~
+      - All dates - Repeater settings:
+        - Cumulate type: ~<2021-06-11 Fri 11:00 +1w>~
+        - Catch-up type: ~<2021-06-11 Fri 11:00 ++1w>~
+        - Restart type: ~<2021-06-11 Fri 11:00 .+1w>~
+      - Time ranges - example: ~<2021-06-11 Fri 11:00-12:30>~
+      - Date ranges - example: ~<2021-06-11 Fri 11:00-12:30>--<2021-06-13 Sun 22:00>~
+    - Properly lists tasks according to defined dates (DEADLINE,SCHEDULED,Plain date)
+    - Navigate forward (=f=)/backward(=b=) or jump to specific date (=J=)
+    - Go to task under cursor in current window(=<CR>=) or other window(=<TAB>=)
+    - Print category from ":CATEGORY:" property if defined
+  - List tasks that have "TODO" state (=t=):
+  - Find headlines matching tag(s) (=m=):
+  - Search for headlines (and it's content) for a query (=s=):
+  - [[DOCS.md#advanced-search][Advanced search]] for tags/todo kewords/properties
+  - Notifications (experimental, see [[https://github.com/nvim-orgmode/orgmode/issues/49)][Issue #49]]
+  - Clocking time
+- Capture:
+  - Define custom templates
+  - Fast capturing to default notes file via =<C-c>=
+  - Capturing to specific destination =<Leader>or=
+  - Abort capture with =<Leader>ok=
+- Org files
+  - Clocking time
+  - Refile to destination/headline: =<Leader>or=
+  - Increase/Decrease date under cursor: =<C-a>= / =<C-x>=
+  - Change date under cursor via calendar popup: =cid=
+  - Change headline TODO state: forward =cit= or backward =ciT=
+  - Open hyperlink or date under cursor: =<Leader>oo=
+  - Toggle checkbox: =<C-space>=
+  - Toggle current line to headline and vice versa: =<Leader>o*=
+  - Toggle folding of current headline: =<TAB>=
+  - Toggle folding in whole file: =<S-TAB>=
+  - Archive headline: =<Leader>o$=
+  - Add archive tag: =<Leader>oA=
+  - Change tags: =<Leader>ot=
+  - Promote headline: =<<=
+  - Demote headline: =>>=
+  - Promote subtree: =<s=
+  - Demote subtree: =>s=
+  - Add headline/list item/checkbox: =<Leader><CR>=
+  - Insert heading after current heading and it's content: =<Leader>oih=
+  - Insert TODO heading after current line: =<Leader>oiT=
+  - Insert TODO heading after current heading and it's content: =<Leader>oit=
+  - Move headline up: =<Leader>oK=
+  - Move headline down: =<Leader>oJ=
+  - Highlighted code blocks (~#+BEGIN_SRC filetype~)
+   Exporting (via ~emacs~, ~pandoc~ and custom export options)
+
+Link to detailed documentation: [[DOCS.md][DOCS]]
+
+** Plugins
+
+- [[https://github.com/chipsenkbeil/org-roam.nvim][org-roam.nvim]] - Implementation of [[https://orgroam.com][Org-roam]] knowledge management system
+- [[https://github.com/akinsho/org-bullets.nvim][org-bullets.nvim]] - Show org mode bullets as UTF-8 characters
+- [[https://github.com/lukas-reineke/headlines.nvim][headlines.nvim]] - Add few highlight options for code blocks and headlines
+- [[https://github.com/michaelb/sniprun][sniprun]] - For code evaluation in blocks
+- [[https://github.com/dhruvasagar/vim-table-mode][vim-table-mode]] - For table support
+
+See all available plugins on [[https://github.com/topics/orgmode-nvim][orgmode-nvim]]
+
+*If you built a plugin please add "orgmode-nvim" topic to it.*
+
+#+BEGIN_QUOTE
+*NOTE*: None of the Emacs Orgmode plugins will be built into nvim-orgmode.
+Anything that's a separate plugin in Emacs Orgmode should be a separate plugin in here.
+The point of this plugin is to provide functionality that's built into Emacs Orgmode core,
+and a good foundation for external plugins.
+#+END_QUOTE
+
+If you want to build a plugin, post suggestions and improvements on [[https://github.com/nvim-orgmode/orgmode/issues/26][Plugins infrastructure]]
+issue.
+
+*** :wrench: API
+
+Documentation for our work-in-progress API can be found [[doc/orgmode_api.txt][here]]
+
+** Contributing
+
+See [[CONTRIBUTING.md][CONTRIBUTING.md]]
+
+** Documentation
+
+If you are just starting out with orgmode, have a look at the [[https://github.com/nvim-orgmode/orgmode/wiki/Getting-Started][Getting Started]] section in our wiki.
+
+Vim documentation is auto generated from [[DOCS.md][DOCS.md]] file with [[https://github.com/FooSoft/md2vim][md2vim]].
+
+Hosted documentation is on: [[https://nvim-orgmode.github.io/][https://nvim-orgmode.github.io/]]
+
+** Roadmap
+
+- :white_check_mark: Support searching by properties
+- :white_square_button: Improve checkbox hierarchy
+- :white_check_mark: Support todo keyword faces
+- :white_check_mark: Support clocking work time
+- :white_check_mark: Improve folding
+- :white_check_mark: Support exporting (via existing emacs tools)
+- :white_square_button: Support archiving to specific headline
+- :white_check_mark: Support tables
+- :white_square_button: Support diary format dates
+- :white_square_button: Support evaluating code blocks
+
+** Thanks to
+
+- [[https://github.com/dhruvasagar][@dhruvasagar]] and his [[https://github.com/dhruvasagar/vim-dotoo][vim-dotoo]] plugin
+  that got me started using orgmode. Without him this plugin would not happen.
+- [[https://github.com/milisims][@milisims]] for writing a treesitter parser for org
+- [[https://github.com/jceb/vim-orgmode][vim-orgmode]] for some parts of the code (mostly syntax)
