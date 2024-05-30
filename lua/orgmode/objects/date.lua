@@ -29,7 +29,7 @@ local time_format = '%H:%M'
 ---@field related_date_range OrgDate
 ---@field dayname string
 ---@field adjustments string[]
----@private is_today_date boolean?
+---@field private is_today_date boolean?
 local Date = {
   ---@type fun(this: OrgDate, other: OrgDate): boolean
   __eq = function(this, other)
