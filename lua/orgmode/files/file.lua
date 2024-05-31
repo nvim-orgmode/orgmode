@@ -7,6 +7,7 @@ local config = require('orgmode.config')
 local Block = require('orgmode.files.elements.block')
 local Link = require('orgmode.org.hyperlinks.link')
 local Range = require('orgmode.files.elements.range')
+local Memoize = require('orgmode.utils.memoize')
 
 ---@class OrgFileMetadata
 ---@field mtime number
@@ -26,12 +27,11 @@ local Range = require('orgmode.files.elements.range')
 ---@field root TSNode
 local OrgFile = {}
 
-local memoize = utils.memoize(OrgFile, function(self)
-  return table.concat({
-    self.filename,
-    self.root and self.root:id() or '',
-    self.metadata.mtime,
-  }, '_')
+local memoize = Memoize:new(OrgFile, function(self)
+  return {
+    file = self,
+    id = table.concat({ 'file', self.root and self.root:id() or '' }, '_'),
+  }
 end)
 
 ---Constructor function, should not be used directly
@@ -740,8 +740,10 @@ function OrgFile:_update_lines(lines, bufnr)
   self:parse()
   if bufnr then
     self.metadata.changedtick = vim.api.nvim_buf_get_changedtick(bufnr)
-  else
-    self.metadata.mtime = vim.loop.fs_stat(self.filename).mtime.nsec
+  end
+  local stat = vim.loop.fs_stat(self.filename)
+  if stat then
+    self.metadata.mtime = stat.mtime.nsec
   end
   return self
 end

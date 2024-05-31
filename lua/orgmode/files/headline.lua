@@ -7,6 +7,7 @@ local PriorityState = require('orgmode.objects.priority_state')
 local indent = require('orgmode.org.indent')
 local Logbook = require('orgmode.files.elements.logbook')
 local OrgId = require('orgmode.org.id')
+local Memoize = require('orgmode.utils.memoize')
 
 ---@alias OrgPlanDateTypes 'DEADLINE' | 'SCHEDULED' | 'CLOSED'
 
@@ -15,13 +16,12 @@ local OrgId = require('orgmode.org.id')
 ---@field file OrgFile
 local Headline = {}
 
-local memoize = utils.memoize(Headline, function(self)
+local memoize = Memoize:new(Headline, function(self)
   ---@cast self OrgHeadline
-  return table.concat({
-    self.file.filename,
-    self.headline:id(),
-    self.file.metadata.mtime,
-  }, '_')
+  return {
+    file = self.file,
+    id = table.concat({ 'headline', self.headline:id() }, '_'),
+  }
 end)
 
 ---@param headline_node TSNode tree sitter headline node
