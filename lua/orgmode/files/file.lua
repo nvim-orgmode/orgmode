@@ -241,7 +241,7 @@ function OrgFile:apply_search(search, todo_only)
     local deadline = item:get_deadline_date()
     local scheduled = item:get_scheduled_date()
     local closed = item:get_closed_date()
-    local _, properties = item:get_properties()
+    local properties = item:get_properties()
 
     return search:check({
       props = vim.tbl_extend('keep', {}, properties, {

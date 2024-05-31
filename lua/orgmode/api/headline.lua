@@ -63,7 +63,7 @@ end
 ---@private
 function OrgHeadline._build_from_internal_headline(section, index)
   local todo, _, type = section:get_todo()
-  local _, properties = section:get_properties()
+  local properties = section:get_properties()
   return OrgHeadline:_new({
     title = section:get_title(),
     line = section:get_headline_line_content(),

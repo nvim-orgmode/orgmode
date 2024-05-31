@@ -186,9 +186,8 @@ end
 
 ---@return OrgDate | nil
 function Headline:get_closed_date()
-  return utils.find(self:get_all_dates(), function(date)
-    return date:is_closed()
-  end)
+  local dates = self:get_plan_dates()
+  return vim.tbl_get(dates, 'CLOSED', 1)
 end
 
 function Headline:get_priority_sort_value()
@@ -361,13 +360,14 @@ function Headline:get_title_with_priority()
   return title
 end
 
----@return TSNode | nil, table<string, string>
+memoize('get_properties')
+---@return table<string, string>, TSNode | nil
 function Headline:get_properties()
   local section = self:node():parent()
   local properties_node = section and section:field('property_drawer')[1]
 
   if not properties_node then
-    return nil, {}
+    return {}, nil
   end
 
   local properties = {}
@@ -383,7 +383,7 @@ function Headline:get_properties()
     end
   end
 
-  return properties_node, properties
+  return properties, properties_node
 end
 
 ---@param name string
@@ -397,19 +397,19 @@ function Headline:set_property(name, value)
       vim.fn.deletebufline(bufnr, property_node:start() + 1)
     end
     self:refresh()
-    local properties_node, properties = self:get_properties()
+    local properties, properties_node = self:get_properties()
     if vim.tbl_isempty(properties) then
       self:_set_node_lines(properties_node, {})
     end
     return self:refresh()
   end
 
-  local properties = self:get_properties()
+  local _, properties = self:get_properties()
   if not properties then
     local append_line = self:get_append_line()
     local property_drawer = self:_apply_indent({ ':PROPERTIES:', ':END:' }) --[[ @as string[] ]]
     vim.api.nvim_buf_set_lines(bufnr, append_line, append_line, false, property_drawer)
-    properties = self:refresh():get_properties()
+    _, properties = self:refresh():get_properties()
   end
 
   local property = (':%s: %s'):format(name, value)
@@ -445,7 +445,7 @@ end
 ---@param search_parents? boolean
 ---@return string | nil, TSNode | nil
 function Headline:get_property(property_name, search_parents)
-  local properties = self:get_properties()
+  local _, properties = self:get_properties()
   if properties then
     for _, node in ipairs(ts_utils.get_named_children(properties)) do
       local name = node:field('name')[1]
@@ -598,7 +598,7 @@ end
 
 ---@return number
 function Headline:get_append_line()
-  local properties = self:get_properties()
+  local _, properties = self:get_properties()
   if properties then
     local row = properties:end_()
     return row
@@ -853,6 +853,7 @@ function Headline:get_drawer_append_line(name)
   return name_row + 1
 end
 
+memoize('get_range')
 ---@return OrgRange
 function Headline:get_range()
   return Range.from_node(self:node():parent())
@@ -863,6 +864,7 @@ function Headline:get_lines()
   return self.file:get_node_text_list(self:node():parent())
 end
 
+memoize('get_headline_line_content')
 ---@return string
 function Headline:get_headline_line_content()
   local line = self.file:get_node_text(self:node()):gsub('\n', '')

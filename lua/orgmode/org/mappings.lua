@@ -457,7 +457,7 @@ function OrgMappings:_todo_change_state(direction)
   )
 
   if log_repeat_enabled then
-    headline:set_property('LAST_REPEAT', Date.now():to_wrapped_string(false))
+    item:set_property('LAST_REPEAT', Date.now():to_wrapped_string(false))
   end
 
   if not prompt_repeat_note and not prompt_done_note then
