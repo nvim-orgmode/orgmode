@@ -703,6 +703,7 @@ function Date:is_in_date_range(date)
   return false
 end
 
+---Range of dates, excluding date
 ---@param date OrgDate
 ---@return OrgDate[]
 function Date:get_range_until(date)

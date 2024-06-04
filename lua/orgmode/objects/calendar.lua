@@ -17,7 +17,6 @@ local small_minute_step = config.calendar.min_small_step or config.org_time_stam
 ---@field callback fun(date: OrgDate | nil, cleared?: boolean)
 ---@field namespace function
 ---@field date OrgDate?
----@field month OrgDate
 ---@field title? string
 ---@field on_day? OrgCalendarOnRenderDay
 ---@field selected OrgDate?
@@ -26,8 +25,7 @@ local small_minute_step = config.calendar.min_small_step or config.org_time_stam
 local Calendar = {
   win = nil,
   buf = nil,
-  date = nil,
-  month = Date.today():start_of('month'),
+  date = Date.today():start_of('month'),
   selected = nil,
   select_state = SelState.DAY,
   clearable = false,
@@ -46,9 +44,8 @@ function Calendar.new(data)
   this.on_day = data.on_day
   if data.date then
     this.date = data.date
-    this.month = this.date:set({ day = 1 })
   else
-    this.month = Date.today():start_of('month')
+    this.date = Date.today()
   end
   return this
 end
@@ -157,24 +154,28 @@ function Calendar:render()
   end
 
   -- construct title (Month YYYY)
-  local title = self.month:format('%B %Y')
+  local title = self.date:format('%B %Y')
   title = string.rep(' ', math.floor((width - title:len()) / 2)) .. title
 
   -- insert whitespace before first day of month
-  local start_weekday = self.month:get_isoweekday()
+  local first_of_month = self.date:start_of('month')
+
+  local end_of_month = self.date:end_of('month')
+  local start_weekday = first_of_month:get_isoweekday()
   if start_from_sunday then
-    start_weekday = self.month:get_weekday()
+    start_weekday = first_of_month:get_weekday()
   end
+
   while start_weekday > 1 do
     table.insert(cal_rows[1], '  ')
     start_weekday = start_weekday - 1
   end
 
   -- insert dates into cal_rows
-  local dates = self.month:get_range_until(self.month:end_of('month'))
+  local dates = first_of_month:get_range_until(end_of_month)
   local current_row = 1
-  for _, date in ipairs(dates) do
-    table.insert(cal_rows[current_row], date:format('%d'))
+  for _, day in ipairs(dates) do
+    table.insert(cal_rows[current_row], day:format('%d'))
     if #cal_rows[current_row] % 7 == 0 then
       current_row = current_row + 1
     end
@@ -236,8 +237,8 @@ function Calendar:render()
         break
       end
       if from and to then
-        local date = self.month:set({ day = num })
-        self:on_render_day(date, {
+        local day = self.date:set({ day = num })
+        self:on_render_day(day, {
           from = from,
           to = to,
           line = i,
@@ -322,7 +323,7 @@ end
 
 function Calendar:forward()
   self:_ensure_day()
-  self.month = self.month:add({ month = vim.v.count1 })
+  self.date = self.date:start_of('month'):add({ month = vim.v.count1 })
   self:render()
   vim.fn.cursor(2, 1)
   vim.fn.search('01')
@@ -331,9 +332,9 @@ end
 
 function Calendar:backward()
   self:_ensure_day()
-  self.month = self.month:subtract({ month = vim.v.count1 })
+  self.date = self.date:start_of('month'):subtract({ month = vim.v.count1 }):end_of('month')
   self:render()
-  vim.fn.cursor(vim.fn.line('$'), 0)
+  vim.fn.cursor(8, 0)
   vim.fn.search([[\d\d]], 'b')
   self:render()
 end
@@ -499,13 +500,13 @@ end
 
 function Calendar:reset()
   self:_ensure_day()
-  local today = self.month:set_todays_date()
-  self.month = today:set({ day = 1 })
+  self.date = self.date:set_todays_date()
   self:render()
   vim.fn.cursor(2, 1)
-  vim.fn.search(today:format('%d'), 'W')
+  vim.fn.search(self.date:format('%d'), 'W')
 end
 
+---@return OrgDate?
 function Calendar:get_selected_date()
   if self.select_state ~= SelState.DAY then
     return self.date
@@ -519,7 +520,6 @@ function Calendar:get_selected_date()
     return utils.echo_warning('Please select valid day number.', nil, false)
   end
   return self.date:set({
-    month = self.month.month,
     day = day,
     date_only = self.date.date_only,
   })
@@ -549,7 +549,7 @@ end
 function Calendar:dispose()
   self.win = nil
   self.buf = nil
-  self.month = Date.today():start_of('month')
+  self.date = Date.today():start_of('month')
   if self.callback then
     self.callback(nil)
     self.callback = nil
@@ -566,7 +566,7 @@ end
 
 function Calendar:read_date()
   self:_ensure_day()
-  local current_date = self:get_selected_date()
+  local current_date = self:get_selected_date() or Date.today()
   vim.ui.input({ prompt = 'Enter date: ', default = current_date:to_string() }, function(result)
     if result then
       local date = Date.from_string(result)
@@ -575,7 +575,6 @@ function Calendar:read_date()
       end
 
       self.date = date
-      self.month = date:set({ day = 1 })
       self:render()
       vim.fn.cursor(2, 1)
       vim.fn.search(date:format('%d'), 'W')

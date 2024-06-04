@@ -108,6 +108,7 @@ end
 ---@param msg string|table
 ---@param additional_msg? table
 ---@param store_in_history? boolean
+---@return nil
 function utils.echo_warning(msg, additional_msg, store_in_history)
   return utils._echo(msg, 'WarningMsg', additional_msg, store_in_history)
 end
@@ -127,6 +128,7 @@ function utils.echo_info(msg, additional_msg, store_in_history)
 end
 
 ---@private
+---@return nil
 function utils._echo(msg, hl, additional_msg, store_in_history)
   vim.cmd([[redraw!]])
   if type(msg) == 'table' then
