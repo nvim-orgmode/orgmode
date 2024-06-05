@@ -481,7 +481,8 @@ function Date:end_of(span)
   end
 
   if span == 'month' then
-    return self:add({ month = 1 }):start_of('month'):adjust('-1d'):end_of('day')
+    local date = os.date('*t', self.timestamp)
+    return self:set({ day = Date._days_of_month(date) }):end_of('day')
   end
 
   return self
@@ -517,6 +518,7 @@ end
 ---@return OrgDate
 function Date:add(opts)
   opts = opts or {}
+  ---@type table
   local date = os.date('*t', self.timestamp)
   for opt, val in pairs(opts) do
     if opt == 'week' then
@@ -525,7 +527,29 @@ function Date:add(opts)
     end
     date[opt] = date[opt] + val
   end
+  if opts['month'] then
+    date['day'] = math.min(date['day'], Date._days_of_month(date))
+  end
   return self:from_time_table(date)
+end
+
+---@param date table
+---@return number
+function Date._days_of_month(date)
+  local days_of = { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 }
+  if date.month == 2 then
+    return Date._days_of_february(date.year)
+  else
+    return days_of[date.month]
+  end
+end
+
+function Date._days_of_february(year)
+  return Date._is_leap_year(year) and 29 or 28
+end
+
+function Date._is_leap_year(year)
+  return year % 400 == 0 or (year % 100 ~= 0 and year % 4 == 0)
 end
 
 ---@param opts table
