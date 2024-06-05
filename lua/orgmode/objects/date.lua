@@ -1,6 +1,6 @@
 -- TODO
 -- Support diary format and format without short date name
----@type table<string, OrgDateSpan>
+---@type OrgDateSpan
 local spans = { d = 'day', m = 'month', y = 'year', h = 'hour', w = 'week', M = 'min' }
 local config = require('orgmode.config')
 local utils = require('orgmode.utils')
@@ -11,25 +11,32 @@ local time_format = '%H:%M'
 
 ---@alias OrgDateSpan 'minute' | 'hour' | 'day' | 'week' | 'month' | 'year'
 
----@class OrgDate
----@field type string
----@field active boolean
----@field date_only boolean
----@field range OrgRange
+---@alias OsTime number
+
+---@class OsDate
 ---@field day number
+---@field wday string
 ---@field month number
 ---@field year number
 ---@field hour number
 ---@field min number
+---
+---@class OrgDateOpts : OsDate
+---@field active boolean
+---@field date_only boolean
+---@field type string
+---@field range OrgRange
 ---@field timestamp number
 ---@field timestamp_end number
 ---@field is_dst boolean
 ---@field is_date_range_start boolean
 ---@field is_date_range_end boolean
----@field related_date_range OrgDate
----@field dayname string
+---@field related_date_range OrgDate?
+---@field dayname string?
 ---@field adjustments string[]
 ---@field private is_today_date boolean?
+
+---@class OrgDate : OrgDateOpts
 local Date = {
   ---@type fun(this: OrgDate, other: OrgDate): boolean
   __eq = function(this, other)
@@ -56,7 +63,7 @@ local Date = {
 ---@param source table
 ---@param target? table
 ---@param include_sec? boolean
----@return table
+---@return OrgDateOpts
 local function set_date_opts(source, target, include_sec)
   target = target or {}
   for _, field in ipairs({ 'year', 'month', 'day' }) do
@@ -71,7 +78,30 @@ local function set_date_opts(source, target, include_sec)
   return target
 end
 
----@param data table
+---@param timestamp integer
+---@return string
+local function os_dayname(timestamp)
+  ---@diagnostic disable-next-line:return-type-mismatch
+  return os.date('%a', timestamp)
+end
+
+---@param timestamp integer
+---@return OsDate
+local function os_date(timestamp)
+  ---@diagnostic disable-next-line:return-type-mismatch
+  return os.date('*t', timestamp)
+end
+
+---@param date OsDate
+---@return integer
+local function os_time(date)
+  ---@diagnostic disable-next-line:return-type-mismatch
+  ---@diagnostic disable-next-line:param-type-mismatch
+  return os.time(date)
+end
+
+---@param data OrgDateOpts
+---@return OrgDate
 function Date:new(data)
   data = data or {}
   local date_only = data.date_only or (not data.hour and not data.min)
@@ -79,9 +109,9 @@ function Date:new(data)
   opts.type = data.type or 'NONE'
   opts.active = data.active or false
   opts.range = data.range
-  opts.timestamp = os.time(opts)
+  opts.timestamp = os_time(opts)
   opts.date_only = date_only
-  opts.dayname = os.date('%a', opts.timestamp)
+  opts.dayname = os_dayname(opts.timestamp)
   opts.is_dst = os.date('*t', opts.timestamp).isdst
   opts.adjustments = data.adjustments or {}
   opts.timestamp_end = data.timestamp_end
@@ -90,6 +120,7 @@ function Date:new(data)
   opts.related_date_range = data.related_date_range or nil
   setmetatable(opts, self)
   self.__index = self
+  ---@diagnostic disable-next-line:return-type-mismatch
   return opts
 end
 
@@ -99,8 +130,8 @@ function Date:from_time_table(time)
   local timestamp_end = self.timestamp_end
   local timestamp = self.timestamp
   local range_diff = timestamp_end and timestamp_end - timestamp or 0
-  timestamp = os.time(set_date_opts(time, {}, true))
-  local opts = set_date_opts(os.date('*t', timestamp))
+  timestamp = os_time(set_date_opts(time, {}, true))
+  local opts = set_date_opts(os_date(timestamp))
   if time.date_only ~= nil then
     opts.date_only = time.date_only
   else
@@ -124,7 +155,7 @@ end
 ---@return OrgDate
 function Date:set(opts)
   opts = opts or {}
-  local date = os.date('*t', self.timestamp)
+  local date = os_date(self.timestamp)
   for opt, val in pairs(opts) do
     date[opt] = val
   end
@@ -142,31 +173,35 @@ function Date:clone(opts)
 end
 
 ---@param date string
----@param dayname string
+---@param dayname string?
 ---@param time string
----@param adjustments string
+---@param adjustments string[]
 ---@param data table
 ---@return OrgDate
 local function parse_datetime(date, dayname, time, time_end, adjustments, data)
   local date_parts = vim.split(date, '-')
   local time_parts = vim.split(time, ':')
+
+  ---@type OrgDate
   local opts = {
-    year = tonumber(date_parts[1]),
-    month = tonumber(date_parts[2]),
-    day = tonumber(date_parts[3]),
-    hour = tonumber(time_parts[1]),
-    min = tonumber(time_parts[2]),
+    year = tonumber(date_parts[1]) or 0,
+    month = tonumber(date_parts[2]) or 0,
+    day = tonumber(date_parts[3]) or 0,
+    hour = tonumber(time_parts[1]) or 0,
+    min = tonumber(time_parts[2]) or 0,
+    wday = dayname or '',
   }
   opts.dayname = dayname
   opts.adjustments = adjustments
   if time_end then
     local time_end_parts = vim.split(time_end, ':')
-    opts.timestamp_end = os.time({
-      year = tonumber(date_parts[1]),
-      month = tonumber(date_parts[2]),
-      day = tonumber(date_parts[3]),
-      hour = tonumber(time_end_parts[1]),
-      min = tonumber(time_end_parts[2]),
+    opts.timestamp_end = os_time({
+      year = tonumber(date_parts[1]) or 0,
+      month = tonumber(date_parts[2]) or 0,
+      day = tonumber(date_parts[3]) or 0,
+      hour = tonumber(time_end_parts[1]) or 0,
+      min = tonumber(time_end_parts[2]) or 0,
+      wday = dayname or '',
     })
   end
   opts = vim.tbl_extend('force', opts, data or {})
@@ -174,8 +209,8 @@ local function parse_datetime(date, dayname, time, time_end, adjustments, data)
 end
 
 ---@param date string
----@param dayname string
----@param adjustments string
+---@param dayname string?
+---@param adjustments string[]
 ---@param data table
 ---@return OrgDate
 local function parse_date(date, dayname, adjustments, data)
@@ -194,8 +229,8 @@ end
 ---@param data? table
 ---@return OrgDate
 local function today(data)
-  local date = os.date('*t', os.time()) --[[@as osdate]]
-  local opts = vim.tbl_deep_extend('force', date, data or {})
+  local date = os_date(os.time())
+  local opts = vim.tbl_deep_extend('force', date, data or {}) --[[@as OrgDateOpts]]
   opts.date_only = true
   return Date:new(opts)
 end
@@ -209,8 +244,8 @@ end
 ---@param data? table
 ---@return OrgDate
 local function now(data)
-  local date = os.date('*t', os.time()) --[[@as osdate]]
-  local opts = vim.tbl_deep_extend('force', date, data or {})
+  local date = os_date(os.time())
+  local opts = vim.tbl_deep_extend('force', date, data or {}) --[[@as OrgDateOpts]]
   return Date:new(opts)
 end
 
@@ -221,8 +256,8 @@ local function is_valid_date(datestr)
 end
 
 ---@param datestr string
----@param opts? table
----@return OrgDate
+---@param opts table?
+---@return OrgDate?
 local function from_string(datestr, opts)
   if not is_valid_date(datestr) then
     return nil
@@ -248,10 +283,10 @@ local function from_string(datestr, opts)
   end
 
   if time then
-    return parse_datetime(date, dayname, time, time_end, adjustments, opts)
+    return parse_datetime(date, dayname, time, time_end, adjustments, opts or {})
   end
 
-  return parse_date(date, dayname, adjustments, opts)
+  return parse_date(date, dayname, adjustments, opts or {})
 end
 
 --- @param datestr string
@@ -316,7 +351,7 @@ local function from_org_date(datestr, opts)
       range = Range:new({
         start_line = line,
         end_line = line,
-        start_col = start_date.range.end_col + 3,
+        start_col = start_date and start_date.range.end_col + 3,
         end_col = opts.range.end_col,
       }),
       related_date_range = start_date,
@@ -397,7 +432,7 @@ function Date:adjust_end_time(value)
   if not self.timestamp_end then
     return self
   end
-  local time_end = from_string(os.date(date_format .. ' ' .. time_format, self.timestamp_end))
+  local time_end = Date:from_time_table(os_date(self.timestamp_end))
   time_end = time_end:adjust(value)
   self.timestamp_end = time_end.timestamp
   return self
@@ -424,7 +459,7 @@ function Date:without_adjustments()
   return self:clone({ adjustments = {} })
 end
 
----@param span OrgDateSpan
+---@param span OrgDateSpan | string
 ---@return OrgDate
 function Date:start_of(span)
   if #span == 1 then
@@ -481,7 +516,7 @@ function Date:end_of(span)
   end
 
   if span == 'month' then
-    local date = os.date('*t', self.timestamp)
+    local date = os_date(self.timestamp)
     return self:set({ day = Date._days_of_month(date) }):end_of('day')
   end
 
@@ -490,13 +525,17 @@ end
 
 ---@return number
 function Date:get_isoweekday()
+  ---@type table
+  ---@diagnostic disable-next-line: assign-type-mismatch
   local date = os.date('*t', self.timestamp)
   return utils.convert_to_isoweekday(date.wday)
 end
 
 ---@return number
 function Date:get_weekday()
-  local date = os.date('*t', self.timestamp)
+  ---@type table
+  ---@diagnostic disable-next-line: assign-type-mismatch
+  local date = os_date(self.timestamp)
   return date.wday
 end
 
@@ -519,6 +558,7 @@ end
 function Date:add(opts)
   opts = opts or {}
   ---@type table
+  ---@diagnostic disable-next-line: assign-type-mismatch
   local date = os.date('*t', self.timestamp)
   for opt, val in pairs(opts) do
     if opt == 'week' then
@@ -631,7 +671,7 @@ function Date:is_after(date, span)
 end
 
 ---@param date OrgDate
----@param span string
+---@param span string?
 ---@return boolean
 function Date:is_same_or_after(date, span)
   local d = date
@@ -664,7 +704,7 @@ end
 
 ---@return boolean
 function Date:has_date_range_end()
-  return self.related_date_range and self.is_date_range_start
+  return self.related_date_range ~= nil and self.is_date_range_start
 end
 
 function Date:has_time()
@@ -858,8 +898,9 @@ function Date:get_repeater()
   return nil
 end
 
+---@return OrgDate
 function Date:set_todays_date()
-  local time = os.date('*t', os.time())
+  local time = os_date(os.time())
   return self:set({
     year = time.year,
     month = time.month,
@@ -965,7 +1006,7 @@ end
 ---@param close string
 ---@param last_match? OrgDate
 ---@param type? string
----@return OrgDate
+---@return OrgDate?
 local function from_match(line, lnum, open, datetime, close, last_match, type)
   local search_from = last_match ~= nil and last_match.range.end_col or 0
   local from, to = line:find(vim.pesc(open .. datetime .. close), search_from)
