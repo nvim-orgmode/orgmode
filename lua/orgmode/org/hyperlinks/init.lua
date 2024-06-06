@@ -181,10 +181,10 @@ function Hyperlinks.get_link_to_headline(headline, path)
     id = headline:id_get_or_create()
   end
 
-  if not config.org_id_link_to_org_use_id or not id then
-    return ('file:%s::*%s'):format(path, title)
+  if config.org_id_link_to_org_use_id and id then
+    return ('id:%s::*%s'):format(id, title)
   end
-  return ('id:%s  %s'):format(id, title)
+  return ('file:%s::*%s'):format(path, title)
 end
 
 ---@param headline OrgHeadline
@@ -216,10 +216,9 @@ end
 function Hyperlinks.insert_link(link_location)
   local selected_link = Link:new(link_location)
   local desc = selected_link.url:get_target_value()
+
   if selected_link.url:is_id() then
-    local id_link = ('id:%s'):format(selected_link.url:get_id())
-    desc = link_location:gsub('^' .. vim.pesc(id_link) .. '%s+', '')
-    link_location = id_link
+    link_location = ('id:%s'):format(selected_link.url:get_id())
   end
 
   local link_description = vim.trim(vim.fn.OrgmodeInput('Description: ', desc or ''))
