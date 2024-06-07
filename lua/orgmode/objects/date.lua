@@ -537,11 +537,28 @@ end
 ---@return number
 function Date._days_of_month(date)
   local days_of = { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 }
-  if date.month == 2 then
+  local month = date.month
+
+  if month == 2 then
     return Date._days_of_february(date.year)
-  else
-    return days_of[date.month]
   end
+
+  if month >= 1 and month <= 12 then
+    return days_of[month]
+  end
+
+  -- In case the month goes below or above the threshold (via adding or subtracting)
+  -- We need to adjust it to be within the range of 1-12
+  -- by either adding or subtracting
+  if month < 1 then
+    month = 12 - month
+  end
+
+  if month > 12 then
+    month = month - 12
+  end
+
+  return days_of[month]
 end
 
 function Date._days_of_february(year)
