@@ -24,20 +24,13 @@ function Hyperlinks.find_by_filepath(url)
     return {}
   end
   --TODO integrate with orgmode.utils.fs or orgmode.objects.url
-  local file_base_no_start_path = vim.pesc(file_base:gsub('^%./', '') .. '')
-  local is_relative_path = file_base:match('^%./')
-  local current_file_directory = vim.pesc(fs.get_current_file_dir())
   local valid_filenames = {}
   for _, f in ipairs(filenames) do
-    if is_relative_path then
-      local match = f:match('^' .. current_file_directory .. '/(' .. file_base_no_start_path .. '.*%.org)$')
-      if match then
-        table.insert(valid_filenames, './' .. match)
+    if f:find('^' .. file_base) then
+      if url.realpath then
+        f = f:gsub(file_base, url.path)
       end
-    else
-      if f:find('^' .. file_base) then
-        table.insert(valid_filenames, f)
-      end
+      table.insert(valid_filenames, f)
     end
   end
 
