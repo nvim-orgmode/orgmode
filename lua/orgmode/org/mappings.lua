@@ -762,7 +762,10 @@ function OrgMappings:move_subtree_up()
     return utils.echo_warning('Cannot move past superior level.')
   end
   local range = item:get_range()
-  vim.cmd(string.format(':%d,%dmove %d', range.start_line, range.end_line, prev_headline:get_range().start_line - 1))
+  local target_line = prev_headline:get_range().start_line - 1
+  vim.cmd(string.format(':%d,%dmove %d', range.start_line, range.end_line, target_line))
+  local pos = vim.fn.getcurpos()
+  vim.fn.cursor(prev_headline:get_range().start_line, pos[2])
 end
 
 function OrgMappings:move_subtree_down()
@@ -772,7 +775,10 @@ function OrgMappings:move_subtree_down()
     return utils.echo_warning('Cannot move past superior level.')
   end
   local range = item:get_range()
-  vim.cmd(string.format(':%d,%dmove %d', range.start_line, range.end_line, next_headline:get_range().end_line))
+  local target_line = next_headline:get_range().end_line
+  vim.cmd(string.format(':%d,%dmove %d', range.start_line, range.end_line, target_line))
+  local pos = vim.fn.getcurpos()
+  vim.fn.cursor(target_line + range.start_line - range.end_line, pos[2])
 end
 
 function OrgMappings:show_help(type)
