@@ -11,17 +11,7 @@ local time_format = '%H:%M'
 
 ---@alias OrgDateSpan 'minute' | 'hour' | 'day' | 'week' | 'month' | 'year'
 
----@alias OsTime number
-
----@class OsDate
----@field day number
----@field wday string
----@field month number
----@field year number
----@field hour number
----@field min number
----
----@class OrgDateOpts : OsDate
+---@class OrgDateOpts : osdateparam
 ---@field active boolean
 ---@field date_only boolean
 ---@field type string
@@ -79,25 +69,10 @@ local function set_date_opts(source, target, include_sec)
 end
 
 ---@param timestamp integer
----@return string
-local function os_dayname(timestamp)
-  ---@diagnostic disable-next-line:return-type-mismatch
-  return os.date('%a', timestamp)
-end
-
----@param timestamp integer
----@return OsDate
-local function os_date(timestamp)
-  ---@diagnostic disable-next-line:return-type-mismatch
-  return os.date('*t', timestamp)
-end
-
----@param date OsDate
----@return integer
-local function os_time(date)
-  ---@diagnostic disable-next-line:return-type-mismatch
-  ---@diagnostic disable-next-line:param-type-mismatch
-  return os.time(date)
+---@param format? string
+---@return osdate
+local function os_date(timestamp, format)
+  return os.date(format or '*t', timestamp) --[[@as osdate]]
 end
 
 ---@param data OrgDateOpts
@@ -109,10 +84,10 @@ function Date:new(data)
   opts.type = data.type or 'NONE'
   opts.active = data.active or false
   opts.range = data.range
-  opts.timestamp = os_time(opts)
+  opts.timestamp = os.time(opts)
   opts.date_only = date_only
-  opts.dayname = os_dayname(opts.timestamp)
-  opts.is_dst = os.date('*t', opts.timestamp).isdst
+  opts.dayname = os.date('%a', opts.timestamp) --[[@as string]]
+  opts.is_dst = os_date(opts.timestamp).isdst
   opts.adjustments = data.adjustments or {}
   opts.timestamp_end = data.timestamp_end
   opts.is_date_range_start = data.is_date_range_start or false
@@ -130,7 +105,7 @@ function Date:from_time_table(time)
   local timestamp_end = self.timestamp_end
   local timestamp = self.timestamp
   local range_diff = timestamp_end and timestamp_end - timestamp or 0
-  timestamp = os_time(set_date_opts(time, {}, true))
+  timestamp = os.time(set_date_opts(time, {}, true))
   local opts = set_date_opts(os_date(timestamp))
   if time.date_only ~= nil then
     opts.date_only = time.date_only
@@ -195,7 +170,7 @@ local function parse_datetime(date, dayname, time, time_end, adjustments, data)
   opts.adjustments = adjustments
   if time_end then
     local time_end_parts = vim.split(time_end, ':')
-    opts.timestamp_end = os_time({
+    opts.timestamp_end = os.time({
       year = tonumber(date_parts[1]) or 0,
       month = tonumber(date_parts[2]) or 0,
       day = tonumber(date_parts[3]) or 0,
@@ -478,10 +453,10 @@ function Date:start_of(span)
 
   if span == 'week' then
     local this = self
-    local date = os.date('*t', self.timestamp)
+    local date = os_date(self.timestamp)
     while date.wday ~= config:get_week_start_day_number() do
       this = this:adjust('-1d')
-      date = os.date('*t', this.timestamp)
+      date = os_date(this.timestamp)
     end
     return this:set(opts.day)
   end
@@ -507,10 +482,10 @@ function Date:end_of(span)
 
   if span == 'week' then
     local this = self
-    local date = os.date('*t', self.timestamp)
+    local date = os_date(self.timestamp)
     while date.wday ~= config:get_week_end_day_number() do
       this = this:adjust('+1d')
-      date = os.date('*t', this.timestamp)
+      date = os_date(this.timestamp)
     end
     return this:set(opts.day)
   end
@@ -527,16 +502,14 @@ end
 function Date:get_isoweekday()
   ---@type table
   ---@diagnostic disable-next-line: assign-type-mismatch
-  local date = os.date('*t', self.timestamp)
+  local date = os_date(self.timestamp)
   return utils.convert_to_isoweekday(date.wday)
 end
 
 ---@return number
 function Date:get_weekday()
-  ---@type table
-  ---@diagnostic disable-next-line: assign-type-mismatch
   local date = os_date(self.timestamp)
-  return date.wday
+  return tonumber(date.wday) or 0
 end
 
 ---@param isoweekday number
@@ -559,7 +532,7 @@ function Date:add(opts)
   opts = opts or {}
   ---@type table
   ---@diagnostic disable-next-line: assign-type-mismatch
-  local date = os.date('*t', self.timestamp)
+  local date = os_date(self.timestamp)
   for opt, val in pairs(opts) do
     if opt == 'week' then
       opt = 'day'
