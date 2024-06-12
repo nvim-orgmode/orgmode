@@ -23,6 +23,7 @@
 9. [User interface](#user-interface)
    1. [Colors](#colors)
    2. [Menu](#menu)
+   3. [Folds](#folds)
 10. [Advanced search](#advanced-search)
 11. [Notifications (experimental)](#notifications-experimental)
 12. [Clocking](#clocking)
@@ -1858,6 +1859,21 @@ Each menu item `MenuItem` is one of two types: `MenuOption` and `MenuSeparator`.
 - `length` (`number` _optional_) — number of repetitions of the separator character. The default length is 80
 
 In order for the menu to work as expected, the handler must call `action` from `MenuItem`.
+
+### Folds
+In Neovim 0.10+, folds are colored with the same highlight as when they are expanded.
+This is enabled by default to be in line with how Emacs work.
+
+To use the old way of highlighting folds with `Folded` highlight group, add this to config:
+```lua
+require('orgmode').setup({
+  ui = {
+    folds = {
+      colored = false
+    }
+  }
+})
+```
 
 ## Advanced search
 

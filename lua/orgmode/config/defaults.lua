@@ -200,6 +200,9 @@ local DefaultConfig = {
     config_path = '$HOME/.emacs.d/init.el',
   },
   ui = {
+    folds = {
+      colored = true,
+    },
     menu = {
       handler = nil,
     },
