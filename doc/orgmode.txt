@@ -182,6 +182,7 @@ CONTENTS                                                        *orgmode-content
         1.9.1. Colors.............................................|orgmode-colors|
             1.9.1.1. Overriding colors.................|orgmode-overriding_colors|
         1.9.2. Menu.................................................|orgmode-menu|
+        1.9.3. Folds...............................................|orgmode-folds|
     1.10. Advanced search................................|orgmode-advanced_search|
     1.11. Notifications (experimental)......|orgmode-notifications_(experimental)|
         1.11.1. Cron................................................|orgmode-cron|
@@ -228,6 +229,7 @@ TABLE OF CONTENT                                        *orgmode-table_of_conten
 9.  User interface (#user-interface)
     1.  Colors (#colors)
     2.  Menu (#menu)
+    3.  Folds (#folds)
 10. Advanced search (#advanced-search)
 11. Notifications (experimental) (#notifications-experimental)
 12. Clocking (#clocking)
@@ -2022,6 +2024,22 @@ Each menu item `MenuItem` is one of two types: `MenuOption` and `MenuSeparator`.
 *   `length` (`number` optional) — number of repetitions of the separator character. The default length is 80
 
 In order for the menu to work as expected, the handler must call `action` from `MenuItem`.
+
+FOLDS                                                              *orgmode-folds*
+
+In Neovim 0.10+, folds are colored with the same highlight as when they are expanded.
+This is enabled by default to be in line with how Emacs work.
+
+To use the old way of highlighting folds with `Folded` highlight group, add this to config:
+>
+    require('orgmode').setup({
+      ui = {
+        folds = {
+          colored = false
+        }
+      }
+    })
+<
 
 --------------------------------------------------------------------------------
 ADVANCED SEARCH                                          *orgmode-advanced_search*
