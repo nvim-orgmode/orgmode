@@ -301,7 +301,7 @@ describe('Heading mappings', function()
     }, vim.api.nvim_buf_get_lines(0, 0, 2, false))
   end)
 
-  it('should move subtree up (org_move_subtree_up)', function()
+  it('should move subtree up once (org_move_subtree_up)', function()
     helpers.create_file({
       '#TITLE: Test',
       '',
@@ -311,9 +311,11 @@ describe('Heading mappings', function()
       'Some content for level 2',
       '*** NEXT [#1] Level 3',
       'Content Level 3',
+      '* TODO top level todo with multiple tags :OFFICE:PROJECT:',
       '* DONE top level todo :WORK:',
       'content for top level todo',
-      '* TODO top level todo with multiple tags :OFFICE:PROJECT:',
+      '** Subtree level 2',
+      '   Content of subtree level 2',
     })
 
     assert.are.same({
@@ -323,15 +325,33 @@ describe('Heading mappings', function()
       'Some content for level 2',
       '*** NEXT [#1] Level 3',
       'Content Level 3',
+      '* TODO top level todo with multiple tags :OFFICE:PROJECT:',
       '* DONE top level todo :WORK:',
       'content for top level todo',
-      '* TODO top level todo with multiple tags :OFFICE:PROJECT:',
-    }, vim.api.nvim_buf_get_lines(0, 2, 11, false))
-    vim.fn.cursor(9, 1)
+      '** Subtree level 2',
+      '   Content of subtree level 2',
+    }, vim.api.nvim_buf_get_lines(0, 2, 13, false))
+    vim.fn.cursor(10, 1)
     vim.cmd([[norm ,oK]])
     assert.are.same({
+      '* TODO Test orgmode',
+      '  DEADLINE: <2021-07-21 Wed 22:02>',
+      '** TODO [#A] Test orgmode level 2 :PRIVATE:',
+      'Some content for level 2',
+      '*** NEXT [#1] Level 3',
+      'Content Level 3',
       '* DONE top level todo :WORK:',
       'content for top level todo',
+      '** Subtree level 2',
+      '   Content of subtree level 2',
+      '* TODO top level todo with multiple tags :OFFICE:PROJECT:',
+    }, vim.api.nvim_buf_get_lines(0, 2, 13, false))
+  end)
+
+  it('should move subtree up twice (org_move_subtree_up)', function()
+    helpers.create_file({
+      '#TITLE: Test',
+      '',
       '* TODO Test orgmode',
       '  DEADLINE: <2021-07-21 Wed 22:02>',
       '** TODO [#A] Test orgmode level 2 :PRIVATE:',
@@ -339,7 +359,51 @@ describe('Heading mappings', function()
       '*** NEXT [#1] Level 3',
       'Content Level 3',
       '* TODO top level todo with multiple tags :OFFICE:PROJECT:',
-    }, vim.api.nvim_buf_get_lines(0, 2, 11, false))
+      '* DONE top level todo :WORK:',
+      'content for top level todo',
+      '** Subtree level 2',
+      '   Content of subtree level 2',
+    })
+
+    assert.are.same({
+      '* TODO Test orgmode',
+      '  DEADLINE: <2021-07-21 Wed 22:02>',
+      '** TODO [#A] Test orgmode level 2 :PRIVATE:',
+      'Some content for level 2',
+      '*** NEXT [#1] Level 3',
+      'Content Level 3',
+      '* TODO top level todo with multiple tags :OFFICE:PROJECT:',
+      '* DONE top level todo :WORK:',
+      'content for top level todo',
+      '** Subtree level 2',
+      '   Content of subtree level 2',
+    }, vim.api.nvim_buf_get_lines(0, 2, 13, false))
+    vim.fn.cursor(10, 1)
+    assert.are_same({
+      '* DONE top level todo :WORK:',
+    }, vim.api.nvim_buf_get_lines(0, 9, 10, false))
+    vim.cmd([[norm ,oK]])
+    local cursor_line = vim.fn.getcurpos()[2]
+    assert.are.same(9, cursor_line)
+    assert.are_same({
+      '* DONE top level todo :WORK:',
+    }, vim.api.nvim_buf_get_lines(0, 8, 9, false))
+    vim.cmd([[norm ,oK]])
+    cursor_line = vim.fn.getcurpos()[2]
+    assert.are.same(3, cursor_line)
+    assert.are.same({
+      '* DONE top level todo :WORK:',
+      'content for top level todo',
+      '** Subtree level 2',
+      '   Content of subtree level 2',
+      '* TODO Test orgmode',
+      '  DEADLINE: <2021-07-21 Wed 22:02>',
+      '** TODO [#A] Test orgmode level 2 :PRIVATE:',
+      'Some content for level 2',
+      '*** NEXT [#1] Level 3',
+      'Content Level 3',
+      '* TODO top level todo with multiple tags :OFFICE:PROJECT:',
+    }, vim.api.nvim_buf_get_lines(0, 2, 13, false))
   end)
 
   it('should move subtree down (org_move_subtree_down)', function()
@@ -382,15 +446,19 @@ describe('Heading mappings', function()
       '   1. First item',
       '   2. Second item',
     }, vim.api.nvim_buf_get_lines(0, 2, 18, false))
-    vim.fn.cursor(9, 1)
+    vim.fn.cursor(3, 1)
     vim.cmd([[norm ,oJ]])
+    local cursor_line = vim.fn.getcurpos()[2]
+    assert.are.same(5, cursor_line)
     assert.are.same({
       '* TODO Test orgmode',
-      '  DEADLINE: <2021-07-21 Wed 22:02>',
-      '** TODO [#A] Test orgmode level 2 :PRIVATE:',
-      'Some content for level 2',
-      '*** NEXT [#1] Level 3',
-      'Content Level 3',
+    }, vim.api.nvim_buf_get_lines(0, 4, 5, false))
+    vim.cmd([[norm ,oJ]])
+    cursor_line = vim.fn.getcurpos()[2]
+    assert.are.same(13, cursor_line)
+    assert.are.same({
+      '* DONE top level todo :WORK:',
+      'content for top level todo',
       '* TODO top level todo with multiple tags :OFFICE:PROJECT:',
       '  - [ ] The checkbox',
       '  - [X] The checkbox 2',
@@ -399,8 +467,12 @@ describe('Heading mappings', function()
       '** NEXT Working on this now :OFFICE:NESTED:',
       '   1. First item',
       '   2. Second item',
-      '* DONE top level todo :WORK:',
-      'content for top level todo',
+      '* TODO Test orgmode',
+      '  DEADLINE: <2021-07-21 Wed 22:02>',
+      '** TODO [#A] Test orgmode level 2 :PRIVATE:',
+      'Some content for level 2',
+      '*** NEXT [#1] Level 3',
+      'Content Level 3',
     }, vim.api.nvim_buf_get_lines(0, 2, 18, false))
   end)
 
