@@ -129,7 +129,9 @@ function EditSpecialSrc:write(ctx)
   local new_content = vim.api.nvim_buf_get_lines(ctx.bufnr, 0, -1, false)
   new_content = self:_update_content('add', ctx.start_extmark_pos[1], new_content)
 
-  vim.api.nvim_buf_set_lines(ctx.org_bufnr, content_start, content_end, false, new_content)
+  vim.schedule(function()
+    vim.api.nvim_buf_set_lines(ctx.org_bufnr, content_start, content_end, false, new_content)
+  end)
 
   self.file:reload()
 
