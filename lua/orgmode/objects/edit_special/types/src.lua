@@ -73,6 +73,9 @@ function EditSpecialSrc:init()
   -- Only the "content" of the block should change, however we might not have content yet
   -- so base the range off of the name of the block
   local ft = self.src_block.children.parameters.text
+  if ft then
+    ft = utils.detect_filetype(ft) or ft:lower()
+  end
 
   local bufnr = es_utils.make_temp_buf()
   if not bufnr or not vim.api.nvim_buf_is_valid(bufnr) then
