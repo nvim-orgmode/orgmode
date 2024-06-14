@@ -567,6 +567,8 @@ function utils.find(entries, check_fn)
   return nil
 end
 
+---@param name string
+---@return string
 function utils.detect_filetype(name)
   local map = {
     ['emacs-lisp'] = 'lisp',
@@ -586,7 +588,7 @@ function utils.detect_filetype(name)
   if map[name] then
     return map[name]
   end
-  return nil
+  return name:lower()
 end
 
 return utils
