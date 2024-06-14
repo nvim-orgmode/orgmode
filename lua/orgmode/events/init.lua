@@ -2,6 +2,8 @@ local Events = require('orgmode.events.types')
 local Listeners = require('orgmode.events.listeners')
 
 ---@class OrgEventManager
+---@field private initialized boolean
+---@field private _listeners table<string, fun(...:any)[]>
 local EventManager = {
   initialized = false,
   _listeners = {},

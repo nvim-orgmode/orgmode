@@ -1,8 +1,6 @@
 ---@class OrgHeadlinePromotedEvent: OrgEvent
----@field type string
 ---@field headline OrgHeadline
----@field old_headline? string
-
+---@field old_level number
 local HeadlinePromotedEvent = {
   type = 'orgmode.headline_promoted',
 }
