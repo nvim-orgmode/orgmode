@@ -174,16 +174,18 @@ end
 ---@param headline OrgHeadline
 ---@param path? string
 function Hyperlinks.get_link_to_headline(headline, path)
-  path = path or utils.current_file_path()
   local title = headline:get_title()
-  local id
+
   if config.org_id_link_to_org_use_id then
-    id = headline:id_get_or_create()
+    local id = headline:id_get_or_create()
+    if id then
+      return ('id:%s::*%s'):format(id, title)
+    end
   end
 
-  if config.org_id_link_to_org_use_id and id then
-    return ('id:%s::*%s'):format(id, title)
-  end
+  path = path or utils.current_file_path()
+  return ('file:%s::*%s'):format(path, title)
+end
 
 ---@param file OrgFile
 ---@param path? string
