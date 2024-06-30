@@ -101,7 +101,67 @@ function OrgApi.refile(opts)
   return true
 end
 
+--- Get a link destination as string
+---
+--- Depending if org_id_link_to_org_use_id is set the format is
+---
+--- id:<uuid>::*title and the id is created if not existing
+--- or
+--- file:<filepath>::*title
+---
+--- The result is meant to be used as link_location for OrgApi.insert_link.
+--- @param headline OrgApiHeadline
+--- @return string
+function OrgApi.get_link_to_headline(headline)
+  local filename = headline.file.filename
+  local bufnr = vim.fn.bufnr(filename)
+
+  if bufnr == -1 then
+    -- do remote edit
+    return orgmode.files
+      :update_file(filename, function(_)
+        return Hyperlinks.get_link_to_headline(headline._section)
+      end)
+      :wait()
+  end
+
+  return Hyperlinks.get_link_to_headline(headline._section)
+end
+
+--- Get a link destination as string
+---
+--- Depending if org_id_link_to_org_use_id is set the format is
+---
+--- id:<uuid>::*title and the id is created if not existing
+--- or
+--- file:<filepath>::*title
+---
+--- The result is meant to be used as link_location for OrgApi.insert_link.
+--- @param file OrgApiFile
+--- @return string
+function OrgApi.get_link_to_file(file)
+  local filename = file.filename
+  local bufnr = vim.fn.bufnr(filename)
+
+  if bufnr == -1 then
+    -- do remote edit
+    return orgmode.files
+      :update_file(filename, function(_file)
+        return Hyperlinks.get_link_to_file(_file)
+      end)
+      :wait()
+  end
+
+  return Hyperlinks.get_link_to_file(file._file)
+end
+
 --- Insert a link to a given location at the current cursor position
+---
+--- The expected format is
+--- <protocol>:<location>::<in_file_location>
+---
+--- If <in_file_location> is *<headline>, <headline> is used as prefilled description for the link.
+--- If <protocol> is id, this format can also be used to pass a prefilled description.
 --- @param link_location string
 --- @return boolean
 function OrgApi.insert_link(link_location)

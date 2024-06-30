@@ -184,6 +184,20 @@ function Hyperlinks.get_link_to_headline(headline, path)
   if config.org_id_link_to_org_use_id and id then
     return ('id:%s::*%s'):format(id, title)
   end
+
+---@param file OrgFile
+---@param path? string
+function Hyperlinks.get_link_to_file(file, path)
+  local title = file:get_title()
+
+  if config.org_id_link_to_org_use_id then
+    local id = file:id_get_or_create()
+    if id then
+      return ('id:%s::*%s'):format(id, title)
+    end
+  end
+
+  path = path or file.filename
   return ('file:%s::*%s'):format(path, title)
 end
 
