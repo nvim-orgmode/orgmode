@@ -2,7 +2,6 @@
 local OrgFile = require('orgmode.api.file')
 local OrgHeadline = require('orgmode.api.headline')
 local Hyperlinks = require('orgmode.org.hyperlinks')
-local Link = require('orgmode.org.hyperlinks.link')
 local orgmode = require('orgmode')
 
 ---@class OrgApiRefileOpts
