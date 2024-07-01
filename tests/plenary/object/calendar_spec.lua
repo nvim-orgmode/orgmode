@@ -74,7 +74,7 @@ describe('Calendar', function()
     local date = Date.from_string('2024-05-31')
     local cal_instance = Calendar.new({ date = date, title = date:to_string() })
     cal_instance:open()
-    feed('l')
+    feed('>')
     vim.wait(50)
     feed('<CR>')
     local cal_date = cal_instance.date
