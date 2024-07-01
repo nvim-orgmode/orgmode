@@ -37,6 +37,12 @@ OrgApi.refile({opts})                                            *OrgApi.refile*
 
 OrgApi.insert_link()                                        *OrgApi.insert_link*
      Insert a link to a given location at the current cursor position
+
+     The expected format is
+     <protocol>:<location>::<in_file_location>
+
+     If <in_file_location> is *<headline>, <headline> is used as prefilled description for the link.
+     If <protocol> is id, this format can also be used to pass a prefilled description.
      @param link_location string
      @return boolean
 
@@ -62,6 +68,19 @@ OrgFile:get_closest_headline()                    *OrgFile:get_closest_headline*
      If cursor is not provided, it will use current cursor position
      @param cursor? { line: number, col: number } (1, 0)-indexed cursor position, same as returned from `vim.api.nvim_win_get_cursor(0)`
      @return OrgApiHeadline | nil
+
+
+OrgFile:get_link()                                            *OrgFile:get_link*
+     Get a link destination as string
+
+     Depending if org_id_link_to_org_use_id is set the format is
+
+     id:<uuid>::*title and the id is created if not existing
+     or
+     file:<filepath>::*title
+
+     The result is meant to be used as link_location for OrgApi.insert_link.
+     @return string
 
 
 OrgApiHeadline                                                  *OrgApiHeadline*
@@ -169,6 +188,19 @@ OrgHeadline:get_property({key})                       *OrgHeadline:get_property*
 
 OrgHeadline:id_get_or_create()                    *OrgHeadline:id_get_or_create*
      Get headline id or create a new one if it doesn't exist
+     @return string
+
+
+OrgHeadline:get_link()                                    *OrgHeadline:get_link*
+     Get a link destination as string
+
+     Depending if org_id_link_to_org_use_id is set the format is
+
+     id:<uuid>::*title and the id is created if not existing
+     or
+     file:<filepath>::*title
+
+     The result is meant to be used as link_location for OrgApi.insert_link.
      @return string
 
 
