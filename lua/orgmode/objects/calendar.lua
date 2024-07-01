@@ -25,7 +25,7 @@ local small_minute_step = config.calendar.min_small_step or config.org_time_stam
 local Calendar = {
   win = nil,
   buf = nil,
-  date = Date.today():start_of('month'),
+  date = nil,
   selected = nil,
   select_state = SelState.DAY,
   clearable = false,
@@ -561,7 +561,6 @@ end
 function Calendar:dispose()
   self.win = nil
   self.buf = nil
-  self.date = Date.today():start_of('month')
   if self.callback then
     self.callback(nil)
     self.callback = nil
