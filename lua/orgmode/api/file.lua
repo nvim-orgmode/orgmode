@@ -1,5 +1,7 @@
 ---@diagnostic disable: invisible
 local OrgHeadline = require('orgmode.api.headline')
+local Hyperlinks = require('orgmode.org.hyperlinks')
+local org = require('orgmode')
 
 ---@class OrgApiFile
 ---@field category string current file category name. By default it's only filename without extension unless defined differently via #+CATEGORY directive
@@ -90,6 +92,32 @@ function OrgFile:get_closest_headline(cursor)
     end
   end
   return nil
+end
+
+--- Get a link destination as string
+---
+--- Depending if org_id_link_to_org_use_id is set the format is
+---
+--- id:<uuid>::*title and the id is created if not existing
+--- or
+--- file:<filepath>::*title
+---
+--- The result is meant to be used as link_location for OrgApi.insert_link.
+--- @return string
+function OrgFile:get_link()
+  local filename = self.filename
+  local bufnr = vim.fn.bufnr(filename)
+
+  if bufnr == -1 or not vim.api.nvim_buf_is_loaded(bufnr) then
+    -- do remote edit
+    return org.files
+      :update_file(filename, function(file)
+        return Hyperlinks.get_link_to_file(file)
+      end)
+      :wait()
+  end
+
+  return Hyperlinks.get_link_to_file(self._file)
 end
 
 return OrgFile

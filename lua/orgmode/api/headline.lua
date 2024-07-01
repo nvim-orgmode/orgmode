@@ -3,6 +3,7 @@ local PriorityState = require('orgmode.objects.priority_state')
 local Date = require('orgmode.objects.date')
 local Calendar = require('orgmode.objects.calendar')
 local Promise = require('orgmode.utils.promise')
+local Hyperlinks = require('orgmode.org.hyperlinks')
 local org = require('orgmode')
 
 ---@class OrgApiHeadline
@@ -257,6 +258,32 @@ function OrgHeadline:_do_action(action)
       return self:reload()
     end)
   end)
+end
+
+--- Get a link destination as string
+---
+--- Depending if org_id_link_to_org_use_id is set the format is
+---
+--- id:<uuid>::*title and the id is created if not existing
+--- or
+--- file:<filepath>::*title
+---
+--- The result is meant to be used as link_location for OrgApi.insert_link.
+--- @return string
+function OrgHeadline:get_link()
+  local filename = self.file.filename
+  local bufnr = vim.fn.bufnr(filename)
+
+  if bufnr == -1 or not vim.api.nvim_buf_is_loaded(bufnr) then
+    -- do remote edit
+    return org.files
+      :update_file(filename, function(_)
+        return Hyperlinks.get_link_to_headline(self._section)
+      end)
+      :wait()
+  end
+
+  return Hyperlinks.get_link_to_headline(self._section)
 end
 
 return OrgHeadline
