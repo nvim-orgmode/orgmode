@@ -108,7 +108,7 @@ function OrgFile:get_link()
   local filename = self.filename
   local bufnr = vim.fn.bufnr(filename)
 
-  if bufnr == -1 then
+  if bufnr == -1 or not vim.api.nvim_buf_is_loaded(bufnr) then
     -- do remote edit
     return org.files
       :update_file(filename, function(file)
