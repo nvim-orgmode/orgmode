@@ -296,23 +296,7 @@ function OrgFiles:update_file(filename, action)
   if not file then
     return Promise.resolve()
   end
-  local is_same_file = filename == utils.current_file_path()
-  if is_same_file then
-    return Promise.resolve(action(file)):next(function(result)
-      vim.cmd(':silent! w')
-      return result
-    end)
-  end
-
-  local edit_file = utils.edit_file(filename)
-  edit_file.open()
-
-  return Promise.resolve(action(file)):next(function(result)
-    edit_file.close()
-    return file:reload():next(function()
-      return result
-    end)
-  end)
+  return file:update(action)
 end
 
 function OrgFiles:ensure_loaded()

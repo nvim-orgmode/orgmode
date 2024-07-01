@@ -20,11 +20,9 @@ function Datetree:create(template)
   local result = self:_get_datetree_destination(template)
 
   if result.create then
-    self.files
-      :update_file(destination_file.filename, function(file)
-        vim.api.nvim_buf_set_lines(file:bufnr(), result.target_line, result.target_line, false, result.content)
-      end)
-      :wait()
+    destination_file:update_sync(function(file)
+      vim.api.nvim_buf_set_lines(file:bufnr(), result.target_line, result.target_line, false, result.content)
+    end)
     destination_file = destination_file:reload_sync()
   end
 

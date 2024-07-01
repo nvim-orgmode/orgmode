@@ -103,6 +103,32 @@ function OrgFile:reload_sync(timeout)
   return self:reload():wait(timeout)
 end
 
+---@param action fun(...:OrgFile):any
+function OrgFile:update(action)
+  local is_same_file = self.filename == utils.current_file_path()
+  if is_same_file then
+    return Promise.resolve(action(self)):next(function(result)
+      vim.cmd(':silent! w')
+      return result
+    end)
+  end
+
+  local edit_file = utils.edit_file(self.filename)
+  edit_file.open()
+
+  return Promise.resolve(action(self)):next(function(result)
+    edit_file.close()
+    return self:reload():next(function()
+      return result
+    end)
+  end)
+end
+
+---@param action fun(...:OrgFile):any
+function OrgFile:update_sync(action, timeout)
+  return self:update(action):wait(timeout)
+end
+
 ---Check if file has been modified via 2 methods:
 ---1. If file is loaded in a buffer, check the changedtick
 ---2. If file is not loaded in a buffer, check the mtime

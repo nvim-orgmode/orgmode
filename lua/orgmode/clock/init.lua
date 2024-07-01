@@ -39,10 +39,9 @@ function Clock:org_clock_in()
   local promise = Promise.resolve()
 
   if self.clocked_headline and self.clocked_headline:is_clocked_in() then
-    local filename = self.clocked_headline.file.filename
-    promise = self.files:update_file(filename, function()
-      local clocked_item =
-        self.files:get(filename):get_closest_headline({ self.clocked_headline:get_range().start_line, 0 })
+    local file = self.clocked_headline.file
+    promise = file:update(function()
+      local clocked_item = file:reload_sync():get_closest_headline({ self.clocked_headline:get_range().start_line, 0 })
       clocked_item:clock_out()
     end)
   end

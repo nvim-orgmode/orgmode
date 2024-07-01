@@ -180,19 +180,17 @@ function Capture:_refile_from_capture_buffer(opts)
 
   lines = opts.template:apply_properties_to_lines(lines)
 
-  self.files
-    :update_file(destination_file.filename, function(file)
-      if not destination_headline and opts.template.regexp then
-        local line = vim.fn.search(opts.template.regexp, 'ncw')
-        if line > 0 then
-          return vim.api.nvim_buf_set_lines(file:bufnr(), line, line, false, lines)
-        end
+  destination_file:update_sync(function(file)
+    if not destination_headline and opts.template.regexp then
+      local line = vim.fn.search(opts.template.regexp, 'ncw')
+      if line > 0 then
+        return vim.api.nvim_buf_set_lines(file:bufnr(), line, line, false, lines)
       end
+    end
 
-      local range = self:_get_destination_range_without_empty_lines(Range.from_line(target_line))
-      vim.api.nvim_buf_set_lines(file:bufnr(), range.start_line, range.end_line, false, lines)
-    end)
-    :wait()
+    local range = self:_get_destination_range_without_empty_lines(Range.from_line(target_line))
+    vim.api.nvim_buf_set_lines(file:bufnr(), range.start_line, range.end_line, false, lines)
+  end)
 
   if self.on_post_refile then
     self.on_post_refile(self, opts)
@@ -235,18 +233,16 @@ function Capture:_refile_from_org_file(opts)
     lines = self:_adapt_headline_level(source_headline, target_level, is_same_file)
   end
 
-  self.files
-    :update_file(destination_file.filename, function()
-      if is_same_file then
-        local item_range = source_headline:get_range()
-        return vim.cmd(string.format('silent! %d,%d move %s', item_range.start_line, item_range.end_line, target_line))
-      end
+  destination_file:update_sync(function(file)
+    if is_same_file then
+      local item_range = source_headline:get_range()
+      return vim.cmd(string.format('silent! %d,%d move %s', item_range.start_line, item_range.end_line, target_line))
+    end
 
-      local range = self:_get_destination_range_without_empty_lines(Range.from_line(target_line))
-      target_line = range.start_line
-      vim.api.nvim_buf_set_lines(0, range.start_line, range.end_line, false, lines)
-    end)
-    :wait()
+    local range = self:_get_destination_range_without_empty_lines(Range.from_line(target_line))
+    target_line = range.start_line
+    vim.api.nvim_buf_set_lines(0, range.start_line, range.end_line, false, lines)
+  end)
 
   if not is_same_file and source_file.filename == utils.current_file_path() then
     local item_range = source_headline:get_range()
@@ -287,7 +283,7 @@ function Capture:refile_file_headline_to_archive(headline)
   })
 
   destination_file = self.files:get(archive_location)
-  self.files:update_file(destination_file.filename, function(archive_file)
+  destination_file:update(function(archive_file)
     local archived_headline = archive_file:get_closest_headline({ target_line, 0 })
     archived_headline:set_property('ARCHIVE_TIME', Date.now():to_string())
     archived_headline:set_property('ARCHIVE_FILE', file.filename)
