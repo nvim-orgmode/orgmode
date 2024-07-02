@@ -331,6 +331,7 @@ Link to detailed documentation: [[DOCS.md][DOCS]]
 ** Plugins
 
 - [[https://github.com/chipsenkbeil/org-roam.nvim][org-roam.nvim]] - Implementation of [[https://orgroam.com][Org-roam]] knowledge management system
+- [[https://github.com/nvim-orgmode/telescope-orgmode.nvim][telescope-orgmode.nvim]] - Telescope extension to find headlines, refile and insert links
 - [[https://github.com/akinsho/org-bullets.nvim][org-bullets.nvim]] - Show org mode bullets as UTF-8 characters
 - [[https://github.com/lukas-reineke/headlines.nvim][headlines.nvim]] - Add few highlight options for code blocks and headlines
 - [[https://github.com/michaelb/sniprun][sniprun]] - For code evaluation in blocks
