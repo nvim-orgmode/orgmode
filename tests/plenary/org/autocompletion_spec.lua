@@ -339,6 +339,39 @@ describe('Autocompletion', function()
           { menu = '[Org]', word = 'Title without anchor' },
         }, result)
       end)
+
+      it('should work on relative paths', function()
+        local files = helpers.create_agenda_files({
+          'a.org',
+          'b/c.org',
+        }, {
+          '[[./  ',
+          '[[../  ',
+        })
+        helpers.load_file(files['b/c.org'])
+        vim.fn.cursor({ 1, 6 })
+
+        assert.are.same({
+          { menu = '[Org]', word = '../a.org' },
+          { menu = '[Org]', word = '../b/c.org' },
+        }, org.completion:omnifunc(0, '../'))
+      end)
+      it('should work on relative paths', function()
+        local files = helpers.create_agenda_files({
+          'a.org',
+          'b/c.org',
+        }, {
+          '[[./  ',
+          '[[../  ',
+        })
+        helpers.load_file(files['a.org'])
+        vim.fn.cursor({ 1, 5 })
+
+        assert.are.same({
+          { menu = '[Org]', word = './a.org' },
+          { menu = '[Org]', word = './b/c.org' },
+        }, org.completion:omnifunc(0, './'))
+      end)
     end)
   end)
 end)
