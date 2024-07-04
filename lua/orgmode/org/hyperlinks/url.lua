@@ -7,6 +7,7 @@ local fs = require('orgmode.utils.fs')
 ---@field protocol string
 ---@field path string
 ---@field path_type OrgUrlPathType
+---@field realpath string
 ---@field target { type: OrgUrlTargetType, value: string | number | nil }
 local Url = {}
 Url.__index = Url
