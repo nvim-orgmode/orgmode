@@ -123,6 +123,10 @@ return {
         help_desc = 'Refile headline to specific destination',
       },
     }),
+    org_agenda_add_note = m.action(
+      'agenda.add_note',
+      { opts = { desc = 'org add note', help_desc = 'Add a note to the current headline' } }
+    ),
     org_agenda_show_help = m.action(
       'org_mappings.show_help',
       { args = { 'agenda' }, opts = { desc = 'org show help', help_desc = 'Show this help' } }
@@ -152,10 +156,6 @@ return {
       'capture.closing_note.kill',
       { opts = { desc = 'org kill note', help_desc = 'Close without saving' } }
     ),
-    org_note_show_help = m.action('org_mappings.show_help', {
-      args = { 'note' },
-      opts = { desc = 'org show help' },
-    }),
   },
   org = {
     org_refile = m.action(
@@ -221,6 +221,10 @@ return {
     org_edit_special = m.action(
       'org_mappings.edit_special',
       { opts = { desc = 'org edit special', help_desc = 'Edit the source block under the cursor in another buffer' } }
+    ),
+    org_add_note = m.action(
+      'org_mappings.add_note',
+      { opts = { desc = 'org add note', help_desc = 'Add a note to the current headline' } }
     ),
     org_cycle = m.action('org_mappings.cycle', { opts = { desc = 'org toggle fold', help_desc = 'Toggle folding' } }),
     org_global_cycle = m.action(

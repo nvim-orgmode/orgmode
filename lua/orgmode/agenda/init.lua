@@ -255,6 +255,13 @@ function Agenda:clock_in()
   })
 end
 
+function Agenda:add_note()
+  return self:_remote_edit({
+    action = 'org_mappings.add_note',
+    redo = true,
+  })
+end
+
 function Agenda:refile()
   return self:_remote_edit({
     action = 'capture.refile_headline_to_destination',

@@ -113,6 +113,7 @@ local DefaultConfig = {
       org_agenda_schedule = '<prefix>is',
       org_agenda_filter = '/',
       org_agenda_refile = '<prefix>r',
+      org_agenda_add_note = '<prefix>na',
       org_agenda_show_help = 'g?',
     },
     capture = {
@@ -124,7 +125,6 @@ local DefaultConfig = {
     note = {
       org_note_finalize = '<C-c>',
       org_note_kill = '<prefix>k',
-      org_note_show_help = 'g?',
     },
     org = {
       org_refile = '<prefix>r',
@@ -142,6 +142,7 @@ local DefaultConfig = {
       org_toggle_heading = '<prefix>*',
       org_open_at_point = '<prefix>o',
       org_edit_special = [[<prefix>']],
+      org_add_note = '<prefix>na',
       org_cycle = '<TAB>',
       org_global_cycle = '<S-TAB>',
       org_archive_subtree = '<prefix>$',

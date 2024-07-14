@@ -376,6 +376,26 @@ function OrgMappings:toggle_heading()
   vim.fn.setline('.', line)
 end
 
+---Prompt for a note
+---@private
+---@param template string
+---@param indent string
+---@param title string
+---@return OrgPromise<string[]>
+function OrgMappings:_get_note(template, indent, title)
+  return self.capture:build_note_capture(title):open():next(function(closing_note)
+    if closing_note == nil then
+      return
+    end
+
+    for i, line in ipairs(closing_note) do
+      closing_note[i] = indent .. '  ' .. line
+    end
+
+    return vim.list_extend({ template }, closing_note)
+  end)
+end
+
 function OrgMappings:_todo_change_state(direction)
   local headline = self.files:get_closest_headline()
   local old_state = headline:get_todo()
@@ -403,20 +423,7 @@ function OrgMappings:_todo_change_state(direction)
   local indent = headline:get_indent()
 
   local closing_note_text = ('%s- CLOSING NOTE %s \\\\'):format(indent, Date.now():to_wrapped_string(false))
-
-  local get_note = function(template)
-    return self.capture.closing_note:open():next(function(closing_note)
-      if closing_note == nil then
-        return
-      end
-
-      for i, line in ipairs(closing_note) do
-        closing_note[i] = indent .. '  ' .. line
-      end
-
-      return vim.list_extend({ template }, closing_note)
-    end)
-  end
+  local closed_title = 'Insert note for closed todo item'
 
   local repeater_dates = item:get_repeater_dates()
 
@@ -436,7 +443,7 @@ function OrgMappings:_todo_change_state(direction)
       return item
     end
 
-    return get_note(closing_note_text):next(function(closing_note)
+    return self:_get_note(closing_note_text, indent, closed_title):next(function(closing_note)
       return item:add_note(closing_note)
     end)
   end
@@ -455,6 +462,7 @@ function OrgMappings:_todo_change_state(direction)
     old_state,
     Date.now():to_string()
   )
+  local repeat_note_title = ('Insert note for state change from "%s" to "%s"'):format(old_state, new_todo)
 
   if log_repeat_enabled then
     item:set_property('LAST_REPEAT', Date.now():to_wrapped_string(false))
@@ -470,12 +478,12 @@ function OrgMappings:_todo_change_state(direction)
 
   -- Done note has precedence over repeat note
   if prompt_done_note then
-    return get_note(closing_note_text):next(function(closing_note)
+    return self:_get_note(closing_note_text, indent, closed_title):next(function(closing_note)
       return item:add_note(closing_note)
     end)
   end
 
-  return get_note(repeat_note_template .. ' \\\\'):next(function(closing_note)
+  return self:_get_note(repeat_note_template .. ' \\\\', indent, repeat_note_title):next(function(closing_note)
     return item:add_note(closing_note)
   end)
 end
@@ -801,6 +809,18 @@ end
 
 function OrgMappings:_edit_special_callback()
   EditSpecial:new():done()
+end
+
+function OrgMappings:add_note()
+  local headline = self.files:get_closest_headline()
+  local indent = headline:get_indent()
+  local text = ('%s- Note taken on %s \\\\'):format(indent, Date.now():to_wrapped_string(false))
+  return self:_get_note(text, indent, 'Insert note for entry.'):next(function(note)
+    if not note then
+      return false
+    end
+    return headline:add_note(note)
+  end)
 end
 
 function OrgMappings:open_at_point()

@@ -428,6 +428,66 @@ function Capture:autocomplete_refile(arg_lead)
   end, result)
 end
 
+function Capture:build_note_capture(title)
+  return CaptureWindow:new({
+    template = Template:new({
+      template = '# ' .. title .. '\n\n%?',
+    }),
+    on_finish = function(content)
+      local result = {}
+
+      -- Remove lines from the beginning that are empty or comments
+      -- until we find a non-empty line
+      local trim_obsolete = true
+
+      for _, line in ipairs(content) do
+        local is_non_empty_line = not line:match('^%s*#%s') and vim.trim(line) ~= ''
+
+        if trim_obsolete and is_non_empty_line then
+          trim_obsolete = false
+        end
+
+        if not trim_obsolete then
+          table.insert(result, line)
+        end
+      end
+
+      if #result == 0 then
+        return nil
+      end
+
+      local has_non_empty_line = vim.tbl_filter(function(line)
+        return vim.trim(line) ~= ''
+      end, result)
+
+      if has_non_empty_line then
+        return result
+      end
+
+      return nil
+    end,
+    on_open = function(capture_window)
+      local maps = config:get_mappings('note', vim.api.nvim_get_current_buf())
+      if not maps then
+        return
+      end
+      local finalize_map = maps.org_note_finalize
+      finalize_map.map_entry
+        :with_handler(function()
+          return capture_window:finish()
+        end)
+        :attach(finalize_map.default_map, finalize_map.user_map, finalize_map.opts)
+
+      local kill_map = maps.org_note_kill
+      kill_map.map_entry
+        :with_handler(function()
+          return capture_window:kill()
+        end)
+        :attach(kill_map.default_map, kill_map.user_map, kill_map.opts)
+    end,
+  })
+end
+
 ---@param from_mapping? boolean
 function Capture:kill(from_mapping)
   if self._window then
@@ -483,25 +543,10 @@ function Capture:_get_refile_vars()
   return opts
 end
 
+---@deprecated
 ---@private
 function Capture:_setup_closing_note()
-  return CaptureWindow:new({
-    template = Template:new({
-      template = '# Insert note for closed todo item\n\n%?',
-    }),
-    on_finish = function(content)
-      if content[1] and content[1]:match('#%s+') then
-        content = { unpack(content, 2) }
-      end
-      if content[1] and vim.trim(content[1]) == '' then
-        content = { unpack(content, 2) }
-      end
-      return content
-    end,
-    on_open = function()
-      config:setup_mappings('note', vim.api.nvim_get_current_buf())
-    end,
-  })
+  return self:build_note_capture('Insert note for closed todo item')
 end
 
 ---@private

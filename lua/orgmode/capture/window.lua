@@ -4,8 +4,8 @@ local Promise = require('orgmode.utils.promise')
 
 ---@class OrgCaptureWindowOpts
 ---@field template OrgCaptureTemplate
----@field on_open? fun()
----@field on_finish? fun(lines: string[]): string[]
+---@field on_open? fun(self: OrgCaptureWindow)
+---@field on_finish? fun(lines: string[]): string[] | nil
 ---@field on_close? fun()
 
 ---@class OrgCaptureWindow :OrgCaptureWindowOpts
@@ -41,7 +41,7 @@ function CaptureWindow:open()
     self._bufnr = vim.api.nvim_get_current_buf()
 
     if self.on_open then
-      self.on_open()
+      self.on_open(self)
     end
 
     return Promise.new(function(resolve)

@@ -1168,13 +1168,6 @@ Save note window content as closing note for a headline. Ignores first comment (
 _mapped to_: `<Leader>ok`<br />
 Close note window without saving anything
 
-#### **org_note_show_help**
-
-_mapped to_: `g?`<br />
-Show help popup with mappings
-
-These mappings live under `mappings.note`, and can be changed like this:
-
 ```lua
 require('orgmode').setup({
   org_agenda_files = {'~/Dropbox/org/*', '~/my-orgs/**/*'},
