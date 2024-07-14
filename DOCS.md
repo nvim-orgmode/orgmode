@@ -1082,6 +1082,11 @@ _mapped to_: `<Leader>or`<br />
 Refile current headline to a destination org-file.
 Same as [org_refile](#org_refile) but from agenda view.
 
+#### **org_agenda_add_note**
+
+_mapped to_: `<Leader>ona`<br />
+Add note to the current headline
+
 #### **org_agenda_filter**
 
 _mapped to_: `/`<br />
@@ -1290,6 +1295,11 @@ _mapped to_: `<Leader>o'`<br />
 Open a source block for editing in a temporary buffer of the associated `filetype`.<br />
 This is useful for editing text with language servers attached, etc. When the buffer is closed, the text of the underlying source block in the original Org file is updated.
 _Note that if the Org file that the source block comes from is edited before the special edit buffer is closed, the edits will not be applied. The special edit buffer contents can be recovered from :messages output_
+
+#### **org_add_note**
+
+_mapped to_: `<Leader>ona`<br />
+Add note to the current headline
 
 #### **org_cycle**
 
