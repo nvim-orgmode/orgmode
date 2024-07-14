@@ -258,7 +258,7 @@ More info on issue [[https://github.com/nvim-orgmode/orgmode/issues/281#issuecom
 - Capturing to default notes file/destination
 - Archiving (archive file or ARCHIVE tag)
 - Exporting (via ~emacs~, ~pandoc~ and custom export options)
-- Notifications (experimental, see [[https://github.com/nvim-orgmode/orgmode/issues/49)][Issue #49]]
+- Notifications (experimental, see issue [[https://github.com/nvim-orgmode/orgmode/issues/49][#49]])
 - Calendar popup for easier navigation and date updates
 - Various org file mappings:
   - Promote/Demote
@@ -292,7 +292,7 @@ More info on issue [[https://github.com/nvim-orgmode/orgmode/issues/281#issuecom
   - Find headlines matching tag(s) (=m=):
   - Search for headlines (and it's content) for a query (=s=):
   - [[DOCS.md#advanced-search][Advanced search]] for tags/todo kewords/properties
-  - Notifications (experimental, see [[https://github.com/nvim-orgmode/orgmode/issues/49)][Issue #49]]
+  - Notifications (experimental, see issue [[https://github.com/nvim-orgmode/orgmode/issues/49][#49]])
   - Clocking time
 - Capture:
   - Define custom templates
