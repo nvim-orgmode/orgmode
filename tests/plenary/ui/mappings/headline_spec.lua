@@ -498,7 +498,7 @@ describe('Heading mappings', function()
       '   2. Second item',
     })
 
-    vim.cmd([[norm gg]])
+    vim.cmd([[norm ggzR]])
     assert.are.same(1, vim.fn.line('.'))
     vim.cmd([[norm }]])
     assert.are.same(3, vim.fn.line('.'))
@@ -506,6 +506,53 @@ describe('Heading mappings', function()
     assert.are.same(5, vim.fn.line('.'))
     vim.cmd([[norm }]])
     assert.are.same(7, vim.fn.line('.'))
+    vim.cmd([[norm }]])
+    assert.are.same(9, vim.fn.line('.'))
+    vim.cmd([[norm }]])
+    assert.are.same(11, vim.fn.line('.'))
+    vim.cmd([[norm }]])
+    assert.are.same(16, vim.fn.line('.'))
+  end)
+
+  it('should jump to next visible heading on any level (org_next_visible_heading)', function()
+    helpers.create_file({
+      '#TITLE: Test',
+      '',
+      '* TODO Test orgmode',
+      '  DEADLINE: <2021-07-21 Wed 22:02>',
+      '** TODO [#A] Test orgmode level 2 :PRIVATE:',
+      'Some content for level 2',
+      '*** NEXT [#1] Level 3',
+      'Content Level 3',
+      '* DONE top level todo :WORK:',
+      'content for top level todo',
+      '* TODO top level todo with multiple tags :OFFICE:PROJECT:',
+      '  - [ ] The checkbox',
+      '  - [X] The checkbox 2',
+      '    - [ ] Nested checkbox',
+      'multiple tags content, tags not read from content :FROMCONTENT:',
+      '** NEXT Working on this now :OFFICE:NESTED:',
+      '   1. First item',
+      '   2. Second item',
+    })
+
+    -- Default collapsed
+    vim.cmd([[norm gg]])
+    assert.are.same(1, vim.fn.line('.'))
+    vim.cmd([[norm }]])
+    assert.are.same(3, vim.fn.line('.'))
+    vim.cmd([[norm }]])
+    assert.are.same(9, vim.fn.line('.'))
+    vim.cmd([[norm }]])
+    assert.are.same(11, vim.fn.line('.'))
+
+    -- Open first level
+    vim.cmd([[norm ggzr]])
+    assert.are.same(1, vim.fn.line('.'))
+    vim.cmd([[norm }]])
+    assert.are.same(3, vim.fn.line('.'))
+    vim.cmd([[norm }]])
+    assert.are.same(5, vim.fn.line('.'))
     vim.cmd([[norm }]])
     assert.are.same(9, vim.fn.line('.'))
     vim.cmd([[norm }]])
@@ -536,7 +583,7 @@ describe('Heading mappings', function()
       '   2. Second item',
     })
 
-    vim.cmd([[norm G]])
+    vim.cmd([[norm GzR]])
     assert.are.same(18, vim.fn.line('.'))
     vim.cmd([[norm {]])
     assert.are.same(16, vim.fn.line('.'))
@@ -546,6 +593,57 @@ describe('Heading mappings', function()
     assert.are.same(9, vim.fn.line('.'))
     vim.cmd([[norm {]])
     assert.are.same(7, vim.fn.line('.'))
+    vim.cmd([[norm {]])
+    assert.are.same(5, vim.fn.line('.'))
+    vim.cmd([[norm {]])
+    assert.are.same(3, vim.fn.line('.'))
+    vim.cmd([[norm {]])
+    assert.are.same(3, vim.fn.line('.'))
+  end)
+
+  it('should jump to previous visible heading on any level (org_previous_visible_heading)', function()
+    helpers.create_file({
+      '#TITLE: Test',
+      '',
+      '* TODO Test orgmode',
+      '  DEADLINE: <2021-07-21 Wed 22:02>',
+      '** TODO [#A] Test orgmode level 2 :PRIVATE:',
+      'Some content for level 2',
+      '*** NEXT [#1] Level 3',
+      'Content Level 3',
+      '* DONE top level todo :WORK:',
+      'content for top level todo',
+      '* TODO top level todo with multiple tags :OFFICE:PROJECT:',
+      '  - [ ] The checkbox',
+      '  - [X] The checkbox 2',
+      '    - [ ] Nested checkbox',
+      'multiple tags content, tags not read from content :FROMCONTENT:',
+      '** NEXT Working on this now :OFFICE:NESTED:',
+      '   1. First item',
+      '   2. Second item',
+    })
+
+    -- Default to only top level
+    vim.cmd([[norm G]])
+    assert.are.same(18, vim.fn.line('.'))
+    vim.cmd([[norm {]])
+    assert.are.same(11, vim.fn.line('.'))
+    vim.cmd([[norm {]])
+    assert.are.same(9, vim.fn.line('.'))
+    vim.cmd([[norm {]])
+    assert.are.same(3, vim.fn.line('.'))
+    vim.cmd([[norm {]])
+    assert.are.same(3, vim.fn.line('.'))
+
+    -- open one dir
+    vim.cmd([[exec "norm Gzr"]])
+    assert.are.same(18, vim.fn.line('.'))
+    vim.cmd([[norm {]])
+    assert.are.same(16, vim.fn.line('.'))
+    vim.cmd([[norm {]])
+    assert.are.same(11, vim.fn.line('.'))
+    vim.cmd([[norm {]])
+    assert.are.same(9, vim.fn.line('.'))
     vim.cmd([[norm {]])
     assert.are.same(5, vim.fn.line('.'))
     vim.cmd([[norm {]])
