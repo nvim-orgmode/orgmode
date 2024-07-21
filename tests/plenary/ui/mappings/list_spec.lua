@@ -2,6 +2,10 @@ local config = require('orgmode.config')
 local helpers = require('tests.plenary.helpers')
 local org = require('orgmode')
 
+local feed = function(keys, mode)
+  vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes(keys, true, true, true), mode, true)
+end
+
 describe('with list item', function()
   describe('increase indentation', function()
     before_each(function()

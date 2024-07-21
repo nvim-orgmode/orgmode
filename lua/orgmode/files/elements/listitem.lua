@@ -115,4 +115,42 @@ function Listitem:update_cookie(total_child_checkboxes, checked_child_checkboxes
   end
 end
 
+---@param line string
+---@return string
+function Listitem._increase(line)
+  return '  ' .. line
+end
+---
+---@param line string
+---@return string
+function Listitem._decrease(line)
+  local repl, _ = line:gsub('^  ', '', 1)
+  return repl
+end
+
+---@param adjust_fn function
+---@param include_childs boolean
+function Listitem:_adjust_lines(adjust_fn, include_childs)
+  local start_row, _, end_row, _ = self.listitem:range()
+  if not include_childs then
+    end_row = start_row + 1
+  end
+
+  local lines = vim.api.nvim_buf_get_lines(0, start_row, end_row, false)
+  for i, line in ipairs(lines) do
+    lines[i] = adjust_fn(line)
+  end
+  vim.api.nvim_buf_set_lines(0, start_row, end_row, false, lines)
+end
+
+---@param include_childs boolean
+function Listitem:demote(include_childs)
+  self:_adjust_lines(self._increase, include_childs)
+end
+
+---@param include_childs boolean
+function Listitem:promote(include_childs)
+  self:_adjust_lines(self._decrease, include_childs)
+end
+
 return Listitem
