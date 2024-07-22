@@ -14,6 +14,7 @@ local Table = require('orgmode.files.elements.table')
 local EventManager = require('orgmode.events')
 local events = EventManager.event
 local Babel = require('orgmode.babel')
+local ListItem = require('orgmode.files.elements.listitem')
 
 ---@class OrgMappings
 ---@field capture OrgCapture
@@ -489,25 +490,58 @@ function OrgMappings:_todo_change_state(direction)
 end
 
 function OrgMappings:do_promote(whole_subtree)
+  local count = vim.v.count1
+  local win_view = vim.fn.winsaveview() or {}
+  -- move to the first non-blank character so the current treesitter node is the listitem
+  vim.cmd([[normal! _]])
+
+  local node = ts_utils.get_node_at_cursor()
+  if node and node:type() == 'bullet' then
+    local listitem = self.files:get_closest_listitem()
+    if listitem then
+      listitem:promote(whole_subtree)
+      vim.fn.winrestview(win_view)
+      return
+    end
+  end
+
   local headline = self.files:get_closest_headline()
   local old_level = headline:get_level()
   local foldclosed = vim.fn.foldclosed('.')
-  headline:promote(vim.v.count1, whole_subtree)
+  headline:promote(count, whole_subtree)
   if foldclosed > -1 and vim.fn.foldclosed('.') == -1 then
     vim.cmd([[norm!zc]])
   end
   EventManager.dispatch(events.HeadlinePromoted:new(self.files:get_closest_headline(), old_level))
+  vim.fn.winrestview(win_view)
 end
 
 function OrgMappings:do_demote(whole_subtree)
+  local count = vim.v.count1
+  local win_view = vim.fn.winsaveview() or {}
+  -- move to the first non-blank character so the current treesitter node is the listitem
+  vim.cmd([[normal! _]])
+
+  local node = ts_utils.get_node_at_cursor()
+  if node and node:type() == 'bullet' then
+    local listitem = self.files:get_closest_listitem()
+    if listitem then
+      listitem:demote(whole_subtree)
+      vim.fn.winrestview(win_view)
+
+      return
+    end
+  end
+
   local headline = self.files:get_closest_headline()
   local old_level = headline:get_level()
   local foldclosed = vim.fn.foldclosed('.')
-  headline:demote(vim.v.count1, whole_subtree)
+  headline:demote(count, whole_subtree)
   if foldclosed > -1 and vim.fn.foldclosed('.') == -1 then
     vim.cmd([[norm!zc]])
   end
   EventManager.dispatch(events.HeadlineDemoted:new(self.files:get_closest_headline(), old_level))
+  vim.fn.winrestview(win_view)
 end
 
 function OrgMappings:org_return()
