@@ -399,6 +399,17 @@ function Config:setup_ts_predicates()
     end
     metadata['injection.language'] = utils.detect_filetype(text)
   end, { force = true })
+
+  vim.treesitter.query.add_predicate('org-is-headline-level?', function(match, _, _, predicate)
+    ---@type TSNode
+    local node = match[predicate[2]]
+    local level = tonumber(predicate[3])
+    if not node then
+      return false
+    end
+    local _, _, _, node_end_col = node:range()
+    return ((node_end_col - 1) % 8) + 1 == level
+  end, { force = true })
 end
 
 ---@param content table
