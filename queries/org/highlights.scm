@@ -1,14 +1,14 @@
 (timestamp "<") @org.timestamp.active
 (timestamp "[") @org.timestamp.inactive
-(headline (stars) @stars (#eq? @stars "*")) @org.headline.level1
-(headline (stars) @stars (#eq? @stars "**")) @org.headline.level2
-(headline (stars) @stars (#eq? @stars "***")) @org.headline.level3
-(headline (stars) @stars (#eq? @stars "****")) @org.headline.level4
-(headline (stars) @stars (#eq? @stars "*****")) @org.headline.level5
-(headline (stars) @stars (#eq? @stars "******")) @org.headline.level6
-(headline (stars) @stars (#eq? @stars "*******")) @org.headline.level7
-(headline (stars) @stars (#eq? @stars "********")) @org.headline.level8
 (headline (item) @spell)
+(headline (stars) @stars (#org-is-headline-level? @stars "1")) @org.headline.level1
+(headline (stars) @stars (#org-is-headline-level? @stars "2")) @org.headline.level2
+(headline (stars) @stars (#org-is-headline-level? @stars "3")) @org.headline.level3
+(headline (stars) @stars (#org-is-headline-level? @stars "4")) @org.headline.level4
+(headline (stars) @stars (#org-is-headline-level? @stars "5")) @org.headline.level5
+(headline (stars) @stars (#org-is-headline-level? @stars "6")) @org.headline.level6
+(headline (stars) @stars (#org-is-headline-level? @stars "7")) @org.headline.level7
+(headline (stars) @stars (#org-is-headline-level? @stars "8")) @org.headline.level8
 (item . (expr) @org.keyword.todo @nospell (#org-is-todo-keyword? @org.keyword.todo "TODO"))
 (item . (expr) @org.keyword.done @nospell (#org-is-todo-keyword? @org.keyword.done "DONE"))
 (item (expr "[" "#" "str" @_priority "]") @org.priority.highest (#org-is-valid-priority? @_priority "highest"))
