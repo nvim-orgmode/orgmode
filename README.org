@@ -10,7 +10,7 @@
 
 Orgmode clone written in Lua for Neovim 0.9.4+
 
-[[#setup][Setup]] • [[/DOCS.md][Docs]] • [[#showcase][Showcase]] • [[#treesitter-info][Treesitter]] • [[#troubleshoot][Troubleshoot]] • [[#plugins][Plugins]] • [[CONTRIBUTING.md][Contributing]] • [[#thanks-to][Kudos]]
+[[#setup][Setup]] • [[file:./DOCS.md][Docs]] • [[#showcase][Showcase]] • [[#treesitter-info][Treesitter]] • [[#troubleshoot][Troubleshoot]] • [[#plugins][Plugins]] • [[file:./CONTRIBUTING.md][Contributing]] • [[#thanks-to][Kudos]]
 
 #+HTML:</div>
 
@@ -79,6 +79,9 @@ call dein#add('nvim-orgmode/orgmode')
 #+HTML:</details>
 
 *** Setup
+:PROPERTIES:
+:CUSTOM_ID: setup
+:END:
 
 Note that this setup is not needed for [[https://github.com/folke/lazy.nvim][lazy.nvim]]
 since instructions above covers full setup
@@ -150,6 +153,9 @@ If you are new to Orgmode, see [[/DOCS.md#getting-started-with-orgmode][Getting 
 or a hands-on [[https://github.com/nvim-orgmode/orgmode/wiki/Getting-Started][tutorial]] in our wiki.
 
 ** Showcase
+:PROPERTIES:
+:CUSTOM_ID: showcase
+:END:
 
 *** Agenda
 
@@ -176,6 +182,9 @@ or a hands-on [[https://github.com/nvim-orgmode/orgmode/wiki/Getting-Started][tu
 [[https://user-images.githubusercontent.com/1782860/123550227-e8605800-d76c-11eb-96f6-c0a677d562d4.gif]]
 
 ** Treesitter Info
+:PROPERTIES:
+:CUSTOM_ID: treesitter-info
+:END:
 
 The built-in treesitter parser is used for parsing the org files.
 
@@ -184,6 +193,9 @@ The built-in treesitter parser is used for parsing the org files.
 - LaTex is still highlighted through syntax file
 
 ** Troubleshoot
+:PROPERTIES:
+:CUSTOM_ID: troubleshoot
+:END:
 
 *** Indentation is not working
 
@@ -329,6 +341,9 @@ More info on issue [[https://github.com/nvim-orgmode/orgmode/issues/281#issuecom
 Link to detailed documentation: [[DOCS.md][DOCS]]
 
 ** Plugins
+:PROPERTIES:
+:CUSTOM_ID: plugins
+:END:
 
 - [[https://github.com/chipsenkbeil/org-roam.nvim][org-roam.nvim]] - Implementation of [[https://orgroam.com][Org-roam]] knowledge management system
 - [[https://github.com/nvim-orgmode/telescope-orgmode.nvim][telescope-orgmode.nvim]] - Telescope extension to find headlines, refile and insert links
@@ -381,6 +396,9 @@ Hosted documentation is on: [[https://nvim-orgmode.github.io/][https://nvim-orgm
 - :white_square_button: Support evaluating code blocks
 
 ** Thanks to
+:PROPERTIES:
+:CUSTOM_ID: thanks-to
+:END:
 
 - [[https://github.com/dhruvasagar][@dhruvasagar]] and his [[https://github.com/dhruvasagar/vim-dotoo][vim-dotoo]] plugin
   that got me started using orgmode. Without him this plugin would not happen.
