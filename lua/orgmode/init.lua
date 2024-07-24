@@ -50,7 +50,7 @@ function Org:init()
     :new({
       paths = require('orgmode.config').org_agenda_files,
     })
-    :load_sync()
+    :load_sync(true, 20000)
   self.agenda = require('orgmode.agenda'):new({
     files = self.files,
   })
