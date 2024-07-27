@@ -1,4 +1,3 @@
-local config = require('orgmode.config')
 local utils = require('orgmode.utils')
 
 ---@class OrgPriorityState
@@ -9,12 +8,13 @@ local utils = require('orgmode.utils')
 local PriorityState = {}
 
 ---@param priority string
-function PriorityState:new(priority)
+---@param prio_range { highest: string, lowest: string, default: string }
+function PriorityState:new(priority, prio_range)
   local o = {}
 
-  o.high_priority = tostring(config.org_priority_highest)
-  o.low_priority = tostring(config.org_priority_lowest)
-  o.default_priority = tostring(config.org_priority_default)
+  o.high_priority = tostring(prio_range.highest)
+  o.low_priority = tostring(prio_range.lowest)
+  o.default_priority = tostring(prio_range.default)
   o.priority = tostring(priority or o.default_priority)
 
   setmetatable(o, self)

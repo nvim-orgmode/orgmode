@@ -331,6 +331,14 @@ function Config:get_inheritable_tags(headline)
   end, headline.tags)
 end
 
+function Config:get_priority_range()
+  return {
+    highest = self.org_priority_highest,
+    default = self.org_priority_default,
+    lowest = self.org_priority_lowest,
+  }
+end
+
 function Config:get_priorities()
   return {
     [self.opts.org_priority_highest] = { type = 'highest', hl_group = '@org.priority.highest' },

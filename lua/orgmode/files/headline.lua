@@ -192,7 +192,8 @@ end
 
 function Headline:get_priority_sort_value()
   local priority = self:get_priority()
-  return PriorityState:new(priority):get_sort_value()
+  local prio_range = config:get_priority_range()
+  return PriorityState:new(priority, prio_range):get_sort_value()
 end
 
 function Headline:is_archived()
