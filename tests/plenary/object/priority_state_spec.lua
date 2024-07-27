@@ -32,8 +32,10 @@ describe('Priority state', function()
 
   it('should increase single alpha priority', function()
     alpha_config()
-    local priority = PriorityState:new('C')
+    local priority = PriorityState:new('D')
+    assert.are.same('C', priority:increase())
     assert.are.same('B', priority:increase())
+    assert.are.same('A', priority:increase())
   end)
 
   it('should decrease single alpha priority', function()
