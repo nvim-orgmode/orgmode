@@ -5,6 +5,7 @@ local defaults = require('orgmode.config.defaults')
 ---@type table<string, OrgMapEntry>
 local mappings = require('orgmode.config.mappings')
 local TodoKeywords = require('orgmode.objects.todo_keywords')
+local PriorityState = require('orgmode.objects.priority_state')
 
 ---@class OrgConfig:OrgDefaultConfig
 ---@field opts table
@@ -340,11 +341,28 @@ function Config:get_priority_range()
 end
 
 function Config:get_priorities()
-  return {
+  local priorities = {
     [self.opts.org_priority_highest] = { type = 'highest', hl_group = '@org.priority.highest' },
-    [self.opts.org_priority_default] = { type = 'default', hl_group = '@org.priority.default' },
-    [self.opts.org_priority_lowest] = { type = 'lowest', hl_group = '@org.priority.lowest' },
   }
+
+  local current_prio = PriorityState:new(self.opts.org_priority_highest, self:get_priority_range())
+  while current_prio:as_num() < current_prio:default_as_num() do
+    current_prio:decrease()
+    priorities[current_prio.priority] = { type = 'high', hl_group = '@org.priority.high' }
+  end
+
+  -- we need to overwrite the default value set by the first loop
+  priorities[self.opts.org_priority_default] = { type = 'default', hl_group = '@org.priority.default' }
+
+  while current_prio:as_num() < current_prio:lowest_as_num() do
+    current_prio:decrease()
+    priorities[current_prio.priority] = { type = 'low', hl_group = '@org.priority.low' }
+  end
+
+  -- we need to overwrite the lowest value set by the second loop
+  priorities[self.opts.org_priority_lowest] = { type = 'lowest', hl_group = '@org.priority.lowest' }
+
+  return priorities
 end
 
 function Config:setup_ts_predicates()
