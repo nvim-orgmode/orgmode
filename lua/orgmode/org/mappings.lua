@@ -698,11 +698,6 @@ function OrgMappings:meta_return(suffix)
     end
 
     if #text_edits > 0 then
-      -- Fix sorting for same position edits
-      -- See: https://github.com/neovim/neovim/commit/2ce4a4d91e4abee0aab8b98c47eea9fbd4849ba6
-      if vim.fn.has('nvim-0.11') > 0 then
-        text_edits = utils.reverse(text_edits)
-      end
       vim.lsp.util.apply_text_edits(text_edits, vim.api.nvim_get_current_buf(), constants.default_offset_encoding)
 
       vim.fn.cursor(end_row + 1 + (add_empty_line and 1 or 0), 1) -- +1 for next line
