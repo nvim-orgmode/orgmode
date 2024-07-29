@@ -320,7 +320,8 @@ end
 function OrgMappings:set_priority(direction)
   local headline = self.files:get_closest_headline()
   local current_priority = headline:get_priority()
-  local priority_state = PriorityState:new(current_priority)
+  local prio_range = config:get_priority_range()
+  local priority_state = PriorityState:new(current_priority, prio_range)
 
   local new_priority = direction
   if direction == 'up' then

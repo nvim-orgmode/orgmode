@@ -1,6 +1,23 @@
+local config = require('orgmode.config')
 local helpers = require('tests.plenary.helpers')
 
 describe('Priority mappings', function()
+  local alpha_config = function()
+    config:extend({
+      org_priority_highest = 'A',
+      org_priority_default = 'C',
+      org_priority_lowest = 'E',
+    })
+  end
+
+  local numeric_config = function()
+    config:extend({
+      org_priority_highest = 1,
+      org_priority_default = 5,
+      org_priority_lowest = 15,
+    })
+  end
+
   after_each(function()
     vim.cmd([[silent! %bw!]])
   end)
@@ -63,5 +80,49 @@ describe('Priority mappings', function()
     assert.are.same('* Test orgmode', vim.fn.getline(1))
     vim.cmd('norm ,o,a\r')
     assert.are.same('* [#A] Test orgmode', vim.fn.getline(1))
+  end)
+
+  it('should increase the default character priority, when it is explicitly defined', function()
+    alpha_config()
+    helpers.create_file({
+      '* [#C] Test orgmode',
+    })
+    vim.fn.cursor(1, 1)
+    assert.are.same('* [#C] Test orgmode', vim.fn.getline(1))
+    vim.cmd('norm ciR')
+    assert.are.same('* [#B] Test orgmode', vim.fn.getline(1))
+  end)
+
+  it('should increase a numeric priority, which is not explicitly defined', function()
+    numeric_config()
+    helpers.create_file({
+      '* [#5] Test orgmode',
+    })
+    vim.fn.cursor(1, 1)
+    assert.are.same('* [#5] Test orgmode', vim.fn.getline(1))
+    vim.cmd('norm ciR')
+    assert.are.same('* [#4] Test orgmode', vim.fn.getline(1))
+  end)
+
+  it('should increase a character priority, which is not explicitly defined', function()
+    alpha_config()
+    helpers.create_file({
+      '* [#D] Test orgmode',
+    })
+    vim.fn.cursor(1, 1)
+    assert.are.same('* [#D] Test orgmode', vim.fn.getline(1))
+    vim.cmd('norm ciR')
+    assert.are.same('* [#C] Test orgmode', vim.fn.getline(1))
+  end)
+
+  it('should increase a numeric priority, which is not explicitly defined', function()
+    numeric_config()
+    helpers.create_file({
+      '* [#10] Test orgmode',
+    })
+    vim.fn.cursor(1, 1)
+    assert.are.same('* [#10] Test orgmode', vim.fn.getline(1))
+    vim.cmd('norm ciR')
+    assert.are.same('* [#9] Test orgmode', vim.fn.getline(1))
   end)
 end)
