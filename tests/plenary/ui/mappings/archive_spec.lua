@@ -10,6 +10,7 @@ describe('Archive', function()
     })
     assert.are.same(vim.fn.glob(vim.fn.fnamemodify(file.filename, ':p:h') .. '/**/*.org_archive', false, 1, 1), {})
 
+    local now = Date.now()
     vim.cmd([[exe "norm ,o$"]])
     -- Pause to finish the archiving
     vim.wait(50)
@@ -25,7 +26,7 @@ describe('Archive', function()
     assert.are.same({
       '* foobar',
       '  :PROPERTIES:',
-      '  :ARCHIVE_TIME: ' .. Date.now():to_string(),
+      '  :ARCHIVE_TIME: ' .. now:to_string(),
       '  :ARCHIVE_FILE: ' .. file.filename,
       '  :ARCHIVE_CATEGORY: ' .. file:get_category(),
       '  :ARCHIVE_TODO: ',
@@ -40,6 +41,7 @@ describe('Archive', function()
       '* foo',
     })
 
+    local now = Date.now()
     vim.cmd([[exe "norm ,o$"]])
     -- Pause to finish the archiving
     vim.wait(50)
@@ -51,7 +53,7 @@ describe('Archive', function()
     assert.are.same({
       '* foobar',
       '  :PROPERTIES:',
-      '  :ARCHIVE_TIME: ' .. Date.now():to_string(),
+      '  :ARCHIVE_TIME: ' .. now:to_string(),
       '  :ARCHIVE_FILE: ' .. file.filename,
       '  :ARCHIVE_CATEGORY: ' .. file:get_category(),
       '  :ARCHIVE_TODO: ',

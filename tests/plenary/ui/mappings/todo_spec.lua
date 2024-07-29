@@ -19,12 +19,13 @@ describe('Todo mappings', function()
       '  DEADLINE: <2021-07-21 Wed 22:02>',
     }, vim.api.nvim_buf_get_lines(0, 2, 4, false))
     vim.fn.cursor(3, 1)
+    local now = Date.now()
 
     -- Changing to DONE and adding closed date
     vim.cmd([[norm cit]])
     assert.are.same({
       '* DONE Test orgmode',
-      '  DEADLINE: <2021-07-21 Wed 22:02> CLOSED: [' .. Date.now():to_string() .. ']',
+      '  DEADLINE: <2021-07-21 Wed 22:02> CLOSED: [' .. now:to_string() .. ']',
     }, vim.api.nvim_buf_get_lines(0, 2, 4, false))
 
     -- Removing todo keyword and removing closed date
@@ -59,15 +60,16 @@ describe('Todo mappings', function()
       '* TODO Another task',
     }, vim.api.nvim_buf_get_lines(0, 2, 6, false))
     vim.fn.cursor(3, 1)
+    local now = Date.now()
     vim.cmd([[norm cit]])
     vim.wait(50)
     assert.are.same({
       '* TODO Test orgmode',
       '  DEADLINE: <2021-09-14 Tue 12:00 +1w>',
       '  :PROPERTIES:',
-      '  :LAST_REPEAT: [' .. Date.now():to_string() .. ']',
+      '  :LAST_REPEAT: [' .. now:to_string() .. ']',
       '  :END:',
-      '  - State "DONE" from "TODO" [' .. Date.now():to_string() .. ']',
+      '  - State "DONE" from "TODO" [' .. now:to_string() .. ']',
       '',
       '* TODO Another task',
     }, vim.api.nvim_buf_get_lines(0, 2, 10, false))
@@ -125,33 +127,35 @@ describe('Todo mappings', function()
       '* TODO Another task',
     }, vim.api.nvim_buf_get_lines(0, 2, 6, false))
     vim.fn.cursor(3, 1)
+    local now = Date.now()
     vim.cmd([[norm cit]])
     vim.wait(50)
     assert.are.same({
       '* TODO Test orgmode',
       '  DEADLINE: <2021-09-14 Tue 12:00 +1w>',
       '  :PROPERTIES:',
-      '  :LAST_REPEAT: [' .. Date.now():to_string() .. ']',
+      '  :LAST_REPEAT: [' .. now:to_string() .. ']',
       '  :END:',
       '  :LOGBOOK:',
-      '  - State "DONE" from "TODO" [' .. Date.now():to_string() .. ']',
+      '  - State "DONE" from "TODO" [' .. now:to_string() .. ']',
       '  :END:',
       '',
       '* TODO Another task',
     }, vim.api.nvim_buf_get_lines(0, 2, 12, false))
 
     vim.fn.cursor(3, 1)
+    local now = Date.now()
     vim.cmd([[norm cit]])
     vim.wait(200)
     assert.are.same({
       '* TODO Test orgmode',
       '  DEADLINE: <2021-09-21 Tue 12:00 +1w>',
       '  :PROPERTIES:',
-      '  :LAST_REPEAT: [' .. Date.now():to_string() .. ']',
+      '  :LAST_REPEAT: [' .. now:to_string() .. ']',
       '  :END:',
       '  :LOGBOOK:',
-      '  - State "DONE" from "TODO" [' .. Date.now():to_string() .. ']',
-      '  - State "DONE" from "TODO" [' .. Date.now():to_string() .. ']',
+      '  - State "DONE" from "TODO" [' .. now:to_string() .. ']',
+      '  - State "DONE" from "TODO" [' .. now:to_string() .. ']',
       '  :END:',
       '',
       '* TODO Another task',
@@ -179,11 +183,12 @@ describe('Todo mappings', function()
       '  DEADLINE: <2021-07-21 Wed 22:02>',
     }, vim.api.nvim_buf_get_lines(0, 2, 4, false))
 
+    local now = Date.now()
     -- Changing to DONE and adding closed date
     vim.cmd([[norm ciT]])
     assert.are.same({
       '* DONE Test orgmode',
-      '  DEADLINE: <2021-07-21 Wed 22:02> CLOSED: [' .. Date.now():to_string() .. ']',
+      '  DEADLINE: <2021-07-21 Wed 22:02> CLOSED: [' .. now:to_string() .. ']',
     }, vim.api.nvim_buf_get_lines(0, 2, 4, false))
 
     -- Setting TODO keyword, initial state
@@ -211,10 +216,11 @@ describe('Todo mappings', function()
       '  <2021-07-21 Wed 22:02>',
     })
     vim.fn.cursor({ 3, 1 })
+    local now = Date.now()
     vim.cmd([[norm cit]])
     assert.are.same({
       '* DONE Test orgmode',
-      '  CLOSED: [' .. Date.now():to_string() .. ']',
+      '  CLOSED: [' .. now:to_string() .. ']',
       '  <2021-07-21 Wed 22:02>',
     }, vim.api.nvim_buf_get_lines(0, 2, 5, false))
   end)
@@ -266,16 +272,17 @@ describe('Todo mappings', function()
     }, vim.api.nvim_buf_get_lines(0, 2, 7, false))
     vim.fn.cursor(3, 3)
     vim.cmd([[norm citd]])
+    local now = Date.now()
     vim.wait(50)
     assert.are.same({
       '* PHONECALL Call dad',
       '  SCHEDULED: <2021-09-08 Wed 12:00 +1d>',
       '  :PROPERTIES:',
       '  :REPEAT_TO_STATE: PHONECALL',
-      '  :LAST_REPEAT: [' .. Date.now():to_string() .. ']',
+      '  :LAST_REPEAT: [' .. now:to_string() .. ']',
       '  :END:',
       '  :LOGBOOK:',
-      '  - State "DONE" from "PHONECALL" [' .. Date.now():to_string() .. ']',
+      '  - State "DONE" from "PHONECALL" [' .. now:to_string() .. ']',
       '  :END:',
     }, vim.api.nvim_buf_get_lines(0, 2, 11, false))
   end)
@@ -300,6 +307,7 @@ describe('Todo mappings', function()
     }, vim.api.nvim_buf_get_lines(0, 2, 4, false))
 
     vim.fn.cursor(3, 3)
+    local now = Date.now()
     vim.cmd([[norm citd]])
     vim.wait(50)
 
@@ -307,10 +315,10 @@ describe('Todo mappings', function()
       '* MEET Daily stand-up with the team',
       '  SCHEDULED: <2021-09-08 Wed 09:00 +1d>',
       '  :PROPERTIES:',
-      '  :LAST_REPEAT: [' .. Date.now():to_string() .. ']',
+      '  :LAST_REPEAT: [' .. now:to_string() .. ']',
       '  :END:',
       '  :LOGBOOK:',
-      '  - State "DONE" from "MEET" [' .. Date.now():to_string() .. ']',
+      '  - State "DONE" from "MEET" [' .. now:to_string() .. ']',
       '  :END:',
     }, vim.api.nvim_buf_get_lines(0, 2, 10, false))
   end)
@@ -341,6 +349,7 @@ describe('Todo mappings', function()
     }, vim.api.nvim_buf_get_lines(0, 2, 7, false))
 
     vim.fn.cursor(3, 3)
+    local now = Date.now()
     vim.cmd([[norm citd]])
     vim.wait(50)
 
@@ -349,10 +358,10 @@ describe('Todo mappings', function()
       '  SCHEDULED: <2021-09-08 Wed 09:00 +1d>',
       '  :PROPERTIES:',
       '  :REPEAT_TO_STATE: PHONECALL',
-      '  :LAST_REPEAT: [' .. Date.now():to_string() .. ']',
+      '  :LAST_REPEAT: [' .. now:to_string() .. ']',
       '  :END:',
       '  :LOGBOOK:',
-      '  - State "DONE" from "MEET" [' .. Date.now():to_string() .. ']',
+      '  - State "DONE" from "MEET" [' .. now:to_string() .. ']',
       '  :END:',
     }, vim.api.nvim_buf_get_lines(0, 2, 11, false))
   end)
@@ -383,6 +392,7 @@ describe('Todo mappings', function()
     }, vim.api.nvim_buf_get_lines(0, 2, 7, false))
 
     vim.fn.cursor(3, 3)
+    local now = Date.now()
     vim.cmd([[norm citd]])
     vim.wait(50)
 
@@ -391,10 +401,10 @@ describe('Todo mappings', function()
       '  SCHEDULED: <2021-09-08 Wed 09:00 +1d>',
       '  :PROPERTIES:',
       '  :REPEAT_TO_STATE: PHONECALL',
-      '  :LAST_REPEAT: [' .. Date.now():to_string() .. ']',
+      '  :LAST_REPEAT: [' .. now:to_string() .. ']',
       '  :END:',
       '  :LOGBOOK:',
-      '  - State "DONE" from "MEET" [' .. Date.now():to_string() .. ']',
+      '  - State "DONE" from "MEET" [' .. now:to_string() .. ']',
       '  :END:',
     }, vim.api.nvim_buf_get_lines(0, 2, 11, false))
   end)
