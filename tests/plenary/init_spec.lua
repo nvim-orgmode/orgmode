@@ -37,7 +37,7 @@ describe('Init', function()
   end)
 
   it('should append files to paths', function()
-    local fname = vim.fn.tempname() .. '.org'
+    local fname = vim.fn.resolve(vim.fn.tempname() .. '.org')
     vim.fn.writefile({ '* Appended' }, fname)
 
     assert.is.Nil(org.files.files[fname])
