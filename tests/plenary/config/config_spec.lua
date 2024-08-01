@@ -28,4 +28,22 @@ describe('Config', function()
       vim.fn.getcwd() .. '/tests/plenary/fixtures/archives_relative/refile.org_archive'
     )
   end)
+
+  it('should use the default key mapping when no override is provided', function()
+    local org = orgmode.setup({})
+    local config = require('orgmode.config')
+    assert.are.same('g{', config:get_mappings('org').outline_up_heading.user_map)
+  end)
+
+  it('should use the provided key mapping when the override is provided as a string', function()
+    local org = orgmode.setup({
+      mappings = {
+        org = {
+          outline_up_heading = 'gouh',
+        }
+      }
+    })
+    local config = require('orgmode.config')
+    assert.are.same('gouh', config:get_mappings('org').outline_up_heading.user_map)
+  end)
 end)
