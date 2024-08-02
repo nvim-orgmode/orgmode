@@ -2,19 +2,24 @@ local Calendar = require('orgmode.objects.calendar')
 local Date = require('orgmode.objects.date')
 local EditSpecial = require('orgmode.objects.edit_special')
 local Help = require('orgmode.objects.help')
-local Hyperlinks = require('orgmode.org.hyperlinks')
 local PriorityState = require('orgmode.objects.priority_state')
 local TodoState = require('orgmode.objects.todo_state')
 local config = require('orgmode.config')
 local constants = require('orgmode.utils.constants')
 local ts_utils = require('orgmode.utils.treesitter')
 local utils = require('orgmode.utils')
-local fs = require('orgmode.utils.fs')
 local Table = require('orgmode.files.elements.table')
 local EventManager = require('orgmode.events')
 local events = EventManager.event
 local Babel = require('orgmode.babel')
-local ListItem = require('orgmode.files.elements.listitem')
+
+local Link = require('orgmode.org.hyperlinks.link')
+local File = require('orgmode.org.hyperlinks.builtin.file')
+local Plain = require('orgmode.org.hyperlinks.builtin.plain')
+local CustomId = require('orgmode.org.hyperlinks.builtin.custom_id')
+local Id = require('orgmode.org.hyperlinks.builtin.id')
+local Headline = require('orgmode.org.hyperlinks.builtin.headline')
+local HyperLink = require('orgmode.org.hyperlinks')
 
 ---@class OrgMappings
 ---@field capture OrgCapture
@@ -775,22 +780,80 @@ function OrgMappings:_insert_heading_from_plain_line(suffix)
   end
 end
 
+---@param completions {link: OrgLink, label?: string, desc?: string}[]
+function OrgMappings._autocompletion_to_selection_options(completions)
+  local options = {}
+
+  for _, completion in pairs(completions) do
+    options[completion.label or completion.link:__tostring()] = completion
+  end
+
+  return options
+end
+
 -- Inserts a new link after the cursor position or modifies the link the cursor is
 -- currently on
 function OrgMappings:insert_link()
-  local link_location = vim.fn.OrgmodeInput('Links: ', '', Hyperlinks.autocomplete_links)
-  if vim.trim(link_location) == '' then
+  local last_suggestions = {}
+  local callback = function(lead)
+    local completions = self._autocompletion_to_selection_options(HyperLink:autocompletions(lead))
+    last_suggestions = completions
+    return vim.tbl_keys(completions)
+  end
+
+  local label = vim.fn.OrgmodeInput('Links: ', '', callback)
+  if vim.trim(label) == '' then
     utils.echo_warning('No Link selected')
     return
   end
 
-  Hyperlinks.insert_link(link_location)
+  local link = last_suggestions[label].link or Link.parse(label)
+  if not link then
+    utils.echo_warning('Unrecognised link format')
+    return
+  end
+
+  local desc = nil
+  if last_suggestions[label].desc then
+    desc = last_suggestions[label].desc
+  end
+
+  desc = vim.trim(vim.fn.OrgmodeInput('Description: ', desc or ''))
+
+  local hyperlink = HyperLink:new(link, desc)
+  if not hyperlink then
+    utils.echo_warning('Unrecognised link format. Unexpected, please contact developer')
+    return
+  end
+  hyperlink:insert_link()
 end
 
 function OrgMappings:store_link()
+  if not (vim.bo.filetype == 'org') then
+    HyperLink:store_link(File:new(vim.fn.expand('%:p')))
+  end
+
+  local cursor_pos = vim.fn.col('.')
+  local line = vim.fn.getline('.')
+  local target_start, target_stop, target = line:match('<<<?([^>])*>>>?')
+  if target_start and target_start <= cursor_pos and target_stop >= cursor_pos then
+    HyperLink:store_link(Plain:new(target))
+  end
+
   local headline = self.files:get_closest_headline()
-  Hyperlinks.store_link_to_headline(headline)
-  return utils.echo_info('Stored: ' .. headline:get_title())
+  local custom_id = headline:get_property('CUSTOM_ID', false)
+  if custom_id then
+    HyperLink:store_link(CustomId:new(custom_id), headline:get_title())
+  else
+    HyperLink:store_link(Headline:new(headline:get_title()), headline:get_title())
+  end
+
+  if config.org_id_link_to_org_use_id then
+    local id = headline:id_get_or_create()
+    if id then
+      HyperLink:store_link(Id:new(id), headline:get_title())
+    end
+  end
 end
 
 function OrgMappings:move_subtree_up()
@@ -854,7 +917,7 @@ function OrgMappings:add_note()
 end
 
 function OrgMappings:open_at_point()
-  local link = Hyperlinks.get_link_under_cursor()
+  local link = HyperLink.get_link_under_cursor()
   if not link then
     local date = self:_get_date_under_cursor()
     if date then
@@ -863,91 +926,7 @@ function OrgMappings:open_at_point()
     return
   end
 
-  -- handle external links (non-org or without org-specific line target)
-
-  if link.url:is_id() then
-    local id = link.url:get_id() or ''
-    local files = self.files:find_files_with_property('id', id)
-    if #files > 0 then
-      if #files > 1 then
-        utils.echo_warning(string.format('Multiple files found with id: %s, jumping to first one found', id))
-      end
-      vim.cmd(('edit %s'):format(files[1].filename))
-      return
-    end
-
-    local headlines = self.files:find_headlines_with_property('id', id)
-    if #headlines == 0 then
-      return utils.echo_warning(string.format('No headline found with id: %s', id))
-    end
-    if #headlines > 1 then
-      return utils.echo_warning(string.format('Multiple headlines found with id: %s', id))
-    end
-    local headline = headlines[1]
-    return self:_goto_headline(headline)
-  end
-
-  if link.url:is_file_line_number() then
-    local line_number = link.url:get_line_number() or 0
-    local file_path = link.url:get_file() or utils.current_file_path()
-    local cmd = string.format('edit +%s %s', line_number, fs.get_real_path(file_path))
-    vim.cmd(cmd)
-    return vim.cmd([[normal! zv]])
-  end
-
-  if link.url:is_external_url() then
-    if vim.ui['open'] then
-      return vim.ui.open(link.url:to_string())
-    end
-    if not vim.g.loaded_netrwPlugin then
-      return utils.echo_warning('Netrw plugin must be loaded in order to open urls.')
-    end
-    return vim.fn['netrw#BrowseX'](link.url:to_string(), vim.fn['netrw#CheckIfRemote']())
-  end
-
-  if link.url:is_file_only() then
-    local file_path = link.url:get_file()
-    local cmd = file_path and string.format('edit %s', fs.get_real_path(file_path)) or ''
-    vim.cmd(cmd)
-    vim.cmd([[normal! zv]])
-  end
-
-  if link.url.protocol and not link.url:is_supported_protocol() then
-    utils.echo_warning(string.format('Unsupported link protocol: %q', link.url.protocol))
-    return
-  end
-
-  local headlines = Hyperlinks.find_matching_links(link.url)
-  local current_headline = self.files:get_closest_headline_or_nil()
-  if current_headline then
-    headlines = vim.tbl_filter(function(headline)
-      return not current_headline:is_same(headline)
-    end, headlines)
-  end
-  if #headlines == 0 then
-    return
-  end
-  local headline = headlines[1]
-  if #headlines > 1 then
-    local longest_headline = utils.reduce(headlines, function(acc, h)
-      return math.max(acc, h:get_headline_line_content():len())
-    end, 0)
-    local options = {}
-    for i, h in ipairs(headlines) do
-      table.insert(
-        options,
-        string.format('%d) %-' .. longest_headline .. 's (%s)', i, h:get_headline_line_content(), h.file.filename)
-      )
-    end
-    vim.cmd([[echo "Multiple targets found. Select target:"]])
-    local choice = vim.fn.inputlist(options)
-    if choice < 1 or choice > #headlines then
-      return
-    end
-    headline = headlines[choice]
-  end
-
-  return self:_goto_headline(headline)
+  link.link:follow()
 end
 
 function OrgMappings:export()

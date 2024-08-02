@@ -91,6 +91,7 @@ describe('Hyperlink mappings', function()
   end)
 
   it('should store link to a headline', function()
+    local Headline = require('orgmode.org.hyperlinks.builtin.headline')
     local target_file = helpers.create_agenda_file({
       '* Test hyperlink',
       ' - some',
@@ -103,7 +104,10 @@ describe('Hyperlink mappings', function()
     vim.fn.cursor(4, 10)
     vim.cmd([[norm ,ols]])
     assert.are.same({
-      [('file:%s::*headline of target id'):format(target_file.filename)] = 'headline of target id',
+      {
+        desc = 'headline of target id',
+        link = Headline:new('headline of target id'),
+      },
     }, require('orgmode.org.hyperlinks').stored_links)
   end)
 

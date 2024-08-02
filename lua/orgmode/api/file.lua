@@ -1,6 +1,5 @@
 ---@diagnostic disable: invisible
 local OrgHeadline = require('orgmode.api.headline')
-local Hyperlinks = require('orgmode.org.hyperlinks')
 local org = require('orgmode')
 
 ---@class OrgApiFile
@@ -94,6 +93,22 @@ function OrgFile:get_closest_headline(cursor)
   return nil
 end
 
+---@param file OrgFile
+---@param path? string
+local function get_link_to_file(file, path)
+  local title = file:get_title()
+
+  if config.org_id_link_to_org_use_id then
+    local id = file:id_get_or_create()
+    if id then
+      return ('id:%s::*%s'):format(id, title)
+    end
+  end
+
+  path = path or file.filename
+  return ('file:%s::*%s'):format(path, title)
+end
+
 --- Get a link destination as string
 ---
 --- Depending if org_id_link_to_org_use_id is set the format is
@@ -112,12 +127,12 @@ function OrgFile:get_link()
     -- do remote edit
     return org.files
       :update_file(filename, function(file)
-        return Hyperlinks.get_link_to_file(file)
+        return get_link_to_file(file)
       end)
       :wait()
   end
 
-  return Hyperlinks.get_link_to_file(self._file)
+  return get_link_to_file(self._file)
 end
 
 return OrgFile

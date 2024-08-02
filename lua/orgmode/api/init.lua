@@ -1,7 +1,8 @@
 ---@diagnostic disable: invisible
 local OrgFile = require('orgmode.api.file')
 local OrgHeadline = require('orgmode.api.headline')
-local Hyperlinks = require('orgmode.org.hyperlinks')
+local Link = require('orgmode.org.hyperlinks.link')
+local HyperLink = require('orgmode.org.hyperlinks')
 local orgmode = require('orgmode')
 
 ---@class OrgApiRefileOpts
@@ -110,7 +111,19 @@ end
 --- @param link_location string
 --- @return boolean
 function OrgApi.insert_link(link_location)
-  Hyperlinks.insert_link(link_location)
+  local link = Link.parse(link_location)
+  if not link then
+    return false
+  end
+
+  local desc = nil
+  if link.target and link.target.headline then
+    desc = link.target.headline
+  end
+
+  HyperLink.insert_link(HyperLink:new(link, desc))
+
+  return true
 end
 
 return OrgApi

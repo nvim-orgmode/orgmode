@@ -6,6 +6,7 @@ local defaults = require('orgmode.config.defaults')
 local mappings = require('orgmode.config.mappings')
 local TodoKeywords = require('orgmode.objects.todo_keywords')
 local PriorityState = require('orgmode.objects.priority_state')
+local Alias = require('orgmode.org.hyperlinks.builtin.alias')
 
 ---@class OrgConfig:OrgDefaultConfig
 ---@field opts table
@@ -53,11 +54,83 @@ function Config:extend(opts)
     opts.org_priority_lowest = self.opts.org_priority_lowest
     opts.org_priority_default = self.opts.org_priority_default
   end
+  opts.hyperlinks = self:_process_links(opts.hyperlinks)
   self.opts = vim.tbl_deep_extend('force', self.opts, opts)
   if self.org_startup_indented then
     self.org_adapt_indentation = not self.org_indent_mode_turns_off_org_adapt_indentation
   end
   return self
+end
+
+function Config:_process_links(links)
+  if not (links or type(links) == table) then
+    return nil
+  end
+
+  local processed = {}
+
+  for protocol, hyperlink in pairs(links) do
+    if type(hyperlink) == 'string' then
+      if not protocol then
+        utils.echo_warning(('A link alias must have a protocol key. Skipped %s'):format(hyperlink))
+      else
+        hyperlink = self:_process_link_alias(protocol, hyperlink)
+        processed[hyperlink.protocol] = hyperlink
+      end
+      goto continue
+    end
+
+    if type(hyperlink) == 'table' then
+      hyperlink = self:_process_link_table(protocol, hyperlink)
+      if hyperlink then
+        processed[hyperlink.protocol] = hyperlink
+      end
+    end
+
+    ::continue::
+  end
+
+  return processed
+end
+
+function Config:_process_link_table(protocol, link)
+  if not link.parse or not (type(link.parse) == 'function') then
+    utils.echo_warning("A link must have a 'parse' function.")
+    return
+  end
+
+  if not link.follow or not (type(link.follow) == 'function') then
+    utils.echo_warning("A link must have a 'follow' method.")
+    return
+  end
+
+  if not link.protocol then
+    if not protocol then
+      utils.echo_warning('A link must have a protocol.')
+      return
+    end
+    link.protocol = protocol
+  end
+
+  return link
+end
+
+function Config:_process_link_alias(protocol, alias)
+  local components = {}
+  local expression = vim.regex([[%s\|%h\|%(.-)]])
+  repeat
+    local start_special, end_special = expression:match_str(alias)
+    if not start_special then
+      table.insert(components, alias)
+      break
+    end
+
+    table.insert(components, alias:sub(0, start_special))
+    table.insert(components, alias:sub(start_special + 1, end_special))
+    alias = alias:sub(end_special + 1)
+  until #alias <= 0
+
+  return Alias(protocol, components)
 end
 
 function Config:_are_priorities_valid(opts)
@@ -97,7 +170,7 @@ function Config:_are_priorities_valid(opts)
         )
         return false
       end
-    -- one-char strings
+      -- one-char strings
     elseif
       (type(high) == 'string' and #high == 1)
       and (type(low) == 'string' and #low == 1)
