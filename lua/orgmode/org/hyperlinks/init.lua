@@ -1,271 +1,240 @@
-local org = require('orgmode')
-local utils = require('orgmode.utils')
-local fs = require('orgmode.utils.fs')
-local Url = require('orgmode.org.hyperlinks.url')
 local Link = require('orgmode.org.hyperlinks.link')
-local config = require('orgmode.config')
-local Hyperlinks = {
+local Range = require('orgmode.files.elements.range')
+
+---@class OrgHyperLink
+---@field link OrgLink
+---@field desc? string
+---@field range? OrgRange
+---@field stored_links OrgHyperLink[]
+local HyperLink = {
   stored_links = {},
 }
 
----@param url OrgUrl
-local function get_file_from_url(url)
-  local file_path = url:get_file()
-  local canonical_path = file_path and fs.get_real_path(file_path)
-  return canonical_path and org.files:get(canonical_path) or org.files:get_current_file()
+---@param self OrgHyperLink
+---@param link string | OrgLink | nil
+---@param desc string?
+---@param range? OrgRange
+---@return OrgHyperLink | nil
+function HyperLink:new(link, desc, range)
+  local this = setmetatable({}, self)
+  self.__index = self
+
+  if type(link) == 'string' then
+    link = Link.parse(link)
+  end
+
+  if not link then
+    return nil
+  end
+  if vim.trim(desc or '') == '' then
+    desc = nil
+  end
+
+  this.link = link
+  this.desc = desc
+  this.range = range
+
+  return this
 end
 
----@param url OrgUrl
----@return string[]
-function Hyperlinks.find_by_filepath(url)
-  local filenames = org.files:filenames()
-  local file_base = url:get_file()
-  if not file_base then
-    return {}
+function HyperLink:follow()
+  self.link:follow()
+end
+
+---@return string
+function HyperLink:__tostring()
+  if self.desc then
+    return string.format('[[%s][%s]]', self.link, self.desc)
+  else
+    return string.format('[[%s]]', self.link)
   end
-  --TODO integrate with orgmode.utils.fs or orgmode.objects.url
-  local valid_filenames = {}
-  for _, f in ipairs(filenames) do
-    if f:find('^' .. file_base) then
-      if url.realpath then
-        f = f:gsub(file_base, url.path)
-      end
-      table.insert(valid_filenames, f)
+end
+
+--- Given a string, tries to parse the start of the string as an Org hyperlink
+--- Returns the link, then the description, then the rest of the string
+---@param input string @ String with potential link at the start
+---@return string?, string?, string?
+local function parse_link(input)
+  -- Doesn't start with a link
+  if input:find('^%[%[') == nil then
+    return nil
+  end
+
+  local substr = input:sub(3)
+  local _, close = substr:find('[^\\]%]')
+  local _, open = substr:find('[^\\]%[')
+
+  -- No closing ] -> invalid
+  if not close then
+    return nil
+  end
+
+  -- Unescaped [ before unescaped ] means it's an invalid link
+  if open and close > open then
+    return nil
+  end
+
+  local link = substr:sub(0, close - 1)
+  substr = substr:sub(close)
+
+  -- Link without description
+  if substr:find('^%]%]') then
+    return link, nil, substr:sub(3)
+  end
+
+  -- Must have a description at this point, else it's invalid syntax
+  if substr:find('^%]%[') == nil then
+    return nil
+  end
+
+  substr = substr:sub(3)
+  local desc_end = substr:find('.%]%]')
+
+  -- Description must have content, and end at some point, else it's invalid syntax
+  if desc_end == nil then
+    return nil
+  end
+
+  return link, substr:sub(0, desc_end), substr:sub(desc_end + 3)
+end
+
+---@param line string @ line contents
+---@param line_number number? @ line number for range
+---@return OrgHyperLink[]
+function HyperLink.all_from_line(line, line_number)
+  local links = {}
+  local str = line
+  local pos = 0
+
+  repeat
+    local start = str:find('[^\\]%[%[')
+    if start == nil then
+      break
+    end
+    str = str:sub(start + 1)
+    pos = pos + start + 1
+
+    local link, desc, next_str = parse_link(str)
+
+    if link then
+      local range = Range:new({
+        start_line = line_number,
+        end_line = line_number,
+        start_col = pos,
+        end_col = pos + (#str - #next_str),
+      })
+      links[#links + 1] = HyperLink:new(link, desc, range)
+      str = next_str
+      pos = range.end_col + 1
+    else
+      str = str:sub(2)
+    end
+  until #str == 0
+
+  return links
+end
+
+---@param line string @ line contents
+---@param pos number
+---@return OrgHyperLink | nil
+function HyperLink.at_pos(line, pos)
+  local links = HyperLink.all_from_line(line)
+
+  for _, link in pairs(links) do
+    if link.range.start_col <= pos and link.range.end_col >= pos then
+      return link
     end
   end
-
-  local protocol = url.protocol
-  local prefix = protocol and protocol == 'file' and 'file:' or ''
-
-  return vim.tbl_map(function(path)
-    return prefix .. path
-  end, valid_filenames)
+  return nil
 end
 
----@param url OrgUrl
----@return OrgHeadline[]
-function Hyperlinks.find_by_custom_id_property(url)
-  local custom_id = url:get_custom_id() or ''
-  local file = get_file_from_url(url)
-  return file:find_headlines_with_property_matching('CUSTOM_ID', custom_id)
-end
-
----@param url OrgUrl
----@return fun(headlines: OrgHeadline[]): string[]
-function Hyperlinks.as_custom_id_anchors(url)
-  local prefix = url:is_file_custom_id() and url:get_file_with_protocol() .. '::' or ''
-  return function(headlines)
-    return vim.tbl_map(function(headline)
-      ---@cast headline OrgHeadline
-      local custom_id = headline:get_property('custom_id')
-      return ('%s#%s'):format(prefix, custom_id)
-    end, headlines)
-  end
-end
-
----@param url OrgUrl
----@param omit_prefix? boolean
----@return fun(headlines: OrgHeadline[]): string[]
-function Hyperlinks.as_headline_anchors(url, omit_prefix)
-  local prefix = url:is_file_headline() and url:get_file_with_protocol() .. '::' or ''
-  return function(headlines)
-    return vim.tbl_map(function(headline)
-      local title = (omit_prefix and '' or '*') .. headline:get_title()
-      return ('%s%s'):format(prefix, title)
-    end, headlines)
-  end
-end
-
----@param url OrgUrl
----@return OrgHeadline[]
-function Hyperlinks.find_by_title(url)
-  local headline = url:get_headline()
-  if not headline then
-    return {}
-  end
-  local file = get_file_from_url(url)
-  return file:find_headlines_by_title(headline)
-end
-
-function Hyperlinks.find_by_plain_title(url)
-  local headline = url:get_plain()
-  if not headline then
-    return {}
-  end
-  return org.files:get_current_file():find_headlines_by_title(headline)
-end
-
-local function as_dedicated_anchor_pattern(anchor_str)
-  return string.format('<<<?(%s[^>]*)>>>?', anchor_str):lower()
-end
-
----@param url OrgUrl
----@return OrgHeadline[]
-function Hyperlinks.find_by_dedicated_target(url)
-  local anchor = url:get_plain()
-  if not anchor then
-    return {}
-  end
-  return org.files:get_current_file():find_headlines_matching_search_term(as_dedicated_anchor_pattern(anchor), true)
-end
-
----@param url OrgUrl
----@return fun(headlines: OrgHeadline[]): string[]
-function Hyperlinks.as_dedicated_targets(url)
-  return function(headlines)
-    local targets = {}
-    local term = as_dedicated_anchor_pattern(url:get_plain())
-    for _, headline in ipairs(headlines) do
-      for m in headline:get_title():lower():gmatch(term) do
-        table.insert(targets, m)
-      end
-      for _, content in ipairs(headline:content()) do
-        for m in content:lower():gmatch(term) do
-          table.insert(targets, m)
-        end
-      end
-    end
-    return targets
-  end
-end
-
----@param url OrgUrl
----@return fun(headlines: OrgHeadline[]): table<string>
-function Hyperlinks.as_dedicated_anchors_or_internal_titles(url)
-  return function(headlines)
-    local dedicated_anchors = Hyperlinks.as_dedicated_targets(url)(headlines)
-    local fuzzy_titles = Hyperlinks.as_headline_anchors(url, true)(headlines)
-    return utils.concat(dedicated_anchors, fuzzy_titles, true)
-  end
-end
-
----@param url OrgUrl
----@return OrgHeadline[], fun(headline: OrgHeadline[]): string[]
-function Hyperlinks.find_matching_links(url)
-  local result = {}
-  local mapper = function(item)
-    return item
-  end
-  if not url then
-    return result, mapper
-  elseif url:is_custom_id() then
-    result = Hyperlinks.find_by_custom_id_property(url)
-    mapper = Hyperlinks.as_custom_id_anchors(url)
-  elseif url:is_headline() then
-    result = Hyperlinks.find_by_title(url)
-    mapper = Hyperlinks.as_headline_anchors(url)
-  elseif url:is_file_only() then
-    result = Hyperlinks.find_by_filepath(url)
-  elseif url:is_plain() then
-    result = utils.concat(Hyperlinks.find_by_dedicated_target(url), Hyperlinks.find_by_plain_title(url))
-    mapper = Hyperlinks.as_dedicated_anchors_or_internal_titles(url)
-  end
-
-  return result, mapper
-end
-
----@param headline OrgHeadline
----@param path? string
-function Hyperlinks.get_link_to_headline(headline, path)
-  local title = headline:get_title()
-
-  if config.org_id_link_to_org_use_id then
-    local id = headline:id_get_or_create()
-    if id then
-      return ('id:%s::*%s'):format(id, title)
-    end
-  end
-
-  path = path or utils.current_file_path()
-  return ('file:%s::*%s'):format(path, title)
-end
-
----@param file OrgFile
----@param path? string
-function Hyperlinks.get_link_to_file(file, path)
-  local title = file:get_title()
-
-  if config.org_id_link_to_org_use_id then
-    local id = file:id_get_or_create()
-    if id then
-      return ('id:%s::*%s'):format(id, title)
-    end
-  end
-
-  path = path or file.filename
-  return ('file:%s::*%s'):format(path, title)
-end
-
----@param headline OrgHeadline
-function Hyperlinks.store_link_to_headline(headline)
-  local title = headline:get_title()
-  Hyperlinks.stored_links[Hyperlinks.get_link_to_headline(headline)] = title
-end
-
----@param arg_lead string
----@return string[]
-function Hyperlinks.autocomplete_links(arg_lead)
-  local url = Url:new(arg_lead)
-  local result, mapper = Hyperlinks.find_matching_links(url)
-
-  if url:is_file_only() or url:is_custom_id() or url:is_headline() then
-    return mapper(result)
-  end
-
-  return vim.tbl_keys(Hyperlinks.stored_links)
-end
-
----@return OrgLink|nil, table | nil
-function Hyperlinks.get_link_under_cursor()
+---@return OrgHyperLink|nil
+function HyperLink.get_link_under_cursor()
   local line = vim.fn.getline('.')
   local col = vim.fn.col('.') or 0
-  return Link.at_pos(line, col)
+  local link = HyperLink.at_pos(line, col)
+  if not link then
+    return nil
+  end
+
+  local line_number = vim.fn.line('.') or 0
+  link.range.start_line = line_number
+  link.range.end_line = line_number
+  return link
 end
 
-function Hyperlinks.insert_link(link_location)
-  local selected_link = Link:new(link_location)
-  local desc = selected_link.url:get_target_value()
+function HyperLink:insert_link()
+  local link_under_cursor = HyperLink.get_link_under_cursor()
+  local cursor_line = vim.fn.getline('.')
+  local line_pre
+  local line_post
 
-  if selected_link.url:is_id() then
-    link_location = ('id:%s'):format(selected_link.url:get_id())
-  end
-
-  local link_description = vim.trim(vim.fn.OrgmodeInput('Description: ', desc or ''))
-
-  link_location = '[' .. vim.trim(link_location) .. ']'
-
-  if link_description ~= '' then
-    link_description = '[' .. link_description .. ']'
-  end
-
-  local insert_from
-  local insert_to
-  local target_col = #link_location + #link_description + 2
-
-  -- check if currently on link
-  local link, position = Hyperlinks.get_link_under_cursor()
-  if link and position then
-    insert_from = position.from - 1
-    insert_to = position.to + 1
-    target_col = target_col + position.from
+  if link_under_cursor then
+    line_pre = cursor_line:sub(0, link_under_cursor.range.start_col)
+    line_post = cursor_line:sub(link_under_cursor.range.end_col)
   else
-    local colnr = vim.fn.col('.')
-    insert_from = colnr
-    insert_to = colnr + 1
-    target_col = target_col + colnr
+    local cursor_pos = vim.fn.col('.')
+    line_pre = cursor_line:sub(0, cursor_pos)
+    line_post = cursor_line:sub(cursor_pos + 1)
   end
 
-  local linenr = vim.fn.line('.') or 0
-  local curr_line = vim.fn.getline(linenr)
-  local new_line = string.sub(curr_line, 0, insert_from)
-    .. '['
-    .. link_location
-    .. link_description
-    .. ']'
-    .. string.sub(curr_line, insert_to, #curr_line)
+  local link_str = self:__tostring()
+  local new_line = line_pre .. link_str .. line_post
 
+  local linenr = vim.fn.line('.')
   vim.fn.setline(linenr, new_line)
-  vim.fn.cursor(linenr, target_col)
+  vim.fn.cursor(linenr, #line_pre + #link_str + 1)
 end
 
-return Hyperlinks
+---@param link OrgLink?
+---@param desc string?
+function HyperLink:store_link(link, desc)
+  table.insert(self.stored_links, HyperLink:new(link, desc))
+end
+
+---@param lead string
+---@return OrgHyperLink[]
+function HyperLink:autocompletions(lead)
+  if not lead then
+    return {}
+  end
+
+  local config = require('orgmode.config')
+
+  local completions = config.hyperlinks[1]:autocompletions(lead)
+  for prot, handler in pairs(config.hyperlinks) do
+    if not (type(prot) == 'string') then
+      goto continue
+    end
+
+    -- Protocol is being typed, but is not finished yet. Ask for all completions (empty lead)
+    if lead == '' or prot:find('^' .. lead) then
+      for _, comp in pairs(handler:autocompletions('')) do
+        table.insert(completions, HyperLink:new(comp.link, comp.desc))
+      end
+    end
+
+    -- Protocol has been typed, send that protocol's data as lead
+    if lead:find('^' .. prot) then
+      local sublead = '' -- Without protocol deliniator, fall back to getting all suggestions
+      local protocol_deliniator = lead:find('[^:\\]:[^:]')
+      if protocol_deliniator then
+        sublead = lead:sub(protocol_deliniator + 2)
+      end
+      for _, comp in pairs(handler:autocompletions(sublead)) do
+        table.insert(completions, HyperLink:new(comp.link, comp.desc))
+      end
+    end
+    ::continue::
+  end
+
+  -- TODO filter on actually being relevant links
+  -- Should maybe be given priority? Didn't in original
+  for _, comp in pairs(self.stored_links) do
+    table.insert(completions, comp)
+  end
+
+  return completions
+end
+
+return HyperLink
