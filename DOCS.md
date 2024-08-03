@@ -847,12 +847,41 @@ require('orgmode').setup({
       org_agenda = false,
       org_capture = 'gC'
     },
-    agenda = {
-      org_agenda_later = false
+  }
+})
+```
+
+To change a key mapping's `lhs` but not its `desc`, provide a string or a table:
+
+```lua
+require('orgmode').setup({
+  org_agenda_files = {'~/Dropbox/org/*', '~/my-orgs/**/*'},
+  org_default_notes_file = '~/Dropbox/org/refile.org',
+  mappings = {
+    global = {
+      -- providing a string
+      org_agenda = '<D-a>',
+      -- providing a table
+      org_capture = { '<D-c>' }
+    },
+  }
+})
+
+To change a key mapping's `lhs` and its `desc`, provide a table:
+
+```lua
+require('orgmode').setup({
+  org_agenda_files = {'~/Dropbox/org/*', '~/my-orgs/**/*'},
+  org_default_notes_file = '~/Dropbox/org/refile.org',
+  mappings = {
+    global = {
+       org_capture = { '<D-c>', desc = 'Open Capture Prompt' }
     }
   }
 })
 ```
+
+(The `desc` value is displayed in tools like WhichKey.)
 
 You can find the configuration file that holds all default mappings [here](./lua/orgmode/config/mappings/init.lua)
 
