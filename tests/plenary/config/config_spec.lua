@@ -46,4 +46,16 @@ describe('Config', function()
     local config = require('orgmode.config')
     assert.are.same('gouh', config:get_mappings('org').outline_up_heading.user_map)
   end)
+
+  it('should use the provided key mapping when the override is provided as a table', function()
+    local org = orgmode.setup({
+      mappings = {
+        org = {
+          outline_up_heading = { 'gouh' },
+        }
+      }
+    })
+    local config = require('orgmode.config')
+    assert.are.same({ 'gouh' }, config:get_mappings('org').outline_up_heading.user_map)
+  end)
 end)
