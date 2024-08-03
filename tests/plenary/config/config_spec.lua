@@ -15,8 +15,8 @@ local get_normal_mode_mapping_in_org_buffer = function(lhs)
         if keymap['lhs'] == lhs then
           vim.cmd('edit ' .. current_buffer)
           return keymap
-        end 
-      end 
+        end
+      end
     end
   end
 
