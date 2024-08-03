@@ -65,8 +65,8 @@ describe('Config', function()
       mappings = {
         org = {
           outline_up_heading = { 'gouh' },
-        }
-      }
+        },
+      },
     })
 
     local mapping = get_normal_mode_mapping_in_org_buffer('gouh')
@@ -79,8 +79,8 @@ describe('Config', function()
       mappings = {
         org = {
           outline_up_heading = { 'gouh' },
-        }
-      }
+        },
+      },
     })
 
     local mapping = get_normal_mode_mapping_in_org_buffer('gouh')
@@ -93,8 +93,8 @@ describe('Config', function()
       mappings = {
         org = {
           outline_up_heading = { 'gouh', desc = 'Go To Parent Headline' },
-        }
-      }
+        },
+      },
     })
 
     local mapping = get_normal_mode_mapping_in_org_buffer('gouh')
