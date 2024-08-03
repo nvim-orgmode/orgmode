@@ -5,7 +5,7 @@ local get_normal_mode_mapping_in_org_buffer = function(lhs)
   local current_buffer = vim.api.nvim_buf_get_name(0)
 
   local refile_file = vim.fn.getcwd() .. '/tests/plenary/fixtures/refile.org'
-  vim.cmd('edit '.. refile_file)
+  vim.cmd('edit ' .. refile_file)
 
   local normal_mode_mappings_in_org_buffer = vim.api.nvim_buf_get_keymap(0, 'n')
 
@@ -13,14 +13,14 @@ local get_normal_mode_mapping_in_org_buffer = function(lhs)
     if keymap then
       if keymap['lhs'] then
         if keymap['lhs'] == lhs then
-          vim.cmd('edit '..current_buffer)
+          vim.cmd('edit ' .. current_buffer)
           return keymap
-        end 
-      end 
+         end 
+       end 
     end
   end
 
-  vim.cmd('edit '.. current_buffer)
+  vim.cmd('edit ' .. current_buffer)
   return nil
 end
 
@@ -50,7 +50,7 @@ describe('Config', function()
       vim.fn.getcwd() .. '/tests/plenary/fixtures/archives_relative/refile.org_archive'
     )
   end)
- 
+
   ---@diagnostic disable: need-check-nil
   it('should use the default key mapping when no override is provided', function()
     local org = orgmode.setup({})
