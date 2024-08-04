@@ -1,3 +1,5 @@
+local default_hyperlinks = require('orgmode.org.hyperlinks.builtin')
+
 ---@class OrgDefaultConfig
 ---@field org_id_method 'uuid' | 'ts' | 'org'
 ---@field org_agenda_span 'day' | 'week' | 'month' | 'year' | number
@@ -208,6 +210,7 @@ local DefaultConfig = {
       handler = nil,
     },
   },
+  hyperlinks = default_hyperlinks,
 }
 
 return DefaultConfig

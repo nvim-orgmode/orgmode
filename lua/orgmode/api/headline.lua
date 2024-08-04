@@ -1,10 +1,10 @@
+local utils = require('orgmode.utils')
 local OrgPosition = require('orgmode.api.position')
 local config = require('orgmode.config')
 local PriorityState = require('orgmode.objects.priority_state')
 local Date = require('orgmode.objects.date')
 local Calendar = require('orgmode.objects.calendar')
 local Promise = require('orgmode.utils.promise')
-local Hyperlinks = require('orgmode.org.hyperlinks')
 local org = require('orgmode')
 
 ---@class OrgApiHeadline
@@ -263,6 +263,22 @@ function OrgHeadline:_do_action(action)
   end)
 end
 
+---@param headline OrgHeadline
+---@param path? string
+local function get_link_to_headline(headline, path)
+  local title = headline:get_title()
+
+  if config.org_id_link_to_org_use_id then
+    local id = headline:id_get_or_create()
+    if id then
+      return ('id:%s::*%s'):format(id, title)
+    end
+  end
+
+  path = path or utils.current_file_path()
+  return ('file:%s::*%s'):format(path, title)
+end
+
 --- Get a link destination as string
 ---
 --- Depending if org_id_link_to_org_use_id is set the format is
@@ -281,12 +297,12 @@ function OrgHeadline:get_link()
     -- do remote edit
     return org.files
       :update_file(filename, function(_)
-        return Hyperlinks.get_link_to_headline(self._section)
+        return get_link_to_headline(self._section)
       end)
       :wait()
   end
 
-  return Hyperlinks.get_link_to_headline(self._section)
+  return get_link_to_headline(self._section)
 end
 
 return OrgHeadline

@@ -273,6 +273,16 @@ function OrgFiles:find_files_with_property(property_name, term)
   return files
 end
 
+---@param property_name string
+---@param term string
+---@return OrgHeadline[]
+function OrgFiles:find_files_with_property_matching(property_name, term)
+  return vim.tbl_filter(function(item)
+    local property = item:get_property(property_name)
+    return property and property:lower():match('^' .. vim.pesc(term:lower()))
+  end, self:all())
+end
+
 ---@param term string
 ---@param no_escape boolean
 ---@param search_extra_files boolean
