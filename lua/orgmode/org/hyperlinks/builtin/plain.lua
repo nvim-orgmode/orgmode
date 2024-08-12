@@ -48,11 +48,9 @@ function Plain:insert_description()
   return self.text
 end
 
--- TODO Plain completion for non-local file. How to pass other file cleanly?
---     ^ Should this be done in `OrgLinkFile:autocompletions()`?
 -- TODO #+NAME tag support should be added, but it didn't exists yet
-function Plain:complete(lead)
-  local file = Org.files:get_current_file()
+function Plain:complete(lead, context)
+  local file = self.get_file_from_context(context)
   local completions = {}
 
   local anchors = file.content:gmatch(('<<<?%s[^>]*>>>?'):format(lead))

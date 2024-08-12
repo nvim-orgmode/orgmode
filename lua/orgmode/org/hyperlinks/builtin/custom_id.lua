@@ -1,3 +1,4 @@
+local utils = require('orgmode.utils')
 local Org = require('orgmode')
 local Internal = require('orgmode.org.hyperlinks.builtin.internal')
 
@@ -19,7 +20,7 @@ function CustomId.parse(input)
 end
 
 function CustomId:__tostring()
-  return '#' .. self.custom_id
+  return string.format('#%s', self.custom_id)
 end
 
 function CustomId:follow()
@@ -36,10 +37,8 @@ function CustomId:insert_description()
   return self.custom_id
 end
 
--- TODO Custom ID completion for non-local file. How to pass other file cleanly?
---     ^ Should this be done in `OrgLinkFile:autocompletions()`?
-function CustomId:complete(lead)
-  local file = Org.files:get_current_file()
+function CustomId:complete(lead, context)
+  local file = self.get_file_from_context(context)
   local headlines = file:find_headlines_with_property_matching('CUSTOM_ID', lead)
 
   local completions = {}

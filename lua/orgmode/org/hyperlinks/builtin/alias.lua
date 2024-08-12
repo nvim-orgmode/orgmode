@@ -1,4 +1,3 @@
-local utils = require('orgmode.utils')
 local Link = require('orgmode.org.hyperlinks.link')
 
 return function(protocol, components)

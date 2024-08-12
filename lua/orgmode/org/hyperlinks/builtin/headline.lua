@@ -53,10 +53,8 @@ function Headline:insert_description()
   return self.headline
 end
 
--- TODO Headline completion for non-local file. How to pass other file cleanly?
---     ^ Should this be done in `OrgLinkFile:autocompletions()`?
-function Headline:complete(lead)
-  local file = Org.files:get_current_file()
+function Headline:complete(lead, context)
+  local file = self.get_file_from_context(context)
   local headlines = file:find_headlines_by_title(lead)
 
   local completions = {}

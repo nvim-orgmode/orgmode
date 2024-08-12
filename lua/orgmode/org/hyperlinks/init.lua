@@ -223,7 +223,7 @@ function HyperLink:autocompletions(lead)
       completions,
       vim.tbl_map(function(link)
         return link:__tostring()
-      end, config.hyperlinks[1]:autocompletions(lead))
+      end, config.hyperlinks[1]:complete(lead))
     )
   else
     -- Protocol has been decided, we only need to check its autocompletions

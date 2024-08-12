@@ -72,15 +72,14 @@ function Id:__tostring()
   return v
 end
 
--- TODO Completion for targets
-function Id:complete(lead)
+local function autocompletions_ids(lead)
   local headlines = Org.files:find_headlines_with_property_matching('id', lead)
 
-  local completions = {}
+  local matches = {}
   for _, headline in ipairs(headlines) do
     local id = headline:get_property('id')
     if id and id:find('^' .. lead) then
-      table.insert(completions, self:new(id))
+      table.insert(matches, id)
     end
   end
 
@@ -88,11 +87,27 @@ function Id:complete(lead)
   for _, file in ipairs(files) do
     local id = file:get_property('id')
     if id and id:find('^' .. lead) then
-      table.insert(completions, self:new(id))
+      table.insert(matches, id)
     end
   end
 
-  return completions
+  return matches
+end
+
+-- TODO Completion for targets
+function Id:complete(lead)
+  local deliniator_start, deliniator_stop = lead:find('::')
+
+  if not deliniator_start then
+    return vim.tbl_map(function(f)
+      return self:new(f)
+    end, autocompletions_ids(lead))
+  else
+    local id = lead:sub(0, deliniator_start - 1)
+    return vim.tbl_map(function(t)
+      return self:new(id, t.label or t.link)
+    end, Internal:complete(lead:sub(deliniator_stop + 1), { id = id, only_internal = true }))
+  end
 end
 
 return Id
