@@ -568,8 +568,9 @@ function utils.find(entries, check_fn)
 end
 
 ---@param name string
+---@param skip_ftmatch? boolean
 ---@return string
-function utils.detect_filetype(name)
+function utils.detect_filetype(name, skip_ftmatch)
   local map = {
     ['emacs-lisp'] = 'lisp',
     js = 'javascript',
@@ -580,10 +581,12 @@ function utils.detect_filetype(name)
     sh = 'bash',
     uxn = 'uxntal',
   }
-  local filename = '__org__detect_filetype__.' .. (map[name] or name)
-  local ft = vim.filetype.match({ filename = filename })
-  if ft then
-    return ft
+  if not skip_ftmatch then
+    local filename = '__org__detect_filetype__.' .. (map[name] or name)
+    local ft = vim.filetype.match({ filename = filename })
+    if ft then
+      return ft
+    end
   end
   if map[name] then
     return map[name]
