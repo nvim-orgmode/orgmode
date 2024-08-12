@@ -423,7 +423,7 @@ function Config:setup_ts_predicates()
     if not text or vim.trim(text) == '' then
       return
     end
-    metadata['injection.language'] = utils.detect_filetype(text)
+    metadata['injection.language'] = utils.detect_filetype(text, true)
   end, { force = true })
 
   vim.treesitter.query.add_predicate('org-is-headline-level?', function(match, _, _, predicate)
