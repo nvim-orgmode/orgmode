@@ -82,19 +82,19 @@ function Internal:autocompletions(lead)
   local Plain = require('orgmode.org.hyperlinks.builtin.plain')
 
   if lead:match('^*') then
-    return Headline:autocompletions(lead:sub(2))
+    return Headline:complete(lead:sub(2))
   end
   if lead:match('^#') then
-    return CustomId:autocompletions(lead:sub(2))
+    return CustomId:complete(lead:sub(2))
   end
   if lead:match('^#d+$') then
-    return LineNumber:autocompletions(lead)
+    return LineNumber:complete(lead)
   end
   if lead:match('^~?/') or lead:match('^%.%.?/') then
-    return File:autocompletions(lead)
+    return File:complete(lead)
   end
 
-  return Plain:autocompletions(lead)
+  return Plain:complete(lead)
 end
 
 return Internal

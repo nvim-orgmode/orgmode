@@ -7,6 +7,7 @@ local mappings = require('orgmode.config.mappings')
 local TodoKeywords = require('orgmode.objects.todo_keywords')
 local PriorityState = require('orgmode.objects.priority_state')
 local Alias = require('orgmode.org.hyperlinks.builtin.alias')
+local Link = require('orgmode.org.hyperlinks.link')
 
 ---@class OrgConfig:OrgDefaultConfig
 ---@field opts table
@@ -99,17 +100,19 @@ function Config:_process_link_table(protocol, link)
     return
   end
 
-  if not link.follow or not (type(link.follow) == 'function') then
-    utils.echo_warning("A link must have a 'follow' method.")
-    return
-  end
-
   if not link.protocol then
     if not protocol then
       utils.echo_warning('A link must have a protocol.')
       return
     end
     link.protocol = protocol
+  end
+
+  -- Inherit basics from Link class
+  for k, v in pairs(Link) do
+    if not link[k] then
+      link[k] = v
+    end
   end
 
   return link

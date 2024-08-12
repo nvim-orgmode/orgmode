@@ -780,44 +780,26 @@ function OrgMappings:_insert_heading_from_plain_line(suffix)
   end
 end
 
----@param completions {link: OrgLink, label?: string, desc?: string}[]
-function OrgMappings._autocompletion_to_selection_options(completions)
-  local options = {}
-
-  for _, completion in pairs(completions) do
-    options[completion.label or completion.link:__tostring()] = completion
-  end
-
-  return options
+local function autocompletions(lead)
+  return HyperLink:autocompletions(lead)
 end
 
 -- Inserts a new link after the cursor position or modifies the link the cursor is
 -- currently on
 function OrgMappings:insert_link()
-  local last_suggestions = {}
-  local callback = function(lead)
-    local completions = self._autocompletion_to_selection_options(HyperLink:autocompletions(lead))
-    last_suggestions = completions
-    return vim.tbl_keys(completions)
-  end
-
-  local label = vim.fn.OrgmodeInput('Links: ', '', callback)
-  if vim.trim(label) == '' then
+  local link = vim.fn.OrgmodeInput('Links: ', '', autocompletions)
+  if vim.trim(link) == '' then
     utils.echo_warning('No Link selected')
     return
   end
 
-  local link = last_suggestions[label].link or Link.parse(label)
+  link = Link.parse(link)
   if not link then
     utils.echo_warning('Unrecognised link format')
     return
   end
 
-  local desc = nil
-  if last_suggestions[label].desc then
-    desc = last_suggestions[label].desc
-  end
-
+  local desc = link:insert_description()
   desc = vim.trim(vim.fn.OrgmodeInput('Description: ', desc or ''))
 
   local hyperlink = HyperLink:new(link, desc)

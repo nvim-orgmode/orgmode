@@ -2,6 +2,7 @@ local Org = require('orgmode')
 local fs = require('orgmode.utils.fs')
 local Link = require('orgmode.org.hyperlinks.link')
 local Internal = require('orgmode.org.hyperlinks.builtin.internal')
+local Id = require('orgmode.org.hyperlinks.builtin.id')
 
 ---@class OrgLinkFile:OrgLink
 ---@field new fun(self: OrgLinkFile, path: string, target: OrgLinkInternal | nil): OrgLinkFile
@@ -73,13 +74,43 @@ local function autocompletions_filenames(lead)
   return matches
 end
 
+function File:resolve()
+  local path = fs.get_real_path(self.path)
+  if not path then
+    return self
+  end
+  local file = Org.files:get(path)
+  if not file then
+    return self
+  end
+  local id = file:get_property('id')
+  if not id then
+    return self
+  end
+
+  return Id:new(id, self.target):resolve()
+end
+
+function File:insert_description()
+  local path = fs.get_real_path(self.path)
+  if not path then
+    return nil
+  end
+  local file = Org.files:get(path)
+  if not file then
+    return nil
+  end
+
+  return file:get_title()
+end
+
 -- TODO Completion for targets
-function File:autocompletions(lead)
+function File:complete(lead)
   local deliniator_start, deliniator_stop = lead:find('::')
 
   if not deliniator_start then
     return vim.tbl_map(function(f)
-      return { link = self:new(f) }
+      return self:new(f)
     end, autocompletions_filenames(lead))
   end
 

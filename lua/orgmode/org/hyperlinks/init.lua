@@ -1,3 +1,4 @@
+local utils = require('orgmode.utils')
 local Link = require('orgmode.org.hyperlinks.link')
 local Range = require('orgmode.files.elements.range')
 
@@ -178,6 +179,7 @@ function HyperLink:insert_link()
     line_post = cursor_line:sub(cursor_pos + 1)
   end
 
+  self.link = self.link:resolve()
   local link_str = self:__tostring()
   local new_line = line_pre .. link_str .. line_post
 
@@ -193,39 +195,51 @@ function HyperLink:store_link(link, desc)
 end
 
 ---@param lead string
----@return OrgHyperLink[]
+---@return string[]
 function HyperLink:autocompletions(lead)
   if not lead then
     return {}
   end
 
   local config = require('orgmode.config')
+  local _, protocol_deliniator = lead:find('[a-z0-9-_]*:')
+  local completions = {}
 
-  local completions = config.hyperlinks[1]:autocompletions(lead)
-  for prot, handler in pairs(config.hyperlinks) do
-    if not (type(prot) == 'string') then
-      goto continue
-    end
+  -- If no protocol has been decided yet, search through the protocols and
+  -- show the ones that could match the lead.
+  -- Also check local file completions, for headlines, custom ids, and files
+  if not protocol_deliniator then
+    completions = utils.concat(
+      completions,
+      vim.tbl_filter(function(prot)
+        if type(prot) == 'string' and (lead == '' or prot:find('^' .. lead)) then
+          return true
+        end
+        return false
+      end, vim.tbl_keys(config.hyperlinks))
+    )
 
-    -- Protocol is being typed, but is not finished yet. Ask for all completions (empty lead)
-    if lead == '' or prot:find('^' .. lead) then
-      for _, comp in pairs(handler:autocompletions('')) do
-        table.insert(completions, HyperLink:new(comp.link, comp.desc))
-      end
-    end
+    completions = utils.concat(
+      completions,
+      vim.tbl_map(function(link)
+        return link:__tostring()
+      end, config.hyperlinks[1]:autocompletions(lead))
+    )
+  else
+    -- Protocol has been decided, we only need to check its autocompletions
+    local protocol = lead:sub(1, protocol_deliniator - 1)
+    lead = lead:sub(protocol_deliniator + 1)
+    local handler = config.hyperlinks[protocol]
 
-    -- Protocol has been typed, send that protocol's data as lead
-    if lead:find('^' .. prot) then
-      local sublead = '' -- Without protocol deliniator, fall back to getting all suggestions
-      local protocol_deliniator = lead:find('[^:\\]:[^:]')
-      if protocol_deliniator then
-        sublead = lead:sub(protocol_deliniator + 2)
-      end
-      for _, comp in pairs(handler:autocompletions(sublead)) do
-        table.insert(completions, HyperLink:new(comp.link, comp.desc))
-      end
+    if handler then
+      completions = utils.concat(
+        completions,
+
+        vim.tbl_map(function(link)
+          return link:__tostring()
+        end, handler:complete(lead))
+      )
     end
-    ::continue::
   end
 
   -- TODO filter on actually being relevant links
@@ -234,6 +248,7 @@ function HyperLink:autocompletions(lead)
     table.insert(completions, comp)
   end
 
+  print(vim.inspect(completions))
   return completions
 end
 

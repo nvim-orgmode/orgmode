@@ -73,14 +73,14 @@ function Id:__tostring()
 end
 
 -- TODO Completion for targets
-function Id:autocompletions(lead)
+function Id:complete(lead)
   local headlines = Org.files:find_headlines_with_property_matching('id', lead)
 
   local completions = {}
   for _, headline in ipairs(headlines) do
     local id = headline:get_property('id')
     if id and id:find('^' .. lead) then
-      table.insert(completions, { link = self:new(id) })
+      table.insert(completions, self:new(id))
     end
   end
 
@@ -88,7 +88,7 @@ function Id:autocompletions(lead)
   for _, file in ipairs(files) do
     local id = file:get_property('id')
     if id and id:find('^' .. lead) then
-      table.insert(completions, { link = self:new(id) })
+      table.insert(completions, self:new(id))
     end
   end
 

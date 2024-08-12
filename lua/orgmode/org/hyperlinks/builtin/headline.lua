@@ -34,22 +34,34 @@ function Headline:follow()
   self.goto_oneof(headlines)
 end
 
+function Headline:resolve()
+  local headlines = Org.files:get_current_file():find_headlines_by_title(self.headline)
+
+  if #headlines == 0 then
+    return self
+  end
+
+  local id = headlines[1]:get_property('id')
+  if not id then
+    return self
+  end
+
+  return Id:new(id):resolve()
+end
+
+function Headline:insert_description()
+  return self.headline
+end
+
 -- TODO Headline completion for non-local file. How to pass other file cleanly?
 --     ^ Should this be done in `OrgLinkFile:autocompletions()`?
-function Headline:autocompletions(lead)
+function Headline:complete(lead)
   local file = Org.files:get_current_file()
   local headlines = file:find_headlines_by_title(lead)
 
   local completions = {}
   for _, headline in pairs(headlines) do
-    local link = Headline:new(headline:get_title())
-
-    local id = headline:get_property('id')
-    if id then
-      table.insert(completions, { link = Id:new(id), label = link:__tostring(), desc = headline:get_title() })
-    else
-      table.insert(completions, { link = link, desc = headline:get_title() })
-    end
+    table.insert(completions, Headline:new(headline:get_title()))
   end
 
   return completions

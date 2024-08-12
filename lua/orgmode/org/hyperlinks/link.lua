@@ -3,6 +3,9 @@ local utils = require('orgmode.utils')
 ---@class OrgLink
 ---@field new fun(self: OrgLink, protocol?: string): OrgLink
 ---@field parse fun(input: string): OrgLink | nil
+---@field complete fun(self: OrgLink, lead: string): OrgLink[]
+---@field resolve fun(self: OrgLink): OrgLink
+---@field insert_description fun(self: OrgLink): string | nil
 ---@field protocol string?
 local Link = {}
 
@@ -17,15 +20,12 @@ function Link.parse(input)
   local config = require('orgmode.config')
 
   -- Finds singular :
-  local protocol_deliniator = input:find('[^:\\]:[^:]')
+  local _, protocol_deliniator = input:find('[a-z0-9-_]*:')
 
   -- If no protocol is specified, fall back to internal links
   if protocol_deliniator == nil then
     return config.hyperlinks[1].parse(input)
   end
-
-  -- Our find call finds the character _before_ the deliniator due to the neq matcher
-  protocol_deliniator = protocol_deliniator + 1
 
   local protocol = input:sub(1, protocol_deliniator - 1)
   local target = input:sub(protocol_deliniator + 1)
@@ -43,9 +43,15 @@ function Link:follow()
   utils.echo_warning(string.format('Unsupported link protocol: %q', self.protocol))
 end
 
----@param lead string
----@return { link: OrgLink, label?: string, desc?: string}[]
-function Link:autocompletions(_)
+function Link:resolve()
+  return self
+end
+
+function Link:insert_description()
+  return nil
+end
+
+function Link:complete(_)
   return {}
 end
 

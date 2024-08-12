@@ -32,16 +32,20 @@ function CustomId:follow()
   self.goto_oneof(headlines)
 end
 
+function CustomId:insert_description()
+  return self.custom_id
+end
+
 -- TODO Custom ID completion for non-local file. How to pass other file cleanly?
 --     ^ Should this be done in `OrgLinkFile:autocompletions()`?
-function CustomId:autocompletions(lead)
+function CustomId:complete(lead)
   local file = Org.files:get_current_file()
   local headlines = file:find_headlines_with_property_matching('CUSTOM_ID', lead)
 
   local completions = {}
   for _, headline in pairs(headlines) do
     local id = headline:get_property('CUSTOM_ID')
-    table.insert(completions, { link = CustomId:new(id), desc = id })
+    table.insert(completions, self:new(id))
   end
 
   return completions
