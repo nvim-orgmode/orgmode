@@ -20,6 +20,7 @@ local auto_instance_keys = {
 ---@field capture OrgCapture
 ---@field clock OrgClock
 ---@field completion OrgCompletion
+---@field links OrgLinkHandlerRegistry
 ---@field org_mappings OrgMappings
 ---@field notifications OrgNotifications
 local Org = {}
@@ -66,6 +67,9 @@ function Org:init()
     files = self.files,
   })
   self.completion = require('orgmode.org.autocompletion'):new({ files = self.files })
+  self.links = require('orgmode.org.links'):new({
+    files = self.files,
+  })
   self.statusline_debounced = require('orgmode.utils').debounce('statusline', function()
     return self.clock:get_statusline()
   end, 300)
