@@ -20,7 +20,7 @@ local auto_instance_keys = {
 ---@field capture OrgCapture
 ---@field clock OrgClock
 ---@field completion OrgCompletion
----@field links OrgLinkHandlerRegistry
+---@field links OrgLinks
 ---@field org_mappings OrgMappings
 ---@field notifications OrgNotifications
 local Org = {}

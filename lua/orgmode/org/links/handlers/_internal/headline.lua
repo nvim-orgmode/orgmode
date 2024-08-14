@@ -31,22 +31,7 @@ function Headline:follow()
     return utils.echo_warning(('Could not find headline "%s".'):format(self.headline))
   end
 
-  self.goto_oneof(headlines)
-end
-
-function Headline:resolve()
-  local headlines = Org.files:get_current_file():find_headlines_by_title(self.headline)
-
-  if #headlines == 0 then
-    return self
-  end
-
-  local id = headlines[1]:get_property('id')
-  if not id then
-    return self
-  end
-
-  return Id:new(id):resolve()
+  utils.goto_oneof(headlines)
 end
 
 function Headline:insert_description()
@@ -59,7 +44,7 @@ function Headline:complete(lead, context)
 
   local completions = {}
   for _, headline in pairs(headlines) do
-    table.insert(completions, Headline:new(headline:get_title()):__tostring())
+    table.insert(completions, tostring(Headline:new(headline:get_title())))
   end
 
   return completions

@@ -30,7 +30,7 @@ function CustomId:follow()
     return utils.echo_warning(('Could not find custom ID "%s".'):format(self.custom_id))
   end
 
-  self.goto_oneof(headlines)
+  utils.goto_oneof(headlines)
 end
 
 function CustomId:insert_description()
@@ -44,7 +44,7 @@ function CustomId:complete(lead, context)
   local completions = {}
   for _, headline in pairs(headlines) do
     local id = headline:get_property('CUSTOM_ID')
-    table.insert(completions, self:new(id):__tostring())
+    table.insert(completions, tostring(self:new(id)))
   end
 
   return completions

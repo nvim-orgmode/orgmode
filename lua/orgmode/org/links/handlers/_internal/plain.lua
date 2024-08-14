@@ -55,12 +55,12 @@ function Plain:complete(lead, context)
 
   local anchors = file.content:gmatch(('<<<?%s[^>]*>>>?'):format(lead))
   for anchor in anchors do
-    table.insert(completions, Plain:new(anchor):__tostring())
+    table.insert(completions, tostring(Plain:new(anchor)))
   end
 
   local headlines = file:find_headlines_by_title(lead)
   for _, headline in pairs(headlines) do
-    table.insert(completions, Plain:new(headline:get_title()):__tostring())
+    table.insert(completions, tostring(Plain:new(headline:get_title())))
   end
 
   return completions

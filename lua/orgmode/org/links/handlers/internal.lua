@@ -41,40 +41,6 @@ function Internal.parse(target, disallow_file)
   return Plain.parse(target)
 end
 
----@param headlines OrgHeadline[]
-function Internal.goto_oneof(headlines)
-  if #headlines == 0 then
-    return
-  end
-
-  local headline = headlines[1]
-  if #headlines > 1 then
-    local longest_headline = utils.reduce(headlines, function(acc, h)
-      return math.max(acc, h:get_headline_line_content():len())
-    end, 0)
-    local options = {}
-    for i, h in ipairs(headlines) do
-      table.insert(
-        options,
-        string.format(
-          '%-' .. math.ceil(math.log(#headlines, 10)) .. 'd) %-' .. longest_headline .. 's (%s)',
-          i,
-          h:get_headline_line_content(),
-          h.file.filename
-        )
-      )
-    end
-    vim.cmd([[echo "Multiple targets found. Select target:"]])
-    local choice = vim.fn.inputlist(options)
-    if choice < 1 or choice > #headlines then
-      return
-    end
-    headline = headlines[choice]
-  end
-
-  return utils.goto_headline(headline)
-end
-
 function Internal.get_file_from_context(context)
   context = context or {}
   local file = nil

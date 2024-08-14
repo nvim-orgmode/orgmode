@@ -4,41 +4,23 @@ local Id = require('orgmode.org.links.handlers.id')
 local Internal = require('orgmode.org.links.handlers.internal')
 
 ---@class OrgLinkHandlerFile:OrgLinkHandler
----@field new fun(self: OrgLinkHandlerFile, path: string, target: OrgLinkHandlerInternal | nil, prefix: boolean | nil): OrgLinkHandlerFile
+---@field new fun(self: OrgLinkHandlerFile, path: string, target: OrgLinkHandlerInternal | nil, prefix: boolean | nil, files: OrgFile[]): OrgLinkHandlerFile
 ---@field parse fun(link: string, prefix: boolean | nil): OrgLinkHandlerFile | nil
 ---@field path string
 ---@field skip_prefix boolean
 ---@field target OrgLinkHandlerInternal | nil
 local File = Link:new('file')
 
-function File:new(path, target, skip_prefix)
+function File:new(path, target, skip_prefix, files)
   ---@class OrgLinkHandlerFile
   local this = Link:new()
   this.skip_prefix = skip_prefix or false
   this.path = path
   this.target = target
+  this.files = files
   setmetatable(this, self)
   self.__index = self
   return this
-end
-
-function File.parse(input, skip_prefix)
-  if input == nil or #input == 0 then
-    return nil
-  end
-  local deliniator_start, deliniator_stop = input:find('::')
-
-  ---@type OrgLinkHandlerInternal | nil
-  local target = nil
-  local path = input
-
-  if deliniator_start then
-    ---@class OrgLinkHandlerInternal | nil
-    target = Internal.parse(input:sub(deliniator_stop + 1), true)
-    path = input:sub(0, deliniator_start - 1)
-  end
-
-  return File:new(path, target, skip_prefix)
 end
 
 -- TODO make protocol prefix optional. Based on what?
@@ -65,9 +47,8 @@ function File:follow()
   end
 end
 
-local function autocompletions_filenames(lead)
-  local Org = require('orgmode')
-  local filenames = Org.files:filenames()
+function File:_autocompletions_filenames(lead)
+  local filenames = self.files:filenames()
 
   local matches = {}
   for _, f in ipairs(filenames) do
@@ -80,24 +61,6 @@ local function autocompletions_filenames(lead)
 
   print(vim.inspect(matches))
   return matches
-end
-
-function File:resolve()
-  local Org = require('orgmode')
-  local path = fs.get_real_path(self.path)
-  if not path then
-    return self
-  end
-  local file = Org.files:get(path)
-  if not file then
-    return self
-  end
-  local id = file:get_property('id')
-  if not id then
-    return self
-  end
-
-  return Id:new(id, self.target):resolve()
 end
 
 function File:insert_description()
@@ -118,7 +81,36 @@ function File:insert_description()
   return file:get_title()
 end
 
-function File:complete(lead, context)
+local FileFactory = {}
+
+function FileFactory:init(files)
+  self.files = files
+end
+
+function FileFactory:new(path, target, skip_prefix)
+  return File:new(path, target, skip_prefix, self.files)
+end
+
+function FileFactory:parse(input, skip_prefix)
+  if input == nil or #input == 0 then
+    return nil
+  end
+  local deliniator_start, deliniator_stop = input:find('::')
+
+  ---@type OrgLinkHandlerInternal | nil
+  local target = nil
+  local path = input
+
+  if deliniator_start then
+    ---@class OrgLinkHandlerInternal | nil
+    target = Internal.parse(input:sub(deliniator_stop + 1), true)
+    path = input:sub(0, deliniator_start - 1)
+  end
+
+  self:new(path, target, skip_prefix)
+end
+
+function FileFactory:complete(lead, context)
   context = context or {}
   local deliniator_start, deliniator_stop = lead:find('::')
 
@@ -131,16 +123,16 @@ function File:complete(lead, context)
   end
 end
 
-function File:_complete(lead, context)
+function FileFactory:_complete(lead, context)
   return vim.tbl_map(function(f)
-    return self:new(f, nil, context.skip_prefix):__tostring()
-  end, autocompletions_filenames(lead))
+    return tostring(self:new(f, nil, context.skip_prefix))
+  end, self:_autocompletions_filenames(lead))
 end
 
-function File:_complete_targets(path, target_lead, context)
+function FileFactory:_complete_targets(path, target_lead, context)
   return vim.tbl_map(
     function(t)
-      return self:new(path, t, context.skip_prefix):__tostring()
+      return tostring(self:new(path, t, context.skip_prefix))
     end,
     Internal:complete(target_lead, {
       filename = fs.get_real_path(path),
@@ -149,4 +141,4 @@ function File:_complete_targets(path, target_lead, context)
   )
 end
 
-return File
+return FileFactory

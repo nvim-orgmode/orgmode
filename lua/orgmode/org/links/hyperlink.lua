@@ -164,7 +164,7 @@ function HyperLink:insert_link()
   end
 
   self.link = self.link:resolve()
-  local link_str = self:__tostring()
+  local link_str = tostring(self)
   local new_line = line_pre .. link_str .. line_post
 
   local linenr = vim.fn.line('.')

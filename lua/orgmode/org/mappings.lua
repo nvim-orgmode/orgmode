@@ -1185,14 +1185,7 @@ end
 
 ---@param headline OrgHeadline
 function OrgMappings:_goto_headline(headline)
-  local current_file_path = utils.current_file_path()
-  if headline.file.filename ~= current_file_path then
-    vim.cmd(string.format('edit %s', headline.file.filename))
-  else
-    vim.cmd([[normal! m']]) -- add link source to jumplist
-  end
-  vim.fn.cursor({ headline:get_range().start_line, 1 })
-  vim.cmd([[normal! zv]])
+  return utils.goto_headline(headline)
 end
 
 return OrgMappings

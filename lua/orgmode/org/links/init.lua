@@ -1,18 +1,18 @@
 local utils = require('orgmode.utils')
 local Link = require('orgmode.org.links.link_handler')
 
----@class OrgLinkHandlerRegistry
+---@class OrgLinks
 ---@field private internal OrgLinkHandler
 ---@field private handlers OrgLinkHandler[]
 ---@field private handlers_by_name table<string, OrgLinkHandler>
 ---@field private stored_links OrgLinkHandler[]
-local OrgLinkHandlerRegistry = {}
-OrgLinkHandlerRegistry.__index = OrgLinkHandlerRegistry
+local OrgLinks = {}
+OrgLinks.__index = OrgLinks
 
 -- Using `linkword` definition as defined in https://orgmode.org/org.pdf#Link%20Abbreviations
 local protocol_deliniator_pattern = '^[a-z][a-z0-9-_]+:'
 
-function OrgLinkHandlerRegistry:new(opts)
+function OrgLinks:new(opts)
   local this = setmetatable({
     internal = nil,
     handlers = {},
@@ -21,9 +21,10 @@ function OrgLinkHandlerRegistry:new(opts)
   }, self)
   self.__index = self
   this:setup_builtin_handlers()
+  return this
 end
 
-function OrgLinkHandlerRegistry:setup_builtin_handlers()
+function OrgLinks:setup_builtin_handlers()
   self:add_handler(require('orgmode.org.links.handlers.file'))
   self:add_handler(require('orgmode.org.links.handlers.http'))
   self:add_handler(require('orgmode.org.links.handlers.https'))
@@ -32,7 +33,7 @@ function OrgLinkHandlerRegistry:setup_builtin_handlers()
 end
 
 ---@param handler OrgLinkHandler
-function OrgLinkHandlerRegistry:add_handler(handler)
+function OrgLinks:add_handler(handler)
   if self.handlers_by_name[handler.protocol] then
     error('Completion handler ' .. handler.protocol .. ' already exists')
   end
@@ -46,7 +47,7 @@ function OrgLinkHandlerRegistry:add_handler(handler)
   table.insert(self.handlers, handler)
 end
 
-function OrgLinkHandlerRegistry:parse(input)
+function OrgLinks:parse(input)
   -- Finds protocol_deliniator
   local _, protocol_deliniator = input:find(protocol_deliniator_pattern)
 
@@ -69,14 +70,11 @@ end
 
 local function filter_by_prefix(lead)
   return function(needle)
-    if lead == '' or needle:find('^' .. lead) then
-      return true
-    end
-    return false
+    return lead == '' or needle:find('^' .. lead)
   end
 end
 
-function OrgLinkHandlerRegistry:complete(lead)
+function OrgLinks:complete(lead)
   if not lead then
     return {}
   end
@@ -95,15 +93,15 @@ function OrgLinkHandlerRegistry:complete(lead)
   return utils.concat(completions, self:_complete_stored_links(lead))
 end
 
-function OrgLinkHandlerRegistry:_complete_stored_links(lead)
+function OrgLinks:_complete_stored_links(lead)
   local stored_strings = vim.tbl_map(function(link)
-    return link:__tostring()
+    return tostring(link)
   end, self.stored_links)
 
   return vim.tbl_filter(filter_by_prefix(lead), stored_strings)
 end
 
-function OrgLinkHandlerRegistry:_complete_protocol(protocol, lead)
+function OrgLinks:_complete_protocol(protocol, lead)
   local handler = self.handlers_by_name[protocol]
 
   if handler then
@@ -113,7 +111,7 @@ function OrgLinkHandlerRegistry:_complete_protocol(protocol, lead)
   return {}
 end
 
-function OrgLinkHandlerRegistry:_complete_no_protocol(lead)
+function OrgLinks:_complete_no_protocol(lead)
   local completions = {}
 
   -- Completions for the different protocols
@@ -123,8 +121,8 @@ function OrgLinkHandlerRegistry:_complete_no_protocol(lead)
 end
 
 ---@param link OrgLinkHandler
-function OrgLinkHandlerRegistry:store_link(link)
+function OrgLinks:store_link(link)
   table.insert(self.stored_links, link)
 end
 
-return OrgLinkHandlerRegistry
+return OrgLinks
