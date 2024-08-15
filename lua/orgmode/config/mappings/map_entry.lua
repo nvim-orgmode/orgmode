@@ -106,6 +106,10 @@ function MapEntry:attach(default_mapping, user_mapping, opts)
     map_opts.prefix = nil
   end
 
+  if type(user_mapping) == 'table' and user_mapping.desc then
+    map_opts.desc = user_mapping.desc
+  end
+
   for _, map in ipairs(mapping) do
     if prefix ~= '' then
       map = map:gsub('<prefix>', prefix)
