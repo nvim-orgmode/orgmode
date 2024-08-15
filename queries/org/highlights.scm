@@ -39,7 +39,5 @@
 (directive) @org.directive
 (row "|" @org.table.delimiter)
 (cell "|" @org.table.delimiter)
-(table
-  (row (cell (contents) @org.table.heading))
-  (hr) @org.table.delimiter
-)
+(table (row (cell (contents) @org.table.heading)))
+(table (hr) @org.table.delimiter)
