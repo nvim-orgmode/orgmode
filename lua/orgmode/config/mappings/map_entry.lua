@@ -106,10 +106,8 @@ function MapEntry:attach(default_mapping, user_mapping, opts)
     map_opts.prefix = nil
   end
 
-  if user_mapping ~= nil then
-    if user_mapping.desc ~= nil then
-      map_opts.desc = user_mapping.desc
-    end
+  if type(user_mapping) == 'table' and user_mapping.desc then
+    map_opts.desc = user_mapping.desc
   end
 
   for _, map in ipairs(mapping) do
