@@ -95,7 +95,7 @@ function VirtualIndent:set_indent(start_line, end_line, ignore_ts)
     start_line = start_line - 1
   end
 
-  local node_at_cursor = vim.treesitter.get_node()
+  local node_at_cursor = vim.treesitter.get_node({ lang = 'org' })
   local tree_has_errors = false
   if node_at_cursor then
     tree_has_errors = node_at_cursor:tree():root():has_error()
