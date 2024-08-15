@@ -13,18 +13,24 @@ function M.parse_current_file()
   return vim.treesitter.get_parser(0, 'org', {}):parse()
 end
 
+---@param opts? vim.treesitter.get_node.Opts
+function M.get_node(opts)
+  opts = opts or {}
+  opts.lang = opts.lang or 'org'
+  return vim.treesitter.get_node(opts)
+end
+
 ---@param cursor? table
 ---@return TSNode | nil
 function M.get_node_at_cursor(cursor)
   M.parse_current_file()
   if not cursor then
-    return vim.treesitter.get_node({ lang = 'org' })
+    return M.get_node()
   end
 
-  return vim.treesitter.get_node({
+  return M.get_node({
     bufnr = 0,
     pos = { cursor[1] - 1, cursor[2] },
-    lang = 'org',
   })
 end
 

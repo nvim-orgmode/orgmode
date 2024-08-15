@@ -1,3 +1,4 @@
+local ts_utils = require('orgmode.utils.treesitter')
 local config = require('orgmode.config')
 
 ---@class OrgStarsHighlighter
@@ -19,10 +20,9 @@ function OrgStars:on_line(bufnr, line)
     return
   end
 
-  local node = vim.treesitter.get_node({
+  local node = ts_utils.get_node({
     bufnr = bufnr,
     pos = { line, 0 },
-    lang = 'org',
   })
 
   if not node or node:type() ~= 'stars' then
