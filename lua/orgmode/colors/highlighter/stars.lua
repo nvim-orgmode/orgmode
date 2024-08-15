@@ -22,6 +22,7 @@ function OrgStars:on_line(bufnr, line)
   local node = vim.treesitter.get_node({
     bufnr = bufnr,
     pos = { line, 0 },
+    lang = 'org',
   })
 
   if not node or node:type() ~= 'stars' then

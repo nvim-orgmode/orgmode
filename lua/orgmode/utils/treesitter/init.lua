@@ -6,7 +6,7 @@ local query_cache = {}
 function M.restart_highlights(bufnr)
   bufnr = bufnr or 0
   vim.treesitter.stop(bufnr)
-  vim.treesitter.start(bufnr)
+  vim.treesitter.start(bufnr, 'org')
 end
 
 function M.parse_current_file()
@@ -18,12 +18,13 @@ end
 function M.get_node_at_cursor(cursor)
   M.parse_current_file()
   if not cursor then
-    return vim.treesitter.get_node()
+    return vim.treesitter.get_node({ lang = 'org' })
   end
 
   return vim.treesitter.get_node({
     bufnr = 0,
     pos = { cursor[1] - 1, cursor[2] },
+    lang = 'org',
   })
 end
 
