@@ -1135,21 +1135,14 @@ function OrgMappings:_get_date_under_cursor(col_offset)
   col_offset = col_offset or 0
   local col = vim.fn.col('.') + col_offset
   local line = vim.fn.line('.') or 0
-  local item = self.files:get_closest_headline_or_nil()
-  local dates = {}
-  if item then
-    dates = vim.tbl_filter(function(date)
-      return date.range:is_in_range(line, col)
-    end, item:get_all_dates())
-  else
-    dates = Date.parse_all_from_line(vim.fn.getline('.'), line)
-  end
+  local dates = vim.tbl_filter(function(date)
+    return date.range:is_in_range(line, col)
+  end, Date.parse_all_from_line(vim.fn.getline('.'), line))
 
   if #dates == 0 then
     return nil
   end
 
-  -- TODO: this will result in a bug, when more than one date is in the line
   return dates[1]
 end
 
