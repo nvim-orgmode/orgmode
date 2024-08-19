@@ -665,9 +665,10 @@ end
 memoize('get_non_plan_dates')
 ---@return OrgDate[]
 function Headline:get_non_plan_dates()
-  local section = self:node():parent()
+  local headline_node = self:node()
+  local section = headline_node:parent()
   local body = section and section:field('body')[1]
-  local headline_text = self.file:get_node_text(self:_get_child_node('item')) or ''
+  local headline_text = self.file:get_node_text(headline_node) or ''
   local dates = Date.parse_all_from_line(headline_text, self:node():start() + 1)
   local properties_node = section and section:field('property_drawer')[1]
 
@@ -684,7 +685,7 @@ function Headline:get_non_plan_dates()
   end
 
   local start_line = body:range()
-  local lines = self.file:get_node_text_list(body)
+  local lines = self.file:get_node_text_list(body, ts_utils.range_with_zero_start_col(body))
   for i, line in ipairs(lines) do
     local line_dates = Date.parse_all_from_line(line, start_line + i)
     local is_clock_line = line:match('^%s*:?CLOCK:') ~= nil

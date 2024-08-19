@@ -121,6 +121,17 @@ function M.node_to_lsp_range(node)
   return rtn
 end
 
+---Return the range of the given node, but override the start column to be 0.
+---This is needed when we want to parse the lines manually to ensure that
+---we parse from the start of the line
+---@param node TSNode
+---@return number[]
+function M.range_with_zero_start_col(node)
+  local range = { node:range() }
+  range[2] = 0
+  return range
+end
+
 -- Memoizes a function based on the buffer tick of the provided bufnr.
 -- The cache entry is cleared when the buffer is detached to avoid memory leaks.
 -- The options argument is a table with one optional value:
