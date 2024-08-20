@@ -10,6 +10,7 @@ local auto_instance_keys = {
   org_mappings = true,
   notifications = true,
   completion = true,
+  links = true,
 }
 
 ---@class Org
@@ -22,6 +23,7 @@ local auto_instance_keys = {
 ---@field completion OrgCompletion
 ---@field org_mappings OrgMappings
 ---@field notifications OrgNotifications
+---@field links OrgLinks
 local Org = {}
 setmetatable(Org, {
   __index = function(tbl, key)
@@ -66,6 +68,7 @@ function Org:init()
     files = self.files,
   })
   self.completion = require('orgmode.org.autocompletion'):new({ files = self.files })
+  self.links = require('orgmode.org.links'):new({ files = self.files })
   self.statusline_debounced = require('orgmode.utils').debounce('statusline', function()
     return self.clock:get_statusline()
   end, 300)
