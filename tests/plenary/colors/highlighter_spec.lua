@@ -5,6 +5,8 @@ local api = vim.api
 
 describe('highlighter', function()
   local ns_id = api.nvim_create_namespace('org_custom_highlighter')
+  local has_extmarks_url_support = vim.fn.has('nvim-0.10.2') == 1
+
   local get_extmarks = function(content)
     ---@diagnostic disable-next-line: inject-field
     config.ts_hl_enabled = true
@@ -32,6 +34,9 @@ describe('highlighter', function()
     end
     if opts.spell ~= nil then
       assert.are.same(opts.spell, details.spell, 'spell is not matching')
+    end
+    if has_extmarks_url_support and opts.url ~= nil then
+      assert.are.same(opts.url, details.url, 'url is not matching')
     end
   end
 
@@ -209,7 +214,10 @@ describe('highlighter', function()
         'I have [[https://google.com]] link',
       })
       assert.are.same(4, #extmarks)
-      assert_extmark(extmarks[1], { line = 0, start_col = 7, end_col = 29, hl_group = '@org.hyperlink' })
+      assert_extmark(
+        extmarks[1],
+        { line = 0, start_col = 7, end_col = 29, hl_group = '@org.hyperlink', url = 'https://google.com' }
+      )
       assert_extmark(extmarks[2], { line = 0, start_col = 7, end_col = 9, conceal = '' })
       assert_extmark(extmarks[3], { line = 0, start_col = 9, end_col = 27, spell = false })
       assert_extmark(extmarks[4], { line = 0, start_col = 27, end_col = 29, conceal = '' })
@@ -220,7 +228,10 @@ describe('highlighter', function()
         'I have [[https://google.com][google]] link',
       })
       assert.are.same(4, #extmarks)
-      assert_extmark(extmarks[1], { line = 0, start_col = 7, end_col = 37, hl_group = '@org.hyperlink' })
+      assert_extmark(
+        extmarks[1],
+        { line = 0, start_col = 7, end_col = 37, hl_group = '@org.hyperlink', url = 'https://google.com' }
+      )
       assert_extmark(extmarks[2], { line = 0, start_col = 7, end_col = 29, conceal = '' })
       assert_extmark(extmarks[3], { line = 0, start_col = 9, end_col = 27, spell = false })
       assert_extmark(extmarks[4], { line = 0, start_col = 35, end_col = 37, conceal = '' })
@@ -231,7 +242,10 @@ describe('highlighter', function()
         'I have [[https://google.com][google I am *not bold*]] link',
       })
       assert.are.same(4, #extmarks)
-      assert_extmark(extmarks[1], { line = 0, start_col = 7, end_col = 53, hl_group = '@org.hyperlink' })
+      assert_extmark(
+        extmarks[1],
+        { line = 0, start_col = 7, end_col = 53, hl_group = '@org.hyperlink', url = 'https://google.com' }
+      )
       assert_extmark(extmarks[2], { line = 0, start_col = 7, end_col = 29, conceal = '' })
       assert_extmark(extmarks[3], { line = 0, start_col = 9, end_col = 27, spell = false })
       assert_extmark(extmarks[4], { line = 0, start_col = 51, end_col = 53, conceal = '' })

@@ -1,13 +1,16 @@
 local ts_utils = require('orgmode.utils.treesitter')
+local utils = require('orgmode.utils')
 
 ---@class OrgLinkHighlighter : OrgMarkupHighlighter
 ---@field private markup OrgMarkupHighlighter
+---@field private has_extmark_url_support boolean
 local OrgLink = {}
 
 ---@param opts { markup: OrgMarkupHighlighter }
 function OrgLink:new(opts)
   local data = {
     markup = opts.markup,
+    has_extmark_url_support = vim.fn.has('nvim-0.10.2') == 1,
   }
   setmetatable(data, self)
   self.__index = self
@@ -100,12 +103,18 @@ function OrgLink:highlight(highlights, bufnr)
     local alias = link:find('%]%[') or 1
     local link_end = link:find('%]%[') or (link:len() - 1)
 
-    vim.api.nvim_buf_set_extmark(bufnr, namespace, entry.from.line, entry.from.start_col, {
+    local link_opts = {
       ephemeral = ephemeral,
       end_col = entry.to.end_col,
       hl_group = '@org.hyperlink',
       priority = 110,
-    })
+    }
+
+    if self.has_extmark_url_support then
+      link_opts.url = alias > 1 and link:sub(3, alias - 1) or link:sub(3, -3)
+    end
+
+    vim.api.nvim_buf_set_extmark(bufnr, namespace, entry.from.line, entry.from.start_col, link_opts)
 
     vim.api.nvim_buf_set_extmark(bufnr, namespace, entry.from.line, entry.from.start_col, {
       ephemeral = ephemeral,
