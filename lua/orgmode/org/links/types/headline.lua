@@ -1,3 +1,5 @@
+local utils = require('orgmode.utils')
+local OrgLinkUrl = require('orgmode.org.links.url')
 local link_utils = require('orgmode.org.links.utils')
 
 ---@class OrgLinkHeadline:OrgLinkType
@@ -25,23 +27,46 @@ function OrgLinkHeadline:follow(link)
     return false
   end
 
-  local headlines = opts.file:find_headlines_by_title(opts.headline_title)
-  return link_utils.goto_oneof_headlines(headlines)
+  local org_file = self.files:load_file_sync(opts.file_path)
+
+  if org_file then
+    local headlines = org_file:find_headlines_by_title(opts.headline)
+    return link_utils.goto_oneof_headlines(headlines, opts.file_path, 'No headline found with title: ' .. opts.headline)
+  end
+
+  return link_utils.open_file_and_search(opts.file_path, opts.headline)
 end
 
 ---@private
 ---@param link string
----@return { headline_title: string, file: OrgFile  } | nil
+---@return { headline: string, file_path: string  } | nil
 function OrgLinkHeadline:_parse(link)
-  local headline_title = link:match('^%*(.+)$')
-  if headline_title then
+  local link_url = OrgLinkUrl:new(link)
+
+  local target = link_url:get_target()
+  local path = link_url:get_path()
+
+  local file_path_headline = target and target:match('^%*(.+)$')
+  local current_file_headline = path and path:match('^%*(.+)$')
+
+  if file_path_headline then
+    local file_path = link_url:get_file_path()
+    if not file_path then
+      return nil
+    end
     return {
-      headline_title = headline_title,
-      file = self.files:get_current_file(),
+      headline = file_path_headline,
+      file_path = file_path,
     }
   end
 
-  -- TODO: Add support for file format
+  if current_file_headline then
+    return {
+      headline = current_file_headline,
+      file_path = utils.current_file_path(),
+    }
+  end
+
   return nil
 end
 

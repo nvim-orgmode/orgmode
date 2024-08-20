@@ -53,6 +53,7 @@ function Org:init()
       paths = require('orgmode.config').org_agenda_files,
     })
     :load_sync(true, 20000)
+  self.links = require('orgmode.org.links'):new({ files = self.files })
   self.agenda = require('orgmode.agenda'):new({
     files = self.files,
   })
@@ -63,12 +64,12 @@ function Org:init()
     capture = self.capture,
     agenda = self.agenda,
     files = self.files,
+    links = self.links,
   })
   self.clock = require('orgmode.clock'):new({
     files = self.files,
   })
   self.completion = require('orgmode.org.autocompletion'):new({ files = self.files })
-  self.links = require('orgmode.org.links'):new({ files = self.files })
   self.statusline_debounced = require('orgmode.utils').debounce('statusline', function()
     return self.clock:get_statusline()
   end, 300)

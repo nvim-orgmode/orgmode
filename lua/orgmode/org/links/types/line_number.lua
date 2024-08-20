@@ -1,5 +1,5 @@
-local fs = require('orgmode.utils.fs')
-local link_utils = require('orgmode.org.links.utils')
+local utils = require('orgmode.utils')
+local OrgLinkUrl = require('orgmode.org.links.url')
 
 ---@class OrgLinkLineNumber:OrgLinkType
 ---@field private files OrgFiles
@@ -15,7 +15,7 @@ function OrgLinkLineNumber:new(opts)
 end
 
 function OrgLinkLineNumber:get_name()
-  return 'headline'
+  return 'line_number'
 end
 
 ---@param link string
@@ -26,7 +26,7 @@ function OrgLinkLineNumber:follow(link)
     return false
   end
 
-  local cmd = string.format('edit +%s %s', opts.line_number, fs.get_real_path(opts.file.filename))
+  local cmd = string.format('edit +%s %s', opts.line_number, opts.file_path)
   vim.cmd(cmd)
   vim.cmd([[normal! zv]])
   return true
@@ -34,23 +34,22 @@ end
 
 ---@private
 ---@param link string
----@return { line_number: number, file: OrgFile  } | nil
+---@return { line_number: number, file_path: string  } | nil
 function OrgLinkLineNumber:_parse(link)
-  local parts = vim.split(link, '::', { plain = true })
-  if #parts < 2 then
-    return nil
-  end
+  local link_url = OrgLinkUrl:new(link)
+  local target = link_url:get_target()
+  local path = link_url:get_path()
+  local file_path = link_url:get_file_path()
+  local line_number = target and target:match('^%d+$')
+  local protocol = link_url:get_protocol()
 
-  local line_number = parts[#parts]:match('^%d+$')
-
-  if line_number then
+  if (protocol == 'file' or file_path) and line_number then
     return {
       line_number = tonumber(line_number),
-      file = self.files:get_current_file(),
+      file_path = file_path and file_path ~= '' and file_path or utils.current_file_path(),
     }
   end
 
-  -- TODO: Add support for file format
   return nil
 end
 

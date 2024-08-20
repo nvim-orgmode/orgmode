@@ -594,4 +594,11 @@ function utils.detect_filetype(name, skip_ftmatch)
   return name:lower()
 end
 
+---@param filename string
+---@return boolean
+function utils.is_org_file(filename)
+  local ext = vim.fn.fnamemodify(filename, ':e')
+  return ext == 'org' or ext == 'org_archive'
+end
+
 return utils

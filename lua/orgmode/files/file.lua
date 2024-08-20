@@ -55,8 +55,7 @@ end
 ---Load the file
 ---@return OrgPromise<OrgFile | false>
 function OrgFile.load(filename)
-  local ext = vim.fn.fnamemodify(filename, ':e')
-  if ext ~= 'org' and ext ~= 'org_archive' then
+  if not utils.is_org_file(filename) or not vim.loop.fs_stat(filename) then
     return Promise.resolve(false)
   end
   local bufnr = vim.fn.bufnr(filename) or -1

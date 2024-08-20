@@ -1,4 +1,5 @@
 local utils = require('orgmode.utils')
+local OrgLinkUrl = require('orgmode.org.links.url')
 local link_utils = require('orgmode.org.links.utils')
 
 ---@class OrgLinkCustomId:OrgLinkType
@@ -26,23 +27,34 @@ function OrgLinkCustomId:follow(link)
     return false
   end
 
-  local headlines = opts.file:find_headlines_with_property('CUSTOM_ID', opts.custom_id)
-  return link_utils.goto_oneof_headlines(headlines)
+  local file = self.files:load_file_sync(opts.file_path)
+  local err_msg = 'No headline found with custom id: ' .. opts.custom_id
+
+  if file then
+    local headlines = file:find_headlines_with_property('CUSTOM_ID', opts.custom_id)
+    return link_utils.goto_oneof_headlines(headlines, file.filename, err_msg)
+  end
+
+  return link_utils.open_file_and_search(opts.file_path, opts.custom_id)
 end
 
 ---@private
 ---@param link string
----@return { custom_id: string, file: OrgFile  } | nil
+---@return { custom_id: string, file_path: string  } | nil
 function OrgLinkCustomId:_parse(link)
-  local custom_id = link:match('^#(.+)$')
+  local link_url = OrgLinkUrl:new(link)
+
+  local target = link_url:get_target()
+  local path = link_url:get_path()
+  local custom_id = (target and target:match('^#(.+)$')) or (path and path:match('^#(.+)$'))
+
   if custom_id then
     return {
       custom_id = custom_id,
-      file = self.files:get_current_file(),
+      file_path = link_url:get_file_path() or utils.current_file_path(),
     }
   end
 
-  -- TODO: Add support for file format
   return nil
 end
 
