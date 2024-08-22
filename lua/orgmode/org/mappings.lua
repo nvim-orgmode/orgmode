@@ -590,6 +590,11 @@ function OrgMappings:org_return()
     rhs = vim.api.nvim_eval(rhs)
   end
 
+  -- If the rhs is empty, assume that callback already handled the action
+  if old_mapping.callback and not rhs then
+    return
+  end
+
   return vim.api.nvim_feedkeys(rhs, 'n', true)
 end
 
