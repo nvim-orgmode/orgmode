@@ -29,3 +29,4 @@ jobs:
     uses: ./.github/workflows/luarocks.yml
     with:
       luarocks_version: ${{ needs.version.outputs.luarocks_version }}
+    secrets: inherit
