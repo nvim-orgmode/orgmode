@@ -1,19 +1,21 @@
 name: Push to Luarocks
 
 on:
-  workflow_call:
-    inputs:
-      luarocks_version:
-        type: string
-        required: true
+  push:
+    tags:
+      - '*'
+  pull_request: # Runs test install without uploading
+  workflow_dispatch: # Allows to trigger manually
 
 jobs:
-  upload:
+  luarocks-upload:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          fetch-depth: 0 # Required to count the commits
+      - name: Get Version
+        run: echo "LUAROCKS_VERSION=$(git describe --abbrev=0 --tags)" >> $GITHUB_ENV
       - name: Install C/C++ Compiler
         uses: rlalik/setup-cpp-compiler@master
         with:
@@ -36,6 +38,6 @@ jobs:
         env:
           LUAROCKS_API_KEY: ${{ secrets.LUAROCKS_API_KEY }}
         with:
-          version: ${{ inputs.luarocks_version }}
+          version: ${{ env.LUAROCKS_VERSION }}
           dependencies: |
             tree-sitter-orgmode ~> 1

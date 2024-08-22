@@ -1,7 +1,10 @@
 name: tests
 
 on:
-  workflow_call:
+  push:
+    branches:
+      - master
+  pull_request:
 
 env:
   CI: true
