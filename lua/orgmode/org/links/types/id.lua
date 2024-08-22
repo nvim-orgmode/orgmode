@@ -47,6 +47,11 @@ function OrgLinkId:follow(link)
   return link_utils.goto_headline(headline)
 end
 
+---@return string[]
+function OrgLinkId:autocomplete(_)
+  return {}
+end
+
 ---@private
 ---@param link string
 ---@return string

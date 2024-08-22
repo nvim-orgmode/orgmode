@@ -40,6 +40,15 @@ function OrgLinkUrl:get_file_path()
 end
 
 ---@return string
+function OrgLinkUrl:get_path_with_protocol()
+  if not self.protocol or self.protocol == '' then
+    return self.path
+  end
+
+  return ('%s:%s'):format(self.protocol, self.path)
+end
+
+---@return string
 function OrgLinkUrl:get_target()
   return self.target
 end

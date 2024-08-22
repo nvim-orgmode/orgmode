@@ -46,9 +46,59 @@ function OrgLinkHeadlineSearch:follow(link)
   return link_utils.open_file_and_search(opts.file_path, opts.headline_text)
 end
 
+---@param link string
+---@return string[]
+function OrgLinkHeadlineSearch:autocomplete(link)
+  local opts = self:_parse(link)
+  if not opts then
+    return {}
+  end
+
+  if opts.type == 'file' and not opts.target then
+    local filenames = self.files:filenames()
+    local valid_filenames = {}
+    for _, f in ipairs(filenames) do
+      if f:find('^' .. opts.file_path) then
+        f = f:gsub('^' .. opts.file_path, opts.link_url.path)
+        table.insert(valid_filenames, f)
+      end
+    end
+
+    local prefix = opts.link_url:get_protocol() == 'file' and 'file:' or ''
+
+    return vim.tbl_map(function(path)
+      return prefix .. path
+    end, valid_filenames)
+  end
+
+  local file = self.files:load_file_sync(opts.file_path)
+
+  if not file then
+    return {}
+  end
+
+  local pattern = ('<<<?(%s[^>]*)>>>?'):format(opts.headline_text):lower()
+  local headlines = vim.tbl_map(function(headline)
+    return headline:get_title()
+  end, file:find_headlines_matching_search_term(pattern, true))
+
+  utils.concat(
+    headlines,
+    vim.tbl_map(function(headline)
+      return headline:get_title()
+    end, file:find_headlines_by_title(opts.headline_text)),
+    true
+  )
+  local prefix = opts.type == 'internal' and '' or opts.link_url:get_path_with_protocol() .. '::'
+
+  return vim.tbl_map(function(headline_title)
+    return prefix .. headline_title
+  end, headlines)
+end
+
 ---@private
 ---@param link string
----@return { headline_text: string, file_path: string  } | nil
+---@return { headline_text: string, file_path: string, link_url: OrgLinkUrl, type: 'file' | 'internal', target: string | nil  } | nil
 function OrgLinkHeadlineSearch:_parse(link)
   local link_url = OrgLinkUrl:new(link)
 
@@ -56,10 +106,14 @@ function OrgLinkHeadlineSearch:_parse(link)
   local path = link_url:get_path()
   local headline_text = target or path
 
-  if headline_text and headline_text ~= '' then
+  if headline_text then
+    local file_path = link_url:get_file_path()
     return {
       headline_text = headline_text,
-      file_path = link_url:get_file_path() or utils.current_file_path(),
+      file_path = file_path or utils.current_file_path(),
+      link_url = link_url,
+      target = target,
+      type = file_path and 'file' or 'internal',
     }
   end
 

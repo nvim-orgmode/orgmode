@@ -32,6 +32,11 @@ function OrgLinkLineNumber:follow(link)
   return true
 end
 
+---@return string[]
+function OrgLinkLineNumber:autocomplete(_)
+  return {}
+end
+
 ---@private
 ---@param link string
 ---@return { line_number: number, file_path: string  } | nil

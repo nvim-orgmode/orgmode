@@ -39,6 +39,11 @@ function OrgLinkHttp:follow(link)
   return true
 end
 
+---@return string[]
+function OrgLinkHttp:autocomplete(_)
+  return {}
+end
+
 ---@private
 ---@param link string
 ---@return string | nil

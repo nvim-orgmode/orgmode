@@ -42,6 +42,18 @@ function OrgLinks:follow(link)
   return self.headline_search:follow(link)
 end
 
+---@param link string
+---@return string[]
+function OrgLinks:autocomplete(link)
+  local items = {}
+  for _, source in ipairs(self.types) do
+    utils.concat(items, source:autocomplete(link))
+  end
+
+  utils.concat(items, self.headline_search:autocomplete(link))
+  return items
+end
+
 ---@param headline OrgHeadline
 function OrgLinks:store_link_to_headline(headline)
   self.stored_links[self:get_link_to_headline(headline)] = headline:get_title()
