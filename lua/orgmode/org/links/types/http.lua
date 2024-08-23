@@ -13,6 +13,7 @@ function OrgLinkHttp:new(opts)
   return this
 end
 
+---@return string
 function OrgLinkHttp:get_name()
   return 'http'
 end

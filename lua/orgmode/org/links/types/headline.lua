@@ -15,6 +15,7 @@ function OrgLinkHeadline:new(opts)
   return this
 end
 
+---@return string
 function OrgLinkHeadline:get_name()
   return 'headline'
 end

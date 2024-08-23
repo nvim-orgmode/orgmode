@@ -1,5 +1,6 @@
 ---@class OrgCompletion
 ---@field files OrgFiles
+---@field links OrgLinks
 ---@field private sources OrgCompletionSource[]
 ---@field private sources_by_name table<string, OrgCompletionSource>
 ---@field menu string
@@ -8,10 +9,11 @@ local OrgCompletion = {
 }
 OrgCompletion.__index = OrgCompletion
 
----@param opts { files: OrgFiles }
+---@param opts { files: OrgFiles, links: OrgLinks }
 function OrgCompletion:new(opts)
   local this = setmetatable({
     files = opts.files,
+    links = opts.links,
     sources = {},
     sources_by_name = {},
   }, OrgCompletion)

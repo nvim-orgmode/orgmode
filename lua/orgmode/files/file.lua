@@ -55,7 +55,7 @@ end
 ---Load the file
 ---@return OrgPromise<OrgFile | false>
 function OrgFile.load(filename)
-  if not utils.is_org_file(filename) or not vim.loop.fs_stat(filename) then
+  if not utils.is_org_file(filename) then
     return Promise.resolve(false)
   end
   local bufnr = vim.fn.bufnr(filename) or -1
@@ -66,6 +66,10 @@ function OrgFile.load(filename)
       lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false),
       bufnr = bufnr,
     }))
+  end
+
+  if not vim.loop.fs_stat(filename) then
+    return Promise.resolve(false)
   end
 
   return utils.readfile(filename, { schedule = true }):next(function(lines)

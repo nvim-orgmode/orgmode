@@ -63,10 +63,28 @@ function OrgLinkUrl:get_protocol()
   return self.protocol
 end
 
+---@return boolean
+function OrgLinkUrl:is_id()
+  return self.protocol == 'id'
+end
+
+---@return string | nil
+function OrgLinkUrl:get_id()
+  if not self:is_id() then
+    return nil
+  end
+  return self.path
+end
+
 ---@private
 ---@return string
 function OrgLinkUrl:_get_real_path()
   return fs.get_real_path(self.path) or self.path
+end
+
+---@return string
+function OrgLinkUrl:to_string()
+  return self.url
 end
 
 ---@private

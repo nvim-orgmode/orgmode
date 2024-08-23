@@ -14,6 +14,7 @@ function OrgLinkLineNumber:new(opts)
   return this
 end
 
+---@return string
 function OrgLinkLineNumber:get_name()
   return 'line_number'
 end

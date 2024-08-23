@@ -14,6 +14,7 @@ function OrgLinkId:new(opts)
   return this
 end
 
+---@return string
 function OrgLinkId:get_name()
   return 'id'
 end

@@ -15,6 +15,7 @@ function OrgLinkCustomId:new(opts)
   return this
 end
 
+---@return string
 function OrgLinkCustomId:get_name()
   return 'custom_id'
 end
