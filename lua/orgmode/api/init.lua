@@ -1,7 +1,6 @@
 ---@diagnostic disable: invisible
 local OrgFile = require('orgmode.api.file')
 local OrgHeadline = require('orgmode.api.headline')
-local Hyperlinks = require('orgmode.org.hyperlinks')
 local orgmode = require('orgmode')
 
 ---@class OrgApiRefileOpts
@@ -110,7 +109,8 @@ end
 --- @param link_location string
 --- @return boolean
 function OrgApi.insert_link(link_location)
-  Hyperlinks.insert_link(link_location)
+  orgmode.links:insert_link(link_location)
+  return true
 end
 
 return OrgApi
