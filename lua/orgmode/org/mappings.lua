@@ -20,6 +20,7 @@ local ListItem = require('orgmode.files.elements.listitem')
 ---@field capture OrgCapture
 ---@field agenda OrgAgenda
 ---@field files OrgFiles
+---@field links OrgLinks
 local OrgMappings = {}
 
 ---@param data table
@@ -29,6 +30,7 @@ function OrgMappings:new(data)
   opts.capture = data.capture
   opts.agenda = data.agenda
   opts.files = data.files
+  opts.links = data.links
   setmetatable(opts, self)
   self.__index = self
   return opts
