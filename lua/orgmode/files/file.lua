@@ -172,10 +172,14 @@ function OrgFile:get_ts_matches(query, node)
   local matches = {}
 
   local from, _, to = node:range()
-  for _, match, _ in ts_query:iter_matches(node, self:_get_source(), from, to + 1) do
+  for _, match, _ in ts_query:iter_matches(node, self:_get_source(), from, to + 1, { all = false }) do
     local items = {}
-    for id, matched_node in pairs(match) do
+    for id, matched_nodes in pairs(match) do
       local name = ts_query.captures[id]
+      local matched_node = matched_nodes
+      if type(matched_nodes) == 'table' then
+        matched_node = matched_nodes[#matched_nodes]
+      end
       local node_text = self:get_node_text_list(matched_node)
       items[name] = {
         node = matched_node,

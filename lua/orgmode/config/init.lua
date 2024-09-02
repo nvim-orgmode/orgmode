@@ -377,7 +377,7 @@ function Config:setup_ts_predicates()
     end
 
     return false
-  end, { force = true })
+  end, { force = true, all = false })
 
   vim.treesitter.query.add_predicate('org-is-valid-priority?', function(match, _, source, predicate)
     local node = match[predicate[2]]
@@ -412,7 +412,7 @@ function Config:setup_ts_predicates()
     local todo_text = vim.treesitter.get_node_text(prev_sibling, source)
     local is_prev_sibling_todo_keyword = todo_keywords[todo_text] and true or false
     return is_prev_sibling_todo_keyword
-  end, { force = true })
+  end, { force = true, all = false })
 
   vim.treesitter.query.add_directive('org-set-block-language!', function(match, _, bufnr, pred, metadata)
     local lang_node = match[pred[2]]
@@ -424,7 +424,7 @@ function Config:setup_ts_predicates()
       return
     end
     metadata['injection.language'] = utils.detect_filetype(text, true)
-  end, { force = true })
+  end, { force = true, all = false })
 
   vim.treesitter.query.add_predicate('org-is-headline-level?', function(match, _, _, predicate)
     ---@type TSNode
@@ -435,7 +435,7 @@ function Config:setup_ts_predicates()
     end
     local _, _, _, node_end_col = node:range()
     return ((node_end_col - 1) % 8) + 1 == level
-  end, { force = true })
+  end, { force = true, all = false })
 end
 
 ---@param content table
