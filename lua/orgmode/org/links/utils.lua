@@ -59,7 +59,7 @@ function link_utils.goto_oneof_headlines(headlines, file_path, error_message)
 end
 
 ---@param file_path string
----@param search_text string
+---@param search_text string | nil
 ---@return boolean
 function link_utils.open_file_and_search(file_path, search_text)
   if not file_path or file_path == '' then
@@ -68,6 +68,11 @@ function link_utils.open_file_and_search(file_path, search_text)
   if file_path ~= utils.current_file_path() then
     vim.cmd(('edit %s'):format(file_path))
   end
+
+  if not search_text or search_text == '' then
+    return true
+  end
+
   local result = vim.fn.search(search_text, 'W')
   if result == 0 then
     utils.echo_warning(string.format('No match found for expression: %s', search_text))
