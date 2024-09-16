@@ -31,6 +31,10 @@ function OrgLinkHeadlineSearch:follow(link)
   local file = self.files:load_file_sync(opts.file_path)
 
   if file then
+    if opts.type == 'file' and not opts.target then
+      return link_utils.goto_file(file)
+    end
+
     local pattern = ('<<<?(%s[^>]*)>>>?'):format(opts.headline_text):lower()
     local headlines = file:find_headlines_matching_search_term(pattern, true)
     if #headlines == 0 then

@@ -109,8 +109,6 @@ describe('Hyperlink mappings', function()
   end)
 
   it('should store link to a headline with id', function()
-    ---@diagnostic disable-next-line: invisible
-    require('orgmode').links.stored_links = {}
     local org = require('orgmode').setup({
       org_id_link_to_org_use_id = true,
     })
@@ -125,6 +123,8 @@ describe('Hyperlink mappings', function()
     })
 
     org:init()
+    ---@diagnostic disable-next-line: invisible
+    require('orgmode').links.stored_links = {}
     vim.fn.cursor(4, 10)
     vim.cmd([[norm ,ols]])
     ---@diagnostic disable-next-line: invisible
