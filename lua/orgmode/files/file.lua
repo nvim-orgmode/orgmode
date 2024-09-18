@@ -55,12 +55,13 @@ end
 ---Load the file
 ---@return OrgPromise<OrgFile | false>
 function OrgFile.load(filename)
-  if not utils.is_org_file(filename) then
-    return Promise.resolve(false)
-  end
   local bufnr = vim.fn.bufnr(filename) or -1
 
-  if bufnr > -1 and vim.api.nvim_buf_is_loaded(bufnr) then
+  if
+    bufnr > -1
+    and vim.api.nvim_buf_is_loaded(bufnr)
+    and vim.api.nvim_get_option_value('filetype', { buf = bufnr }) == 'org'
+  then
     return Promise.resolve(OrgFile:new({
       filename = filename,
       lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false),
@@ -68,7 +69,7 @@ function OrgFile.load(filename)
     }))
   end
 
-  if not vim.loop.fs_stat(filename) then
+  if not vim.loop.fs_stat(filename) or not utils.is_org_file(filename) then
     return Promise.resolve(false)
   end
 

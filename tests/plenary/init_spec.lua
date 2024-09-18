@@ -1,5 +1,5 @@
-local helpers = require('tests.plenary.helpers')
 local orgmode = require('orgmode')
+local Date = require('orgmode.objects.date')
 
 describe('Init', function()
   local org = orgmode.setup({
@@ -10,6 +10,7 @@ describe('Init', function()
   local todo_archive_file = vim.fn.getcwd() .. '/tests/plenary/fixtures/todo.org_archive'
   local refile_file = vim.fn.getcwd() .. '/tests/plenary/fixtures/refile.org'
   local txt_file = vim.fn.getcwd() .. '/tests/plenary/fixtures/text_notes.txt'
+
   it('should load and parse files from folder', function()
     assert.is.Nil(rawget(org, 'files'))
     assert.is.Nil(rawget(org, 'agenda'))
@@ -52,5 +53,24 @@ describe('Init', function()
     org.files:add_to_paths_sync(todo_file)
     -- Existing file in path not appended to paths
     assert.are.same({ vim.fn.getcwd() .. '/tests/plenary/fixtures/*', fname }, org.files.paths)
+  end)
+
+  it('should load a file as org file if it has correct filetype', function()
+    local fname = vim.fn.resolve(vim.fn.tempname() .. '.txt')
+
+    -- Behaves as text file
+    vim.fn.writefile({ '* TODO Test' }, fname)
+    vim.cmd('edit ' .. fname)
+    assert.are.same('text', vim.api.nvim_get_option_value('filetype', { buf = vim.api.nvim_get_current_buf() }))
+    vim.cmd('norm >>')
+    assert.are.same({ '        * TODO Test' }, vim.api.nvim_buf_get_lines(0, 0, -1, false))
+    vim.cmd('bw!')
+
+    -- Behaves as org file
+    vim.fn.writefile({ '* TODO Test' }, fname)
+    vim.cmd('edit ' .. fname)
+    vim.cmd('set filetype=org')
+    vim.cmd('norm >>')
+    assert.are.same({ '** TODO Test' }, vim.api.nvim_buf_get_lines(0, 0, -1, false))
   end)
 end)
