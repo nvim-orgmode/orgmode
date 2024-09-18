@@ -1,6 +1,5 @@
 ---@diagnostic disable: invisible
 local OrgHeadline = require('orgmode.api.headline')
-local Hyperlinks = require('orgmode.org.hyperlinks')
 local org = require('orgmode')
 
 ---@class OrgApiFile
@@ -112,12 +111,12 @@ function OrgFile:get_link()
     -- do remote edit
     return org.files
       :update_file(filename, function(file)
-        return Hyperlinks.get_link_to_file(file)
+        return org.links:get_link_to_file(file)
       end)
       :wait()
   end
 
-  return Hyperlinks.get_link_to_file(self._file)
+  return org.links:get_link_to_file(self._file)
 end
 
 return OrgFile

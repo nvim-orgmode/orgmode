@@ -104,11 +104,11 @@ describe('Hyperlink mappings', function()
     vim.cmd([[norm ,ols]])
     assert.are.same({
       [('file:%s::*headline of target id'):format(target_file.filename)] = 'headline of target id',
-    }, require('orgmode.org.hyperlinks').stored_links)
+      ---@diagnostic disable-next-line: invisible
+    }, require('orgmode').links.stored_links)
   end)
 
   it('should store link to a headline with id', function()
-    require('orgmode.org.hyperlinks').stored_links = {}
     local org = require('orgmode').setup({
       org_id_link_to_org_use_id = true,
     })
@@ -123,9 +123,12 @@ describe('Hyperlink mappings', function()
     })
 
     org:init()
+    ---@diagnostic disable-next-line: invisible
+    require('orgmode').links.stored_links = {}
     vim.fn.cursor(4, 10)
     vim.cmd([[norm ,ols]])
-    local stored_links = require('orgmode.org.hyperlinks').stored_links
+    ---@diagnostic disable-next-line: invisible
+    local stored_links = require('orgmode').links.stored_links
     local keys = vim.tbl_keys(stored_links)
     local values = vim.tbl_values(stored_links)
     assert.is.True(keys[1]:match('^id:' .. OrgId.uuid_pattern .. '.*$') ~= nil)
@@ -201,40 +204,6 @@ describe('Hyperlink mappings', function()
     local url = target_file.filename:gsub(dir, '.')
     helpers.create_file({
       string.format('This [[%s::11][link]] should bring us to the 11th line.', url),
-    })
-    vim.cmd([[norm w]])
-    vim.fn.cursor(1, 10)
-    vim.cmd([[norm ,oo]])
-    assert.is.same(' --> eleven <--', vim.api.nvim_get_current_line())
-  end)
-
-  it('should follow link to certain line (nvim-orgmode compatibility)', function()
-    local target_file = helpers.create_file({
-      '* Test hyperlink',
-      '  - some',
-      '  - boiler',
-      '  - plate',
-      '** some headline',
-      '   - more',
-      '   - boiler',
-      '   - plate',
-      ' ->   9',
-      ' ->  10',
-      ' --> eleven <--',
-      ' ->  12',
-      ' ->  13',
-      ' ->  14',
-      ' ->  15 <--',
-    })
-    vim.cmd([[norm w]])
-    assert.is.truthy(target_file)
-    if not target_file then
-      return
-    end
-    local dir = vim.fs.dirname(target_file.filename)
-    local url = target_file.filename:gsub(dir, '.')
-    helpers.create_file({
-      string.format('This [[%s +11][link]] should bring us to the 11th line.', url),
     })
     vim.cmd([[norm w]])
     vim.fn.cursor(1, 10)

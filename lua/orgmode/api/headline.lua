@@ -4,7 +4,6 @@ local PriorityState = require('orgmode.objects.priority_state')
 local Date = require('orgmode.objects.date')
 local Calendar = require('orgmode.objects.calendar')
 local Promise = require('orgmode.utils.promise')
-local Hyperlinks = require('orgmode.org.hyperlinks')
 local org = require('orgmode')
 
 ---@class OrgApiHeadline
@@ -281,12 +280,12 @@ function OrgHeadline:get_link()
     -- do remote edit
     return org.files
       :update_file(filename, function(_)
-        return Hyperlinks.get_link_to_headline(self._section)
+        return org.links:get_link_to_headline(self._section)
       end)
       :wait()
   end
 
-  return Hyperlinks.get_link_to_headline(self._section)
+  return org.links:get_link_to_headline(self._section)
 end
 
 return OrgHeadline

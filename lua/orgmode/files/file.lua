@@ -5,7 +5,7 @@ local Headline = require('orgmode.files.headline')
 local ts = vim.treesitter
 local config = require('orgmode.config')
 local Block = require('orgmode.files.elements.block')
-local Link = require('orgmode.org.hyperlinks.link')
+local Hyperlink = require('orgmode.org.links.hyperlink')
 local Range = require('orgmode.files.elements.range')
 local Memoize = require('orgmode.utils.memoize')
 
@@ -722,7 +722,7 @@ function OrgFile:get_archive_file_location()
 end
 
 memoize('get_links')
----@return OrgLink[]
+---@return OrgHyperlink[]
 function OrgFile:get_links()
   self:parse(true)
   local ts_query = ts_utils.get_query([[
@@ -736,7 +736,7 @@ function OrgFile:get_links()
   for _, match in ts_query:iter_captures(self.root, self:_get_source()) do
     local line = match:start()
     if not processed_lines[line] then
-      vim.list_extend(links, Link.all_from_line(self.lines[line + 1], line + 1))
+      vim.list_extend(links, Hyperlink.all_from_line(self.lines[line + 1], line + 1))
       processed_lines[line] = true
     end
   end
