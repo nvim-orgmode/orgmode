@@ -332,6 +332,53 @@ function Promise.all(list)
   end)
 end
 
+--- Equivalents to JavaScript's Promise.map with concurrency limit.
+--- @param callback fun(value: any, index: number, array: any[]): any
+--- @param list any[]: promise or non-promise values
+--- @param concurrency? number: limit number of concurrent items processing
+--- @return OrgPromise
+function Promise.map(callback, list, concurrency)
+  vim.validate({
+    list = { list, 'table' },
+    callback = { callback, 'function' },
+    concurrency = { concurrency, 'number', true },
+  })
+
+  local results = {}
+  local processing = 0
+  local index = 1
+  concurrency = concurrency or #list
+
+  return Promise.new(function(resolve, reject)
+    local function processNext()
+      if index > #list then
+        if processing == 0 then
+          resolve(results)
+        end
+        return
+      end
+
+      local i = index
+      index = index + 1
+      processing = processing + 1
+
+      Promise.resolve(callback(list[i], i, list))
+        :next(function(...)
+          results[i] = ...
+          processing = processing - 1
+          processNext()
+        end)
+        :catch(function(...)
+          reject(...)
+        end)
+    end
+
+    for _ = 1, concurrency do
+      processNext()
+    end
+  end)
+end
+
 --- Equivalents to JavaScript's Promise.race.
 --- @param list any[]: promise or non-promise values
 --- @return OrgPromise

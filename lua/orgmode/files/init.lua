@@ -39,16 +39,14 @@ function OrgFiles:load(force)
   end
 
   self.load_state = 'loading'
-  local actions = vim.tbl_map(function(filename)
+  return Promise.map(function(filename)
     return self:load_file(filename):next(function(orgfile)
       if orgfile then
         self.files[orgfile.filename] = orgfile
       end
       return orgfile
     end)
-  end, self:_files(true))
-
-  return Promise.all(actions):next(function()
+  end, self:_files(true), 50):next(function()
     self.load_state = 'loaded'
     return self
   end)
