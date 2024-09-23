@@ -169,7 +169,7 @@ function OrgFiles:load_file(filename, opts)
 
   return OrgFile.load(filename):next(function(orgfile)
     if orgfile then
-      persist_if_required(file)
+      persist_if_required(orgfile)
       self.all_files[filename] = orgfile
     end
     return orgfile

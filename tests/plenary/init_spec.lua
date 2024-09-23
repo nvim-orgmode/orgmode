@@ -48,11 +48,17 @@ describe('Init', function()
     org.files:load_file_sync(fname, { persist = true })
     assert.is.Nil(org.files.files[fname])
 
+    org.files.all_files[todo_file] = nil
     org.files.files[todo_file] = nil
 
     org.files:load_file_sync(todo_file)
+
     -- Not added because persist was not provided
-    assert.is.Nil(org.files.files[fname])
+    assert.is.Nil(org.files.files[todo_file])
+    assert.is.Not.Nil(org.files.all_files[todo_file])
+
+    org.files.all_files[todo_file] = nil
+    org.files.files[todo_file] = nil
 
     org.files:load_file_sync(todo_file, { persist = true })
     assert.is.Not.Nil(org.files.files[todo_file])
