@@ -59,24 +59,10 @@ end
 ---@param filename string
 ---@return OrgPromise<OrgFile | false>
 function OrgFiles:add_to_paths(filename)
-  filename = vim.fn.resolve(vim.fn.fnamemodify(filename, ':p'))
-
-  if self.files[filename] then
-    return self.files[filename]:reload()
-  end
-
-  return self:load_file(filename):next(function(orgfile)
-    if orgfile then
-      self.files[filename] = orgfile
-      local all_paths = self:_files()
-      if not vim.tbl_contains(all_paths, filename) then
-        table.insert(self.paths, filename)
-      end
-    end
-    return orgfile
-  end)
+  return self:load_file(filename, { persist = true })
 end
 
+---@deprecated Use `load_file_sync` with `persist` option instead
 ---@param filename string
 ---@param timeout? number
 ---@return OrgFile | false

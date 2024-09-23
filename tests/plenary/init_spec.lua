@@ -58,24 +58,6 @@ describe('Init', function()
     assert.is.Not.Nil(org.files.files[todo_file])
   end)
 
-  it('should append files to paths', function()
-    local fname = vim.fn.resolve(vim.fn.tempname() .. '.org')
-    vim.fn.writefile({ '* Appended' }, fname)
-
-    assert.is.Nil(org.files.files[fname])
-    assert.are.same({}, org.files:find_headlines_by_title('Appended'))
-    assert.are.same({ vim.fn.getcwd() .. '/tests/plenary/fixtures/*' }, org.files.paths)
-
-    org.files:add_to_paths_sync(fname)
-    assert.is.Not.Nil(org.files.files[fname])
-    assert.are.same('Appended', org.files:find_headlines_by_title('Appended')[1]:get_title())
-    assert.are.same({ vim.fn.getcwd() .. '/tests/plenary/fixtures/*', fname }, org.files.paths)
-
-    org.files:add_to_paths_sync(todo_file)
-    -- Existing file in path not appended to paths
-    assert.are.same({ vim.fn.getcwd() .. '/tests/plenary/fixtures/*', fname }, org.files.paths)
-  end)
-
   it('should load a file as org file if it has correct filetype', function()
     local fname = vim.fn.resolve(vim.fn.tempname() .. '.txt')
 
