@@ -1,5 +1,4 @@
 local orgmode = require('orgmode')
-local Date = require('orgmode.objects.date')
 
 describe('Init', function()
   local org = orgmode.setup({
@@ -35,6 +34,28 @@ describe('Init', function()
     assert.are.same(0, #org.files:get(todo_archive_file):get_headlines())
     assert.are.same(true, org.files:get(todo_archive_file):is_archive_file())
     assert.are.same({ 'NESTED', 'OFFICE', 'PRIVATE', 'PROJECT', 'WORK' }, org.files:get_tags())
+  end)
+
+  it('should load file and persist to files if it belongs to path', function()
+    local fname = vim.fn.resolve(vim.fn.tempname() .. '.org')
+    vim.fn.writefile({ '* Appended' }, fname)
+
+    assert.is.Nil(org.files.files[fname])
+    assert.are.same({}, org.files:find_headlines_by_title('Appended'))
+    assert.are.same({ vim.fn.getcwd() .. '/tests/plenary/fixtures/*' }, org.files.paths)
+
+    -- Not added because it does not belong to defined path
+    org.files:load_file_sync(fname, { persist = true })
+    assert.is.Nil(org.files.files[fname])
+
+    org.files.files[todo_file] = nil
+
+    org.files:load_file_sync(todo_file)
+    -- Not added because persist was not provided
+    assert.is.Nil(org.files.files[fname])
+
+    org.files:load_file_sync(todo_file, { persist = true })
+    assert.is.Not.Nil(org.files.files[todo_file])
   end)
 
   it('should append files to paths', function()
