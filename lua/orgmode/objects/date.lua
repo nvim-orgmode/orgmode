@@ -498,6 +498,10 @@ function Date:end_of(span)
   return self
 end
 
+function Date:last_day_of_month()
+  return self:set({ day = Date._days_of_month(os_date(self.timestamp)) })
+end
+
 ---@return number
 function Date:get_isoweekday()
   ---@type table

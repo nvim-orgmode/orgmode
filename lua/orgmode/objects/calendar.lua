@@ -335,7 +335,7 @@ end
 
 function Calendar:forward()
   self:_ensure_day()
-  self.date = self.date:start_of('month'):add({ month = vim.v.count1 })
+  self.date = self.date:set({ day = 1 }):add({ month = vim.v.count1 })
   self:render()
   vim.fn.cursor(2, 1)
   vim.fn.search('01')
@@ -344,7 +344,7 @@ end
 
 function Calendar:backward()
   self:_ensure_day()
-  self.date = self.date:start_of('month'):subtract({ month = vim.v.count1 }):end_of('month')
+  self.date = self.date:set({ day = 1 }):subtract({ month = vim.v.count1 }):last_day_of_month()
   self:render()
   vim.fn.cursor(8, 0)
   vim.fn.search([[\d\d]], 'b')
