@@ -57,21 +57,23 @@ local y_offset = 2 -- one border cell and one padding cell
 
 ---@return OrgPromise<OrgDate | nil>
 function Calendar:open()
-  local opts = {
-    relative = 'editor',
-    width = width,
-    height = height,
-    style = 'minimal',
-    border = config.win_border,
-    row = vim.o.lines / 2 - (y_offset + height) / 2,
-    col = vim.o.columns / 2 - (x_offset + width) / 2,
-    title = self.title or 'Calendar',
-    title_pos = 'center',
-  }
+  local get_window_opts = function()
+    return {
+      relative = 'editor',
+      width = width,
+      height = height,
+      style = 'minimal',
+      border = config.win_border,
+      row = vim.o.lines / 2 - (y_offset + height) / 2,
+      col = vim.o.columns / 2 - (x_offset + width) / 2,
+      title = self.title or 'Calendar',
+      title_pos = 'center',
+    }
+  end
 
   self.buf = vim.api.nvim_create_buf(false, true)
   vim.api.nvim_buf_set_name(self.buf, 'orgcalendar')
-  self.win = vim.api.nvim_open_win(self.buf, true, opts)
+  self.win = vim.api.nvim_open_win(self.buf, true, get_window_opts())
 
   local calendar_augroup = vim.api.nvim_create_augroup('org_calendar', { clear = true })
   vim.api.nvim_create_autocmd('BufWipeout', {
@@ -81,6 +83,16 @@ function Calendar:open()
       self:dispose()
     end,
     once = true,
+  })
+
+  vim.api.nvim_create_autocmd('VimResized', {
+    buffer = self.buf,
+    group = calendar_augroup,
+    callback = function()
+      if self.win then
+        vim.api.nvim_win_set_config(self.win, get_window_opts())
+      end
+    end,
   })
 
   self:render()
