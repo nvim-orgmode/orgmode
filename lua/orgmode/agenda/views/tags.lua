@@ -35,7 +35,7 @@ end
 
 function AgendaTagsView:build()
   local tags = vim.fn.OrgmodeInput('Match: ', self.search, function(arg_lead)
-    utils.prompt_autocomplete(arg_lead, self.files:get_tags())
+    return utils.prompt_autocomplete(arg_lead, self.files:get_tags())
   end)
   if vim.trim(tags) == '' then
     return utils.echo_warning('Invalid tag.')
