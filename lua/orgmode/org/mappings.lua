@@ -340,12 +340,12 @@ function OrgMappings:set_priority(direction)
   headline:set_priority(new_priority)
 end
 
-function OrgMappings:todo_next_state()
-  return self:_todo_change_state('next')
+function OrgMappings:todo_next_state(use_fast_access)
+  return self:_todo_change_state('next', use_fast_access)
 end
 
-function OrgMappings:todo_prev_state()
-  self:_todo_change_state('prev')
+function OrgMappings:todo_prev_state(use_fast_access)
+  self:_todo_change_state('prev', use_fast_access)
 end
 
 function OrgMappings:toggle_heading()
@@ -400,7 +400,12 @@ function OrgMappings:_get_note(template, indent, title)
   end)
 end
 
-function OrgMappings:_todo_change_state(direction)
+function OrgMappings:_todo_change_state(direction, use_fast_access)
+  -- default use_fast_access
+  if use_fast_access == nil or type(use_fast_access) ~= "boolean" then
+    use_fast_access = true
+  end
+  
   local headline = self.files:get_closest_headline()
   local old_state = headline:get_todo()
   local was_done = headline:is_done()
