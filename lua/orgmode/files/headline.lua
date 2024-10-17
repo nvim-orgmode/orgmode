@@ -243,11 +243,7 @@ function Headline:get_outline_path()
   end
 
   -- reverse headline order
-  local outer_to_inner_parent_headlines = {}
-  for i = #inner_to_outer_parent_headlines, 1, -1 do
-    table.insert(outer_to_inner_parent_headlines, inner_to_outer_parent_headlines[i])
-  end
-
+  local outer_to_inner_parent_headlines = utils.reverse(inner_to_outer_parent_headlines)
   local outline_path = table.concat(outer_to_inner_parent_headlines, '/')
   return outline_path
 end
