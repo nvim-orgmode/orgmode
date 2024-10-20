@@ -345,7 +345,11 @@ function Config:get_priorities()
     [self.opts.org_priority_highest] = { type = 'highest', hl_group = '@org.priority.highest' },
   }
 
-  local current_prio = PriorityState:new(self.opts.org_priority_highest, self:get_priority_range())
+  local current_prio = PriorityState:new(
+    self.opts.org_priority_highest,
+    self:get_priority_range(),
+    self.org_priority_start_cycle_with_default
+  )
   while current_prio:as_num() < current_prio:default_as_num() do
     current_prio:decrease()
     priorities[current_prio.priority] = { type = 'high', hl_group = '@org.priority.high' }
