@@ -3,6 +3,7 @@ local api = require('orgmode.api')
 local Date = require('orgmode.objects.date')
 local OrgId = require('orgmode.org.id')
 local orgmode = require('orgmode')
+local config = require('orgmode.config')
 
 describe('Api', function()
   ---@return OrgApiFile
@@ -109,7 +110,7 @@ describe('Api', function()
     assert.is.True(vim.fn.getline(5):match(':PERSONAL:HEALTH:$') ~= nil)
   end)
 
-  it('should toggle priority up and down', function()
+  it('should cycle upwards through priorities, starting with default', function()
     helpers.create_file({
       '#TITLE: First file',
       '',
@@ -125,9 +126,9 @@ describe('Api', function()
     local current_file = cur_file()
     local headline = current_file.headlines[2]
     assert.are.same('', headline.priority)
-    headline:priority_up():wait()
-    assert.are.same('C', cur_file().headlines[2].priority)
-    assert.is.True(vim.fn.getline(5):match('%[#C%]') ~= nil)
+    assert.are.same(true, config.org_priority_start_cycle_with_default)
+    assert.are.same('B', config.org_priority_default)
+
     headline:priority_up():wait()
     assert.are.same('B', cur_file().headlines[2].priority)
     assert.is.True(vim.fn.getline(5):match('%[#B%]') ~= nil)
@@ -135,13 +136,112 @@ describe('Api', function()
     assert.are.same('A', cur_file().headlines[2].priority)
     assert.is.True(vim.fn.getline(5):match('%[#A%]') ~= nil)
     headline:priority_up():wait()
-    assert.are.same('', cur_file().headlines[2].priority)
-    assert.is.True(vim.fn.getline(5):match('%[.*%]') == nil)
+    assert.are.same('C', cur_file().headlines[2].priority)
+    assert.is.True(vim.fn.getline(5):match('%[#C%]') ~= nil)
+    headline:priority_up():wait()
+    assert.are.same('B', cur_file().headlines[2].priority)
+    assert.is.True(vim.fn.getline(5):match('%[#B%]') ~= nil)
+  end)
+
+  it('should cycle downwards through priorities, starting with default', function()
+    helpers.create_file({
+      '#TITLE: First file',
+      '',
+      '* TODO Test orgmode :WORK:OFFICE:',
+      '  DEADLINE: <2021-07-21 Wed 22:02>',
+      '** TODO Second level :NESTEDTAG:',
+      '  DEADLINE: <2021-07-21 Wed 22:02>',
+      '* DONE Some task',
+      '  DEADLINE: <2021-07-21 Wed 22:02>',
+    })
+
+    assert.is.True(#api.load() > 1)
+    local current_file = cur_file()
+    local headline = current_file.headlines[2]
+    assert.are.same('', headline.priority)
+    assert.are.same(true, config.org_priority_start_cycle_with_default)
+    assert.are.same('B', config.org_priority_default)
+
+    headline:priority_down():wait()
+    assert.are.same('B', cur_file().headlines[2].priority)
+    assert.is.True(vim.fn.getline(5):match('%[#B%]') ~= nil)
+    headline:priority_down():wait()
+    assert.are.same('C', cur_file().headlines[2].priority)
+    assert.is.True(vim.fn.getline(5):match('%[#C%]') ~= nil)
     headline:priority_down():wait()
     assert.are.same('A', cur_file().headlines[2].priority)
     assert.is.True(vim.fn.getline(5):match('%[#A%]') ~= nil)
     headline:priority_down():wait()
     assert.are.same('B', cur_file().headlines[2].priority)
+    assert.is.True(vim.fn.getline(5):match('%[#B%]') ~= nil)
+  end)
+
+  it('should enable priority at default + 1', function()
+    helpers.create_file({
+      '#TITLE: First file',
+      '',
+      '* TODO Test orgmode :WORK:OFFICE:',
+      '  DEADLINE: <2021-07-21 Wed 22:02>',
+      '** TODO Second level :NESTEDTAG:',
+      '  DEADLINE: <2021-07-21 Wed 22:02>',
+      '* DONE Some task',
+      '  DEADLINE: <2021-07-21 Wed 22:02>',
+    })
+
+    assert.is.True(#api.load() > 1)
+    local current_file = cur_file()
+    local headline = current_file.headlines[2]
+    assert.are.same('', headline.priority)
+    assert.are.same('B', config.org_priority_default)
+    config.org_priority_start_cycle_with_default = false
+
+    headline:priority_up():wait()
+    assert.are.same('A', cur_file().headlines[2].priority)
+    assert.is.True(vim.fn.getline(5):match('%[#A%]') ~= nil)
+  end)
+
+  it('should enable priority at default + 1', function()
+    helpers.create_file({
+      '#TITLE: First file',
+      '',
+      '* TODO Test orgmode :WORK:OFFICE:',
+      '  DEADLINE: <2021-07-21 Wed 22:02>',
+      '** TODO Second level :NESTEDTAG:',
+      '  DEADLINE: <2021-07-21 Wed 22:02>',
+      '* DONE Some task',
+      '  DEADLINE: <2021-07-21 Wed 22:02>',
+    })
+
+    assert.is.True(#api.load() > 1)
+    local current_file = cur_file()
+    local headline = current_file.headlines[2]
+    assert.are.same('', headline.priority)
+    assert.are.same('B', config.org_priority_default)
+    config.org_priority_start_cycle_with_default = false
+
+    headline:priority_down():wait()
+    assert.are.same('C', cur_file().headlines[2].priority)
+    assert.is.True(vim.fn.getline(5):match('%[#C%]') ~= nil)
+  end)
+
+  it('should set/unset priorities', function()
+    helpers.create_file({
+      '#TITLE: First file',
+      '',
+      '* TODO Test orgmode :WORK:OFFICE:',
+      '  DEADLINE: <2021-07-21 Wed 22:02>',
+      '** TODO Second level :NESTEDTAG:',
+      '  DEADLINE: <2021-07-21 Wed 22:02>',
+      '* DONE Some task',
+      '  DEADLINE: <2021-07-21 Wed 22:02>',
+    })
+
+    assert.is.True(#api.load() > 1)
+    local current_file = cur_file()
+    local headline = current_file.headlines[2]
+    assert.are.same('', headline.priority)
+
+    cur_file().headlines[2]:set_priority('B'):wait()
     assert.is.True(vim.fn.getline(5):match('%[#B%]') ~= nil)
     cur_file().headlines[2]:set_priority('C'):wait()
     assert.is.True(vim.fn.getline(5):match('%[#C%]') ~= nil)

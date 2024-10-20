@@ -32,6 +32,7 @@ local DefaultConfig = {
   org_priority_highest = 'A',
   org_priority_default = 'B',
   org_priority_lowest = 'C',
+  org_priority_start_cycle_with_default = true,
   org_archive_location = '%s_archive::',
   org_tags_column = -80,
   org_use_tag_inheritance = true,

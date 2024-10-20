@@ -113,7 +113,8 @@ function OrgHeadline:priority_up()
     local headline = org.files:get_closest_headline()
     local current_priority = headline:get_priority()
     local prio_range = config:get_priority_range()
-    local priority_state = PriorityState:new(current_priority, prio_range)
+    local start_with_default = config.org_priority_start_cycle_with_default
+    local priority_state = PriorityState:new(current_priority, prio_range, start_with_default)
     return headline:set_priority(priority_state:increase())
   end)
 end
@@ -125,7 +126,8 @@ function OrgHeadline:priority_down()
     local headline = org.files:get_closest_headline()
     local current_priority = headline:get_priority()
     local prio_range = config:get_priority_range()
-    local priority_state = PriorityState:new(current_priority, prio_range)
+    local start_with_default = config.org_priority_start_cycle_with_default
+    local priority_state = PriorityState:new(current_priority, prio_range, start_with_default)
     return headline:set_priority(priority_state:decrease())
   end)
 end
