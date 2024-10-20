@@ -1,0 +1,50 @@
+* Heading root
+** Subheading root
+   :PROPERTIES:
+   :CUSTOM_ID: ID_Subheading_root
+   :END:
+* Redundant
+  - sometext1
+  - sometext2
+  - sometext3
+** Redundant
+   - sometext1
+   - sometext2
+   - sometext3 <<dedicated anchor>>
+   - sometext4
+* Several Tests
+We use the subheadlines to keep the orgfile responsive. Because of some
+performance bug not too much link should be visible at a time.
+** Tests: Follow links to headings
+ [[file:./subdir/subtest.org::*Heading Sub1][file:subtest -> *Heading Sub1]] -> should work
+ [[./subdir/subtest.org::*Heading Sub1][./subtest -> *Heading Sub1]] -> should work
+ [[/home/seflue/Nextcloud/Documents/test_org/subdir/subtest.org::*Heading Sub1][/full_path/subtest -> *Heading Sub1]] -> should work
+ [[file:./subdir/subtest.org::*Redundant][file:subtest -> *Redundant]] -> should work and present selection
+ [[file:./subdir/subtest.org::*Redundant][./subtest -> *Redundant]] -> should work and present selection
+ [[file:./subdir2/subtest2.org::*Test][subtest -> *Test]] -> should work and present selection
+ [[file:./subdir2/subtest2.org::*Test][subtest -> *Test]] -> should work and present selection
+ [[*Subheading]] --> should jump within file
+** Tests: Follow links to CUSTOM_IDs
+ [[file:./subdir/subtest.org::#ID_Redundant][subtest -> #ID_Redundant]] -> should work and present selection
+ [[file:./subdir2/subtest2.org::#ID_Test][subtest2 -> #ID_Test]] -> should work and present selection
+ [[#ID_Subheading_root]] -> should jump within file
+** Tests: Follow plain link
+ [[dedicated anchor]] -> should jump to section with dedicated anchor
+ [[test]]
+** Tests: Omnicompletion
+ [[file:./subdir/subtest.org::# -> autocompletion should work and filter correctly
+ [[file:./subdir2/subtest2.org::# -> autocompletion should work and filter correctly
+ [[file:./subdir/subtest.org::* -> autocompletion should work and filter correctly
+ [[file:./subdir2/subtest2.org::* -> autocompletion should work and filter correctly
+ [[. --> writing "." should not produce an error
+ [[de  --> test plain completion with "some anchor"
+ [[Te  --> test plain completion with fuzzy title
+ [[file:./subdir/subtest.org::#]]
+ [[./subdir/subtest.org::#]]
+ [[./subdir2/subtest2.org::*]]
+** Tests: Misc
+ [[https://github.com/nvim-orgmode/orgmode#nvim-orgmode][external: goto github]] -> should work
+ [[][empty link]] -> should do nothing
+ [[./../../../../README.md]]      --> should open foreign file
+ [[./../../ui/mappings/hyperlink_spec.lua::114]] --> should open and jump to line
+ [[./../../ui/mappings/hyperlink_spec.lua +148]] --> should open and jump to line

@@ -1,5 +1,5 @@
 local Date = require('orgmode.objects.date')
-local Range = require('orgmode.parser.range')
+local Range = require('orgmode.files.elements.range')
 local function get_timestamp(year, month, day, hour, min)
   return os.time({ year = year, month = month, day = day, hour = hour or 0, min = min or 0 })
 end
@@ -303,6 +303,24 @@ describe('Date object', function()
     assert.are.same('2021-05-31 Mon 23:59', date:to_string())
   end)
 
+  it('should get last day of the month', function()
+    local date = Date.from_string('2024-02-02 09:00')
+    date = date:last_day_of_month()
+    assert.are.same('2024-02-29 Thu 09:00', date:to_string())
+    date = date:add({ month = 1 }):last_day_of_month()
+    assert.are.same('2024-03-31 Sun 09:00', date:to_string())
+    date = date:set({ month = 6, day = 2 }):last_day_of_month()
+    assert.are.same('2024-06-30 Sun 09:00', date:to_string())
+  end)
+
+  it('should properly handle end of month', function()
+    local date = Date.from_string('2021-05-12')
+    date = date:end_of('month')
+    assert.are.same('2021-05-31 Mon', date:to_string())
+    date = date:end_of('month')
+    assert.are.same('2021-05-31 Mon', date:to_string())
+  end)
+
   it('should add/subtract/set date', function()
     local date = Date.from_string('2021-05-12 14:00')
     date = date:add({ week = 2 })
@@ -319,6 +337,24 @@ describe('Date object', function()
     assert.are.same('2022-03-26 Sat 12:30', date:to_string())
     date = date:subtract({ year = 2 })
     assert.are.same('2020-03-26 Thu 12:30', date:to_string())
+  end)
+
+  it('properly adds and subtracts month at the edge of the year', function()
+    local date = Date.from_string('2024-01-03 Wed 14:00')
+    date = date:subtract({ month = 1 })
+    assert.are.same('2023-12-03 Sun 14:00', date:to_string())
+    date = date:add({ month = 1 })
+    assert.are.same('2024-01-03 Wed 14:00', date:to_string())
+  end)
+
+  it('should be robust for some arithmetic', function()
+    local date = Date.from_string('2024-06-04')
+    date = date:start_of('month')
+    assert.are.same('2024-06-01 Sat', date:to_string())
+    date = date:subtract({ month = 1 })
+    assert.are.same('2024-05-01 Wed', date:to_string())
+    date = date:end_of('month')
+    assert.are.same('2024-05-31 Fri', date:to_string())
   end)
 
   it('should compare dates', function()
@@ -362,6 +398,26 @@ describe('Date object', function()
     }, dates)
   end)
 
+  it('should return proper diff in days between DST difference', function()
+    -- No overlap
+    local date = Date.from_string('2023-06-26')
+    local end_date = Date.from_string('2023-06-27')
+    assert.are.same(1, end_date:diff(date))
+    assert.are.same(1440, end_date:diff(date, 'minute'))
+
+    -- DST start overlap
+    local date_no_dst = Date.from_string('2023-03-26 Sun')
+    local end_date_dst = Date.from_string('2023-03-27 Mon')
+    assert.are.same(1, end_date_dst:diff(date_no_dst))
+    assert.are.same(1440, end_date_dst:diff(date_no_dst, 'minute'))
+
+    -- DST end overlap
+    local date_dst = Date.from_string('2023-10-28 Sun')
+    local end_date_no_dst = Date.from_string('2023-10-29 Mon')
+    assert.are.same(1, end_date_no_dst:diff(date_dst))
+    assert.are.same(1440, end_date_no_dst:diff(date_dst, 'minute'))
+  end)
+
   it('should format the date', function()
     local date = Date.from_string('2021-05-12 14:00')
     assert.are.same('Wednesday 12 May', date:format('%A %d %B'))
@@ -394,6 +450,7 @@ describe('Date object', function()
       date_only = true,
       day = 15,
       dayname = 'Sat',
+      is_dst = true,
       hour = 0,
       min = 0,
       month = 5,
@@ -425,6 +482,7 @@ describe('Date object', function()
       dayname = 'Sat',
       hour = 0,
       min = 0,
+      is_dst = true,
       month = 5,
       is_date_range_start = false,
       is_date_range_end = false,
@@ -448,6 +506,7 @@ describe('Date object', function()
       hour = 9,
       min = 25,
       month = 6,
+      is_dst = true,
       is_date_range_start = false,
       is_date_range_end = false,
       related_date_range = nil,
@@ -476,6 +535,7 @@ describe('Date object', function()
       dayname = 'Sat',
       hour = 0,
       min = 0,
+      is_dst = true,
       month = 5,
       is_date_range_start = false,
       is_date_range_end = false,
@@ -499,6 +559,7 @@ describe('Date object', function()
       hour = 0,
       min = 0,
       month = 5,
+      is_dst = true,
       is_date_range_start = false,
       is_date_range_end = false,
       related_date_range = nil,
@@ -565,6 +626,19 @@ describe('Date object', function()
     assert.is.True(closest_friday:diff(Date.now()) < 8)
   end)
 
+  it('should apply repeater date until provided date', function()
+    local sunday = Date.from_string('2022-06-19 Sun 12:30 +1w')
+    local inTwoWeeks = Date.from_string('2022-06-26 Sun 12:30 +1w')
+    assert.are.same(inTwoWeeks:to_string(), sunday:apply_repeater_until(inTwoWeeks):to_string())
+  end)
+
+  it('should apply repeater to future dates', function()
+    local tomorrow = Date.now({ adjustments = { '++1d' } }):add({ day = 1 })
+    local day_after_tomorrow = tomorrow:add({ day = 1 })
+    local updated_date = tomorrow:apply_repeater()
+    assert.are.same(updated_date:to_string(), day_after_tomorrow:to_string())
+  end)
+
   it('should cache check for today', function()
     local today = Date.today()
     assert.is.Nil(today.is_today_date)
@@ -617,6 +691,7 @@ describe('Date object', function()
       dayname = 'Sat',
       hour = 14,
       min = 30,
+      is_dst = true,
       month = 5,
       is_date_range_start = false,
       is_date_range_end = false,
@@ -641,6 +716,7 @@ describe('Date object', function()
       hour = 0,
       min = 0,
       month = 5,
+      is_dst = true,
       is_date_range_start = false,
       is_date_range_end = false,
       related_date_range = nil,
@@ -668,6 +744,7 @@ describe('Date object', function()
       day = 15,
       dayname = 'Sat',
       hour = 0,
+      is_dst = true,
       min = 0,
       month = 5,
       is_date_range_start = true,
@@ -692,6 +769,7 @@ describe('Date object', function()
       hour = 0,
       min = 0,
       month = 5,
+      is_dst = true,
       is_date_range_start = false,
       is_date_range_end = true,
       related_date_range = dates[1],
@@ -717,6 +795,7 @@ describe('Date object', function()
       is_date_range_start = false,
       is_date_range_end = false,
       related_date_range = nil,
+      is_dst = true,
       range = Range:new({
         start_line = 1,
         end_line = 1,
@@ -741,30 +820,78 @@ describe('Date object', function()
 
   it('should properly calculate week number', function()
     local first = Date.from_string('2021-09-19')
-    assert.are.same(37, first:get_week_number())
+    assert.are.same('37', first:get_week_number())
 
     local start_of_2020 = Date.from_string('2020-01-01')
-    assert.are.same(1, start_of_2020:get_week_number())
+    assert.are.same('01', start_of_2020:get_week_number())
 
     local february_2020 = Date.from_string('2020-02-28')
-    assert.are.same(9, february_2020:get_week_number())
+    assert.are.same('09', february_2020:get_week_number())
 
     local november_2020 = Date.from_string('2020-11-30')
-    assert.are.same(49, november_2020:get_week_number())
+    assert.are.same('49', november_2020:get_week_number())
 
     local end_of_2020 = Date.from_string('2020-12-31')
-    assert.are.same(53, end_of_2020:get_week_number())
+    assert.are.same('53', end_of_2020:get_week_number())
 
     local start_of_2021 = Date.from_string('2021-01-01')
-    assert.are.same(53, start_of_2021:get_week_number())
+    assert.are.same('53', start_of_2021:get_week_number())
 
     local february_2021 = Date.from_string('2021-02-28')
-    assert.are.same(8, february_2021:get_week_number())
+    assert.are.same('08', february_2021:get_week_number())
 
     local august_2021 = Date.from_string('2021-08-31')
-    assert.are.same(35, august_2021:get_week_number())
+    assert.are.same('35', august_2021:get_week_number())
 
     local end_of_2021 = Date.from_string('2021-12-31')
-    assert.are.same(52, end_of_2021:get_week_number())
+    assert.are.same('52', end_of_2021:get_week_number())
+  end)
+
+  it('should add month correctly | long month + short month', function()
+    local date = Date.from_string('2021-05-31')
+    assert.are.same('2021-05-31 Mon', date:to_string())
+    assert.are.same('2021-06-30 Wed', date:add({ month = 1 }):to_string())
+  end)
+
+  it('should add month correctly | short month + long month', function()
+    local date = Date.from_string('2021-04-30')
+    assert.are.same('2021-04-30 Fri', date:to_string())
+    assert.are.same('2021-05-30 Sun', date:add({ month = 1 }):to_string())
+  end)
+
+  it('should add month correctly | long month + february', function()
+    local date = Date.from_string('2021-01-31')
+    assert.are.same('2021-01-31 Sun', date:to_string())
+    assert.are.same('2021-02-28 Sun', date:add({ month = 1 }):to_string())
+  end)
+
+  it('should add month correctly | long month + february in leap year', function()
+    local date = Date.from_string('2024-01-31')
+    assert.are.same('2024-01-31 Wed', date:to_string())
+    assert.are.same('2024-02-29 Thu', date:add({ month = 1 }):to_string())
+  end)
+
+  it('should calculate end of month correctly | long month', function()
+    local date = Date.from_string('2021-05-31')
+    assert.are.same('2021-05-31 Mon', date:to_string())
+    assert.are.same('2021-05-31 Mon', date:end_of('month'):to_string())
+  end)
+
+  it('should calculate end of month correctly | short month', function()
+    local date = Date.from_string('2021-04-30')
+    assert.are.same('2021-04-30 Fri', date:to_string())
+    assert.are.same('2021-04-30 Fri', date:end_of('month'):to_string())
+  end)
+
+  it('should calculate end of month correctly | february', function()
+    local date = Date.from_string('2021-02-28')
+    assert.are.same('2021-02-28 Sun', date:to_string())
+    assert.are.same('2021-02-28 Sun', date:end_of('month'):to_string())
+  end)
+
+  it('should calculate end of month correctly | february leap-year', function()
+    local date = Date.from_string('2024-02-29')
+    assert.are.same('2024-02-29 Thu', date:to_string())
+    assert.are.same('2024-02-29 Thu', date:end_of('month'):to_string())
   end)
 end)

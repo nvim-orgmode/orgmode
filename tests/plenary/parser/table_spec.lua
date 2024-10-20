@@ -1,12 +1,12 @@
-local Range = require('orgmode.parser.range')
-local Table = require('orgmode.parser.table')
+local Range = require('orgmode.files.elements.range')
+local Table = require('orgmode.files.elements.table')
 
 describe('Table', function()
   it('should calculate column width', function()
     local data = {
       { 'one', 'two', 'three' },
       { 'four', 'five', 'six', 'seven' },
-      {},
+      'hr',
       { 'eight' },
       { 'nine', 'ten' },
     }
@@ -37,7 +37,7 @@ describe('Table', function()
 
     local data_with_long_names = {
       { 'one', 'two', 'three' },
-      {},
+      'hr',
       { 'four', 'five', 'six', 'seven longer long' },
       { 'eight', 'iamverylong' },
       { 'nine', 'ten', 'a' },

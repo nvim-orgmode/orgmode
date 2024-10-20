@@ -27,8 +27,6 @@ luac.out
 
 # Shared objects (inc. Windows DLLs)
 *.dll
-*.so
-*.so.*
 *.dylib
 
 # Executables
@@ -39,5 +37,8 @@ luac.out
 *.x86_64
 *.hex
 
-plenary.nvim/
-nvim-treesitter/
+# Directory containing testing dependencies downloaded during test run
+.deps/
+
+# Auto-generated vim helptags
+doc/tags

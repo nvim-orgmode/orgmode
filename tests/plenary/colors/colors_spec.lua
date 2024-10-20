@@ -15,19 +15,19 @@ describe('Colors', function()
   it('should get appropriate fg color from hl group', function()
     vim.cmd([[hi OrgTestParse guifg=#FF0000]])
     local parsed_color = colors.parse_hl_fg_color('OrgTestParse')
-    assert.are.same('#FF0000', parsed_color)
+    assert.are.same('#FF0000', parsed_color:upper())
 
     vim.cmd([[hi OrgTestParse guibg=#FF8888]])
     parsed_color = colors.parse_hl_fg_color('OrgTestParse')
-    assert.are.same('#FF8888', parsed_color)
+    assert.are.same('#FF8888', parsed_color:upper())
 
     vim.cmd([[hi OrgTestParse guifg=#FFFFFF guibg=#00FF00]])
     parsed_color = colors.parse_hl_fg_color('OrgTestParse')
-    assert.are.same('#00FF00', parsed_color)
+    assert.are.same('#00FF00', parsed_color:upper())
 
     vim.cmd([[hi OrgTestParse guifg=#FFFFFF guibg=#00FF00 gui=reverse]])
     parsed_color = colors.parse_hl_fg_color('OrgTestParse')
-    assert.are.same('#FFFFFF', parsed_color)
+    assert.are.same('#FFFFFF', parsed_color:upper())
 
     vim.cmd([[hi clear OrgTestParse]])
   end)
@@ -52,77 +52,103 @@ describe('Colors', function()
 
   it('should parse todo keyword faces', function()
     local get_color_opt = function(hlgroup, name, type)
-      return vim.fn.synIDattr(vim.fn.synIDtrans(vim.fn.hlID(hlgroup)), name, type)
+      return vim.fn.synIDattr(vim.fn.synIDtrans(vim.fn.hlID(hlgroup)), name, type):lower()
     end
     config:extend({
       org_todo_keyword_faces = {
         NEXT = ':foreground "blue" :underline on :weight bold :background red :slant italic',
         CANCELED = ':foreground green :slant italic',
+        ['IN-PROGRESS'] = ':foreground red :weight bold',
       },
     })
 
-    local result = highlights.parse_todo_keyword_faces()
+    local result = highlights.define_todo_keyword_faces()
 
     assert.are.same({
-      NEXT = 'OrgKeywordFaceNEXT',
-      CANCELED = 'OrgKeywordFaceCANCELED',
+      NEXT = '@org.keyword.face.NEXT',
+      CANCELED = '@org.keyword.face.CANCELED',
+      ['IN-PROGRESS'] = '@org.keyword.face.INPROGRESS',
     }, result)
 
-    assert.are.same('red', get_color_opt('OrgKeywordFaceNEXT', 'bg', 'gui'))
-    assert.are.same('', get_color_opt('OrgKeywordFaceNEXT', 'bg', 'cterm'))
-    assert.are.same('blue', get_color_opt('OrgKeywordFaceNEXT', 'fg', 'gui'))
-    assert.are.same('', get_color_opt('OrgKeywordFaceNEXT', 'fg', 'cterm'))
-    assert.are.same('1', get_color_opt('OrgKeywordFaceNEXT', 'bold', 'gui'))
-    assert.are.same('', get_color_opt('OrgKeywordFaceNEXT', 'bold', 'cterm'))
-    assert.are.same('1', get_color_opt('OrgKeywordFaceNEXT', 'italic', 'gui'))
-    assert.are.same('', get_color_opt('OrgKeywordFaceNEXT', 'italic', 'cterm'))
-    assert.are.same('1', get_color_opt('OrgKeywordFaceNEXT', 'underline', 'gui'))
-    assert.are.same('', get_color_opt('OrgKeywordFaceNEXT', 'underline', 'cterm'))
+    assert.are.same('red', get_color_opt('@org.keyword.face.NEXT', 'bg', 'gui'))
+    assert.are.same('', get_color_opt('@org.keyword.face.NEXT', 'bg', 'cterm'))
+    assert.are.same('blue', get_color_opt('@org.keyword.face.NEXT', 'fg', 'gui'))
+    assert.are.same('', get_color_opt('@org.keyword.face.NEXT', 'fg', 'cterm'))
+    assert.are.same('1', get_color_opt('@org.keyword.face.NEXT', 'bold', 'gui'))
+    assert.are.same('', get_color_opt('@org.keyword.face.NEXT', 'bold', 'cterm'))
+    assert.are.same('1', get_color_opt('@org.keyword.face.NEXT', 'italic', 'gui'))
+    assert.are.same('', get_color_opt('@org.keyword.face.NEXT', 'italic', 'cterm'))
+    assert.are.same('1', get_color_opt('@org.keyword.face.NEXT', 'underline', 'gui'))
+    assert.are.same('', get_color_opt('@org.keyword.face.NEXT', 'underline', 'cterm'))
 
-    assert.are.same('green', get_color_opt('OrgKeywordFaceCANCELED', 'fg', 'gui'))
-    assert.are.same('', get_color_opt('OrgKeywordFaceCANCELED', 'fg', 'cterm'))
-    assert.are.same('1', get_color_opt('OrgKeywordFaceCANCELED', 'italic', 'gui'))
-    assert.are.same('', get_color_opt('OrgKeywordFaceCANCELED', 'italic', 'cterm'))
-    assert.are.same('', get_color_opt('OrgKeywordFaceCANCELED', 'bg', 'gui'))
-    assert.are.same('', get_color_opt('OrgKeywordFaceCANCELED', 'bg', 'cterm'))
-    assert.are.same('', get_color_opt('OrgKeywordFaceCANCELED', 'bold', 'gui'))
-    assert.are.same('', get_color_opt('OrgKeywordFaceCANCELED', 'bold', 'cterm'))
-    assert.are.same('', get_color_opt('OrgKeywordFaceCANCELED', 'underline', 'gui'))
-    assert.are.same('', get_color_opt('OrgKeywordFaceCANCELED', 'underline', 'cterm'))
+    assert.are.same('green', get_color_opt('@org.keyword.face.CANCELED', 'fg', 'gui'))
+    assert.are.same('', get_color_opt('@org.keyword.face.CANCELED', 'fg', 'cterm'))
+    assert.are.same('1', get_color_opt('@org.keyword.face.CANCELED', 'italic', 'gui'))
+    assert.are.same('', get_color_opt('@org.keyword.face.CANCELED', 'italic', 'cterm'))
+    assert.are.same('', get_color_opt('@org.keyword.face.CANCELED', 'bg', 'gui'))
+    assert.are.same('', get_color_opt('@org.keyword.face.CANCELED', 'bg', 'cterm'))
+    assert.are.same('', get_color_opt('@org.keyword.face.CANCELED', 'bold', 'gui'))
+    assert.are.same('', get_color_opt('@org.keyword.face.CANCELED', 'bold', 'cterm'))
+    assert.are.same('', get_color_opt('@org.keyword.face.CANCELED', 'underline', 'gui'))
+    assert.are.same('', get_color_opt('@org.keyword.face.CANCELED', 'underline', 'cterm'))
+
+    assert.are.same('', get_color_opt('@org.keyword.face.INPROGRESS', 'bg', 'gui'))
+    assert.are.same('', get_color_opt('@org.keyword.face.INPROGRESS', 'bg', 'cterm'))
+    assert.are.same('red', get_color_opt('@org.keyword.face.INPROGRESS', 'fg', 'gui'))
+    assert.are.same('', get_color_opt('@org.keyword.face.INPROGRESS', 'fg', 'cterm'))
+    assert.are.same('1', get_color_opt('@org.keyword.face.INPROGRESS', 'bold', 'gui'))
+    assert.are.same('', get_color_opt('@org.keyword.face.INPROGRESS', 'bold', 'cterm'))
+    assert.are.same('', get_color_opt('@org.keyword.face.INPROGRESS', 'italic', 'gui'))
+    assert.are.same('', get_color_opt('@org.keyword.face.INPROGRESS', 'italic', 'cterm'))
+    assert.are.same('', get_color_opt('@org.keyword.face.INPROGRESS', 'underline', 'gui'))
+    assert.are.same('', get_color_opt('@org.keyword.face.INPROGRESS', 'underline', 'cterm'))
 
     vim.cmd([[
-      hi clear OrgKeywordFaceNEXT
-      hi clear OrgKeywordFaceCANCELED
+      hi clear @org.keyword.face.NEXT
+      hi clear @org.keyword.face.CANCELED
+      hi clear @org.keyword.face.INPROGRESS
     ]])
 
     vim.o.termguicolors = false
-    result = highlights.parse_todo_keyword_faces()
+    result = highlights.define_todo_keyword_faces()
 
     assert.are.same({
-      NEXT = 'OrgKeywordFaceNEXT',
-      CANCELED = 'OrgKeywordFaceCANCELED',
+      NEXT = '@org.keyword.face.NEXT',
+      CANCELED = '@org.keyword.face.CANCELED',
+      ['IN-PROGRESS'] = '@org.keyword.face.INPROGRESS',
     }, result)
 
-    assert.are.same('9', get_color_opt('OrgKeywordFaceNEXT', 'bg', 'cterm'))
-    assert.are.same('', get_color_opt('OrgKeywordFaceNEXT', 'bg', 'gui'))
-    assert.are.same('12', get_color_opt('OrgKeywordFaceNEXT', 'fg', 'cterm'))
-    assert.are.same('', get_color_opt('OrgKeywordFaceNEXT', 'fg', 'gui'))
-    assert.are.same('1', get_color_opt('OrgKeywordFaceNEXT', 'bold', 'cterm'))
-    assert.are.same('', get_color_opt('OrgKeywordFaceNEXT', 'bold', 'gui'))
-    assert.are.same('1', get_color_opt('OrgKeywordFaceNEXT', 'italic', 'cterm'))
-    assert.are.same('', get_color_opt('OrgKeywordFaceNEXT', 'italic', 'gui'))
-    assert.are.same('1', get_color_opt('OrgKeywordFaceNEXT', 'underline', 'cterm'))
-    assert.are.same('', get_color_opt('OrgKeywordFaceNEXT', 'underline', 'gui'))
+    assert.are.same('9', get_color_opt('@org.keyword.face.NEXT', 'bg', 'cterm'))
+    assert.are.same('', get_color_opt('@org.keyword.face.NEXT', 'bg', 'gui'))
+    assert.are.same('12', get_color_opt('@org.keyword.face.NEXT', 'fg', 'cterm'))
+    assert.are.same('', get_color_opt('@org.keyword.face.NEXT', 'fg', 'gui'))
+    assert.are.same('1', get_color_opt('@org.keyword.face.NEXT', 'bold', 'cterm'))
+    assert.are.same('', get_color_opt('@org.keyword.face.NEXT', 'bold', 'gui'))
+    assert.are.same('1', get_color_opt('@org.keyword.face.NEXT', 'italic', 'cterm'))
+    assert.are.same('', get_color_opt('@org.keyword.face.NEXT', 'italic', 'gui'))
+    assert.are.same('1', get_color_opt('@org.keyword.face.NEXT', 'underline', 'cterm'))
+    assert.are.same('', get_color_opt('@org.keyword.face.NEXT', 'underline', 'gui'))
 
-    assert.are.same('10', get_color_opt('OrgKeywordFaceCANCELED', 'fg', 'cterm'))
-    assert.are.same('', get_color_opt('OrgKeywordFaceCANCELED', 'fg', 'gui'))
-    assert.are.same('1', get_color_opt('OrgKeywordFaceCANCELED', 'italic', 'cterm'))
-    assert.are.same('', get_color_opt('OrgKeywordFaceCANCELED', 'italic', 'gui'))
-    assert.are.same('', get_color_opt('OrgKeywordFaceCANCELED', 'bg', 'gui'))
-    assert.are.same('', get_color_opt('OrgKeywordFaceCANCELED', 'bg', 'cterm'))
-    assert.are.same('', get_color_opt('OrgKeywordFaceCANCELED', 'bold', 'gui'))
-    assert.are.same('', get_color_opt('OrgKeywordFaceCANCELED', 'bold', 'cterm'))
-    assert.are.same('', get_color_opt('OrgKeywordFaceCANCELED', 'underline', 'gui'))
-    assert.are.same('', get_color_opt('OrgKeywordFaceCANCELED', 'underline', 'cterm'))
+    assert.are.same('10', get_color_opt('@org.keyword.face.CANCELED', 'fg', 'cterm'))
+    assert.are.same('', get_color_opt('@org.keyword.face.CANCELED', 'fg', 'gui'))
+    assert.are.same('1', get_color_opt('@org.keyword.face.CANCELED', 'italic', 'cterm'))
+    assert.are.same('', get_color_opt('@org.keyword.face.CANCELED', 'italic', 'gui'))
+    assert.are.same('', get_color_opt('@org.keyword.face.CANCELED', 'bg', 'gui'))
+    assert.are.same('', get_color_opt('@org.keyword.face.CANCELED', 'bg', 'cterm'))
+    assert.are.same('', get_color_opt('@org.keyword.face.CANCELED', 'bold', 'gui'))
+    assert.are.same('', get_color_opt('@org.keyword.face.CANCELED', 'bold', 'cterm'))
+    assert.are.same('', get_color_opt('@org.keyword.face.CANCELED', 'underline', 'gui'))
+    assert.are.same('', get_color_opt('@org.keyword.face.CANCELED', 'underline', 'cterm'))
+
+    assert.are.same('', get_color_opt('@org.keyword.face.INPROGRESS', 'bg', 'cterm'))
+    assert.are.same('', get_color_opt('@org.keyword.face.INPROGRESS', 'bg', 'gui'))
+    assert.are.same('9', get_color_opt('@org.keyword.face.INPROGRESS', 'fg', 'cterm'))
+    assert.are.same('', get_color_opt('@org.keyword.face.INPROGRESS', 'fg', 'gui'))
+    assert.are.same('1', get_color_opt('@org.keyword.face.INPROGRESS', 'bold', 'cterm'))
+    assert.are.same('', get_color_opt('@org.keyword.face.INPROGRESS', 'bold', 'gui'))
+    assert.are.same('', get_color_opt('@org.keyword.face.INPROGRESS', 'italic', 'cterm'))
+    assert.are.same('', get_color_opt('@org.keyword.face.INPROGRESS', 'italic', 'gui'))
+    assert.are.same('', get_color_opt('@org.keyword.face.INPROGRESS', 'underline', 'cterm'))
+    assert.are.same('', get_color_opt('@org.keyword.face.INPROGRESS', 'underline', 'gui'))
   end)
 end)

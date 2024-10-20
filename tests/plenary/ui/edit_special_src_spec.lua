@@ -1,5 +1,5 @@
 local config = require('orgmode.config')
-local helpers = require('tests.plenary.ui.helpers')
+local helpers = require('tests.plenary.helpers')
 
 describe('Edit special operation', function()
   local start_org_bufnr
@@ -7,14 +7,14 @@ describe('Edit special operation', function()
   local edit_special_indent = config.org_edit_src_content_indentation
 
   local setup_test = function(o)
-    helpers.load_file_content(o.lines)
+    helpers.create_file(o.lines)
     start_org_bufnr = vim.api.nvim_get_current_buf()
     vim.fn.cursor(unpack(o.startpos))
 
     if not o.noenter then
       vim.cmd([[norm ,o']])
-      assert.are.same(o.ft, vim.api.nvim_buf_get_option(0, 'filetype'))
-      assert.are_not.same(start_org_bufnr, vim.api.nvim_get_current_buf())
+      assert.are.same(o.ft, vim.api.nvim_get_option_value('filetype', { buf = vim.api.nvim_get_current_buf() }))
+      assert.Not.are.same(start_org_bufnr, vim.api.nvim_get_current_buf())
     end
   end
 

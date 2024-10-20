@@ -1,22 +1,43 @@
-(timestamp "<") @OrgTSTimestampActive
-(timestamp "[") @OrgTSTimestampInactive
-(headline (stars) @stars (#eq? @stars "*")) @OrgTSHeadlineLevel1
-(headline (stars) @stars (#eq? @stars "**")) @OrgTSHeadlineLevel2
-(headline (stars) @stars (#eq? @stars "***")) @OrgTSHeadlineLevel3
-(headline (stars) @stars (#eq? @stars "****")) @OrgTSHeadlineLevel4
-(headline (stars) @stars (#eq? @stars "*****")) @OrgTSHeadlineLevel5
-(headline (stars) @stars (#eq? @stars "******")) @OrgTSHeadlineLevel6
-(headline (stars) @stars (#eq? @stars "*******")) @OrgTSHeadlineLevel7
-(headline (stars) @stars (#eq? @stars "********")) @OrgTSHeadlineLevel8
- (bullet) @OrgTSBullet
- (checkbox) @OrgTSCheckbox
- ((checkbox) @check (#eq? @check "\[-\]")) @OrgTSCheckboxHalfChecked
- ((checkbox) @check (#eq? @check "\[ \]")) @OrgTSCheckboxUnchecked
- ((checkbox) @check (#match? @check "\[[xX]\]")) @OrgTSCheckboxChecked
- (property_drawer) @OrgTSPropertyDrawer
- (drawer) @OrgTSDrawer
- (tag) @OrgTSTag
- (plan) @OrgTSPlan
- (comment) @OrgTSComment
- (directive) @OrgTSDirective
-(ERROR) @LspDiagnosticsUnderlineError
+(timestamp "<") @org.timestamp.active
+(timestamp "[") @org.timestamp.inactive
+(headline (item) @spell)
+(headline (stars) @stars (#org-is-headline-level? @stars "1")) @org.headline.level1
+(headline (stars) @stars (#org-is-headline-level? @stars "2")) @org.headline.level2
+(headline (stars) @stars (#org-is-headline-level? @stars "3")) @org.headline.level3
+(headline (stars) @stars (#org-is-headline-level? @stars "4")) @org.headline.level4
+(headline (stars) @stars (#org-is-headline-level? @stars "5")) @org.headline.level5
+(headline (stars) @stars (#org-is-headline-level? @stars "6")) @org.headline.level6
+(headline (stars) @stars (#org-is-headline-level? @stars "7")) @org.headline.level7
+(headline (stars) @stars (#org-is-headline-level? @stars "8")) @org.headline.level8
+(item . (expr) @org.keyword.todo @nospell (#org-is-todo-keyword? @org.keyword.todo "TODO"))
+(item . (expr) @org.keyword.done @nospell (#org-is-todo-keyword? @org.keyword.done "DONE"))
+(item (expr "[" "#" "str" @_priority "]") @org.priority.highest (#org-is-valid-priority? @_priority "highest"))
+(item (expr "[" "#" "str" @_priority "]") @org.priority.high (#org-is-valid-priority? @_priority "high"))
+(item (expr "[" "#" "str" @_priority "]") @org.priority.default (#org-is-valid-priority? @_priority "default"))
+(item (expr "[" "#" "str" @_priority "]") @org.priority.low (#org-is-valid-priority? @_priority "low"))
+(item (expr "[" "#" "str" @_priority "]") @org.priority.lowest (#org-is-valid-priority? @_priority "lowest"))
+(list (listitem (paragraph) @spell))
+(body (paragraph) @spell)
+(bullet) @org.bullet
+(checkbox) @org.checkbox
+(checkbox status: (expr "-") @org.checkbox.halfchecked)
+(checkbox status: (expr "str") @org.checkbox.checked (#any-of? @org.checkbox.checked "x" "X"))
+(block "#+begin_" @org.block "#+end_" @org.block)
+(block name: (expr) @org.block)
+(block end_name: (expr) @org.block)
+(block parameter: (expr) @org.block)
+(dynamic_block name: (expr) @org.block)
+(dynamic_block end_name: (expr) @org.block)
+(dynamic_block parameter: (expr) @org.block)
+(property_drawer (property name: (expr) @org.properties.name)) @org.properties
+(latex_env) @org.latex_env
+(drawer) @org.drawer
+(tag_list) @org.tag
+(directive name: (expr) @_directive_name value: (value) @org.tag (#match? @_directive_name "\\c^filetags$"))
+(plan) @org.plan
+(comment) @org.comment @spell
+(directive) @org.directive
+(row "|" @org.table.delimiter)
+(cell "|" @org.table.delimiter)
+(table (row (cell (contents) @org.table.heading)))
+(table (hr) @org.table.delimiter)

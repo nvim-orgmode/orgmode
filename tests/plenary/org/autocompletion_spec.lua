@@ -1,230 +1,384 @@
-local mock = require('luassert.mock')
-local OrgmodeOmniCompletion = require('orgmode.org.autocompletion.omni')
-local Files = require('orgmode.parser.files')
-
-local function mock_line(api, content)
-  api.nvim_get_current_line.returns(content)
-  api.nvim_call_function.returns(content:len() + 5)
-end
+local helpers = require('tests.plenary.helpers')
+local org = require('orgmode')
 
 describe('Autocompletion', function()
-  it('should properly find start offset for omni autocompletion', function()
-    local api = mock(vim.api, true)
-    mock_line(api, '')
-    local result = OrgmodeOmniCompletion(1, '')
-    assert.are.same(0, result)
+  local function setup_file(content)
+    -- Add space to the end of content because insert mode in
+    -- tests doesn't pick up a proper cursor location
+    helpers.create_agenda_file({ content .. ' ' })
+    vim.cmd('norm!A')
+  end
 
-    mock_line(api, '* ')
-    result = OrgmodeOmniCompletion(1, '')
-    assert.are.same(2, result)
+  describe('omni find start', function()
+    it('for an empty line', function()
+      setup_file('')
+      local result = org.completion:omnifunc(1)
+      assert.are.same(-1, result)
+    end)
+    it('for an empty headline', function()
+      setup_file('* ')
+      vim.cmd('norm!A')
+      local result = org.completion:omnifunc(1)
+      assert.are.same(2, result)
+    end)
+    it('within TODO in headline', function()
+      setup_file('* TO')
+      vim.cmd('norm!A')
+      local result = org.completion:omnifunc(1)
+      assert.are.same(2, result)
 
-    mock_line(api, '* TO')
-    result = OrgmodeOmniCompletion(1, '')
-    assert.are.same(2, result)
+      setup_file('* TODO')
+      vim.cmd('norm!A')
+      result = org.completion:omnifunc(1)
+      assert.are.same(2, result)
+    end)
+    it('in the middle of a headline', function()
+      setup_file('* TODO some text ')
+      vim.cmd('norm!A')
+      local result = org.completion:omnifunc(1)
+      assert.are.same(-1, result)
+    end)
+    it('within tag in headline', function()
+      setup_file('* TODO tags goes at the end :')
+      local result = org.completion:omnifunc(1)
+      assert.are.same(28, result)
 
-    mock_line(api, '* TODO')
-    result = OrgmodeOmniCompletion(1, '')
-    assert.are.same(2, result)
+      setup_file('* TODO tags goes at the end :SOMET')
+      result = org.completion:omnifunc(1)
+      assert.are.same(28, result)
+    end)
+    it('after tag in headline', function()
+      setup_file('* TODO tags goes at the end :SOMETAG:')
+      local result = org.completion:omnifunc(1)
+      assert.are.same(36, result)
+    end)
+    it('within special directives (#+)', function()
+      setup_file('#')
+      local result = org.completion:omnifunc(1)
+      assert.are.same(0, result)
 
-    mock_line(api, '* TODO some text ')
-    result = OrgmodeOmniCompletion(1, '')
-    assert.are.same(17, result)
+      setup_file('#+')
+      result = org.completion:omnifunc(1)
+      assert.are.same(0, result)
 
-    mock_line(api, '* TODO tags goes at the end :')
-    result = OrgmodeOmniCompletion(1, '')
-    assert.are.same(28, result)
+      setup_file('#+ar')
+      result = org.completion:omnifunc(1)
+      assert.are.same(0, result)
+    end)
 
-    mock_line(api, '* TODO tags goes at the end :SOMET')
-    result = OrgmodeOmniCompletion(1, '')
-    assert.are.same(28, result)
-    mock_line(api, '* TODO tags goes at the end :SOMETAG:')
-    result = OrgmodeOmniCompletion(1, '')
-    assert.are.same(36, result)
+    it('within properties', function()
+      setup_file(':')
+      local result = org.completion:omnifunc(1)
+      assert.are.same(0, result)
 
-    mock_line(api, '#')
-    result = OrgmodeOmniCompletion(1, '')
-    assert.are.same(0, result)
+      setup_file('  :')
+      result = org.completion:omnifunc(1)
+      assert.are.same(2, result)
 
-    mock_line(api, '#+')
-    result = OrgmodeOmniCompletion(1, '')
-    assert.are.same(0, result)
+      setup_file('  :PROP')
+      result = org.completion:omnifunc(1)
+      assert.are.same(2, result)
 
-    mock_line(api, '#+AR')
-    result = OrgmodeOmniCompletion(1, '')
-    assert.are.same(0, result)
+      setup_file('  :PROPERTI')
+      result = org.completion:omnifunc(1)
+      assert.are.same(2, result)
+    end)
+    it('within hyperlinks', function()
+      setup_file('  [[')
+      local result = org.completion:omnifunc(1)
+      assert.are.same(4, result)
 
-    mock_line(api, ':')
-    result = OrgmodeOmniCompletion(1, '')
-    assert.are.same(0, result)
+      setup_file('  [[*some')
+      result = org.completion:omnifunc(1)
+      assert.are.same(4, result)
 
-    mock_line(api, '  :')
-    result = OrgmodeOmniCompletion(1, '')
-    assert.are.same(2, result)
+      setup_file('  [[#val')
+      result = org.completion:omnifunc(1)
+      assert.are.same(4, result)
 
-    mock_line(api, '  :PROP')
-    result = OrgmodeOmniCompletion(1, '')
-    assert.are.same(2, result)
+      setup_file('  [[test')
+      result = org.completion:omnifunc(1)
+      assert.are.same(4, result)
 
-    mock_line(api, '  :PROPERTI')
-    result = OrgmodeOmniCompletion(1, '')
-    assert.are.same(2, result)
+      setup_file('  [[file:')
+      result = org.completion:omnifunc(1)
+      assert.are.same(4, result)
+    end)
+    it('within file hyperlink anchors (file: prefix)', function()
+      setup_file('  [[file:./some/path/file.org::*')
+      local result = org.completion:omnifunc(1)
+      assert.are.same(4, result)
 
-    mock_line(api, '  [[')
-    result = OrgmodeOmniCompletion(1, '')
-    assert.are.same(4, result)
+      setup_file('  [[file:./some/path/file.org::#')
+      result = org.completion:omnifunc(1)
+      assert.are.same(4, result)
 
-    mock_line(api, '  [[*some')
-    result = OrgmodeOmniCompletion(1, '')
-    assert.are.same(4, result)
-
-    mock_line(api, '  [[#val')
-    result = OrgmodeOmniCompletion(1, '')
-    assert.are.same(4, result)
-
-    mock_line(api, '  [[test')
-    result = OrgmodeOmniCompletion(1, '')
-    assert.are.same(4, result)
-
-    mock_line(api, '  [[file:')
-    result = OrgmodeOmniCompletion(1, '')
-    assert.are.same(4, result)
-
-    mock.revert(api)
+      setup_file('  [[file:./some/path/file.org::')
+      result = org.completion:omnifunc(1)
+      assert.are.same(4, result)
+    end)
+    it('within file hyperlink anchors (./ prefix, headline)', function()
+      setup_file('  [[./1-34_some/path/file.org::*')
+      local result = org.completion:omnifunc(1)
+      assert.are.same(4, result)
+    end)
+    --TODO These tests expose a bug. Actually the expected start should be 31 as in the tests before
+    it('within file hyperlink anchors (./ prefix, custom_id)', function()
+      setup_file('  [[./1-34_some/path/file.org::#')
+      local result = org.completion:omnifunc(1)
+      assert.are.same(4, result)
+    end)
+    it('within file hyperlink anchors (./ prefix, dedicated anchor)', function()
+      setup_file('  [[./1-34_some/path/file.org::')
+      local result = org.completion:omnifunc(1)
+      assert.are.same(4, result)
+    end)
   end)
 
-  it('should properly return results for base', function()
-    local api = mock(vim.api, true)
-    mock_line(api, '')
-    local result = OrgmodeOmniCompletion(0, '')
-    assert.are.same({}, result)
+  describe('omni complete', function()
+    it('should return an empty table when base is empty', function()
+      setup_file('')
+      local result = org.completion:omnifunc(0, '')
+      assert.are.same({}, result)
+    end)
 
-    -- Metadata
-    result = OrgmodeOmniCompletion(0, 'D')
-    assert.are.same({
-      { menu = '[Org]', word = 'DEADLINE:' },
-    }, result)
+    it('should return DEADLINE: when base is D on second headline line', function()
+      -- Metadata
+      helpers.create_agenda_file({
+        '* TODO test',
+        '  A',
+      })
+      vim.fn.cursor({ 2, 1 })
+      vim.cmd('norm!A')
+      local result = org.completion:omnifunc(0, 'D')
+      assert.are.same({
+        { menu = '[Org]', word = 'DEADLINE:' },
+      }, result)
+    end)
 
-    -- Properties
-    result = OrgmodeOmniCompletion(0, ':')
-    local props = {
-      { menu = '[Org]', word = ':PROPERTIES:' },
-      { menu = '[Org]', word = ':END:' },
-      { menu = '[Org]', word = ':LOGBOOK:' },
-      { menu = '[Org]', word = ':STYLE:' },
-      { menu = '[Org]', word = ':REPEAT_TO_STATE:' },
-      { menu = '[Org]', word = ':CUSTOM_ID:' },
-      { menu = '[Org]', word = ':CATEGORY:' },
-    }
-    assert.are.same(props, result)
+    it('should return defined keywords when base is :', function()
+      setup_file(':')
+      local result = org.completion:omnifunc(0, ':')
+      local props = {
+        { menu = '[Org]', word = ':PROPERTIES:' },
+        { menu = '[Org]', word = ':END:' },
+        { menu = '[Org]', word = ':LOGBOOK:' },
+        { menu = '[Org]', word = ':STYLE:' },
+        { menu = '[Org]', word = ':REPEAT_TO_STATE:' },
+        { menu = '[Org]', word = ':CUSTOM_ID:' },
+        { menu = '[Org]', word = ':CATEGORY:' },
+      }
+      assert.are.same(props, result)
+    end)
 
-    result = OrgmodeOmniCompletion(0, ':C')
-    assert.are.same({
-      { menu = '[Org]', word = ':CUSTOM_ID:' },
-      { menu = '[Org]', word = ':CATEGORY:' },
-    }, result)
+    it('should filter keywords down', function()
+      setup_file(':')
+      local result = org.completion:omnifunc(0, ':C')
+      assert.are.same({
+        { menu = '[Org]', word = ':CUSTOM_ID:' },
+        { menu = '[Org]', word = ':CATEGORY:' },
+      }, result)
 
-    result = OrgmodeOmniCompletion(0, ':CA')
-    assert.are.same({
-      { menu = '[Org]', word = ':CATEGORY:' },
-    }, result)
+      result = org.completion:omnifunc(0, ':CA')
+      assert.are.same({
+        { menu = '[Org]', word = ':CATEGORY:' },
+      }, result)
+    end)
 
-    -- Directives
-    result = OrgmodeOmniCompletion(0, '#')
-    local directives = {
-      { menu = '[Org]', word = '#+TITLE' },
-      { menu = '[Org]', word = '#+AUTHOR' },
-      { menu = '[Org]', word = '#+EMAIL' },
-      { menu = '[Org]', word = '#+NAME' },
-      { menu = '[Org]', word = '#+FILETAGS' },
-      { menu = '[Org]', word = '#+ARCHIVE' },
-      { menu = '[Org]', word = '#+OPTIONS' },
-      { menu = '[Org]', word = '#+BEGIN_SRC' },
-      { menu = '[Org]', word = '#+END_SRC' },
-      { menu = '[Org]', word = '#+BEGIN_EXAMPLE' },
-      { menu = '[Org]', word = '#+END_EXAMPLE' },
-    }
-    assert.are.same(directives, result)
+    it('should find and filter down export options when base is #', function()
+      setup_file('#')
+      -- Directives
+      local result = org.completion:omnifunc(0, '#')
+      local directives = {
+        { menu = '[Org]', word = '#+title' },
+        { menu = '[Org]', word = '#+author' },
+        { menu = '[Org]', word = '#+email' },
+        { menu = '[Org]', word = '#+name' },
+        { menu = '[Org]', word = '#+filetags' },
+        { menu = '[Org]', word = '#+archive' },
+        { menu = '[Org]', word = '#+options' },
+        { menu = '[Org]', word = '#+category' },
+        { menu = '[Org]', word = '#+begin_src' },
+        { menu = '[Org]', word = '#+begin_example' },
+        { menu = '[Org]', word = '#+end_src' },
+        { menu = '[Org]', word = '#+end_example' },
+      }
+      assert.are.same(directives, result)
 
-    result = OrgmodeOmniCompletion(0, '#+')
-    assert.are.same(directives, result)
+      result = org.completion:omnifunc(0, '#+')
+      assert.are.same(directives, result)
 
-    result = OrgmodeOmniCompletion(0, '#+B')
-    assert.are.same({
-      { menu = '[Org]', word = '#+BEGIN_SRC' },
-      { menu = '[Org]', word = '#+BEGIN_EXAMPLE' },
-    }, result)
+      result = org.completion:omnifunc(0, '#+b')
+      assert.are.same({
+        { menu = '[Org]', word = '#+begin_src' },
+        { menu = '[Org]', word = '#+begin_example' },
+      }, result)
+    end)
 
-    -- Headline
-    mock_line(api, '* ')
-    result = OrgmodeOmniCompletion(0, '')
-    assert.are.same({
-      { menu = '[Org]', word = 'TODO' },
-      { menu = '[Org]', word = 'DONE' },
-    }, result)
+    it('should find and filter down TODO keywords at the beginning of a headline', function()
+      setup_file('* ')
+      local result = org.completion:omnifunc(0, '')
+      assert.are.same({
+        { menu = '[Org]', word = 'TODO' },
+        { menu = '[Org]', word = 'DONE' },
+      }, result)
 
-    mock_line(api, '* T')
-    result = OrgmodeOmniCompletion(0, 'T')
-    assert.are.same({
-      { menu = '[Org]', word = 'TODO' },
-    }, result)
+      setup_file('* T')
+      result = org.completion:omnifunc(0, 'T')
+      assert.are.same({
+        { menu = '[Org]', word = 'TODO' },
+      }, result)
+    end)
 
-    Files.tags = { 'OFFICE', 'PRIVATE' }
-    mock_line(api, '* TODO tags go at the end :')
-    result = OrgmodeOmniCompletion(0, ':')
-    assert.are.same({
-      { menu = '[Org]', word = ':OFFICE:' },
-      { menu = '[Org]', word = ':PRIVATE:' },
-    }, result)
+    it('should find defined tags', function()
+      local file = helpers.create_agenda_file({
+        '#+filetags: :OFFICE:PRIVATE:',
+      })
+      setup_file('* TODO tags go at the end :')
+      local result = org.completion:omnifunc(0, ':')
+      assert.are.same({
+        { menu = '[Org]', word = ':OFFICE:' },
+        { menu = '[Org]', word = ':PRIVATE:' },
+        { menu = '[Org]', word = ':SOMETAG:' },
+      }, result)
 
-    mock_line(api, '* TODO tags go at the end :')
-    result = OrgmodeOmniCompletion(0, ':OFF')
-    assert.are.same({
-      { menu = '[Org]', word = ':OFFICE:' },
-    }, result)
+      result = org.completion:omnifunc(0, ':OFF')
+      assert.are.same({
+        { menu = '[Org]', word = ':OFFICE:' },
+      }, result)
 
-    mock_line(api, '* TODO tags go at the end :OFFICE:')
-    result = OrgmodeOmniCompletion(0, ':')
-    assert.are.same({
-      { menu = '[Org]', word = ':OFFICE:' },
-      { menu = '[Org]', word = ':PRIVATE:' },
-    }, result)
+      vim.fn.setline(1, '* TODO tags go at the end :OFFICE:')
+      result = org.completion:omnifunc(0, ':')
+      assert.are.same({
+        { menu = '[Org]', word = ':OFFICE:' },
+        { menu = '[Org]', word = ':PRIVATE:' },
+        { menu = '[Org]', word = ':SOMETAG:' },
+      }, result)
 
-    mock_line(api, '#+FILETAGS: ')
-    result = OrgmodeOmniCompletion(0, '')
-    assert.are.same({}, result)
+      setup_file('#+filetags: ')
+      result = org.completion:omnifunc(0, '')
+      assert.are.same({}, result)
+      --
+      setup_file('#+filetags: :')
+      result = org.completion:omnifunc(0, ':')
+      assert.are.same({
+        { menu = '[Org]', word = ':OFFICE:' },
+        { menu = '[Org]', word = ':PRIVATE:' },
+        { menu = '[Org]', word = ':SOMETAG:' },
+      }, result)
+    end)
 
-    mock_line(api, '#+FILETAGS: :')
-    result = OrgmodeOmniCompletion(0, ':')
-    assert.are.same({
-      { menu = '[Org]', word = ':OFFICE:' },
-      { menu = '[Org]', word = ':PRIVATE:' },
-    }, result)
+    describe('in hyperlinks', function()
+      it('should complete headlines', function()
+        local orgfile = helpers.create_agenda_file({
+          '* Item for work 1',
+          '* Item for work 2',
+        })
+        local filename = vim.fn.fnamemodify(orgfile.filename, ':t')
+        local file_path_relative = string.format('./%s', filename)
 
-    -- TODO: Add more hyperlink tests
-    local MockFiles = mock(Files, true)
-    local filename = 'work.org'
-    local headlines = {
-      { title = 'Item for work 1' },
-      { title = 'Item for work 2' },
-    }
+        local line = string.format('  [[%s::* ', file_path_relative)
+        helpers.create_file({ line })
 
-    MockFiles.filenames.returns({ filename })
-    MockFiles.get.returns({
-      filename = filename,
-      find_headlines_by_title = function()
-        return headlines
-      end,
-    })
+        vim.fn.cursor({ 1, #line })
+        local result = org.completion:omnifunc(0, ('%s::*'):format(file_path_relative))
+        assert.are.same({
+          { menu = '[Org]', word = ('%s::*Item for work 1'):format(file_path_relative) },
+          { menu = '[Org]', word = ('%s::*Item for work 2'):format(file_path_relative) },
+        }, result)
+      end)
 
-    mock_line(api, string.format('  [[file:%s::*', filename))
-    result = OrgmodeOmniCompletion(0, '*')
-    assert.are.same({
-      { menu = '[Org]', word = '*' .. headlines[1].title },
-      { menu = '[Org]', word = '*' .. headlines[2].title },
-    }, result)
+      it('should complete custom_ids', function()
+        local orgfile = helpers.create_agenda_file({
+          '* Item for work 1',
+          ':PROPERTIES:',
+          ':CUSTOM_ID: ID_1',
+          ':END:',
+          '* Item for work 2',
+          ':PROPERTIES:',
+          ':CUSTOM_ID: ID_2',
+          ':END:',
+        })
+        local filename = vim.fn.fnamemodify(orgfile.filename, ':t')
+        local file_path_relative = string.format('./%s', filename)
 
-    mock.revert(MockFiles)
+        local line = string.format('  [[%s::# ', file_path_relative)
+        helpers.create_file({ line })
 
-    mock.revert(api)
+        vim.fn.cursor({ 1, #line })
+        local result = org.completion:omnifunc(0, ('%s::#'):format(file_path_relative))
+        assert.are.same({
+          { menu = '[Org]', word = ('%s::#ID_1'):format(file_path_relative) },
+          { menu = '[Org]', word = ('%s::#ID_2'):format(file_path_relative) },
+        }, result)
+      end)
+
+      it('should complete fuzzy titles', function()
+        helpers.create_agenda_file({
+          '* Title with an <<some anchor>>',
+          'line1',
+          'line2',
+          'line3',
+          '* This headline should not be found',
+          'line1',
+          '... <<some other anchor>> ...',
+          'line3',
+          '* Title without anchor',
+          'line1',
+          'line2',
+          'line3',
+          '',
+          '  [[Tit ',
+        })
+        vim.fn.cursor({ 14, 8 })
+
+        local result = org.completion:omnifunc(0, 'Tit')
+
+        assert.are.same({
+          { menu = '[Org]', word = 'Title with an <<some anchor>>' },
+          { menu = '[Org]', word = 'Title without anchor' },
+        }, result)
+      end)
+
+      it('should work on relative paths targeting parent directory', function()
+        local files = helpers.create_agenda_files({
+          {
+            filename = 'a.org',
+            content = { '' },
+          },
+          {
+            filename = 'b/c.org',
+            content = { '[[../' },
+          },
+        })
+        helpers.load_file(files['b/c.org'])
+        vim.fn.cursor({ 1, 6 })
+
+        assert.are.same({
+          { menu = '[Org]', word = '../a.org' },
+          { menu = '[Org]', word = '../b/c.org' },
+        }, org.completion:omnifunc(0, '../'))
+      end)
+
+      it('should work on relative paths targeting current directory', function()
+        local files = helpers.create_agenda_files({
+          {
+            filename = 'a.org',
+            content = { '[[./' },
+          },
+          {
+            filename = 'b/c.org',
+            content = { '' },
+          },
+        })
+        helpers.load_file(files['a.org'])
+        vim.fn.cursor({ 1, 5 })
+
+        assert.are.same({
+          { menu = '[Org]', word = './a.org' },
+          { menu = '[Org]', word = './b/c.org' },
+        }, org.completion:omnifunc(0, './'))
+      end)
+    end)
   end)
 end)

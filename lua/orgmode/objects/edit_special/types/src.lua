@@ -1,6 +1,5 @@
 local config = require('orgmode.config')
 local es_utils = require('orgmode.objects.edit_special.utils')
-local ts_utils = require('nvim-treesitter.ts_utils')
 local utils = require('orgmode.utils')
 
 local EditSpecialSrc = {
@@ -29,12 +28,8 @@ function EditSpecialSrc:_update_content(action, block_start_line, content)
   -- will have its column reported as 0)
   --
   -- Grab the line itself in order to circumvent this
-  local block_start_line_text = vim.api.nvim_buf_get_lines(
-    self.org_bufnr,
-    block_start_line,
-    block_start_line + 1,
-    false
-  )[1]
+  local block_start_line_text =
+    vim.api.nvim_buf_get_lines(self.org_bufnr, block_start_line, block_start_line + 1, false)[1]
 
   -- Not quite what Emacs does, but assume that the leading space of the entire block is consistent
   -- and strip that off
@@ -62,7 +57,8 @@ end
 
 function EditSpecialSrc:_highlight_contents(range)
   self:clear_highlights()
-  ts_utils.highlight_range(range, self.org_bufnr, self.hl_ns, 'OrgEditSrcHighlight')
+  local start_row, start_col, end_row, end_col = unpack(range)
+  vim.highlight.range(self.org_bufnr, self.hl_ns, 'OrgEditSrcHighlight', { start_row, start_col }, { end_row, end_col })
 end
 
 function EditSpecialSrc:abort()
@@ -77,6 +73,9 @@ function EditSpecialSrc:init()
   -- Only the "content" of the block should change, however we might not have content yet
   -- so base the range off of the name of the block
   local ft = self.src_block.children.parameters.text
+  if ft then
+    ft = utils.detect_filetype(ft)
+  end
 
   local bufnr = es_utils.make_temp_buf()
   if not bufnr or not vim.api.nvim_buf_is_valid(bufnr) then
@@ -106,10 +105,10 @@ function EditSpecialSrc:init()
 
   content = self:_update_content('remove', block_start_line, content)
 
-  vim.api.nvim_buf_set_option(bufnr, 'bufhidden', 'wipe')
-  vim.api.nvim_buf_set_option(bufnr, 'filetype', ft)
+  vim.api.nvim_set_option_value('bufhidden', 'wipe', { buf = bufnr })
+  vim.api.nvim_set_option_value('filetype', ft, { buf = bufnr })
   vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, content)
-  vim.api.nvim_buf_set_option(ctx.bufnr, 'modified', false)
+  vim.api.nvim_set_option_value('modified', false, { buf = ctx.bufnr })
 
   self:_highlight_contents({
     block_start_line + 1,
@@ -135,7 +134,7 @@ function EditSpecialSrc:write(ctx)
 
   vim.api.nvim_buf_set_lines(ctx.org_bufnr, content_start, content_end, false, new_content)
 
-  self.file:refresh()
+  self.file:reload()
 
   -- If this is after the special buffer has been closed, our extmarks will have already
   -- been removed

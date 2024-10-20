@@ -1,0 +1,264 @@
+OrgApiRefileOpts                                              *OrgApiRefileOpts*
+
+    Fields: ~
+        {source}       (OrgApiHeadline)
+        {destination}  (OrgApiFile|OrgApiHeadline)
+
+
+OrgApi                                                                  *OrgApi*
+
+
+OrgApi.load({name?})                                               *OrgApi.load*
+
+    Parameters: ~
+        {name?}  (string|string[])  specific file names to return (absolute path). If ommitted, returns all loaded files
+
+    Returns: ~
+        (OrgApiFile|OrgApiFile[])
+
+
+OrgApi.current()                                                *OrgApi.current*
+     Get current org buffer file
+
+    Returns: ~
+        (OrgApiFile)
+
+
+OrgApi.refile({opts})                                            *OrgApi.refile*
+    Refile headline to another file or headline
+    If executed from capture buffer, it will close the capture buffer
+
+    Parameters: ~
+        {opts}  (OrgApiRefileOpts)
+
+    Returns: ~
+        (boolean)
+
+
+OrgApi.insert_link()                                        *OrgApi.insert_link*
+     Insert a link to a given location at the current cursor position
+
+     The expected format is
+     <protocol>:<location>::<in_file_location>
+
+     If <in_file_location> is *<headline>, <headline> is used as prefilled description for the link.
+     If <protocol> is id, this format can also be used to pass a prefilled description.
+     @param link_location string
+     @return boolean
+
+
+OrgApiFile                                                          *OrgApiFile*
+
+    Fields: ~
+        {category}         (string)            current file category name. By default it's only filename without extension unless defined differently via #+CATEGORY directive
+        {filename}         (string)            absolute path of the current file
+        {headlines}        (OrgApiHeadline[])
+        {is_archive_file}  (boolean)
+
+
+OrgFile:reload()                                                *OrgFile:reload*
+     Return refreshed instance of the file
+
+    Returns: ~
+        (OrgApiFile)
+
+
+OrgFile:get_closest_headline()                    *OrgFile:get_closest_headline*
+     Return closest headline, or nil if there are no headlines found
+     If cursor is not provided, it will use current cursor position
+     @param cursor? { line: number, col: number } (1, 0)-indexed cursor position, same as returned from `vim.api.nvim_win_get_cursor(0)`
+     @return OrgApiHeadline | nil
+
+
+OrgFile:get_link()                                            *OrgFile:get_link*
+     Get a link destination as string
+
+     Depending if org_id_link_to_org_use_id is set the format is
+
+     id:<uuid>::*title and the id is created if not existing
+     or
+     file:<filepath>::*title
+
+     The result is meant to be used as link_location for OrgApi.insert_link.
+     @return string
+
+
+OrgApiHeadline                                                  *OrgApiHeadline*
+
+    Fields: ~
+        {title}        (string)                headline title without todo keyword, tags and priority. Ex. `* TODO I am a headline  :SOMETAG:` returns `I am a headline`
+        {line}         (string)                full headline line
+        {level}        (number)                headline level (number of asterisks). Example: 1
+        {todo_value?}  (string)                todo keyword of the headline (Example: TODO, DONE)
+        {todo_type?}   ("TODO"|"DONE"|"")
+        {tags}         (string[])              List of own tags
+        {deadline}     (OrgDate|nil)
+        {scheduled}    (OrgDate|nil)
+        {properties}   (table<string,string>)  Table containing all properties. All keys are lowercased
+        {closed}       (OrgDate|nil)
+        {dates}        (OrgDate[])             List of all dates that are not "plan" dates
+        {position}     (OrgRange)
+        {all_tags}     (string[])              List of all tags (own + inherited)
+        {file}         (OrgApiFile)
+        {parent}       (OrgApiHeadline|nil)
+        {priority}     (string|nil)
+        {is_archived}  (boolean)               headline marked with the `:ARCHIVE:` tag
+        {headlines}    (OrgApiHeadline[])
+
+
+OrgHeadline:reload()                                        *OrgHeadline:reload*
+     Return updated version of headline
+
+    Returns: ~
+        (OrgApiHeadline)
+
+
+OrgHeadline:set_tags({tags})                              *OrgHeadline:set_tags*
+     Set tags on the headline. This replaces all current tags with provided ones
+
+    Parameters: ~
+        {tags}  (string[])
+
+    Returns: ~
+        (OrgPromise)
+
+
+OrgHeadline:priority_up()                              *OrgHeadline:priority_up*
+     Increase priority on a headline
+
+    Returns: ~
+        (OrgPromise)
+
+
+OrgHeadline:priority_down()                          *OrgHeadline:priority_down*
+     Decrease priority on a headline
+
+    Returns: ~
+        (OrgPromise)
+
+
+OrgHeadline:set_priority({priority})                  *OrgHeadline:set_priority*
+     Set specific priority on a headline. Empty string clears the priority
+
+    Parameters: ~
+        {priority}  (string)
+
+    Returns: ~
+        (OrgPromise)
+
+
+OrgHeadline:set_deadline({date?})                     *OrgHeadline:set_deadline*
+     Set deadline date
+
+    Parameters: ~
+        {date?}  (OrgDate|string|nil)  If ommited, opens the datepicker. Empty string removes the date. String must follow org date convention (YYYY-MM-DD HH:mm...)
+
+    Returns: ~
+        (OrgPromise)
+
+
+OrgHeadline:set_scheduled({date?})                   *OrgHeadline:set_scheduled*
+     Set scheduled date
+
+    Parameters: ~
+        {date?}  (OrgDate|string|nil)  If ommited, opens the datepicker. Empty string removes the date. String must follow org date convention (YYYY-MM-DD HH:mm...)
+
+    Returns: ~
+        (OrgPromise)
+
+
+                                                      *OrgHeadline:set_property*
+OrgHeadline:set_property({key}, {value?})
+     Set property on a headline. Setting value to nil removes the property
+
+    Parameters: ~
+        {key}     (string)
+        {value?}  (string)
+
+
+OrgHeadline:get_property({key})                       *OrgHeadline:get_property*
+     Get headline property
+
+    Parameters: ~
+        {key}  (string)
+
+    Returns: ~
+        (string|nil)
+
+
+OrgHeadline:id_get_or_create()                    *OrgHeadline:id_get_or_create*
+     Get headline id or create a new one if it doesn't exist
+     @return string
+
+
+OrgHeadline:get_link()                                    *OrgHeadline:get_link*
+     Get a link destination as string
+
+     Depending if org_id_link_to_org_use_id is set the format is
+
+     id:<uuid>::*title and the id is created if not existing
+     or
+     file:<filepath>::*title
+
+     The result is meant to be used as link_location for OrgApi.insert_link.
+     @return string
+
+
+OrgApiAgenda                                                      *OrgApiAgenda*
+
+
+OrgApiAgendaFilter                                          *OrgApiAgendaFilter*
+
+    Type: ~
+        string
+
+
+OrgApiAgendaOptions                                        *OrgApiAgendaOptions*
+
+    Fields: ~
+        {filters?}  (OrgApiAgendaFilter)
+        {from?}     (string|OrgDate)
+        {span?}     (number|"day"|"week"|"month"|"year")
+
+
+OrgAgenda.agenda({options?})                                  *OrgAgenda.agenda*
+
+    Parameters: ~
+        {options?}  (OrgApiAgendaOptions)
+
+
+OrgAgendaTodosOptions                                    *OrgAgendaTodosOptions*
+
+    Fields: ~
+        {filters?}  (OrgApiAgendaFilter)
+
+
+OrgAgenda.todos({options?})                                    *OrgAgenda.todos*
+
+    Parameters: ~
+        {options?}  (OrgAgendaTodosOptions)
+
+
+OrgAgendaTagsOptions                                      *OrgAgendaTagsOptions*
+
+    Fields: ~
+        {filters?}    (OrgApiAgendaFilter)
+        {todo_only?}  (boolean)
+
+
+OrgAgenda.tags({options?})                                      *OrgAgenda.tags*
+
+    Parameters: ~
+        {options?}  (OrgAgendaTagsOptions)
+
+
+OrgPosition                                                        *OrgPosition*
+
+    Fields: ~
+        {start_line}  (number)  start line number
+        {end_line}    (number)  end line number
+        {start_col}   (number)  start column number
+        {end_col}     (number)  end column number
+
+
+vim:tw=78:ts=8:noet:ft=help:norl:

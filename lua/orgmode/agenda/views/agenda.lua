@@ -1,70 +1,69 @@
 local Date = require('orgmode.objects.date')
-local Files = require('orgmode.parser.files')
-local Range = require('orgmode.parser.range')
+local Range = require('orgmode.files.elements.range')
 local config = require('orgmode.config')
 local ClockReport = require('orgmode.clock.report')
 local AgendaItem = require('orgmode.agenda.agenda_item')
 local AgendaFilter = require('orgmode.agenda.filter')
 local utils = require('orgmode.utils')
 
-local function sort_by_date_or_category(a, b)
-  if not a.headline_date:is_same(b.headline_date) then
-    return a.headline_date:is_before(b.headline_date)
+local function sort_by_date_or_priority_or_category(a, b)
+  if a.headline:get_priority_sort_value() ~= b.headline:get_priority_sort_value() then
+    return a.headline:get_priority_sort_value() > b.headline:get_priority_sort_value()
+  end
+  if not a.real_date:is_same(b.real_date, 'day') then
+    return a.real_date:is_before(b.real_date)
   end
   return a.index < b.index
 end
 
----@param agenda_items AgendaItem[]
----@return AgendaItem[]
+---@param agenda_items OrgAgendaItem[]
+---@return OrgAgendaItem[]
 local function sort_agenda_items(agenda_items)
   table.sort(agenda_items, function(a, b)
     if a.is_same_day and b.is_same_day then
-      if not a.headline_date.date_only and not b.headline_date.date_only then
-        return a.headline_date:is_before(b.headline_date)
-      end
-      if not a.headline_date.date_only then
+      if a.real_date:has_time() and not b.real_date:has_time() then
         return true
       end
-      if not b.headline_date.date_only then
+      if b.real_date:has_time() and not a.real_date:has_time() then
         return false
       end
-      return sort_by_date_or_category(a, b)
+      if a.real_date:has_time() and b.real_date:has_time() then
+        return a.real_date:is_before(b.real_date)
+      end
+      return sort_by_date_or_priority_or_category(a, b)
     end
 
     if a.is_same_day and not b.is_same_day then
-      if not a.headline_date.date_only or (b.headline_date:is_none() and not a.headline_date:is_none()) then
+      if a.real_date:has_time() or (b.real_date:is_none() and not a.real_date:is_none()) then
         return true
       end
     end
 
     if not a.is_same_day and b.is_same_day then
-      if not b.headline_date.date_only or (a.headline_date:is_none() and not b.headline_date:is_none()) then
+      if b.real_date:has_time() or (a.real_date:is_none() and not b.real_date:is_none()) then
         return false
       end
     end
 
-    if a.headline:get_priority_sort_value() ~= b.headline:get_priority_sort_value() then
-      return a.headline:get_priority_sort_value() > b.headline:get_priority_sort_value()
-    end
-
-    return sort_by_date_or_category(a, b)
+    return sort_by_date_or_priority_or_category(a, b)
   end)
   return agenda_items
 end
 
----@class AgendaView
+---@class OrgAgendaView
 ---@field span string|number
----@field from Date
----@field to Date
+---@field from OrgDate
+---@field to OrgDate
 ---@field items table[]
 ---@field content table[]
 ---@field highlights table[]
----@field clock_report ClockReport
+---@field clock_report OrgClockReport
 ---@field show_clock_report boolean
 ---@field start_on_weekday number
 ---@field start_day string
 ---@field header string
----@field filters AgendaFilter
+---@field filters OrgAgendaFilter
+---@field files OrgFiles
 local AgendaView = {}
 
 function AgendaView:new(opts)
@@ -82,7 +81,9 @@ function AgendaView:new(opts)
     start_on_weekday = opts.org_agenda_start_on_weekday or config.org_agenda_start_on_weekday,
     start_day = opts.org_agenda_start_day or config.org_agenda_start_day,
     header = opts.org_agenda_overriding_header,
+    files = opts.files,
   }
+
   setmetatable(data, self)
   self.__index = self
   data:_set_date_range()
@@ -99,7 +100,7 @@ function AgendaView:_get_title()
   end
   local span_number = ''
   if span == 'week' then
-    span_number = string.format(' (W%d)', self.from:get_week_number())
+    span_number = string.format(' (W%s)', self.from:get_week_number())
   end
   return utils.capitalize(span) .. '-agenda' .. span_number .. ':'
 end
@@ -135,7 +136,7 @@ function AgendaView:_build_items()
   local agenda_days = {}
 
   local headline_dates = {}
-  for _, orgfile in ipairs(Files.all()) do
+  for _, orgfile in ipairs(self.files:all()) do
     for _, headline in ipairs(orgfile:get_opened_headlines()) do
       for _, headline_date in ipairs(headline:get_valid_dates_for_agenda()) do
         table.insert(headline_dates, {
@@ -177,7 +178,7 @@ function AgendaView:build()
 
     if is_today or is_weekend then
       table.insert(highlights, {
-        hlgroup = 'OrgBold',
+        hlgroup = is_today and '@org.agenda.today' or '@org.agenda.weekend',
         range = Range:new({
           start_line = #content + 1,
           end_line = #content + 1,
@@ -190,8 +191,8 @@ function AgendaView:build()
     table.insert(content, { line_content = self:_format_day(day) })
 
     local longest_items = utils.reduce(agenda_items, function(acc, agenda_item)
-      acc.category = math.max(acc.category, agenda_item.headline:get_category():len())
-      acc.label = math.max(acc.label, agenda_item.label:len())
+      acc.category = math.max(acc.category, vim.api.nvim_strwidth(agenda_item.headline:get_category()))
+      acc.label = math.max(acc.label, vim.api.nvim_strwidth(agenda_item.label))
       return acc
     end, {
       category = 0,
@@ -209,13 +210,19 @@ function AgendaView:build()
   self.highlights = highlights
   self.active_view = 'agenda'
   if self.show_clock_report then
-    self.clock_report = ClockReport.from_date_range(self.from, self.to)
+    self.clock_report = ClockReport:new({
+      from = self.from,
+      to = self.to,
+      files = self.files,
+    })
     utils.concat(self.content, self.clock_report:draw_for_agenda(#self.content + 1))
   end
   return self
 end
 
-function AgendaView:advance_span(direction)
+function AgendaView:advance_span(direction, count)
+  count = count or 1
+  direction = direction * count
   local action = { [self.span] = direction }
   if type(self.span) == 'number' then
     action = { day = self.span * direction }
@@ -264,25 +271,29 @@ function AgendaView:after_print(_)
   return vim.fn.search(self:_format_day(Date.now()))
 end
 
----@param agenda_item AgendaItem
+---@param agenda_item OrgAgendaItem
 ---@return table
 function AgendaView.build_agenda_item_content(agenda_item, longest_category, longest_date, line_nr)
   local headline = agenda_item.headline
-  local category = string.format('  %-' .. longest_category .. 's', headline:get_category() .. ':')
+  local category = '  ' .. utils.pad_right(string.format('%s:', headline:get_category()), longest_category)
   local date = agenda_item.label
   if date ~= '' then
-    date = string.format(' %-' .. longest_date .. 's', agenda_item.label)
+    date = ' ' .. utils.pad_right(agenda_item.label, longest_date)
   end
-  local todo_keyword = agenda_item.headline.todo_keyword.value
+  local todo_keyword = agenda_item.headline:get_todo() or ''
   local todo_padding = ''
   if todo_keyword ~= '' and vim.trim(agenda_item.label):find(':$') then
     todo_padding = ' '
   end
   todo_keyword = todo_padding .. todo_keyword
-  local line = string.format('%s%s%s %s', category, date, todo_keyword, headline.title)
+  local line = string.format('%s%s%s %s', category, date, todo_keyword, headline:get_title_with_priority())
   local todo_keyword_pos = string.format('%s%s%s', category, date, todo_padding):len()
-  if #headline.tags > 0 then
-    line = string.format('%-99s %s', line, headline:tags_to_string())
+  if #headline:get_tags() > 0 then
+    local tags_string = headline:tags_to_string()
+    local padding_length =
+      math.max(1, utils.winwidth() - vim.api.nvim_strwidth(line) - vim.api.nvim_strwidth(tags_string))
+    local indent = string.rep(' ', padding_length)
+    line = string.format('%s%s%s', line, indent, tags_string)
   end
 
   local item_highlights = {}
@@ -298,6 +309,10 @@ function AgendaView.build_agenda_item_content(agenda_item, longest_category, lon
         hl.range.start_col = todo_keyword_pos + 1
         hl.range.end_col = todo_keyword_pos + hl.todo_keyword:len() + 1
       end
+      if hl.priority then
+        hl.range.start_col = todo_keyword_pos + hl.start_col
+        hl.range.end_col = todo_keyword_pos + hl.start_col + 4
+      end
       return hl
     end, agenda_item.highlights)
   end
@@ -310,7 +325,7 @@ function AgendaView.build_agenda_item_content(agenda_item, longest_category, lon
         start_col = 1,
         end_col = 0,
       }),
-      hl_group = 'Visual',
+      hlgroup = 'Visual',
       whole_line = true,
     })
   end
@@ -319,8 +334,8 @@ function AgendaView.build_agenda_item_content(agenda_item, longest_category, lon
     line_content = line,
     line = line_nr,
     jumpable = true,
-    file = headline.file,
-    file_position = headline.range.start_line,
+    file = headline.file.filename,
+    file_position = headline:get_range().start_line,
     highlights = item_highlights,
     longest_date = longest_date,
     longest_category = longest_category,

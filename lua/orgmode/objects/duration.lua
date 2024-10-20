@@ -1,4 +1,4 @@
----@class Duration
+---@class OrgDuration
 ---@field parts table
 ---@field minutes number
 local Duration = {}

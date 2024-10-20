@@ -9,22 +9,38 @@ jobs:
   docgen:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-go@v2
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GH_TOKEN }}
+      - uses: actions/setup-go@v5
         with:
           go-version: '^1.17.1'
       - name: Install md2vim
-        run: go get github.com/FooSoft/md2vim
+        run: go install git.foosoft.net/alex/md2vim@latest
+      - name: Install Neovim
+        uses: rhysd/action-setup-vim@v1
+        id: neovim
+        with:
+          neovim: true
+          version: v0.9.5
+      - name: Install lemmy-help
+        run: |
+          curl -Lq https://github.com/numToStr/lemmy-help/releases/latest/download/lemmy-help-x86_64-unknown-linux-gnu.tar.gz | tar xz
+          echo "$PWD" >> $GITHUB_PATH
+      - name: Generate api docs
+        run: make api_docs
       - name: Generate vim docs
         run: make docs
       - name: Commit changes
         env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
           COMMIT_MSG: |
-            [docgen] Update doc/orgmode.txt
-            skip-checks: true
+            [docgen] Update docs
         run: |
+          rm lemmy-help
           git config user.name github-actions
           git config user.email github-actions@github.com
           git add doc/orgmode.txt
+          git add doc/orgmode_api.txt
           # Only commit and push if we have changes
           git diff --quiet && git diff --staged --quiet || (git commit -m "${COMMIT_MSG}"; git push)

@@ -1,3 +1,4 @@
+---@diagnostic disable: undefined-field
 -- Taken from https://github.com/notomo/promise.nvim
 
 local vim = vim
@@ -5,18 +6,8 @@ local vim = vim
 local PackedValue = {}
 PackedValue.__index = PackedValue
 
---- like {...} except preserve the lenght explicitly
-local function pack_len(...)
-  return { n = select('#', ...), ... }
-end
-
---- like unpack() but use the length set by pack_len if present
-local function unpack_len(t)
-  return unpack(t, 1, t.n)
-end
-
 function PackedValue.new(...)
-  local values = pack_len(...)
+  local values = vim.F.pack_len(...)
   local tbl = { _values = values }
   return setmetatable(tbl, PackedValue)
 end
@@ -29,7 +20,7 @@ function PackedValue.pcall(self, f)
 end
 
 function PackedValue.unpack(self)
-  return unpack_len(self._values)
+  return vim.F.unpack_len(self._values)
 end
 
 function PackedValue.first(self)
@@ -37,6 +28,9 @@ function PackedValue.first(self)
   return first
 end
 
+--- @generic T : any
+--- @generic V : any
+--- @class OrgPromise<T, V>: { next: (fun(self: OrgPromise<T>, resolve:fun(result:T):V):OrgPromise<V>), catch: (fun(self: OrgPromise<T>, reject:fun(err:any)):OrgPromise), finally: (fun(self: OrgPromise<T>, reject:fun(err:any)):OrgPromise), wait: fun(self: OrgPromise<T>, timeout?: number):V }
 local Promise = {}
 Promise.__index = Promise
 
@@ -82,14 +76,25 @@ local new_pending = function(on_fullfilled, on_rejected)
 end
 
 --- Equivalents to JavaScript's Promise.new.
---- @param executor function: `(resolve: function(...), reject: function(...))`
---- @return table: Promise
+--- @param executor fun(resolve:fun(...:any),reject:fun(...:any))
+--- @return OrgPromise
 function Promise.new(executor)
   vim.validate({ executor = { executor, 'function' } })
 
   local self = new_pending()
 
   local resolve = function(...)
+    local first = ...
+    if is_promise(first) then
+      first
+        :next(function(...)
+          self:_resolve(...)
+        end)
+        :catch(function(...)
+          self:_reject(...)
+        end)
+      return
+    end
     self:_resolve(...)
   end
   local reject = function(...)
@@ -102,8 +107,8 @@ end
 
 --- Returns a fulfilled promise.
 --- But if the first argument is promise, returns the promise.
---- @vararg any: one promise or non-promises
---- @return table: Promise
+--- @param ... any: one promise or non-promises
+--- @return OrgPromise
 function Promise.resolve(...)
   local first = ...
   if is_promise(first) then
@@ -117,8 +122,8 @@ end
 
 --- Returns a rejected promise.
 --- But if the first argument is promise, returns the promise.
---- @vararg any: one promise or non-promises
---- @return table: Promise
+--- @param ... any: one promise or non-promises
+--- @return OrgPromise
 function Promise.reject(...)
   local first = ...
   if is_promise(first) then
@@ -210,9 +215,9 @@ function Promise._start_reject(self, value)
 end
 
 --- Equivalents to JavaScript's Promise.then.
---- @param on_fullfilled function|nil: A callback on fullfilled.
---- @param on_rejected function|nil: A callback on rejected.
---- @return table: Promise
+--- @param on_fullfilled (fun(...:any):any)?: A callback on fullfilled.
+--- @param on_rejected (fun(...:any):any)?: A callback on rejected.
+--- @return OrgPromise
 function Promise.next(self, on_fullfilled, on_rejected)
   vim.validate({
     on_fullfilled = { on_fullfilled, 'function', true },
@@ -232,15 +237,15 @@ function Promise.next(self, on_fullfilled, on_rejected)
 end
 
 --- Equivalents to JavaScript's Promise.catch.
---- @param on_rejected function|nil: A callback on rejected.
---- @return table: Promise
+--- @param on_rejected (fun(...:any):any)?: A callback on rejected.
+--- @return OrgPromise
 function Promise.catch(self, on_rejected)
   return self:next(nil, on_rejected)
 end
 
 --- Equivalents to JavaScript's Promise.finally.
---- @param on_finally function
---- @return table: Promise
+--- @param on_finally fun()
+--- @return OrgPromise
 function Promise.finally(self, on_finally)
   vim.validate({ on_finally = { on_finally, 'function', true } })
   return self
@@ -254,10 +259,53 @@ function Promise.finally(self, on_finally)
     end)
 end
 
+--- Equivalents to JavaScript's Promise.then.
+--- @param timeout? number
+--- @return any
+function Promise.wait(self, timeout)
+  timeout = timeout or 5000
+  local is_done = false
+  local has_error = false
+  local result = nil
+
+  self
+    :next(function(...)
+      result = PackedValue.new(...)
+      is_done = true
+    end)
+    :catch(function(...)
+      has_error = true
+      result = PackedValue.new(...)
+      is_done = true
+    end)
+
+  local success, code = vim.wait(timeout, function()
+    return is_done
+  end, 1)
+
+  local value = result and result:unpack()
+
+  if has_error then
+    return error(value)
+  end
+
+  if success then
+    return value
+  end
+
+  if code == -1 then
+    return error('promise timeout of ' .. tostring(timeout) .. 'ms reached')
+  elseif code == -2 then
+    return error('promise interrupted')
+  end
+
+  return error('promise failed with unknown reason')
+end
+
 --- Equivalents to JavaScript's Promise.all.
 --- Even if multiple value are resolved, results include only the first value.
---- @param list table: promise or non-promise values
---- @return table: Promise
+--- @param list any[]: promise or non-promise values
+--- @return OrgPromise
 function Promise.all(list)
   vim.validate({ list = { list, 'table' } })
   return Promise.new(function(resolve, reject)
@@ -284,9 +332,56 @@ function Promise.all(list)
   end)
 end
 
+--- Equivalents to JavaScript's Promise.map with concurrency limit.
+--- @param callback fun(value: any, index: number, array: any[]): any
+--- @param list any[]: promise or non-promise values
+--- @param concurrency? number: limit number of concurrent items processing
+--- @return OrgPromise
+function Promise.map(callback, list, concurrency)
+  vim.validate({
+    list = { list, 'table' },
+    callback = { callback, 'function' },
+    concurrency = { concurrency, 'number', true },
+  })
+
+  local results = {}
+  local processing = 0
+  local index = 1
+  concurrency = concurrency or #list
+
+  return Promise.new(function(resolve, reject)
+    local function processNext()
+      if index > #list then
+        if processing == 0 then
+          resolve(results)
+        end
+        return
+      end
+
+      local i = index
+      index = index + 1
+      processing = processing + 1
+
+      Promise.resolve(callback(list[i], i, list))
+        :next(function(...)
+          results[i] = ...
+          processing = processing - 1
+          processNext()
+        end)
+        :catch(function(...)
+          reject(...)
+        end)
+    end
+
+    for _ = 1, concurrency do
+      processNext()
+    end
+  end)
+end
+
 --- Equivalents to JavaScript's Promise.race.
---- @param list table: promise or non-promise values
---- @return table: Promise
+--- @param list any[]: promise or non-promise values
+--- @return OrgPromise
 function Promise.race(list)
   vim.validate({ list = { list, 'table' } })
   return Promise.new(function(resolve, reject)
@@ -304,8 +399,8 @@ end
 
 --- Equivalents to JavaScript's Promise.any.
 --- Even if multiple value are rejected, errors include only the first value.
---- @param list table: promise or non-promise values
---- @return table: Promise
+--- @param list any[]: promise or non-promise values
+--- @return OrgPromise
 function Promise.any(list)
   vim.validate({ list = { list, 'table' } })
   return Promise.new(function(resolve, reject)
@@ -334,8 +429,8 @@ end
 
 --- Equivalents to JavaScript's Promise.allSettled.
 --- Even if multiple value are resolved/rejected, value/reason is only the first value.
---- @param list table: promise or non-promise values
---- @return table: Promise
+--- @param list any[]: promise or non-promise values
+--- @return OrgPromise
 function Promise.all_settled(list)
   vim.validate({ list = { list, 'table' } })
   return Promise.new(function(resolve)
