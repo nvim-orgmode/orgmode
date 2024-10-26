@@ -111,7 +111,6 @@ function Clock:org_set_effort()
 end
 
 function Clock:get_statusline()
-  self:update_clocked_headline()
   if not self.clocked_headline or not self.clocked_headline:is_clocked_in() then
     return ''
   end
