@@ -1,6 +1,5 @@
 local OrgFiles = require('orgmode.files')
 local OrgFile = require('orgmode.files.file')
-local Files = require('orgmode.parser.files')
 local org = require('orgmode')
 
 describe('Clock', function()
@@ -23,14 +22,12 @@ describe('Clock', function()
 
     vim.cmd('edit ' .. file.filename)
 
-    Files.file_loader = OrgFiles:new({
+    orgmode.files = OrgFiles:new({
       paths = { file.filename },
-    })
-    local files = Files.loader()
-    files:add_to_paths(file.filename):wait()
+    }):load_sync(true, 20000)
 
     -- Establish baseline: Test 1 is clocked in
-    local clock = org.clock:new({ files = files })
+    local clock = org.clock:new({ files = orgmode.files })
     assert.are.same('Test 1', clock.clocked_headline:get_title())
     assert.is_true(clock.clocked_headline:is_clocked_in())
 
