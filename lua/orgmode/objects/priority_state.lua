@@ -4,18 +4,20 @@ local utils = require('orgmode.utils')
 ---@field high_priority string
 ---@field low_priority string
 ---@field priority string
+---@field start_with_default boolean
 ---@field default_priority string
 local PriorityState = {}
 
 ---@param priority string
 ---@param prio_range { highest: string, lowest: string, default: string }
-function PriorityState:new(priority, prio_range)
+function PriorityState:new(priority, prio_range, start_with_default)
   local o = {}
 
   o.high_priority = tostring(prio_range.highest)
   o.low_priority = tostring(prio_range.lowest)
   o.default_priority = tostring(prio_range.default)
   o.priority = tostring(priority or o.default_priority)
+  o.start_with_default = start_with_default
 
   setmetatable(o, self)
   self.__index = self
@@ -54,9 +56,12 @@ end
 
 ---@return string
 function PriorityState:increase()
-  if self.priority == self.high_priority then
-    self.priority = ''
-  elseif self.priority == '' then
+  if self.priority == '' then
+    self.priority = self.default_priority
+    if not self.start_with_default then
+      self.priority = self:_apply(-1)
+    end
+  elseif self.priority == self.high_priority then
     self.priority = self.low_priority
   else
     self.priority = self:_apply(-1)
@@ -67,9 +72,12 @@ end
 
 ---@return string
 function PriorityState:decrease()
-  if self.priority == self.low_priority then
-    self.priority = ''
-  elseif self.priority == '' then
+  if self.priority == '' then
+    self.priority = self.default_priority
+    if not self.start_with_default then
+      self.priority = self:_apply(1)
+    end
+  elseif self.priority == self.low_priority then
     self.priority = self.high_priority
   else
     self.priority = self:_apply(1)
