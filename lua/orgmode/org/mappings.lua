@@ -609,15 +609,7 @@ function OrgMappings:meta_return(suffix)
   suffix = suffix or ''
   local item = ts_utils.get_node_at_cursor()
 
-  if not item then
-    return
-  end
-
-  if item:type() == 'expr' then
-    item = item:parent()
-  end
-
-  if item and item:parent() and item:parent():type() == 'headline' then
+  if item and item:type() == 'expr' then
     item = item:parent()
   end
 
@@ -625,12 +617,21 @@ function OrgMappings:meta_return(suffix)
     return
   end
 
-  if item:type() == 'headline' then
-    local linenr = vim.fn.line('.') or 0
-    local _, level = item:field('stars')[1]:end_()
+  local headline = (item:type() == 'headline') and item
+    or (item:parent() and item:parent():type() == 'headline') and item:parent()
+    or nil
+  if headline then
+    local _, level = headline:field('stars')[1]:end_()
     local content = config:respect_blank_before_new_entry({ ('*'):rep(level) .. ' ' .. suffix })
-    vim.fn.append(linenr, content)
-    vim.fn.cursor(linenr + #content, 1)
+
+    local section = headline:parent()
+    if not section or section:type() ~= 'section' then
+      return
+    end
+    local end_row = section:end_()
+
+    vim.fn.append(end_row, content)
+    vim.fn.cursor(end_row + #content, 1)
     vim.cmd([[startinsert!]])
     return true
   end
