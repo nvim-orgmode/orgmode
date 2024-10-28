@@ -23,7 +23,7 @@ end
 ---@return number | nil
 function OrgCompletionPlan:get_start(context)
   local prev_line = vim.fn.getline(vim.fn.line('.') - 1)
-  if not self.completion:is_headline_line(prev_line) then
+  if not self.completion:is_headline_line(prev_line) or self.completion:is_headline_line(vim.fn.getline('.')) then
     return nil
   end
 
