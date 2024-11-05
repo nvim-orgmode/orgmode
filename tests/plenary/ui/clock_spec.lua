@@ -2,7 +2,6 @@ local helpers = require('tests.plenary.helpers')
 local Date = require('orgmode.objects.date')
 local orgmode = require('orgmode')
 
-
 describe('Clock', function()
   local files = {}
   after_each(function()
