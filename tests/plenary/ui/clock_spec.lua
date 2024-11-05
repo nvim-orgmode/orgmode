@@ -1,5 +1,6 @@
 local helpers = require('tests.plenary.helpers')
 local Date = require('orgmode.objects.date')
+local orgmode = require('orgmode')
 
 describe('Clock', function()
   local files = {}
@@ -148,5 +149,40 @@ describe('Clock', function()
     assert.are.same('', vim.fn.getline(5))
     assert.are.same('', vim.fn.getline(6))
     assert.are.same('', vim.fn.getline(7))
+  end)
+
+  it('should properly clock in an entry if unsaved edits were made to the buffer', function()
+    local file = helpers.create_agenda_file({
+      '* TODO Test 1',
+      '  :LOGBOOK:',
+      '  CLOCK: [2024-05-22 Wed 05:15]',
+      '  :END:',
+      '* TODO Test 2',
+    })
+
+    vim.cmd('edit ' .. file.filename)
+
+    -- Establish baseline: Test 1 is clocked in
+    local clock = orgmode.clock
+    assert.are.same('Test 1', clock.clocked_headline:get_title())
+    assert.is_true(clock.clocked_headline:is_clocked_in())
+
+    -- Move the test 2 header above test 1 and then clock test 2 in
+    vim.fn.cursor({ 5, 1 })
+    vim.cmd([[norm dd]])
+    vim.fn.cursor({ 1, 1 })
+    vim.cmd([[norm P]])
+    vim.fn.cursor({ 1, 1 })
+    clock:org_clock_in():wait()
+    file:reload():wait()
+
+    -- Test 2 is properly clocked in
+    assert.are.same('Test 2', clock.clocked_headline:get_title())
+    assert.are.same('Test 2', file:get_headlines()[1]:get_title())
+    assert.is_true(file:get_headlines()[1]:is_clocked_in())
+
+    -- Test 1 is properly clocked out
+    assert.are.same('Test 1', file:get_headlines()[2]:get_title())
+    assert.is_false(file:get_headlines()[2]:is_clocked_in())
   end)
 end)

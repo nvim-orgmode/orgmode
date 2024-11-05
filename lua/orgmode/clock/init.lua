@@ -26,11 +26,20 @@ function Clock:init()
   end
 end
 
+function Clock:update_clocked_headline()
+  local last_clocked_headline = self.files:get_clocked_headline()
+  if last_clocked_headline and last_clocked_headline:is_clocked_in() then
+    self.clocked_headline = last_clocked_headline
+  end
+end
+
 function Clock:has_clocked_headline()
+  self:update_clocked_headline()
   return self.clocked_headline ~= nil
 end
 
 function Clock:org_clock_in()
+  self:update_clocked_headline()
   local item = self.files:get_closest_headline()
   if item:is_clocked_in() then
     return utils.echo_info(string.format('Clock continues in "%s"', item:get_title()))
@@ -53,6 +62,7 @@ function Clock:org_clock_in()
 end
 
 function Clock:org_clock_out()
+  self:update_clocked_headline()
   if not self.clocked_headline or not self.clocked_headline:is_clocked_in() then
     return
   end
@@ -62,6 +72,7 @@ function Clock:org_clock_out()
 end
 
 function Clock:org_clock_cancel()
+  self:update_clocked_headline()
   if not self.clocked_headline or not self.clocked_headline:is_clocked_in() then
     return utils.echo_info('No active clock')
   end
@@ -72,6 +83,7 @@ function Clock:org_clock_cancel()
 end
 
 function Clock:org_clock_goto()
+  self:update_clocked_headline()
   if not self.clocked_headline then
     return utils.echo_info('No active or recent clock task')
   end
