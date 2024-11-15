@@ -246,6 +246,13 @@ local function indentexpr(linenr, bufnr)
   query = query or vim.treesitter.query.get('org', 'org_indent')
 
   bufnr = bufnr or vim.api.nvim_get_current_buf()
+
+  -- The buffer might be invalid, which can happen, if the function is implicitly called through
+  -- refile operations. In this case we fallback to autoindent.
+  if bufnr == -1 or not vim.api.nvim_buf_is_valid(bufnr) then
+    return -1
+  end
+
   local indentexpr_cache = buf_indentexpr_cache[bufnr] or { prev_linenr = -1 }
   if indentexpr_cache.prev_linenr ~= linenr - 1 or not mode:lower():find('n') then
     indentexpr_cache.matches = get_matches(bufnr)
