@@ -71,6 +71,8 @@ local DefaultConfig = {
     [':tangle'] = 'no',
     [':noweb'] = 'no',
   },
+  org_resource_download_policy = 'prompt',
+  org_safe_remote_resources = {},
   win_split_mode = 'horizontal',
   win_border = 'single',
   notifications = {
