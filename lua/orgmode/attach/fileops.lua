@@ -339,4 +339,44 @@ function M.remove_directory(path, opts)
   end)
 end
 
+--[[
+-- Scary hacks 💀
+--]]
+
+---Helper function to `download_file`.
+---This uses NetRW to download a file and returns the download location.
+---@param url string
+---@return OrgPromise<string> tmpfile
+local function netrw_read(url)
+  return Promise.new(function(resolve, reject)
+    if not vim.g.loaded_netrwPlugin then
+      return reject('Netrw plugin must be loaded in order to download urls.')
+    end
+    vim.schedule(function()
+      local ok, err = pcall(vim.fn['netrw#NetRead'], 3, url)
+      if ok then
+        resolve(vim.b.netrw_tmpfile)
+      else
+        reject(err)
+      end
+    end)
+  end)
+end
+
+---Download a file via NetRW.
+---The file is first downloaded to a temporary location (no matter the value of
+---`exist_ok`) and only then copied over to `dest`. The copy operation uses the
+---`exist_ok` flag exactly like `copy_file`.
+---@param url string
+---@param dest string
+---@param opts? {exist_ok: boolean?}
+---@return OrgPromise<true> success
+function M.download_file(url, dest, opts)
+  opts = opts or {}
+  local exist_ok = opts.exist_ok or false
+  return netrw_read(url):next(function(source)
+    return M.copy_file(source, dest, { excl = not exist_ok, ficlone = true, ficlone_force = false })
+  end)
+end
+
 return M
