@@ -60,9 +60,13 @@ function OrgAgenda.tags(options)
   if options.filters and options.filters ~= '' then
     orgmode.agenda.filters:parse(options.filters, true)
   end
-  orgmode.agenda:tags({
-    todo_only = options.todo_only,
-  })
+  -- Ugly fix until https://github.com/nvim-orgmode/orgmode/issues/483 is fixed
+  options.todo_only = true
+  options.query = options.query or ''
+  orgmode.agenda:tags(options)
+  -- orgmode.agenda:tags({
+  --   todo_only = options.todo_only,
+  -- })
 end
 
 return OrgAgenda
