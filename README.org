@@ -127,6 +127,32 @@ require('cmp').setup({
 
 #+HTML:</details>
 
+#+HTML:<details> <summary><a href="https://github.com/Saghen/blink.cmp"><b>blink.cmp</b></a></summary> </br>
+#+BEGIN_SRC lua
+require('blink.cmp').setup({
+  sources = {
+    completion = {
+      enabled_providers = { 'lsp', 'path', 'snippets', 'buffer', 'orgmode' }
+      -- Or if you want to use only this provider in org files
+      -- enabled_providers = function()
+      --   if vim.bo.filetype == 'org' then
+      --     return { 'orgmode' }
+      --   end
+      --   return { 'lsp', 'path', 'snippets', 'buffer' }
+      -- end
+    },
+    providers = {
+      orgmode = {
+        name = 'Orgmode',
+        module = 'orgmode.org.autocompletion.blink',
+      },
+    },
+  },
+})
+#+END_SRC
+
+#+HTML:</details>
+
 #+HTML:<details> <summary><a href="https://github.com/nvim-lua/completion-nvim"><b>completion-nvim</b></a></summary> </br>
 
 #+BEGIN_SRC lua
