@@ -43,4 +43,24 @@ function M.get_current_file_dir()
   return current_dir or ''
 end
 
+---@param paths string[]
+---@return string[]
+function M.trim_common_root(paths)
+  local filepaths = vim.deepcopy(paths)
+  table.sort(filepaths, function(a, b)
+    local _, count_a = a:gsub('/', '')
+    local _, count_b = b:gsub('/', '')
+    return count_a < count_b
+  end)
+
+  local result = {}
+  local root = vim.pesc(vim.fn.fnamemodify(filepaths[1], ':h')) .. '/'
+
+  for _, path in ipairs(paths) do
+    local relative_path = path:sub(#root + 1)
+    table.insert(result, relative_path)
+  end
+  return result
+end
+
 return M
