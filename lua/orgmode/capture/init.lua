@@ -1,4 +1,5 @@
 local utils = require('orgmode.utils')
+local fs = require('orgmode.utils.fs')
 local config = require('orgmode.config')
 local Templates = require('orgmode.capture.templates')
 local Template = require('orgmode.capture.template')
@@ -363,12 +364,13 @@ function Capture:get_destination()
   local valid_destinations = self:_get_autocompletion_files()
 
   local destination = vim.fn.OrgmodeInput('Enter destination: ', '', function(arg_lead)
-    return self:autocomplete_refile(arg_lead)
+    return self:autocomplete_refile(arg_lead, valid_destinations)
   end)
 
-  destination = vim.split(destination, '/', { plain = true })
+  local path = destination:match('^.*%.org/')
+  local headline_title = path and destination:sub(#path + 1) or ''
 
-  if not valid_destinations[destination[1]] then
+  if not valid_destinations[path] then
     utils.echo_error(
       ('"%s" is not a is not a file specified in the "org_agenda_files" setting. Refiling cancelled.'):format(
         destination[1]
@@ -377,11 +379,10 @@ function Capture:get_destination()
     return {}
   end
 
-  local destination_file = valid_destinations[destination[1]]
+  local destination_file = valid_destinations[path]
   local result = {
     file = destination_file,
   }
-  local headline_title = table.concat({ unpack(destination, 2) }, '/')
 
   if not headline_title or vim.trim(headline_title) == '' then
     return result
@@ -406,24 +407,24 @@ function Capture:get_destination()
 end
 
 ---@param arg_lead string
+---@param files table<string, OrgFile>
 ---@return string[]
-function Capture:autocomplete_refile(arg_lead)
-  local valid_files = self:_get_autocompletion_files(true)
-
+function Capture:autocomplete_refile(arg_lead, files)
   if not arg_lead or #arg_lead == 0 then
-    return vim.tbl_keys(valid_files)
+    return vim.tbl_keys(files)
   end
 
-  local filename = vim.split(arg_lead, '/', { plain = true })[1]
-  local selected_file = valid_files[filename .. '/']
+  local filename = arg_lead:match('^.*%.org/')
+
+  local selected_file = filename and files[filename]
 
   if not selected_file then
-    return vim.fn.matchfuzzy(vim.tbl_keys(valid_files), filename)
+    return vim.fn.matchfuzzy(vim.tbl_keys(files), filename or arg_lead)
   end
 
   local headlines = selected_file:get_opened_unfinished_headlines()
   local result = vim.tbl_map(function(headline)
-    return string.format('%s/%s', vim.fn.fnamemodify(headline.file.filename, ':t'), headline:get_title())
+    return string.format('%s%s', filename, headline:get_title())
   end, headlines)
 
   return vim.tbl_filter(function(item)
@@ -597,16 +598,25 @@ function Capture:_create_menu_items(templates)
 end
 
 ---@private
----@param add_slash_suffix? boolean
 ---@return table<string, OrgFile>
-function Capture:_get_autocompletion_files(add_slash_suffix)
+function Capture:_get_autocompletion_files()
   local valid_destinations = {}
+  local filenames = {}
   for _, file in ipairs(self.files:all()) do
     if not file:is_archive_file() then
-      valid_destinations[vim.fn.fnamemodify(file.filename, ':t') .. (add_slash_suffix and '/' or '')] = file
+      table.insert(valid_destinations, file)
+      table.insert(filenames, file.filename)
     end
   end
-  return valid_destinations
+
+  filenames = fs.trim_common_root(filenames)
+  local result = {}
+
+  for i, filename in ipairs(filenames) do
+    result[filename .. '/'] = valid_destinations[i]
+  end
+
+  return result
 end
 
 ---@private
