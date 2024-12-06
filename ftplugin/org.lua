@@ -65,5 +65,5 @@ vim.b.undo_ftplugin = table.concat({
   'foldexpr<',
   'formatexpr<',
   'omnifunc<',
-  '| unlet! b:org_bufnr',
+  '| unlet! b:org_bufnr b:org_tmp_edit_window',
 }, ' ')

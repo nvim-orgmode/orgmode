@@ -538,6 +538,7 @@ function utils.edit_file(filename)
     end,
     close = function()
       vim.cmd('silent! w')
+      vim.b.org_tmp_edit_window = nil
       if buf_not_already_loaded then
         vim.cmd('silent! bw!')
       else
