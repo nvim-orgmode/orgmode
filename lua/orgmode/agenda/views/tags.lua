@@ -22,6 +22,7 @@ function AgendaTagsView:new(opts)
     highlights = {},
     items = {},
     search = opts.search or '',
+    query = opts.query or '',
     todo_only = opts.todo_only or false,
     filters = opts.filters or AgendaFilter:new(),
     header = opts.org_agenda_overriding_header,
@@ -34,9 +35,15 @@ function AgendaTagsView:new(opts)
 end
 
 function AgendaTagsView:build()
-  local tags = vim.fn.OrgmodeInput('Match: ', self.search, function(arg_lead)
-    return utils.prompt_autocomplete(arg_lead, self.files:get_tags())
-  end)
+  local tags
+  -- Ugly fix until https://github.com/nvim-orgmode/orgmode/issues/483 is fixed
+  if self.query ~= '' then
+    tags = self.query
+  else
+    tags = vim.fn.OrgmodeInput('Match: ', self.search, function(arg_lead)
+      return utils.prompt_autocomplete(arg_lead, self.files:get_tags())
+    end)
+  end
   if vim.trim(tags) == '' then
     return utils.echo_warning('Invalid tag.')
   end
