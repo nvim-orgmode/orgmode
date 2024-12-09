@@ -460,10 +460,10 @@ function OrgMappings:_todo_change_state(direction)
 
   local prompt_repeat_note = config.org_log_repeat == 'note'
   local log_repeat_enabled = config.org_log_repeat ~= false
-  local repeat_note_template = ('%s- State "%s" from "%s" [%s]'):format(
+  local repeat_note_template = ('%s- State %-12s from %-12s [%s]'):format(
     indent,
-    new_todo,
-    old_state,
+    [["]] .. new_todo .. [["]],
+    [["]] .. old_state .. [["]],
     Date.now():to_string()
   )
   local repeat_note_title = ('Insert note for state change from "%s" to "%s"'):format(old_state, new_todo)

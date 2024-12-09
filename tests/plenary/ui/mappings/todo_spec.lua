@@ -69,7 +69,7 @@ describe('Todo mappings', function()
       '  :PROPERTIES:',
       '  :LAST_REPEAT: [' .. now:to_string() .. ']',
       '  :END:',
-      '  - State "DONE" from "TODO" [' .. now:to_string() .. ']',
+      '  - State "DONE"       from "TODO"       [' .. now:to_string() .. ']',
       '',
       '* TODO Another task',
     }, vim.api.nvim_buf_get_lines(0, 2, 10, false))
@@ -137,7 +137,7 @@ describe('Todo mappings', function()
       '  :LAST_REPEAT: [' .. now:to_string() .. ']',
       '  :END:',
       '  :LOGBOOK:',
-      '  - State "DONE" from "TODO" [' .. now:to_string() .. ']',
+      '  - State "DONE"       from "TODO"       [' .. now:to_string() .. ']',
       '  :END:',
       '',
       '* TODO Another task',
@@ -154,8 +154,8 @@ describe('Todo mappings', function()
       '  :LAST_REPEAT: [' .. now:to_string() .. ']',
       '  :END:',
       '  :LOGBOOK:',
-      '  - State "DONE" from "TODO" [' .. now:to_string() .. ']',
-      '  - State "DONE" from "TODO" [' .. now:to_string() .. ']',
+      '  - State "DONE"       from "TODO"       [' .. now:to_string() .. ']',
+      '  - State "DONE"       from "TODO"       [' .. now:to_string() .. ']',
       '  :END:',
       '',
       '* TODO Another task',
@@ -282,7 +282,7 @@ describe('Todo mappings', function()
       '  :LAST_REPEAT: [' .. now:to_string() .. ']',
       '  :END:',
       '  :LOGBOOK:',
-      '  - State "DONE" from "PHONECALL" [' .. now:to_string() .. ']',
+      '  - State "DONE"       from "PHONECALL"  [' .. now:to_string() .. ']',
       '  :END:',
     }, vim.api.nvim_buf_get_lines(0, 2, 11, false))
   end)
@@ -318,7 +318,7 @@ describe('Todo mappings', function()
       '  :LAST_REPEAT: [' .. now:to_string() .. ']',
       '  :END:',
       '  :LOGBOOK:',
-      '  - State "DONE" from "MEET" [' .. now:to_string() .. ']',
+      '  - State "DONE"       from "MEET"       [' .. now:to_string() .. ']',
       '  :END:',
     }, vim.api.nvim_buf_get_lines(0, 2, 10, false))
   end)
@@ -361,7 +361,7 @@ describe('Todo mappings', function()
       '  :LAST_REPEAT: [' .. now:to_string() .. ']',
       '  :END:',
       '  :LOGBOOK:',
-      '  - State "DONE" from "MEET" [' .. now:to_string() .. ']',
+      '  - State "DONE"       from "MEET"       [' .. now:to_string() .. ']',
       '  :END:',
     }, vim.api.nvim_buf_get_lines(0, 2, 11, false))
   end)
@@ -404,7 +404,7 @@ describe('Todo mappings', function()
       '  :LAST_REPEAT: [' .. now:to_string() .. ']',
       '  :END:',
       '  :LOGBOOK:',
-      '  - State "DONE" from "MEET" [' .. now:to_string() .. ']',
+      '  - State "DONE"       from "MEET"       [' .. now:to_string() .. ']',
       '  :END:',
     }, vim.api.nvim_buf_get_lines(0, 2, 11, false))
   end)
