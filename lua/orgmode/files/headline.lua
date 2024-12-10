@@ -288,9 +288,9 @@ function Headline:set_tags(tags)
 end
 
 function Headline:align_tags()
-  local current_text, tags_node = self:tags_to_string()
-  if tags_node then
-    self:set_tags(current_text)
+  local own_tags, node = self:get_own_tags()
+  if node then
+    self:set_tags(utils.tags_to_string(own_tags))
   end
 end
 

@@ -26,6 +26,8 @@ local function format_line(linenr)
   return false
 end
 
+local formatexpr_cache = {}
+
 local function format()
   if vim.tbl_contains({ 'i', 'R', 'ic', 'ix' }, vim.fn.mode()) then
     -- `formatexpr` is also called when exceeding `textwidth` in insert mode
@@ -37,16 +39,27 @@ local function format()
   local end_line = vim.v.lnum + vim.v.count - 1
   local formatted = false
 
+  -- If single line is being formatted and is cached in the loop below,
+  -- Just fallback to internal formatting
+  if start_line == end_line and formatexpr_cache[start_line] then
+    return 1
+  end
+
   for linenr = start_line, end_line do
     local line_formatted = format_line(linenr)
+    if not line_formatted then
+      formatexpr_cache[linenr] = true
+    end
     formatted = formatted or line_formatted
   end
 
-  if formatted then
-    return 0
+  for line in pairs(formatexpr_cache) do
+    vim.cmd(('%dnormal! gqq'):format(line))
   end
 
-  return 1
+  formatexpr_cache = {}
+
+  return formatted and 0 or 1
 end
 
 return format
