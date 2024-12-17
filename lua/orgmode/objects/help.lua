@@ -96,10 +96,16 @@ function Help._generate_mappings(buffer_type, title)
       maps = table.concat(maps, ', ')
     end
 
+    if type(maps) == 'boolean' and not maps then
+      goto continue
+    end
+
     table.insert(
       content,
       string.format('  `%-12s` - %s', string.gsub(maps, '<prefix>', mappings.prefix), item.description)
     )
+
+    ::continue::
   end
   table.insert(content, '')
   return content
