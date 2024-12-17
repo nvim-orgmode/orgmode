@@ -556,9 +556,10 @@ function Headline:get_tags()
 
   local all_tags = utils.concat({}, file_tags)
   utils.concat(all_tags, utils.reverse(parent_tags), true)
+  all_tags = config:exclude_tags(all_tags)
   utils.concat(all_tags, tags, true)
 
-  return config:exclude_tags(all_tags), own_tags_node
+  return all_tags, own_tags_node
 end
 
 ---@return OrgHeadline | nil
