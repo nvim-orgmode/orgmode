@@ -250,7 +250,6 @@ end
 ---@return OrgPromise<string | nil>
 function Template:_compile(content, content_type)
   content = self:_compile_dates(content)
-  content = self:_compile_expressions(content)
   if self._compile_hooks then
     for _, hook in ipairs(self._compile_hooks) do
       content = hook(content, content_type) --[[@as string]]
@@ -267,6 +266,7 @@ function Template:_compile(content, content_type)
       if not cnt then
         return nil
       end
+      cnt = self:_compile_expressions(cnt)
       return self:_compile_prompts(cnt)
     end)
   end)
