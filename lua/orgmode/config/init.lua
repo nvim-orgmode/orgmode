@@ -30,10 +30,11 @@ function Config:__index(key)
 end
 
 function Config:install_grammar()
-  local ok, _, err = pcall(vim.treesitter.language.add, 'org')
-  if not ok or err ~= nil then
-    require('orgmode.utils.treesitter.install').run()
+  local ok = pcall(vim.treesitter.language.add, 'org')
+  if ok then
+    return
   end
+  require('orgmode.utils.treesitter.install').run()
 end
 
 ---@param url? string
