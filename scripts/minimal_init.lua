@@ -3,6 +3,10 @@ local nvim_root = tmp_dir .. '/nvim_orgmode'
 local lazy_root = nvim_root .. '/lazy'
 local lazypath = lazy_root .. '/lazy.nvim'
 
+for _, name in ipairs({ "config", "data", "state", "cache" }) do
+  vim.env[("XDG_%s_HOME"):format(name:upper())] = nvim_root .. "/" .. name
+end
+
 -- Install lazy.nvim if not already installed
 if not vim.loop.fs_stat(lazypath) then
   vim.fn.system({
