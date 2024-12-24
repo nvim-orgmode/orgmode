@@ -739,18 +739,25 @@ function OrgMappings:insert_heading_respect_content(suffix)
 end
 
 function OrgMappings:insert_todo_heading_respect_content()
-  return self:insert_heading_respect_content(config:get_todo_keywords():first_by_type('TODO').value .. ' ')
+  local first_todo_keyword = config.org_todo_default_state or config:get_todo_keywords():first_by_type('TODO').value
+  if not first_todo_keyword then
+    error('No default TODO keyword found')
+  end
+  return self:insert_heading_respect_content(first_todo_keyword .. ' ')
 end
 
 function OrgMappings:insert_todo_heading()
   local item = self.files:get_closest_headline_or_nil()
-  local first_todo_keyword = config:get_todo_keywords():first_by_type('TODO')
+  local first_todo_keyword = config.org_todo_default_state or config:get_todo_keywords():first_by_type('TODO').value
+  if not first_todo_keyword then
+    error('No default TODO keyword found')
+  end
   if not item then
-    self:_insert_heading_from_plain_line(first_todo_keyword.value .. ' ')
+    self:_insert_heading_from_plain_line(first_todo_keyword .. ' ')
     return vim.cmd([[startinsert!]])
   else
     vim.fn.cursor(item:get_range().start_line, 1)
-    return self:meta_return(first_todo_keyword.value .. ' ')
+    return self:meta_return(first_todo_keyword .. ' ')
   end
 end
 
