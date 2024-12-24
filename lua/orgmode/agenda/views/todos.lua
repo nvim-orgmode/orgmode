@@ -6,9 +6,59 @@ local hl_map = agenda_highlights.get_agenda_hl_map()
 
 local function sort_todos(todos)
   table.sort(todos, function(a, b)
+    -- Tasks marked as clocked_in appear first
+    if a:is_clocked_in() then
+      return true
+    end
+    if b:is_clocked_in() then
+      return false
+    end
+
+    -- Then tasks are sorted by their priority
     if a:get_priority_sort_value() ~= b:get_priority_sort_value() then
       return a:get_priority_sort_value() > b:get_priority_sort_value()
     end
+
+    -- Then tasks are sorted by their TODO keyword
+    local a_keyword = a:get_todo()
+    local b_keyword = b:get_todo()
+    if (a_keyword and b_keyword) and (a_keyword ~= b_keyword) then
+      return a:get_todo_sort_value() < b:get_todo_sort_value()
+    end
+
+    -- Then tasks which have a DEADLINE have priority over SCHEDULED over nothing
+    local a_deadline = a:get_deadline_date()
+    local a_scheduled = a:get_scheduled_date()
+    local b_deadline = b:get_deadline_date()
+    local b_scheduled = b:get_scheduled_date()
+
+    -- If both have deadlines, earlier deadline comes first
+    if a_deadline and b_deadline then
+      return a_deadline < b_deadline
+    end
+
+    -- If only one has deadline, it comes first
+    if a_deadline then
+      return true
+    end
+    if b_deadline then
+      return false
+    end
+
+    -- If both have scheduled dates, earlier date comes first
+    if a_scheduled and b_scheduled then
+      return a_scheduled < b_scheduled
+    end
+
+    -- If only one has scheduled date, it comes first
+    if a_scheduled then
+      return true
+    end
+    if b_scheduled then
+      return false
+    end
+
+    -- Then tasks are sorted by their category keyword
     return a:get_category() < b:get_category()
   end)
   return todos
