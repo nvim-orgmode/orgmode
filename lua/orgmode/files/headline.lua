@@ -196,6 +196,19 @@ function Headline:get_priority_sort_value()
   return PriorityState:new(priority, prio_range):get_sort_value()
 end
 
+---@return integer | nil
+function Headline:get_todo_sort_value()
+  local todo_keyword = self:get_todo()
+  if todo_keyword == nil then
+    return nil
+  end
+  local todo_state = config:get_todo_keywords():find(todo_keyword)
+  if todo_state == nil then
+    return nil
+  end
+  return todo_state.index
+end
+
 function Headline:is_archived()
   return #vim.tbl_filter(function(tag)
     return tag:upper() == 'ARCHIVE'
