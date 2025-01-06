@@ -1,5 +1,6 @@
 local config = require('orgmode.config')
 local Template = require('orgmode.capture.template')
+local validator = require('orgmode.utils.validator')
 
 ---@see https://orgmode.org/manual/Capture-templates.html
 
@@ -12,7 +13,7 @@ local Templates = {}
 function Templates:new(templates)
   local opts = {}
 
-  vim.validate({
+  validator.validate({
     templates = { templates, 'table', true },
   })
 

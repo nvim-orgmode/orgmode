@@ -1,6 +1,7 @@
 local TemplateProperties = require('orgmode.capture.template.template_properties')
 local Date = require('orgmode.objects.date')
 local utils = require('orgmode.utils')
+local validator = require('orgmode.utils.validator')
 local Calendar = require('orgmode.objects.calendar')
 local Promise = require('orgmode.utils.promise')
 
@@ -94,7 +95,7 @@ local Template = {}
 function Template:new(opts)
   opts = opts or {}
 
-  vim.validate({
+  validator.validate({
     description = { opts.description, 'string', true },
     template = { opts.template, { 'string', 'table' }, true },
     target = { opts.target, 'string', true },

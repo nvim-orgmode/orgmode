@@ -2,6 +2,7 @@
 local OrgFile = require('orgmode.api.file')
 local OrgHeadline = require('orgmode.api.headline')
 local orgmode = require('orgmode')
+local validator = require('orgmode.utils.validator')
 
 ---@class OrgApiRefileOpts
 ---@field source OrgApiHeadline
@@ -13,7 +14,7 @@ local OrgApi = {}
 ---@param name? string|string[] specific file names to return (absolute path). If ommitted, returns all loaded files
 ---@return OrgApiFile|OrgApiFile[]
 function OrgApi.load(name)
-  vim.validate({
+  validator.validate({
     name = { name, { 'string', 'table' }, true },
   })
   if not name then
@@ -55,7 +56,7 @@ end
 ---@param opts OrgApiRefileOpts
 ---@return boolean
 function OrgApi.refile(opts)
-  vim.validate({
+  validator.validate({
     source = { opts.source, 'table' },
     destination = { opts.destination, 'table' },
   })
