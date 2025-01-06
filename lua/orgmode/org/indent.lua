@@ -212,7 +212,7 @@ local get_matches = ts_utils.memoize_by_buf_tick(function(bufnr)
       -- Only loop the content.
       for i = range.start.line + 1, range['end'].line - 2 do
         matches[i + 1] = vim.tbl_deep_extend('force', opts, {
-          indent = vim.fn.indent(i + 1) + content_indent_pad,
+          indent = vim.fn.indent(i + 1) + (content_indent_pad or 0),
         })
       end
     elseif type == 'paragraph' or type == 'drawer' or type == 'property_drawer' then
