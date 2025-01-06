@@ -4,16 +4,6 @@ local utils = require('orgmode.utils')
 local agenda_highlights = require('orgmode.colors.highlights')
 local hl_map = agenda_highlights.get_agenda_hl_map()
 
-local function sort_todos(todos)
-  table.sort(todos, function(a, b)
-    if a:get_priority_sort_value() ~= b:get_priority_sort_value() then
-      return a:get_priority_sort_value() > b:get_priority_sort_value()
-    end
-    return a:get_category() < b:get_category()
-  end)
-  return todos
-end
-
 ---@class OrgAgendaTodosView
 ---@field items table[]
 ---@field content table[]
@@ -59,7 +49,7 @@ function AgendaTodosView:build()
 end
 
 function AgendaTodosView.generate_view(items, content, filters)
-  items = sort_todos(items)
+  items = AgendaTodosView._sort(items)
   local offset = #content
   local longest_category = utils.reduce(items, function(acc, todo)
     return math.max(acc, vim.api.nvim_strwidth(todo:get_category()))
@@ -140,6 +130,19 @@ function AgendaTodosView.generate_todo_item(headline, longest_category, line_nr)
     headline = headline,
     highlights = highlights,
   }
+end
+
+---@private
+---@param todos OrgHeadline[]
+---@return OrgHeadline[]
+function AgendaTodosView._sort(todos)
+  table.sort(todos, function(a, b)
+    if a:get_priority_sort_value() ~= b:get_priority_sort_value() then
+      return a:get_priority_sort_value() > b:get_priority_sort_value()
+    end
+    return a:get_category() < b:get_category()
+  end)
+  return todos
 end
 
 return AgendaTodosView

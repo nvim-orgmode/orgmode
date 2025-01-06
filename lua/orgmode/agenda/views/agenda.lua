@@ -16,40 +16,6 @@ local function sort_by_date_or_priority_or_category(a, b)
   return a.index < b.index
 end
 
----@param agenda_items OrgAgendaItem[]
----@return OrgAgendaItem[]
-local function sort_agenda_items(agenda_items)
-  table.sort(agenda_items, function(a, b)
-    if a.is_same_day and b.is_same_day then
-      if a.real_date:has_time() and not b.real_date:has_time() then
-        return true
-      end
-      if b.real_date:has_time() and not a.real_date:has_time() then
-        return false
-      end
-      if a.real_date:has_time() and b.real_date:has_time() then
-        return a.real_date:is_before(b.real_date)
-      end
-      return sort_by_date_or_priority_or_category(a, b)
-    end
-
-    if a.is_same_day and not b.is_same_day then
-      if a.real_date:has_time() or (b.real_date:is_none() and not a.real_date:is_none()) then
-        return true
-      end
-    end
-
-    if not a.is_same_day and b.is_same_day then
-      if b.real_date:has_time() or (a.real_date:is_none() and not b.real_date:is_none()) then
-        return false
-      end
-    end
-
-    return sort_by_date_or_priority_or_category(a, b)
-  end)
-  return agenda_items
-end
-
 ---@class OrgAgendaView
 ---@field span string|number
 ---@field from OrgDate
@@ -157,7 +123,7 @@ function AgendaView:_build_items()
       end
     end
 
-    date.agenda_items = sort_agenda_items(date.agenda_items)
+    date.agenda_items = self._sort(date.agenda_items)
 
     table.insert(agenda_days, date)
   end
@@ -346,6 +312,41 @@ end
 
 function AgendaView:_format_day(day)
   return string.format('%-10s %s', day:format('%A'), day:format('%d %B %Y'))
+end
+
+---@private
+---@param agenda_items OrgAgendaItem[]
+---@return OrgAgendaItem[]
+function AgendaView._sort(agenda_items)
+  table.sort(agenda_items, function(a, b)
+    if a.is_same_day and b.is_same_day then
+      if a.real_date:has_time() and not b.real_date:has_time() then
+        return true
+      end
+      if b.real_date:has_time() and not a.real_date:has_time() then
+        return false
+      end
+      if a.real_date:has_time() and b.real_date:has_time() then
+        return a.real_date:is_before(b.real_date)
+      end
+      return sort_by_date_or_priority_or_category(a, b)
+    end
+
+    if a.is_same_day and not b.is_same_day then
+      if a.real_date:has_time() or (b.real_date:is_none() and not a.real_date:is_none()) then
+        return true
+      end
+    end
+
+    if not a.is_same_day and b.is_same_day then
+      if b.real_date:has_time() or (a.real_date:is_none() and not b.real_date:is_none()) then
+        return false
+      end
+    end
+
+    return sort_by_date_or_priority_or_category(a, b)
+  end)
+  return agenda_items
 end
 
 return AgendaView
