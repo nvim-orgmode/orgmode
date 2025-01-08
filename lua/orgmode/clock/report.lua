@@ -22,8 +22,8 @@ function ClockReport:new(opts)
 end
 
 ---@param start_line number
----@return table[]
-function ClockReport:draw_for_agenda(start_line)
+---@return OrgTable
+function ClockReport:get_table_report(start_line)
   local report = self:generate_report()
   local data = {
     { 'File', 'Headline', 'Time' },
@@ -33,7 +33,7 @@ function ClockReport:draw_for_agenda(start_line)
   }
 
   for _, file in ipairs(report.files_with_clocks) do
-    table.insert(data, { { value = file.name, reference = file }, 'File time', file.total_duration:to_string() })
+    table.insert(data, { { value = file.name }, 'File time', file.total_duration:to_string() })
     for _, headline in ipairs(file.headlines) do
       table.insert(data, {
         '',
@@ -44,44 +44,7 @@ function ClockReport:draw_for_agenda(start_line)
     table.insert(data, 'hr')
   end
 
-  local clock_table = Table.from_list(data, start_line, 0):compile()
-  self.table = clock_table
-  local result = {}
-  for i, row in ipairs(clock_table.rows) do
-    local highlights = {}
-    local prev_row = clock_table.rows[i - 1]
-    if prev_row and prev_row.is_separator then
-      for _, cell in ipairs(row.cells) do
-        local range = cell.range:clone()
-        range.start_col = range.start_col + 1
-        range.end_col = range.end_col + 2
-        table.insert(highlights, {
-          hlgroup = '@org.bold',
-          range = range,
-        })
-      end
-    elseif i > 1 and not row.is_separator then
-      for _, cell in ipairs(row.cells) do
-        if cell.reference then
-          local range = cell.range:clone()
-          range.start_col = range.start_col + 1
-          range.end_col = range.end_col + 2
-          table.insert(highlights, {
-            hlgroup = '@org.hyperlink',
-            range = range,
-          })
-        end
-      end
-    end
-
-    table.insert(result, {
-      line_content = row.content,
-      is_table = true,
-      table_row = row,
-      highlights = highlights,
-    })
-  end
-  return result
+  return Table.from_list(data, start_line, 0):compile()
 end
 
 function ClockReport:generate_report()
@@ -122,30 +85,6 @@ function ClockReport:_get_clock_report_for_file(orgfile)
   return {
     headlines = headlines,
     total_duration = Duration.from_minutes(total_duration),
-  }
-end
-
----@param item table
-function ClockReport:find_agenda_item(item)
-  local line = vim.fn.line('.')
-  local col = vim.fn.col('.')
-  local found_cell = nil
-  for _, cell in ipairs(item.table_row.cells) do
-    if cell.range:is_in_range(line, col) then
-      found_cell = cell
-      break
-    end
-  end
-
-  if found_cell and found_cell.reference then
-    return {
-      jumpable = true,
-      file = found_cell.reference.file.filename,
-      file_position = found_cell.reference:get_range().start_line,
-    }
-  end
-  return {
-    jumpable = false,
   }
 end
 

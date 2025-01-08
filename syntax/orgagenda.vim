@@ -8,6 +8,8 @@ syn match org_hyperlinkBracketsRight	contained "\]\{2}"     conceal
 hi default link @org.agenda.day Statement
 hi default link @org.agenda.today @org.bold
 hi default link @org.agenda.weekend @org.bold
+hi default link @org.agenda.header Comment
+hi default link @org.agenda.separator Comment
 hi default @org.agenda.tag gui=bold cterm=bold
 
 hi default link org_hyperlink @org.hyperlink

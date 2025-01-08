@@ -207,7 +207,7 @@ end
 ---@return boolean
 function Headline:has_tag(tag)
   for _, tag_item in ipairs(self:get_tags()) do
-    if tag_item:lower() == tag:lower() then
+    if tag_item == tag then
       return true
     end
   end
@@ -757,7 +757,7 @@ end
 ---@param category string
 ---@return boolean
 function Headline:matches_category(category)
-  return self:get_category():lower() == category:lower()
+  return self:get_category() == category
 end
 
 ---@return OrgDate[]

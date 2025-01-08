@@ -49,7 +49,7 @@ return {
     ),
     org_agenda_redo = m.action(
       'agenda.redo',
-      { opts = { desc = 'org redo', help_desc = 'Reload org files and redraw' } }
+      { args = { 'mapping' }, opts = { desc = 'org redo', help_desc = 'Reload org files and redraw' } }
     ),
     org_agenda_todo = m.action(
       'agenda.change_todo_state',
