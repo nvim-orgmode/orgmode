@@ -218,7 +218,8 @@ OrgApiAgendaOptions                                        *OrgApiAgendaOptions*
     Fields: ~
         {filters?}  (OrgApiAgendaFilter)
         {from?}     (string|OrgDate)
-        {span?}     (number|"day"|"week"|"month"|"year")
+        {span?}     (OrgAgendaSpan)
+        {header?}   (string)
 
 
 OrgAgenda.agenda({options?})                                  *OrgAgenda.agenda*
@@ -247,6 +248,19 @@ OrgAgendaTagsOptions                                      *OrgAgendaTagsOptions*
 
 
 OrgAgenda.tags({options?})                                      *OrgAgenda.tags*
+
+    Parameters: ~
+        {options?}  (OrgAgendaTagsOptions)
+
+
+OrgAgendaTagsTodoOptions                              *OrgAgendaTagsTodoOptions*
+
+    Fields: ~
+        {filters?}    (OrgApiAgendaFilter)
+        {todo_only?}  (boolean)
+
+
+OrgAgenda.tags_todo({options?})                            *OrgAgenda.tags_todo*
 
     Parameters: ~
         {options?}  (OrgAgendaTagsOptions)
