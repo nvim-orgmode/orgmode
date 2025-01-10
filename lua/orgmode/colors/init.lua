@@ -98,4 +98,43 @@ M.highlight = function(highlights, clear, bufnr)
   end
 end
 
+---@param virt_texts{ range: OrgRange, content: string, virt_text_pos: string, hl_groups: string[] }[]
+---@param bufnr number
+M.virtual_text = function(virt_texts, bufnr)
+  bufnr = bufnr or 0
+  for _, virt_text in ipairs(virt_texts) do
+    local start_line = virt_text.range.start_line - 1
+    vim.api.nvim_buf_set_extmark(bufnr, namespace, start_line, 0, {
+      virt_text = { { virt_text.content, virt_text.hl_groups } },
+      virt_text_pos = virt_text.virt_text_pos,
+      hl_mode = 'combine',
+    })
+  end
+end
+
+---@param bufnr number
+---@param start_line? number Default: 0
+---@param end_line? number Default: -1
+M.clear_extmarks = function(bufnr, start_line, end_line)
+  local extmarks = vim.api.nvim_buf_get_extmarks(
+    bufnr,
+    namespace,
+    { start_line, 0 },
+    { end_line, 9999 },
+    { details = true }
+  )
+  for _, extmark in ipairs(extmarks) do
+    vim.api.nvim_buf_del_extmark(bufnr, namespace, extmark[1])
+  end
+end
+
+M.add_hr = function(bufnr, line)
+  vim.api.nvim_buf_set_lines(bufnr, line, line, false, { '' })
+  local width = vim.api.nvim_win_get_width(0)
+  vim.api.nvim_buf_set_extmark(bufnr, namespace, line, 0, {
+    virt_text = { { string.rep('-', width), '@org.agenda.separator' } },
+    virt_text_pos = 'overlay',
+  })
+end
+
 return M

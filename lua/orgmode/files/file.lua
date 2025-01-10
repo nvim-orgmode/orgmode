@@ -276,6 +276,7 @@ function OrgFile:apply_search(search, todo_only)
     local scheduled = item:get_scheduled_date()
     local closed = item:get_closed_date()
     local properties = item:get_properties()
+    local priority = item:get_priority()
 
     return search:check({
       props = vim.tbl_extend('keep', {}, properties, {
@@ -283,6 +284,7 @@ function OrgFile:apply_search(search, todo_only)
         deadline = deadline and deadline:to_wrapped_string(true),
         scheduled = scheduled and scheduled:to_wrapped_string(true),
         closed = closed and closed:to_wrapped_string(false),
+        priority = priority,
       }),
       tags = item:get_tags(),
       todo = item:get_todo() or '',

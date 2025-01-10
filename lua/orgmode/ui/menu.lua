@@ -12,15 +12,17 @@ local config = require('orgmode.config')
 
 ---@alias OrgMenuItem OrgMenuOption | OrgMenuSeparator
 
---- Menu for selecting an action by pressing a key by the user
----@class OrgMenu
+---@class OrgMenuOpts
 ---@field title string Menu title
 ---@field items OrgMenuItem[]? Menu items, may include options and separators
 ---@field prompt string Prompt text used to prompt a keystroke
 ---@field separator OrgMenuSeparator? Default separator
+
+--- Menu for selecting an action by pressing a key by the user
+---@class OrgMenu:OrgMenuOpts
 local Menu = {}
 
----@param data OrgMenu
+---@param data OrgMenuOpts
 function Menu:new(data)
   self:_validate_data(data)
 
@@ -77,7 +79,7 @@ function Menu:_validate_separator(separator)
   end
 end
 
----@param data OrgMenu
+---@param data OrgMenuOpts
 function Menu:_validate_data(data)
   validator.validate({
     title = { data.title, 'string' },

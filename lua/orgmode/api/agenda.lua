@@ -20,22 +20,30 @@ local function get_date(date, name)
   error(('Invalid format for "%s" date in Org Agenda'):format(name))
 end
 
+local function get_opts(options)
+  options = options or {}
+  local opts = {}
+  if options.filters and options.filters ~= '' then
+    opts.filter = options.filters
+  end
+  opts.header = options.header
+  return opts
+end
+
 ---@class OrgApiAgendaOptions
 ---@field filters? OrgApiAgendaFilter
 ---@field from? string | OrgDate
----@field span? number | 'day' | 'week' | 'month' | 'year'
+---@field span? OrgAgendaSpan
+---@field header? string
 
 ---@param options? OrgApiAgendaOptions
 function OrgAgenda.agenda(options)
   options = options or {}
-  if options.filters and options.filters ~= '' then
-    orgmode.agenda.filters:parse(options.filters, true)
-  end
-  local from = get_date(options.from, 'from')
-  orgmode.agenda:agenda({
-    from = from,
-    span = options.span,
-  })
+  local opts = get_opts(options)
+  opts.from = get_date(options.from, 'from')
+  opts.span = options.span
+  opts.header = options.header
+  orgmode.agenda:agenda(opts)
 end
 
 ---@class OrgAgendaTodosOptions
@@ -44,10 +52,8 @@ end
 ---@param options? OrgAgendaTodosOptions
 function OrgAgenda.todos(options)
   options = options or {}
-  if options.filters and options.filters ~= '' then
-    orgmode.agenda.filters:parse(options.filters, true)
-  end
-  orgmode.agenda:todos()
+  local opts = get_opts(options)
+  orgmode.agenda:todos(opts)
 end
 
 ---@class OrgAgendaTagsOptions
@@ -57,12 +63,19 @@ end
 ---@param options? OrgAgendaTagsOptions
 function OrgAgenda.tags(options)
   options = options or {}
-  if options.filters and options.filters ~= '' then
-    orgmode.agenda.filters:parse(options.filters, true)
-  end
-  orgmode.agenda:tags({
-    todo_only = options.todo_only,
-  })
+  local opts = get_opts(options)
+  orgmode.agenda:tags(opts)
+end
+
+---@class OrgAgendaTagsTodoOptions
+---@field filters? OrgApiAgendaFilter
+---@field todo_only? boolean
+
+---@param options? OrgAgendaTagsOptions
+function OrgAgenda.tags_todo(options)
+  options = options or {}
+  local opts = get_opts(options)
+  orgmode.agenda:tags(opts)
 end
 
 return OrgAgenda

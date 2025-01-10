@@ -1,6 +1,8 @@
+---@alias OrgAgendaSpan 'day' | 'week' | 'month' | 'year' | number
+---
 ---@class OrgDefaultConfig
 ---@field org_id_method 'uuid' | 'ts' | 'org'
----@field org_agenda_span 'day' | 'week' | 'month' | 'year' | number
+---@field org_agenda_span OrgAgendaSpan
 ---@field org_log_repeat 'time' | 'note' | false
 ---@field calendar { round_min_with_hours: boolean, min_big_step: number, min_small_step: number? }
 local DefaultConfig = {

@@ -1,27 +1,19 @@
-local utils = require('orgmode.utils')
 ---@class OrgAgendaFilter
 ---@field value string
----@field available_tags table<string, boolean>
----@field available_categories table<string, boolean>
----@field filter_type 'include' | 'exclude'
----@field tags table[]
----@field categories table[]
+---@field available_values table<string, boolean>
+---@field values table[]
 ---@field term string
 ---@field parsed boolean
----@field applying boolean
 local AgendaFilter = {}
 
+---@return OrgAgendaFilter
 function AgendaFilter:new()
   local data = {
     value = '',
-    available_tags = {},
-    available_categories = {},
-    filter_type = 'exclude',
-    tags = {},
-    categories = {},
+    available_values = {},
+    values = {},
     term = '',
     parsed = false,
-    applying = false,
   }
   setmetatable(data, self)
   self.__index = self
@@ -40,39 +32,32 @@ function AgendaFilter:matches(headline)
     return true
   end
   local term_match = vim.trim(self.term) == ''
-  local tag_cat_match_empty = #self.tags == 0 and #self.categories == 0
+  local values_match_empty = #self.values == 0
 
   if not term_match then
     local rgx = vim.regex(self.term) --[[@as vim.regex]]
     term_match = rgx:match_str(headline:get_title()) and true or false
   end
 
-  if tag_cat_match_empty then
+  if values_match_empty then
     return term_match
   end
 
-  local tag_cat_match = false
-
-  if self.filter_type == 'include' then
-    tag_cat_match = self:_matches_include(headline)
-  else
-    tag_cat_match = self:_matches_exclude(headline)
-  end
+  local tag_cat_match = self:_match(headline)
 
   return tag_cat_match and term_match
 end
 
----@param headline OrgHeadline
 ---@private
-function AgendaFilter:_matches_exclude(headline)
-  for _, tag in ipairs(self.tags) do
-    if headline:has_tag(tag.value) then
-      return false
-    end
-  end
-
-  for _, category in ipairs(self.categories) do
-    if headline:matches_category(category.value) then
+---@param headline OrgHeadline
+---@return boolean
+function AgendaFilter:_match(headline)
+  for _, value in ipairs(self.values) do
+    if value.operator == '-' then
+      if headline:has_tag(value.value) or headline:matches_category(value.value) then
+        return false
+      end
+    elseif not headline:has_tag(value.value) and not headline:matches_category(value.value) then
       return false
     end
   end
@@ -80,59 +65,12 @@ function AgendaFilter:_matches_exclude(headline)
   return true
 end
 
----@param headline OrgHeadline
----@private
-function AgendaFilter:_matches_include(headline)
-  local tags_to_check = {}
-  local categories_to_check = {}
-
-  for _, tag in ipairs(self.tags) do
-    if tag.operator == '-' then
-      if headline:has_tag(tag.value) then
-        return false
-      end
-    else
-      table.insert(tags_to_check, tag.value)
-    end
-  end
-
-  for _, category in ipairs(self.categories) do
-    if category.operator == '-' then
-      if headline:matches_category(category.value) then
-        return false
-      end
-    else
-      table.insert(categories_to_check, category.value)
-    end
-  end
-
-  local tags_passed = #tags_to_check == 0
-  local categories_passed = #categories_to_check == 0
-
-  for _, category in ipairs(categories_to_check) do
-    if headline:matches_category(category) then
-      categories_passed = true
-      break
-    end
-  end
-
-  for _, tag in ipairs(tags_to_check) do
-    if headline:has_tag(tag) then
-      tags_passed = true
-      break
-    end
-  end
-
-  return tags_passed and categories_passed
-end
-
 ---@param filter string
 ---@param skip_check? boolean do not check if given values exist in the current view
 function AgendaFilter:parse(filter, skip_check)
   filter = filter or ''
   self.value = filter
-  self.tags = {}
-  self.categories = {}
+  self.values = {}
   local search_rgx = '/[^/]*/?'
   local search_term = filter:match(search_rgx)
   if search_term then
@@ -140,56 +78,46 @@ function AgendaFilter:parse(filter, skip_check)
   end
   filter = filter:gsub(search_rgx, '')
   for operator, tag_cat in string.gmatch(filter, '([%+%-]*)([^%-%+]+)') do
-    if not operator or operator == '' or operator == '+' then
-      self.filter_type = 'include'
-    end
     local val = vim.trim(tag_cat)
     if val ~= '' then
-      if self.available_tags[val] or skip_check then
-        table.insert(self.tags, { operator = operator, value = val })
-      elseif self.available_categories[val] or skip_check then
-        table.insert(self.categories, { operator = operator, value = val })
+      if self.available_values[val] or skip_check then
+        table.insert(self.values, { operator = operator, value = val })
       end
     end
   end
   self.term = search_term or ''
-  self.applying = true
-  if skip_check then
-    self.parsed = true
-  end
+  return self
 end
 
 function AgendaFilter:reset()
   self.value = ''
   self.term = ''
   self.parsed = false
-  self.applying = false
 end
 
----@param content table[]
-function AgendaFilter:parse_tags_and_categories(content)
+---@param agenda_views OrgAgendaViewType[]
+function AgendaFilter:parse_available_filters(agenda_views)
   if self.parsed then
     return
   end
-  local tags = {}
-  local categories = {}
-  for _, item in ipairs(content) do
-    if item.jumpable and item.headline then
-      categories[item.headline:get_category():lower()] = true
-      for _, tag in ipairs(item.headline:get_tags()) do
-        tags[tag:lower()] = true
+  local values = {}
+  for _, agenda_view in ipairs(agenda_views) do
+    for _, line in ipairs(agenda_view:get_lines()) do
+      if line.headline then
+        values[line.headline:get_category()] = true
+        for _, tag in ipairs(line.headline:get_tags()) do
+          values[tag] = true
+        end
       end
     end
   end
-  self.available_tags = tags
-  self.available_categories = categories
+  self.available_values = values
   self.parsed = true
 end
 
 ---@return string[]
 function AgendaFilter:get_completion_list()
-  local list = vim.tbl_keys(self.available_tags)
-  return utils.concat(list, vim.tbl_keys(self.available_categories), true)
+  return vim.tbl_keys(self.available_values)
 end
 
 return AgendaFilter

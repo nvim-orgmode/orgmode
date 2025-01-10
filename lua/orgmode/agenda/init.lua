@@ -4,17 +4,13 @@ local config = require('orgmode.config')
 local colors = require('orgmode.colors')
 local Calendar = require('orgmode.objects.calendar')
 local AgendaFilter = require('orgmode.agenda.filter')
-local AgendaSearchView = require('orgmode.agenda.views.search')
-local AgendaTodosView = require('orgmode.agenda.views.todos')
-local AgendaTagsView = require('orgmode.agenda.views.tags')
-local AgendaView = require('orgmode.agenda.views.agenda')
 local Menu = require('orgmode.ui.menu')
 local Promise = require('orgmode.utils.promise')
+local AgendaTypes = require('orgmode.agenda.types')
 
 ---@class OrgAgenda
----@field content table[]
 ---@field highlights table[]
----@field views table[]
+---@field views OrgAgendaViewType[]
 ---@field filters OrgAgendaFilter
 ---@field files OrgFiles
 local Agenda = {}
@@ -34,43 +30,69 @@ function Agenda:new(opts)
   return data
 end
 
----@param View table
----@param type string
+---@param type OrgAgendaTypes
 ---@param opts? table
-function Agenda:open_agenda_view(View, type, opts)
-  self:open_window()
-  local view = View:new(vim.tbl_deep_extend('force', opts or {}, {
-    filters = self.filters,
+function Agenda:open_view(type, opts)
+  self.filters:reset()
+  local view_opts = vim.tbl_extend('force', opts or {}, {
     files = self.files,
-  })):build()
+    agenda_filter = self.filters,
+  })
+
+  local view = AgendaTypes[type]:new(view_opts)
+  if not view then
+    return
+  end
   self.views = { view }
-  vim.b.org_agenda_type = type
-  return self:_render()
+  return self:render()
+end
+
+function Agenda:render()
+  local line = vim.fn.line('.')
+  local bufnr = self:_open_window()
+  for i, view in ipairs(self.views) do
+    view:render(bufnr, line)
+    if #self.views > 1 and i < #self.views then
+      colors.add_hr(bufnr, vim.fn.line('$'))
+    end
+  end
+  vim.bo[bufnr].modifiable = false
+
+  if vim.w.org_window_split_mode == 'horizontal' then
+    local win_height = math.max(math.min(34, vim.api.nvim_buf_line_count(bufnr)), config.org_agenda_min_height)
+    if vim.w.org_window_pos and vim.deep_equal(vim.fn.win_screenpos(0), vim.w.org_window_pos) then
+      vim.cmd(string.format('resize %d', win_height))
+      vim.w.org_window_pos = vim.fn.win_screenpos(0)
+    else
+      vim.w.org_window_pos = nil
+    end
+  end
 end
 
 function Agenda:agenda(opts)
-  self:open_agenda_view(AgendaView, 'agenda', opts)
+  return self:open_view('agenda', opts)
 end
 
 -- TODO: Introduce searching ALL/DONE
-function Agenda:todos()
-  self:open_agenda_view(AgendaTodosView, 'todos')
+function Agenda:todos(opts)
+  return self:open_view('todo', opts)
 end
 
 function Agenda:search()
-  self:open_agenda_view(AgendaSearchView, 'search')
+  return self:open_view('search')
 end
 
 function Agenda:tags(opts)
-  self:open_agenda_view(AgendaTagsView, 'tags', opts)
+  return self:open_view('tags', opts)
 end
 
-function Agenda:tags_todo()
-  return self:tags({ todo_only = true })
+function Agenda:tags_todo(opts)
+  return self:open_view('tags_todo', opts)
 end
 
+---@private
 ---@return number buffer number
-function Agenda:open_window()
+function Agenda:_open_window()
   -- if an agenda window is already open, return it
   for _, win in ipairs(vim.api.nvim_list_wins()) do
     local buf = vim.api.nvim_win_get_buf(win)
@@ -78,6 +100,9 @@ function Agenda:open_window()
       buf = buf,
     })
     if ft == 'orgagenda' then
+      vim.bo[buf].modifiable = true
+      colors.highlight({}, true, buf)
+      vim.api.nvim_buf_set_lines(buf, 0, -1, true, {})
       return buf
     end
   end
@@ -92,7 +117,6 @@ function Agenda:open_window()
 end
 
 function Agenda:prompt()
-  self.filters:reset()
   local menu = Menu:new({
     title = 'Press key for an agenda command',
     prompt = 'Press key for an agenda command',
@@ -123,7 +147,7 @@ function Agenda:prompt()
     label = 'Like m, but only TODO entries',
     key = 'M',
     action = function()
-      return self:tags({ todo_only = true })
+      return self:tags_todo()
     end,
   })
   menu:add_option({
@@ -139,56 +163,20 @@ function Agenda:prompt()
   return menu:open()
 end
 
-function Agenda:_render(skip_rebuild)
-  if not skip_rebuild then
-    self.content = {}
-    self.highlights = {}
-    for _, view in ipairs(self.views) do
-      utils.concat(self.content, view.content)
-      utils.concat(self.highlights, view.highlights)
-    end
-  end
-  local bufnr = self:open_window()
-  if vim.w.org_window_split_mode == 'horizontal' then
-    local win_height = math.max(math.min(34, #self.content), config.org_agenda_min_height)
-    if vim.w.org_window_pos and vim.deep_equal(vim.fn.win_screenpos(0), vim.w.org_window_pos) then
-      vim.cmd(string.format('resize %d', win_height))
-      vim.w.org_window_pos = vim.fn.win_screenpos(0)
-    else
-      vim.w.org_window_pos = nil
-    end
-  end
-  local lines = vim.tbl_map(function(item)
-    return item.line_content
-  end, self.content)
-  vim.bo[bufnr].modifiable = true
-  vim.api.nvim_buf_set_lines(bufnr, 0, -1, true, lines)
-  vim.bo[bufnr].modifiable = false
-  vim.bo[bufnr].modified = false
-  colors.highlight(self.highlights, true, bufnr)
-  vim.tbl_map(function(item)
-    if item.highlights then
-      return colors.highlight(item.highlights, false, bufnr)
-    end
-  end, self.content)
-  if not skip_rebuild then
-    self:_call_view('after_print', self.content)
-  end
-end
-
 function Agenda:reset()
   return self:_call_view_and_render('reset')
 end
 
-function Agenda:redo(preserve_cursor_pos)
+---@param source? string
+function Agenda:redo(source, preserve_cursor_pos)
   return self.files:load(true):next(vim.schedule_wrap(function()
-    local cursor_view = nil
-    if preserve_cursor_pos then
-      cursor_view = vim.fn.winsaveview() or {}
+    local save_view = preserve_cursor_pos and vim.fn.winsaveview()
+    if source == 'mapping' then
+      self:_call_view_and_render('redo')
     end
-    self:_call_view_and_render('build')
-    if cursor_view then
-      vim.fn.winrestview(cursor_view)
+    self:render()
+    if save_view then
+      vim.fn.winrestview(save_view)
     end
   end))
 end
@@ -202,7 +190,7 @@ function Agenda:change_span(span)
 end
 
 function Agenda:open_day(day)
-  return self:open_agenda_view(AgendaView, 'agenda', {
+  return self:open_view('agenda', {
     span = 'day',
     from = day,
   })
@@ -211,7 +199,8 @@ end
 function Agenda:goto_date()
   local views = {}
   for _, view in ipairs(self.views) do
-    if view.goto_date then
+    ---@diagnostic disable-next-line: undefined-field
+    if view.goto_date and view.view:is_in_range() then
       table.insert(views, view)
     end
   end
@@ -227,17 +216,17 @@ function Agenda:goto_date()
     for _, view in ipairs(views) do
       view:goto_date(date)
     end
-    self:_render()
+    return self:render()
   end)
 end
 
 function Agenda:switch_to_item()
-  local item = self:_get_jumpable_item()
+  local item = self:_get_headline()
   if not item then
     return
   end
-  vim.cmd('edit ' .. vim.fn.fnameescape(item.file))
-  vim.fn.cursor({ item.file_position, 1 })
+  vim.cmd('edit ' .. vim.fn.fnameescape(item.file.filename))
+  vim.fn.cursor({ item:get_range().start_line, 1 })
   vim.cmd([[normal! zv]])
 end
 
@@ -276,7 +265,7 @@ function Agenda:clock_out()
     getter = function()
       local last_clocked = self.files:get_clocked_headline()
       if last_clocked and last_clocked:is_clocked_in() then
-        return { file = last_clocked.file.filename, file_position = last_clocked:get_range().start_line }
+        return last_clocked
       end
     end,
   })
@@ -289,7 +278,7 @@ function Agenda:clock_cancel()
     getter = function()
       local last_clocked = self.files:get_clocked_headline()
       if last_clocked and last_clocked:is_clocked_in() then
-        return { file = last_clocked.file.filename, file_position = last_clocked:get_range().start_line }
+        return last_clocked
       end
     end,
   })
@@ -357,11 +346,23 @@ end
 
 function Agenda:toggle_clock_report()
   self:_call_view('toggle_clock_report')
-  return self:redo(true)
+  return self:redo('agenda', true)
+end
+
+---@private
+---@return OrgHeadline | nil, OrgAgendaLine | nil, OrgAgendaViewType | nil
+function Agenda:_get_headline()
+  local line = vim.fn.line('.')
+  for _, view in ipairs(self.views) do
+    local agenda_line = view:get_line(line)
+    if agenda_line and agenda_line.headline then
+      return agenda_line.headline, agenda_line, view
+    end
+  end
 end
 
 function Agenda:goto_item()
-  local item = self:_get_jumpable_item()
+  local item = self:_get_headline()
   if not item then
     return
   end
@@ -392,43 +393,45 @@ function Agenda:goto_item()
     vim.cmd([[aboveleft split]])
   end
 
-  vim.cmd('edit ' .. vim.fn.fnameescape(item.file))
-  vim.fn.cursor({ item.file_position, 1 })
+  vim.cmd('edit ' .. vim.fn.fnameescape(item.file.filename))
+  vim.fn.cursor({ item:get_range().start_line, 1 })
   vim.cmd([[normal! zv]])
 end
 
 function Agenda:filter()
   local this = self
-  self.filters:parse_tags_and_categories(self.content)
+  self.filters:parse_available_filters(self.views)
   local filter_term = vim.fn.OrgmodeInput('Filter [+cat-tag/regexp/]: ', self.filters.value, function(arg_lead)
-    return utils.prompt_autocomplete(arg_lead:lower(), this.filters:get_completion_list(), { '+', '-' })
+    return utils.prompt_autocomplete(arg_lead, this.filters:get_completion_list(), { '+', '-' })
   end)
+  if filter_term == self.filters.value then
+    return
+  end
   self.filters:parse(filter_term)
-  return self:redo()
+  return self:redo('filter', true)
 end
 
 ---@param opts table
 function Agenda:_remote_edit(opts)
   opts = opts or {}
-  local line = vim.fn.line('.') or 0
   local action = opts.action
   if not action then
     return
   end
   local getter = opts.getter
     or function()
-      local item = self.content[line]
-      if not item or not item.jumpable then
+      local item, agenda_line, view = self:_get_headline()
+      if not item then
         return
       end
-      return item
+      return item, agenda_line, view
     end
-  local item = getter()
+  local item, agenda_line, view = getter()
   if not item then
     return
   end
-  local update = self.files:update_file(item.file, function(_)
-    vim.fn.cursor({ item.file_position, 1 })
+  local update = item.file:update(function(_)
+    vim.fn.cursor({ item:get_range().start_line, 1 })
     return Promise.resolve(require('orgmode').action(action)):next(function()
       return self.files:get_closest_headline_or_nil()
     end)
@@ -437,59 +440,26 @@ function Agenda:_remote_edit(opts)
   update:next(function(headline)
     ---@cast headline OrgHeadline
     if opts.redo then
-      return self:redo(true)
+      return self:redo('remote_edit', true)
     end
     if not opts.update_in_place or not headline then
       return
     end
-    local line_range_same = headline:get_range():is_same_line_range(item.headline:get_range())
+    local line_range_same = headline:get_range():is_same_line_range(item:get_range())
 
     local update_item_inline = function()
-      if item.agenda_item then
-        item.agenda_item:set_headline(headline)
-        self.content[line] =
-          AgendaView.build_agenda_item_content(item.agenda_item, item.longest_category, item.longest_date, item.line)
-      else
-        self.content[line] = AgendaTodosView.generate_todo_item(headline, item.longest_category, item.line)
+      if not agenda_line or not view then
+        return
       end
-      return self:_render(true)
+      return view:rerender_agenda_line(agenda_line, headline)
     end
 
     if line_range_same then
       return update_item_inline()
     end
 
-    -- If line range was changed, some other agenda items might have outdated position
-    -- In that case, we need to reload the agenda and try to find the same headline to update it in place
-    return self:redo(true):next(function()
-      for content_line, content_item in pairs(self.content) do
-        if content_item.headline and content_item.headline:is_same(headline) then
-          item = self.content[content_line]
-          return update_item_inline()
-        end
-      end
-    end)
+    return self:redo('remote_edit', true)
   end)
-end
-
----@return table|nil
-function Agenda:_get_jumpable_item()
-  local item = self.content[vim.fn.line('.')]
-  if not item then
-    return nil
-  end
-  if item.is_table and item.table_row then
-    for _, view in ipairs(self.views) do
-      if view.clock_report then
-        item = view.clock_report:find_agenda_item(item)
-        break
-      end
-    end
-  end
-  if not item.jumpable then
-    return nil
-  end
-  return item
 end
 
 function Agenda:quit()
@@ -499,7 +469,7 @@ end
 function Agenda:_call_view(method, ...)
   local executed = false
   for _, view in ipairs(self.views) do
-    if view[method] then
+    if view[method] and view.view:is_in_range() then
       view[method](view, ...)
       executed = true
     end
@@ -511,7 +481,7 @@ end
 function Agenda:_call_view_and_render(method, ...)
   local executed = self:_call_view(method, ...)
   if executed then
-    return self:_render()
+    return self:render()
   end
 end
 
