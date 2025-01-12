@@ -390,8 +390,9 @@ function PropertyMatch:parse(input)
   end
 
   -- Date property
-  date_str, input = parse_pattern(input, '"(<[^>]+>)"')
+  date_str, input = parse_pattern(input, '"<[^>]+>"')
   if date_str then
+    date_str = date_str:sub(2, -2)
     ---@type string?, OrgDate?
     local date_content, date_value
     if date_str == '<today>' then
@@ -407,7 +408,7 @@ function PropertyMatch:parse(input)
       else
         date_content = date_str:match('^<([^>]+)>$')
         if date_content then
-          date_value = Date.from_string(date_str)
+          date_value = Date.from_string(date_content)
         end
       end
     end
