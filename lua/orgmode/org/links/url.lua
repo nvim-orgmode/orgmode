@@ -20,20 +20,20 @@ end
 ---@return string | nil
 function OrgLinkUrl:get_file_path()
   if self.protocol == 'file' then
-    return self:_get_real_path()
+    return self:get_real_path() or self.path
   end
 
   local first_char = self.path:sub(1, 1)
 
   if first_char == '/' then
-    return self:_get_real_path()
+    return self:get_real_path() or self.path
   end
 
   if
     (first_char == '.' and (self.path:sub(1, 3) == '../' or self.path:sub(1, 2) == './'))
     or (first_char == '~' and self.path:sub(2, 2) == '/')
   then
-    return self:_get_real_path()
+    return self:get_real_path() or self.path
   end
 
   return nil
@@ -76,10 +76,8 @@ function OrgLinkUrl:get_id()
   return self.path
 end
 
----@private
----@return string
-function OrgLinkUrl:_get_real_path()
-  return fs.get_real_path(self.path) or self.path
+function OrgLinkUrl:get_real_path()
+  return fs.get_real_path(self.path) or nil
 end
 
 ---@return string

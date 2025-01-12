@@ -1,4 +1,5 @@
 local utils = require('orgmode.utils')
+local fs = require('orgmode.utils.fs')
 local OrgLinkUrl = require('orgmode.org.links.url')
 local link_utils = require('orgmode.org.links.utils')
 
@@ -73,6 +74,19 @@ function OrgLinkHeadlineSearch:autocomplete(link)
       if f:find('^' .. opts.file_path) then
         f = f:gsub('^' .. opts.file_path, opts.link_url.path)
         table.insert(valid_filenames, f)
+      end
+
+      local real_path = opts.link_url:get_real_path()
+
+      if not real_path then
+        local substitute_path = fs.substitute_path(opts.file_path)
+        if substitute_path then
+          local full_path = vim.fn.fnamemodify(substitute_path, ':p')
+          if f:find('^' .. full_path) then
+            f = f:gsub('^' .. full_path, opts.link_url.path)
+            table.insert(valid_filenames, f)
+          end
+        end
       end
     end
 
