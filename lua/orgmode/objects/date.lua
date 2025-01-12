@@ -30,23 +30,38 @@ local time_format = '%H:%M'
 local Date = {
   ---@type fun(this: OrgDate, other: OrgDate): boolean
   __eq = function(this, other)
-    return this.timestamp == other.timestamp
+    if this.date_only ~= other.date_only then
+      return this:is_same(other, 'day')
+    end
+    return this:is_same(other)
   end,
   ---@type fun(this: OrgDate, other: OrgDate): boolean
   __lt = function(this, other)
-    return this.timestamp < other.timestamp
+    if this.date_only ~= other.date_only then
+      return this:is_before(other, 'day')
+    end
+    return this:is_before(other)
   end,
   ---@type fun(this: OrgDate, other: OrgDate): boolean
   __le = function(this, other)
-    return this.timestamp <= other.timestamp
+    if this.date_only ~= other.date_only then
+      return this:is_same_or_before(other, 'day')
+    end
+    return this:is_same_or_before(other)
   end,
   ---@type fun(this: OrgDate, other: OrgDate): boolean
   __gt = function(this, other)
-    return this.timestamp > other.timestamp
+    if this.date_only ~= other.date_only then
+      return this:is_after(other, 'day')
+    end
+    return this:is_after(other)
   end,
   ---@type fun(this: OrgDate, other: OrgDate): boolean
   __ge = function(this, other)
-    return this.timestamp >= other.timestamp
+    if this.date_only ~= other.date_only then
+      return this:is_same_or_after(other, 'day')
+    end
+    return this:is_same_or_after(other)
   end,
 }
 
@@ -85,7 +100,7 @@ function Date:new(data)
   opts.active = data.active or false
   opts.range = data.range
   opts.timestamp = os.time(opts)
-  opts.date_only = date_only
+  opts.date_only = date_only or false
   opts.dayname = os.date('%a', opts.timestamp) --[[@as string]]
   opts.is_dst = os_date(opts.timestamp).isdst
   opts.adjustments = data.adjustments or {}
@@ -628,7 +643,7 @@ function Date:is_before(date, span)
 end
 
 ---@param date OrgDate
----@param span string
+---@param span? string
 ---@return boolean
 function Date:is_same_or_before(date, span)
   local d = date
@@ -641,7 +656,7 @@ function Date:is_same_or_before(date, span)
 end
 
 ---@param date OrgDate
----@param span string
+---@param span? string
 ---@return boolean
 function Date:is_after(date, span)
   return not self:is_same_or_before(date, span)
