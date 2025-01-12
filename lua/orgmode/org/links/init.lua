@@ -96,9 +96,9 @@ function OrgLinks:get_link_to_file(file)
 end
 
 ---@param link_location string
-function OrgLinks:insert_link(link_location)
+function OrgLinks:insert_link(link_location, desc)
   local selected_link = OrgHyperlink:new(link_location)
-  local desc = selected_link.url:get_target()
+  desc = desc or selected_link.url:get_target()
   if desc and (desc:match('^%*') or desc:match('^#')) then
     desc = desc:sub(2)
   end

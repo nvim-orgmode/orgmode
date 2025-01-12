@@ -31,9 +31,9 @@ function OrgAgendaSearchType:get_search_term()
   return vim.fn.OrgmodeInput('Enter search term: ', self.headline_query or '')
 end
 
-function OrgAgendaSearchType:redo()
+function OrgAgendaSearchType:redraw()
   -- Skip prompt for custom views
-  if self.is_custom then
+  if self.id then
     return self
   end
   self.headline_query = self:get_search_term()

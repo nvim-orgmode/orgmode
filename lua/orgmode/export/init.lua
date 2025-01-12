@@ -69,11 +69,26 @@ function Export.pandoc(opts)
 end
 
 ---@param opts table
-function Export.emacs(opts)
+---@param skip_config? boolean
+function Export.emacs(opts, skip_config)
   local file = utils.current_file_path()
   local target = vim.fn.fnamemodify(file, ':p:r') .. '.' .. opts.extension
   local emacs = config.emacs_config.executable_path
   local emacs_config_path = config.emacs_config.config_path
+  if not emacs_config_path and not skip_config then
+    local paths = {
+      '~/.config/emacs/init.el',
+      '~/.emacs.d/init.el',
+      '~/.emacs.el',
+    }
+    for _, path in ipairs(paths) do
+      if vim.uv.fs_stat(vim.fn.fnamemodify(path, ':p')) then
+        emacs_config_path = vim.fn.fnamemodify(path, ':p')
+        break
+      end
+    end
+  end
+
   if vim.fn.executable(emacs) ~= 1 then
     return utils.echo_error('emacs executable not found. Make sure emacs is in $PATH.')
   end
@@ -82,16 +97,25 @@ function Export.emacs(opts)
     emacs,
     '-nw',
     '--batch',
-    '--load',
-    emacs_config_path,
-    string.format('--visit=%s', file),
-    string.format('--funcall=%s', opts.command),
   }
+
+  if emacs_config_path and not skip_config then
+    table.insert(cmd, '--load')
+    table.insert(cmd, emacs_config_path)
+  end
+
+  table.insert(cmd, ('--visit=%s'):format(file))
+  table.insert(cmd, ('--funcall=%s'):format(opts.command))
 
   return Export._exporter(cmd, target, nil, function(err)
     table.insert(err, '')
     table.insert(err, 'NOTE: Emacs export issues are most likely caused by bad or missing emacs configuration.')
-    return utils.echo_error(string.format('Export error:\n%s', table.concat(err, '\n')))
+    utils.echo_error(string.format('Export error:\n%s', table.concat(err, '\n')))
+    if not skip_config then
+      if vim.fn.input('Attempt to export again without a configuration file? [y/n]') == 'y' then
+        return Export.emacs(opts, true)
+      end
+    end
   end)
 end
 

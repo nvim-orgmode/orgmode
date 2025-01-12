@@ -68,6 +68,8 @@ function ClockReport:generate_report()
   }
 end
 
+---@private
+---@param orgfile OrgFile
 function ClockReport:_get_clock_report_for_file(orgfile)
   local total_duration = 0
   local headlines = {}

@@ -85,6 +85,16 @@ M.highlight = function(highlights, clear, bufnr)
         end_line = hl.range.start_line,
         hl_eol = true,
       })
+    elseif hl.extmark then
+      vim.api.nvim_buf_set_extmark(bufnr, namespace, hl.range.start_line - 1, hl.range.start_col - 1, {
+        hl_group = hl.hlgroup,
+        end_line = hl.range.end_line - 1,
+        end_col = hl.range.end_col - 1,
+        spell = hl.spell,
+        priority = hl.priority,
+        conceal = hl.conceal,
+        url = hl.url,
+      })
     else
       vim.api.nvim_buf_add_highlight(
         bufnr,
@@ -128,11 +138,11 @@ M.clear_extmarks = function(bufnr, start_line, end_line)
   end
 end
 
-M.add_hr = function(bufnr, line)
+M.add_hr = function(bufnr, line, separator)
   vim.api.nvim_buf_set_lines(bufnr, line, line, false, { '' })
   local width = vim.api.nvim_win_get_width(0)
   vim.api.nvim_buf_set_extmark(bufnr, namespace, line, 0, {
-    virt_text = { { string.rep('-', width), '@org.agenda.separator' } },
+    virt_text = { { string.rep(separator, width), '@org.agenda.separator' } },
     virt_text_pos = 'overlay',
   })
 end

@@ -13,9 +13,10 @@ local AgendaTypes = require('orgmode.agenda.types')
 ---@field views OrgAgendaViewType[]
 ---@field filters OrgAgendaFilter
 ---@field files OrgFiles
+---@field highlighter OrgHighlighter
 local Agenda = {}
 
----@param opts? table
+---@param opts? { highlighter: OrgHighlighter, files: OrgFiles }
 function Agenda:new(opts)
   opts = opts or {}
   local data = {
@@ -24,6 +25,7 @@ function Agenda:new(opts)
     content = {},
     highlights = {},
     files = opts.files,
+    highlighter = opts.highlighter,
   }
   setmetatable(data, self)
   self.__index = self
@@ -37,6 +39,7 @@ function Agenda:open_view(type, opts)
   local view_opts = vim.tbl_extend('force', opts or {}, {
     files = self.files,
     agenda_filter = self.filters,
+    highlighter = self.highlighter,
   })
 
   local view = AgendaTypes[type]:new(view_opts)
@@ -53,7 +56,7 @@ function Agenda:render()
   for i, view in ipairs(self.views) do
     view:render(bufnr, line)
     if #self.views > 1 and i < #self.views then
-      colors.add_hr(bufnr, vim.fn.line('$'))
+      colors.add_hr(bufnr, vim.fn.line('$'), config.org_agenda_block_separator)
     end
   end
   vim.bo[bufnr].modifiable = false
@@ -88,6 +91,74 @@ end
 
 function Agenda:tags_todo(opts)
   return self:open_view('tags_todo', opts)
+end
+
+function Agenda:_build_custom_commands()
+  if not config.org_agenda_custom_commands then
+    return {}
+  end
+  local custom_commands = {}
+  ---@param opts OrgAgendaCustomCommandType
+  local get_type_opts = function(opts, id)
+    local opts_by_type = {
+      agenda = {
+        span = opts.org_agenda_span,
+        start_day = opts.org_agenda_start_day,
+        start_on_weekday = opts.org_agenda_start_on_weekday,
+      },
+      tags = {
+        match_query = opts.match,
+        todo_ignore_scheduled = opts.org_agenda_todo_ignore_scheduled,
+        todo_ignore_deadlines = opts.org_agenda_todo_ignore_deadlines,
+      },
+      tags_todo = {
+        match_query = opts.match,
+        todo_ignore_scheduled = opts.org_agenda_todo_ignore_scheduled,
+        todo_ignore_deadlines = opts.org_agenda_todo_ignore_deadlines,
+      },
+    }
+
+    if not opts_by_type[opts.type] then
+      return
+    end
+
+    opts_by_type[opts.type].sorting_strategy = opts.org_agenda_sorting_strategy
+    opts_by_type[opts.type].filters = self.filters
+    opts_by_type[opts.type].files = self.files
+    opts_by_type[opts.type].header = opts.org_agenda_overriding_header
+    opts_by_type[opts.type].agenda_files = opts.org_agenda_files
+    opts_by_type[opts.type].tag_filter = opts.org_agenda_tag_filter_preset
+    opts_by_type[opts.type].category_filter = opts.org_agenda_category_filter_preset
+    opts_by_type[opts.type].highlighter = self.highlighter
+    opts_by_type[opts.type].remove_tags = opts.org_agenda_remove_tags
+    opts_by_type[opts.type].id = id
+
+    return opts_by_type[opts.type]
+  end
+  for shortcut, command in pairs(config.org_agenda_custom_commands) do
+    table.insert(custom_commands, {
+      label = command.description or '',
+      key = shortcut,
+      action = function()
+        local views = {}
+        for i, agenda_type in ipairs(command.types) do
+          local opts = get_type_opts(agenda_type, ('%s_%s_%d'):format(shortcut, agenda_type.type, i))
+          if not opts then
+            utils.echo_error('Invalid custom agenda command type ' .. agenda_type.type)
+            break
+          end
+          table.insert(views, AgendaTypes[agenda_type.type]:new(opts))
+        end
+        self.views = views
+        local result = self:render()
+        if #self.views > 1 then
+          vim.fn.cursor({ 1, 0 })
+        end
+        return result
+      end,
+    })
+  end
+  return custom_commands
 end
 
 ---@private
@@ -157,6 +228,18 @@ function Agenda:prompt()
       return self:search()
     end,
   })
+
+  local custom_commands = self:_build_custom_commands()
+  if #custom_commands > 0 then
+    for _, command in ipairs(custom_commands) do
+      menu:add_option({
+        label = command.label,
+        key = command.key,
+        action = command.action,
+      })
+    end
+  end
+
   menu:add_option({ label = 'Quit', key = 'q' })
   menu:add_separator({ icon = ' ', length = 1 })
 
@@ -169,10 +252,11 @@ end
 
 ---@param source? string
 function Agenda:redo(source, preserve_cursor_pos)
+  self:_call_all_views('redo')
   return self.files:load(true):next(vim.schedule_wrap(function()
     local save_view = preserve_cursor_pos and vim.fn.winsaveview()
     if source == 'mapping' then
-      self:_call_view_and_render('redo')
+      self:_call_view_and_render('redraw')
     end
     self:render()
     if save_view then
@@ -470,6 +554,18 @@ function Agenda:_call_view(method, ...)
   local executed = false
   for _, view in ipairs(self.views) do
     if view[method] and view.view:is_in_range() then
+      view[method](view, ...)
+      executed = true
+    end
+  end
+
+  return executed
+end
+
+function Agenda:_call_all_views(method, ...)
+  local executed = false
+  for _, view in ipairs(self.views) do
+    if view[method] then
       view[method](view, ...)
       executed = true
     end

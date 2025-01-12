@@ -20,6 +20,7 @@ end
 ---@field is_in_date_range boolean
 ---@field date_range_days number
 ---@field label string
+---@field index number
 local AgendaItem = {}
 
 ---@param headline_date OrgDate single date in a headline

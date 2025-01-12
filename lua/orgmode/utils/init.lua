@@ -252,9 +252,12 @@ function utils.parse_tags_string(tags)
   return parsed_tags
 end
 
-function utils.tags_to_string(taglist)
+function utils.tags_to_string(taglist, sorted)
   local tags = ''
   if #taglist > 0 then
+    if sorted then
+      table.sort(taglist)
+    end
     tags = ':' .. table.concat(taglist, ':') .. ':'
   end
   return tags

@@ -1,10 +1,38 @@
 ---@alias OrgAgendaSpan 'day' | 'week' | 'month' | 'year' | number
----
+
+---@class OrgAgendaCustomCommandTypeInterface
+---@field type? 'agenda' | 'tags' | 'tags_todo'
+---@field org_agenda_overriding_header? string
+---@field org_agenda_files? string[]
+---@field org_agenda_tag_filter_preset? string
+---@field org_agenda_category_filter_preset? string
+---@field org_agenda_sorting_strategy? OrgAgendaSortingStrategy[]
+---@field org_agenda_remove_tags? boolean
+
+---@class OrgAgendaCustomCommandAgenda:OrgAgendaCustomCommandTypeInterface
+---@field org_agenda_span? OrgAgendaSpan Default: 'week'
+---@field org_agenda_start_day? string Modifier from today, example '+1d'
+---@field org_agenda_start_on_weekday? number
+
+---@class OrgAgendaCustomCommandTags:OrgAgendaCustomCommandTypeInterface
+---@field match? string
+---@field org_agenda_todo_ignore_scheduled? OrgAgendaTodoIgnoreScheduledTypes
+---@field org_agenda_todo_ignore_deadlines? OrgAgendaTodoIgnoreDeadlinesTypes
+
+---@alias OrgAgendaCustomCommandType (OrgAgendaCustomCommandAgenda | OrgAgendaCustomCommandTags)
+
+---@class OrgAgendaCustomCommand
+---@field description string Description in prompt
+---@field types? OrgAgendaCustomCommandType[]
+
 ---@class OrgDefaultConfig
 ---@field org_id_method 'uuid' | 'ts' | 'org'
 ---@field org_agenda_span OrgAgendaSpan
 ---@field org_log_repeat 'time' | 'note' | false
 ---@field calendar { round_min_with_hours: boolean, min_big_step: number, min_small_step: number? }
+---@field org_agenda_custom_commands table<string, OrgAgendaCustomCommand>
+---@field org_agenda_sorting_strategy table<'agenda' | 'todo' | 'tags', OrgAgendaSortingStrategy[]>
+---@field org_agenda_remove_tags? boolean
 local DefaultConfig = {
   org_agenda_files = '',
   org_default_notes_file = '',
@@ -31,6 +59,14 @@ local DefaultConfig = {
   org_agenda_skip_scheduled_if_done = false,
   org_agenda_skip_deadline_if_done = false,
   org_agenda_text_search_extra_files = {},
+  org_agenda_custom_commands = {},
+  org_agenda_block_separator = '-',
+  org_agenda_sorting_strategy = {
+    agenda = { 'time-up', 'priority-down', 'category-keep' },
+    todo = { 'priority-down', 'category-keep' },
+    tags = { 'priority-down', 'category-keep' },
+  },
+  org_agenda_remove_tags = false,
   org_priority_highest = 'A',
   org_priority_default = 'B',
   org_priority_lowest = 'C',
@@ -201,7 +237,7 @@ local DefaultConfig = {
   },
   emacs_config = {
     executable_path = 'emacs',
-    config_path = '$HOME/.emacs.d/init.el',
+    config_path = nil,
   },
   ui = {
     folds = {

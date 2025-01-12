@@ -1,11 +1,11 @@
 ---@class OrgHighlighter
 ---@field namespace number
+---@field markup OrgMarkupHighlighter
 ---@field private stars OrgStarsHighlighter
----@field private markup OrgMarkupHighlighter
 ---@field private todos OrgTodosHighlighter
 ---@field private foldtext OrgFoldtextHighlighter
 ---@field private _ephemeral boolean
----@field private buffers table<number, { language_tree: LanguageTree, tree: TSTree }>
+---@field private buffers table<number, { language_tree: vim.treesitter.LanguageTree, tree: TSTree }>
 local OrgHighlighter = {}
 local config = require('orgmode.config')
 

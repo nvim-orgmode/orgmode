@@ -1,18 +1,22 @@
 ---@class OrgAgendaFilter
 ---@field value string
 ---@field available_values table<string, boolean>
+---@field types? ('tags' | 'categories')[]
 ---@field values table[]
 ---@field term string
 ---@field parsed boolean
 local AgendaFilter = {}
 
+---@param opts? { types?: ('tags' | 'categories')[] }
 ---@return OrgAgendaFilter
-function AgendaFilter:new()
+function AgendaFilter:new(opts)
+  opts = opts or {}
   local data = {
     value = '',
     available_values = {},
     values = {},
     term = '',
+    types = opts.types or { 'tags', 'categories' },
     parsed = false,
   }
   setmetatable(data, self)
@@ -52,13 +56,31 @@ end
 ---@param headline OrgHeadline
 ---@return boolean
 function AgendaFilter:_match(headline)
+  local filters = {}
+  if vim.tbl_contains(self.types, 'tags') then
+    table.insert(filters, function(tag)
+      return headline:has_tag(tag)
+    end)
+  end
+  if vim.tbl_contains(self.types, 'categories') then
+    table.insert(filters, function(category)
+      return headline:matches_category(category)
+    end)
+  end
   for _, value in ipairs(self.values) do
     if value.operator == '-' then
-      if headline:has_tag(value.value) or headline:matches_category(value.value) then
+      for _, filter in ipairs(filters) do
+        if filter(value.value) then
+          return false
+        end
+      end
+    else
+      local result = vim.tbl_filter(function(filter)
+        return filter(value.value)
+      end, filters)
+      if #result == 0 then
         return false
       end
-    elseif not headline:has_tag(value.value) and not headline:matches_category(value.value) then
-      return false
     end
   end
 
@@ -104,9 +126,13 @@ function AgendaFilter:parse_available_filters(agenda_views)
   for _, agenda_view in ipairs(agenda_views) do
     for _, line in ipairs(agenda_view:get_lines()) do
       if line.headline then
-        values[line.headline:get_category()] = true
-        for _, tag in ipairs(line.headline:get_tags()) do
-          values[tag] = true
+        if vim.tbl_contains(self.types, 'categories') then
+          values[line.headline:get_category()] = true
+        end
+        if vim.tbl_contains(self.types, 'tags') then
+          for _, tag in ipairs(line.headline:get_tags()) do
+            values[tag] = true
+          end
         end
       end
     end
