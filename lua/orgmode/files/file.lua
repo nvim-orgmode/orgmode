@@ -20,6 +20,7 @@ local Memoize = require('orgmode.utils.memoize')
 
 ---@class OrgFile
 ---@field filename string
+---@field index number
 ---@field lines string[]
 ---@field content string
 ---@field metadata OrgFileMetadata
@@ -43,6 +44,7 @@ function OrgFile:new(opts)
     filename = opts.filename,
     lines = opts.lines,
     content = table.concat(opts.lines, '\n'),
+    index = 0,
     metadata = {
       mtime = stat and stat.mtime.nsec or 0,
       changedtick = opts.bufnr and vim.api.nvim_buf_get_changedtick(opts.bufnr) or 0,
@@ -173,7 +175,7 @@ function OrgFile:get_ts_matches(query, node)
   local matches = {}
 
   local from, _, to = node:range()
-  for _, match, _ in ts_query:iter_matches(node, self:_get_source(), from, to + 1, { all = false }) do
+  for _, match, _ in ts_query:iter_matches(node, self:get_source(), from, to + 1, { all = false }) do
     local items = {}
     for id, matched_nodes in pairs(match) do
       local name = ts_query.captures[id]
@@ -285,6 +287,7 @@ function OrgFile:apply_search(search, todo_only)
         scheduled = scheduled and scheduled:to_wrapped_string(true),
         closed = closed and closed:to_wrapped_string(false),
         priority = priority,
+        todo = item:get_todo() or '',
       }),
       tags = item:get_tags(),
       todo = item:get_todo() or '',
@@ -419,13 +422,13 @@ function OrgFile:get_node_text(node, range)
     return ''
   end
   if range then
-    return ts.get_node_text(node, self:_get_source(), {
+    return ts.get_node_text(node, self:get_source(), {
       metadata = {
         range = range,
       },
     })
   end
-  return ts.get_node_text(node, self:_get_source())
+  return ts.get_node_text(node, self:get_source())
 end
 
 ---@param node? TSNode
@@ -736,7 +739,7 @@ function OrgFile:get_links()
 
   local links = {}
   local processed_lines = {}
-  for _, match in ts_query:iter_captures(self.root, self:_get_source()) do
+  for _, match in ts_query:iter_captures(self.root, self:get_source()) do
     local line = match:start()
     if not processed_lines[line] then
       vim.list_extend(links, Hyperlink.all_from_line(self.lines[line + 1], line + 1))
@@ -831,9 +834,8 @@ end
 --- Get the ts source for the file
 --- If there is a buffer, return buffer number
 --- Otherwise, return the string content
----@private
 ---@return integer | string
-function OrgFile:_get_source()
+function OrgFile:get_source()
   local bufnr = self:bufnr()
   if bufnr > -1 then
     return bufnr

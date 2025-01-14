@@ -2,13 +2,14 @@ local colors = require('orgmode.colors')
 
 ---@class OrgAgendaView
 ---@field bufnr number
+---@field highlighter OrgHighlighter
 ---@field start_line number
 ---@field line_counter number
 ---@field lines OrgAgendaLine[]
 local OrgAgendaView = {}
 OrgAgendaView.__index = OrgAgendaView
 
----@param opts { bufnr: number }
+---@param opts { bufnr: number, highlighter: OrgHighlighter }
 ---@return OrgAgendaView
 function OrgAgendaView:new(opts)
   local line_nr = vim.api.nvim_buf_line_count(opts.bufnr)
@@ -19,6 +20,7 @@ function OrgAgendaView:new(opts)
   end
   return setmetatable({
     bufnr = opts.bufnr,
+    highlighter = opts.highlighter,
     start_line = line_nr,
     end_line = line_nr,
     lines = {},
@@ -29,6 +31,7 @@ end
 function OrgAgendaView:add_line(line)
   line.line_nr = self.end_line
   line.view = self
+  line.highlighter = self.highlighter
   table.insert(self.lines, line)
   self.end_line = self.end_line + 1
 end
@@ -45,6 +48,7 @@ end
 function OrgAgendaView:replace_line(old_line, new_line)
   new_line.line_nr = old_line.line_nr
   new_line.view = self
+  new_line.highlighter = self.highlighter
   for i, line in ipairs(self.lines) do
     if line.line_nr == old_line.line_nr then
       self.lines[i] = new_line

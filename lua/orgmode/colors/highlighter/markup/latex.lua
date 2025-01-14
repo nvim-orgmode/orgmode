@@ -104,4 +104,23 @@ function OrgLatex:highlight(highlights, bufnr)
   end
 end
 
+---@param highlights OrgMarkupHighlight[]
+---@return OrgMarkupPreparedHighlight[]
+function OrgLatex:prepare_highlights(highlights)
+  local ephemeral = self.markup:use_ephemeral()
+  local extmarks = {}
+  for _, entry in ipairs(highlights) do
+    table.insert(extmarks, {
+      start_line = entry.from.line,
+      start_col = entry.from.start_col,
+      end_col = entry.to.end_col,
+      ephemeral = ephemeral,
+      hl_group = '@org.latex',
+      spell = false,
+      priority = 110 + entry.from.start_col,
+    })
+  end
+  return extmarks
+end
+
 return OrgLatex

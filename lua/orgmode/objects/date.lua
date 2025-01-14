@@ -713,6 +713,15 @@ function Date:get_date_range_end()
   return self:has_date_range_end() and self.related_date_range or nil
 end
 
+function Date:get_type_sort_value()
+  local types = {
+    DEADLINE = 1,
+    SCHEDULED = 2,
+    NONE = 3,
+  }
+  return types[self.type]
+end
+
 ---Return number of days for a date range
 ---@return number
 function Date:get_date_range_days()

@@ -7,28 +7,48 @@ local Listitem = require('orgmode.files.elements.listitem')
 
 ---@class OrgFilesOpts
 ---@field paths string | string[]
+---@field cache? boolean Store the instances to cache and retrieve it later if paths are the same
 
 ---@class OrgLoadFileOpts
 ---@field persist boolean Persist the file in the list of loaded files if it belongs to path
 
 ---@class OrgFiles
+---@field cache? boolean
+---@field cached_instances table<string, { files: OrgFiles, paths: string | string[] }>
 ---@field paths string[]
 ---@field files table<string, OrgFile> table with files that are part of paths
 ---@field all_files table<string, OrgFile> all loaded files, no matter if they are part of paths
 ---@field load_state 'loading' | 'loaded' | nil
-local OrgFiles = {}
+local OrgFiles = {
+  cached_instances = {},
+}
 OrgFiles.__index = OrgFiles
 
 ---@param opts OrgFilesOpts
+---@return OrgFiles
 function OrgFiles:new(opts)
   local data = {
     files = {},
     all_files = {},
     load_state = nil,
+    cache = opts.cache or false,
   }
   setmetatable(data, self)
   data.paths = self:_setup_paths(opts.paths)
-  return data
+  return data:cache_and_return()
+end
+
+function OrgFiles:cache_and_return()
+  if not self.cache then
+    return self
+  end
+  local key = table.concat(self.paths)
+  local cached = OrgFiles.cached_instances[key]
+  if cached then
+    return cached
+  end
+  OrgFiles.cached_instances[key] = self
+  return self
 end
 
 ---@param force? boolean Force reload all files
@@ -42,9 +62,10 @@ function OrgFiles:load(force)
   end
 
   self.load_state = 'loading'
-  return Promise.map(function(filename)
+  return Promise.map(function(filename, index)
     return self:load_file(filename):next(function(orgfile)
       if orgfile then
+        orgfile.index = index
         self.files[orgfile.filename] = orgfile
       end
       return orgfile
@@ -128,8 +149,9 @@ function OrgFiles:all()
   self:ensure_loaded()
   local valid_files = {}
   local filenames = self:_files()
-  for _, file in ipairs(filenames) do
+  for i, file in ipairs(filenames) do
     if self.files[file] then
+      self.files[file].index = i
       table.insert(valid_files, self.files[file])
     end
   end

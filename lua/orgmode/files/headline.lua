@@ -14,6 +14,7 @@ local Memoize = require('orgmode.utils.memoize')
 ---@class OrgHeadline
 ---@field headline TSNode
 ---@field file OrgFile
+---@field index? number
 local Headline = {}
 
 local memoize = Memoize:new(Headline, function(self)
@@ -326,8 +327,8 @@ end
 
 memoize('get_todo')
 --- Returns the headlines todo keyword, it's node,
---- and it's type (todo or done)
---- @return string | nil, TSNode | nil, string | nil
+--- it's type (todo or done) and it's index in the todo_keywords list
+--- @return string | nil, TSNode | nil, string | nil, number | nil
 function Headline:get_todo()
   -- A valid keyword can only be the first child
   local first_item_node = self:_get_child_node('item')
@@ -341,10 +342,10 @@ function Headline:get_todo()
   local text = self.file:get_node_text(todo_node)
   local keyword_by_value = todo_keywords:find(text)
   if not keyword_by_value then
-    return nil, nil, nil
+    return nil, nil, nil, nil
   end
 
-  return text, todo_node, keyword_by_value.type
+  return text, todo_node, keyword_by_value.type, keyword_by_value.index
 end
 
 ---@return boolean
@@ -360,18 +361,24 @@ function Headline:is_done()
 end
 
 memoize('get_title')
----@return string
+---@return string, number
 function Headline:get_title()
-  local title = self.file:get_node_text(self:_get_child_node('item')) or ''
+  local title_node = self:_get_child_node('item')
+  local title = self.file:get_node_text(title_node) or ''
   local word, todo_node = self:get_todo()
+  local offset = title_node and select(2, title_node:start()) or 0
   if todo_node and word then
-    title = title:gsub('^' .. vim.pesc(word) .. '%s*', '')
+    local new_title = title:gsub('^' .. vim.pesc(word) .. '%s*', '')
+    offset = offset + (title:len() - new_title:len())
+    title = new_title
   end
   local priority, priority_node = self:get_priority()
   if priority_node then
-    title = title:gsub('^' .. vim.pesc(('[#%s]'):format(priority)) .. '%s*', '')
+    local new_title = title:gsub('^' .. vim.pesc(('[#%s]'):format(priority)) .. '%s*', '')
+    offset = offset + title:len() - new_title:len()
+    title = new_title
   end
-  return title
+  return title, offset
 end
 
 function Headline:get_title_with_priority()
@@ -725,9 +732,11 @@ function Headline:get_non_plan_dates()
   return dates
 end
 
-function Headline:tags_to_string()
+---@param sorted? boolean
+---@return string, TSNode | nil
+function Headline:tags_to_string(sorted)
   local tags, node = self:get_tags()
-  return utils.tags_to_string(tags), node
+  return utils.tags_to_string(tags, sorted), node
 end
 
 ---@return boolean

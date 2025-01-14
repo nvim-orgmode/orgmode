@@ -506,8 +506,18 @@ Determine on which day the week will start in calendar modal (ex: [changing the 
 #### **emacs_config**
 
 _type_: `table`<br />
-_default value_: `{ executable_path = 'emacs', config_path='$HOME/.emacs.d/init.el' }`<br />
+_default value_: `{ executable_path = 'emacs', config_path=nil }`<br />
 Set configuration for your emacs. This is useful for having the emacs export properly pickup your emacs config and plugins.
+If `config_path` is not provided, exporter tries to find a configuration file from these locations:
+
+1. `~/.config/emacs/init.el`
+2. `~/.emacs.d/init.el`
+3. `~/.emacs.el`
+
+If there is no configuration found, it will still process the export.
+
+If it finds a configuration and export attempt fails because of the configuration issue, there will be a prompt to
+attempt the same export without the configuration file.
 
 ### Agenda settings
 
@@ -547,6 +557,107 @@ offset to apply to the agenda start date.<br />
 Example:<br />
 If `org_agenda_start_on_weekday` is `false`, and `org_agenda_start_day` is `-2d`,<br />
 agenda will always show current week from today - 2 days
+
+#### **org_agenda_custom_commands**
+
+_type_: `table<string, OrgAgendaCustomCommand>`<br />
+_default value_: `{}`<br />
+
+Define custom agenda views that are available through the (org_agenda)[#org_agenda] mapping.
+It is possible to combine multiple agenda types into single view.
+An example:
+
+```lua
+require('orgmode').setup({
+  org_agenda_files = {'~/org/**/*'},
+  org_agenda_custom_commands = {
+    -- "c" is the shortcut that will be used in the prompt
+    c = {
+      description = 'Combined view', -- Description shown in the prompt for the shortcut
+      types = {
+        {
+          type = 'tags_todo', -- Type can be agenda | tags | tags_todo
+          match = '+PRIORITY="A"', --Same as providing a "Match:" for tags view <leader>oa + m, See: https://orgmode.org/manual/Matching-tags-and-properties.html
+          org_agenda_overriding_header = 'High priority todos',
+          org_agenda_todo_ignore_deadlines = 'far', -- Ignore all deadlines that are too far in future (over org_deadline_warning_days). Possible values: all | near | far | past | future
+        },
+        {
+          type = 'agenda',
+          org_agenda_overriding_header = 'My daily agenda',
+          org_agenda_span = 'day' -- can be any value as org_agenda_span
+        },
+        {
+          type = 'tags',
+          match = 'WORK', --Same as providing a "Match:" for tags view <leader>oa + m, See: https://orgmode.org/manual/Matching-tags-and-properties.html
+          org_agenda_overriding_header = 'My work todos',
+          org_agenda_todo_ignore_scheduled = 'all', -- Ignore all headlines that are scheduled. Possible values: past | future | all
+        },
+        {
+          type = 'agenda',
+          org_agenda_overriding_header = 'Whole week overview',
+          org_agenda_span = 'week', -- 'week' is default, so it's not necessary here, just an example
+          org_agenda_start_on_weekday = 1 -- Start on Monday
+          org_agenda_remove_tags = true -- Do not show tags only for this view
+        },
+      }
+    },
+    p = {
+      description = 'Personal agenda',
+      types = {
+        {
+          type = 'tags_todo',
+          org_agenda_overriding_header = 'My personal todos',
+          org_agenda_category_filter_preset = 'todos', -- Show only headlines from `todos` category. Same value providad as when pressing `/` in the Agenda view
+          org_agenda_sorting_strategy = {'todo-state-up', 'priority-down'} -- See all options available on org_agenda_sorting_strategy
+        },
+        {
+          type = 'agenda',
+          org_agenda_overriding_header = 'Personal projects agenda',
+          org_agenda_files = {'~/my-projects/**/*'}, -- Can define files outside of the default org_agenda_files
+        },
+        {
+          type = 'tags',
+          org_agenda_overriding_header = 'Personal projects notes',
+          org_agenda_files = {'~/my-projects/**/*'},
+          org_agenda_tag_filter_preset = 'NOTES-REFACTOR' -- Show only headlines with NOTES tag that does not have a REFACTOR tag. Same value providad as when pressing `/` in the Agenda view
+        },
+      }
+    }
+  }
+})
+```
+
+#### **org_agenda_sorting_strategy**
+_type_: `table<'agenda' | 'todo' | 'tags', OrgAgendaSortingStrategy[]><`<br />
+default value: `{ agenda = {'time-up', 'priority-down', 'category-keep'}, todo = {'priority-down', 'category-keep'}, tags = {'priority-down', 'category-keep'}}`<br />
+List of sorting strategies to apply to a given view.
+Available strategies:
+
+- `time-up` - Sort entries by time of day. Applicable only in `agenda` view
+- `time-down` - Opposite of `time-up`
+- `priority-down` - Sort by priority, from highest to lowest
+- `priority-up` - Sort by priority, from lowest to highest
+- `tag-up` - Sort by sorted tags string, ascending
+- `tag-down` - Sort by sorted tags string, descending
+- `todo-state-up` - Sort by todo keyword by position (example: 'TODO, PROGRESS, DONE' has a sort value of 1, 2 and 3), ascending
+- `todo-state-down` - Sort by todo keyword, descending
+- `clocked-up` - Show clocked in headlines first
+- `clocked-down` - Show clocked in headines last
+- `category-up` - Sort by category name, ascending
+- `category-down` - Sort by category name, descending
+- `category-keep` - Keep default category sorting, as it appears in org-agenda-files
+
+
+#### **org_agenda_block_separator**
+_type_: `string`<br />
+default value: `-`<br />
+Separator used to separate multiple agenda views generated by org_agenda_custom_commands.<br />
+To change the highlight, override `@org.agenda.separator` hl group.
+
+#### **org_agenda_remove_tags**
+_type_: `boolean`<br />
+default value: `false`<br />
+Should tags be hidden from all agenda views.
 
 #### **org_capture_templates**
 

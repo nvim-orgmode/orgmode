@@ -1,4 +1,5 @@
 local Date = require('orgmode.objects.date')
+local Files = require('orgmode.files')
 local config = require('orgmode.config')
 local AgendaFilter = require('orgmode.agenda.filter')
 local AgendaItem = require('orgmode.agenda.agenda_item')
@@ -7,6 +8,7 @@ local AgendaLine = require('orgmode.agenda.view.line')
 local AgendaLineToken = require('orgmode.agenda.view.token')
 local ClockReport = require('orgmode.clock.report')
 local utils = require('orgmode.utils')
+local SortingStrategy = require('orgmode.agenda.sorting_strategy')
 
 ---@class OrgAgendaViewType
 ---@field render fun(self: OrgAgendaViewType, bufnr:number, current_line?: number): OrgAgendaView
@@ -17,20 +19,30 @@ local utils = require('orgmode.utils')
 
 ---@class OrgAgendaTypeOpts
 ---@field files OrgFiles
+---@field highlighter OrgHighlighter
 ---@field agenda_filter OrgAgendaFilter
 ---@field filter? string
+---@field tag_filter? string
+---@field category_filter? string
+---@field agenda_files string | string[] | nil
 ---@field span? OrgAgendaSpan
 ---@field from? OrgDate
 ---@field start_on_weekday? number
 ---@field start_day? string
 ---@field header? string
 ---@field show_clock_report? boolean
----@field is_custom? boolean
+---@field sorting_strategy? OrgAgendaSortingStrategy[]
+---@field remove_tags? boolean
+---@field id? string
 
 ---@class OrgAgendaType:OrgAgendaViewType
 ---@field files OrgFiles
+---@field highlighter OrgHighlighter
 ---@field agenda_filter OrgAgendaFilter
 ---@field filter? OrgAgendaFilter
+---@field tag_filter? OrgAgendaFilter
+---@field category_filter? OrgAgendaFilter
+---@field agenda_files string | string[] | nil
 ---@field span? OrgAgendaSpan
 ---@field from? OrgDate
 ---@field to? OrgDate
@@ -41,7 +53,9 @@ local utils = require('orgmode.utils')
 ---@field show_clock_report? boolean
 ---@field clock_report? OrgClockReport
 ---@field clock_report_view? OrgAgendaView
----@field is_custom? boolean
+---@field sorting_strategy? OrgAgendaSortingStrategy[]
+---@field remove_tags? boolean
+---@field id? string
 local OrgAgendaType = {}
 OrgAgendaType.__index = OrgAgendaType
 
@@ -49,8 +63,12 @@ OrgAgendaType.__index = OrgAgendaType
 function OrgAgendaType:new(opts)
   local data = {
     files = opts.files,
+    highlighter = opts.highlighter,
     agenda_filter = opts.agenda_filter,
     filter = opts.filter and AgendaFilter:new():parse(opts.filter, true) or nil,
+    tag_filter = opts.tag_filter and AgendaFilter:new({ types = { 'tags' } }):parse(opts.tag_filter, true) or nil,
+    category_filter = opts.category_filter and AgendaFilter:new({ types = { 'categories' } })
+      :parse(opts.category_filter, true) or nil,
     span = opts.span or config:get_agenda_span(),
     from = opts.from or Date.now():start_of('day'),
     to = nil,
@@ -58,12 +76,32 @@ function OrgAgendaType:new(opts)
     show_clock_report = opts.show_clock_report or false,
     start_on_weekday = opts.start_on_weekday or config.org_agenda_start_on_weekday,
     start_day = opts.start_day or config.org_agenda_start_day,
+    agenda_files = opts.agenda_files,
     header = opts.header,
-    is_custom = opts.is_custom or false,
+    sorting_strategy = opts.sorting_strategy or vim.tbl_get(config.org_agenda_sorting_strategy, 'agenda') or {},
+    id = opts.id,
+    remove_tags = type(opts.remove_tags) == 'boolean' and opts.remove_tags or config.org_agenda_remove_tags,
   }
   local this = setmetatable(data, OrgAgendaType)
   this:_set_date_range()
+  this:_setup_agenda_files()
   return this
+end
+
+function OrgAgendaType:redo()
+  if self.agenda_files then
+    self.files:load_sync(true)
+  end
+end
+
+function OrgAgendaType:_setup_agenda_files()
+  if not self.agenda_files then
+    return
+  end
+  self.files = Files:new({
+    paths = self.agenda_files,
+    cache = true,
+  }):load_sync(true)
 end
 
 function OrgAgendaType:advance_span(count, direction)
@@ -188,7 +226,7 @@ function OrgAgendaType:render(bufnr, current_line)
   end
   local agenda_days = self:_get_agenda_days()
 
-  local agendaView = AgendaView:new({ bufnr = self.bufnr })
+  local agendaView = AgendaView:new({ bufnr = self.bufnr, highlighter = self.highlighter })
   agendaView:add_line(AgendaLine:single_token({
     content = self:_get_title(),
     hl_group = '@org.agenda.header',
@@ -304,8 +342,9 @@ function OrgAgendaType:_build_line(agenda_item, metadata)
   end
   line:add_token(AgendaLineToken:new({
     content = headline:get_title(),
+    add_markup_to_headline = headline,
   }))
-  if #headline:get_tags() > 0 then
+  if not self.remove_tags and #headline:get_tags() > 0 then
     local tags_string = headline:tags_to_string()
     line:add_token(AgendaLineToken:new({
       content = tags_string,
@@ -349,11 +388,7 @@ function OrgAgendaType:_get_agenda_days()
     for index, item in ipairs(headline_dates) do
       local headline = item.headline
       local agenda_item = AgendaItem:new(item.headline_date, headline, day, index)
-      if
-        agenda_item.is_valid
-        and self.agenda_filter:matches(headline)
-        and (not self.filter or self.filter:matches(headline))
-      then
+      if agenda_item.is_valid and self:_matches_filters(headline) then
         table.insert(headlines, headline)
         table.insert(date.agenda_items, agenda_item)
         date.category_length = math.max(date.category_length, vim.api.nvim_strwidth(headline:get_category()))
@@ -361,7 +396,7 @@ function OrgAgendaType:_get_agenda_days()
       end
     end
 
-    date.agenda_items = self._sort(date.agenda_items)
+    date.agenda_items = self:_sort(date.agenda_items)
     date.category_length = math.max(11, date.category_length + 1)
     date.label_length = math.min(11, date.label_length)
 
@@ -374,6 +409,22 @@ end
 function OrgAgendaType:toggle_clock_report()
   self.show_clock_report = not self.show_clock_report
   return self
+end
+
+function OrgAgendaType:_matches_filters(headline)
+  local valid_filters = {
+    self.filter,
+    self.tag_filter,
+    self.category_filter,
+    self.agenda_filter,
+  }
+
+  for _, filter in pairs(valid_filters) do
+    if filter and not filter:matches(headline) then
+      return false
+    end
+  end
+  return true
 end
 
 function OrgAgendaType:_set_date_range(from)
@@ -422,49 +473,21 @@ function OrgAgendaType:_format_day(day)
   return string.format('%-10s %s', day:format('%A'), day:format('%d %B %Y'))
 end
 
-local function sort_by_date_or_priority_or_category(a, b)
-  if a.headline:get_priority_sort_value() ~= b.headline:get_priority_sort_value() then
-    return a.headline:get_priority_sort_value() > b.headline:get_priority_sort_value()
-  end
-  if not a.real_date:is_same(b.real_date, 'day') then
-    return a.real_date:is_before(b.real_date)
-  end
-  return a.index < b.index
-end
-
 ---@private
 ---@param agenda_items OrgAgendaItem[]
 ---@return OrgAgendaItem[]
-function OrgAgendaType._sort(agenda_items)
-  table.sort(agenda_items, function(a, b)
-    if a.is_same_day and b.is_same_day then
-      if a.real_date:has_time() and not b.real_date:has_time() then
-        return true
-      end
-      if b.real_date:has_time() and not a.real_date:has_time() then
-        return false
-      end
-      if a.real_date:has_time() and b.real_date:has_time() then
-        return a.real_date:is_before(b.real_date)
-      end
-      return sort_by_date_or_priority_or_category(a, b)
-    end
+function OrgAgendaType:_sort(agenda_items)
+  ---@param agenda_item OrgAgendaItem
+  local make_entry = function(agenda_item)
+    return {
+      date = agenda_item.real_date,
+      headline = agenda_item.headline,
+      index = agenda_item.index,
+      is_day_match = agenda_item.is_same_day,
+    }
+  end
 
-    if a.is_same_day and not b.is_same_day then
-      if a.real_date:has_time() or (b.real_date:is_none() and not a.real_date:is_none()) then
-        return true
-      end
-    end
-
-    if not a.is_same_day and b.is_same_day then
-      if b.real_date:has_time() or (a.real_date:is_none() and not b.real_date:is_none()) then
-        return false
-      end
-    end
-
-    return sort_by_date_or_priority_or_category(a, b)
-  end)
-  return agenda_items
+  return SortingStrategy.sort(agenda_items, self.sorting_strategy, make_entry)
 end
 
 return OrgAgendaType

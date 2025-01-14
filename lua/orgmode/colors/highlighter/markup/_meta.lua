@@ -18,8 +18,20 @@
 ---@field to OrgMarkupRange
 ---@field char string
 
+---@class OrgMarkupPreparedHighlight
+---@field start_line number
+---@field start_col number
+---@field end_col number
+---@field hl_group string
+---@field spell? boolean
+---@field priority number
+---@field conceal? boolean
+---@field ephemeral boolean
+---@field url? string
+
 ---@class OrgMarkupHighlighter
 ---@field parse_node fun(self: OrgMarkupHighlighter, node: TSNode): OrgMarkupNode | false
 ---@field is_valid_start_node fun(self: OrgMarkupHighlighter, entry: OrgMarkupNode, bufnr: number): boolean
 ---@field is_valid_end_node fun(self: OrgMarkupHighlighter, entry: OrgMarkupNode, bufnr: number): boolean
 ---@field highlight fun(self: OrgMarkupHighlighter, highlights: OrgMarkupHighlight[], bufnr: number)
+---@field prepare_highlights fun(self: OrgMarkupHighlighter, highlights: OrgMarkupHighlight[], source: number | string): OrgMarkupPreparedHighlight[]

@@ -785,7 +785,8 @@ end
 -- Inserts a new link after the cursor position or modifies the link the cursor is
 -- currently on
 function OrgMappings:insert_link()
-  local link_location = vim.fn.OrgmodeInput('Links: ', '', function(arg_lead)
+  local link = OrgHyperlink.at_cursor()
+  local link_location = vim.fn.OrgmodeInput('Links: ', link and link.url:to_string() or '', function(arg_lead)
     return self.links:autocomplete(arg_lead)
   end)
   if vim.trim(link_location) == '' then
@@ -793,7 +794,7 @@ function OrgMappings:insert_link()
     return
   end
 
-  self.links:insert_link(link_location)
+  self.links:insert_link(link_location, link and link.desc)
 end
 
 function OrgMappings:store_link()

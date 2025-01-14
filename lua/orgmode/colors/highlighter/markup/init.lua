@@ -39,11 +39,10 @@ function OrgMarkup:on_line(bufnr, line, tree)
   end
 end
 
----@private
 ---@param bufnr number
 ---@param line number
 ---@param tree TSTree
----@return { emphasis: OrgMarkupHighlight[], link: OrgMarkupHighlight[], latex: OrgMarkupHighlight[] }
+---@return { emphasis: OrgMarkupHighlight[], link: OrgMarkupHighlight[], latex: OrgMarkupHighlight[], date: OrgMarkupHighlight[] }
 function OrgMarkup:_get_highlights(bufnr, line, tree)
   local line_content = vim.api.nvim_buf_get_lines(bufnr, line, line + 1, false)[1]
 
@@ -51,6 +50,25 @@ function OrgMarkup:_get_highlights(bufnr, line, tree)
     return self.cache[bufnr][line].highlights
   end
 
+  local result = self:get_node_highlights(tree:root(), bufnr, line)
+
+  if not self.cache[bufnr] then
+    self.cache[bufnr] = {}
+  end
+
+  self.cache[bufnr][line] = {
+    line_content = line_content,
+    highlights = result,
+  }
+
+  return result
+end
+
+---@param root_node TSNode
+---@param source number | string
+---@param line number
+---@return { emphasis: OrgMarkupHighlight[], link: OrgMarkupHighlight[], latex: OrgMarkupHighlight[], date: OrgMarkupHighlight[] }
+function OrgMarkup:get_node_highlights(root_node, source, line)
   local result = {
     emphasis = {},
     link = {},
@@ -60,7 +78,7 @@ function OrgMarkup:_get_highlights(bufnr, line, tree)
   ---@type OrgMarkupNode[]
   local entries = {}
 
-  for _, node in self.query:iter_captures(tree:root(), bufnr, line, line + 1) do
+  for _, node in self.query:iter_captures(root_node, source, line, line + 1) do
     local entry = nil
     for _, parser in pairs(self.parsers) do
       entry = parser:parse_node(node)
@@ -86,7 +104,7 @@ function OrgMarkup:_get_highlights(bufnr, line, tree)
     if not self:has_valid_parent(item) then
       return false
     end
-    return self.parsers[item.type]:is_valid_start_node(item, bufnr)
+    return self.parsers[item.type]:is_valid_start_node(item, source)
   end
 
   local is_valid_end_item = function(item)
@@ -94,7 +112,7 @@ function OrgMarkup:_get_highlights(bufnr, line, tree)
       return false
     end
 
-    return self.parsers[item.type]:is_valid_end_node(item, bufnr)
+    return self.parsers[item.type]:is_valid_end_node(item, source)
   end
 
   for _, item in ipairs(entries) do
@@ -139,14 +157,26 @@ function OrgMarkup:_get_highlights(bufnr, line, tree)
     ::continue::
   end
 
-  if not self.cache[bufnr] then
-    self.cache[bufnr] = {}
-  end
+  return result
+end
 
-  self.cache[bufnr][line] = {
-    line_content = line_content,
-    highlights = result,
-  }
+---@param headline OrgHeadline
+---@return OrgMarkupPreparedHighlight[]
+function OrgMarkup:get_prepared_headline_highlights(headline)
+  local highlights =
+    self:get_node_highlights(headline:node(), headline.file:get_source(), select(1, headline:node():range()))
+
+  local result = {}
+
+  for type, highlight in pairs(highlights) do
+    vim.list_extend(
+      result,
+      self.parsers[type]:prepare_highlights(highlight, function(markup_highlight)
+        local text = headline.file:get_node_text(headline:node())
+        return text:sub(markup_highlight.from.start_col + 1, markup_highlight.to.end_col)
+      end)
+    )
+  end
 
   return result
 end
@@ -156,7 +186,7 @@ function OrgMarkup:on_detach(bufnr)
 end
 
 ---@param node TSNode
----@param source number
+---@param source number | string
 ---@param offset_col_start? number
 ---@param offset_col_end? number
 ---@return string

@@ -141,6 +141,24 @@ function OrgDates:highlight(highlights, bufnr)
   end
 end
 
+---@param highlights OrgMarkupHighlight[]
+---@return OrgMarkupPreparedHighlight[]
+function OrgDates:prepare_highlights(highlights)
+  local ephemeral = self.markup:use_ephemeral()
+  local extmarks = {}
+  for _, entry in ipairs(highlights) do
+    table.insert(extmarks, {
+      start_line = entry.from.line,
+      start_col = entry.from.start_col,
+      end_col = entry.to.end_col,
+      ephemeral = ephemeral,
+      hl_group = entry.char == '>' and '@org.timestamp.active' or '@org.timestamp.inactive',
+      priority = 110,
+    })
+  end
+  return extmarks
+end
+
 ---@param item OrgMarkupNode
 ---@return boolean
 function OrgDates:has_valid_parent(item)

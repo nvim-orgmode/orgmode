@@ -1,6 +1,3 @@
-local ts_utils = require('orgmode.utils.treesitter')
-local utils = require('orgmode.utils')
-
 ---@class OrgLinkHighlighter : OrgMarkupHighlighter
 ---@field private markup OrgMarkupHighlighter
 ---@field private has_extmark_url_support boolean
@@ -134,6 +131,67 @@ function OrgLink:highlight(highlights, bufnr)
       conceal = '',
     })
   end
+end
+
+---@param highlights OrgMarkupHighlight[]
+---@param source_getter_fn fun(highlight: OrgMarkupHighlight): string
+---@return OrgMarkupPreparedHighlight[]
+function OrgLink:prepare_highlights(highlights, source_getter_fn)
+  local ephemeral = self.markup:use_ephemeral()
+  local extmarks = {}
+
+  for _, entry in ipairs(highlights) do
+    local link = source_getter_fn(entry)
+    local alias = link:find('%]%[') or 1
+    local link_end = link:find('%]%[') or (link:len() - 1)
+
+    local link_opts = {
+      ephemeral = ephemeral,
+      end_col = entry.to.end_col,
+      hl_group = '@org.hyperlink',
+      priority = 110,
+    }
+
+    if self.has_extmark_url_support then
+      link_opts.url = alias > 1 and link:sub(3, alias - 1) or link:sub(3, -3)
+    end
+
+    table.insert(extmarks, {
+      start_line = entry.from.line,
+      start_col = entry.from.start_col,
+      end_col = link_opts.end_col,
+      ephemeral = link_opts.ephemeral,
+      hl_group = link_opts.hl_group,
+      priority = link_opts.priority,
+      url = link_opts.url,
+    })
+
+    table.insert(extmarks, {
+      start_line = entry.from.line,
+      start_col = entry.from.start_col,
+      end_col = entry.from.start_col + 1 + alias,
+      ephemeral = ephemeral,
+      conceal = '',
+    })
+
+    table.insert(extmarks, {
+      start_line = entry.from.line,
+      start_col = entry.from.start_col + 2,
+      end_col = entry.from.start_col - 1 + link_end,
+      ephemeral = ephemeral,
+      spell = false,
+    })
+
+    table.insert(extmarks, {
+      start_line = entry.from.line,
+      start_col = entry.to.end_col - 2,
+      end_col = entry.to.end_col,
+      ephemeral = ephemeral,
+      conceal = '',
+    })
+  end
+
+  return extmarks
 end
 
 return OrgLink

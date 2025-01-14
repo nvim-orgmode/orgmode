@@ -1,59 +1,102 @@
+local config = require('orgmode.config')
 local AgendaView = require('orgmode.agenda.view.init')
+local Files = require('orgmode.files')
 local AgendaLine = require('orgmode.agenda.view.line')
 local AgendaFilter = require('orgmode.agenda.filter')
 local AgendaLineToken = require('orgmode.agenda.view.token')
 local utils = require('orgmode.utils')
 local agenda_highlights = require('orgmode.colors.highlights')
 local hl_map = agenda_highlights.get_agenda_hl_map()
+local SortingStrategy = require('orgmode.agenda.sorting_strategy')
 
 ---@class OrgAgendaTodosTypeOpts
 ---@field files OrgFiles
+---@field highlighter OrgHighlighter
 ---@field agenda_filter OrgAgendaFilter
 ---@field filter? string
+---@field tag_filter? string
+---@field category_filter? string
+---@field agenda_files string | string[] | nil
 ---@field header? string
 ---@field subheader? string
 ---@field todo_only? boolean
----@field is_custom? boolean
+---@field sorting_strategy? OrgAgendaSortingStrategy[]
+---@field remove_tags? boolean
+---@field id? string
 
 ---@class OrgAgendaTodosType:OrgAgendaViewType
 ---@field files OrgFiles
+---@field highlighter OrgHighlighter
 ---@field agenda_filter OrgAgendaFilter
 ---@field filter? OrgAgendaFilter
+---@field tag_filter? string
+---@field category_filter? string
+---@field agenda_files string | string[] | nil
 ---@field header? string
 ---@field subheader? string
 ---@field bufnr? number
 ---@field todo_only? boolean
----@field is_custom? boolean
+---@field sorting_strategy? OrgAgendaSortingStrategy[]
+---@field remove_tags? boolean
+---@field id? string
 local OrgAgendaTodosType = {}
 OrgAgendaTodosType.__index = OrgAgendaTodosType
 
 ---@param opts OrgAgendaTodosTypeOpts
 function OrgAgendaTodosType:new(opts)
-  return setmetatable({
+  local this = setmetatable({
     files = opts.files,
+    highlighter = opts.highlighter,
     agenda_filter = opts.agenda_filter,
     filter = opts.filter and AgendaFilter:new():parse(opts.filter, true) or nil,
+    tag_filter = opts.tag_filter and AgendaFilter:new({ types = { 'tags' } }):parse(opts.tag_filter, true) or nil,
+    category_filter = opts.category_filter and AgendaFilter:new({ types = { 'categories' } })
+      :parse(opts.category_filter, true) or nil,
     header = opts.header,
     subheader = opts.subheader,
+    agenda_files = opts.agenda_files,
     todo_only = opts.todo_only == nil and true or opts.todo_only,
-    is_custom = opts.is_custom or false,
+    sorting_strategy = opts.sorting_strategy or vim.tbl_get(config.org_agenda_sorting_strategy, 'todo') or {},
+    id = opts.id,
+    remove_tags = type(opts.remove_tags) == 'boolean' and opts.remove_tags or config.org_agenda_remove_tags,
   }, OrgAgendaTodosType)
+
+  this:_setup_agenda_files()
+  return this
+end
+
+function OrgAgendaTodosType:_setup_agenda_files()
+  if not self.agenda_files then
+    return
+  end
+  self.files = Files:new({
+    paths = self.agenda_files,
+    cache = true,
+  }):load_sync(true)
+end
+
+function OrgAgendaTodosType:redo()
+  if self.agenda_files then
+    self.files:load_sync(true)
+  end
 end
 
 ---@param bufnr? number
 function OrgAgendaTodosType:render(bufnr)
   self.bufnr = bufnr or 0
   local headlines, category_length = self:_get_headlines()
-  local agendaView = AgendaView:new({ bufnr = self.bufnr })
+  local agendaView = AgendaView:new({ bufnr = self.bufnr, highlighter = self.highlighter })
 
   agendaView:add_line(AgendaLine:single_token({
     content = self.header or 'Global list of TODO items of type: ALL',
     hl_group = '@org.agenda.header',
   }))
-  agendaView:add_line(AgendaLine:single_token({
-    content = self.subheader or '',
-    hl_group = '@org.agenda.header',
-  }))
+  if self.subheader then
+    agendaView:add_line(AgendaLine:single_token({
+      content = self.subheader,
+      hl_group = '@org.agenda.header',
+    }))
+  end
 
   for _, headline in ipairs(headlines) do
     agendaView:add_line(self:_build_line(headline, { category_length = category_length }))
@@ -94,8 +137,9 @@ function OrgAgendaTodosType:_build_line(headline, metadata)
   end
   line:add_token(AgendaLineToken:new({
     content = headline:get_title(),
+    add_markup_to_headline = headline,
   }))
-  if #headline:get_tags() > 0 then
+  if not self.remove_tags and #headline:get_tags() > 0 then
     local tags_string = headline:tags_to_string()
     line:add_token(AgendaLineToken:new({
       content = tags_string,
@@ -143,9 +187,11 @@ function OrgAgendaTodosType:_get_headlines()
 
   for _, orgfile in ipairs(self.files:all()) do
     local headlines = self:get_file_headlines(orgfile)
-    for _, headline in ipairs(headlines) do
-      if self.agenda_filter:matches(headline) and (not self.filter or self.filter:matches(headline)) then
+    for i, headline in ipairs(headlines) do
+      if self:_matches_filters(headline) then
         category_length = math.max(category_length, vim.api.nvim_strwidth(headline:get_category()))
+        ---@diagnostic disable-next-line: inject-field
+        headline.index = i
         table.insert(items, headline)
       end
     end
@@ -155,17 +201,35 @@ function OrgAgendaTodosType:_get_headlines()
   return items, category_length + 1
 end
 
+function OrgAgendaTodosType:_matches_filters(headline)
+  local valid_filters = {
+    self.agenda_filter,
+    self.filter,
+    self.tag_filter,
+    self.category_filter,
+  }
+
+  for _, filter in ipairs(valid_filters) do
+    if filter and not filter:matches(headline) then
+      return false
+    end
+  end
+  return true
+end
+
 ---@private
 ---@param todos OrgHeadline[]
 ---@return OrgHeadline[]
 function OrgAgendaTodosType:_sort(todos)
-  table.sort(todos, function(a, b)
-    if a:get_priority_sort_value() ~= b:get_priority_sort_value() then
-      return a:get_priority_sort_value() > b:get_priority_sort_value()
-    end
-    return a:get_category() < b:get_category()
-  end)
-  return todos
+  ---@param headline OrgHeadline
+  local make_entry = function(headline)
+    return {
+      headline = headline,
+      index = headline.index,
+      is_day_match = false,
+    }
+  end
+  return SortingStrategy.sort(todos, self.sorting_strategy, make_entry)
 end
 
 return OrgAgendaTodosType
