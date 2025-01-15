@@ -1,0 +1,47 @@
+* Nvim Orgmode
+
+Nvim orgmode is a clone of Emacs Orgmode for Neovim 0.10.0+.
+It aims to be a feature-complete implementation of Orgmode features in Neovim.
+
+** Quick start
+:PROPERTIES:
+:CUSTOM_ID: quick-start
+:END:
+- Install with [[https://github.com/folke/lazy.nvim][lazy.nvim]]:
+  #+begin_src lua
+  {
+    'nvim-orgmode/orgmode',
+    event = 'VeryLazy',
+    config = function()
+      -- Setup orgmode
+      require('orgmode').setup({
+        org_agenda_files = '~/orgfiles/**/*',
+        org_default_notes_file = '~/orgfiles/refile.org',
+      })
+    end,
+  }
+  #+end_src
+- Capture youf first note with =<leader>oc=
+- Open up the prompt for agenda with =<leader>oa=
+
+For more details about the installation and usage, check [[./installation.org][Installation page]].
+
+To see all configuration options, check [[file:./configuration.org][Configuration page]].
+
+** Getting started with orgmode
+:PROPERTIES:
+:CUSTOM_ID: getting-started
+:END:
+To get a basic idea how Orgmode works, check our hands-on [[file:./tutorial.org][tutorial]].
+
+You can also check this screencast from [[https://github.com/dhruvasagar][@dhruvasagar]]
+that demonstrates how the similar Orgmode clone [[https://github.com/dhruvasagar/vim-dotoo][vim-dotoo]] works.
+
+[[https://www.youtube.com/watch?v=nsv33iOnH34]]
+
+** API docs
+:PROPERTIES:
+:CUSTOM_ID: api-docs
+:END:
+Nvim-orgmode exoses a Lua API that can be used to interact with the orgmode. To view it, check [[file:../docs/orgmode-api.txt][orgmode-api.txt]]
+or do =:h OrgApi= in Neovim.

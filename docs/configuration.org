@@ -1,0 +1,2831 @@
+#+OPTIONS: H:9
+* Configuration
+
+This page contains information about all configuration that can be provided to the plugin.
+
+- [[#global-settings][Global settings]]
+- [[#agenda-settings][Agenda settings]]
+- [[#calendar-settings][Calendar settings]]
+- [[#tags-settings][Tags settings]]
+- [[#mappings][Mappings]]
+- [[#features][Features]]
+- [[#user-interface][User interface]]
+
+** Global settings
+:PROPERTIES:
+:CUSTOM_ID: global-settings
+:END:
+*** =org_agenda_files=
+:PROPERTIES:
+:CUSTOM_ID: org_agenda_files
+:END:
+- Type: =string | string[]=
+- Default: =''=
+Single or multiple paths from where the org files are being read.
+# TODO: Add link to custom agenda commands
+
+Examples:
+- =~/org/*=
+- ={'~/Dropbox/org/**/*', '~/orgfiles/*'}=
+*** =org_default_notes_file=
+:PROPERTIES:
+:CUSTOM_ID: org_default_notes_file
+:END:
+- Type: =string=
+- Default: =''=
+Path to a file that will be used as a default target file when refiling.
+
+Example: =~/orgfiles/refile.org=
+*** =org_todo_keywords=
+:PROPERTIES:
+:CUSTOM_ID: org_todo_keywords
+:END:
+- Type: =string[]=
+- Default: ={'TODO', '|', 'DONE'}=
+List of unfinished (/"TODO"/) and finished (/"DONE"/) keywords. \\
+=|= is used as a separator between the two groups.
+
+if =|= is omitted, only the last entry in array is considered a /"DONE"/ state.
+
+To use [[https://orgmode.org/manual/Fast-access-to-TODO-states.html#Fast-access-to-TODO-states][Fast access to TODO States]], set a fast access key to at least one of the entries.
+
+For entries where a fast access key is not set, the first character of the keyword is used as the fast access key.
+
+Examples (Without fast access):
+- ={'TODO', 'NEXT', '|', 'DONE'}=
+- ={'TODO', 'WAITING', '|', 'DONE', 'DELEGATED'}=
+
+Examples (With fast access):
+- ={'TODO(t)', 'NEXT(n)', '|', 'DONE(d)'}=
+- ={'TODO(t)', 'NEXT', '|', 'DONE'}= - Same as above. Fast key is derived from first char.
+
+NOTE: Make sure fast access keys do not overlap. If that happens, first entry in list gets it.
+*** =org_todo_repeat_to_state=
+:PROPERTIES:
+:CUSTOM_ID: org_todo_repeat_to_state
+:END:
+- Type: =string | nil=
+- Default: =nil=
+Path to a file that will be used as a default target file when refiling.
+
+Set an entry from [[#org_todo_keywords][org_todo_keywords]] to use as the "starting" state for repeatable todos.
+
+If provided value does not exist in [[#org_todo_keywords][org_todo_keywords]], first entry from that list is used.
+*** =win_split_mode=
+:PROPERTIES:
+:CUSTOM_ID: win_split_mode
+:END:
+- Type: =string | function | [string, number]=
+- Default: ='horizontal'=
+This option determines how to open agenda and capture window.
+
+Available =string= values:
+- =horizontal= - Always split horizontally
+- =vertical= - Always split vertically
+- =auto= - Determine between horizontal and vertical split depending on the current window size
+- =float= - Open in float window that has width of 70% of the screen centered
+- ={'float', 0.9}= - Open in float window and provide custom scale (in this case it's 90% of screen size), must be value between =0= and =1=
+
+If none of the options above suit your needs, there are 2 other ways to customize this:
+1. Provide a custom command string (see =:help <mods>=). Few examples:
+   - Always open in tab: =tabnew=
+   - Always open vertically: =vsplit=
+   - Always open horizontally with specific height of 20 lines: =20split=
+2. Custom function
+   #+begin_src lua
+   win_split_mode = function(name)
+     -- Make sure it's not a scratch buffer by passing false as 2nd argument
+     local bufnr = vim.api.nvim_create_buf(false, false)
+     --- Setting buffer name is required
+     vim.api.nvim_buf_set_name(bufnr, name)
+
+     local fill = 0.8
+     local width = math.floor((vim.o.columns * fill))
+     local height = math.floor((vim.o.lines * fill))
+     local row = math.floor((((vim.o.lines - height) / 2) - 1))
+     local col = math.floor(((vim.o.columns - width) / 2))
+
+     vim.api.nvim_open_win(bufnr, true, {
+       relative = "editor",
+       width = width,
+       height = height,
+       row = row,
+       col = col,
+       style = "minimal",
+       border = "rounded"
+     })
+   end
+   #+end_src
+
+*** =win_border=
+:PROPERTIES:
+:CUSTOM_ID: win_border
+:END:
+- Type: =string | string[]=
+- Default: ='single'=
+Border style for floating windows.
+Available options:
+- =none= - No border (default)
+- =single= - A single line box
+- =double= - A double line box
+- =rounded= - Like "single", but with rounded corners ("╭" etc.)
+- =solid= - Adds padding by a single whitespace cell
+- =shadow= - A drop shadow effect by blending with the background
+- ={'╔', '═' ,'╗', '║', '╝', '═', '╚', '║' }= - Specify border characters in a clock-wise fashion
+- ={'/', '-', '\\', '|' }= - If less than eight chars the chars will start repeating
+
+See =:help nvim_open_win()=
+
+Applies to:
+- always - calendar pop-up, help pop-up, notification pop-up
+- =win_split_mode= is set to =float= - agenda window , capture window
+
+*** =org_startup_folded=
+:PROPERTIES:
+:CUSTOM_ID: org_startup_folded
+:END:
+- Type: =string=
+- Default: ='overview'=
+How many headings and other foldable items should be shown when an org file is opened.
+Available options:
+- =overview= - Only show top level elements (default)
+- =content= - Only show the first two levels
+- =showeverything= - Show all elements
+- =inherit= - Use the fold level set in Neovim's global =foldlevel= option
+
+*** =org_todo_keyword_faces=
+:PROPERTIES:
+:CUSTOM_ID: org_todo_keyword_faces
+:END:
+- Type: =table<string, string>=
+- Default: ={}=
+Custom colors for todo keywords.
+Available options:
+
+- foreground - =:foreground hex/colorname=. Examples: =:foreground #FF0000=, =:foreground blue=
+- background - =:background hex/colorname=. Examples: =:background #FF0000=, =:background blue=
+- weight - =:weight bold=
+- underline - =:underline on=
+- italic - =:slant italic=
+
+Full configuration example with additional todo keywords and their colors:
+
+#+begin_src lua
+require('orgmode').setup({
+  org_todo_keywords = {'TODO', 'WAITING', '|', 'DONE', 'DELEGATED'},
+  org_todo_keyword_faces = {
+    WAITING = ':foreground blue :weight bold',
+    DELEGATED = ':background #FFFFFF :slant italic :underline on',
+    TODO = ':background #000000 :foreground red', -- overrides builtin color for `TODO` keyword
+  }
+})
+#+end_src
+***
+*** =org_archive_location=
+:PROPERTIES:
+:CUSTOM_ID: org_archive_location
+:END:
+- Type: =string=
+- Default: ='%s_archive::'=
+Destination file for archiving. =%s= indicates the current file. =::= is used as a separator for archiving to headline
+which is currently not supported.
+This means that if you do a refile from a file =~/my-orgs/todos.org=, your task
+will be archived in =~/my-orgs/todos.org_archive=.
+
+Example value: ='~/my-orgs/default-archive-file.org::'=
+
+📝 NOTE: This value can be overridden per file basis with a org special keyword =#+ARCHIVE=.
+
+
+
+*** =org_hide_leading_stars=
+:PROPERTIES:
+:CUSTOM_ID: org_hide_leading_stars
+:END:
+- Type: =boolean=
+- Default: =false=
+Hide leading stars for headings.
+Example:
+
+Disabled (default):
+#+begin_src org
+* TODO First item
+** TODO Second Item
+*** TODO Third item
+#+end_src
+
+Enabled:
+#+begin_src org
+* TODO First item
+ * TODO Second Item
+  * TODO Third item
+#+end_src
+
+📝 NOTE: Stars are hidden by applying highlight group that masks them with color that's same as background color.
+If this highlight group does not suit you, you can apply different highlight group to it:
+#+begin_src lua
+vim.cmd[[autocmd ColorScheme * hi link @org.leading.stars MyCustomHlGroup]]
+#+end_src
+
+To set specific characters instead of using asterisk, check [[file:./plugins.org::#org-bulletsnvim][org-bullets.nvim]] plugin plugin.
+
+
+*** =org_hide_emphasis_markers=
+:PROPERTIES:
+:CUSTOM_ID: org_hide_emphasis_markers
+:END:
+- Type: =boolean=
+- Default: =false=
+Conceal bold/italic/underline/code/verbatim markers.
+
+Ensure your =:h conceallevel= is set properly in order for this to function.
+
+*** =org_ellipsis=
+:PROPERTIES:
+:CUSTOM_ID: org_ellipsis
+:END:
+- Type: =string=
+- Default: ='...'=
+Marker used to indicate a folded headline.
+
+*** =org_log_done=
+:PROPERTIES:
+:CUSTOM_ID: org_log_done
+:END:
+- Type: =string|false=
+- Default: =time=
+Possible values:
+- =time= - adds =CLOSED= date when marking headline as done
+- =note= - adds =CLOSED= date as above, and prompts for closing note via capture window.
+  Confirm note with =org_note_finalize= (Default =<C-c>=), or ignore providing note via =org_note_kill= (Default =<Leader>ok=)
+- =false= - Disable any logging
+
+*** =org_log_repeat=
+:PROPERTIES:
+:CUSTOM_ID: org_log_repeat
+:END:
+- Type: =string|false=
+- Default: =time=
+Possible values:
+
+- =time= - adds =LAST_REPEAT= date to properties when marking headline with a repeater date as done
+- =note= - adds =LAST_REPEAT= date as above, and prompts for closing note via capture window.
+  Confirm note with =org_note_finalize= (Default =<C-c>=), or ignore providing note via =org_note_kill= (Default =<Leader>ok=)
+- =false= - Disable logging the =LAST_REPEAT= date
+
+*** =org_log_into_drawer=
+:PROPERTIES:
+:CUSTOM_ID: org_log_into_drawer
+:END:
+- Type: =string|nil=
+- Default: =nil=
+Log TODO state changes into a drawer with the given name. The recommended value is =LOGBOOK=.
+If =nil=, log into the section body.
+
+*** =org_highlight_latex_and_related=
+:PROPERTIES:
+:CUSTOM_ID: org_highlight_latex_and_related
+:END:
+- Type: =string|nil=
+- Default: =nil=
+
+📝 NOTE: This option is experimental
+
+Possible values:
+- =native= - Includes whole latex syntax file into the org syntax. It can potentially cause some highlighting issues and slowness.
+- =entities= - Highlight latex only in these situations (see [[https://orgmode.org/manual/LaTeX-fragments.html#LaTeX-fragments][Orgmode latex fragments]]):
+  - between ~\begin~ and ~\end~ delimiters
+  - between ~$~ and ~$~ delimiters - example: ~$a^2=b$~
+  - between ~$$~ and ~$$~ delimiters - example: ~$$ a=+\sqrt{2} $$~
+  - between ~\[~ and ~\]~ delimiters - example: ~\[ a=-\sqrt{2} \]~
+  - between ~\(~ and ~\)~ delimiters - example: ~\( b=2 \)~
+
+*** =org_startup_indented=
+:PROPERTIES:
+:CUSTOM_ID: org_startup_indented
+:END:
+- Type: =boolean=
+- Default: =false=
+Possible values:
+- =true= - Uses /Virtual/ indents to align content visually. The indents are only visual, they are not saved to the file.
+- =false= - Do not add any /Virtual/ indentation.
+
+You can toggle Virtual indents on the fly by setting =vim.b.org_indent_mode= to either =true= or =false= when in a org
+buffer. For example, if virtual indents were enabled in the current buffer then you could disable them immediately by
+setting ~vim.b.org_indent_mode = false~.
+
+*** =org_adapt_indentation=
+:PROPERTIES:
+:CUSTOM_ID: org_adapt_indentation
+:END:
+- Type: =boolean=
+- Default: =true=
+Possible values:
+- =true= - Use /hard/ indents for content under headlines. Files will save with indents relative to headlines.
+- =false= - Do not add any /hard/ indents. Files will save without indentation relative to headlines.
+
+*** =org_indent_mode_turns_off_org_adapt_indentation=
+:PROPERTIES:
+:CUSTOM_ID: org_indent_mode_turns_off_org_adapt_indentation
+:END:
+- Type: =boolean=
+- Defaul: =true=
+Possible values:
+- =true= - Disable [[#org_adapt_indentation][org_adapt_indentation]] by default when [[#org_startup_indented][org_startup_indented]] is enabled.
+- =false= - Do not disable [[#org_adapt_indentation][org_adapt_indentation]] by default when [[#org_startup_indented][org_startup_indented]] is enabled.
+
+*** =org_indent_mode_turns_on_hiding_stars=
+:PROPERTIES:
+:CUSTOM_ID: org_indent_mode_turns_on_hiding_stars
+:END:
+- Type: =boolean=
+- Defaul: =true=
+Possible values:
+- =true= - Enable [[#org_hide_leading_stars][org_hide_leading_stars]] by default when [[#org_startup_indented][org_indent_mode]] is enabled for buffer (~vim.b.org_indent_mode = true~).
+- =false= - Do not modify the value in [[#org_hide_leading_stars][org_hide_leading_stars]] by default when [[#org_startup_indented][org_indent_mode]] is enabled for buffer (~vim.b.org_indent_mode = true~).
+
+*** =org_src_window_setup=
+:PROPERTIES:
+:CUSTOM_ID: org_src_window_setup
+:END:
+- Type: =string | function=
+- Default: ='top 16new'=
+If the value is a string, it will be run directly as input to
+=:h vim.cmd=, otherwise if the value is a function it will be called.
+Both values have the responsibility of opening a buffer (within a
+window) to show the special edit buffer. The content of the buffer will
+be set automatically, so this option only needs to handle opening an
+empty buffer.
+
+*** =org_edit_src_content_indentation=
+:PROPERTIES:
+:CUSTOM_ID: org_edit_src_content_indentation
+:END:
+- Type: =number=
+- Default: =0=
+The indent value for content within =SRC= block types beyond the
+existing indent of the block itself. Only applied when exiting from an
+=org_edit_special= action on a =SRC= block.
+
+*** =org_custom_exports=
+:PROPERTIES:
+:CUSTOM_ID: org_custom_exports
+:END:
+- Type: =table=
+- Default: ={}=
+Add custom export options to the export prompt.
+Structure:
+
+#+begin_example
+[shortcut:string] = {
+  [label:string] = 'Label in export prompt',
+  [action:function] = function(exporter)
+    return exporter(command:table, target:string, on_success?:function, on_error?:function)
+  end
+}
+#+end_example
+
+Breakdown:
+
+- =shortcut= - single char that will be used to select the export. Make
+  sure it doesn't conflict with existing options
+- =action= - function that provides =exporter= function for generating
+  the exports
+- =exporter= - function that calls the command provided via =job=
+  - =command= - table (array like) that contains command how to generate
+    the export
+  - =target= - target file name that will be generated
+  - =on_success?= - function that is triggered when export succeeds
+    (command exit status is 0). Provides table parameter with command
+    output. Optional, defaults to prompt to open target file.
+  - =on_error?= - function that is triggered when export fails (command
+    exit status is not 0). Provides table parameter with command output.
+    Optional, defaults to printing output as error.
+
+For example, lets add option to export to =rtf= format via =pandoc=:
+
+#+begin_src lua
+require('orgmode').setup({
+  org_custom_exports = {
+    f = {
+      label = 'Export to RTF format',
+      action = function(exporter)
+        local current_file = vim.api.nvim_buf_get_name(0)
+        local target = vim.fn.fnamemodify(current_file, ':p:r')..'.rtf'
+        local command = {'pandoc', current_file, '-o', target}
+        local on_success = function(output)
+          print('Success!')
+          vim.api.nvim_echo({{ table.concat(output, '\n') }}, true, {})
+        end
+        local on_error = function(err)
+          print('Error!')
+          vim.api.nvim_echo({{ table.concat(err, '\n'), 'ErrorMsg' }}, true, {})
+        end
+        return exporter(command , target, on_success, on_error)
+      end
+    }
+  }
+})
+#+end_src
+
+*** =org_time_stamp_rounding_minutes=
+:PROPERTIES:
+:CUSTOM_ID: org_time_stamp_rounding_minutes
+:END:
+- Type: =number=
+- Default: =5=
+Number of minutes to increase/decrease when using
+[[#org_timestamp_up][org_timestamp_up]]/[[#org_timestamp_down][org_timestamp_down]]
+
+*** =org_blank_before_new_entry=
+:PROPERTIES:
+:CUSTOM_ID: org_blank_before_new_entry
+:END:
+- Type: =table<string, boolean>=
+- Default: ~{ heading = true, plain_list_item = false }~
+Determine if blank line should be prepended when:
+
+- Adding heading via =org_meta_return= and =org_insert_*= mappings
+- Adding a list item via =org_meta_return=
+
+*** =org_id_uuid_program=
+:PROPERTIES:
+:CUSTOM_ID: org_id_uuid_program
+:END:
+- Type: =string=
+- Default: =uuidgen=
+External program used to generate uuid's for id module
+
+*** =org_id_ts_format=
+:PROPERTIES:
+:CUSTOM_ID: org_id_ts_format
+:END:
+- Type: =string=
+- Default: =%Y%m%d%H%M%S=
+Format of the id generated when [[#org_id_method][org_id_method]] is set
+to =ts=.
+
+*** =org_id_method=
+:PROPERTIES:
+:CUSTOM_ID: org_id_method
+:END:
+- Type: ='uuid' | 'ts' | 'org'=
+- Default: =uuid=
+What method to use to generate ids via org id module.
+
+- =uuid= - Use [[#org_id_uuid_program][org_id_uuid_program]] to generate
+  the id
+- =ts= - Generate id from current timestamp using format [[#org_id_ts_format][org_id_ts_format]]
+- =org= - Generate a random 12 digit number and prepend [[#org_id_prefix][org_id_prefix]]
+
+*** =org_id_prefix=
+:PROPERTIES:
+:CUSTOM_ID: org_id_prefix
+:END:
+- Type: =string | nil=
+- Default: =nil=
+Prefix added to the generated id when [[#org_id_method][org_id_method]] is set to =org=.
+
+*** =org_id_link_to_org_use_id=
+:PROPERTIES:
+:CUSTOM_ID: org_id_link_to_org_use_id
+:END:
+- Type: =boolean=
+- Default: =false=
+If =true=, generate ID with the Org ID module and append it to the
+headline as property. More info on [[#org_store_link][org_store_link]]
+
+*** =org_babel_default_header_args=
+:PROPERTIES:
+:CUSTOM_ID: org_babel_default_header_args
+:END:
+- Type: =table<string, string>=
+- Default: ~{ [':tangle'] = 'no', [':noweb']  = no }~
+Default header args for extracting source code. See [[#extract-source-code-tangle][Extract source code (tangle)]] for more details.
+
+*** =calendar_week_start_day=
+:PROPERTIES:
+:CUSTOM_ID: calendar_week_start_day
+:END:
+- Type: =number=
+- Default: =1=
+Available options:
+
+- =0= - start week on Sunday
+- =1= - start week on Monday
+
+Determine on which day the week will start in calendar modal (ex:[[#org_change_date][changing the date under cursor]])
+
+*** =emacs_config=
+:PROPERTIES:
+:CUSTOM_ID: emacs_config
+:END:
+- Type: =table=
+- Default: ={ executable_path = 'emacs', config_path=nil }=
+Set configuration for your emacs. This is useful for having the emacs
+export properly pickup your emacs config and plugins. If =config_path=
+is not provided, exporter tries to find a configuration file from these
+locations:
+
+1. =~/.config/emacs/init.el=
+2. =~/.emacs.d/init.el=
+3. =~/.emacs.el=
+
+If there is no configuration found, it will still process the export.
+
+If it finds a configuration and export attempt fails because of the
+configuration issue, there will be a prompt to attempt the same export
+without the configuration file.
+
+** Agenda settings
+:PROPERTIES:
+:CUSTOM_ID: agenda-settings
+:END:
+*** =org_deadline_warning_days=
+:PROPERTIES:
+:CUSTOM_ID: org_deadline_warning_days
+:END:
+- Type: =number=
+- Default: =14=
+Number of days during which deadline becomes visible in today's
+agenda.
+Example: If Today is =2021-06-10=, and we have these tasks:
+- =Task 1= has a deadline date =2021-06-15=
+- =Task 2= has a deadline date =2021-06-30=
+
+- =Task 1= is visible in today's agenda
+- =Task 2= is not visible in today's agenda until =2021-06-16=
+
+*** =org_agenda_span=
+:PROPERTIES:
+:CUSTOM_ID: org_agenda_span
+:END:
+- Type: =string|number=
+- Default: ='week'=
+/possible string values/: =day=, =week=, =month=, =year=
+Default time span shown when agenda is opened.
+
+*** =org_agenda_start_on_weekday=
+:PROPERTIES:
+:CUSTOM_ID: org_agenda_start_on_weekday
+:END:
+- Type: =number=
+- Default: =1=
+From which day in week (ISO weekday, 1 is Monday) to show the agenda.
+Applies only to =week= and number span.
+If set to =false=, starts from today
+
+*** =org_agenda_start_day=
+:PROPERTIES:
+:CUSTOM_ID: org_agenda_start_day
+:END:
+- Type: =string=
+- Default: =nil=
+/example values/: =+2d=, =-1d=
+offset to apply to the agenda start date.
+Example:
+If =org_agenda_start_on_weekday= is =false=, and =org_agenda_start_day=
+is =-2d=,
+agenda will always show current week from today - 2 days
+
+*** =org_agenda_custom_commands=
+:PROPERTIES:
+:CUSTOM_ID: org_agenda_custom_commands
+:END:
+- Type: =table<string, OrgAgendaCustomCommand>=
+- Default: ={}=
+
+Define custom agenda views that are available through the
+(org_agenda)[#org_agenda] mapping. It is possible to combine multiple
+agenda types into single view. An example:
+
+#+begin_src lua
+require('orgmode').setup({
+  org_agenda_files = {'~/org/**/*'},
+  org_agenda_custom_commands = {
+    -- "c" is the shortcut that will be used in the prompt
+    c = {
+      description = 'Combined view', -- Description shown in the prompt for the shortcut
+      types = {
+        {
+          type = 'tags_todo', -- Type can be agenda | tags | tags_todo
+          match = '+PRIORITY="A"', --Same as providing a "Match:" for tags view <leader>oa + m, See: https://orgmode.org/manual/Matching-tags-and-properties.html
+          org_agenda_overriding_header = 'High priority todos',
+          org_agenda_todo_ignore_deadlines = 'far', -- Ignore all deadlines that are too far in future (over org_deadline_warning_days). Possible values: all | near | far | past | future
+        },
+        {
+          type = 'agenda',
+          org_agenda_overriding_header = 'My daily agenda',
+          org_agenda_span = 'day' -- can be any value as org_agenda_span
+        },
+        {
+          type = 'tags',
+          match = 'WORK', --Same as providing a "Match:" for tags view <leader>oa + m, See: https://orgmode.org/manual/Matching-tags-and-properties.html
+          org_agenda_overriding_header = 'My work todos',
+          org_agenda_todo_ignore_scheduled = 'all', -- Ignore all headlines that are scheduled. Possible values: past | future | all
+        },
+        {
+          type = 'agenda',
+          org_agenda_overriding_header = 'Whole week overview',
+          org_agenda_span = 'week', -- 'week' is default, so it's not necessary here, just an example
+          org_agenda_start_on_weekday = 1 -- Start on Monday
+          org_agenda_remove_tags = true -- Do not show tags only for this view
+        },
+      }
+    },
+    p = {
+      description = 'Personal agenda',
+      types = {
+        {
+          type = 'tags_todo',
+          org_agenda_overriding_header = 'My personal todos',
+          org_agenda_category_filter_preset = 'todos', -- Show only headlines from `todos` category. Same value providad as when pressing `/` in the Agenda view
+          org_agenda_sorting_strategy = {'todo-state-up', 'priority-down'} -- See all options available on org_agenda_sorting_strategy
+        },
+        {
+          type = 'agenda',
+          org_agenda_overriding_header = 'Personal projects agenda',
+          org_agenda_files = {'~/my-projects/**/*'}, -- Can define files outside of the default org_agenda_files
+        },
+        {
+          type = 'tags',
+          org_agenda_overriding_header = 'Personal projects notes',
+          org_agenda_files = {'~/my-projects/**/*'},
+          org_agenda_tag_filter_preset = 'NOTES-REFACTOR' -- Show only headlines with NOTES tag that does not have a REFACTOR tag. Same value providad as when pressing `/` in the Agenda view
+        },
+      }
+    }
+  }
+})
+#+end_src
+
+*** =org_agenda_sorting_strategy=
+:PROPERTIES:
+:CUSTOM_ID: org_agenda_sorting_strategy
+:END:
+- Type:
+=table<'agenda' | 'todo' | 'tags', OrgAgendaSortingStrategy[]><=
+- Default:
+~{ agenda = {'time-up', 'priority-down', 'category-keep'}, todo = {'priority-down', 'category-keep'}, tags = {'priority-down', 'category-keep'}}~
+List of sorting strategies to apply to a given view. Available
+strategies:
+
+- =time-up= - Sort entries by time of day. Applicable only in =agenda=
+  view
+- =time-down= - Opposite of =time-up=
+- =priority-down= - Sort by priority, from highest to lowest
+- =priority-up= - Sort by priority, from lowest to highest
+- =tag-up= - Sort by sorted tags string, ascending
+- =tag-down= - Sort by sorted tags string, descending
+- =todo-state-up= - Sort by todo keyword by position (example: 'TODO,
+  PROGRESS, DONE' has a sort value of 1, 2 and 3), ascending
+- =todo-state-down= - Sort by todo keyword, descending
+- =clocked-up= - Show clocked in headlines first
+- =clocked-down= - Show clocked in headines last
+- =category-up= - Sort by category name, ascending
+- =category-down= - Sort by category name, descending
+- =category-keep= - Keep default category sorting, as it appears in
+  org-agenda-files
+
+*** =org_agenda_block_separator=
+:PROPERTIES:
+:CUSTOM_ID: org_agenda_block_separator
+:END:
+- Type: =string=
+- Default: =-=
+Separator used to separate multiple agenda views generated by
+org_agenda_custom_commands.
+To change the highlight, override =@org.agenda.separator= hl group.
+
+*** =org_agenda_remove_tags=
+:PROPERTIES:
+:CUSTOM_ID: org_agenda_remove_tags
+:END:
+- Type: =boolean=
+- Default: =false=
+Should tags be hidden from all agenda views.
+
+*** =org_capture_templates=
+:PROPERTIES:
+:CUSTOM_ID: org_capture_templates
+:END:
+- Type: =table<string, table>=
+- Default:
+={ t = { description = 'Task', template = '* TODO %?\n  %u' } }=
+Templates for capture/refile prompt.
+Variables:
+
+- =%f=: Prints the file of the buffer capture was called from
+- =%F=: Like =%f= but inserts the full path
+- =%n=: Inserts the current =$USER=
+- =%t=: Prints current date (Example: =<2021-06-10 Thu>=)
+- =%^t=: Prompt for current date (Example: =<2021-06-10 Thu>=)
+- =%^{Name}t=: Prompt for current date for given =Name= (visible in
+  calendar title) (Example: =<2021-06-10 Thu>=)
+- =%T=: Prints current date and time (Example: =<2021-06-10 Thu 12:30>=)
+- =%^T=: Prompt for current date and time (Example:
+  =<2021-06-10 Thu 12:30>=)
+- =%^{Name}T=: Prompt for current date and time for given =Name=
+  (visible in calendar title) (Example: =<2021-06-10 Thu 12:30>=)
+- =%u=: Prints current date in inactive format (Example:
+  =[2021-06-10 Thu]=)
+- =%^u=: Prompt for current date in inactive format (Example:
+  =[2021-06-10 Thu]=)
+- =%^{Name}u=: Prompt for current date in inactive format for given
+  =Name= (visible in calendar title) (Example: =[2021-06-10 Thu]=)
+- =%U=: Prints current date and time in inactive format (Example:
+  =[2021-06-10 Thu 12:30]=)
+- =%^U=: Prompt for current date and time in inactive format (Example:
+  =[2021-06-10 Thu 12:30]=)
+- =%^{Name}U=: Prompt for current date and time in inactive format for
+  given =Name= (visible in calendar title) (Example:
+  =[2021-06-10 Thu 12:30]=)
+- =%a=: File and line number from where capture was initiated (Example:
+  =[[file:/home/user/projects/myfile.txt +2]]=)
+- =%<FORMAT>=: Insert current date/time formatted according to
+  [[https://www.lua.org/pil/22.1.html][lua date]] format (Example:
+  =%<%Y-%m-%d %A>= produces '2021-07-02 Friday')
+- =%x=: Insert content of the clipboard via the "+" register (see :help
+  clipboard)
+- =%?=: Default cursor position when template is opened
+- =%^{PROMPT|DEFAULT|COMPLETION...}=: Prompt for input, if completion is
+  provided an :h inputlist will be used
+- =%(EXP)=: Runs the given lua code and inserts the result. NOTE: this
+  will internally pass the content to the lua =load()= function. So the
+  body inside =%()= should be the body of a function that returns a
+  string.
+
+Templates have the following fields:
+
+- =description= (=string=) --- description of the template that is
+  displayed in the template selection menu
+- =template= (=string|string[]=) --- body of the template that will be
+  used when creating capture
+- =target= (=string?=) --- name of the file to which the capture content
+  will be added. If the target is not specified, the content will be
+  added to the [[#org_default_notes_file][org_default_notes_file]] file
+- =headline= (=string?=) --- title of the headline after which the
+  capture content will be added. If no headline is specified, the
+  content will be appended to the end of the file
+- =datetree (boolean | { time_prompt?: boolean, reversed?: boolean, tree_type: 'day' | 'month' | 'week' | 'custom' })=
+  Create a [[https://orgmode.org/manual/Template-elements.hml#FOOT84][date tree]] with current day in the target file and put the capture content there.
+  - =true= - Create ascending datetree (newer dates go to end) with the current date
+  - ~{ time_prompt = true, reversed?: boolean }~ open up a date picker to select a date before opening up a capture buffer
+  - ={ reversed: true }= add entries in reversed order (newer dates comes first)
+  - ={ tree_type: 'day' | 'month' | 'week' | 'custom' }= Which date tree type to use:
+    - =day= Create year -> month -> day structure, and refile headlines in the day headline
+    - =month= Create year -> month structure, and refile headlines in the month headline
+    - =week= Create year -> week number structure, and refile headlines in the week number headline
+    - =custom= (*Advanced*) - Create custom datetree with own date formats. This requires adding =tree= property in the =datetree= opts.
+      Example with year and month tree:
+      #+begin_src lua
+      datetree = {
+        tree_type = 'custom',
+        tree = {
+          {
+            format = '%Y',
+            pattern = '^(%d%d%d%d)$',
+            order = { 1 }
+          },
+          {
+            format = '%Y-%m',
+            pattern = '^(%d%d%d%d)%-(%d%d)$',
+            order = { 1, 2 }
+          }
+        }
+      }
+      #+end_src
+      Check [[https://github.com/nvim-orgmode/orgmode/blob/master/lua/orgmode/capture/template/datetree.lua#L144][this line in source]] for builtin tree types and detailed explanation how to add own tree.
+- =regexp (string)= Search for specific line in the target file via regex (same as searching through file from command),
+  and append the content after that line. For example, if you have line =appendhere= in target file,
+  put this option to =^appendhere$= to add headlines after that line
+- =properties= (=table?=):
+  - =empty_lines= (=table|number?=) if the value is a number, then empty lines are added before and after the content.
+    If the value is a table, then the following fields are expected:
+    - =before= (=integer?=) add empty lines to the beginning of the content
+    - =after= (=integer?=) add empty lines to the end of the content
+
+Example:
+
+#+begin_src lua
+{ T = {
+  description = 'Todo',
+  template = '* TODO %?\n %u',
+  target = '~/org/todo.org'
+} }
+#+end_src
+
+Journal example:
+
+#+begin_src lua
+{
+  j = {
+    description = 'Journal',
+    template = '\n*** %<%Y-%m-%d> %<%A>\n**** %U\n\n%?',
+    target = '~/sync/org/journal.org'
+  },
+}
+#+end_src
+
+Journal example with dynamic target, i.e. a separate file per month:
+
+#+begin_src lua
+{
+  J = {
+    description = 'Journal',
+    template = '\n*** %<%Y-%m-%d> %<%A>\n**** %U\n\n%?',
+    target = '~/sync/org/journal/%<%Y-%m>.org'
+  },
+}
+#+end_src
+
+Nested key example:
+
+#+begin_src lua
+{
+  e =  'Event',
+  er = {
+    description = 'recurring',
+    template = '** %?\n %T',
+    target = '~/org/calendar.org',
+    headline = 'recurring'
+  },
+  eo = {
+    description = 'one-time',
+    template = '** %?\n %T',
+    target = '~/org/calendar.org',
+    headline = 'one-time'
+  }
+}
+-- or
+{
+  e = {
+    description = 'Event',
+    subtemplates = {
+      r = {
+        description = 'recurring',
+        template = '** %?\n %T',
+        target = '~/org/calendar.org',
+        headline = 'recurring'
+      },
+      o = {
+        description = 'one-time',
+        template = '** %?\n %T',
+        target = '~/org/calendar.org',
+        headline = 'one-time'
+      },
+    },
+  },
+}
+#+end_src
+
+Lua expression example:
+
+#+begin_src lua
+{
+  j = {
+    description = 'Journal',
+    template = '* %(return vim.fn.getreg "w")',
+    -- get the content of register "w"
+    target = '~/sync/org/journal.org'
+  },
+}
+#+end_src
+
+*** =org_agenda_min_height=
+:PROPERTIES:
+:CUSTOM_ID: org_agenda_min_height
+:END:
+- Type: =number=
+- Default: =16=
+Indicates the minimum height that the agenda window will occupy.
+
+*** =org_priority_highest=
+:PROPERTIES:
+:CUSTOM_ID: org_priority_highest
+:END:
+- Type: =string|number=
+- Default: =A=
+Indicates highest priority for a task in the agenda view.
+Example:
+#+begin_src org
+ * TODO [#A] This task has the highest priority
+#+end_src
+
+*** =org_priority_default=
+:PROPERTIES:
+:CUSTOM_ID: org_priority_default
+:END:
+- Type: =string|number=
+- Default: =B=
+Indicates normal priority for a task in the agenda view.
+This is the default priority for all tasks if other priority is not applied
+Example:
+#+begin_src org
+* TODO [#B] This task has the normal priority
+* TODO And this one has the same priority
+#+end_src
+
+*** =org_priority_lowest=
+:PROPERTIES:
+:CUSTOM_ID: org_priority_lowest
+:END:
+- Type: =string|number=
+- Default: =C=
+Indicates lowest priority for a task in the agenda view.
+Example:
+#+begin_src org
+* TODO [#B] This task has the normal priority
+* TODO And this one has the same priority as above one
+* TODO [#C] I'm lowest in priority
+#+end_src
+
+*** =org_agenda_skip_scheduled_if_done=
+:PROPERTIES:
+:CUSTOM_ID: org_agenda_skip_scheduled_if_done
+:END:
+- Type: =boolean=
+- Default: =false=
+
+Hide scheduled entries from agenda if they are in a "DONE" state.
+
+*** =org_agenda_skip_deadline_if_done=
+:PROPERTIES:
+:CUSTOM_ID: org_agenda_skip_deadline_if_done
+:END:
+- Type: =boolean=
+- Default: =false=
+
+Hide deadline entries from agenda if they are in a "DONE" state.
+
+*** =org_agenda_text_search_extra_files=
+:PROPERTIES:
+:CUSTOM_ID: org_agenda_text_search_extra_files
+:END:
+- Type: =('agenda-archives')[]=
+- Default: ={}=
+Additional files to search from agenda search prompt.
+Currently it accepts only a single value: =agenda-archives=.
+Example value: ={'agenda-archives'}=
+
+** Calendar settings
+:PROPERTIES:
+:CUSTOM_ID: calendar-settings
+:END:
+Adjust behavior of the calendar modal (ex: [[#org_change_date][changing the date under cursor]]).
+
+*** =calendar.round_min_with_hours=
+:PROPERTIES:
+:CUSTOM_ID: calendarround_min_with_hours
+:END:
+- Type: =boolean=
+- Default: =true=
+Should minutes be rounded, when the hour is changed. It behaves more
+fluently when changing the hours, especially when scheduling from the
+current time (which can be something odd). If set to false, the minutes
+are unchanged while changing the hours.
+
+*** =calendar.min_big_step=
+:PROPERTIES:
+:CUSTOM_ID: calendarmin_big_step
+:END:
+- Type: =number=
+- Default: =15=
+The step size for changing the minutes while the cursor is on the first
+digit.
+
+*** =calendar.min_small_step=
+:PROPERTIES:
+:CUSTOM_ID: calendarmin_small_step
+:END:
+- Type: =number=
+- Default: same as [[#org_time_stamp_rounding_minutes][org_time_stamp_rounding_minutes]]
+The step size for changing the minutes while the cursor is on the second
+digit.
+
+** Tags settings
+:PROPERTIES:
+:CUSTOM_ID: tags-settings
+:END:
+*** =org_tags_column=
+:PROPERTIES:
+:CUSTOM_ID: org_tags_column
+:END:
+- Type: =number=
+- Default: =80=
+The column to which tags should be indented in a headline. If this
+number is positive, it specifies the column. If it is negative, it means
+that the tags should be flushright to that column. For example, -80
+works well for a normal 80 character screen. When 0, place tags directly
+after headline text, with only one space in between.
+
+*** =org_use_tag_inheritance=
+:PROPERTIES:
+:CUSTOM_ID: org_use_tag_inheritance
+:END:
+- Type: =boolean=
+- Default: =true=
+  When set to =true=, tags are
+inherited from parents for purposes of searching. Which means that if
+you have this structure:
+
+#+begin_src org
+* TODO My top task :MYTAG:
+** TODO MY child task :CHILDTAG:
+*** TODO Nested task
+#+end_src
+
+First headline has tag =MYTAG= Second headline has tags =MYTAG= and
+=CHILDTAG= Third headline has tags =MYTAG= and =CHILDTAG=.
+When disabled, headlines have only tags that are directly applied to them.
+
+*** =org_tags_exclude_from_inheritance=
+:PROPERTIES:
+:CUSTOM_ID: org_tags_exclude_from_inheritance
+:END:
+- Type: =string[]=
+- Default: ={}=
+List of tags that are excluded from inheritance.
+Using the example above, setting this variable to ={'MYTAG'}=, second
+and third headline would have only =CHILDTAG=, where =MYTAG= would not
+be inherited.
+
+** Mappings
+:PROPERTIES:
+:CUSTOM_ID: mappings
+:END:
+Mappings try to mimic some of the Orgmode mappings, but since Orgmode
+uses =CTRL + c= as a modifier most of the time, we have to take a
+different route. When possible, instead of =CTRL + C=, prefix
+=<Leader>o= is used. This is customizable via the =mappings.prefix=
+setting.
+
+To disable all mappings, just pass ~disable_all = true~ to mappings
+settings:
+
+#+begin_src lua
+require('orgmode').setup({
+  org_agenda_files = {'~/Dropbox/org/*', '~/my-orgs/**/*'},
+  org_default_notes_file = '~/Dropbox/org/refile.org',
+  mappings = {
+    disable_all = true
+  }
+})
+#+end_src
+
+To disable a specific mapping, set it's value to =false=:
+
+#+begin_src lua
+require('orgmode').setup({
+  org_agenda_files = {'~/Dropbox/org/*', '~/my-orgs/**/*'},
+  org_default_notes_file = '~/Dropbox/org/refile.org',
+  mappings = {
+    global = {
+      org_agenda = false,
+      org_capture = 'gC'
+    },
+  }
+})
+#+end_src
+
+To change a key mapping's =lhs= but not its =desc=, provide a string or
+a table:
+
+#+begin_src lua
+require('orgmode').setup({
+  org_agenda_files = {'~/Dropbox/org/*', '~/my-orgs/**/*'},
+  org_default_notes_file = '~/Dropbox/org/refile.org',
+  mappings = {
+    global = {
+      -- providing a string
+      org_agenda = '<D-a>',
+      -- providing a table
+      org_capture = { '<D-c>' }
+    },
+  }
+})
+#+end_src
+
+To change a key mapping's =lhs= and its =desc=, provide a table:
+
+#+begin_src lua
+require('orgmode').setup({
+  org_agenda_files = {'~/Dropbox/org/*', '~/my-orgs/**/*'},
+  org_default_notes_file = '~/Dropbox/org/refile.org',
+  mappings = {
+    global = {
+       org_capture = { '<D-c>', desc = 'Open Capture Prompt' }
+    }
+  }
+})
+#+end_src
+
+(The =desc= value is displayed in tools like WhichKey.)
+
+You can find the configuration file that holds all default mappings
+[[../lua/orgmode/config/mappings/init.lua][here]]
+
+*NOTE*: All mappings are normal mode mappings (=nnoremap=) with
+exception of =org_return=
+
+*** Use Enter in insert mode to add list items/checkboxes/todos
+:PROPERTIES:
+:CUSTOM_ID: use-enter-in-insert-mode
+:END:
+By default, adding list items/checkboxes/todos is done with
+[[#org_meta_return][org_meta_return]] which is a normal mode mapping. If
+you want to have an insert mode mapping there are two options:
+
+1. If your terminal supports it, map a key like =Shift + Enter= to the
+   meta return mapping (Recommended):
+
+#+begin_src lua
+vim.api.nvim_create_autocmd('FileType', {
+  pattern = 'org',
+  callback = function()
+    vim.keymap.set('i', '<S-CR>', '<cmd>lua require("orgmode").action("org_mappings.meta_return")<CR>', {
+      silent = true,
+      buffer = true,
+    })
+  end,
+})
+#+end_src
+
+2. If you want to use only enter, enable =org_return_uses_meta_return= option:
+
+#+begin_src lua
+require('orgmode').setup({
+  org_agenda_files = {'~/Dropbox/org/*', '~/my-orgs/**/*'},
+  org_default_notes_file = '~/Dropbox/org/refile.org',
+  mappings = {
+    org_return_uses_meta_return = true
+  }
+})
+#+end_src
+
+This will trigger =org_meta_return= if there is no content after the
+cursor position (either at the end of line or has just trailing spaces).
+Just note that this option always tries to use =meta_return=, which also
+adds new headlines automatically if you are on the headline line, which
+can give undesired results.
+
+*** Global mappings
+:PROPERTIES:
+:CUSTOM_ID: global-mappings
+:END:
+There are only 2 global mappings that are accessible from everywhere.
+
+**** =org_agenda=
+:PROPERTIES:
+:CUSTOM_ID: org_agenda
+:END:
+- Mapped to: =<Leader>oa=
+Opens up agenda prompt.
+
+**** =org_capture=
+:PROPERTIES:
+:CUSTOM_ID: org_capture
+:END:
+- Mapped to: =<Leader>oc=
+Opens up capture prompt.
+
+These live under =mappings.global= and can be overridden like this:
+
+#+begin_src lua
+require('orgmode').setup({
+  org_agenda_files = {'~/Dropbox/org/*', '~/my-orgs/**/*'},
+  org_default_notes_file = '~/Dropbox/org/refile.org',
+  mappings = {
+    global = {
+      org_agenda = 'gA',
+      org_capture = 'gC'
+    }
+  }
+})
+#+end_src
+
+If you want to use multiple mappings for same thing, pass array of
+mappings:
+
+#+begin_src lua
+require('orgmode').setup({
+  org_agenda_files = {'~/Dropbox/org/*', '~/my-orgs/**/*'},
+  org_default_notes_file = '~/Dropbox/org/refile.org',
+  mappings = {
+    global = {
+      org_agenda = {'gA', '<Leader>oa'},
+      org_capture = {'gC', '<Leader>oc'}
+    }
+  }
+})
+#+end_src
+
+*** Agenda mappings
+:PROPERTIES:
+:CUSTOM_ID: agenda-mappings
+:END:
+Mappings used in agenda view window.
+
+**** =org_agenda_later=
+:PROPERTIES:
+:CUSTOM_ID: org_agenda_later
+:END:
+- Mapped to: =f=
+Go to next agenda span.
+
+**** =org_agenda_earlier=
+:PROPERTIES:
+:CUSTOM_ID: org_agenda_earlier
+:END:
+- Mapped to: =b=
+Go to previous agenda span.
+
+**** =org_agenda_goto_today=
+:PROPERTIES:
+:CUSTOM_ID: org_agenda_goto_today
+:END:
+- Mapped to: =.=
+Go to span with for today.
+
+**** =org_agenda_day_view=
+:PROPERTIES:
+:CUSTOM_ID: org_agenda_day_view
+:END:
+- Mapped to: =vd=
+Show agenda day view.
+
+**** =org_agenda_week_view=
+:PROPERTIES:
+:CUSTOM_ID: org_agenda_week_view
+:END:
+- Mapped to: =vw=
+Show agenda week view.
+
+**** =org_agenda_month_view=
+:PROPERTIES:
+:CUSTOM_ID: org_agenda_month_view
+:END:
+- Mapped to: =vm=
+Show agenda month view.
+
+**** =org_agenda_year_view=
+:PROPERTIES:
+:CUSTOM_ID: org_agenda_year_view
+:END:
+- Mapped to: =vy=
+Show agenda year view.
+
+**** =org_agenda_quit=
+:PROPERTIES:
+:CUSTOM_ID: org_agenda_quit
+:END:
+- Mapped to: =q=
+Close agenda.
+
+**** =org_agenda_switch_to=
+:PROPERTIES:
+:CUSTOM_ID: org_agenda_switch_to
+:END:
+- Mapped to: =<CR>=
+Open selected agenda item in the same buffer.
+
+**** =org_agenda_goto=
+:PROPERTIES:
+:CUSTOM_ID: org_agenda_goto
+:END:
+- Mapped to: ={'<TAB>'}=
+Open selected agenda item in split window.
+
+**** =org_agenda_goto_date=
+:PROPERTIES:
+:CUSTOM_ID: org_agenda_goto_date
+:END:
+- Mapped to: =J=
+Open calendar that allows selecting date to jump to.
+
+**** =org_agenda_redo=
+:PROPERTIES:
+:CUSTOM_ID: org_agenda_redo
+:END:
+- Mapped to: =r=
+Reload all org files and refresh current agenda view.
+
+**** =org_agenda_todo=
+:PROPERTIES:
+:CUSTOM_ID: org_agenda_todo
+:END:
+- Mapped to: =t=
+Change =TODO= state of an item in both agenda and original Org file.
+
+**** =org_agenda_clock_in=
+:PROPERTIES:
+:CUSTOM_ID: org_agenda_clock_in
+:END:
+- Mapped to: =I=
+Clock in item under cursor.
+See [[#clocking][Clocking]] for more details.
+
+**** =org_agenda_clock_out=
+:PROPERTIES:
+:CUSTOM_ID: org_agenda_clock_out
+:END:
+- Mapped to: =O=
+Clock out currently active clock item.
+See [[#clocking][Clocking]] for more details.
+
+**** =org_agenda_clock_cancel=
+:PROPERTIES:
+:CUSTOM_ID: org_agenda_clock_cancel
+:END:
+- Mapped to: =X=
+Cancel clock on currently active clock item.
+See [[#clocking][Clocking]] for more details.
+
+**** =org_agenda_clock_goto=
+:PROPERTIES:
+:CUSTOM_ID: org_agenda_clock_goto
+:END:
+- Mapped to: =<Leader>oxj=
+Jump to currently clocked in headline.
+See [[#clocking][Clocking]] for more details.
+
+**** =org_agenda_clockreport_mode=
+:PROPERTIES:
+:CUSTOM_ID: org_agenda_clockreport_mode
+:END:
+- Mapped to: =R=
+Show clock report at the end of the agenda for current agenda time
+range
+See [[#clocking][Clocking]] for more details.
+
+**** =org_agenda_priority=
+:PROPERTIES:
+:CUSTOM_ID: org_agenda_priority
+:END:
+- Mapped to: =<Leader>o,=
+Choose the priority of a headline item.
+
+**** =org_agenda_priority_up=
+:PROPERTIES:
+:CUSTOM_ID: org_agenda_priority_up
+:END:
+- Mapped to: =+=
+Increase the priority of a headline item.
+
+**** =org_agenda_priority_down=
+:PROPERTIES:
+:CUSTOM_ID: org_agenda_priority_down
+:END:
+- Mapped to: =-=
+Decrease the priority of a headline item.
+
+**** =org_agenda_archive=
+:PROPERTIES:
+:CUSTOM_ID: org_agenda_archive
+:END:
+- Mapped to: =<Leader>o$=
+Archive headline item to archive location.
+
+**** =org_agenda_toggle_archive_tag=
+:PROPERTIES:
+:CUSTOM_ID: org_agenda_toggle_archive_tag
+:END:
+- Mapped to: =<Leader>oA=
+Toggle "ARCHIVE" tag of a headline item.
+
+**** =org_agenda_set_tags=
+:PROPERTIES:
+:CUSTOM_ID: org_agenda_set_tags
+:END:
+- Mapped to: =<Leader>ot=
+Set tags on current headline item.
+
+**** =org_agenda_deadline=
+:PROPERTIES:
+:CUSTOM_ID: org_agenda_deadline
+:END:
+- Mapped to: =<Leader>oid=
+Insert/Update deadline date on current headline item.
+
+**** =org_agenda_schedule=
+:PROPERTIES:
+:CUSTOM_ID: org_agenda_schedule
+:END:
+- Mapped to: =<Leader>ois=
+Insert/Update scheduled date on current headline item.
+
+**** =org_agenda_refile=
+:PROPERTIES:
+:CUSTOM_ID: org_agenda_refile
+:END:
+- Mapped to: =<Leader>or=
+Refile current headline to a destination org-file. Same as [[#org_refile][org_refile]] but from agenda view.
+
+**** =org_agenda_add_note=
+:PROPERTIES:
+:CUSTOM_ID: org_agenda_add_note
+:END:
+- Mapped to: =<Leader>ona=
+Add note to the current headline
+
+**** =org_agenda_filter=
+:PROPERTIES:
+:CUSTOM_ID: org_agenda_filter
+:END:
+- Mapped to: =/=
+Open prompt that allows filtering current agenda view by category, tags
+and title (vim regex, see =:help vim.regex()=)
+Example:
+
+Having =todos.org= file with headlines that have tags =mytag= or
+=myothertag=, and some of them have =check= in content, this search:
+=todos+mytag/check/=
+Returns all headlines that are in =todos.org= file, that have =mytag=
+tag, and have =check= in headline title. Note that regex is case
+sensitive by default.
+Use vim regex flag =\c= to make it case insensitive. See
+=:help vim.regex()= and =:help /magic=.
+Pressing =<TAB>= in filter prompt autocompletes categories and tags.
+
+**** =org_agenda_show_help=
+:PROPERTIES:
+:CUSTOM_ID: org_agenda_show_help
+:END:
+- Mapped to: =g?=
+Show help popup with mappings
+
+These mappings live under =mappings.agenda=, and can be changed like
+this:
+
+#+begin_src lua
+require('orgmode').setup({
+  org_agenda_files = {'~/Dropbox/org/*', '~/my-orgs/**/*'},
+  org_default_notes_file = '~/Dropbox/org/refile.org',
+  mappings = {
+    agenda = {
+      org_agenda_later = '>',
+      org_agenda_earlier = '<',
+      org_agenda_goto_today = {'.', 'T'}
+    }
+  }
+})
+#+end_src
+
+*** Capture mappings
+:PROPERTIES:
+:CUSTOM_ID: capture-mappings
+:END:
+Mappings used in capture window.
+
+**** =org_capture_finalize=
+:PROPERTIES:
+:CUSTOM_ID: org_capture_finalize
+:END:
+- Mapped to: =<C-c>=
+Save current capture content to =org_default_notes_file= and close capture window.
+
+**** =org_capture_refile=
+:PROPERTIES:
+:CUSTOM_ID: org_capture_refile
+:END:
+- Mapped to: =<Leader>or=
+Refile capture content to specific destination.
+
+**** =org_capture_kill=
+:PROPERTIES:
+:CUSTOM_ID: org_capture_kill
+:END:
+- Mapped to: =<Leader>ok=
+Close capture window without saving anything.
+
+**** =org_capture_show_help=
+:PROPERTIES:
+:CUSTOM_ID: org_capture_show_help
+:END:
+- Mapped to: =g?=
+Show help popup with mappings.
+
+These mappings live under =mappings.capture=, and can be changed like
+this:
+
+#+begin_src lua
+require('orgmode').setup({
+  org_agenda_files = {'~/Dropbox/org/*', '~/my-orgs/**/*'},
+  org_default_notes_file = '~/Dropbox/org/refile.org',
+  mappings = {
+    capture = {
+      org_capture_finalize = '<Leader>w',
+      org_capture_refile = 'R',
+      org_capture_kill = 'Q'
+    }
+  }
+})
+#+end_src
+
+*** Note mappings
+:PROPERTIES:
+:CUSTOM_ID: note-mappings
+:END:
+Mappings used in closing note window.
+
+**** =org_note_finalize=
+:PROPERTIES:
+:CUSTOM_ID: org_note_finalize
+:END:
+- Mapped to: =<C-c>=
+Save note window content as closing note for a headline. Ignores first comment (if exists).
+
+**** =org_note_kill=
+:PROPERTIES:
+:CUSTOM_ID: org_note_kill
+:END:
+- Mapped to: =<Leader>ok=
+Close note window without saving anything.
+
+#+begin_src lua
+require('orgmode').setup({
+  org_agenda_files = {'~/Dropbox/org/*', '~/my-orgs/**/*'},
+  org_default_notes_file = '~/Dropbox/org/refile.org',
+  mappings = {
+    note = {
+      org_note_finalize = '<Leader>w',
+      org_note_kill = 'Q'
+    }
+  }
+})
+#+end_src
+
+*** Org mappings
+:PROPERTIES:
+:CUSTOM_ID: org-mappings
+:END:
+Mappings for =org= files.
+
+**** =org_refile=
+:PROPERTIES:
+:CUSTOM_ID: org_refile
+:END:
+- Mapped to: =<Leader>or=
+Refile current headline, including its subtree, to a destination
+org-file. This file must be one of the files specified for the
+=org_agenda_files= setting. A target headline in the destination file
+can be specified with =destination.org/<headline>=. If there are
+multiple headlines with the same name in the destination file, the first
+occurence will be used.
+
+**** =org_timestamp_up=
+:PROPERTIES:
+:CUSTOM_ID: org_timestamp_up
+:END:
+- Mapped to: =<C-a>=
+Increase date part under under cursor. Accepts count: (Example:
+=5<C-a>=)
+=|= in examples references cursor position.
+
+- Year - Example date: =<202|1-10-01 Fri 10:30>= becomes
+  =<202|2-10-01 Sat 10:30>=
+- Month - Example date: =<2021-1|0-01 Fri 10:30>= becomes
+  =<2022-1|1-01 Mon 10:30>=
+- Day - Example date: =<2021-10-0|1 Fri 10:30>= becomes
+  =<2022-10-0|2 Sat 10:30>=. Same thing happens when cursor is on day
+  name.
+- Hour - Example date: =<2021-10-01 Fri 1|0:30>= becomes
+  =<2022-10-02 Sat 1|1:30>=.
+- Minute - Example date: =<2021-10-01 Fri 10:3|0>= becomes
+  =<2022-10-02 Sat 11:3|5>=. See [[#org_time_stamp_rounding_minutes][org_time_stamp_rounding_minutes]] for steps configuration.
+- Repeater/Delay range (=h->d->w->m->y=) - Example date:
+  =<2021-10-01 Fri 10:30 +1|w>= becomes =<2021-10-01 Fri 10:30 +1|m>=
+- Active/Inactive state - (=<= to =[= and vice versa) - Example date:
+  =|<2021-10-01 Fri 10:30>= becomes =|[2021-10-01 Fri 10:30]=
+
+**** =org_timestamp_down=
+:PROPERTIES:
+:CUSTOM_ID: org_timestamp_down
+:END:
+- Mapped to: =<C-x>=
+Decrease date part under under cursor.
+Same as [[#org_timestamp_up][org_timestamp_up]], just opposite
+direction.
+
+**** =org_timestamp_up_day=
+:PROPERTIES:
+:CUSTOM_ID: org_timestamp_up_day
+:END:
+- Mapped to: =<S-UP>=
+Increase date under cursor by 1 or "count" day(s) (Example count:
+=5<S-UP>=).
+
+**** =org_timestamp_down_day=
+:PROPERTIES:
+:CUSTOM_ID: org_timestamp_down_day
+:END:
+- Mapped to: =<S-DOWN>=
+Decrease date under cursor by 1 or "count" day(s) (Example count:
+=5<S-UP>=).
+
+**** =org_change_date=
+:PROPERTIES:
+:CUSTOM_ID: org_change_date
+:END:
+- Mapped to: =cid=
+Change date under cursor. Opens calendar to select new date.
+
+**** =org_toggle_timestamp_type=
+:PROPERTIES:
+:CUSTOM_ID: org_toggle_timestamp_type
+:END:
+- Mapped to: =<Leader>od!=
+Switches the timestamp under the cursor between inactive and active.
+
+**** =org_priority=
+:PROPERTIES:
+:CUSTOM_ID: org_priority
+:END:
+- Mapped to: =<Leader>o,=
+Choose the priority of a headline item.
+
+**** =org_priority_up=
+:PROPERTIES:
+:CUSTOM_ID: org_priority_up
+:END:
+- Mapped to: =ciR=
+Increase the priority of a headline item.
+
+**** =org_priority_down=
+:PROPERTIES:
+:CUSTOM_ID: org_priority_down
+:END:
+- Mapped to: =cir=
+Decrease the priority of a headline item.
+
+**** =org_todo=
+:PROPERTIES:
+:CUSTOM_ID: org_todo
+:END:
+- Mapped to: =cit=
+Cycle todo keyword forward on current headline or open fast access to
+TODO states prompt (see [[#org_todo_keywords][org_todo_keywords]]) if it's enabled.
+
+**** =org_todo_prev=
+:PROPERTIES:
+:CUSTOM_ID: org_todo_prev
+:END:
+- Mapped to: =ciT=
+Cycle todo keyword backward on current headline.
+
+**** =org_toggle_checkbox=
+:PROPERTIES:
+:CUSTOM_ID: org_toggle_checkbox
+:END:
+- Mapped to: =<C-Space>=
+Toggle current line checkbox state.
+
+**** =org_toggle_heading=
+:PROPERTIES:
+:CUSTOM_ID: org_toggle_heading
+:END:
+- Mapped to: =<Leader>o*=
+Toggle current line to headline and vice versa. Checkboxes will turn into TODO headlines.
+
+**** =org_insert_link=
+:PROPERTIES:
+:CUSTOM_ID: org_insert_link
+:END:
+- Mapped to: =<Leader>oli=
+Insert a hyperlink at cursor position. When the cursor is on a hyperlink, edit that hyperlink. If there
+are any links stored with [[#org_store_link][org_store_link]], pressing =<TAB>= to autocomplete the input will show
+list of all stored links to select. Links generated with ID are properly expanded to valid links after
+selection.
+
+**** =org_store_link=
+:PROPERTIES:
+:CUSTOM_ID: org_store_link
+:END:
+- Mapped to: =<Leader>ols=
+Generate a link to the closest headline. If [[#org_id_link_to_org_use_id][org_id_link_to_org_use_id]] is
+=true=, it appends the =ID= property to the headline, and generates link with that id to be inserted via
+[[#org_insert_link][org_insert_link]]. When [[#org_id_link_to_org_use_id][org_id_link_to_org_use_id]] is =false=,
+it generates the standard file::*headline link (example: =file:/path/to/my/todos.org::*My headline=)
+
+**** =org_open_at_point=
+:PROPERTIES:
+:CUSTOM_ID: org_open_at_point
+:END:
+- Mapped to: =<Leader>oo=
+Open hyperlink or date under cursor. When date is under the cursor, open
+the agenda for that day.
+
+**** =org_edit_special=
+:PROPERTIES:
+:CUSTOM_ID: org_edit_special
+:END:
+- Mapped to: =<Leader>o'=
+Open a source block for editing in a temporary buffer of the associated =filetype=.
+This is useful for editing text with language servers attached, etc.
+When the buffer is closed, the text of the underlying source block in
+the original Org file is updated.
+📝 NOTE: if the Org file that the source block comes from is edited before the
+special edit buffer is closed, the edits will not be applied. The special edit
+buffer contents can be recovered from :messages output
+
+**** =org_add_note=
+:PROPERTIES:
+:CUSTOM_ID: org_add_note
+:END:
+- Mapped to: =<Leader>ona=
+Add note to the current headline.
+
+**** =org_cycle=
+:PROPERTIES:
+:CUSTOM_ID: org_cycle
+:END:
+- Mapped to: =<TAB>=
+Cycle folding for current headline.
+
+**** =org_global_cycle=
+:PROPERTIES:
+:CUSTOM_ID: org_global_cycle
+:END:
+- Mapped to: =<S-TAB>=
+Cycle global folding.
+
+**** =org_archive_subtree=
+:PROPERTIES:
+:CUSTOM_ID: org_archive_subtree
+:END:
+- Mapped to: =<Leader>o$=
+Archive current headline to archive location.
+
+**** =org_set_tags_command=
+:PROPERTIES:
+:CUSTOM_ID: org_set_tags_command
+:END:
+- Mapped to: =<Leader>ot=
+Set tags on current headline.
+
+**** =org_toggle_archive_tag=
+:PROPERTIES:
+:CUSTOM_ID: org_toggle_archive_tag
+:END:
+- Mapped to: =<Leader>oA=
+Toggle "ARCHIVE" tag on current headline.
+
+**** =org_do_promote=
+:PROPERTIES:
+:CUSTOM_ID: org_do_promote
+:END:
+- Mapped to: =<<=
+Promote headline.
+
+**** =org_do_demote=
+:PROPERTIES:
+:CUSTOM_ID: org_do_demote
+:END:
+- Mapped to: =>>=
+Demote headline.
+
+**** =org_promote_subtree=
+:PROPERTIES:
+:CUSTOM_ID: org_promote_subtree
+:END:
+- Mapped to: =<s=
+Promote subtree.
+
+**** =org_demote_subtree=
+:PROPERTIES:
+:CUSTOM_ID: org_demote_subtree
+:END:
+- Mapped to: =>s=
+Demote subtree.
+
+**** =org_meta_return=
+:PROPERTIES:
+:CUSTOM_ID: org_meta_return
+:END:
+- Mapped to: =<Leader><CR>=
+Add headline, list item or checkbox below, depending on current line.
+
+**** =org_insert_heading_respect_content=
+:PROPERTIES:
+:CUSTOM_ID: org_insert_heading_respect_content
+:END:
+- Mapped to: =<Leader>oih=
+Add headline after current headline + it's content with same level.
+
+**** =org_insert_todo_heading=
+:PROPERTIES:
+:CUSTOM_ID: org_insert_todo_heading
+:END:
+- Mapped to: =<Leader>oiT=
+Add TODO headline right after the current headline.
+
+**** =org_insert_todo_heading_respect_content=
+:PROPERTIES:
+:CUSTOM_ID: org_insert_todo_heading_respect_content
+:END:
+- Mapped to: =<Leader>oit=
+Add TODO headliner after current headline + it's content.
+
+**** =org_move_subtree_up=
+:PROPERTIES:
+:CUSTOM_ID: org_move_subtree_up
+:END:
+- Mapped to: =<Leader>oK=
+Move current headline + it's content up by one headline.
+
+**** =org_move_subtree_down=
+:PROPERTIES:
+:CUSTOM_ID: org_move_subtree_down
+:END:
+- Mapped to: =<Leader>oJ=
+Move current headline + it's content down by one headline.
+
+**** =org_export=
+:PROPERTIES:
+:CUSTOM_ID: org_export
+:END:
+- Mapped to: =<Leader>oe=
+Open export options.
+*NOTE*: Exports are handled via =emacs= and =pandoc=. This means that =emacs= and/or =pandoc= must be in
+=$PATH=. see [[#org_custom_exports][org_custom_exports]] if you want to add your own export options.
+
+**** =org_next_visible_heading=
+:PROPERTIES:
+:CUSTOM_ID: org_next_visible_heading
+:END:
+- Mapped to: =}=
+Go to next heading (any level).
+
+**** =org_previous_visible_heading=
+:PROPERTIES:
+:CUSTOM_ID: org_previous_visible_heading
+:END:
+- Mapped to: ={=
+Go to previous heading (any level).
+
+**** =org_forward_heading_same_level=
+:PROPERTIES:
+:CUSTOM_ID: org_forward_heading_same_level
+:END:
+- Mapped to: =]]=
+Go to next heading on same level. Doesn't go outside of parent.
+
+**** =org_backward_heading_same_level=
+:PROPERTIES:
+:CUSTOM_ID: org_backward_heading_same_level
+:END:
+- Mapped to: =[[=
+Go to previous heading on same level. Doesn't go outside of parent.
+
+**** =outline_up_heading=
+:PROPERTIES:
+:CUSTOM_ID: outline_up_heading
+:END:
+- Mapped to: =g{=
+Go to parent heading.
+
+**** =org_deadline=
+:PROPERTIES:
+:CUSTOM_ID: org_deadline
+:END:
+- Mapped to: =<Leader>oid=
+Insert/Update deadline date.
+
+**** =org_schedule=
+:PROPERTIES:
+:CUSTOM_ID: org_schedule
+:END:
+- Mapped to: =<Leader>ois=
+Insert/Update scheduled date.
+
+**** =org_time_stamp=
+:PROPERTIES:
+:CUSTOM_ID: org_time_stamp
+:END:
+- Mapped to: =<Leader>oi.=
+Insert/Update date under cursor.
+
+**** =org_time_stamp_inactive=
+:PROPERTIES:
+:CUSTOM_ID: org_time_stamp_inactive
+:END:
+- Mapped to: =<Leader>oi!=
+Insert/Update inactive date under cursor.
+
+**** =org_clock_in=
+:PROPERTIES:
+:CUSTOM_ID: org_clock_in
+:END:
+- Mapped to: =<Leader>oxi=
+Clock in headline under cursor.
+See [[#clocking][Clocking]] for more details.
+
+**** =org_clock_out=
+:PROPERTIES:
+:CUSTOM_ID: org_clock_out
+:END:
+- Mapped to: =<Leader>oxo=
+Clock out headline under cursor.
+See [[#clocking][Clocking]] for more details.
+
+**** =org_clock_cancel=
+:PROPERTIES:
+:CUSTOM_ID: org_clock_cancel
+:END:
+- Mapped to: =<Leader>oxq=
+Cancel currently active clock on current headline.
+See [[#clocking][Clocking]] for more details.
+
+**** =org_clock_goto=
+:PROPERTIES:
+:CUSTOM_ID: org_clock_goto
+:END:
+- Mapped to: =<Leader>oxj=
+Jump to currently clocked in headline.
+See [[#clocking][Clocking]] for more details.
+
+**** =org_set_effort=
+:PROPERTIES:
+:CUSTOM_ID: org_set_effort
+:END:
+- Mapped to: =<Leader>oxe=
+Set effort estimate property on for current headline.
+See [[#clocking][Clocking]] for more details.
+
+**** =org_babel_tangle=
+:PROPERTIES:
+:CUSTOM_ID: org_babel_tangle
+:END:
+- Mapped to: =<leader>obt=
+Tangle current file. See [[#extract-source-code-tangle][Extract source code (tangle)]] for more details.
+
+**** =org_show_help=
+:PROPERTIES:
+:CUSTOM_ID: org_show_help
+:END:
+- Mapped to: =g?=
+Show help popup with mappings
+
+These mappings live under =mappings.org=, and can be changed like this:
+
+#+begin_src lua
+require('orgmode').setup({
+  org_agenda_files = {'~/Dropbox/org/*', '~/my-orgs/**/*'},
+  org_default_notes_file = '~/Dropbox/org/refile.org',
+  mappings = {
+    org = {
+      org_timestamp_up = '+',
+      org_timestamp_down = '-'
+    }
+  }
+})
+#+end_src
+
+*** Edit Src
+:PROPERTIES:
+:CUSTOM_ID: edit-src
+:END:
+Mappings applied when editing a =SRC= block content via =org_edit_special=.
+
+**** =org_edit_src_abort=
+:PROPERTIES:
+:CUSTOM_ID: org_edit_src_abort
+:END:
+- Mapped to: =<Leader>ok=
+Abort changes made to temporary buffer created from the content of a =SRC= block, see above.
+
+**** =org_edit_src_save=
+:PROPERTIES:
+:CUSTOM_ID: org_edit_src_save
+:END:
+- Mapped to: =<Leader>ow=
+Apply changes from the special buffer to the source Org buffer.
+
+**** =org_edit_src_save_exit=
+:PROPERTIES:
+:CUSTOM_ID: org_edit_src_save_exit
+:END:
+- Mapped to: =<Leader>'=
+Apply changes from the special buffer to the source Org buffer and close the edit special window.
+
+**** =org_edit_src_show_help=
+:PROPERTIES:
+:CUSTOM_ID: org_edit_src_show_help
+:END:
+- Mapped to: =g?=
+Show help within the temporary buffer used to edit the content of a
+=SRC= block.
+
+*** Text objects
+:PROPERTIES:
+:CUSTOM_ID: text-objects
+:END:
+Operator mappings for =org= files. Example: Pressing =vir= select everything from current heading and all
+child. =inner= means that it doesn't select the stars, where =around= selects =inner= + =stars=. See
+[[https://github.com/nvim-orgmode/orgmode/issues/48#issuecomment-884528170][this issue comment]] for visual preview.
+
+📝 NOTE: Some mappings can clash with other plugin mappings, like [[https://github.com/lewis6991/gitsigns.nvim][gitsigns.nvim]] which also has =ih= operator mapping.
+
+**** =inner_heading=
+:PROPERTIES:
+:CUSTOM_ID: inner_heading
+:END:
+- Mapped to: =ih=
+Select inner heading with content.
+
+**** =around_heading=
+:PROPERTIES:
+:CUSTOM_ID: around_heading
+:END:
+- Mapped to: =ah=
+Select around heading with content.
+
+**** =inner_subtree=
+:PROPERTIES:
+:CUSTOM_ID: inner_subtree
+:END:
+- Mapped to: =ir=
+Select whole inner subtree.
+
+**** =around_subtree=
+:PROPERTIES:
+:CUSTOM_ID: around_subtree
+:END:
+- Mapped to: =ar=
+Select around whole subtree.
+
+**** =inner_heading_from_root=
+:PROPERTIES:
+:CUSTOM_ID: inner_heading_from_root
+:END:
+- Mapped to: =Oh= (big letter =o=)
+select everything from first level heading to the current heading.
+
+**** =around_heading_from_root=
+:PROPERTIES:
+:CUSTOM_ID: around_heading_from_root
+:END:
+- Mapped to: =OH= (big letter =o=)
+select around everything from first level heading to the current
+heading.
+
+**** =inner_subtree_from_root=
+:PROPERTIES:
+:CUSTOM_ID: inner_subtree_from_root
+:END:
+- Mapped to: =Or= (big letter =o=)
+select everything from first level subtree to the current subtree.
+
+**** =around_subtree_from_root=
+:PROPERTIES:
+:CUSTOM_ID: around_subtree_from_root
+:END:
+- Mapped to: =OR= (big letter =o=)
+select around everything from first level subtree to the current
+subtree.
+
+These mappings live under =mappings.text_objects=, and can be changed
+like this:
+
+#+begin_src lua
+require('orgmode').setup({
+  org_agenda_files = {'~/Dropbox/org/*', '~/my-orgs/**/*'},
+  org_default_notes_file = '~/Dropbox/org/refile.org',
+  mappings = {
+    text_objects = {
+      inner_heading = 'ic',
+    }
+  }
+})
+#+end_src
+
+*** markup text objects*
+:PROPERTIES:
+:CUSTOM_ID: markup-text-objects
+:END:
+Mappings to select inner/outer markup entries. For example, having =This is *bold*=, and if cursor is in
+middle of =*bold*=, doing =ci*= changes only inner text, and doing =ca*= changes outer text. These are
+supported: =*=, =_=, =/=, =+=, =~=, === These cannot be changed.
+
+*** Dot repeat
+:PROPERTIES:
+:CUSTOM_ID: dot-repeat
+:END:
+To make all mappings dot repeatable, install [[https://github.com/tpope/vim-repeat][vim-repeat]] plugin.
+
+** Features
+:PROPERTIES:
+:CUSTOM_ID: features
+:END:
+*** Autocompletion
+:PROPERTIES:
+:CUSTOM_ID: autocompletion
+:END:
+By default, =omnifunc= is provided in =org= files that autocompletes
+these types:
+
+- Tags
+- Todo keywords
+- Common drawer properties and values (=:PROPERTIES:=, =:CATEGORY:=, =:END:=, etc.)
+- Planning keywords (=DEADLINE=, =SCHEDULED=, =CLOSED=)
+- Orgfile special keywords (=#+TITLE=, =#+BEGIN_SRC=, =#+ARCHIVE=, etc.)
+- Hyperlinks (=* - headlines=, =# - headlines with CUSTOM_ID property=, =headlines matching title=)
+
+Autocompletion is context aware, which means that for example
+tags autocompletion will kick in only when cursor is at the end of
+headline. Example (=|= marks the cursor):
+
+#+begin_src org
+** TODO Some task :|
+#+end_src
+
+Or todo keywords only at the beginning of the headline:
+
+#+begin_src org
+*** |
+#+end_src
+
+Or hyperlinks after double square bracket:
+
+#+begin_src org
+Some content [[|
+#+end_src
+
+To use an autocompletion plugin, check [[file:./plugins.org::#completion-plugins][Completion plugins]]
+
+*** Clocking
+:PROPERTIES:
+:CUSTOM_ID: clocking
+:END:
+There is partial support for [[https://orgmode.org/manual/Clocking-Work-Time.html][Clocking work time]].
+
+Supported actions:
+
+**** Clock in
+:PROPERTIES:
+:CUSTOM_ID: clock-in
+:END:
+Org file mapping: =<leader>oxi=\\
+Agenda view mapping: =I=\\
+Start the clock by adding or updating the =:LOGBOOK:= drawer. Note that
+this clocks out any currently active clock.\\
+Also, agenda/todo/search view highlights item that is clocked in.
+
+***** Clock out
+:PROPERTIES:
+:CUSTOM_ID: clock-out
+:END:
+Org file mapping: =<leader>oxo=\\
+Agenda view mapping: =O=\\
+Clock out the entry and update the =:LOGBOOK:= drawer, and also add a
+total tracked time.\\
+Note that in agenda view pressing =O= anywhere clocks the currently
+active entry, while in org file cursor must be in the headline subtree.
+
+***** Clock cancel
+:PROPERTIES:
+:CUSTOM_ID: clock-cancel
+:END:
+Org file mapping: =<leader>oxq=\\
+Agenda view mapping: =X=\\
+Cancel the currently active clock. This just removes the entry added by
+clock in from =:LOGBOOK:= drawer.\\
+Note that in agenda view pressing =X= anywhere cancels clock on the
+currently active entry, while in org file cursor must be in the headline
+subtree.
+
+***** Clock goto
+:PROPERTIES:
+:CUSTOM_ID: clock-goto
+:END:
+Org file mapping: =<leader>oxj=
+Agenda view mapping: =<leader>oxj=
+Jump to currently clocked in headline in the current window.
+
+***** Set effort
+:PROPERTIES:
+:CUSTOM_ID: set-effort
+:END:
+- Org file mapping: =<leader>oxe=
+- Agenda view mapping: =<leader>oxe=
+Add/Update an Effort estimate property for the current headline.
+
+***** Clock report table
+:PROPERTIES:
+:CUSTOM_ID: clock-report-table
+:END:
+Agenda view mapping: =R=
+
+Show the clocking report for the current agenda time range. Headlines from table can be jumped to via =<TAB>/<CR>= (underlined).
+Note that this is visible only in Agenda view, since it's the only view that have a time range. Todo/Search views are not supported.
+
+***** Automatic updates of totals
+:PROPERTIES:
+:CUSTOM_ID: automatic-updates-of-totals
+:END:
+When updating closed logbook dates that have a total at the right
+(~example: ==> 1:05~), updating any of the dates via [[#org_timestamp_up][org_timestamp_up]]/[[#org_timestamp_down][org_timestamp_down]] automatically recalculates this value.
+
+***** Recalculating totals
+:PROPERTIES:
+:CUSTOM_ID: recalculating-totals
+:END:
+Org file mapping: =gq= (Note: This is Vim's built in mapping that calls =formatexpr=, see =:help gq=)
+
+If you changed any of the dates in closed logbook entry, and want to
+recalculate the total, select the line and press =gq=, or if you want to
+do it in normal mode, just do =gqgq=.
+
+***** Statusline function
+:PROPERTIES:
+:CUSTOM_ID: statusline-function
+:END:
+Function: =v:lua.orgmode.statusline()=
+
+Show the currently clocked in headline (if any), with total clocked time / effort estimate (if set).
+
+#+begin_src vim
+set statusline=%{v:lua.orgmode.statusline()}
+#+end_src
+
+*** Formatting
+:PROPERTIES:
+:CUSTOM_ID: formatting
+:END:
+Formatting is done via =gq= mapping, which uses =formatexpr= under the
+hood (see =:help formatexpr= for more info). For example, to re-format
+whole document, you can do =gggqG=. =gg= goes to first line in current
+file, =gq= starts the format motion, and =G= goes to last line in file
+to make it format the whole thing. To format a single line, do =gqgq=,
+or to format selection, select the lines you want to format and just do
+=gq=.
+
+Currently, these things are formatted:
+
+- Tags are aligned according to the =org_tags_column= setting
+- Tables are formatted (see [[#Tables][Tables]] for more info)
+- Clock entries total time is recalculated (see
+  [[#recalculating-totals][Recalculating totals]] in
+  [[#Clocking][Clocking]] section)
+*** Hyperlinks
+:PROPERTIES:
+:CUSTOM_ID: hyperlinks
+:END:
+The format for links is either =[[LINK]]= or =[[LINK][DESCRIPTION]]=. If
+a description is provided, the actual link is concealed in favor of the
+description.
+
+Hyperlink types supported:
+
+- URL (=http://=, =https://=)
+- File (starts with =file:=. Example: =file:/home/user/.config/nvim/init.lua=) Optionally, target can be specified:
+  - Headline - It needs to start with =*= (Example: =file:/home/user/org/file.org::*Specific Headline=)
+  - Custom id - It needs to start with =#= (Example: =file:/home/user/org/file.org::#my-custom-id=)
+  - Line number - It needs to be a number (Example: =file:/home/user/org/file.org::235=)
+- Headline title target within the same file (starts with =*=) (Example: =*Specific headline=)
+- Headline with =CUSTOM_ID= property within the same file (starts with =#=) (Example: =#my-custom-id=)
+- Fallback: If file path, opens the file, otherwise, tries to find the headline title in the current file.
+*** Notifications
+:PROPERTIES:
+:CUSTOM_ID: notifications
+:END:
+There is an experimental support for agenda tasks notifications. Related [[https://github.com/nvim-orgmode/orgmode/issues/49][issue #49]].
+
+Linux/MacOS has support for notifications via:
+
+- System notification app (notify-send/terminal-notifier) (See below for setup)
+- As part of Neovim running instance in floating window
+
+Windows support only notifications in running Neovim instance. Any help on this topic is appreciated.
+
+Default configuration (detailed description below):
+
+#+begin_src lua
+require('orgmode').setup({
+  notifications = {
+    enabled = false,
+    cron_enabled = true,
+    repeater_reminder_time = false,
+    deadline_warning_reminder_time = false,
+    reminder_time = 10,
+    deadline_reminder = true,
+    scheduled_reminder = true,
+    notifier = function(tasks)
+      local result = {}
+      for _, task in ipairs(tasks) do
+        require('orgmode.utils').concat(result, {
+          string.format('# %s (%s)', task.category, task.humanized_duration),
+          string.format('%s %s %s', string.rep('*', task.level), task.todo, task.title),
+          string.format('%s: <%s>', task.type, task.time:to_string())
+        })
+      end
+
+      if not vim.tbl_isempty(result) then
+        require('orgmode.notifications.notification_popup'):new({ content = result })
+      end
+    end,
+    cron_notifier = function(tasks)
+      for _, task in ipairs(tasks) do
+        local title = string.format('%s (%s)', task.category, task.humanized_duration)
+        local subtitle = string.format('%s %s %s', string.rep('*', task.level), task.todo, task.title)
+        local date = string.format('%s: %s', task.type, task.time:to_string())
+
+        -- Linux
+        if vim.fn.executable('notify-send') == 1 then
+          vim.loop.spawn('notify-send', { args = { string.format('%s\n%s\n%s', title, subtitle, date) }})
+        end
+
+        -- MacOS
+        if vim.fn.executable('terminal-notifier') == 1 then
+          vim.loop.spawn('terminal-notifier', { args = { '-title', title, '-subtitle', subtitle, '-message', date }})
+        end
+      end
+    end
+  },
+})
+#+end_src
+
+Options description:
+
+- =enabled=
+  - Type: =boolean=
+  - Default: =false=
+  Enable notifications inside Neovim. Not needed for cron notifications.
+- =cron_enabled=
+  - Type: =boolean=
+  - Default: =true=
+  Enable notifications via cron. Requires additional setup, see [[#cron][Cron]] section.
+- =repeater_reminder_time= (boolean|number|number[]) -
+  - Type: =boolean|number|number[]=
+  - Default: =false=
+  Number of minutes before the repeater time to send notifications.
+  For example, if now is =2021-07-15 15:30=, and there's a todo item
+  with date =<2021-07-01 15:30 +1w>=, notification will be sent if value
+  of this setting is =0=.
+  If this configuration has a value of ={1, 5, 10}=, this means that
+  notification will be sent on =2021-07-15 15:20=, =2021-07-15 15:25=
+  and =2021-07-15 15:29=.
+  =false= means disabled (default).
+- =deadline_warning_reminder_time=
+  - Type: =boolean|number|number[]=
+  - Default: =0=
+  Number of minutes before the warning time to send notifications.
+  For example, if now is =2021-07-15 12:30=, and there's a todo item
+  with date =<2021-07-15 18:30 -6h>=, notification will be sent.
+  If this configuration has a value of ={1, 5, 10}=, this means that
+  notification will be sent on =2021-07-15 12:20=, =2021-07-15 12:25=
+  and =2021-07-15 12:29=.
+  =0= (Default) means that it will send notification only on exact warning time
+- =reminder_time=
+  - Type: =boolean|number|number[]=
+  - Default: =10=
+  Number of minutes before the time to send notifications.
+  For example, if now is =2021-07-15 12:30=, and there's a todo item
+  with date =<2021-07-15 12:40>=, notification will be sent.
+  If this configuration has a value of ={1, 5, 10}=, this means that
+  notification will be sent on =2021-07-15 12:20=, =2021-07-15 12:25=
+  and =2021-07-15 12:29=.
+  This reminder also applies to both repeater and warning time if the
+  time is matching. So with the example above, both
+  =2021-07-15 12:20 +1w= and =2021-07-15 12:20 -3h= will trigger
+  notification. will trigger notification.
+  =10= (default) means that it will send notification 10 minutes before the time.
+- =deadline_reminder=
+  - Type: =boolean=
+  - Default: =true=
+  Should notifications be sent for DEADLINE dates.
+- =scheduled_reminder=
+  - Type: =boolean=
+  - Default: =true=
+  Should notifications be sent for SCHEDULED dates.
+- =notifier=
+  - Type: =fun(tasks: table[])=
+  - Default: =nil=
+  Function for sending notification inside Neovim. Accepts array of tasks (see below) and shows floating window with notifications.
+- =cron_notifier=
+  - Type: =fun(tasks: table[])=
+  - Default: =nil=
+  Function for sending notification via cron. Accepts array of tasks (see below) and triggers external program to send notifications.
+
+**Tasks*
+
+Notifier functions accepts =tasks= parameter which is an array of this
+type:
+
+#+begin_src lua
+{
+  file = string, -- (Path to org file containing this task. Example: /home/myhome/orgfiles/todos.org)
+  todo = string, -- (Todo keyword on the task. Example value: TODO)
+  title = string, -- (Content of the headline without the todo keyword and tag. Example: Submit papers)
+  level = number, -- (Headline level (number of asterisks). Example: 1)
+  category = string, -- (file name where this task lives. With example file above, this would be: todos),
+  priority = string, -- (priority on the task. Example: A)
+  tags = string[], -- (array of tags applied to the headline. Example: {'WORK', 'OFFICE'})
+  original_time = Date, -- (Date object (see [Date object](lua/orgmode/objects/date.lua) for details) containing original time of the task (with adjustments and everything))
+  time = Date, -- (Date object (see [Date object](lua/orgmode/objects/date.lua) for details) time that matched the reminder configuration (with applied adjustments))
+  reminder_type = string, -- (Type of the date that matched reminder settings. Can be one of these: repeater, warning or time),
+  minutes = number, -- (Number of minutes before the task)
+  humanized_duration = string, -- (Humanized duration until the task. Examples: in 10 min., in 5 hr, in 3 hr and 10 min.)
+  type = string, -- (Date type. Can be one of these: DEADLINE or SCHEDULED),
+  range = table -- (Start and end line of the headline subtree. Example: { start_line = 2, end_line = 5 })
+}
+#+end_src
+
+**** Cron
+:PROPERTIES:
+:CUSTOM_ID: cron
+:END:
+In order to trigger notifications via cron, job needs to be added to the crontab.
+This is currently possible only on Linux and MacOS, since I don't know
+how would this be done on Windows. Any help on this topic is appreciated.
+This works by starting the headless Neovim instance, running one off
+function inside orgmode, and quitting the Neovim.
+
+First try to see if you can run this command:
+
+#+begin_example
+nvim --headless -c 'lua require("orgmode").cron()'
+#+end_example
+
+If it exits without errors, you are ready!
+
+Here's maximum simplified *Linux* example (Tested on Manjaro/Arch/Ubuntu), but least optimized:
+
+Run this to open crontab:
+
+#+begin_example
+crontab -e
+#+end_example
+
+Then add this (Ensure path to =nvim= is correct):
+
+#+begin_src crontab
+** * * * * DISPLAY=:0 DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/1000/bus /usr/local/bin/nvim --headless -c 'lua require("orgmode").cron()'
+#+end_src
+
+More optimized version would be to create a lua file that has only
+necessary plugins loaded:
+
+#+begin_src lua
+-- ~/.config/nvim/lua/partials/org_cron.lua
+
+-- If you are using lazy.vim do this:
+local orgmode = vim.fn.stdpath('data') .. '/lazy/orgmode'
+vim.opt.runtimepath:append(orgmode)
+-- If you are using Packer or any other package manager that uses built-in package manager, do this:
+vim.cmd('packadd orgmode')
+
+-- Run the orgmode cron
+require('orgmode').cron({
+  org_agenda_files = '~/orgmode/*',
+  org_default_notes_file = '~/orgmode/notes.org',
+  notifications = {
+    reminder_time = {0, 5, 10},
+  },
+})
+#+end_src
+
+And update cron job to this:
+
+#+begin_src crontab
+** * * * * DISPLAY=:0 DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/1000/bus /usr/local/bin/nvim -u NONE --noplugin --headless -c 'lua require("partials.org_cron")'
+#+end_src
+
+This option is most optimized because it doesn't load plugins and your init.vim
+For *MacOS*, things should be very similar, but I wasn't able to test it. Any help on this is appreciated.
+*** Tables
+:PROPERTIES:
+:CUSTOM_ID: tables
+:END:
+Tables can be formatted via built in =formatexpr= (see =:help gq=)
+
+For example, having this content:
+
+#+begin_src org
+* TODO My headline
+  DEADLINE: <2022-05-22 Sun>
+
+  |Header 1|Header 2
+  |-
+  | col 1| col 2|
+#+end_src
+
+And going to line =4= and pressing =gqgq=, it will format it to this:
+
+#+begin_src org
+* TODO My headline
+  DEADLINE: <2022-05-22 Sun>
+
+  | Header 1 | Header 2 |
+  |----------+----------|
+  | col 1    | col 2    |
+#+end_src
+*** Advanced search
+:PROPERTIES:
+:CUSTOM_ID: advanced-search
+:END:
+Part of [[https://orgmode.org/worg/org-tutorials/advanced-searching.html][Advanced search]] functionality is implemented.
+
+To leverage advanced search, open up agenda prompt (default
+=<Leader>oa=), and select =m= or =M=(todos only) option.
+
+What is supported:
+
+- Operators: =|=, =&=, =+= and =-= (examples: =COMPUTER+URGENT=,
+  =COMPUTER|URGENT=, =+COMPUTER-URGENT=, =COMPUTER|WORK+EMAIL=)
+- Search by property with basic arithmetic operators (~<~, ~<=~, ~=~, ~>=~, ~>=~, =<>=) (examples: ~CATEGORY="mycategory"~, ~CUSTOM_ID=my_custom_id~, ~AGE<10~, ~ITEMS>=5~)
+- Search by todo keyword (example: =COMPUTER+URGENT/TODO|NEXT=)
+
+Few examples:
+
+- Search all with tag =COMPUTER= *or* =WORK= and =EMAIL=:
+  =COMPUTER|WORK+EMAIL=. =And= always have precedence over =or=.
+  Workaround to use first =or= is to write it like this:
+  =COMPUTER+EMAIL|WORK+EMAIL=
+- Search all with keyword =TODO=, tag =URGENT= and property =AGE= bigger
+  than 10: =URGENT+AGE>10/TODO=
+- Search all with keyword =DONE= or =DELEGATED=, tag =COMPUTER= and
+  property =AGE= not equal to 10: =COMPUTER+AGE<>10/DONE|DELEGATED=
+- Search all without keyword =DONE=, tag =URGENT= but without tag
+  =COMPUTER= and property =CATEGORY= equal to =mywork=:
+  =URGENT-COMPUTER+CATEGORY=mywork/-DONE=
+
+*** Tangle
+Extract source code (tangle)
+:PROPERTIES:
+:CUSTOM_ID: extract-source-code-tangle
+:END:
+There is basic support for extracting source code with =tangle= and =noweb=.
+(Orgmode link: [[https://orgmode.org/manual/Extracting-Source-Code.html][Extracting source code]])
+These options are supported:
+
+1. Setting =header-args= on multiple levels:
+
+   1. Configuration ([[#org_babel_default_header_args][org_babel_default_header_args]])
+   2. File level property (=#+property: header-args :tangle yes=)
+   3. Headline level property
+      #+begin_src org
+      * Headline
+        :PROPERTIES:
+        :header-args: :tangle yes
+        :END:
+      #+end_src
+
+   4. Block level argument
+      =#+begin_src lua :tangle yes=
+
+2. Tangling all blocks with these options:
+   1. =:tangle no= - Do not tangle
+   2. =:tangle yes= - Tangle to same filename as current org file, with
+      different extension (If org file is =~/org/todo.org= and block is =#+block_src lua=, tangles to =/org/todo.lua=)
+   3. =:tangle path= - Tangle to given filename. It can be absolute (=:tangle /path/to/file.ext=) or relative to current file (either =:tangle ./file.ext= or =:tangle file.ext=)
+
+3. Basic =:noweb= syntax (See [[https://orgmode.org/manual/Noweb-Reference-Syntax.html][Noweb Reference Syntax]]):
+   1. =:noweb no= - Do not expand any references
+   2. =:noweb yes= - Expand references via =#+name= directive on block.
+      See example below.
+   3. =:noweb tangle= - Same as =:noweb yes=
+
+Example: Having this file in =~/org/todos.org=
+
+Block below will pick up reference from the 2nd block name
+
+=#+begin_src lua :tangle yes :noweb yes=
+=<<headline2block>>=
+=print('Headline 1')=
+=#+end_src=
+
+=#+name: headline2block=
+=#+begin_src lua :tangle yes=
+=print('Headline 2')=
+=#+end_src=
+=#+end_src=
+
+Running [[#org_babel_tangle][org_babel_tangle]] will create file =~/org/todos.lua= with this content:
+
+=#+begin_src lua=
+=print('Headline 2')=
+=print('Headline 1')=
+==
+=print('Headline 2')=
+=#+end_src=
+
+To extract blocks to specific file, you can set file level property with
+default path, and maybe exclude 2nd block to not be repeated:
+
+=#+property: header-args :tangle ./my_tangled_file.lua=
+
+=#+begin_src lua :noweb yes=
+=<<headline2block>>=
+=print('Headline 1')=
+=#+end_src=
+
+Here we disable tangling, so only first block will give results with the noweb
+=#+name: headline2block=
+=#+begin_src lua :tangle no=
+=print('Headline 2')=
+=#+end_src=
+
+Running [[#org_babel_tangle][org_babel_tangle]] will create file =~/org/my_tangled_file.lua= with this content:
+
+=#+begin_src lua=
+=print('Headline 2')=
+=print('Headline 1')=
+=#+end_src=
+
+** User interface
+:PROPERTIES:
+:CUSTOM_ID: user-interface
+:END:
+*** Colors
+:PROPERTIES:
+:CUSTOM_ID: colors
+:END:
+Most of the highlight groups are linked to treesitter highlights where
+applicable (see =:h treesitter-highlight=).
+
+The following highlight groups are used:
+
+- =@org.headline.level1=: Headline at level 1 - linked to =Title=
+- =@org.headline.level2=: Headline at level 2 - linked to =Constant=
+- =@org.headline.level3=: Headline at level 3 - linked to =Identifier=
+- =@org.headline.level4=: Headline at level 4 - linked to =Statement=
+- =@org.headline.level5=: Headline at level 5 - linked to =PreProc=
+- =@org.headline.level6=: Headline at level 6 - linked to =Type=
+- =@org.headline.level7=: Headline at level 7 - linked to =Special=
+- =@org.headline.level8=: Headline at level 8 - linked to =String=
+- =@org.priority.highest=: Highest priority marker - linked to =@comment.error=
+- =@org.priority.high=: High priority marker - Not linked to anything, defaults to normal text
+- =@org.priority.default=: Default priority marker - Not linked to anything, defaults to normal text
+- =@org.priority.low=: Lowest priority marker - Not linked to anything, defaults to normal text
+- =@org.priority.lowest=: Lowest priority marker - Not linked to anything, defaults to normal text
+- =@org.timestamp.active=: An active timestamp - linked to =@keyword=
+- =@org.timestamp.inactive=: An inactive timestamp - linked to =@comment=
+- =@org.keyword.todo=: TODO keywords color - Parsed from =Error= (see note below)
+- =@org.keyword.done=: DONE keywords color - Parsed from =DiffAdd= (see note below)
+- =@org.bullet=: A normal bullet under a header item - linked to =@markup.list=
+- =@org.properties=: Property drawer start/end delimiters - linked to =@property=
+- =@org.drawer=: Drawer start/end delimiters - linked to =@property=
+- =@org.tag=: A tag for a headline item, shown on the righthand side like =:foo:= - linked to =@tag.attribute=
+- =@org.plan=: =SCHEDULED=, =DEADLINE=, =CLOSED=, etc. keywords - linked to =Constant=
+- =@org.comment=: A comment block - linked to =@comment=
+- =@org.latex_env=: LaTeX block - linked to =@markup.environment=
+- =@org.directive=: Blocks starting with =#+= - linked to =@comment=
+- =@org.checkbox=: The default checkbox highlight, including square brackets - linked to =@markup.list.unchecked=
+- =@org.checkbox.halfchecked=: A checkbox status (marker between =[]=) checked with =[-]= - linked to =@markup.list.unchecked=
+- =@org.checkbox.checked=: A checkbox status (marker between =[]=) checked with either =[x]= or =[X]= - linked to =@markup.list.checked=
+- =@org.bold=: *bold* text - linked to =@markup.strong=,
+- =@org.bold.delimiter=: bold text delimiter =*= - linked to =@markup.strong=,
+- =@org.italic=: /italic/ text - linked to =@markup.italic=,
+- =@org.italic.delimiter=: italic text delimiter =/= - linked to =@markup.italic=,
+- =@org.strikethrough=: ~strikethrough~ text - linked to =@markup.strikethrough=,
+- =@org.strikethrough.delimiter=: strikethrough text delimiter =+= - linked to =@markup.strikethrough=,
+- =@org.underline=: underline text - linked to =@markup.underline=,
+- =@org.underline.delimiter=: underline text delimiter =_= - linked to =@markup.underline=,
+- =@org.code=: =code= text - linked to =@markup.raw=,
+- =@org.code.delimiter=: code text delimiter =~= - linked to =@markup.raw=,
+- =@org.verbatim=: =verbatim= text - linked to =@markup.raw=,
+- =@org.verbatim.delimiter=: verbatim text delimiter === - linked to =@markup.raw=,
+- =@org.hyperlink=: =[[file:link]]= text - linked to =@markup.link.url=,
+- =@org.latex=: Inline latex - linked to =@markup.math=,
+- =@org.table.delimiter= - =|= and =-= delimiters in tables - linked to =@punctuation.special=,
+- =@org.table.heading= - Table headings - linked to =@markup.heading=,
+- =@org.edit_src= - The highlight for the source content in an /Org/ buffer while it is being edited in an edit special buffer - linked to =Visual=,
+- =@org.agenda.deadline=: A item deadline in the agenda view - Parsed from =Error= (see note below)
+- =@org.agenda.scheduled=: A scheduled item in the agenda view - Parsed from =DiffAdd= (see note below)
+- =@org.agenda.scheduled_past=: A item past its scheduled date in the agenda view - Parsed from =WarningMsg= (see note below)
+- =@org.agenda.day=: Highlight for all days in Agenda view - linked to =Statement=
+- =@org.agenda.today=: Highlight for today in Agenda view - linked to =@org.bold=
+- =@org.agenda.weekend=: Highlight for weekend days in Agenda view - linked to =@org.bold=
+
+📝 NOTE:
+Colors used for todo keywords and agenda states (deadline, schedule ok,
+schedule warning) are parsed from the current colorscheme from several
+highlight groups (Error, WarningMsg, DiffAdd, etc.).
+
+**** Overriding colors
+:PROPERTIES:
+:CUSTOM_ID: overriding-colors
+:END:
+All colors can be overridden by either setting new values or linking to
+another highlight group:
+
+#+begin_src lua
+vim.api.nvim_create_autocmd('ColorScheme', {
+  pattern = '*',
+  callback = function()
+    -- Define own colors
+    vim.api.nvim_set_hl(0, '@org.agenda.deadline', { fg = '#FFAAAA' })
+    vim.api.nvim_set_hl(0, '@org.agenda.scheduled', { fg = '#AAFFAA' })
+    -- Link to another highlight group
+    vim.api.nvim_set_hl(0, '@org.agenda.scheduled_past', { link = 'Statement' })
+  end
+})
+#+end_src
+
+For adding/changing TODO keyword colors see [[#org_todo_keyword_faces][org-todo-keyword-faces]]
+*** Menu
+:PROPERTIES:
+:CUSTOM_ID: menu
+:END:
+The menu is used when selecting further actions in =agenda=, =capture=
+and =export=. Here is an example of the menu you see when opening =agenda=:
+
+#+begin_example
+Press key for an agenda command
+-------------------------------
+a Agenda for current week or day
+t List of all TODO entries
+m Match a TAGS/PROP/TODO query
+M Like m, but only for TODO entries
+s Search for keywords
+q Quit
+#+end_example
+
+Users have the option to change the appearance of this menu. To do this,
+you need to add a handler in the UI configuration section:
+
+#+begin_src lua
+require("orgmode").setup({
+  ui = {
+    menu = {
+      handler = function(data)
+        -- your handler here, for example:
+        local options = {}
+        local options_by_label = {}
+
+        for _, item in ipairs(data.items) do
+          -- Only MenuOption has `key`
+          -- Also we don't need `Quit` option because we can close the menu with ESC
+          if item.key and item.label:lower() ~= "quit" then
+            table.insert(options, item.label)
+            options_by_label[item.label] = item
+          end
+        end
+
+        local handler = function(choice)
+          if not choice then
+            return
+          end
+
+          local option = options_by_label[choice]
+          if option.action then
+            option.action()
+          end
+        end
+
+        vim.ui.select(options, {
+          propmt = data.propmt,
+        }, handler)
+      end,
+    },
+  },
+})
+#+end_src
+
+When the menu is called, the handler receives a table =data= with the
+following fields as input:
+
+- =title= (=string=) - menu title
+- =items= (=table=) - array containing =MenuItem= (see below)
+- =prompt= (=string=) - prompt text used to prompt a keystroke
+
+Each menu item =MenuItem= is one of two types: =MenuOption= and =MenuSeparator=.
+
+=MenuOption= is a table containing the following fields:
+
+- =label= (=string=) - description of the action
+- =key= (=string=) - key that will be processed when the keys are
+  pressed in the menu
+- =action= (=function= /optional/) - handler that will be called when
+  the =key= is pressed in the menu.
+
+=MenuSeparator= is a table containing the following fields:
+
+- =icon= (=string= /optional/) - character used as separator. The
+  default character is =-=
+- =length= (=number= /optional/) - number of repetitions of the
+  separator character. The default length is 80
+
+In order for the menu to work as expected, the handler must call =action= from =MenuItem=.
+
+*** Folds
+:PROPERTIES:
+:CUSTOM_ID: folds
+:END:
+In Neovim 0.10+, folds are colored with the same highlight as when they
+are expanded. This is enabled by default to be in line with how Emacs
+work.
+
+To use the old way of highlighting folds with =Folded= highlight group,
+add this to config:
+
+#+begin_src lua
+require('orgmode').setup({
+  ui = {
+    folds = {
+      colored = false
+    }
+  }
+})
+#+end_src

@@ -12,11 +12,10 @@ jobs:
       - uses: actions/checkout@v4
         with:
           token: ${{ secrets.GH_TOKEN }}
-      - uses: actions/setup-go@v5
+      - name: Install pandoc
+        uses: pandoc/actions/setup@v1
         with:
-          go-version: '^1.17.1'
-      - name: Install md2vim
-        run: go install git.foosoft.net/alex/md2vim@latest
+          version: 3.5
       - name: Install Neovim
         uses: rhysd/action-setup-vim@v1
         id: neovim
@@ -30,7 +29,7 @@ jobs:
       - name: Generate api docs
         run: make api_docs
       - name: Generate vim docs
-        run: make docs
+        run: make vim_docs
       - name: Commit changes
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
