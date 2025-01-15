@@ -65,9 +65,9 @@ end
 function Help._generate_tree()
   local tree = {}
   local mappings = require('orgmode.config.mappings')
-  for category, category_mappings in pairs(mappings) do
+  for category, category_mappings in utils.sorted_pairs(mappings) do
     tree[category] = {}
-    for key, mapping in pairs(category_mappings) do
+    for key, mapping in utils.sorted_pairs(category_mappings) do
       if mapping.help_desc then
         table.insert(tree[category], { key = key, description = mapping.help_desc })
       end

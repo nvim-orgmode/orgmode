@@ -419,7 +419,7 @@ function OrgAgendaType:_matches_filters(headline)
     self.agenda_filter,
   }
 
-  for _, filter in pairs(valid_filters) do
+  for _, filter in ipairs(valid_filters) do
     if filter and not filter:matches(headline) then
       return false
     end

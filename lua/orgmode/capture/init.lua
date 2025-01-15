@@ -558,7 +558,7 @@ end
 ---@param templates table<string, OrgCaptureTemplate>
 function Capture:_get_subtemplates(base_key, templates)
   local subtemplates = {}
-  for key, template in pairs(templates) do
+  for key, template in utils.sorted_pairs(templates) do
     if string.len(key) > 1 and string.sub(key, 1, 1) == base_key then
       subtemplates[string.sub(key, 2, string.len(key))] = template
     end
@@ -570,7 +570,7 @@ end
 ---@param templates table<string, OrgCaptureTemplate>
 function Capture:_create_menu_items(templates)
   local menu_items = {}
-  for key, template in pairs(templates) do
+  for key, template in utils.sorted_pairs(templates) do
     if string.len(key) == 1 then
       local item = {
         key = key,

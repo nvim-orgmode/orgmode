@@ -135,7 +135,7 @@ function Agenda:_build_custom_commands()
 
     return opts_by_type[opts.type]
   end
-  for shortcut, command in pairs(config.org_agenda_custom_commands) do
+  for shortcut, command in utils.sorted_pairs(config.org_agenda_custom_commands) do
     table.insert(custom_commands, {
       label = command.description or '',
       key = shortcut,

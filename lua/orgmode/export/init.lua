@@ -133,7 +133,7 @@ function Export.prompt()
 
     local exporters_names = {}
 
-    for name, opts in pairs(exporters) do
+    for name, opts in utils.sorted_pairs(exporters) do
       table.insert(exporters_names, name)
 
       opts.extension = extension
@@ -228,7 +228,7 @@ function Export.prompt()
   }
 
   if not vim.tbl_isempty(config.org_custom_exports) then
-    for key, data in pairs(config.org_custom_exports) do
+    for key, data in utils.sorted_pairs(config.org_custom_exports) do
       table.insert(opts, {
         key = key,
         label = data.label,

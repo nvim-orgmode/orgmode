@@ -378,7 +378,7 @@ describe('with "indent" and "VirtualIndent" is enabled', function()
       { '  #+END_SRC', 5 },
     }
     local content = {}
-    for _, content_virtcol in pairs(content_virtcols) do
+    for _, content_virtcol in ipairs(content_virtcols) do
       table.insert(content, content_virtcol[1])
     end
     helpers.create_file(content)
@@ -448,7 +448,7 @@ describe('with "indent" and "VirtualIndent" is enabled', function()
       { '  #+END_SRC', 5 },
     }
     local content = {}
-    for _, content_virtcol in pairs(content_virtcols) do
+    for _, content_virtcol in ipairs(content_virtcols) do
       table.insert(content, content_virtcol[1])
     end
     helpers.create_file(content)

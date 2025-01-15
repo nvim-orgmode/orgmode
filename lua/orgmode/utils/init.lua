@@ -178,7 +178,7 @@ end
 ---@param acc any
 ---@return unknown
 function utils.reduce(tbl, callback, acc)
-  for i, v in pairs(tbl) do
+  for i, v in ipairs(tbl) do
     acc = callback(acc, v, i)
   end
   return acc
@@ -602,6 +602,16 @@ end
 function utils.is_org_file(filename)
   local ext = vim.fn.fnamemodify(filename, ':e')
   return ext == 'org' or ext == 'org_archive'
+end
+
+function utils.sorted_pairs(t)
+  local keys = vim.tbl_keys(t)
+  table.sort(keys)
+  local i = 0
+  return function()
+    i = i + 1
+    return keys[i], t[keys[i]]
+  end
 end
 
 return utils
