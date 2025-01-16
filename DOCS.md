@@ -1637,6 +1637,11 @@ Abort changes made to temporary buffer created from the content of a `SRC` block
 _mapped to_: `<Leader>ow`<br />
 Apply changes from the special buffer to the source Org buffer<br />
 
+#### **org_edit_src_save_exit**
+
+_mapped to_: `<Leader>'`<br />
+Apply changes from the special buffer to the source Org buffer and close the edit special window<br />
+
 #### **org_edit_src_show_help**
 
 _mapped to_: `g?`<br />

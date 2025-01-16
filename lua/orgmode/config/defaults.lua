@@ -188,6 +188,7 @@ local DefaultConfig = {
     edit_src = {
       org_edit_src_abort = '<prefix>k',
       org_edit_src_save = '<prefix>w',
+      org_edit_src_save_exit = [[<prefix>']],
       org_edit_src_show_help = 'g?',
     },
     text_objects = {

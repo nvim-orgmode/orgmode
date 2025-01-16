@@ -373,6 +373,15 @@ return {
       [[<Cmd>lua require('orgmode.objects.edit_special'):new():write()<CR>]],
       { opts = { desc = 'org save', help_desc = 'Apply changes from the special buffer to the source Org buffer' } }
     ),
+    org_edit_src_save_exit = m.custom(
+      [[<Cmd>lua require('orgmode.objects.edit_special'):new():write_end_exit()<CR>]],
+      {
+        opts = {
+          desc = 'org save and exit',
+          help_desc = 'Apply changes from the special buffer to the source Org buffer and exit',
+        },
+      }
+    ),
   },
   text_objects = {
     inner_heading = m.text_object('inner_heading', { help_desc = 'Select inner headline' }),

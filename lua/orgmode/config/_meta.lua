@@ -106,7 +106,7 @@
 ---@field org_toggle_checkbox? string Default: '<C-Space>'
 ---@field org_toggle_heading? string Default: '<prefix>*'
 ---@field org_open_at_point? string Default: '<prefix>o'
----@field org_edit_special? string Default: [[<prefix>']]
+---@field org_edit_special? string Default: "<prefix>'"
 ---@field org_add_note? string Default: '<prefix>na'
 ---@field org_cycle? string Default: '<TAB>'
 ---@field org_global_cycle? string Default: '<S-TAB>'
@@ -158,6 +158,7 @@
 ---@class OrgMappingsEditSrc
 ---@field org_edit_src_abort? string Default: '<prefix>k'
 ---@field org_edit_src_save? string Default: '<prefix>w'
+---@field org_edit_src_save_exit? string Default: "<prefix>'"
 ---@field org_edit_src_show_help? string Default: 'g?'
 ---
 ---@class OrgEmacsConfig

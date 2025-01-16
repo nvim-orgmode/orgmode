@@ -119,6 +119,19 @@ function EditSpecial:write()
     :write(ctx)
 end
 
+function EditSpecial:write_end_exit()
+  local ctx = self:get_context(vim.api.nvim_get_current_buf())
+
+  self.block_types[ctx.block_type]
+    :new({
+      org_bufnr = ctx.org_bufnr,
+      org_pos = ctx.org_pos,
+      file = ctx.file,
+    })
+    :write(ctx)
+  vim.cmd([[q!]])
+end
+
 function EditSpecial:done()
   local wiped_bufnr = vim.api.nvim_get_current_buf()
   local ctx = self:get_context(wiped_bufnr)
