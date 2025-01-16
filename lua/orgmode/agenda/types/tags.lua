@@ -42,7 +42,7 @@ function OrgAgendaTagsType:new(opts)
   obj.match_query = match_query or ''
   obj.todo_ignore_deadlines = opts.todo_ignore_deadlines
   obj.todo_ignore_scheduled = opts.todo_ignore_scheduled
-  obj.header = 'Headlines with TAGS match: ' .. obj.match_query
+  obj.header = opts.header or ('Headlines with TAGS match: ' .. obj.match_query)
   return obj
 end
 
