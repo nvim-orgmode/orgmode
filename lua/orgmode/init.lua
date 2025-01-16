@@ -116,7 +116,7 @@ function Org.setup_ts_grammar()
   )
 end
 
----@param opts? OrgDefaultConfig
+---@param opts? OrgConfigOpts
 ---@return Org
 function Org.setup(opts)
   opts = opts or {}

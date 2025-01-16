@@ -7,7 +7,7 @@ local mappings = require('orgmode.config.mappings')
 local TodoKeywords = require('orgmode.objects.todo_keywords')
 local PriorityState = require('orgmode.objects.priority_state')
 
----@class OrgConfig:OrgDefaultConfig
+---@class OrgConfig:OrgConfigOpts
 ---@field opts table
 ---@field todo_keywords OrgTodoKeywords
 local Config = {}
