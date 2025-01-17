@@ -32,7 +32,7 @@ function utils.readfile(file, opts)
             if opts.raw then
               result = data
             else
-              local lines = vim.split(data, '\n')
+              local lines = vim.split(data, '[\r\n]')
               if lines[#lines] == '' then
                 table.remove(lines, #lines)
               end
