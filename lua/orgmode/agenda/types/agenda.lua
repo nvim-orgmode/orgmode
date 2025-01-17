@@ -55,6 +55,7 @@ local SortingStrategy = require('orgmode.agenda.sorting_strategy')
 ---@field clock_report_view? OrgAgendaView
 ---@field sorting_strategy? OrgAgendaSortingStrategy[]
 ---@field remove_tags? boolean
+---@field valid_filters? OrgAgendaFilter[]
 ---@field id? string
 local OrgAgendaType = {}
 OrgAgendaType.__index = OrgAgendaType
@@ -82,6 +83,14 @@ function OrgAgendaType:new(opts)
     id = opts.id,
     remove_tags = type(opts.remove_tags) == 'boolean' and opts.remove_tags or config.org_agenda_remove_tags,
   }
+  data.valid_filters = vim.tbl_filter(function(filter)
+    return filter and true or false
+  end, {
+    data.filter,
+    data.tag_filter,
+    data.category_filter,
+    data.agenda_filter,
+  })
   local this = setmetatable(data, OrgAgendaType)
   this:_set_date_range()
   this:_setup_agenda_files()
@@ -412,14 +421,7 @@ function OrgAgendaType:toggle_clock_report()
 end
 
 function OrgAgendaType:_matches_filters(headline)
-  local valid_filters = {
-    self.filter,
-    self.tag_filter,
-    self.category_filter,
-    self.agenda_filter,
-  }
-
-  for _, filter in ipairs(valid_filters) do
+  for _, filter in ipairs(self.valid_filters) do
     if filter and not filter:matches(headline) then
       return false
     end
