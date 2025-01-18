@@ -245,7 +245,7 @@ end
 function utils.parse_tags_string(tags)
   local parsed_tags = {}
   for _, tag in ipairs(vim.split(tags or '', ':')) do
-    if tag:find('^[%w_%%@#]+$') then
+    if tag:find('^[\128-\255%w_%%@#]+$') then
       table.insert(parsed_tags, tag)
     end
   end

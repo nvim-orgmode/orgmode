@@ -339,7 +339,7 @@ end
 ---@return OrgTagMatch?, string
 function TagMatch:parse(input)
   local tag
-  tag, input = parse_pattern(input, '[%w_@#%%]+')
+  tag, input = parse_pattern(input, '[\128-\255%w_%%@#]+')
   if not tag then
     return nil, input
   end
