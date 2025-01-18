@@ -248,28 +248,29 @@ OrgAgenda.todos({options?})                                    *OrgAgenda.todos*
         {options?}  (OrgApiAgendaTodosOptions)
 
 
-                                                       *OrgApiAgendaTagsOptions*
-OrgApiAgendaTagsOptions : OrgApiAgendaOpts
+                                                   *OrgApiAgendaTagsTodoOptions*
+OrgApiAgendaTagsTodoOptions : OrgApiAgendaOpts
 
     Fields: ~
-        {match_query?}  (string)   Match query to find the todos
-        {todo_only?}    (boolean)
+        {match_query?}                       (string)                             Match query to find the todos
+        {org_agenda_todo_ignore_scheduled?}  (OrgAgendaTodoIgnoreScheduledTypes)
+        {org_agenda_todo_ignore_deadlines?}  (OrgAgendaTodoIgnoreDeadlinesTypes)
 
 
-OrgAgenda.tags({options?})                                      *OrgAgenda.tags*
+OrgAgenda.tags_todo({options?})                            *OrgAgenda.tags_todo*
 
     Parameters: ~
         {options?}  (OrgApiAgendaTagsOptions)
 
 
-                                                   *OrgApiAgendaTagsTodoOptions*
-OrgApiAgendaTagsTodoOptions : OrgApiAgendaOpts
+                                                       *OrgApiAgendaTagsOptions*
+OrgApiAgendaTagsOptions : OrgApiAgendaTagsTodoOptions
 
     Fields: ~
-        {match_query?}  (string)  Match query to find the todos
+        {todo_only?}  (boolean)
 
 
-OrgAgenda.tags_todo({options?})                            *OrgAgenda.tags_todo*
+OrgAgenda.tags({options?})                                      *OrgAgenda.tags*
 
     Parameters: ~
         {options?}  (OrgApiAgendaTagsOptions)
