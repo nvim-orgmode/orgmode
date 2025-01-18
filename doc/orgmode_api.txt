@@ -276,6 +276,12 @@ OrgAgenda.tags({options?})                                      *OrgAgenda.tags*
         {options?}  (OrgApiAgendaTagsOptions)
 
 
+OrgAgenda.open_by_key({key})                             *OrgAgenda.open_by_key*
+
+    Parameters: ~
+        {key}  (string)  Key in the agenda prompt (for example: "a", "t", "m", "M")
+
+
 OrgPosition                                                        *OrgPosition*
 
     Fields: ~
