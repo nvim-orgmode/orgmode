@@ -371,7 +371,7 @@ function PropertyMatch:parse(input)
   local name, operator, string_str, number_str, date_str
   local original_input = input
 
-  name, input = parse_pattern(input, '[^=<>]+')
+  name, input = parse_pattern(input, '([^%-%+=<>]+)[=<>]+')
   if not name then
     return nil, original_input
   end
