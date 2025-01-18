@@ -20,7 +20,7 @@ local function get_date(date, name)
   error(('Invalid format for "%s" date in Org Agenda'):format(name))
 end
 
-local function get_opts(options)
+local function get_shared_opts(options)
   options = options or {}
   local opts = {}
   if options.filters and options.filters ~= '' then
@@ -32,6 +32,14 @@ local function get_opts(options)
   opts.tag_filter = options.org_agenda_tag_filter_preset
   opts.category_filter = options.org_agenda_category_filter_preset
   opts.remove_tags = options.org_agenda_remove_tags
+  return opts
+end
+
+local function get_tags_opts(options)
+  local opts = get_shared_opts(options)
+  opts.match_query = options.match_query
+  opts.todo_ignore_scheduled = options.org_agenda_todo_ignore_scheduled
+  opts.todo_ignore_deadlines = options.org_agenda_todo_ignore_deadlines
   return opts
 end
 
@@ -51,7 +59,7 @@ end
 ---@param options? OrgApiAgendaOptions
 function OrgAgenda.agenda(options)
   options = options or {}
-  local opts = get_opts(options)
+  local opts = get_shared_opts(options)
   opts.from = get_date(options.from, 'from')
   opts.span = options.span
   orgmode.agenda:agenda(opts)
@@ -62,32 +70,31 @@ end
 ---@param options? OrgApiAgendaTodosOptions
 function OrgAgenda.todos(options)
   options = options or {}
-  local opts = get_opts(options)
+  local opts = get_shared_opts(options)
   orgmode.agenda:todos(opts)
 end
 
----@class OrgApiAgendaTagsOptions:OrgApiAgendaOpts
+---@class OrgApiAgendaTagsTodoOptions:OrgApiAgendaOpts
 ---@field match_query? string Match query to find the todos
+---@field org_agenda_todo_ignore_scheduled? OrgAgendaTodoIgnoreScheduledTypes
+---@field org_agenda_todo_ignore_deadlines? OrgAgendaTodoIgnoreDeadlinesTypes
+
+---@param options? OrgApiAgendaTagsOptions
+function OrgAgenda.tags_todo(options)
+  options = options or {}
+  local opts = get_tags_opts(options)
+  orgmode.agenda:tags_todo(opts)
+end
+
+---@class OrgApiAgendaTagsOptions:OrgApiAgendaTagsTodoOptions
 ---@field todo_only? boolean
 
 ---@param options? OrgApiAgendaTagsOptions
 function OrgAgenda.tags(options)
   options = options or {}
-  local opts = get_opts(options)
+  local opts = get_tags_opts(options)
   opts.todo_only = options.todo_only
-  opts.match_query = options.match_query
   orgmode.agenda:tags(opts)
-end
-
----@class OrgApiAgendaTagsTodoOptions:OrgApiAgendaOpts
----@field match_query? string Match query to find the todos
-
----@param options? OrgApiAgendaTagsOptions
-function OrgAgenda.tags_todo(options)
-  options = options or {}
-  local opts = get_opts(options)
-  opts.match_query = options.match_query
-  orgmode.agenda:tags_todo(opts)
 end
 
 return OrgAgenda
