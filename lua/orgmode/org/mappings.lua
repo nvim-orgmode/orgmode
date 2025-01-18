@@ -9,12 +9,10 @@ local config = require('orgmode.config')
 local constants = require('orgmode.utils.constants')
 local ts_utils = require('orgmode.utils.treesitter')
 local utils = require('orgmode.utils')
-local fs = require('orgmode.utils.fs')
 local Table = require('orgmode.files.elements.table')
 local EventManager = require('orgmode.events')
 local events = EventManager.event
 local Babel = require('orgmode.babel')
-local ListItem = require('orgmode.files.elements.listitem')
 
 ---@class OrgMappings
 ---@field capture OrgCapture
@@ -48,7 +46,7 @@ function OrgMappings:set_tags(tags)
   local current_tags = utils.tags_to_string(headline:get_own_tags())
 
   if not tags then
-    tags = vim.fn.OrgmodeInput('Tags: ', current_tags, function(arg_lead)
+    tags = utils.input('Tags: ', current_tags, function(arg_lead)
       return utils.prompt_autocomplete(arg_lead, self.files:get_tags())
     end)
   elseif type(tags) == 'table' then
@@ -786,7 +784,7 @@ end
 -- currently on
 function OrgMappings:insert_link()
   local link = OrgHyperlink.at_cursor()
-  local link_location = vim.fn.OrgmodeInput('Links: ', link and link.url:to_string() or '', function(arg_lead)
+  local link_location = utils.input('Links: ', link and link.url:to_string() or '', function(arg_lead)
     return self.links:autocomplete(arg_lead)
   end)
   if vim.trim(link_location) == '' then

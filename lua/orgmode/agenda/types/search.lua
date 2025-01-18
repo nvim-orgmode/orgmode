@@ -1,3 +1,4 @@
+local utils = require('orgmode.utils')
 ---@diagnostic disable: inject-field
 local OrgAgendaTodosType = require('orgmode.agenda.types.todo')
 
@@ -28,7 +29,7 @@ function OrgAgendaSearchType:get_file_headlines(file)
 end
 
 function OrgAgendaSearchType:get_search_term()
-  return vim.fn.OrgmodeInput('Enter search term: ', self.headline_query or '')
+  return utils.input('Enter search term: ', self.headline_query or '')
 end
 
 function OrgAgendaSearchType:redraw()

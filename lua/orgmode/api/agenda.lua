@@ -17,7 +17,7 @@ local function get_date(date, name)
     return Date.from_string(date)
   end
 
-  error(('Invalid format for "%s" date in Org Agenda'):format(name))
+  error(('Invalid format for "%s" date in Org Agenda'):format(name), 0)
 end
 
 local function get_shared_opts(options)

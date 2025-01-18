@@ -96,7 +96,8 @@ function MapEntry:attach(default_mapping, user_mapping, opts)
 
   if type(mapping) ~= 'table' then
     error(
-      'Invalid mapping provided for ' .. tostring(self.handler) .. '. Only string and array of strings can be provided'
+      'Invalid mapping provided for ' .. tostring(self.handler) .. '. Only string and array of strings can be provided',
+      0
     )
   end
 

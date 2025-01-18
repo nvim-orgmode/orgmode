@@ -38,10 +38,7 @@ function M.load_plugin(plugin_name, plugin_url)
       install_destination,
     })
     if vim.v.shell_error > 0 then
-      error(
-        string.format('>> Failed to clone plugin: "%s" to "%s"!', plugin_name, install_destination),
-        vim.log.levels.ERROR
-      )
+      error(string.format('>> Failed to clone plugin: "%s" to "%s"!', plugin_name, install_destination), 0)
     end
   end
 end

@@ -230,7 +230,7 @@ function Hyperlinks.insert_link(link_location)
     link_location = ('id:%s'):format(selected_link.url:get_id())
   end
 
-  local link_description = vim.trim(vim.fn.OrgmodeInput('Description: ', desc or ''))
+  local link_description = vim.trim(utils.input('Description: ', desc or ''))
 
   link_location = '[' .. vim.trim(link_location) .. ']'
 

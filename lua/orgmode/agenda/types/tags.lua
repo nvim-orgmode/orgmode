@@ -97,7 +97,7 @@ end
 
 ---@param files? OrgFiles
 function OrgAgendaTagsType:get_tags(files)
-  local tags = vim.fn.OrgmodeInput('Match: ', self.match_query or '', function(arg_lead)
+  local tags = utils.input('Match: ', self.match_query or '', function(arg_lead)
     return utils.prompt_autocomplete(arg_lead, (files or self.files):get_tags())
   end)
   if vim.trim(tags) == '' then

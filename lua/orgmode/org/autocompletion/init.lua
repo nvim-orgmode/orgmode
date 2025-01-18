@@ -34,7 +34,7 @@ end
 ---@param source OrgCompletionSource
 function OrgCompletion:add_source(source)
   if self.sources_by_name[source:get_name()] then
-    error('Completion source ' .. source:get_name() .. ' already exists')
+    error('Completion source ' .. source:get_name() .. ' already exists', 0)
   end
   self.sources_by_name[source:get_name()] = source
   table.insert(self.sources, source)

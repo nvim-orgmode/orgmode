@@ -107,7 +107,7 @@ function OrgLinks:insert_link(link_location, desc)
     link_location = ('id:%s'):format(selected_link.url:get_path())
   end
 
-  local link_description = vim.trim(vim.fn.OrgmodeInput('Description: ', desc or ''))
+  local link_description = vim.trim(utils.input('Description: ', desc or ''))
 
   link_location = '[' .. vim.trim(link_location) .. ']'
 
@@ -148,7 +148,7 @@ end
 ---@param link_type OrgLinkType
 function OrgLinks:add_type(link_type)
   if self.types_by_name[link_type:get_name()] then
-    error('Link type ' .. link_type:get_name() .. ' already exists')
+    error('Link type ' .. link_type:get_name() .. ' already exists', 0)
   end
   self.types_by_name[link_type:get_name()] = link_type
   table.insert(self.types, link_type)

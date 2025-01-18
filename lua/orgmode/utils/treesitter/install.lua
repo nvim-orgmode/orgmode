@@ -87,7 +87,7 @@ function M.get_path(url)
   })
     :next(function(code)
       if code ~= 0 then
-        error('[orgmode] Failed to clone tree-sitter-org')
+        error('[orgmode] Failed to clone tree-sitter-org', 0)
       end
       return M.exe('git', {
         args = { 'checkout', ts_revision },
@@ -96,7 +96,7 @@ function M.get_path(url)
     end)
     :next(function(code)
       if code ~= 0 then
-        error('[orgmode] Failed to checkout to correct revision on tree-sitter-org')
+        error('[orgmode] Failed to checkout to correct revision on tree-sitter-org', 0)
       end
       return path
     end)
@@ -110,7 +110,7 @@ function M.run(url)
   end, M.compilers)[1]
 
   if not compiler then
-    error('[orgmode] No C compiler found for installing tree-sitter grammar')
+    error('[orgmode] No C compiler found for installing tree-sitter grammar', 0)
   end
 
   local compiler_args = M.select_compiler_args(compiler)
@@ -127,11 +127,11 @@ function M.run(url)
     end)
     :next(vim.schedule_wrap(function(code)
       if code ~= 0 then
-        error('[orgmode] Failed to compile parser')
+        error('[orgmode] Failed to compile parser', 0)
       end
       local renamed = vim.fn.rename(path .. '/parser.so', package_path .. '/parser/org.so')
       if renamed ~= 0 then
-        error('[orgmode] Failed to move generated tree-sitter parser to runtime folder')
+        error('[orgmode] Failed to move generated tree-sitter parser to runtime folder', 0)
       end
       utils.echo_info('Done!')
       return true

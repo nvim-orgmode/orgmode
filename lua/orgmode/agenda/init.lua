@@ -485,7 +485,7 @@ end
 function Agenda:filter()
   local this = self
   self.filters:parse_available_filters(self.views)
-  local filter_term = vim.fn.OrgmodeInput('Filter [+cat-tag/regexp/]: ', self.filters.value, function(arg_lead)
+  local filter_term = utils.input('Filter [+cat-tag/regexp/]: ', self.filters.value, function(arg_lead)
     return utils.prompt_autocomplete(arg_lead, this.filters:get_completion_list(), { '+', '-' })
   end)
   if filter_term == self.filters.value then

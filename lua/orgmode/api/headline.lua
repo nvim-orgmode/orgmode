@@ -171,14 +171,14 @@ function OrgHeadline:set_deadline(date)
       if date_instance then
         return headline:set_deadline_date(date_instance)
       end
-      error('Invalid string format for deadline date')
+      error('Invalid string format for deadline date', 0)
     end
 
     if Date.is_date_instance(date) then
       return headline:set_deadline_date(date)
     end
 
-    error('Invalid argument to set_deadline')
+    error('Invalid argument to set_deadline', 0)
   end)
 end
 
@@ -211,14 +211,14 @@ function OrgHeadline:set_scheduled(date)
       if date_instance then
         return headline:set_scheduled_date(date_instance)
       end
-      error('Invalid string format for schedule date')
+      error('Invalid string format for schedule date', 0)
     end
 
     if Date.is_date_instance(date) then
       return headline:set_scheduled_date(date)
     end
 
-    error('Invalid argument to set_scheduled')
+    error('Invalid argument to set_scheduled', 0)
   end)
 end
 

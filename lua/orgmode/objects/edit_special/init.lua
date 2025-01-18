@@ -53,16 +53,16 @@ function EditSpecial:get_context(bufnr)
   local exists, ctx = pcall(vim.api.nvim_buf_get_var, bufnr or self.org_bufnr, self.context_var)
   ---@cast ctx table
   if not exists then
-    error({ message = 'Unable to find context for edit special action' })
+    error('Unable to find context for edit special action', 0)
   end
 
   if not vim.api.nvim_buf_is_valid(ctx.org_bufnr) then
-    error({ message = 'Org buffer associated with edit special no longer valid' })
+    error('Org buffer associated with edit special no longer valid', 0)
   end
 
   ctx.file = org.files:get(ctx.filename)
   if not ctx.file then
-    error({ message = 'Edit special callback with invalid file: ' .. (ctx.filename or '?') })
+    error('Edit special callback with invalid file: ' .. (ctx.filename or '?'), 0)
   end
 
   ctx.start_extmark_pos = vim.api.nvim_buf_get_extmark_by_id(ctx.org_bufnr, ctx.extmark_ns, ctx.start_extmark, {})

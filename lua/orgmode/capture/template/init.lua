@@ -363,7 +363,7 @@ function Template:_compile_prompts(content)
     if #parts > 2 then
       local completion_items = vim.list_slice(parts, 3, #parts)
       local prompt = string.format('%s [%s]: ', title, default)
-      response = vim.fn.OrgmodeInput(prompt, '', function(arg_lead)
+      response = utils.input(prompt, '', function(arg_lead)
         return vim.tbl_filter(function(v)
           return v:match('^' .. vim.pesc(arg_lead))
         end, completion_items)

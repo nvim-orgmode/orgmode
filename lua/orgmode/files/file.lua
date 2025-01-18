@@ -389,7 +389,7 @@ end
 function OrgFile:get_closest_headline(cursor)
   local node = self:closest_headline_node(cursor)
   if not node then
-    error('No headline found')
+    error('No headline found', 0)
   end
   return Headline:new(node, self)
 end
@@ -504,12 +504,15 @@ end
 function OrgFile:get_valid_bufnr()
   local bufnr = vim.fn.bufnr(self.filename) or -1
   if bufnr < 0 then
-    error('[orgmode] No valid buffer for file ' .. self.filename .. ' to edit')
+    error('[orgmode] No valid buffer for file ' .. self.filename .. ' to edit', 0)
   end
   -- Do not consider unloaded buffers as valid
   -- Treesitter is not working in them
   if not vim.api.nvim_buf_is_loaded(bufnr) then
-    error('[orgmode] Cannot edit buffer ' .. tostring(bufnr) .. ' for file ' .. self.filename .. ', it is not loaded')
+    error(
+      '[orgmode] Cannot edit buffer ' .. tostring(bufnr) .. ' for file ' .. self.filename .. ', it is not loaded',
+      0
+    )
   end
   return bufnr
 end

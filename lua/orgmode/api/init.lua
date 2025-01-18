@@ -38,14 +38,14 @@ function OrgApi.load(name)
 
     return list
   end
-  error('Invalid argument to OrgApi.load')
+  error('Invalid argument to OrgApi.load', 0)
 end
 
 --- Get current org buffer file
 ---@return OrgApiFile
 function OrgApi.current()
   if vim.bo.filetype ~= 'org' then
-    error('Not an org buffer.')
+    error('Not an org buffer.', 0)
   end
   local name = vim.api.nvim_buf_get_name(0)
   return OrgApi.load(name)
@@ -62,14 +62,14 @@ function OrgApi.refile(opts)
   })
 
   if getmetatable(opts.source) ~= OrgHeadline then
-    error('Source must be an OrgApiHeadline')
+    error('Source must be an OrgApiHeadline', 0)
   end
 
   local is_file = getmetatable(opts.destination) == OrgFile
   local is_headline = getmetatable(opts.destination) == OrgHeadline
 
   if not is_file and not is_headline then
-    error('Destination must be an OrgApiFile or OrgApiHeadline')
+    error('Destination must be an OrgApiFile or OrgApiHeadline', 0)
   end
 
   local refile_opts = {

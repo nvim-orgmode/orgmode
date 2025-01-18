@@ -363,7 +363,7 @@ end
 function Capture:get_destination()
   local valid_destinations = self:_get_autocompletion_files()
 
-  local destination = vim.fn.OrgmodeInput('Enter destination: ', '', function(arg_lead)
+  local destination = utils.input('Enter destination: ', '', function(arg_lead)
     return self:autocomplete_refile(arg_lead, valid_destinations)
   end)
 
