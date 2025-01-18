@@ -123,7 +123,7 @@ function Agenda:_build_custom_commands()
     end
 
     opts_by_type[opts.type].sorting_strategy = opts.org_agenda_sorting_strategy
-    opts_by_type[opts.type].filters = self.filters
+    opts_by_type[opts.type].agenda_filter = self.filters
     opts_by_type[opts.type].files = self.files
     opts_by_type[opts.type].header = opts.org_agenda_overriding_header
     opts_by_type[opts.type].agenda_files = opts.org_agenda_files
