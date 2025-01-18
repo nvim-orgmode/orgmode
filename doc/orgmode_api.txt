@@ -213,13 +213,23 @@ OrgApiAgendaFilter                                          *OrgApiAgendaFilter*
         string
 
 
-OrgApiAgendaOptions                                        *OrgApiAgendaOptions*
+OrgApiAgendaOpts                                              *OrgApiAgendaOpts*
 
     Fields: ~
-        {filters?}  (OrgApiAgendaFilter)
-        {from?}     (string|OrgDate)
-        {span?}     (OrgAgendaSpan)
-        {header?}   (string)
+        {filters?}                            (OrgApiAgendaFilter)
+        {header?}                             (string)
+        {org_agenda_files?}                   (string[])
+        {org_agenda_tag_filter_preset?}       (string)
+        {org_agenda_category_filter_preset?}  (string)
+        {org_agenda_sorting_strategy?}        (OrgAgendaSortingStrategy[])
+        {org_agenda_remove_tags?}             (boolean)
+
+
+OrgApiAgendaOptions : OrgApiAgendaOpts                     *OrgApiAgendaOptions*
+
+    Fields: ~
+        {from?}  (string|OrgDate)
+        {span?}  (OrgAgendaSpan)
 
 
 OrgAgenda.agenda({options?})                                  *OrgAgenda.agenda*
@@ -228,11 +238,8 @@ OrgAgenda.agenda({options?})                                  *OrgAgenda.agenda*
         {options?}  (OrgApiAgendaOptions)
 
 
-OrgApiAgendaTodosOptions                              *OrgApiAgendaTodosOptions*
-
-    Fields: ~
-        {filters?}  (OrgApiAgendaFilter)
-        {header?}   (string)
+                                                      *OrgApiAgendaTodosOptions*
+OrgApiAgendaTodosOptions : OrgApiAgendaOpts
 
 
 OrgAgenda.todos({options?})                                    *OrgAgenda.todos*
@@ -241,13 +248,12 @@ OrgAgenda.todos({options?})                                    *OrgAgenda.todos*
         {options?}  (OrgApiAgendaTodosOptions)
 
 
-OrgApiAgendaTagsOptions                                *OrgApiAgendaTagsOptions*
+                                                       *OrgApiAgendaTagsOptions*
+OrgApiAgendaTagsOptions : OrgApiAgendaOpts
 
     Fields: ~
-        {filters?}      (OrgApiAgendaFilter)  Agenda filters for tags and categories
-        {match_query?}  (string)              Match query to find the todos
+        {match_query?}  (string)   Match query to find the todos
         {todo_only?}    (boolean)
-        {header?}       (string)
 
 
 OrgAgenda.tags({options?})                                      *OrgAgenda.tags*
@@ -256,12 +262,11 @@ OrgAgenda.tags({options?})                                      *OrgAgenda.tags*
         {options?}  (OrgApiAgendaTagsOptions)
 
 
-OrgApiAgendaTagsTodoOptions                        *OrgApiAgendaTagsTodoOptions*
+                                                   *OrgApiAgendaTagsTodoOptions*
+OrgApiAgendaTagsTodoOptions : OrgApiAgendaOpts
 
     Fields: ~
-        {filters?}      (OrgApiAgendaFilter)  Agenda filters for tags and categories
-        {match_query?}  (string)              Match query to find the todos
-        {header?}       (string)
+        {match_query?}  (string)  Match query to find the todos
 
 
 OrgAgenda.tags_todo({options?})                            *OrgAgenda.tags_todo*
