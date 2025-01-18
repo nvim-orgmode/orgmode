@@ -45,7 +45,8 @@ function OrgLinkId:follow(link)
     return true
   end
   local headline = headlines[1]
-  return link_utils.goto_headline(headline)
+  utils.goto_headline(headline)
+  return true
 end
 
 ---@return string[]

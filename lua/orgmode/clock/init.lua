@@ -92,10 +92,7 @@ function Clock:org_clock_goto()
     utils.echo_info('No running clock, this is the most recently clocked task')
   end
 
-  if utils.current_file_path() ~= self.clocked_headline.file then
-    vim.cmd('edit ' .. vim.fn.fnameescape(self.clocked_headline.file.filename))
-  end
-  vim.fn.cursor({ self.clocked_headline:get_range().start_line, 1 })
+  utils.goto_headline(self.clocked_headline)
 end
 
 function Clock:org_set_effort()

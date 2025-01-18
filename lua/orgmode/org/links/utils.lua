@@ -8,20 +8,6 @@ function link_utils.goto_file(file)
   return true
 end
 
----@param headline OrgHeadline
----@return boolean
-function link_utils.goto_headline(headline)
-  local current_file_path = utils.current_file_path()
-  if headline.file.filename ~= current_file_path then
-    vim.cmd(string.format('edit %s', headline.file.filename))
-  else
-    vim.cmd([[normal! m']]) -- add link source to jumplist
-  end
-  vim.fn.cursor({ headline:get_range().start_line, 1 })
-  vim.cmd([[normal! zv]])
-  return true
-end
-
 ---@param headlines OrgHeadline[]
 ---@param file_path string
 ---@param error_message string
@@ -36,7 +22,8 @@ function link_utils.goto_oneof_headlines(headlines, file_path, error_message)
   end
 
   if #headlines == 1 then
-    return link_utils.goto_headline(headlines[1])
+    utils.goto_headline(headlines[1])
+    return true
   end
 
   local longest_headline = utils.reduce(headlines, function(acc, h)
@@ -55,7 +42,8 @@ function link_utils.goto_oneof_headlines(headlines, file_path, error_message)
     return true
   end
 
-  return link_utils.goto_headline(headlines[choice])
+  utils.goto_headline(headlines[choice])
+  return true
 end
 
 ---@param file_path string

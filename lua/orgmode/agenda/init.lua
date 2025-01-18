@@ -326,9 +326,7 @@ function Agenda:switch_to_item()
   if not item then
     return
   end
-  vim.cmd('edit ' .. vim.fn.fnameescape(item.file.filename))
-  vim.fn.cursor({ item:get_range().start_line, 1 })
-  vim.cmd([[normal! zv]])
+  utils.goto_headline(item)
 end
 
 function Agenda:change_todo_state()
@@ -494,9 +492,7 @@ function Agenda:goto_item()
     vim.cmd([[aboveleft split]])
   end
 
-  vim.cmd('edit ' .. vim.fn.fnameescape(item.file.filename))
-  vim.fn.cursor({ item:get_range().start_line, 1 })
-  vim.cmd([[normal! zv]])
+  utils.goto_headline(item)
 end
 
 function Agenda:filter()
