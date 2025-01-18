@@ -27,14 +27,26 @@ local function get_opts(options)
     opts.filter = options.filters
   end
   opts.header = options.header
+  opts.agenda_files = options.org_agenda_files
+  opts.sorting_strategy = options.org_agenda_sorting_strategy
+  opts.tag_filter = options.org_agenda_tag_filter_preset
+  opts.category_filter = options.org_agenda_category_filter_preset
+  opts.remove_tags = options.org_agenda_remove_tags
   return opts
 end
 
----@class OrgApiAgendaOptions
+---@class OrgApiAgendaOpts
 ---@field filters? OrgApiAgendaFilter
+---@field header? string
+---@field org_agenda_files? string[]
+---@field org_agenda_tag_filter_preset? string
+---@field org_agenda_category_filter_preset? string
+---@field org_agenda_sorting_strategy? OrgAgendaSortingStrategy[]
+---@field org_agenda_remove_tags? boolean
+
+---@class OrgApiAgendaOptions:OrgApiAgendaOpts
 ---@field from? string | OrgDate
 ---@field span? OrgAgendaSpan
----@field header? string
 
 ---@param options? OrgApiAgendaOptions
 function OrgAgenda.agenda(options)
@@ -42,13 +54,10 @@ function OrgAgenda.agenda(options)
   local opts = get_opts(options)
   opts.from = get_date(options.from, 'from')
   opts.span = options.span
-  opts.header = options.header
   orgmode.agenda:agenda(opts)
 end
 
----@class OrgApiAgendaTodosOptions
----@field filters? OrgApiAgendaFilter
----@field header? string
+---@class OrgApiAgendaTodosOptions:OrgApiAgendaOpts
 
 ---@param options? OrgApiAgendaTodosOptions
 function OrgAgenda.todos(options)
@@ -57,11 +66,9 @@ function OrgAgenda.todos(options)
   orgmode.agenda:todos(opts)
 end
 
----@class OrgApiAgendaTagsOptions
----@field filters? OrgApiAgendaFilter Agenda filters for tags and categories
+---@class OrgApiAgendaTagsOptions:OrgApiAgendaOpts
 ---@field match_query? string Match query to find the todos
 ---@field todo_only? boolean
----@field header? string
 
 ---@param options? OrgApiAgendaTagsOptions
 function OrgAgenda.tags(options)
@@ -72,10 +79,8 @@ function OrgAgenda.tags(options)
   orgmode.agenda:tags(opts)
 end
 
----@class OrgApiAgendaTagsTodoOptions
----@field filters? OrgApiAgendaFilter Agenda filters for tags and categories
+---@class OrgApiAgendaTagsTodoOptions:OrgApiAgendaOpts
 ---@field match_query? string Match query to find the todos
----@field header? string
 
 ---@param options? OrgApiAgendaTagsOptions
 function OrgAgenda.tags_todo(options)
