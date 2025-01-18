@@ -135,6 +135,16 @@ function Menu._default_menu(data)
   return entry.action()
 end
 
+function Menu:get_entry_by_key(key)
+  local valid_keys = {}
+  for _, item in ipairs(self.items) do
+    if item.key then
+      valid_keys[item.key] = item
+    end
+  end
+  return valid_keys[key]
+end
+
 function Menu:open()
   local menu_data = {
     title = self.title,

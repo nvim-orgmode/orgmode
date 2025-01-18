@@ -97,4 +97,9 @@ function OrgAgenda.tags(options)
   orgmode.agenda:tags(opts)
 end
 
+---@param key string Key in the agenda prompt (for example: "a", "t", "m", "M")
+function OrgAgenda.open_by_key(key)
+  return orgmode.agenda:open_by_key(key)
+end
+
 return OrgAgenda

@@ -162,32 +162,8 @@ function Agenda:_build_custom_commands()
 end
 
 ---@private
----@return number buffer number
-function Agenda:_open_window()
-  -- if an agenda window is already open, return it
-  for _, win in ipairs(vim.api.nvim_list_wins()) do
-    local buf = vim.api.nvim_win_get_buf(win)
-    local ft = vim.api.nvim_get_option_value('filetype', {
-      buf = buf,
-    })
-    if ft == 'orgagenda' then
-      vim.bo[buf].modifiable = true
-      colors.highlight({}, true, buf)
-      vim.api.nvim_buf_set_lines(buf, 0, -1, true, {})
-      return buf
-    end
-  end
-
-  utils.open_window('orgagenda', math.max(34, config.org_agenda_min_height), config.win_split_mode, config.win_border)
-
-  vim.cmd([[setf orgagenda]])
-  vim.cmd([[setlocal buftype=nofile bufhidden=wipe nobuflisted nolist noswapfile nowrap nospell]])
-  vim.w.org_window_pos = vim.fn.win_screenpos(0)
-  config:setup_mappings('agenda', vim.api.nvim_get_current_buf())
-  return vim.fn.bufnr()
-end
-
-function Agenda:prompt()
+---@return OrgMenu
+function Agenda:_build_menu()
   local menu = Menu:new({
     title = 'Press key for an agenda command',
     prompt = 'Press key for an agenda command',
@@ -243,6 +219,47 @@ function Agenda:prompt()
   menu:add_option({ label = 'Quit', key = 'q' })
   menu:add_separator({ icon = ' ', length = 1 })
 
+  return menu
+end
+
+---@private
+---@return number buffer number
+function Agenda:_open_window()
+  -- if an agenda window is already open, return it
+  for _, win in ipairs(vim.api.nvim_list_wins()) do
+    local buf = vim.api.nvim_win_get_buf(win)
+    local ft = vim.api.nvim_get_option_value('filetype', {
+      buf = buf,
+    })
+    if ft == 'orgagenda' then
+      vim.bo[buf].modifiable = true
+      colors.highlight({}, true, buf)
+      vim.api.nvim_buf_set_lines(buf, 0, -1, true, {})
+      return buf
+    end
+  end
+
+  utils.open_window('orgagenda', math.max(34, config.org_agenda_min_height), config.win_split_mode, config.win_border)
+
+  vim.cmd([[setf orgagenda]])
+  vim.cmd([[setlocal buftype=nofile bufhidden=wipe nobuflisted nolist noswapfile nowrap nospell]])
+  vim.w.org_window_pos = vim.fn.win_screenpos(0)
+  config:setup_mappings('agenda', vim.api.nvim_get_current_buf())
+  return vim.fn.bufnr()
+end
+
+---@param key string
+function Agenda:open_by_key(key)
+  local menu = self:_build_menu()
+  local item = menu:get_entry_by_key(key)
+  if not item then
+    return utils.echo_error('No agenda view with key ' .. key)
+  end
+  return item.action()
+end
+
+function Agenda:prompt()
+  local menu = self:_build_menu()
   return menu:open()
 end
 
