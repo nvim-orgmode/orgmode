@@ -8,12 +8,11 @@
 #+HTML:<a href="https://ko-fi.com/kristijanhusak"><img alt="Kofi" src="https://img.shields.io/badge/support-kofi-00b9fe?style=flat-square&logo=kofi"></a>
 #+HTML:<a href="https://matrix.to/#/#neovim-orgmode:matrix.org"><img alt="Chat" src="https://img.shields.io/matrix/neovim-orgmode:matrix.org?logo=matrix&server_fqdn=matrix.org&style=flat-square"></a>
 
-Orgmode clone written in Lua for Neovim 0.10.0+
+Orgmode clone written in Lua for Neovim
 
-[[#setup][Setup]] • [[file:./DOCS.md][Docs]] • [[#showcase][Showcase]] • [[#treesitter-info][Treesitter]] • [[#troubleshoot][Troubleshoot]] • [[#plugins][Plugins]] • [[file:./CONTRIBUTING.md][Contributing]] • [[#thanks-to][Kudos]]
+[[#installation][Installation]] • [[file:./docs/index.org][Docs]] • [[#showcase][Showcase]] • [[file:./docs/troubleshoot.org][Troubleshoot]] • [[#plugins][Plugins]] • [[file:./docs/contributing.org][Contributing]] • [[#thanks-to][Kudos]]
 
 #+HTML:</div>
-
 
 ** Quickstart
 
@@ -22,11 +21,11 @@ Orgmode clone written in Lua for Neovim 0.10.0+
 - Neovim 0.10.0 or later
 
 *** Installation
+:PROPERTIES:
+:CUSTOM_ID: installation
+:END:
 
-Use your favourite package manager:
-
-#+HTML:<details open><summary><b><a href="https://github.com/folke/lazy.nvim">lazy.nvim</a> (recommended)</b></summary></br>
-
+Use your favourite package manager. We recommend [[https://github.com/folke/lazy.nvim][lazy.nvim]]:
 #+BEGIN_SRC lua
 {
   'nvim-orgmode/orgmode',
@@ -49,134 +48,14 @@ Use your favourite package manager:
 }
 #+END_SRC
 
-#+HTML:</details>
-
-#+HTML:<details> <summary><b><a href="https://github.com/wbthomason/packer.nvim">packer.nvim</a></b></summary> </br>
-
-#+BEGIN_SRC lua
-use {'nvim-orgmode/orgmode', config = function()
-  require('orgmode').setup{}
-end
-}
-#+END_SRC
-
-#+HTML:</details>
-
-#+HTML:<details> <summary><a href="https://github.com/junegunn/vim-plug"><b>vim-plug</b></a></summary> </br>
-
-#+BEGIN_SRC vim
-Plug 'nvim-orgmode/orgmode'
-#+END_SRC
-
-#+HTML:</details>
-
-#+HTML:<details> <summary><a href="https://github.com/Shougo/dein.vim"><b>dein.vim</b></a></summary> </br>
-
-#+BEGIN_SRC vim
-call dein#add('nvim-orgmode/orgmode')
-#+END_SRC
-
-#+HTML:</details>
-
-*** Setup
-:PROPERTIES:
-:CUSTOM_ID: setup
-:END:
-
-Note that this setup is not needed for [[https://github.com/folke/lazy.nvim][lazy.nvim]]
-since instructions above covers full setup
-
-#+BEGIN_SRC lua
--- init.lua
-
-require('orgmode').setup({
-  org_agenda_files = {'~/Dropbox/org/*', '~/my-orgs/**/*'},
-  org_default_notes_file = '~/Dropbox/org/refile.org',
-})
-
--- NOTE: If you are using nvim-treesitter with ~ensure_installed = "all"~ option
--- add ~org~ to ignore_install
--- require('nvim-treesitter.configs').setup({
---   ensure_installed = 'all',
---   ignore_install = { 'org' },
--- })
-
-Or if you are using ~init.vim~, wrap the above snippet like so:
-#+BEGIN_SRC vim
-" init.vim
-lua << EOF
-
-require('orgmode').setup({
-  org_agenda_files = {'~/Dropbox/org/*', '~/my-orgs/**/*'},
-  org_default_notes_file = '~/Dropbox/org/refile.org',
-})
-
-EOF
-#+END_SRC
-
-**** Completion
-
-#+HTML:<details> <summary><a href="https://github.com/hrsh7th/nvim-cmp"><b>nvim-cmp</b></a></summary> </br>
-#+BEGIN_SRC lua
-require('cmp').setup({
-  sources = {
-    { name = 'orgmode' }
-  }
-})
-#+END_SRC
-
-#+HTML:</details>
-
-#+HTML:<details> <summary><a href="https://github.com/Saghen/blink.cmp"><b>blink.cmp</b></a></summary> </br>
-#+BEGIN_SRC lua
-require('blink.cmp').setup({
-  sources = {
-    completion = {
-      enabled_providers = { 'lsp', 'path', 'snippets', 'buffer', 'orgmode' }
-      -- Or if you want to use only this provider in org files
-      -- enabled_providers = function()
-      --   if vim.bo.filetype == 'org' then
-      --     return { 'orgmode' }
-      --   end
-      --   return { 'lsp', 'path', 'snippets', 'buffer' }
-      -- end
-    },
-    providers = {
-      orgmode = {
-        name = 'Orgmode',
-        module = 'orgmode.org.autocompletion.blink',
-      },
-    },
-  },
-})
-#+END_SRC
-
-#+HTML:</details>
-
-#+HTML:<details> <summary><a href="https://github.com/nvim-lua/completion-nvim"><b>completion-nvim</b></a></summary> </br>
-
-#+BEGIN_SRC lua
-vim.g.completion_chain_complete_list = {
-  org = {
-    { mode = 'omni'},
-  },
-}
--- add additional keyword chars
-vim.cmd[[autocmd FileType org setlocal iskeyword+=:,#,+]]
-#+END_SRC
-
-#+HTML:</details>
-
-Or just use ~omnifunc~ via =<C-x><C-o>=
-
+For more installation options see [[file:./docs/installation.org][Installation]] page.
 *** Usage
 
 - *Open agenda prompt*: =<Leader>oa=
 - *Open capture prompt*: =<Leader>oc=
 - In any orgmode buffer press =g?= for help
 
-If you are new to Orgmode, see [[/DOCS.md#getting-started-with-orgmode][Getting started]] section in the Docs
-or a hands-on [[https://github.com/nvim-orgmode/orgmode/wiki/Getting-Started][tutorial]] in our wiki.
+If you are new to Orgmode, see [[file:./docs/index.org#getting-started][Getting started]] section in the Docs.
 
 ** Showcase
 :PROPERTIES:
@@ -206,84 +85,6 @@ or a hands-on [[https://github.com/nvim-orgmode/orgmode/wiki/Getting-Started][tu
 #+CAPTION: autocomplete
 #+NAME: autocomplete
 [[https://user-images.githubusercontent.com/1782860/123550227-e8605800-d76c-11eb-96f6-c0a677d562d4.gif]]
-
-** Treesitter Info
-:PROPERTIES:
-:CUSTOM_ID: treesitter-info
-:END:
-
-The built-in treesitter parser is used for parsing the org files.
-
-*** Known highlighting issues and limitations
-
-- LaTex is still highlighted through syntax file
-
-** Troubleshoot
-:PROPERTIES:
-:CUSTOM_ID: troubleshoot
-:END:
-
-*** Indentation is not working
-
-Make sure you are not overriding indentexpr in Org buffers with [[https://github.com/nvim-treesitter/nvim-treesitter#indentation][nvim-treesitter indentation]]
-
-*** I get ~treesitter/query.lua~ errors when opening agenda/capture prompt or org files
-
-Tree-sitter parser might not be installed.
-Try running ~:lua require('orgmode.config'):reinstall_grammar()~ to reinstall it.
-
-*** Dates are not in English
-
-Dates are generated with Lua native date support, and it reads your current locale when creating them.
-#+HTML: <br/>
-To use different locale you can add this to your ~init.lua~:
-
-#+BEGIN_SRC lua
-vim.cmd('language en_US.utf8')
-#+END_SRC
-
-or ~init.vim~
-
-#+BEGIN_SRC vim
-language en_US.utf8
-#+END_SRC
-
-Just make sure you have ~en_US~ locale installed on your system. To see what you have available on the system you can
-start the command ~:language~ and press ~<TAB>~ to autocomplete possible options.
-
-*** Links are not concealed
-
-Links are concealed with Vim's conceal feature (see ~:help conceal~). To enable concealing, add this to your ~init.lua~:
-
-#+BEGIN_SRC lua
-vim.opt.conceallevel = 2
-vim.opt.concealcursor = 'nc'
-#+END_SRC
-
-Or if you are using ~init.vim~:
-
-#+BEGIN_SRC vim
-set conceallevel=2
-set concealcursor=nc
-#+END_SRC
-
-*** Jumping to file path is not working for paths with forward slash
-
-If you are using Windows, paths are by default written with backslashes.
-To use forward slashes, you must enable ~shellslash~ option
-(see ~:help shellslash~).
-
-#+BEGIN_SRC lua
-vim.opt.shellslash = true
-#+END_SRC
-
-Or if you are using ~init.vim~:
-
-#+BEGIN_SRC vim
-set shellslash
-#+END_SRC
-
-More info on issue [[https://github.com/nvim-orgmode/orgmode/issues/281#issuecomment-1120200775][#281]]
 
 ** Features
 
@@ -329,7 +130,7 @@ More info on issue [[https://github.com/nvim-orgmode/orgmode/issues/281#issuecom
   - List tasks that have "TODO" state (=t=):
   - Find headlines matching tag(s) (=m=):
   - Search for headlines (and it's content) for a query (=s=):
-  - [[DOCS.md#advanced-search][Advanced search]] for tags/todo kewords/properties
+  - [[file:./docs/configuration.org#advanced-search][Advanced search]] for tags/todo kewords/properties
   - Notifications (experimental, see issue [[https://github.com/nvim-orgmode/orgmode/issues/49][#49]])
   - Clocking time
 - Capture:
@@ -364,23 +165,10 @@ More info on issue [[https://github.com/nvim-orgmode/orgmode/issues/281#issuecom
   - Highlighted code blocks (~#+BEGIN_SRC filetype~)
    Exporting (via ~emacs~, ~pandoc~ and custom export options)
 
-Link to detailed documentation: [[DOCS.md][DOCS]]
+Link to detailed documentation: [[./docs/index.org][DOCS]]
 
 ** Plugins
-:PROPERTIES:
-:CUSTOM_ID: plugins
-:END:
-
-- [[https://github.com/chipsenkbeil/org-roam.nvim][org-roam.nvim]] - Implementation of [[https://orgroam.com][Org-roam]] knowledge management system
-- [[https://github.com/nvim-orgmode/telescope-orgmode.nvim][telescope-orgmode.nvim]] - Telescope extension to find headlines, refile and insert links
-- [[https://github.com/akinsho/org-bullets.nvim][org-bullets.nvim]] - Show org mode bullets as UTF-8 characters
-- [[https://github.com/lukas-reineke/headlines.nvim][headlines.nvim]] - Add few highlight options for code blocks and headlines
-- [[https://github.com/michaelb/sniprun][sniprun]] - For code evaluation in blocks
-- [[https://github.com/dhruvasagar/vim-table-mode][vim-table-mode]] - For table support
-
-See all available plugins on [[https://github.com/topics/orgmode-nvim][orgmode-nvim]]
-
-*If you built a plugin please add "orgmode-nvim" topic to it.*
+Check [[file:./docs/plugins.org][Plugins]] page for list of plugins.
 
 #+BEGIN_QUOTE
 *NOTE*: None of the Emacs Orgmode plugins will be built into nvim-orgmode.
@@ -391,35 +179,6 @@ and a good foundation for external plugins.
 
 If you want to build a plugin, post suggestions and improvements on [[https://github.com/nvim-orgmode/orgmode/issues/26][Plugins infrastructure]]
 issue.
-
-*** :wrench: API
-
-Documentation for our work-in-progress API can be found [[doc/orgmode_api.txt][here]]
-
-** Contributing
-
-See [[CONTRIBUTING.md][CONTRIBUTING.md]]
-
-** Documentation
-
-If you are just starting out with orgmode, have a look at the [[https://github.com/nvim-orgmode/orgmode/wiki/Getting-Started][Getting Started]] section in our wiki.
-
-Vim documentation is auto generated from [[DOCS.md][DOCS.md]] file with [[https://github.com/FooSoft/md2vim][md2vim]].
-
-Hosted documentation is on: [[https://nvim-orgmode.github.io/][https://nvim-orgmode.github.io/]]
-
-** Roadmap
-
-- :white_check_mark: Support searching by properties
-- :white_square_button: Improve checkbox hierarchy
-- :white_check_mark: Support todo keyword faces
-- :white_check_mark: Support clocking work time
-- :white_check_mark: Improve folding
-- :white_check_mark: Support exporting (via existing emacs tools)
-- :white_square_button: Support archiving to specific headline
-- :white_check_mark: Support tables
-- :white_square_button: Support diary format dates
-- :white_square_button: Support evaluating code blocks
 
 ** Thanks to
 :PROPERTIES:

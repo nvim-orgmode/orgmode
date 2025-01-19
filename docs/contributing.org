@@ -1,0 +1,90 @@
+* Contributing Guide
+:PROPERTIES:
+:CUSTOM_ID: contributing-guide
+:END:
+Thanks for wanting to help out with nvim-orgmode, we appreciate the effort!
+
+- [[#reporting-bugsfeatures][Reporting Bugs/Features]]
+- [[#documentation][Documentation]]
+- [[*Development][Development]]
+  - [[*Philosophy][Philosophy]]
+  - [[#local-dev][Local dev]]
+  - [[#code][Code]]
+    - [[#tests][Tests]]
+    - [[#parser][Parser]]
+
+** Reporting Bugs/Features
+:PROPERTIES:
+:CUSTOM_ID: reporting-bugsfeatures
+:END:
+
+📣 Please always make a quick search in our [[https://github.com/nvim-orgmode/orgmode/issues][issue-tracker]] before
+reporting anything. If the bug/feature has already been reported,
+continue the conversation on the existing issue.
+
+We distinguish between =core= (part of [[https://orgmode.org/][orgmode]]) and
+=non-core= features. The former will be prioritized. Bugs get the highest
+priority.
+
+If you're reporting a =core= feature, please be sure to provide a link
+that describes it. There are several places where features could be
+documented, have a look at these [[https://orgmode.org/worg/#resources][resources]]. The more info you provide the better!
+
+** Documentation
+:PROPERTIES:
+:CUSTOM_ID: documentation
+:END:
+If you spot something missing in our [[file:../index.org][docs]], don't hesitate making a PR.
+The [[https://github.com/nvim-orgmode/orgmode/wiki][wiki]] can be edited freely.
+
+** Development
+*** Philosophy
+We try to mimic the behavior of Emacs Orgmode as closely as possible.
+Variable names follow the same naming convention as in Emacs Orgmode,
+except that they are in =snake_case= instead of =kebab-case=.
+
+Example: =org-agenda-files= in Emacs is =org_agenda_files= in nvim-orgmode.
+
+*** Local dev
+:PROPERTIES:
+:CUSTOM_ID: local-dev
+:END:
+Requirements:
+
+- [[https://github.com/JohnnyMorganz/StyLua][StyLua]] - For formatting
+
+To set up local development, run =make setup_dev=. This will add a
+pre-commit hook that will auto format all files before committing them.
+You can always manually format all files with =make format= command
+
+*** Code
+:PROPERTIES:
+:CUSTOM_ID: code
+:END:
+If you prefer working on an issue that has been reported, please leave a comment voicing your interest.
+
+Please document any new code you add with [[https://emmylua.github.io/annotation.html][emmylua annotations]].
+Feel free to add annotations/docs to any existing functions integral to your PR that are missing them.
+
+**** Tests
+:PROPERTIES:
+:CUSTOM_ID: tests
+:END:
+To run tests run =make test= in the nvim-orgmode directory:
+
+#+begin_example
+make test
+#+end_example
+
+To run a specific test you can set a =FILE= environment variable to a
+specific spec you want to test. Example:
+
+#+begin_example
+make test FILE=./tests/plenary/api/api_spec.lua
+#+end_example
+
+**** Parser
+:PROPERTIES:
+:CUSTOM_ID: parser
+:END:
+Parsing is done via builtin treesitter parser and the [[https://github.com/milisims/tree-sitter-org][tree-sitter-org]] grammar.

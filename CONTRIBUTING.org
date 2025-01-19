@@ -1,0 +1,1 @@
+* Check [[file:./docs/contributing.org][contributing]] for more information

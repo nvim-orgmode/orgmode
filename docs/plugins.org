@@ -1,0 +1,173 @@
+* Plugins
+
+📝 NOTE: If you create a plugin for orgmode, make sure to tag it with =orgmode-nvim= on github and submit an issue/PR to add it to this list.
+
+Orgmode supports various plugins to extend its functionality or make it more pretty and user friendly:
+
+- [[#extend-orgmode][Extend orgmode]]
+  - [[#org-roamnvim][org-roam.nvim]]
+  - [[#sniprun][sniprun]]
+  - [[#telescope-orgmodenvim][telescope-orgmode.nvim]]
+- [[#completion-plugins][Completion plugins]]
+  - [[#blinkcmp][blink.cmp]]
+  - [[#nvim-cmp][nvim-cmp]]
+- [[#aesthetics][Aestehtics]]
+  - [[#org-bulletsnvim][org-bullets.nvim]]
+  - [[#headlinesnvim][headlines.nvim]]
+- [[#other][Other]]
+- [[#example-configuration][Example configuration]]
+
+** Extend orgmode
+:PROPERTIES:
+:CUSTOM_ID: extend-orgmode
+:END:
+*** org-roam.nvim
+:PROPERTIES:
+:CUSTOM_ID: org-roamnvim
+:END:
+Link: [[https://github.com/chipsenkbeil/org-roam.nvim][org-roam.nvim]]
+
+This is the port of Emacs [[https://www.orgroam.com/][org-roam]].
+*** sniprun
+:PROPERTIES:
+:CUSTOM_ID: sniprun
+:END:
+Link: [[https://github.com/michaelb/sniprun][sniprun]]
+
+Plugin for code block evaluation.
+*** telescope-orgmode.nvim
+:PROPERTIES:
+:CUSTOM_ID: telescope-orgmodenvim
+:END:
+Link: [[https://github.com/nvim-orgmode/telescope-orgmode.nvim][telescope-orgmode.nvim]]
+[[https://github.com/nvim-telescope/telescope.nvim][Telescope]] extension for orgmode that adds fuzzy finding of orgmode files, headlines, etc.
+
+** Completion plugins
+:PROPERTIES:
+:CUSTOM_ID: completion-plugins
+:END:
+*** blink.cmp
+:PROPERTIES:
+:CUSTOM_ID: blinkcmp
+:END:
+Link:  [[https://github.com/Saghen/blink.cmp][blink.cmp]]
+
+Add the orgmode provider and enable it for =org= filetype.
+#+begin_src lua
+require('blink.cmp').setup({
+  sources = {
+    per_filetype = {
+      org = {'ormode'}
+    },
+    providers = {
+      orgmode = {
+        name = 'Orgmode',
+        module = 'orgmode.org.autocompletion.blink',
+        fallbacks = { 'buffer' },
+      },
+    },
+  },
+})
+#+end_src
+
+*** nvim-cmp
+:PROPERTIES:
+:CUSTOM_ID: nvim-cmp
+:END:
+Link: [[https://github.com/hrsh7th/nvim-cmp][nvim-cmp]]
+Add the =orgmode= source to =nvim-cmp= ~sources~ list.
+#+BEGIN_SRC lua
+require('cmp').setup({
+  sources = {
+    { name = 'orgmode' }
+  }
+})
+#+END_SRC
+
+** Aestehtics
+:PROPERTIES:
+:CUSTOM_ID: aesthetics
+:END:
+*** org-bullets.nvim
+:PROPERTIES:
+:CUSTOM_ID: org-bulletsnvim
+:END:
+Link: [[https://github.com/nvim-orgmode/org-bullets.nvim][org-bullets.nvim]]
+Port of Emacs [[https://github.com/sabof/org-bullets][org-bullets]].
+
+Run after the orgmode setup.
+#+BEGIN_SRC lua
+-- Your orgmode setup
+require('orgmode').setup()
+
+--Setup org-bullets
+require('org-bullets').setup()
+#+END_SRC
+
+*** headlines.nvim
+:PROPERTIES:
+:CUSTOM_ID: headlinesnvim
+:END:
+Link: [[https://github.com/lukas-reineke/headlines.nvim][headlines.nvim]]
+
+Plugin that adds some additional highlights to headlines.
+#+BEGIN_SRC lua
+-- Your orgmode setup
+require('orgmode').setup()
+
+--Setup headlines.nvim
+require("headlines").setup()
+#+END_SRC
+
+** Other
+:PROPERTIES:
+:CUSTOM_ID: other
+:END:
+To view all plugins that are tagged for =nvim-orgmode=, visit [[https://github.com/topics/orgmode-nvim][orgmode-nvim]] github tag.
+
+📝 NOTE: If you create a plugin for orgmode, make sure to tag it with =orgmode-nvim= on github and submit an issue/PR to add it to this list.
+
+** Example configuration
+:PROPERTIES:
+:CUSTOM_ID: example-configuration
+:END:
+Example configuration with few of these plugins using [[https://github.com/folke/lazy.nvim][lazy.nvim]]:
+#+begin_src lua
+{
+  'nvim-orgmode/orgmode',
+  dependencies = {
+    'nvim-telescope/telescope.nvim',
+    'nvim-orgmode/telescope-orgmode.nvim',
+    'nvim-orgmode/org-bullets.nvim',
+    'Saghen/blink.cmp'
+  },
+  event = 'VeryLazy',
+  config = function()
+    require('orgmode').setup({
+      org_agenda_files = '~/orgfiles/**/*',
+      org_default_notes_file = '~/orgfiles/refile.org',
+    })
+    require('org-bullets').setup()
+    require('blink.cmp').setup({
+      sources = {
+        per_filetype = {
+          org = {'ormode'}
+        },
+        providers = {
+          orgmode = {
+            name = 'Orgmode',
+            module = 'orgmode.org.autocompletion.blink',
+            fallbacks = { 'buffer' },
+          },
+        },
+      },
+    })
+
+    require('telescope').setup()
+    require('telescope').load_extension('orgmode')
+    vim.keymap.set('n', '<leader>r', require('telescope').extensions.orgmode.refile_heading)
+    vim.keymap.set('n', '<leader>fh', require('telescope').extensions.orgmode.search_headings)
+    vim.keymap.set('n', '<leader>li', require('telescope').extensions.orgmode.insert_link)
+  end,
+}
+#+end_src

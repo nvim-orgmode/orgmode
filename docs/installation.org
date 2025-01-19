@@ -1,0 +1,58 @@
+* Installation
+
+Orgmode can be installed with any package manager.
+Here are few examples:
+
+1. [[https://github.com/folke/lazy.nvim][lazy.nvim]] (Recommended)
+   #+begin_src lua
+   {
+     'nvim-orgmode/orgmode',
+     event = 'VeryLazy',
+     config = function()
+       require('orgmode').setup({
+         org_agenda_files = '~/orgfiles/**/*',
+         org_default_notes_file = '~/orgfiles/refile.org',
+       })
+     end,
+   }
+   #+end_src
+2. [[https://github.com/lewis6991/pckr.nvim][pckr.nvim]]
+   #+begin_src lua
+   require('pckr').add({
+     {
+      'nvim-orgmode/orgmode',
+        config = function()
+          require('orgmode').setup({
+            org_agenda_files = '~/orgfiles/**/*',
+            org_default_notes_file = '~/orgfiles/refile.org',
+          })
+        end
+     }
+   })
+   #+end_src
+3. [[https://github.com/junegunn/vim-plug][vim-plug]]
+   #+begin_src vim
+   Plug 'nvim-orgmode/orgmode'
+
+   lua << EOF
+   require('orgmode').setup({
+     org_agenda_files = '~/orgfiles/**/*',
+     org_default_notes_file = '~/orgfiles/refile.org',
+   })
+   EOF
+   #+end_src
+4. [[https://github.com/Shougo/dein.vim][dein.vim]]
+   #+begin_src vim
+   call dein#add('nvim-orgmode/orgmode')
+
+    lua << EOF
+    require('orgmode').setup({
+      org_agenda_files = '~/orgfiles/**/*',
+      org_default_notes_file = '~/orgfiles/refile.org',
+    })
+    EOF
+   #+end_src
+
+*** Useful links:
+- [[file:./configuration.org][Configuration]]
+- [[file:./plugins.org][Plugins]]

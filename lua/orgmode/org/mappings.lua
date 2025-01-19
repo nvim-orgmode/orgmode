@@ -881,13 +881,13 @@ end
 ---Find and move cursor to next visible heading.
 ---@return integer
 function OrgMappings:next_visible_heading()
-  return vim.fn.search([[^\*\+]], 'W', 0, 0, self._skip_invisible_heading)
+  return vim.fn.search([[^\*\+\s\+]], 'W', 0, 0, self._skip_invisible_heading)
 end
 
 ---Find and move cursor to previous visible heading.
 ---@return integer
 function OrgMappings:previous_visible_heading()
-  return vim.fn.search([[^\*\+]], 'bW', 0, 0, self._skip_invisible_heading)
+  return vim.fn.search([[^\*\+\s\+]], 'bW', 0, 0, self._skip_invisible_heading)
 end
 
 ---Check if heading is visible. If not, skip it.

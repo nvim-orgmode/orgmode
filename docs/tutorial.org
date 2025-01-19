@@ -1,0 +1,248 @@
+#+title: nvim-orgmode Tutorial
+#+author: nvim-orgmode Team
+
+* Overview
+Org-mode is a flexible note-taking system that was originally created for
+Emacs. It has gained wide-spread acclaim (this file itself is an Org-mode file,
+which is supported by GitHub wikis) and was eventually ported to Neovim.
+
+1. [[#file-syntax][File Syntax]]
+2. [[#basic-customization][Basic Customization]]
+3. [[#agenda][Agenda]]
+4. [[#captures][Captures]]
+5. [[#archiving][Archiving]]
+6. [[#exporting][Exporting]]
+7. [[#further-resources][Further Resources]]
+
+To get the hang of it, we will create an org file in which we will keep all
+the repositories we want to check out in the future. First, let's create an
+empty file called =repos.org=.
+
+* File Syntax
+:PROPERTIES:
+:CUSTOM_ID: file-syntax
+:END:
+
+Org files often start with meta-information for the title and the author:
+
+#+begin_src
+#+title: Repositories
+#+author: <Your Name>
+#+end_src
+
+These directives are not necessary but may give others (including you in the
+future!) a gist what this file is about. There are many more directives
+detailed at [TODO: add this to the docs]
+
+To create a list of repositories, we start a new line with a dash, followed by
+the repo name we'd like to remember:
+
+#+begin_src
+- Org Bullets
+#+end_src
+
+Congratulations, you created your first list! :tada: From here, you can easily
+add new list items by pressing =<Leader><Enter>=, the so-called org =meta return=.
+It has different effects, depending on the current position of the
+cursor. If it's on a list item, it will add another one. We will discuss other
+uses later on. [TODO: actually do that]
+
+#+begin_src
+- Org Bullets
+- vim-table-mode
+#+end_src
+
+Our list is already functional, but it's only scratching the surface of what
+Org-mode can do. Let's look at how org files are structured using =headings=.
+
+** Headings
+:PROPERTIES:
+:CUSTOM_ID: headings
+:END:
+
+Any line starting with one or more asterisks (*) but without any preceding
+whitespace is a heading (also called headline). Let's change our list items
+to 1st-level headings by replacing the dashes with asterisks:
+
+#+begin_src
+* Org Bullets
+* Vim table-mode
+#+end_src
+
+The number of asterisks denotes the level of the heading: the more asterisks,
+the deeper the level. That is how we achieve nested structures in our org
+files.
+
+#+begin_src
+* Org Bullets
+** Synopsis
+* Vim table-mode
+#+end_src
+
+The content within a heading can be free form text, include links, be a list,
+or any combination thereof. Let's add a short description:
+
+#+begin_src
+* Org Bullets
+** Synopsis
+   This plugin is a clone of org-bullets. It replaces the asterisks in org
+   syntax with unicode characters.
+* Vim table-mode
+#+end_src
+
+The full syntax for a headline is
+
+#+begin_src
+STARS KEYWORD PRIORITY TITLE TAGS
+*     TODO    [#A]     foo   :bar:baz:
+#+end_src
+
+- =KEYWORD=, if present, turns the heading into a TODO item. By default this
+  can be =TODO= or =DONE= (see the [[#basic-customization][Customization]] section to change this).
+- =PRIORITY= sets a priority level to be used in the [[#agenda][Agenda]].
+- =TITLE= is the main body of the heading.
+- =TAGS= is a colon surrounded and delimited list of tags used in searching
+  in the [[#agenda][Agenda]].
+
+Headings (usually with a =KEYWORD=) can also have deadlines, and/or be
+scheduled with timestamps (e.g. <2022-12-31>) [TODO: explain the difference
+between deadlines and scheduled headings]. Thus we could enhance our list
+of repos like so:
+
+#+begin_src org
+* org-bullets.nvim                                                      :org:
+** Synopsis
+   This plugin is a clone of org-bullets. It replaces the asterisks in org
+   syntax with unicode characters.
+* vim-table-mode                                                        :org:
+** TODO Synopsis
+   SCHEDULED: <YYYY-MM-DD>
+* plenary                                                               :lua:
+** TODO [#A] Synopsis
+   DEADLINE: <YYYY-MM-DD>
+#+end_src
+
+** Links
+:PROPERTIES:
+:CUSTOM_ID: links
+:END:
+
+One final aspect of the org file syntax are links.
+Links are of the form =[[link][description]]=, where link can be a
+- URL (=http://=, =https://=)
+- path to a file (=file:/path/to/org/file=)
+- target (any text surrounded by << and >>). If the target is in a different
+  file the format is ‘file:~/path/to/org/file.org::My Target’
+- headline within the same file
+- headline with a custom id (=#your-custom-id=)
+
+In order to easily go to the repositories we found online, let's link to
+their actual website:
+
+#+begin_src org
+* [[https://github.com/akinsho/org-bullets.nvim][org-bullets.nvim]]     :org:
+** Synopsis
+   This plugin is a clone of org-bullets. It replaces the asterisks in org
+   syntax with unicode characters.
+* [[https://github.com/dhruvasagar/vim-table-mode][vim-table-mode]]     :org:
+** TODO Synopsis
+   SCHEDULED: <YYYY-MM-DD>
+* [[https://github.com/nvim-lua/plenary.nvim][plenary]]                 :lua:
+** TODO [#A] Synopsis
+   DEADLINE: <YYYY-MM-DD>
+#+end_src
+
+* Basic Customization
+
+A first customization of orgmode would look like:
+
+#+begin_src lua
+-- init.lua
+local org = require('orgmode')
+
+org.setup_ts_grammar()
+org.setup({
+  org_agenda_files = {'~/path/to/agenda/file/*.org'},
+  org_default_notes_file = '~/path/to/default/capture/file.org',
+})
+#+end_src
+
+with all customization options going in the =org.setup({})=.
+
+All available options are detailed [[file:./configuration.org][here]], including setting new keybindings.
+
+
+* Agenda
+:PROPERTIES:
+:CUSTOM_ID: agenda
+:END:
+
+The org agenda is used to get an overview of all your different org files.
+Pressing =<Leader>oa= gives you an overview of the various specialized views
+into the agenda that are available. From each view you can press =g?= to see
+all the available key mappings. The most important ones are:
+
+- t       => change the TODO state of a heading
+- <Enter> => open heading in current (agenda-)window
+- <TAB>   => open heading in another window
+
+* Captures
+:PROPERTIES:
+:CUSTOM_ID: captures
+:END:
+
+To quickly save thoughts, ideas or other things that come up regularly in your
+day without interrupting your current task, Org-mode offers you so-called
+captures. They can conveniently opened in any Vim buffer with =<Leader>oc=.
+Here we are presented with a list of availabe capture templates.
+
+To aid us in our endeavour of saving interesting repos, let's create a custom
+capture that saves us from manually adding them to the =repos.org= file. We
+add the following in our call to ~org.setup()~:
+
+#+begin_src lua
+org_capture_templates = {
+  r = {
+      description = "Repo",
+      template = "* [[%x][%(return string.match('%x', '([^/]+)$'))]]%?",
+      target = "~/org/repos.org",
+  }
+}
+#+end_src
+
+After restarting Vim you should be able to select the =Repo= capture-template
+with =r= when you initiate a capture. If you have the link to the repo in you
+clipboard, it will be inserted into the link correctly. See the docs about the
+possible ways to [[file:./configuration.org::#org_capture_templates][configure your templates]].
+
+* Archiving
+:PROPERTIES:
+:CUSTOM_ID: archiving
+:END:
+
+When we no longer need certain parts of our org files, they can be archived.
+Let's say we are done with checking out the org-bullets repo, so we archive it
+by pressing =<Leader>o$= while on the heading. This will also archive any
+child headings. The default location for archived headings is
+<name-of-current-org-file>.org_archive, which can be changed with the
+[[file:./configuration.org::#org_archive_location][org_archive_location]] option.
+
+* Exporting
+:PROPERTIES:
+:CUSTOM_ID: exporting
+:END:
+
+In case you want to preview, you can export your .org file to e.g., html with pandoc, see the [[file:./configuration.org::#org_export][docs]].
+
+* Further Resources
+:PROPERTIES:
+:CUSTOM_ID: future-resources
+:END:
+
+Org-mode is has many more features than the tiny subset outlined here. Have a
+look around the official [[https://orgmode.org/manual/][manual]] if you are
+interested in any particular topic. But please keep in mind, that this is a
+work-in-progress port for Neovim and not the original source for Emacs
+Org-mode. If you find any features you would like to see here, feel free to
+open an issue or (even better)
+[[https://github.com/nvim-orgmode/orgmode#development][get your hands dirty]] and create a pull request :wink:
