@@ -55,6 +55,10 @@ for _, char in ipairs({ '*', '=', '/', '+', '~', '_' }) do
   vim.keymap.set('o', 'a' .. char, ':normal va' .. char .. '<CR>', { buffer = true })
 end
 
+if config.org_highlight_latex_and_related then
+  vim.bo[vim.b.org_bufnr].syntax = 'ON'
+end
+
 vim.b.undo_ftplugin = table.concat({
   'setlocal',
   'commentstring<',
