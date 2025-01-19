@@ -23,6 +23,7 @@ local config = require('orgmode.config')
 local Menu = {}
 
 ---@param data OrgMenuOpts
+---@return OrgMenu
 function Menu:new(data)
   self:_validate_data(data)
 

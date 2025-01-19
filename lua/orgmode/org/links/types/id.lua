@@ -56,7 +56,7 @@ end
 
 ---@private
 ---@param link string
----@return string
+---@return string?
 function OrgLinkId:_parse(link)
   return link:match('^id:(.+)$')
 end

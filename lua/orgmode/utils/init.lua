@@ -53,6 +53,9 @@ function utils.readfile(file, opts)
   end)
 end
 
+---@param file string
+---@param data string|string[]
+---@return OrgPromise<integer> bytes
 function utils.writefile(file, data)
   return Promise.new(function(resolve, reject)
     uv.fs_open(file, 'w', 438, function(err1, fd)
@@ -502,6 +505,7 @@ function utils.is_list(value)
   if vim.islist then
     return vim.islist(value)
   end
+  ---@diagnostic disable-next-line: deprecated
   return vim.tbl_islist(value)
 end
 
