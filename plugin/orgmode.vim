@@ -7,7 +7,7 @@ function! OrgmodeInput(prompt, default, ...) abort
         \ 'cancelreturn': v:null,
         \ }
 
-  if a:0 > 0
+  if a:0 > 0 && a:1 !=? v:null
     let opts.completion = 'customlist,'..get(a:1, 'name')
   endif
   return input(opts)
