@@ -266,7 +266,35 @@ local function indentexpr(linenr, bufnr)
 
   local new_indent = get_indent_for_match(indentexpr_cache.matches, linenr, mode, bufnr)
   local match = indentexpr_cache.matches[linenr]
+
   if match then
+    -- Attempt to calculate indentation from the block filetype
+    if match.indent_type == 'block' and linenr > match.line_nr and linenr < match.line_end_nr then
+      local block_parameters = match.node:field('parameter')
+
+      if block_parameters and block_parameters[1] then
+        local block_ft = vim.treesitter.get_node_text(block_parameters[1], bufnr)
+
+        if block_ft and block_ft ~= vim.bo.filetype then
+          local curr_indentexpr = vim.filetype.get_option(block_ft, 'indentexpr') --[[@as string]]
+
+          if curr_indentexpr and curr_indentexpr ~= '' then
+            curr_indentexpr = curr_indentexpr:gsub('%(%)$', '')
+
+            local buf_shiftwidth = vim.bo.shiftwidth
+            vim.bo.shiftwidth = vim.filetype.get_option(block_ft, 'shiftwidth')
+            local ok, block_ft_indent = pcall(function()
+              return vim.fn[curr_indentexpr]()
+            end)
+            if ok then
+              new_indent = math.max(block_ft_indent, vim.fn.indent(match.line_nr))
+            end
+
+            vim.bo.shiftwidth = buf_shiftwidth
+          end
+        end
+      end
+    end
     match.indent = new_indent
   end
   indentexpr_cache.prev_linenr = linenr
