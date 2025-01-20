@@ -3,6 +3,9 @@
 Nvim orgmode is a clone of Emacs Orgmode for Neovim 0.10.0+.
 It aims to be a feature-complete implementation of Orgmode features in Neovim.
 
+💡 TIP: To view this documentation offline in Neovim, run =:Org help=. More info in [[#globals-and-commands][Globals and commands]] section.
+
+
 ** Quick start
 :PROPERTIES:
 :CUSTOM_ID: quick-start
@@ -45,3 +48,22 @@ that demonstrates how the similar Orgmode clone [[https://github.com/dhruvasagar
 :END:
 Nvim-orgmode exoses a Lua API that can be used to interact with the orgmode. To view it, check [[file:../docs/orgmode-api.txt][orgmode-api.txt]]
 or do =:h OrgApi= in Neovim.
+
+** Globals and commands
+:PROPERTIES:
+:CUSTOM_ID: globals-and-commands
+:END:
+There are 2 additional ways to interact with Orgmode:
+1. Through the =:Org= command
+2. Through =Org= Lua global variable
+
+List of available actions:
+- =:Org help= - Open this documentation in new tab, set working directory to the docs folder for the tab to allow browsing
+- =:Org helpgrep= - Open search agenda view that allows searching through the documentation
+- =:Org agenda {type?}= - Open agenda view by the shortcut, for example =:Org agenda M= will open =tags_todo= view. When =type= is omitted, it opens up Agenda view.
+
+All of the commands above can be executed through the global Lua =Org= variable. Examples:
+- =Org.help()=
+- =Org.helpgrep()=
+- =Org.open()= - Opens =agenda= view
+- =Org.open.m()= - Opens =tags= view

@@ -1,4 +1,5 @@
 _G.orgmode = _G.orgmode or {}
+_G.Org = _G.Org or {}
 ---@type Org | nil
 local instance = nil
 
@@ -35,6 +36,7 @@ setmetatable(Org, {
 })
 
 function Org:new()
+  require('orgmode.org.global')(self)
   self.initialized = false
   self:setup_autocmds()
   require('orgmode.config'):setup_ts_predicates()

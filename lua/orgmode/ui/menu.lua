@@ -135,14 +135,19 @@ function Menu._default_menu(data)
   return entry.action()
 end
 
-function Menu:get_entry_by_key(key)
+---@return table<string, OrgMenuOption | OrgMenuSeparator>
+function Menu:get_valid_keys()
   local valid_keys = {}
   for _, item in ipairs(self.items) do
     if item.key then
       valid_keys[item.key] = item
     end
   end
-  return valid_keys[key]
+  return valid_keys
+end
+
+function Menu:get_entry_by_key(key)
+  return self:get_valid_keys()[key]
 end
 
 function Menu:open()

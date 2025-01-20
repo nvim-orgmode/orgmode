@@ -17,6 +17,7 @@ local AgendaTypes = require('orgmode.agenda.types')
 local Agenda = {}
 
 ---@param opts? { highlighter: OrgHighlighter, files: OrgFiles }
+---@return OrgAgenda
 function Agenda:new(opts)
   opts = opts or {}
   local data = {
