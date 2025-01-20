@@ -211,16 +211,6 @@ end
 ---@param buffer number? Buffer id
 ---@see orgmode.config.mappings
 function Config:setup_mappings(category, buffer)
-  if category == 'org' and vim.bo.filetype == 'org' and not vim.b[buffer].org_old_cr_mapping then
-    local old_mapping = utils.get_keymap({
-      mode = 'i',
-      lhs = '<CR>',
-      buffer = buffer,
-    })
-    if old_mapping and old_mapping.rhs ~= '<Cmd>lua require("orgmode").action("org_mappings.org_return")<CR>' then
-      vim.b[buffer].org_old_cr_mapping = old_mapping
-    end
-  end
   local maps = self:get_mappings(category, buffer)
   if not maps then
     return

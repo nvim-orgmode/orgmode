@@ -571,28 +571,25 @@ function OrgMappings:org_return()
     end
   end
 
-  local old_mapping = vim.b.org_old_cr_mapping
-
+  local global_cr_keymap = utils.get_keymap({
+    mode = 'i',
+    lhs = '<CR>',
+  })
   -- No other mapping for <CR>, just reproduce it.
-  if not old_mapping or vim.tbl_isempty(old_mapping) then
+  if not global_cr_keymap or vim.tbl_isempty(global_cr_keymap) then
     return vim.api.nvim_feedkeys(utils.esc('<CR>'), 'n', true)
   end
 
-  local rhs = old_mapping.rhs
-  local eval = old_mapping.expr > 0
+  local rhs = global_cr_keymap.rhs
 
-  if old_mapping.callback then
-    rhs = old_mapping.callback()
-    eval = false
+  if global_cr_keymap.callback then
+    rhs = global_cr_keymap.callback()
   end
 
-  if eval then
+  -- If mapping contains `\r`, it means it's already escaped and evaluated
+  if global_cr_keymap.expr > 0 and not rhs:lower():find('\r') then
+    rhs = vim.api.nvim_replace_termcodes(rhs, true, true, true)
     rhs = vim.api.nvim_eval(rhs)
-  end
-
-  -- If the rhs is empty, assume that callback already handled the action
-  if old_mapping.callback and not rhs then
-    return
   end
 
   return vim.api.nvim_feedkeys(rhs, 'n', true)
