@@ -2,33 +2,49 @@ local current_file_path = string.sub(debug.getinfo(1, 'S').source, 2)
 local docs_dir = vim.fn.fnamemodify(current_file_path, ':p:h:h:h:h') .. '/docs'
 
 ---@param orgmode Org
-local build = function(orgmode)
+---@param config OrgConfig
+local function generate_open_object(orgmode, config)
   local Open = setmetatable({}, {
     __call = function(t, ...)
       t.a(...)
     end,
-    __index = function(t, k)
-      local existing = rawget(t, k)
-      if existing then
-        return existing
-      end
-
-      ---@diagnostic disable-next-line: invisible
-      local keys = orgmode.agenda:_build_menu():get_valid_keys()
-
-      for key, item in pairs(keys) do
-        t[key] = item.action
-      end
-
-      return rawget(t, k)
-    end,
   })
 
-  for _, shortcut in ipairs({ 'a', 't', 'm', 'M', 's' }) do
-    Open[shortcut] = function()
-      return orgmode.agenda:open_by_key(shortcut)
+  local agenda_keys = { 'a', 't', 'm', 'M', 's' }
+  if config.org_agenda_custom_commands then
+    for key, _ in pairs(config.org_agenda_custom_commands) do
+      table.insert(agenda_keys, key)
     end
   end
+
+  table.sort(agenda_keys)
+
+  for _, key in ipairs(agenda_keys) do
+    Open[key] = function()
+      return orgmode.agenda:open_by_key(key)
+    end
+  end
+
+  return Open
+end
+
+---@param orgmode Org
+---@param config OrgConfig
+local function generate_capture_object(orgmode, config)
+  local Capture = {}
+
+  for key, _ in pairs(config.org_capture_templates or {}) do
+    Capture[key] = function()
+      return orgmode.capture:open_template_by_shortcut(key)
+    end
+  end
+
+  return Capture
+end
+
+---@param orgmode Org
+local build = function(orgmode)
+  local config = require('orgmode.config')
 
   local OrgGlobal = {
     help = function()
@@ -42,7 +58,8 @@ local build = function(orgmode)
       })
     end,
 
-    open = Open,
+    open = generate_open_object(orgmode, config),
+    capture = generate_capture_object(orgmode, config),
   }
 
   _G.Org = OrgGlobal

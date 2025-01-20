@@ -61,9 +61,11 @@ List of available actions:
 - =:Org help= - Open this documentation in new tab, set working directory to the docs folder for the tab to allow browsing
 - =:Org helpgrep= - Open search agenda view that allows searching through the documentation
 - =:Org agenda {type?}= - Open agenda view by the shortcut, for example =:Org agenda M= will open =tags_todo= view. When =type= is omitted, it opens up Agenda view.
+- =:Org capture {type}= - Open capture template by the shortcut, for example =:Org capture t=.
 
 All of the commands above can be executed through the global Lua =Org= variable. Examples:
 - =Org.help()=
 - =Org.helpgrep()=
 - =Org.open()= - Opens =agenda= view
 - =Org.open.m()= - Opens =tags= view
+- =Org.capture.t()= - Opens capture template for =t= shortcut
