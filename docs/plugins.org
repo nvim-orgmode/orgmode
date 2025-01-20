@@ -57,7 +57,7 @@ Add the orgmode provider and enable it for =org= filetype.
 require('blink.cmp').setup({
   sources = {
     per_filetype = {
-      org = {'ormode'}
+      org = {'orgmode'}
     },
     providers = {
       orgmode = {
@@ -151,7 +151,7 @@ Example configuration with few of these plugins using [[https://github.com/folke
     require('blink.cmp').setup({
       sources = {
         per_filetype = {
-          org = {'ormode'}
+          org = {'orgmode'}
         },
         providers = {
           orgmode = {
