@@ -3,10 +3,10 @@ local docs_dir = vim.fn.fnamemodify(current_file_path, ':p:h:h:h:h') .. '/docs'
 
 ---@param orgmode Org
 ---@param config OrgConfig
-local function generate_open_object(orgmode, config)
-  local Open = setmetatable({}, {
-    __call = function(t, ...)
-      t.a(...)
+local function generate_agenda_object(orgmode, config)
+  local Agenda = setmetatable({}, {
+    __call = function()
+      return orgmode.agenda:prompt()
     end,
   })
 
@@ -20,18 +20,22 @@ local function generate_open_object(orgmode, config)
   table.sort(agenda_keys)
 
   for _, key in ipairs(agenda_keys) do
-    Open[key] = function()
+    Agenda[key] = function()
       return orgmode.agenda:open_by_key(key)
     end
   end
 
-  return Open
+  return Agenda
 end
 
 ---@param orgmode Org
 ---@param config OrgConfig
 local function generate_capture_object(orgmode, config)
-  local Capture = {}
+  local Capture = setmetatable({}, {
+    __call = function()
+      return orgmode.capture:prompt()
+    end,
+  })
 
   for key, _ in pairs(config.org_capture_templates or {}) do
     Capture[key] = function()
@@ -58,7 +62,7 @@ local build = function(orgmode)
       })
     end,
 
-    open = generate_open_object(orgmode, config),
+    agenda = generate_agenda_object(orgmode, config),
     capture = generate_capture_object(orgmode, config),
   }
 
@@ -84,7 +88,7 @@ end
 
 vim.api.nvim_create_user_command('Org', function(opts)
   local item = resolve_item(opts.fargs)
-  if item and type(item) == 'function' then
+  if item and (type(item) == 'function' or getmetatable(item).__call) then
     return item()
   end
   require('orgmode.utils').echo_error(('Invalid command "Org %s"'):format(opts.args))
