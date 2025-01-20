@@ -6,12 +6,13 @@ Thanks for wanting to help out with nvim-orgmode, we appreciate the effort!
 
 - [[#reporting-bugsfeatures][Reporting Bugs/Features]]
 - [[#documentation][Documentation]]
-- [[*Development][Development]]
-  - [[*Philosophy][Philosophy]]
+- [[#development][Development]]
+  - [[#philosophy][Philosophy]]
   - [[#local-dev][Local dev]]
   - [[#code][Code]]
     - [[#tests][Tests]]
     - [[#parser][Parser]]
+
 
 ** Reporting Bugs/Features
 :PROPERTIES:
@@ -38,7 +39,13 @@ If you spot something missing in our [[file:../index.org][docs]], don't hesitate
 The [[https://github.com/nvim-orgmode/orgmode/wiki][wiki]] can be edited freely.
 
 ** Development
+:PROPERTIES:
+:CUSTOM_ID: development
+:END:
 *** Philosophy
+:PROPERTIES:
+:CUSTOM_ID: philosophy
+:END:
 We try to mimic the behavior of Emacs Orgmode as closely as possible.
 Variable names follow the same naming convention as in Emacs Orgmode,
 except that they are in =snake_case= instead of =kebab-case=.
