@@ -396,14 +396,14 @@ function PropertyMatch:parse(input)
     ---@type string?, OrgDate?
     local date_content, date_value
     if date_str == '<today>' then
-      date_value = Date.today()
+      date_value = Date.today():start_of('day')
     elseif date_str == '<tomorrow>' then
-      date_value = Date.tomorrow()
+      date_value = Date.tomorrow():start_of('day')
     else
       -- Parse relative formats (e.g. <+1d>) as well as absolute
       date_content = date_str:match('^<([%+%-]%d+[dmyhwM])>$')
       if date_content then
-        date_value = Date.today()
+        date_value = Date.today():start_of('day')
         date_value = date_value:adjust(date_content)
       else
         date_content = date_str:match('^<([^>]+)>$')
