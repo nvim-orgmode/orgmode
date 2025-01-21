@@ -348,35 +348,43 @@ function OrgMappings:todo_prev_state()
 end
 
 function OrgMappings:toggle_heading()
-  local line = vim.fn.getline('.')
-  -- TODO: allow nil
+  local line_number = vim.fn.line('.')
+  local line = vim.fn.getline(line_number)
   local parent = self.files:get_closest_headline_or_nil()
+
+  local set_line_and_dispatch_event = function(line_content, action)
+    vim.fn.setline(line_number, line_content)
+    EventManager.dispatch(
+      events.HeadingToggled:new(line_number, action, self.files:get_closest_headline_or_nil({ line_number, 0 }))
+    )
+  end
+  -- Convert to headline
   if not parent then
-    line = '* ' .. line
-    vim.fn.setline('.', line)
-    return
+    return set_line_and_dispatch_event('* ' .. line, 'line_to_headline')
   end
 
+  -- Convert headline to plain text
   if parent:get_range().start_line == vim.api.nvim_win_get_cursor(0)[1] then
     line = line:gsub('^%*+%s', '')
-  else
-    line = line:gsub('^(%s*)', '')
-    if line:match('^[%*-]%s') then -- handle lists
-      line = line:gsub('^[%*-]%s', '') -- strip bullet
-      local todo_keywords = config:get_todo_keywords()
-      line = line:gsub('^%[([X%s])%]%s', function(checkbox_state)
-        if checkbox_state == 'X' then
-          return todo_keywords:first_by_type('DONE').value .. ' '
-        else
-          return todo_keywords:first_by_type('TODO').value .. ' '
-        end
-      end)
-    end
-
-    line = string.rep('*', parent:get_level() + 1) .. ' ' .. line
+    return set_line_and_dispatch_event(line, 'headline_to_line')
   end
 
-  vim.fn.setline('.', line)
+  line = line:gsub('^(%s*)', '')
+  if line:match('^[%*-]%s') then -- handle lists
+    line = line:gsub('^[%*-]%s', '') -- strip bullet
+    local todo_keywords = config:get_todo_keywords()
+    line = line:gsub('^%[([X%s])%]%s', function(checkbox_state)
+      if checkbox_state == 'X' then
+        return todo_keywords:first_by_type('DONE').value .. ' '
+      else
+        return todo_keywords:first_by_type('TODO').value .. ' '
+      end
+    end)
+  end
+
+  line = string.rep('*', parent:get_level() + 1) .. ' ' .. line
+
+  return set_line_and_dispatch_event(line, 'line_to_child_headline')
 end
 
 ---Prompt for a note
