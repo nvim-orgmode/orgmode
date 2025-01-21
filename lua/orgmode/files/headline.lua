@@ -775,7 +775,7 @@ function Headline:get_valid_dates_for_agenda()
   for _, date in ipairs(self:get_all_dates()) do
     if date.active and not date:is_closed() and not date:is_obsolete_range_end() then
       table.insert(dates, date)
-      if not date:is_none() and date.related_date_range then
+      if not date:is_none() and date.related_date then
         local new_date = date:clone({ type = 'NONE' })
         table.insert(dates, new_date)
       end

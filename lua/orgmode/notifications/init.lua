@@ -22,7 +22,7 @@ end
 function Notifications:start_timer()
   self:stop_timer()
   self.timer = vim.loop.new_timer()
-  self:notify(Date.now():start_of('minute'))
+  self:notify(Date.now())
   self.timer:start(
     (60 - os.date('%S')) * 1000,
     60000,
@@ -62,7 +62,7 @@ function Notifications:notify(time)
 end
 
 function Notifications:cron()
-  local tasks = self:get_tasks(Date.now():start_of('minute'))
+  local tasks = self:get_tasks(Date.now())
   if type(config.notifications.cron_notifier) == 'function' then
     config.notifications.cron_notifier(tasks)
   else

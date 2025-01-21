@@ -193,6 +193,7 @@ function OrgMappings:_adjust_date_part(direction, amount, fallback)
     return string.format('%d%s', count or amount, span)
   end
   local minute_adj = get_adj('M', tonumber(config.org_time_stamp_rounding_minutes) * amount)
+  ---@param date OrgDate
   local do_replacement = function(date)
     local col = vim.fn.col('.') or 0
     local char = vim.fn.getline('.'):sub(col, col)
@@ -202,7 +203,7 @@ function OrgMappings:_adjust_date_part(direction, amount, fallback)
       return self:_replace_date(date)
     end
     local col_from_start = col - date.range.start_col
-    local parts = Date.parse_parts(raw_date_value)
+    local parts = Date.from_string(raw_date_value):parse_parts()
     local adj = nil
     local modify_end_time = false
     local part = nil
@@ -276,7 +277,7 @@ function OrgMappings:_adjust_date_part(direction, amount, fallback)
 
     self:_replace_date(new_date)
 
-    if date:is_logbook() and date.related_date_range then
+    if date:is_logbook() and date.related_date then
       local item = self.files:get_closest_headline_or_nil()
       if item then
         local logbook = item:get_logbook()

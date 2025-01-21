@@ -144,7 +144,7 @@ describe('Todo mappings', function()
     }, vim.api.nvim_buf_get_lines(0, 2, 12, false))
 
     vim.fn.cursor(3, 1)
-    local now = Date.now()
+    now = Date.now()
     vim.cmd([[norm cit]])
     vim.wait(200)
     assert.are.same({
