@@ -254,11 +254,13 @@ end
 
 function utils.tags_to_string(taglist, sorted)
   local tags = ''
+  local tags_list = taglist
   if #taglist > 0 then
     if sorted then
-      table.sort(taglist)
+      tags_list = vim.deepcopy(taglist)
+      table.sort(tags_list)
     end
-    tags = ':' .. table.concat(taglist, ':') .. ':'
+    tags = ':' .. table.concat(tags_list, ':') .. ':'
   end
   return tags
 end

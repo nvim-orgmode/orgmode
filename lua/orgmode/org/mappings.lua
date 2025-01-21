@@ -43,7 +43,8 @@ end
 ---@param tags? string|string[]
 function OrgMappings:set_tags(tags)
   local headline = self.files:get_closest_headline()
-  local current_tags = utils.tags_to_string(headline:get_own_tags())
+  local headline_tags = headline:get_own_tags()
+  local current_tags = utils.tags_to_string(headline_tags)
 
   if not tags then
     tags = utils.input('Tags: ', current_tags, function(arg_lead)
