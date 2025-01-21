@@ -57,7 +57,7 @@ function Agenda:render()
   for i, view in ipairs(self.views) do
     view:render(bufnr, line)
     if #self.views > 1 and i < #self.views then
-      colors.add_hr(bufnr, vim.fn.line('$'), config.org_agenda_block_separator)
+      colors.add_hr(bufnr, vim.api.nvim_buf_line_count(bufnr), config.org_agenda_block_separator)
     end
   end
   vim.bo[bufnr].modifiable = false
