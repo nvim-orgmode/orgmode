@@ -3,6 +3,8 @@ local utils = require('orgmode.utils')
 local Promise = require('orgmode.utils.promise')
 local config = require('orgmode.config')
 local namespace = vim.api.nvim_create_namespace('org_calendar')
+local colors = require('orgmode.colors')
+local Range = require('orgmode.files.elements.range')
 
 ---@alias OrgCalendarOnRenderDayOpts { line: number, from: number, to: number, buf: number, namespace: number }
 ---@alias OrgCalendarOnRenderDay fun(day: OrgDate, opts: OrgCalendarOnRenderDayOpts)
@@ -15,7 +17,6 @@ local small_minute_step = config.calendar.min_small_step or config.org_time_stam
 ---@field win number?
 ---@field buf number?
 ---@field callback fun(date: OrgDate | nil, cleared?: boolean)
----@field namespace function
 ---@field date OrgDate?
 ---@field title? string
 ---@field on_day? OrgCalendarOnRenderDay
@@ -239,17 +240,27 @@ function Calendar:render()
   vim.api.nvim_buf_set_lines(self.buf, 0, -1, true, content)
   vim.api.nvim_buf_clear_namespace(self.buf, namespace, 0, -1)
   if self.clearable then
-    vim.api.nvim_buf_add_highlight(self.buf, namespace, 'Comment', #content - 3, 0, -1)
+    local range = Range:new({
+      start_line = #content - 2,
+      start_col = 0,
+      end_line = #content - 2,
+      end_col = 1,
+    })
+    colors.highlight({
+      range = range,
+      hlgroup = 'Comment',
+    }, self.buf)
+    self:_apply_hl('Comment', #content - 3, 0, -1)
   end
 
   if not self:has_time() then
-    vim.api.nvim_buf_add_highlight(self.buf, namespace, 'Comment', 8, 0, -1)
+    self:_apply_hl('Comment', 8, 0, -1)
   end
 
-  vim.api.nvim_buf_add_highlight(self.buf, namespace, 'Comment', #content - 4, 0, -1)
-  vim.api.nvim_buf_add_highlight(self.buf, namespace, 'Comment', #content - 3, 0, -1)
-  vim.api.nvim_buf_add_highlight(self.buf, namespace, 'Comment', #content - 2, 0, -1)
-  vim.api.nvim_buf_add_highlight(self.buf, namespace, 'Comment', #content - 1, 0, -1)
+  self:_apply_hl('Comment', #content - 4, 0, -1)
+  self:_apply_hl('Comment', #content - 3, 0, -1)
+  self:_apply_hl('Comment', #content - 2, 0, -1)
+  self:_apply_hl('Comment', #content - 1, 0, -1)
 
   for i, line in ipairs(content) do
     local from = 0
@@ -274,14 +285,28 @@ function Calendar:render()
   vim.api.nvim_set_option_value('modifiable', false, { buf = self.buf })
 end
 
+function Calendar:_apply_hl(hl_group, start_line, start_col, end_col)
+  local range = Range:new({
+    start_line = start_line + 1,
+    start_col = start_col + 1,
+    end_line = start_line + 1,
+    end_col = end_col > 0 and end_col + 1 or end_col,
+  })
+  colors.highlight({
+    namespace = namespace,
+    range = range,
+    hlgroup = hl_group,
+  }, self.buf)
+end
+
 ---@param day OrgDate
 ---@param opts { from: number, to: number, line: number}
 function Calendar:on_render_day(day, opts)
   if day:is_today() then
-    vim.api.nvim_buf_add_highlight(self.buf, namespace, 'OrgCalendarToday', opts.line - 1, opts.from - 1, opts.to)
+    self:_apply_hl('OrgCalendarToday', opts.line - 1, opts.from - 1, opts.to)
   end
   if day:is_same_day(self.date) then
-    vim.api.nvim_buf_add_highlight(self.buf, namespace, 'OrgCalendarSelected', opts.line - 1, opts.from - 1, opts.to)
+    self:_apply_hl('OrgCalendarSelected', opts.line - 1, opts.from - 1, opts.to)
   end
   if self.on_day then
     self.on_day(
@@ -324,12 +349,12 @@ function Calendar:rerender_time()
     else
       vim.api.nvim_buf_set_lines(self.buf, 13, 14, true, { ' [d] - select day  [T] - clear time' })
     end
-    vim.api.nvim_buf_add_highlight(self.buf, namespace, 'Normal', 8, 0, -1)
-    vim.api.nvim_buf_add_highlight(self.buf, namespace, 'Comment', 13, 0, -1)
+    self:_apply_hl('Normal', 8, 0, -1)
+    self:_apply_hl('Comment', 13, 0, -1)
   else
     vim.api.nvim_buf_set_lines(self.buf, 13, 14, true, { ' [t] - enter time' })
-    vim.api.nvim_buf_add_highlight(self.buf, namespace, 'Comment', 8, 0, -1)
-    vim.api.nvim_buf_add_highlight(self.buf, namespace, 'Comment', 13, 0, -1)
+    self:_apply_hl('Comment', 8, 0, -1)
+    self:_apply_hl('Comment', 13, 0, -1)
   end
   vim.api.nvim_set_option_value('modifiable', false, { buf = self.buf })
 end

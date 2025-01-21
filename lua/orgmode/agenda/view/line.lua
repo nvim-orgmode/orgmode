@@ -126,7 +126,7 @@ function OrgAgendaLine:render()
   vim.bo[bufnr].modifiable = true
   vim.api.nvim_buf_set_lines(bufnr, self.line_nr - 1, self.line_nr, false, { compiled.content })
   vim.bo[bufnr].modifiable = false
-  colors.highlight(compiled.highlights, false, bufnr)
+  colors.apply_highlights(compiled.highlights, false, bufnr)
   colors.virtual_text(compiled.virt_texts, bufnr)
 end
 

@@ -70,42 +70,56 @@ M.get_todo_keywords_colors = function()
   }
 end
 
----@param highlights table[]
+---@class OrgHighlightEntry
+---@field range OrgRange
+---@field hlgroup string
+---@field namespace? number
+---@field spell? boolean
+---@field priority? number
+---@field conceal? boolean
+---@field url? string
+---@field whole_line? boolean
+
+---@param highlights OrgHighlightEntry[]
 ---@param clear? boolean
 ---@return string
-M.highlight = function(highlights, clear, bufnr)
+M.apply_highlights = function(highlights, clear, bufnr)
   bufnr = bufnr or 0
   if clear then
     vim.api.nvim_buf_clear_namespace(bufnr, namespace, 0, -1)
   end
   for _, hl in ipairs(highlights) do
-    if hl.whole_line then
-      vim.api.nvim_buf_set_extmark(bufnr, namespace, hl.range.start_line - 1, hl.range.start_col - 1, {
-        hl_group = hl.hlgroup,
-        end_line = hl.range.start_line,
-        hl_eol = true,
-      })
-    elseif hl.extmark then
-      vim.api.nvim_buf_set_extmark(bufnr, namespace, hl.range.start_line - 1, hl.range.start_col - 1, {
-        hl_group = hl.hlgroup,
-        end_line = hl.range.end_line - 1,
-        end_col = hl.range.end_col - 1,
-        spell = hl.spell,
-        priority = hl.priority,
-        conceal = hl.conceal,
-        url = hl.url,
-      })
-    else
-      vim.api.nvim_buf_add_highlight(
-        bufnr,
-        namespace,
-        hl.hlgroup,
-        hl.range.start_line - 1,
-        hl.range.start_col - 1,
-        hl.range.end_col - 1
-      )
-    end
+    M.highlight(hl, bufnr)
   end
+end
+
+---@param hl OrgHighlightEntry
+M.highlight = function(hl, bufnr)
+  bufnr = bufnr or 0
+  local start_row = hl.range.start_line - 1
+  local start_col = hl.range.start_col - 1
+  local opts = {
+    hl_group = hl.hlgroup,
+    end_row = hl.range.end_line - 1,
+    end_col = hl.range.end_col - 1,
+    spell = hl.spell,
+    priority = hl.priority,
+    conceal = hl.conceal,
+    url = hl.url,
+  }
+
+  if hl.whole_line then
+    opts.end_row = start_row + 1
+    opts.end_col = 0
+    opts.hl_eol = true
+  end
+
+  if opts.end_col < 0 then
+    opts.end_col = 99999
+    opts.strict = false
+  end
+
+  return vim.api.nvim_buf_set_extmark(bufnr, hl.namespace or namespace, start_row, start_col, opts)
 end
 
 ---@param virt_texts{ range: OrgRange, content: string, virt_text_pos: string, hl_groups: string[] }[]
@@ -130,7 +144,7 @@ M.clear_extmarks = function(bufnr, start_line, end_line)
     bufnr,
     namespace,
     { start_line, 0 },
-    { end_line, 9999 },
+    { end_line, 99999 },
     { details = true }
   )
   for _, extmark in ipairs(extmarks) do

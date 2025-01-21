@@ -234,7 +234,7 @@ function Agenda:_open_window()
     })
     if ft == 'orgagenda' then
       vim.bo[buf].modifiable = true
-      colors.highlight({}, true, buf)
+      colors.apply_highlights({}, true, buf)
       vim.api.nvim_buf_set_lines(buf, 0, -1, true, {})
       return buf
     end

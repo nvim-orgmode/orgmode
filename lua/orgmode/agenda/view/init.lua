@@ -69,7 +69,7 @@ function OrgAgendaView:render()
     vim.list_extend(virt_texts, compiled.virt_texts)
   end
   vim.api.nvim_buf_set_lines(self.bufnr, self.start_line - 1, self.end_line - 1, false, lines)
-  colors.highlight(highlights, false, self.bufnr)
+  colors.apply_highlights(highlights, false, self.bufnr)
   colors.virtual_text(virt_texts, self.bufnr)
 
   return self
