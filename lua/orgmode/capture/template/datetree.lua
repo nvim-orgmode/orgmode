@@ -1,5 +1,4 @@
 local utils = require('orgmode.utils')
-local Date = require('orgmode.objects.date')
 
 ---@class OrgDatetree
 ---@field files OrgFiles

@@ -2,7 +2,6 @@
 local Date = require('orgmode.objects.date')
 local config = require('orgmode.config')
 local utils = require('orgmode.utils')
-local validator = require('orgmode.utils.validator')
 local Search = require('orgmode.files.elements.search')
 local OrgAgendaTodosType = require('orgmode.agenda.types.todo')
 
@@ -58,11 +57,11 @@ function OrgAgendaTagsType:get_file_headlines(file)
         return false
       end
       if self.todo_ignore_deadlines == 'near' then
-        local diff = deadline_date:diff(Date.now())
+        local diff = deadline_date:diff(Date.now(), 'day')
         return diff > config.org_deadline_warning_days
       end
       if self.todo_ignore_deadlines == 'far' then
-        local diff = deadline_date:diff(Date.now())
+        local diff = deadline_date:diff(Date.now(), 'day')
         return diff <= config.org_deadline_warning_days
       end
       if self.todo_ignore_deadlines == 'past' then

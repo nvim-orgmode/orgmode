@@ -71,7 +71,7 @@ function OrgAgendaType:new(opts)
     category_filter = opts.category_filter and AgendaFilter:new({ types = { 'categories' } })
       :parse(opts.category_filter, true) or nil,
     span = opts.span or config:get_agenda_span(),
-    from = opts.from or Date.now():start_of('day'),
+    from = opts.from or Date.today(),
     to = nil,
     clock_report = nil,
     show_clock_report = opts.show_clock_report or false,
@@ -160,7 +160,7 @@ function OrgAgendaType:goto_date(date)
 end
 
 function OrgAgendaType:reset()
-  return self:goto_date(Date.now():start_of('day'))
+  return self:goto_date(Date.today())
 end
 
 ---@return OrgAgendaLine[]

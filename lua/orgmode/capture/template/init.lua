@@ -23,51 +23,51 @@ local expansions = {
   end,
   ['%%%^t'] = function()
     return Calendar.new({ date = Date.today() }):open():next(function(date)
-      return date and string.format('<%s>', date:to_string()) or nil
+      return date and date:to_wrapped_string(true) or nil
     end)
   end,
   ['%%%^%{([^%}]*)%}t'] = function(title)
     return Calendar.new({ date = Date.today(), title = title }):open():next(function(date)
-      return date and string.format('<%s>', date:to_string()) or nil
+      return date and date:to_wrapped_string(true) or nil
     end)
   end,
   ['%%T'] = function()
-    return string.format('<%s>', Date.now():to_string())
+    return Date.now():to_wrapped_string(true)
   end,
   ['%%%^T'] = function()
     return Calendar.new({ date = Date.now() }):open():next(function(date)
-      return date and string.format('<%s>', date:to_string()) or nil
+      return date and date:to_wrapped_string(true) or nil
     end)
   end,
   ['%%%^%{([^%}]*)%}T'] = function(title)
     return Calendar.new({ date = Date.now(), title = title }):open():next(function(date)
-      return date and string.format('<%s>', date:to_string()) or nil
+      return date and date:to_wrapped_string(true) or nil
     end)
   end,
   ['%%u'] = function()
-    return string.format('[%s]', Date.today():to_string())
+    return Date.today():to_wrapped_string(false)
   end,
   ['%%%^u'] = function()
     return Calendar.new({ date = Date.today() }):open():next(function(date)
-      return date and string.format('[%s]', date:to_string()) or nil
+      return date and date:to_wrapped_string(false) or nil
     end)
   end,
   ['%%%^%{([^%}]*)%}u'] = function(title)
     return Calendar.new({ date = Date.today(), title = title }):open():next(function(date)
-      return date and string.format('[%s]', date:to_string()) or nil
+      return date and date:to_wrapped_string(false) or nil
     end)
   end,
   ['%%U'] = function()
-    return string.format('[%s]', Date.now():to_string())
+    return Date.now():to_wrapped_string(false)
   end,
   ['%%%^U'] = function()
     return Calendar.new({ date = Date.now() }):open():next(function(date)
-      return date and string.format('[%s]', date:to_string()) or nil
+      return date and date:to_wrapped_string(false) or nil
     end)
   end,
   ['%%%^%{([^%}]*)%}U'] = function(title)
     return Calendar.new({ date = Date.now(), title = title }):open():next(function(date)
-      return date and string.format('[%s]', date:to_string()) or nil
+      return date and date:to_wrapped_string(false) or nil
     end)
   end,
   ['%%a'] = function()
