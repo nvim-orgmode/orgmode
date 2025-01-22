@@ -2335,6 +2335,12 @@ Default configuration (detailed description below):
           if not vim.tbl_isempty(result) then
             require('orgmode.notifications.notification_popup'):new({ content = result })
           end
+    
+          -- Example: if you use Snacks, you can do something like this (THis is not implemented)
+          Snacks.notifier.notify(table.concat(result, '\n'), vim.log.levels.INFO, {
+            title = 'Orgmode',
+            ft = 'org'
+          })
         end,
         cron_notifier = function(tasks)
           for _, task in ipairs(tasks) do
@@ -2344,12 +2350,18 @@ Default configuration (detailed description below):
     
             -- Linux
             if vim.fn.executable('notify-send') == 1 then
-              vim.loop.spawn('notify-send', { args = { string.format('%s\n%s\n%s', title, subtitle, date) }})
+              vim.system({
+                'notify-send',
+                '--icon=/path/to/orgmode/assets/nvim-orgmode-small.png',
+                '--app-name=orgmode',
+                title,
+                string.format('%s\n%s', subtitle, date),
+              })
             end
     
             -- MacOS
             if vim.fn.executable('terminal-notifier') == 1 then
-              vim.loop.spawn('terminal-notifier', { args = { '-title', title, '-subtitle', subtitle, '-message', date }})
+              vim.system({ 'terminal-notifier', '-title', title, '-subtitle', subtitle, '-message', date })
             end
           end
         end
