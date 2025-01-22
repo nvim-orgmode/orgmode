@@ -32,6 +32,7 @@ end
 vim.opt_local.formatexpr = 'v:lua.require("orgmode.org.format")()'
 vim.opt_local.omnifunc = 'v:lua.orgmode.omnifunc'
 vim.opt_local.commentstring = '# %s'
+vim.bo.indentkeys = ('%s,%s'):format(vim.bo.indentkeys, '=~end_src,=~end_example,<:>')
 
 _G.orgmode.omnifunc = function(findstart, base)
   return require('orgmode').completion:omnifunc(findstart, base)
@@ -69,5 +70,6 @@ vim.b.undo_ftplugin = table.concat({
   'foldexpr<',
   'formatexpr<',
   'omnifunc<',
+  'indentkeys<',
   '| unlet! b:org_bufnr b:org_tmp_edit_window',
 }, ' ')
