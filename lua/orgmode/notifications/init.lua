@@ -2,6 +2,8 @@ local Date = require('orgmode.objects.date')
 local config = require('orgmode.config')
 local utils = require('orgmode.utils')
 local NotificationPopup = require('orgmode.notifications.notification_popup')
+local current_file_path = string.sub(debug.getinfo(1, 'S').source, 2)
+local root_path = vim.fn.fnamemodify(current_file_path, ':p:h:h:h:h')
 
 ---@class OrgNotifications
 ---@field timer table
@@ -79,11 +81,17 @@ function Notifications:_cron_notifier(tasks)
     local date = string.format('%s: %s', task.type, task.time:to_string())
 
     if vim.fn.executable('notify-send') == 1 then
-      vim.loop.spawn('notify-send', { args = { string.format('%s\n%s\n%s', title, subtitle, date) } })
+      vim.system({
+        'notify-send',
+        ('--icon=%s/assets/nvim-orgmode-small.png'):format(root_path),
+        '--app-name=orgmode',
+        title,
+        string.format('%s\n%s', subtitle, date),
+      })
     end
 
     if vim.fn.executable('terminal-notifier') == 1 then
-      vim.loop.spawn('terminal-notifier', { args = { '-title', title, '-subtitle', subtitle, '-message', date } })
+      vim.system({ 'terminal-notifier', '-title', title, '-subtitle', subtitle, '-message', date })
     end
   end
 end
