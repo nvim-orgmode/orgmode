@@ -46,7 +46,7 @@ that demonstrates how the similar Orgmode clone [[https://github.com/dhruvasagar
 :PROPERTIES:
 :CUSTOM_ID: api-docs
 :END:
-Nvim-orgmode exoses a Lua API that can be used to interact with the orgmode. To view it, check [[file:../docs/orgmode-api.txt][orgmode-api.txt]]
+Nvim-orgmode exposes a Lua API that can be used to interact with the orgmode. To view it, check [[file:../docs/orgmode-api.txt][orgmode-api.txt]]
 or do =:h OrgApi= in Neovim.
 
 ** Globals and commands
@@ -62,7 +62,7 @@ List of available actions:
 - =:Org helpgrep= - Open search agenda view that allows searching through the documentation
 - =:Org agenda {type?}= - Open agenda view by the shortcut, for example =:Org agenda M= will open =tags_todo= view. When =type= is omitted, it opens up Agenda view.
 - =:Org capture {type?}= - Open capture template by the shortcut, for example =:Org capture t=. When =type= is omitted, it opens up Capture prompt.
-- =:Org install_treesitter_grammar= - Install the treesitter grammar for orgmode. If installed, prompt to reinstall. Grammar is installed automatically
+- =:Org install_treesitter_grammar= - Install the treesitter grammar for Orgmode. If installed, prompt to reinstall. Grammar is installed automatically
   on first run, but this is useful in case when there are issues with the grammar.
 
 All of the commands above can be executed through the global Lua =Org= variable. Examples:
