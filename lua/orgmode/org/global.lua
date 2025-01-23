@@ -62,6 +62,17 @@ local build = function(orgmode)
       })
     end,
 
+    install_treesitter_grammar = function()
+      local installed = require('orgmode.config'):install_grammar()
+      if not installed then
+        local choice =
+          vim.fn.confirm('Treesitter grammar is already installed. Do you want to re-install it?', '&Yes\n&No', 2)
+        if choice == 1 then
+          return require('orgmode.config'):reinstall_grammar()
+        end
+      end
+    end,
+
     agenda = generate_agenda_object(orgmode, config),
     capture = generate_capture_object(orgmode, config),
   }

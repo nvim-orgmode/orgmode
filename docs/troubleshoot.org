@@ -6,7 +6,7 @@ Make sure you are not overriding indentexpr in Org buffers with [[https://github
 *** I get ~treesitter/query.lua~ errors when opening agenda/capture prompt or org files
 
 Tree-sitter parser might not be installed.
-Try running ~:lua require('orgmode.config'):reinstall_grammar()~ to reinstall it.
+Try running ~:Org install_treesitter_grammar~ to reinstall it.
 
 *** Dates are not in English
 Dates are generated with Lua native date support, and it reads your current locale when creating them.
