@@ -1159,7 +1159,7 @@ To change a key mapping's `lhs` and its `desc`, provide a table:
 (The `desc` value is displayed in tools like WhichKey.)
 
 You can find the configuration file that holds all default mappings here
-<../lua/orgmode/config/mappings/init.lua>
+<https://github.com/nvim-orgmode/orgmode/blob/master/lua/orgmode/config/mappings/init.lua>.
 
 **NOTE**: All mappings are normal mode mappings (`nnoremap`) with exception of
 `org_return`
