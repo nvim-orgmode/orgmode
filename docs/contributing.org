@@ -35,7 +35,7 @@ documented, have a look at these [[https://orgmode.org/worg/#resources][resource
 :PROPERTIES:
 :CUSTOM_ID: documentation
 :END:
-If you spot something missing in our [[file:../index.org][docs]], don't hesitate making a PR.
+If you spot something missing in our [[file:./index.org][docs]], don't hesitate making a PR.
 The [[https://github.com/nvim-orgmode/orgmode/wiki][wiki]] can be edited freely.
 
 ** Development

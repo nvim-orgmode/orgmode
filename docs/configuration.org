@@ -1122,7 +1122,7 @@ require('orgmode').setup({
 (The =desc= value is displayed in tools like WhichKey.)
 
 You can find the configuration file that holds all default mappings
-[[../lua/orgmode/config/mappings/init.lua][here]]
+[[https://github.com/nvim-orgmode/orgmode/blob/master/lua/orgmode/config/mappings/init.lua][here]].
 
 *NOTE*: All mappings are normal mode mappings (=nnoremap=) with
 exception of =org_return=
