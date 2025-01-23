@@ -20,4 +20,5 @@ jobs:
           source-files: 'docs/'
           destination-username: 'nvim-orgmode'
           destination-repository: 'nvim-orgmode.github.io'
+          destination-branch: 'main'
           commit-email: 'github-actions@github.com'
