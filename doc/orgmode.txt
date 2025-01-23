@@ -2865,8 +2865,8 @@ indentation <https://github.com/nvim-treesitter/nvim-treesitter#indentation>
 
 I get treesitter/query.lua errors when opening agenda/capture prompt or org files*orgmode-I-get-treesitter/query.lua-errors-when-opening-agenda/capture-prompt-or-org-files*
 
-Tree-sitter parser might not be installed. Try running `:lua
-require('orgmode.config'):reinstall_grammar()` to reinstall it.
+Tree-sitter parser might not be installed. Try running `:Org
+install_treesitter_grammar` to reinstall it.
 
 
 Dates are not in English                    *orgmode-Dates-are-not-in-English*
