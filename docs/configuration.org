@@ -22,7 +22,6 @@ This page contains information about all configuration that can be provided to t
 - Type: =string | string[]=
 - Default: =''=
 Single or multiple paths from where the org files are being read.
-# TODO: Add link to custom agenda commands
 
 Examples:
 - =~/org/*=
@@ -329,7 +328,7 @@ Possible values:
 :CUSTOM_ID: org_indent_mode_turns_off_org_adapt_indentation
 :END:
 - Type: =boolean=
-- Defaul: =true=
+- Default: =true=
 Possible values:
 - =true= - Disable [[#org_adapt_indentation][org_adapt_indentation]] by default when [[#org_startup_indented][org_startup_indented]] is enabled.
 - =false= - Do not disable [[#org_adapt_indentation][org_adapt_indentation]] by default when [[#org_startup_indented][org_startup_indented]] is enabled.
@@ -339,7 +338,7 @@ Possible values:
 :CUSTOM_ID: org_indent_mode_turns_on_hiding_stars
 :END:
 - Type: =boolean=
-- Defaul: =true=
+- Default: =true=
 Possible values:
 - =true= - Enable [[#org_hide_leading_stars][org_hide_leading_stars]] by default when [[#org_startup_indented][org_indent_mode]] is enabled for buffer (~vim.b.org_indent_mode = true~).
 - =false= - Do not modify the value in [[#org_hide_leading_stars][org_hide_leading_stars]] by default when [[#org_startup_indented][org_indent_mode]] is enabled for buffer (~vim.b.org_indent_mode = true~).
@@ -521,7 +520,7 @@ Determine on which day the week will start in calendar modal (ex:[[#org_change_d
 :CUSTOM_ID: emacs_config
 :END:
 - Type: =table=
-- Default: ={ executable_path = 'emacs', config_path=nil }=
+- Default: ~{ executable_path = 'emacs', config_path=nil }~
 Set configuration for your emacs. This is useful for having the emacs
 export properly pickup your emacs config and plugins. If =config_path=
 is not provided, exporter tries to find a configuration file from these
@@ -681,7 +680,7 @@ strategies:
   PROGRESS, DONE' has a sort value of 1, 2 and 3), ascending
 - =todo-state-down= - Sort by todo keyword, descending
 - =clocked-up= - Show clocked in headlines first
-- =clocked-down= - Show clocked in headines last
+- =clocked-down= - Show clocked in headlines last
 - =category-up= - Sort by category name, ascending
 - =category-down= - Sort by category name, descending
 - =category-keep= - Keep default category sorting, as it appears in
@@ -1847,7 +1846,7 @@ Move current headline + it's content down by one headline.
 - Mapped to: =<Leader>oe=
 Open export options.
 *NOTE*: Exports are handled via =emacs= and =pandoc=. This means that =emacs= and/or =pandoc= must be in
-=$PATH=. see [[#org_custom_exports][org_custom_exports]] if you want to add your own export options.
+=$PATH=. See [[#org_custom_exports][org_custom_exports]] if you want to add your own export options.
 
 **** =org_next_visible_heading=
 :PROPERTIES:
