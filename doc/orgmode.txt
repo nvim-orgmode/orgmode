@@ -373,7 +373,7 @@ Possible values:
 org_indent_mode_turns_off_org_adapt_indentation*orgmode-org_indent_mode_turns_off_org_adapt_indentation*
 
 - Type: `boolean`
-- Defaul: `true`
+- Default: `true`
 
 Possible values:
 
@@ -384,7 +384,7 @@ Possible values:
 org_indent_mode_turns_on_hiding_stars*orgmode-org_indent_mode_turns_on_hiding_stars*
 
 - Type: `boolean`
-- Defaul: `true`
+- Default: `true`
 
 Possible values:
 
@@ -722,7 +722,7 @@ List of sorting strategies to apply to a given view. Available strategies:
     PROGRESS, DONE' has a sort value of 1, 2 and 3), ascending
 - `todo-state-down` - Sort by todo keyword, descending
 - `clocked-up` - Show clocked in headlines first
-- `clocked-down` - Show clocked in headines last
+- `clocked-down` - Show clocked in headlines last
 - `category-up` - Sort by category name, ascending
 - `category-down` - Sort by category name, descending
 - `category-keep` - Keep default category sorting, as it appears in
@@ -1867,7 +1867,7 @@ org_export                                                *orgmode-org_export*
 - Mapped to: `<Leader>oe`
 
 Open export options. **NOTE**: Exports are handled via `emacs` and `pandoc`.
-This means that `emacs` and/or `pandoc` must be in `$PATH`. see
+This means that `emacs` and/or `pandoc` must be in `$PATH`. See
 |orgmode-org_customexports| if you want to add your own export options.
 
 
