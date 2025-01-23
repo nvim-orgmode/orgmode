@@ -213,7 +213,7 @@ org_capture_templates = {
 After restarting Vim you should be able to select the =Repo= capture-template
 with =r= when you initiate a capture. If you have the link to the repo in you
 clipboard, it will be inserted into the link correctly. See the docs about the
-possible ways to [[file:./configuration.org::#org_capture_templates][configure your templates]].
+possible ways to [[file:./configuration.org::#org-capture-templates][configure your templates]].
 
 * Archiving
 :PROPERTIES:
@@ -225,14 +225,14 @@ Let's say we are done with checking out the org-bullets repo, so we archive it
 by pressing =<Leader>o$= while on the heading. This will also archive any
 child headings. The default location for archived headings is
 <name-of-current-org-file>.org_archive, which can be changed with the
-[[file:./configuration.org::#org_archive_location][org_archive_location]] option.
+[[file:./configuration.org::#org-archive-location][org_archive_location]] option.
 
 * Exporting
 :PROPERTIES:
 :CUSTOM_ID: exporting
 :END:
 
-In case you want to preview, you can export your .org file to e.g., html with pandoc, see the [[file:./configuration.org::#org_export][docs]].
+In case you want to preview, you can export your .org file to e.g., html with pandoc, see the [[file:./configuration.org::#org-export][docs]].
 
 * Further Resources
 :PROPERTIES:

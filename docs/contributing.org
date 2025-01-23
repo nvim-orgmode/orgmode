@@ -10,8 +10,6 @@ Thanks for wanting to help out with nvim-orgmode, we appreciate the effort!
   - [[#philosophy][Philosophy]]
   - [[#local-dev][Local dev]]
   - [[#code][Code]]
-    - [[#tests][Tests]]
-    - [[#parser][Parser]]
 
 
 ** Reporting Bugs/Features
