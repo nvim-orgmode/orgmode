@@ -2561,8 +2561,7 @@ Few examples:
   =COMPUTER= and property =CATEGORY= equal to =mywork=:
   =URGENT-COMPUTER+CATEGORY=mywork/-DONE=
 
-*** Tangle
-Extract source code (tangle)
+*** Extract source code (tangle)
 :PROPERTIES:
 :CUSTOM_ID: extract-source-code-tangle
 :END:
@@ -2571,7 +2570,6 @@ There is basic support for extracting source code with =tangle= and =noweb=.
 These options are supported:
 
 1. Setting =header-args= on multiple levels:
-
    1. Configuration ([[#org_babel_default_header_args][org_babel_default_header_args]])
    2. File level property (=#+property: header-args :tangle yes=)
    3. Headline level property

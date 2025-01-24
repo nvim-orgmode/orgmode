@@ -1,5 +1,4 @@
-#+title: nvim-orgmode Tutorial
-#+author: nvim-orgmode Team
+#+OPTIONS: H:9
 
 * Overview
 Org-mode is a flexible note-taking system that was originally created for

@@ -1,3 +1,4 @@
+#+OPTIONS: H:9
 ** Troubleshooting
 *** Indentation is not working
 

@@ -1,10 +1,12 @@
+#+OPTIONS: H:9
 * Nvim Orgmode
 
 Nvim orgmode is a clone of Emacs Orgmode for Neovim 0.10.0+.
 It aims to be a feature-complete implementation of Orgmode features in Neovim.
 
-💡 TIP: To view this documentation offline in Neovim, run =:Org help=. More info in [[#globals-and-commands][Globals and commands]] section.
+Online version of this documentation is available at [[https://nvim-orgmode.github.io]].
 
+To view this documentation offline in Neovim, run =:Org help=. More info in [[#globals-and-commands][Globals and commands]] section.
 
 ** Quick start
 :PROPERTIES:
