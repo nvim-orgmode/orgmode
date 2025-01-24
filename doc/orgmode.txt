@@ -11,7 +11,12 @@ Table of Contents                                  *orgmode-table-of-contents*
   - Mappings                                  |orgmode-configuration-mappings|
   - Features                                  |orgmode-configuration-features|
   - User interface                      |orgmode-configuration-user-interface|
-  - Troubleshooting                    |orgmode-configuration-troubleshooting|
+2. Troubleshooting                                   |orgmode-troubleshooting|
+  - Indentation is not working|orgmode-troubleshooting-indentation-is-not-working|
+  - I get treesitter/query.lua errors when opening agenda/capture prompt or org files|orgmode-troubleshooting-i-get-treesitter/query.lua-errors-when-opening-agenda/capture-prompt-or-org-files|
+  - Dates are not in English|orgmode-troubleshooting-dates-are-not-in-english|
+  - Links are not concealed  |orgmode-troubleshooting-links-are-not-concealed|
+  - Jumping to file path is not working for paths with forward slash|orgmode-troubleshooting-jumping-to-file-path-is-not-working-for-paths-with-forward-slash|
 
 ==============================================================================
 1. Configuration                                       *orgmode-configuration*
@@ -2845,22 +2850,23 @@ this to config:
 <
 
 
-TROUBLESHOOTING                        *orgmode-configuration-troubleshooting*
+==============================================================================
+2. Troubleshooting                                   *orgmode-troubleshooting*
 
 
-Indentation is not working                *orgmode-Indentation-is-not-working*
+INDENTATION IS NOT WORKING*orgmode-troubleshooting-indentation-is-not-working*
 
 Make sure you are not overriding indentexpr in Org buffers with nvim-treesitter
 indentation <https://github.com/nvim-treesitter/nvim-treesitter#indentation>
 
 
-I get treesitter/query.lua errors when opening agenda/capture prompt or org files*orgmode-I-get-treesitter/query.lua-errors-when-opening-agenda/capture-prompt-or-org-files*
+I GET TREESITTER/QUERY.LUA ERRORS WHEN OPENING AGENDA/CAPTURE PROMPT OR ORG FILES*orgmode-troubleshooting-i-get-treesitter/query.lua-errors-when-opening-agenda/capture-prompt-or-org-files*
 
 Tree-sitter parser might not be installed. Try running `:Org
 install_treesitter_grammar` to reinstall it.
 
 
-Dates are not in English                    *orgmode-Dates-are-not-in-English*
+DATES ARE NOT IN ENGLISH    *orgmode-troubleshooting-dates-are-not-in-english*
 
 Dates are generated with Lua native date support, and it reads your current
 locale when creating them.
@@ -2876,7 +2882,7 @@ you have available on the system you can start the command `:language` and
 press `<TAB>` to autocomplete possible options.
 
 
-Links are not concealed                      *orgmode-Links-are-not-concealed*
+LINKS ARE NOT CONCEALED      *orgmode-troubleshooting-links-are-not-concealed*
 
 Links are concealed with Vim's conceal feature (see `:help conceal`). To enable
 concealing, add this to your `init.lua`:
@@ -2887,7 +2893,7 @@ concealing, add this to your `init.lua`:
 <
 
 
-Jumping to file path is not working for paths with forward slash*orgmode-Jumping-to-file-path-is-not-working-for-paths-with-forward-slash*
+JUMPING TO FILE PATH IS NOT WORKING FOR PATHS WITH FORWARD SLASH*orgmode-troubleshooting-jumping-to-file-path-is-not-working-for-paths-with-forward-slash*
 
 If you are using Windows, paths are by default written with backslashes. To use
 forward slashes, you must enable `shellslash` option (see `:help shellslash`).
