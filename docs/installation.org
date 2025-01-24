@@ -1,6 +1,7 @@
 #+OPTIONS: H:9
 * Installation
 
+** Installation methods
 Orgmode can be installed with any package manager.
 Here are few examples:
 
@@ -54,6 +55,6 @@ Here are few examples:
     EOF
    #+end_src
 
-*** Useful links:
+** Useful links
 - [[file:./configuration.org][Configuration]]
 - [[file:./plugins.org][Plugins]]

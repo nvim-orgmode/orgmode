@@ -1,15 +1,15 @@
 #+OPTIONS: H:9
-** Troubleshooting
-*** Indentation is not working
+* Troubleshooting
+** Indentation is not working
 
 Make sure you are not overriding indentexpr in Org buffers with [[https://github.com/nvim-treesitter/nvim-treesitter#indentation][nvim-treesitter indentation]]
 
-*** I get ~treesitter/query.lua~ errors when opening agenda/capture prompt or org files
+** I get ~treesitter/query.lua~ errors when opening agenda/capture prompt or org files
 
 Tree-sitter parser might not be installed.
 Try running ~:Org install_treesitter_grammar~ to reinstall it.
 
-*** Dates are not in English
+** Dates are not in English
 Dates are generated with Lua native date support, and it reads your current locale when creating them.
 #+HTML: <br/>
 To use different locale you can add this to your ~init.lua~:
@@ -21,7 +21,7 @@ vim.cmd('language en_US.utf8')
 Just make sure you have ~en_US~ locale installed on your system. To see what you have available on the system you can
 start the command ~:language~ and press ~<TAB>~ to autocomplete possible options.
 
-*** Links are not concealed
+** Links are not concealed
 Links are concealed with Vim's conceal feature (see ~:help conceal~). To enable concealing, add this to your ~init.lua~:
 
 #+BEGIN_SRC lua
@@ -29,7 +29,7 @@ vim.opt.conceallevel = 2
 vim.opt.concealcursor = 'nc'
 #+END_SRC
 
-*** Jumping to file path is not working for paths with forward slash
+** Jumping to file path is not working for paths with forward slash
 If you are using Windows, paths are by default written with backslashes.
 To use forward slashes, you must enable ~shellslash~ option
 (see ~:help shellslash~).
