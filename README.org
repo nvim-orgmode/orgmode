@@ -10,7 +10,7 @@
 
 Orgmode clone written in Lua for Neovim
 
-[[#installation][Installation]] • [[file:./docs/index.org][Docs]] • [[#showcase][Showcase]] • [[file:./docs/troubleshoot.org][Troubleshoot]] • [[#plugins][Plugins]] • [[file:./docs/contributing.org][Contributing]] • [[#thanks-to][Kudos]]
+[[#installation][Installation]] • [[#docs][Docs]] • [[#showcase][Showcase]] • [[file:./docs/troubleshoot.org][Troubleshoot]] • [[#plugins][Plugins]] • [[file:./docs/contributing.org][Contributing]] • [[#thanks-to][Kudos]]
 
 #+HTML:</div>
 
@@ -49,6 +49,17 @@ Use your favourite package manager. We recommend [[https://github.com/folke/lazy
 #+END_SRC
 
 For more installation options see [[file:./docs/installation.org][Installation]] page.
+
+*** Docs
+:PROPERTIES:
+:CUSTOM_ID: docs
+:END:
+
+Online docs is available at [[https://nvim-orgmode.github.io]].
+
+To view docs in orgmode format in Neovim, run =:Org help=.
+
+Vim help docs is available at =:help orgmode.txt=
 *** Usage
 
 - *Open agenda prompt*: =<Leader>oa=
