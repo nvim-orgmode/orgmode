@@ -2577,18 +2577,14 @@ Few examples:
     `URGENT-COMPUTER+CATEGORY=mywork/-DONE`
 
 
-Tangle                                                        *orgmode-Tangle*
-
-Extract source code (tangle)
+Extract source code (tangle)            *orgmode-Extract-source-code-(tangle)*
 
 There is basic support for extracting source code with `tangle` and `noweb`.
 (Orgmode link: Extracting source code
 <https://orgmode.org/manual/Extracting-Source-Code.html>) These options are
 supported:
 
-1. Setting `header-args` on multiple levels:
-
-1. Configuration (|orgmode-org_babeldefaultheaderargs|)
+1. Setting `header-args` on multiple levels:1. Configuration (|orgmode-org_babeldefaultheaderargs|)
 
 
 2. File level property (`#+property: header-args :tangle yes`)
@@ -2609,18 +2605,13 @@ supported:
 
 
 
-2. Tangling all blocks with these options:
-
-1. `:tangle no` - Do not tangle
+2. Tangling all blocks with these options:1. `:tangle no` - Do not tangle
 2. `:tangle yes` - Tangle to same filename as current org file, with
 different extension (If org file is `~/org/todo.org` and block is `#+block_src lua`, tangles to `/org/todo.lua`)
 3. `:tangle path` - Tangle to given filename. It can be absolute (`:tangle /path/to/file.ext`) or relative to current file (either `:tangle ./file.ext` or `:tangle file.ext`)
 
 
-3. Basic `:noweb` syntax (See Noweb Reference Syntax
-<https://orgmode.org/manual/Noweb-Reference-Syntax.html>):
-
-1. `:noweb no` - Do not expand any references
+3. Basic `:noweb` syntax (See Noweb Reference Syntax <https://orgmode.org/manual/Noweb-Reference-Syntax.html>):1. `:noweb no` - Do not expand any references
 2. `:noweb yes` - Expand references via `#+name` directive on block.
 See example below.
 3. `:noweb tangle` - Same as `:noweb yes`
