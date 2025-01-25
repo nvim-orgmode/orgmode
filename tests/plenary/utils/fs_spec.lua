@@ -49,6 +49,12 @@ describe('substitute_path', function()
   it('fails on all other relative paths', function()
     assert.is.False(fs_utils.substitute_path('a/b/c'))
   end)
+
+  it('allows passing a custom base', function()
+    local output = fs_utils.substitute_path('./b/c', 'a/')
+    assert(output)
+    assert.are.same(output, 'a//b/c')
+  end)
 end)
 
 describe('get_real_path', function()

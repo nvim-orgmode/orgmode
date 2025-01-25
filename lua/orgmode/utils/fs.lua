@@ -3,18 +3,23 @@ local utils = require('orgmode.utils')
 local M = {}
 
 ---@param path_str string
+---@param base? string
 ---@return string | false
-function M.substitute_path(path_str)
+function M.substitute_path(path_str, base)
   if path_str:match('^/') then
     return path_str
   elseif path_str:match('^~/') then
     local home_path = os.getenv('HOME')
     return home_path and path_str:gsub('^~', home_path) or false
   elseif path_str:match('^%./') then
-    local base = vim.fn.fnamemodify(utils.current_file_path(), ':p:h')
+    if not base then
+      base = vim.fn.fnamemodify(utils.current_file_path(), ':p:h')
+    end
     return base .. '/' .. path_str:gsub('^%./', '')
   elseif path_str:match('^%.%./') then
-    local base = vim.fn.fnamemodify(utils.current_file_path(), ':p:h')
+    if not base then
+      base = vim.fn.fnamemodify(utils.current_file_path(), ':p:h')
+    end
     return base .. '/' .. path_str
   end
   return false
