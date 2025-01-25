@@ -489,6 +489,19 @@ function Capture:build_note_capture(title)
         end)
         :attach(kill_map.default_map, kill_map.user_map, kill_map.opts)
     end,
+    on_close = function(capture_window)
+      local is_modified = vim.bo.modified
+
+      if is_modified then
+        local choice = vim.fn.confirm('Do you want to capture this note?', '&Yes\n&No')
+        vim.cmd([[redraw!]])
+        if choice ~= 1 then
+          return utils.echo_info('Canceled.')
+        end
+      end
+
+      capture_window:finish()
+    end,
   })
 end
 

@@ -6,7 +6,7 @@ local Promise = require('orgmode.utils.promise')
 ---@field template OrgCaptureTemplate
 ---@field on_open? fun(self: OrgCaptureWindow)
 ---@field on_finish? fun(lines: string[]): string[] | nil
----@field on_close? fun()
+---@field on_close? fun(self: OrgCaptureWindow)
 
 ---@class OrgCaptureWindow :OrgCaptureWindowOpts
 ---@field private _window fun() | nil
@@ -34,7 +34,7 @@ function CaptureWindow:open()
     if not content then
       return utils.echo_info('Canceled.')
     end
-    self._window = utils.open_tmp_org_window(16, config.win_split_mode, config.win_border, self.on_close)
+    self._window = utils.open_tmp_org_window(16, config.win_split_mode, config.win_border, self:_on_close())
     vim.api.nvim_buf_set_lines(0, 0, -1, true, content)
     self.template:setup()
     vim.b.org_capture = true
@@ -48,6 +48,15 @@ function CaptureWindow:open()
       self._resolve_fn = resolve
     end)
   end)
+end
+
+function CaptureWindow:_on_close()
+  if not self.on_close then
+    return nil
+  end
+  return function()
+    self.on_close(self)
+  end
 end
 
 function CaptureWindow:finish()
