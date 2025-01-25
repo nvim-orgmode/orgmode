@@ -558,6 +558,19 @@ function Config:use_property_inheritance(property_name)
   end
 end
 
+---@param property_name string
+---@return boolean uses_inheritance
+function Config:use_attach_inheritance(property_name)
+  local use_it = self.org_attach_use_inheritance
+  if use_it == 'always' then
+    return true
+  elseif use_it == 'never' then
+    return false
+  else
+    return self:use_property_inheritance(property_name)
+  end
+end
+
 ---@type OrgConfig
 instance = Config:new()
 return instance
