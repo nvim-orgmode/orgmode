@@ -3,6 +3,30 @@ local orgmode = require('orgmode')
 
 local M = {}
 
+---Temporarily change a variable.
+---@param ctx table<string, any>
+---@param name string
+---@param value any
+---@param inner fun()
+function M.with_var(ctx, name, value, inner)
+  local old = ctx[name]
+  ctx[name] = value
+  local ok, err = pcall(inner)
+  ctx[name] = old
+  assert(ok, err)
+end
+
+---Temporarily change the working directory.
+---@param new_path string
+---@param inner fun()
+function M.with_cwd(new_path, inner)
+  local old_path = vim.fn.getcwd()
+  vim.cmd.cd(new_path)
+  local ok, err = pcall(inner)
+  vim.cmd.cd(old_path)
+  assert(ok, err)
+end
+
 ---@param path string
 function M.load_file(path)
   vim.cmd.edit(path)
