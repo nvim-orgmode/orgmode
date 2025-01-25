@@ -124,5 +124,15 @@ describe('Util', function()
       local msg = err:sub(#err - #expected)
       assert.are.equal(expected, msg)
     end)
+
+    it('allows no-clobber writes', function()
+      local promise = utils.writefile(filename, contents, { excl = true })
+      ---@type boolean, string?
+      local ok, err = pcall(promise.wait, promise)
+      assert.is.False(ok)
+      assert(err)
+      local expected = 'EEXIST: file already exists: ' .. filename
+      assert.are.equal(expected, err)
+    end)
   end)
 end)
