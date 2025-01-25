@@ -15,6 +15,7 @@ Orgmode supports various plugins to extend its functionality or make it more pre
 - [[#aesthetics][Aestehtics]]
   - [[#org-bulletsnvim][org-bullets.nvim]]
   - [[#headlinesnvim][headlines.nvim]]
+  - [[#org-modernnvim][org-modern.nvim]]
 - [[#other][Other]]
 - [[#example-configuration][Example configuration]]
 
@@ -119,6 +120,28 @@ require('orgmode').setup()
 --Setup headlines.nvim
 require("headlines").setup()
 #+END_SRC
+
+
+*** org-modern.nvim
+:PROPERTIES:
+:CUSTOM_ID: org-modernnvim
+:END:
+Link: [[https://github.com/danilshvalov/org-modern.nvim][org-modern.nvim]]
+
+Modern looking agenda prompt menu.
+#+begin_src lua
+local Menu = require("org-modern.menu")
+
+require("orgmode").setup({
+  ui = {
+    menu = {
+      handler = function(data)
+        Menu:new():open(data)
+      end,
+    },
+  },
+})
+#+end_src
 
 ** Other
 :PROPERTIES:
