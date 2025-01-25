@@ -203,6 +203,76 @@ describe('Search parser', function()
     }))
   end)
 
+  it('should correctly parse todo keywords', function()
+    local result = Search:new('+WORK/!+TODO|-NEXT')
+    assert.is.True(result:check({
+      props = {},
+      tags = { 'WORK' },
+      todo = 'TODO',
+    }))
+    assert.is.True(result:check({
+      props = {},
+      tags = { 'WORK' },
+      todo = 'DONE',
+    }))
+    assert.is.False(result:check({
+      props = {},
+      tags = { 'WORK' },
+      todo = 'NEXT',
+    }))
+
+    result = Search:new('+WORK/!+TODO|+NEXT')
+    assert.is.True(result:check({
+      props = {},
+      tags = { 'WORK' },
+      todo = 'TODO',
+    }))
+    assert.is.False(result:check({
+      props = {},
+      tags = { 'WORK' },
+      todo = 'DONE',
+    }))
+    assert.is.True(result:check({
+      props = {},
+      tags = { 'WORK' },
+      todo = 'NEXT',
+    }))
+
+    result = Search:new('+WORK/!+TODO-NEXT')
+    assert.is.True(result:check({
+      props = {},
+      tags = { 'WORK' },
+      todo = 'TODO',
+    }))
+    assert.is.False(result:check({
+      props = {},
+      tags = { 'WORK' },
+      todo = 'DONE',
+    }))
+    assert.is.False(result:check({
+      props = {},
+      tags = { 'WORK' },
+      todo = 'NEXT',
+    }))
+
+    result = Search:new('+WORK/!-TODO-NEXT')
+    assert.is.False(result:check({
+      props = {},
+      tags = { 'WORK' },
+      todo = 'TODO',
+    }))
+    assert.is.True(result:check({
+      props = {},
+      tags = { 'WORK' },
+      todo = 'DONE',
+    }))
+    assert.is.False(result:check({
+      props = {},
+      tags = { 'WORK' },
+      todo = 'NEXT',
+    }))
+  end)
+
   it('should parse allowed punctuation in tags', function()
     local result = Search:new('lang_dev|@work|org#mode|a2%')
     assert.is.True(result:check({ tags = { 'lang_dev' } }))

@@ -59,9 +59,12 @@ PropertyStringMatch.__index = PropertyStringMatch
 local PropertyNumberMatch = {}
 PropertyNumberMatch.__index = PropertyNumberMatch
 
+---@class OrgTodoMatchAndItem
+---@field operator string
+---@field value string
+
 ---@class OrgTodoMatch
----@field anyOf string[]
----@field noneOf string[]
+---@field orItems OrgTodoMatchAndItem[][]
 local TodoMatch = {}
 TodoMatch.__index = TodoMatch
 
@@ -541,10 +544,8 @@ end
 ---@private
 ---@return OrgTodoMatch
 function TodoMatch:_new()
-  ---@type OrgTodoMatch
   local todo_match = {
-    anyOf = {},
-    noneOf = {},
+    orItems = {},
   }
 
   setmetatable(todo_match, TodoMatch)
@@ -567,39 +568,43 @@ function TodoMatch:parse(input)
 
   -- Parse a whitelist of keywords
   --- @type string[]?
-  local anyOf
-  anyOf, input = parse_delimited_sequence(input, function(i)
-    return parse_pattern(i, '%w+')
-  end, '%|')
-  if anyOf and #anyOf > 0 then
-    -- Successfully parsed the whitelist, return it
-    local todo_match = TodoMatch:_new()
-    todo_match.anyOf = anyOf
-    return todo_match, input
-  end
+  local orItems
+  orItems, input = parse_delimited_sequence(input, function(i)
+    ---@type string?
+    local operator
+    operator, i = parse_pattern(i, '[%+%-]?')
 
-  -- Parse a blacklist of keywords
-  ---@type string?
-  local negation
-  negation, input = parse_pattern(input, '-')
-  if negation then
-    local negative_items
-    negative_items, input = parse_delimited_sequence(input, function(i)
-      return parse_pattern(i, '%w+')
-    end, '%-')
-
-    if negative_items then
-      if #negation > 0 then
-        local todo_match = TodoMatch:_new()
-        todo_match.noneOf = negative_items
-        return todo_match, input
-      else
-        return nil, original_input
-      end
+    if operator == '' then
+      operator = '+'
     end
+
+    local andItems = {}
+
+    while operator do
+      ---@type string?
+      local value
+      value, i = parse_pattern(i, '%w+')
+      if not value then
+        break
+      end
+      table.insert(andItems, {
+        operator = operator,
+        value = value,
+      })
+
+      operator, i = parse_pattern(i, '[%+%-]')
+    end
+
+    return andItems, i
+  end, '%|')
+
+  if not orItems or #orItems == 0 then
+    return nil, original_input
   end
 
-  return nil, original_input
+  local todo_match = TodoMatch:_new()
+  todo_match.orItems = orItems
+  return todo_match, input
 end
 
 ---@param item OrgSearchable
@@ -607,25 +612,24 @@ end
 function TodoMatch:match(item)
   local item_todo = item.todo
 
-  if #self.anyOf > 0 then
-    for _, todo_value in ipairs(self.anyOf) do
-      if item_todo == todo_value then
-        return true
+  for _, orItem in ipairs(self.orItems) do
+    local validItems = true
+    for _, andItem in ipairs(orItem) do
+      if andItem.operator == '-' and item_todo == andItem.value then
+        validItems = false
+        break
+      elseif andItem.operator == '+' and item_todo ~= andItem.value then
+        validItems = false
+        break
       end
     end
 
-    return false
-  elseif #self.noneOf > 0 then
-    for _, todo_value in ipairs(self.noneOf) do
-      if item_todo == todo_value then
-        return false
-      end
+    if validItems then
+      return true
     end
-
-    return true
-  else
-    return true
   end
+
+  return false
 end
 
 return Search
