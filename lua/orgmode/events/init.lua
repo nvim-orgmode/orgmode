@@ -32,7 +32,7 @@ end
 
 function EventManager.init()
   if EventManager.initialized then
-    return
+    return EventManager
   end
   for event, listeners in pairs(Listeners) do
     for _, listener in ipairs(listeners) do
