@@ -94,23 +94,6 @@ function utils.system_notification(message)
   end
 end
 
-function utils.open(target)
-  if vim.fn.executable('xdg-open') == 1 then
-    vim.system({ 'xdg-open', target }, { text = false })
-    return 0
-  end
-
-  if vim.fn.executable('open') == 1 then
-    vim.system({ 'open', target }, { text = false })
-    return 0
-  end
-
-  if vim.fn.has('win32') == 1 then
-    vim.system({ 'start', target }, { text = false })
-    return 0
-  end
-end
-
 ---@param msg string|table
 ---@param additional_msg? table
 ---@param store_in_history? boolean
