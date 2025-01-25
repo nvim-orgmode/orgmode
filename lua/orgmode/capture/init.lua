@@ -3,6 +3,7 @@ local fs = require('orgmode.utils.fs')
 local config = require('orgmode.config')
 local Templates = require('orgmode.capture.templates')
 local Template = require('orgmode.capture.template')
+local EventManager = require('orgmode.events')
 local Menu = require('orgmode.ui.menu')
 local Range = require('orgmode.files.elements.range')
 local CaptureWindow = require('orgmode.capture.window')
@@ -298,6 +299,7 @@ function Capture:refile_file_headline_to_archive(headline)
   local destination_file = self.files:get(archive_location)
   local todo_state = headline:get_todo()
 
+  EventManager.dispatch(EventManager.event.HeadlineArchived:new(headline, destination_file))
   return self
     :_refile_from_org_file({
       source_headline = headline,
