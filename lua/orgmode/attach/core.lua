@@ -395,6 +395,8 @@ function AttachCore:attach(node, file, opts)
         return nil
       end
       node:toggle_auto_tag(true)
+      local link = self.links:store_link_to_attachment({ attach_dir = attach_dir, original = file })
+      vim.fn.setreg(vim.v.register, link)
       return basename
     end)
   end)
@@ -420,6 +422,8 @@ function AttachCore:attach_url(node, url, opts)
         return nil
       end
       node:toggle_auto_tag(true)
+      local link = self.links:store_link_to_attachment({ attach_dir = attach_dir, original = url })
+      vim.fn.setreg(vim.v.register, link)
       return basename
     end)
   end)
@@ -445,6 +449,14 @@ function AttachCore:attach_buffer(node, bufnr, opts)
         return nil
       end
       node:toggle_auto_tag(true)
+      -- Ignore all errors here, this is just to determine whether we can store
+      -- a link to `bufname`.
+      local bufname_exists = vim.uv.fs_stat(bufname)
+      local link = self.links:store_link_to_attachment({
+        attach_dir = attach_dir,
+        original = bufname_exists and bufname or attach_file,
+      })
+      vim.fn.setreg(vim.v.register, link)
       return basename
     end)
   end)
@@ -472,7 +484,10 @@ function AttachCore:attach_many(node, files, opts)
       .mapSeries(function(to_be_attached)
         local basename = basename_safe(to_be_attached)
         local attach_file = vim.fs.joinpath(attach_dir, basename)
-        return attach(to_be_attached, attach_file)
+        return attach(to_be_attached, attach_file):next(function(success)
+          self.links:store_link_to_attachment({ attach_dir = attach_dir, original = to_be_attached })
+          return success
+        end)
       end, files)
       ---@param successes boolean[]
       :next(function(successes)
