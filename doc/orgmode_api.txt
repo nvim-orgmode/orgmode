@@ -70,6 +70,16 @@ OrgFile:get_closest_headline()                    *OrgFile:get_closest_headline*
      @return OrgApiHeadline | nil
 
 
+                                                  *OrgFile:get_headline_on_line*
+OrgFile:get_headline_on_line({line_number})
+
+    Parameters: ~
+        {line_number}  (number)
+
+    Returns: ~
+        (OrgApiHeadline|nil)
+
+
 OrgFile:get_link()                                            *OrgFile:get_link*
      Get a link destination as string
 
@@ -280,6 +290,13 @@ OrgAgenda.open_by_key({key})                             *OrgAgenda.open_by_key*
 
     Parameters: ~
         {key}  (string)  Key in the agenda prompt (for example: "a", "t", "m", "M")
+
+
+OrgAgenda.get_headline_at_cursor()            *OrgAgenda.get_headline_at_cursor*
+    Get the headline at the cursor position in the agenda view
+
+    Returns: ~
+        (OrgApiHeadline|nil)
 
 
 OrgPosition                                                        *OrgPosition*
