@@ -93,6 +93,14 @@ function OrgFile:get_closest_headline(cursor)
   return nil
 end
 
+---@param line_number number
+---@return OrgApiHeadline | nil
+function OrgFile:get_headline_on_line(line_number)
+  return vim.tbl_filter(function(headline)
+    return headline.position.start_line == line_number
+  end, self.headlines)[1]
+end
+
 --- Get a link destination as string
 ---
 --- Depending if org_id_link_to_org_use_id is set the format is
