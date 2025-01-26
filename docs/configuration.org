@@ -596,7 +596,8 @@ agenda will always show current week from today - 2 days
 
 Define custom agenda views that are available through the
 [[#org_agenda][org_agenda]] mapping. It is possible to combine multiple
-agenda types into single view. An example:
+agenda types into single view. Available options for each agenda
+type are explained down below the example:
 
 #+begin_src lua
 require('orgmode').setup({
@@ -657,6 +658,25 @@ require('orgmode').setup({
   }
 })
 #+end_src
+
+These arguments are shared between all of the agenda types:
+- =org_agenda_overriding_header= =(string)= - Override the header of the agenda view
+- =org_agenda_files= =(string | string[])= - Set custom files to be loaded into this view. In same format as [[#org_agenda_files][org_agenda_files]]
+- =org_agenda_tag_filter_preset= =string= - Custom tags filter for the view. Same format as [[#org_agenda_files][org_agenda_files]], but applies only for tags.
+- =org_agenda_category_filter_preset= =string= - Custom category filter for the view. Same format as [[#org_agenda_files][org_agenda_files]], but applies only for categories.
+- =org_agenda_sorting_strategy= =string[]= - List of sorting functions. See [[#org_agenda_sorting_strategy][org_agenda_sorting_strategy]]
+- =org_agenda_remove_tags= =boolean= - Remove tags from the view. Default: =false=
+
+=agenda= type arguments:
+- =org_agenda_span= =string|number= - Set custom span for the view. In same format as [[#org_agenda_span][org_agenda_span]]
+- =org_agenda_start_on_weekday= =number= - Set custom start day for the view. In same format as [[#org_agenda_start_on_weekday][org_agenda_start_on_weekday]]
+- =org_agenda_start_day= =string= - Set custom start day offset for the view. In same format as [[#org_agenda_start_day][org_agenda_start_day]]
+
+=tags= and =tags_todo= type arguments:
+- =org_agenda_todo_ignore_scheduled= =('past' | 'future' | 'all' | nil')= - Do not show headlines that have scheduled task according to the value. Default: =nil=
+- =org_agenda_todo_ignore_deadlines= =('near' | 'far' | 'all' | 'past' | 'future' | nil')= - Do not show headlines that have deadline task according to the value. Default: =nil=
+  - =far= - Do not show deadlines that are too far in future (over [[#org_deadline_warning_days][org_deadline_warning_days]])
+  - =near= - Do not show deadlines that are too near in future (under [[#org_deadline_warning_days][org_deadline_warning_days]])
 
 *** =org_agenda_sorting_strategy=
 :PROPERTIES:
