@@ -2850,6 +2850,29 @@ this to config:
 <
 
 
+Input                                                          *orgmode-Input*
+
+- Type: `boolean`
+- Default: `false`
+
+By default, Vim's built-in `input()` function is used for input prompts. To use
+Neovim's `vim.ui.input()` function, add this to config:
+
+>lua
+    require('orgmode').setup({
+      ui = {
+        input = {
+          use_vim_ui = true
+        }
+      }
+    })
+<
+
+📝 NOTE: If you are using a plugin for `vim.ui.input`, make sure it supports
+autocompletion for better experience. snacks.nvim
+<https://github.com/folke/snacks.nvim> input module supports autocompletion.
+
+
 ==============================================================================
 2. Troubleshooting                                   *orgmode-troubleshooting*
 

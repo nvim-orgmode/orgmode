@@ -29,10 +29,7 @@ OrgApi.refile({opts})                                            *OrgApi.refile*
     If executed from capture buffer, it will close the capture buffer
 
     Parameters: ~
-        {opts}  (OrgApiRefileOpts)
-
-    Returns: ~
-        (boolean)
+        {opts}  (OrgApiRefileOpts)  @return OrgPromise<boolean>
 
 
 OrgApi.insert_link()                                        *OrgApi.insert_link*
@@ -44,7 +41,7 @@ OrgApi.insert_link()                                        *OrgApi.insert_link*
      If <in_file_location> is *<headline>, <headline> is used as prefilled description for the link.
      If <protocol> is id, this format can also be used to pass a prefilled description.
      @param link_location string
-     @return boolean
+     @return OrgPromise<boolean>
 
 
 OrgApiFile                                                          *OrgApiFile*
