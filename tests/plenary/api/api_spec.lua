@@ -442,10 +442,12 @@ describe('Api', function()
           '* TODO Some task',
         })
 
-        api.refile({
-          source = api.current().headlines[2],
-          destination = api.load(destination_file.filename),
-        })
+        api
+          .refile({
+            source = api.current().headlines[2],
+            destination = api.load(destination_file.filename),
+          })
+          :wait()
 
         assert.are.same(vim.api.nvim_buf_get_name(0), source_file.filename)
         vim.cmd('e' .. destination_file.filename)
@@ -480,10 +482,12 @@ describe('Api', function()
 
         assert.are.same(vim.api.nvim_buf_get_name(0), source_file.filename)
 
-        api.refile({
-          source = api.current().headlines[2],
-          destination = api.load(destination_file.filename).headlines[2],
-        })
+        api
+          .refile({
+            source = api.current().headlines[2],
+            destination = api.load(destination_file.filename).headlines[2],
+          })
+          :wait()
 
         vim.cmd('e' .. destination_file.filename)
 
@@ -517,10 +521,12 @@ describe('Api', function()
           '  DEADLINE: <2021-07-21 Wed 22:02>',
         })
 
-        api.refile({
-          source = api.current().headlines[1],
-          destination = api.load(destination_file.filename),
-        })
+        api
+          .refile({
+            source = api.current().headlines[1],
+            destination = api.load(destination_file.filename),
+          })
+          :wait()
 
         assert.are.Not.same(vim.api.nvim_buf_get_name(0), source_file)
 
@@ -554,10 +560,12 @@ describe('Api', function()
           '  DEADLINE: <2021-07-21 Wed 22:02>',
         })
 
-        api.refile({
-          source = api.current().headlines[1],
-          destination = api.load(destination_file.filename).headlines[2],
-        })
+        api
+          .refile({
+            source = api.current().headlines[1],
+            destination = api.load(destination_file.filename).headlines[2],
+          })
+          :wait()
 
         assert.are.Not.same(vim.api.nvim_buf_get_name(0), source_file)
 

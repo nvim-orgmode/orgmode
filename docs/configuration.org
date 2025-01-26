@@ -2838,3 +2838,25 @@ require('orgmode').setup({
   }
 })
 #+end_src
+
+*** Input
+:PROPERTIES:
+:CUSTOM_ID: input
+:END:
+- Type: =boolean=
+- Default: =false=
+
+By default, Vim's built-in =input()= function is used for input prompts.
+To use Neovim's =vim.ui.input()= function, add this to config:
+
+#+begin_src lua
+require('orgmode').setup({
+  ui = {
+    input = {
+      use_vim_ui = true
+    }
+  }
+})
+#+end_src
+
+📝 NOTE: If you are using a plugin for =vim.ui.input=, make sure it supports autocompletion for better experience. [[https://github.com/folke/snacks.nvim][snacks.nvim]] input module supports autocompletion.

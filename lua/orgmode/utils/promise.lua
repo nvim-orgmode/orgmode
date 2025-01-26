@@ -380,6 +380,14 @@ function Promise.map(callback, list, concurrency)
   end)
 end
 
+--- Equivalents to JavaScript's Promise.mapSeries
+--- @param callback fun(value: any, index: number): any
+--- @param list any[]: promise or non-promise values
+--- @return OrgPromise
+function Promise.mapSeries(callback, list)
+  return Promise.map(callback, list, 1)
+end
+
 --- Equivalents to JavaScript's Promise.race.
 --- @param list any[]: promise or non-promise values
 --- @return OrgPromise

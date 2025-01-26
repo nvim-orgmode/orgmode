@@ -140,10 +140,12 @@ describe('Refile', function()
     local source_headline = capture_file:get_headlines()[2]
 
     ---@diagnostic disable-next-line: invisible
-    org.capture:_refile_from_org_file({
-      source_headline = source_headline,
-      destination_file = destination_file,
-    })
+    org.capture
+      :_refile_from_org_file({
+        source_headline = source_headline,
+        destination_file = destination_file,
+      })
+      :wait()
     vim.cmd('edit' .. vim.fn.fnameescape(destination_file.filename))
     assert.are.same({
       '* foo',
@@ -169,10 +171,12 @@ describe('Refile', function()
     local item = capture_file:get_headlines()[2]
 
     ---@diagnostic disable-next-line: invisible
-    org.capture:_refile_from_org_file({
-      destination_file = destination_file,
-      source_headline = item,
-    })
+    org.capture
+      :_refile_from_org_file({
+        destination_file = destination_file,
+        source_headline = item,
+      })
+      :wait()
     vim.cmd('edit' .. vim.fn.fnameescape(destination_file.filename))
     assert.are.same({
       '* foobar',
@@ -197,11 +201,13 @@ describe('Refile', function()
     local item = capture_file:get_headlines()[1]
 
     ---@diagnostic disable-next-line: invisible
-    org.capture:_refile_from_org_file({
-      destination_file = destination_file,
-      source_headline = item,
-      destination_headline = destination_file:get_headlines()[1],
-    })
+    org.capture
+      :_refile_from_org_file({
+        destination_file = destination_file,
+        source_headline = item,
+        destination_headline = destination_file:get_headlines()[1],
+      })
+      :wait()
     vim.cmd('edit' .. vim.fn.fnameescape(destination_file.filename))
     assert.are.same({
       '* foobar',

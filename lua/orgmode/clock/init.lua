@@ -1,6 +1,7 @@
 local Duration = require('orgmode.objects.duration')
 local utils = require('orgmode.utils')
 local Promise = require('orgmode.utils.promise')
+local Input = require('orgmode.ui.input')
 
 ---@class OrgClock
 ---@field files OrgFiles
@@ -99,12 +100,17 @@ function Clock:org_set_effort()
   local item = self.files:get_closest_headline()
   -- TODO: Add Effort_ALL property as autocompletion
   local current_effort = item:get_property('Effort')
-  local effort = utils.input('Effort: ', current_effort or '')
-  local duration = Duration.parse(effort)
-  if duration == nil then
-    return utils.echo_error('Invalid duration format: ' .. effort)
-  end
-  item:set_property('Effort', effort)
+  return Input.open('Effort: ', current_effort or ''):next(function(effort)
+    if not effort then
+      return false
+    end
+    local duration = Duration.parse(effort)
+    if duration == nil then
+      return utils.echo_error('Invalid duration format: ' .. effort)
+    end
+    item:set_property('Effort', effort)
+    return item
+  end)
 end
 
 function Clock:get_statusline()

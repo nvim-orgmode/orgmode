@@ -8,6 +8,8 @@ local Range = require('orgmode.files.elements.range')
 local CaptureWindow = require('orgmode.capture.window')
 local Date = require('orgmode.objects.date')
 local Datetree = require('orgmode.capture.template.datetree')
+local Input = require('orgmode.ui.input')
+local Promise = require('orgmode.utils.promise')
 
 ---@alias OrgOnCaptureClose fun(capture:OrgCapture, opts:OrgProcessCaptureOpts)
 ---@alias OrgOnCaptureCancel fun(capture:OrgCapture)
@@ -130,14 +132,18 @@ end
 function Capture:refile_to_destination()
   local source_file = self.files:get_current_file()
   local source_headline = source_file:get_headlines()[1]
-  local destination = self:get_destination()
-  self:_refile_from_capture_buffer({
-    template = self._window.template,
-    source_file = source_file,
-    source_headline = source_headline,
-    destination_file = destination.file,
-    destination_headline = destination.headline,
-  })
+  return self:get_destination():next(function(destination)
+    if not destination then
+      return false
+    end
+    return self:_refile_from_capture_buffer({
+      template = self._window.template,
+      source_file = source_file,
+      source_headline = source_headline,
+      destination_file = destination.file,
+      destination_headline = destination.headline,
+    })
+  end)
 end
 
 ---Triggered from org file when we want to refile headline
@@ -204,54 +210,68 @@ end
 ---Refile a headline from a regular org file (non-capture)
 ---@private
 ---@param opts OrgProcessRefileOpts
----@return number
+---@return OrgPromise<number>
 function Capture:_refile_from_org_file(opts)
   local source_headline = opts.source_headline
   local source_file = source_headline.file
   local destination_file = opts.destination_file
   local destination_headline = opts.destination_headline
 
-  if not opts.destination_file then
-    local destination = self:get_destination()
-    destination_file = destination.file
-    destination_headline = destination.headline
-  end
-  assert(destination_file)
+  return Promise.resolve()
+    :next(function()
+      if not opts.destination_file then
+        return self:get_destination():next(function(destination)
+          if not destination then
+            return false
+          end
+          destination_file = destination.file
+          destination_headline = destination.headline
+          return destination
+        end)
+      end
+    end)
+    :next(function()
+      if not destination_file then
+        return false
+      end
 
-  local is_same_file = source_file.filename == destination_file.filename
+      local is_same_file = source_file.filename == destination_file.filename
 
-  local target_level = 0
-  local target_line = -1
+      local target_level = 0
+      local target_line = -1
 
-  if destination_headline then
-    target_level = destination_headline:get_level()
-    target_line = destination_headline:get_range().end_line
-  end
+      if destination_headline then
+        target_level = destination_headline:get_level()
+        target_line = destination_headline:get_range().end_line
+      end
 
-  local lines = source_headline:get_lines()
+      local lines = source_headline:get_lines()
 
-  if destination_headline or source_headline:get_level() > 1 then
-    lines = self:_adapt_headline_level(source_headline, target_level, is_same_file)
-  end
+      if destination_headline or source_headline:get_level() > 1 then
+        lines = self:_adapt_headline_level(source_headline, target_level, is_same_file)
+      end
 
-  destination_file:update_sync(function(file)
-    if is_same_file then
-      local item_range = source_headline:get_range()
-      return vim.cmd(string.format('silent! %d,%d move %s', item_range.start_line, item_range.end_line, target_line))
-    end
+      destination_file:update_sync(function()
+        if is_same_file then
+          local item_range = source_headline:get_range()
+          return vim.cmd(
+            string.format('silent! %d,%d move %s', item_range.start_line, item_range.end_line, target_line)
+          )
+        end
 
-    local range = self:_get_destination_range_without_empty_lines(Range.from_line(target_line))
-    target_line = range.start_line
-    vim.api.nvim_buf_set_lines(0, range.start_line, range.end_line, false, lines)
-  end)
+        local range = self:_get_destination_range_without_empty_lines(Range.from_line(target_line))
+        target_line = range.start_line
+        vim.api.nvim_buf_set_lines(0, range.start_line, range.end_line, false, lines)
+      end)
 
-  if not is_same_file and source_file.filename == utils.current_file_path() then
-    local item_range = source_headline:get_range()
-    vim.api.nvim_buf_set_lines(0, item_range.start_line - 1, item_range.end_line, false, {})
-  end
+      if not is_same_file and source_file.filename == utils.current_file_path() then
+        local item_range = source_headline:get_range()
+        vim.api.nvim_buf_set_lines(0, item_range.start_line - 1, item_range.end_line, false, {})
+      end
 
-  utils.echo_info(opts.message or ('Wrote %s'):format(destination_file.filename))
-  return target_line + 1
+      utils.echo_info(opts.message or ('Wrote %s'):format(destination_file.filename))
+      return target_line + 1
+    end)
 end
 
 ---@param headline OrgHeadline
@@ -278,24 +298,26 @@ function Capture:refile_file_headline_to_archive(headline)
   local destination_file = self.files:get(archive_location)
   local todo_state = headline:get_todo()
 
-  local target_line = self:_refile_from_org_file({
-    source_headline = headline,
-    destination_file = destination_file,
-    message = ('Archived to %s'):format(destination_file.filename),
-  })
-
-  destination_file = self.files:get(archive_location)
-  destination_file:update(function(archive_file)
-    local archived_headline = archive_file:get_closest_headline({ target_line, 0 })
-    archived_headline:set_property('ARCHIVE_TIME', Date.now():to_string())
-    archived_headline:set_property('ARCHIVE_FILE', file.filename)
-    local outline_path = headline:get_outline_path()
-    if outline_path ~= '' then
-      archived_headline:set_property('ARCHIVE_OLPATH', outline_path)
-    end
-    archived_headline:set_property('ARCHIVE_CATEGORY', headline:get_category())
-    archived_headline:set_property('ARCHIVE_TODO', todo_state or '')
-  end)
+  return self
+    :_refile_from_org_file({
+      source_headline = headline,
+      destination_file = destination_file,
+      message = ('Archived to %s'):format(destination_file.filename),
+    })
+    :next(function(target_line)
+      destination_file = self.files:get(archive_location)
+      return destination_file:update(function(archive_file)
+        local archived_headline = archive_file:get_closest_headline({ target_line, 0 })
+        archived_headline:set_property('ARCHIVE_TIME', Date.now():to_string())
+        archived_headline:set_property('ARCHIVE_FILE', file.filename)
+        local outline_path = headline:get_outline_path()
+        if outline_path ~= '' then
+          archived_headline:set_property('ARCHIVE_OLPATH', outline_path)
+        end
+        archived_headline:set_property('ARCHIVE_CATEGORY', headline:get_category())
+        archived_headline:set_property('ARCHIVE_TODO', todo_state or '')
+      end)
+    end)
 end
 
 ---@param item OrgHeadline
@@ -359,51 +381,53 @@ function Capture:_get_destination_range_without_empty_lines(range)
 end
 
 --- Prompt for file (and headline) where to refile to
---- @return { file: OrgFile, headline?: OrgHeadline}
+--- @return OrgPromise<{ file: OrgFile, headline?: OrgHeadline}>
 function Capture:get_destination()
   local valid_destinations = self:_get_autocompletion_files()
 
-  local destination = utils.input('Enter destination: ', '', function(arg_lead)
+  return Input.open('Enter destination: ', '', function(arg_lead)
     return self:autocomplete_refile(arg_lead, valid_destinations)
-  end)
+  end):next(function(destination)
+    if not destination then
+      return false
+    end
 
-  local path = destination:match('^.*%.org/')
-  local headline_title = path and destination:sub(#path + 1) or ''
+    local path = destination:match('^.*%.org/')
+    local headline_title = path and destination:sub(#path + 1) or ''
 
-  if not valid_destinations[path] then
-    utils.echo_error(
-      ('"%s" is not a is not a file specified in the "org_agenda_files" setting. Refiling cancelled.'):format(
-        destination[1]
+    if not valid_destinations[path] then
+      utils.echo_error(
+        ('"%s" is not a is not a file specified in the "org_agenda_files" setting. Refiling cancelled.'):format(path)
       )
-    )
-    return {}
-  end
+      return false
+    end
 
-  local destination_file = valid_destinations[path]
-  local result = {
-    file = destination_file,
-  }
+    local destination_file = valid_destinations[path]
+    local result = {
+      file = destination_file,
+    }
 
-  if not headline_title or vim.trim(headline_title) == '' then
-    return result
-  end
+    if not headline_title or vim.trim(headline_title) == '' then
+      return result
+    end
 
-  local headlines = vim.tbl_filter(function(item)
-    local pattern = '^' .. vim.pesc(headline_title:lower()) .. '$'
-    return item:get_title():lower():match(pattern)
-  end, destination_file:get_opened_unfinished_headlines())
+    local headlines = vim.tbl_filter(function(item)
+      local pattern = '^' .. vim.pesc(headline_title:lower()) .. '$'
+      return item:get_title():lower():match(pattern)
+    end, destination_file:get_opened_unfinished_headlines())
 
-  if not headlines[1] then
-    utils.echo_error(
-      ("'%s' is not a valid headline in '%s'. Refiling cancelled."):format(headline_title, destination_file.filename)
-    )
-    return {}
-  end
+    if not headlines[1] then
+      utils.echo_error(
+        ("'%s' is not a valid headline in '%s'. Refiling cancelled."):format(headline_title, destination_file.filename)
+      )
+      return {}
+    end
 
-  return {
-    file = destination_file,
-    headline = headlines[1],
-  }
+    return {
+      file = destination_file,
+      headline = headlines[1],
+    }
+  end)
 end
 
 ---@param arg_lead string

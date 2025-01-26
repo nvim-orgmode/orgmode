@@ -169,6 +169,7 @@
 ---@class OrgUiConfig
 ---@field folds? { colored: boolean } Should folds be colored or use the default folding highlight. Default: { colored: true }
 ---@field menu? { handler: fun() | nil } Menu configuration
+---@field input? { use_vim_ui: boolean } Input configuration
 
 ---@class OrgMappingsConfig
 ---@field disable_all? boolean Disable all mappings. Default: false

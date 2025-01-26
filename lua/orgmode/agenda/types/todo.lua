@@ -8,6 +8,7 @@ local utils = require('orgmode.utils')
 local agenda_highlights = require('orgmode.colors.highlights')
 local hl_map = agenda_highlights.get_agenda_hl_map()
 local SortingStrategy = require('orgmode.agenda.sorting_strategy')
+local Promise = require('orgmode.utils.promise')
 
 ---@class OrgAgendaTodosTypeOpts
 ---@field files OrgFiles
@@ -74,6 +75,10 @@ function OrgAgendaTodosType:new(opts)
   return this
 end
 
+function OrgAgendaTodosType:prepare()
+  return Promise.resolve(self)
+end
+
 function OrgAgendaTodosType:_setup_agenda_files()
   if not self.agenda_files then
     return
@@ -90,6 +95,13 @@ function OrgAgendaTodosType:redo()
   end
 end
 
+function OrgAgendaTodosType:_get_header()
+  if self.header then
+    return self.header
+  end
+  return 'Global list of TODO items of type: ALL'
+end
+
 ---@param bufnr? number
 function OrgAgendaTodosType:render(bufnr)
   self.bufnr = bufnr or 0
@@ -97,7 +109,7 @@ function OrgAgendaTodosType:render(bufnr)
   local agendaView = AgendaView:new({ bufnr = self.bufnr, highlighter = self.highlighter })
 
   agendaView:add_line(AgendaLine:single_token({
-    content = self.header or 'Global list of TODO items of type: ALL',
+    content = self:_get_header(),
     hl_group = '@org.agenda.header',
   }))
   if self.subheader then
