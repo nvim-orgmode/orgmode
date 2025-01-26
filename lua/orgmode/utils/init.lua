@@ -628,4 +628,9 @@ function utils.goto_headline(headline)
   vim.cmd([[normal! zv]])
 end
 
+---@return string
+function utils.get_visual_selection()
+  return table.concat(vim.fn.getregion(vim.fn.getpos('v'), vim.fn.getpos('.')), '\n')
+end
+
 return utils

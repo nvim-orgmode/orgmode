@@ -319,10 +319,13 @@ return {
       args = { true },
       opts = { desc = 'org timestamp (inactive)', help_desc = 'Insert/Update inactive date under cursor' },
     }),
-    org_insert_link = m.action(
-      'org_mappings.insert_link',
-      { opts = { desc = 'org insert link', help_desc = 'Insert a hyperlink' } }
-    ),
+    org_insert_link = m.action('org_mappings.insert_link', {
+      modes = { 'n', 'x' },
+      opts = {
+        desc = 'org insert link',
+        help_desc = 'Insert or Update a hyperlink under cursor. Visual selection used as description',
+      },
+    }),
     org_store_link = m.action(
       'org_mappings.store_link',
       { opts = { desc = 'org store link', help_desc = 'Store link to current headline' } }

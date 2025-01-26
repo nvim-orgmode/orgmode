@@ -108,6 +108,10 @@ function OrgLinks:insert_link(link_location, desc)
     link_location = ('id:%s'):format(selected_link.url:get_path())
   end
 
+  if not desc and vim.fn.mode() == 'v' then
+    desc = utils.get_visual_selection()
+  end
+
   return Input.open('Description: ', desc or ''):next(function(link_description)
     if not link_description then
       return false
@@ -128,6 +132,12 @@ function OrgLinks:insert_link(link_location, desc)
       insert_from = position.from - 1
       insert_to = position.to + 1
       target_col = target_col + position.from
+    elseif vim.fn.mode() == 'v' then
+      local start_pos = vim.fn.getpos('v')
+      local end_pos = vim.fn.getpos('.')
+      insert_from = start_pos[3] - 1
+      insert_to = end_pos[3] + 1
+      target_col = target_col + start_pos[3]
     else
       local colnr = vim.fn.col('.')
       insert_from = colnr
