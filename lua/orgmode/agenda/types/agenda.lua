@@ -9,13 +9,7 @@ local AgendaLineToken = require('orgmode.agenda.view.token')
 local ClockReport = require('orgmode.clock.report')
 local utils = require('orgmode.utils')
 local SortingStrategy = require('orgmode.agenda.sorting_strategy')
-
----@class OrgAgendaViewType
----@field render fun(self: OrgAgendaViewType, bufnr:number, current_line?: number): OrgAgendaView
----@field get_lines fun(self: OrgAgendaViewType): OrgAgendaLine | OrgAgendaLine[]
----@field get_line fun(self: OrgAgendaViewType, line_nr: number): OrgAgendaLine | nil
----@field rerender_agenda_line fun(self: OrgAgendaViewType, agenda_line: OrgAgendaLine, headline: OrgHeadline): OrgAgendaLine | nil
----@field view OrgAgendaView
+local Promise = require('orgmode.utils.promise')
 
 ---@class OrgAgendaTypeOpts
 ---@field files OrgFiles
@@ -95,6 +89,10 @@ function OrgAgendaType:new(opts)
   this:_set_date_range()
   this:_setup_agenda_files()
   return this
+end
+
+function OrgAgendaType:prepare()
+  return Promise.resolve(self)
 end
 
 function OrgAgendaType:redo()

@@ -13,6 +13,8 @@ local Table = require('orgmode.files.elements.table')
 local EventManager = require('orgmode.events')
 local events = EventManager.event
 local Babel = require('orgmode.babel')
+local Promise = require('orgmode.utils.promise')
+local Input = require('orgmode.ui.input')
 
 ---@class OrgMappings
 ---@field capture OrgCapture
@@ -46,15 +48,26 @@ function OrgMappings:set_tags(tags)
   local headline_tags = headline:get_own_tags()
   local current_tags = utils.tags_to_string(headline_tags)
 
-  if not tags then
-    tags = utils.input('Tags: ', current_tags, function(arg_lead)
-      return utils.prompt_autocomplete(arg_lead, self.files:get_tags())
-    end)
-  elseif type(tags) == 'table' then
-    tags = string.format(':%s:', table.concat(tags, ':'))
-  end
+  return Promise.resolve()
+    :next(function()
+      if not tags then
+        return Input.open('Tags: ', current_tags, function(arg_lead)
+          return utils.prompt_autocomplete(arg_lead, self.files:get_tags())
+        end)
+      end
+      if type(tags) == 'table' then
+        tags = string.format(':%s:', table.concat(tags, ':'))
+      end
 
-  return headline:set_tags(tags)
+      return tags
+    end)
+    :next(function(new_tags)
+      if not new_tags then
+        return
+      end
+
+      return headline:set_tags(new_tags)
+    end)
 end
 
 function OrgMappings:toggle_archive_tag()
@@ -791,15 +804,20 @@ end
 -- currently on
 function OrgMappings:insert_link()
   local link = OrgHyperlink.at_cursor()
-  local link_location = utils.input('Links: ', link and link.url:to_string() or '', function(arg_lead)
+  return Input.open('Links: ', link and link.url:to_string() or '', function(arg_lead)
     return self.links:autocomplete(arg_lead)
-  end)
-  if vim.trim(link_location) == '' then
-    utils.echo_warning('No Link selected')
-    return
-  end
+  end):next(function(link_location)
+    if not link_location then
+      return false
+    end
 
-  self.links:insert_link(link_location, link and link.desc)
+    if vim.trim(link_location) == '' then
+      utils.echo_warning('No Link selected')
+      return false
+    end
+
+    return self.links:insert_link(link_location, link and link.desc)
+  end)
 end
 
 function OrgMappings:store_link()

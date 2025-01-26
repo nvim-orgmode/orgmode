@@ -4,6 +4,7 @@ local config = require('orgmode.config')
 local utils = require('orgmode.utils')
 local Search = require('orgmode.files.elements.search')
 local OrgAgendaTodosType = require('orgmode.agenda.types.todo')
+local Input = require('orgmode.ui.input')
 
 ---@alias OrgAgendaTodoIgnoreDeadlinesTypes 'all' | 'near' | 'far' | 'past' | 'future'
 ---@alias OrgAgendaTodoIgnoreScheduledTypes 'all' | 'past' | 'future'
@@ -27,22 +28,29 @@ function OrgAgendaTagsType:new(opts)
   if not opts.id then
     opts.subheader = 'Press "r" to update search'
   end
-  local match_query = opts.match_query
-  if not opts.id and (not match_query or match_query == '') then
-    match_query = self:get_tags(opts.files)
-    if not match_query then
-      return nil
-    end
-  end
-
   setmetatable(self, { __index = OrgAgendaTodosType })
   local obj = OrgAgendaTodosType:new(opts)
   setmetatable(obj, self)
-  obj.match_query = match_query or ''
+  obj.match_query = opts.match_query or ''
   obj.todo_ignore_deadlines = opts.todo_ignore_deadlines
   obj.todo_ignore_scheduled = opts.todo_ignore_scheduled
-  obj.header = opts.header or ('Headlines with TAGS match: ' .. obj.match_query)
   return obj
+end
+
+function OrgAgendaTagsType:_get_header()
+  if self.header then
+    return self.header
+  end
+
+  return 'Headlines with TAGS match: ' .. (self.match_query or '')
+end
+
+function OrgAgendaTagsType:prepare()
+  if self.id or self.match_query and self.match_query ~= '' then
+    return self
+  end
+
+  return self:get_tags()
 end
 
 function OrgAgendaTagsType:get_file_headlines(file)
@@ -94,15 +102,20 @@ function OrgAgendaTagsType:get_file_headlines(file)
   return headlines
 end
 
----@param files? OrgFiles
-function OrgAgendaTagsType:get_tags(files)
-  local tags = utils.input('Match: ', self.match_query or '', function(arg_lead)
-    return utils.prompt_autocomplete(arg_lead, (files or self.files):get_tags())
+function OrgAgendaTagsType:get_tags()
+  return Input.open('Match: ', self.match_query or '', function(arg_lead)
+    return utils.prompt_autocomplete(arg_lead, self.files:get_tags())
+  end):next(function(tags)
+    if not tags then
+      return false
+    end
+    if vim.trim(tags) == '' then
+      utils.echo_warning('Invalid tag.')
+      return false
+    end
+    self.match_query = tags
+    return self
   end)
-  if vim.trim(tags) == '' then
-    return utils.echo_warning('Invalid tag.')
-  end
-  return tags
 end
 
 function OrgAgendaTagsType:redraw()
@@ -110,9 +123,7 @@ function OrgAgendaTagsType:redraw()
   if self.id then
     return self
   end
-  self.match_query = self:get_tags() or ''
-  self.header = 'Headlines with TAGS match: ' .. self.match_query
-  return self
+  return self:get_tags()
 end
 
 return OrgAgendaTagsType

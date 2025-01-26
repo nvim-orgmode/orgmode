@@ -1,6 +1,6 @@
-local utils = require('orgmode.utils')
 ---@diagnostic disable: inject-field
 local OrgAgendaTodosType = require('orgmode.agenda.types.todo')
+local Input = require('orgmode.ui.input')
 
 ---@class OrgAgendaSearchTypeOpts:OrgAgendaTodosTypeOpts
 ---@field headline_query? string
@@ -18,10 +18,13 @@ function OrgAgendaSearchType:new(opts)
   local obj = OrgAgendaTodosType:new(opts)
   setmetatable(obj, self)
   obj.headline_query = self.headline_query
-  if not opts.headline_query or opts.headline_query == '' then
-    obj.headline_query = self:get_search_term()
-  end
   return obj
+end
+
+function OrgAgendaSearchType:prepare()
+  if not self.headline_query or self.headline_query == '' then
+    return self:get_search_term()
+  end
 end
 
 function OrgAgendaSearchType:get_file_headlines(file)
@@ -29,7 +32,13 @@ function OrgAgendaSearchType:get_file_headlines(file)
 end
 
 function OrgAgendaSearchType:get_search_term()
-  return utils.input('Enter search term: ', self.headline_query or '')
+  return Input.open('Enter search term: ', self.headline_query or ''):next(function(value)
+    if not value then
+      return false
+    end
+    self.headline_query = value
+    return self
+  end)
 end
 
 function OrgAgendaSearchType:redraw()
@@ -37,8 +46,7 @@ function OrgAgendaSearchType:redraw()
   if self.id then
     return self
   end
-  self.headline_query = self:get_search_term()
-  return self
+  return self:get_search_term()
 end
 
 return OrgAgendaSearchType

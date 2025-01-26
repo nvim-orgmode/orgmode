@@ -213,6 +213,9 @@ local DefaultConfig = {
     menu = {
       handler = nil,
     },
+    input = {
+      use_vim_ui = false,
+    },
   },
 }
 

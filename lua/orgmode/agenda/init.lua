@@ -7,6 +7,7 @@ local AgendaFilter = require('orgmode.agenda.filter')
 local Menu = require('orgmode.ui.menu')
 local Promise = require('orgmode.utils.promise')
 local AgendaTypes = require('orgmode.agenda.types')
+local Input = require('orgmode.ui.input')
 
 ---@class OrgAgenda
 ---@field highlights table[]
@@ -48,7 +49,25 @@ function Agenda:open_view(type, opts)
     return
   end
   self.views = { view }
-  return self:render()
+  return self:prepare_and_render()
+end
+
+function Agenda:prepare_and_render()
+  return Promise.map(function(view)
+    return view:prepare()
+  end, self.views):next(function(views)
+    local valid_views = vim.tbl_filter(function(view)
+      return view ~= false
+    end, views)
+
+    -- Some of the views returned false, abort render
+    if #valid_views ~= #self.views then
+      return
+    end
+
+    self.views = views
+    return self:render()
+  end)
 end
 
 function Agenda:render()
@@ -70,6 +89,10 @@ function Agenda:render()
     else
       vim.w.org_window_pos = nil
     end
+  end
+
+  if #self.views > 1 then
+    vim.fn.cursor({ 1, 0 })
   end
 end
 
@@ -151,11 +174,7 @@ function Agenda:_build_custom_commands()
           table.insert(views, AgendaTypes[agenda_type.type]:new(opts))
         end
         self.views = views
-        local result = self:render()
-        if #self.views > 1 then
-          vim.fn.cursor({ 1, 0 })
-        end
-        return result
+        return self:prepare_and_render()
       end,
     })
   end
@@ -271,16 +290,21 @@ end
 ---@param source? string
 function Agenda:redo(source, preserve_cursor_pos)
   self:_call_all_views('redo')
-  return self.files:load(true):next(vim.schedule_wrap(function()
-    local save_view = preserve_cursor_pos and vim.fn.winsaveview()
-    if source == 'mapping' then
-      self:_call_view_and_render('redraw')
-    end
-    self:render()
-    if save_view then
-      vim.fn.winrestview(save_view)
-    end
-  end))
+  local save_view = preserve_cursor_pos and vim.fn.winsaveview()
+  return self.files
+    :load(true)
+    :next(function()
+      if source == 'mapping' then
+        return self:_call_view_async('redraw')
+      end
+      return true
+    end)
+    :next(function()
+      self:render()
+      if save_view then
+        vim.fn.winrestview(save_view)
+      end
+    end)
 end
 
 function Agenda:advance_span(direction)
@@ -499,14 +523,15 @@ end
 function Agenda:filter()
   local this = self
   self.filters:parse_available_filters(self.views)
-  local filter_term = utils.input('Filter [+cat-tag/regexp/]: ', self.filters.value, function(arg_lead)
+  return Input.open('Filter [+cat-tag/regexp/]: ', self.filters.value, function(arg_lead)
     return utils.prompt_autocomplete(arg_lead, this.filters:get_completion_list(), { '+', '-' })
+  end):next(function(value)
+    if not value or value == self.filters.value then
+      return false
+    end
+    self.filters:parse(value)
+    return self:redo('filter', true)
   end)
-  if filter_term == self.filters.value then
-    return
-  end
-  self.filters:parse(filter_term)
-  return self:redo('filter', true)
 end
 
 ---@param opts table
@@ -574,6 +599,22 @@ function Agenda:_call_view(method, ...)
   end
 
   return executed
+end
+
+function Agenda:_call_view_async(method, ...)
+  local args = { ... }
+  return Promise.map(function(view)
+    if view[method] and view.view:is_in_range() then
+      return view[method](view, unpack(args))
+    end
+  end, self.views):next(function(views)
+    for _, view in ipairs(views) do
+      if view then
+        return true
+      end
+    end
+    return false
+  end)
 end
 
 function Agenda:_call_all_views(method, ...)

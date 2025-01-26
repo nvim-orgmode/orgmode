@@ -616,17 +616,6 @@ function utils.sorted_pairs(t)
   end
 end
 
----@param prompt string
----@param default? any
----@param completion_fn? fun(arg_lead: string): string[]
-function utils.input(prompt, default, completion_fn)
-  local result = vim.fn.OrgmodeInput(prompt, default, completion_fn)
-  if result == vim.NIL then
-    error('Canceled.', 0)
-  end
-  return result
-end
-
 ---@param headline OrgHeadline
 function utils.goto_headline(headline)
   local current_file_path = utils.current_file_path()
