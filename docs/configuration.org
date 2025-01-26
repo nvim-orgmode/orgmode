@@ -1691,8 +1691,9 @@ Toggle current line to headline and vice versa. Checkboxes will turn into TODO h
 :CUSTOM_ID: org_insert_link
 :END:
 - Mapped to: =<Leader>oli=
-Insert a hyperlink at cursor position. When the cursor is on a hyperlink, edit that hyperlink. If there
-are any links stored with [[#org_store_link][org_store_link]], pressing =<TAB>= to autocomplete the input will show
+Insert a hyperlink at cursor position. When the cursor is on a hyperlink, edit that hyperlink.
+In visual mode, uses selected text as link description.
+If there are any links stored with [[#org_store_link][org_store_link]], pressing =<TAB>= to autocomplete the input will show
 list of all stored links to select. Links generated with ID are properly expanded to valid links after
 selection.
 
