@@ -488,6 +488,49 @@ Number of minutes to increase/decrease when using
 |orgmode-org_timestampup|/|orgmode-org_timestampdown|
 
 
+org_cycle_separator_lines                  *orgmode-org_cycle_separator_lines*
+
+- Type `number`
+- Default: `2`
+
+Minimum number of empty lines needed at the end of the headline to show a
+single empty line when headline is folded.
+
+For example, given this structure:
+
+>org
+    * One empty space headline
+      Content
+    
+    * Two empty space headline
+      Content
+    
+    
+    * Three empty space headline
+      Content
+    
+    
+    
+    * Last headline
+      Content
+<
+
+When folded, it will appear like this:
+
+>org
+    * One empty space headline ...
+    * Two empty space headline ...
+    
+    * Three empty space headline ...
+    
+    * Last headline ...
+<
+
+When value is `0`, all empty lines are folded together with headline.
+
+Cannot be negative.
+
+
 org_blank_before_new_entry                *orgmode-org_blank_before_new_entry*
 
 - Type: `table<string, boolean>`
