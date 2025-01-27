@@ -226,6 +226,7 @@
 ---@field org_indent_mode_turns_off_org_adapt_indentation? boolean If true, turning on indent mode will turn off `org_adapt_indentation`. Default: true
 ---@field org_indent_mode_turns_on_hiding_stars? boolean If true, turning on indent mode will hide leading stars. Default: true
 ---@field org_time_stamp_rounding_minutes? number Rounding minutes for time stamps. Default: 5
+---@field org_cycle_separator_lines? number Min number of spaces are needed at the end of headline to show empty line between folds. Default: 2
 ---@field org_blank_before_new_entry? { heading: boolean, plain_list_item: boolean } Should blank line be prepended. Default: { heading = true, plain_list_item = false }
 ---@field org_src_window_setup? string | fun() How to open "special edit" buffer window. Default: 'top 16new'
 ---@field org_edit_src_content_indentation? number Addditional ndentation number applied when editing a SRC block through special edit. Default: 0

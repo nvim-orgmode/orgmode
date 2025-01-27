@@ -54,6 +54,7 @@ local DefaultConfig = {
   org_indent_mode_turns_off_org_adapt_indentation = true,
   org_indent_mode_turns_on_hiding_stars = true,
   org_time_stamp_rounding_minutes = 5,
+  org_cycle_separator_lines = 2,
   org_blank_before_new_entry = {
     heading = true,
     plain_list_item = false,

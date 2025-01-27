@@ -374,6 +374,42 @@ function Config:setup_ts_predicates()
     return false
   end, { force = true, all = false })
 
+  local org_cycle_separator_lines = math.max(self.opts.org_cycle_separator_lines, 0)
+
+  vim.treesitter.query.add_directive('org-set-fold-offset!', function(match, _, bufnr, pred, metadata)
+    if org_cycle_separator_lines == 0 then
+      return
+    end
+    ---@type TSNode | nil
+    local capture_id = pred[2]
+    local section_node = match[capture_id]
+    if not capture_id or not section_node or section_node:type() ~= 'section' then
+      return
+    end
+    if not metadata[capture_id] then
+      metadata[capture_id] = {}
+    end
+    local range = metadata[capture_id].range or { section_node:range() }
+    local start_row = range[1]
+    local end_row = range[3]
+
+    local empty_lines = 0
+    while end_row > start_row do
+      local line = vim.api.nvim_buf_get_lines(bufnr, end_row - 1, end_row, false)[1]
+      if vim.trim(line) ~= '' then
+        break
+      end
+      empty_lines = empty_lines + 1
+      end_row = end_row - 1
+    end
+
+    if empty_lines < org_cycle_separator_lines then
+      return
+    end
+    range[3] = range[3] - 1
+    metadata[capture_id].range = range
+  end, { force = true, all = false })
+
   vim.treesitter.query.add_predicate('org-is-valid-priority?', function(match, _, source, predicate)
     local node = match[predicate[2]]
     local type = predicate[3]

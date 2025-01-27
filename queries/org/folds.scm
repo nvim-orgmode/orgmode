@@ -4,4 +4,4 @@
   (drawer)
   (property_drawer)
   (block)
-  ] @fold)
+  ] @fold (#org-set-fold-offset! @fold))
