@@ -7,7 +7,7 @@ local OrgInput = {}
 
 ---@param prompt string
 ---@param default? string
----@param completion? fun(arg_lead: string): string[]
+---@param completion? string | fun(arg_lead: string): string[]
 ---@return OrgPromise<string>
 function OrgInput.open(prompt, default, completion)
   _G.orgmode.__input_completion = completion
@@ -15,7 +15,9 @@ function OrgInput.open(prompt, default, completion)
     prompt = prompt,
     default = default or '',
   }
-  if completion then
+  if type(completion) == 'string' then
+    opts.completion = completion
+  elseif completion then
     opts.completion = 'customlist,v:lua.orgmode.__input_completion'
   end
 
