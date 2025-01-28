@@ -93,15 +93,18 @@ end
 
 function utils.open(target)
   if vim.fn.executable('xdg-open') == 1 then
-    return vim.fn.system(string.format('xdg-open %s', target))
+    vim.system({ 'xdg-open', target }, { text = false })
+    return 0
   end
 
   if vim.fn.executable('open') == 1 then
-    return vim.fn.system(string.format('open %s', target))
+    vim.system({ 'open', target }, { text = false })
+    return 0
   end
 
   if vim.fn.has('win32') == 1 then
-    return vim.fn.system(string.format('start "%s"', target))
+    vim.system({ 'start', target }, { text = false })
+    return 0
   end
 end
 
