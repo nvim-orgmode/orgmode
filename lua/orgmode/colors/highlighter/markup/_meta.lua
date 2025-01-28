@@ -12,11 +12,13 @@
 ---@field node TSNode
 ---@field range OrgMarkupRange
 ---@field self_contained? boolean
+---@field metadata? table<string, any>
 
 ---@class OrgMarkupHighlight
 ---@field from OrgMarkupRange
 ---@field to OrgMarkupRange
 ---@field char string
+---@field metadata? table<string, any>
 
 ---@class OrgMarkupPreparedHighlight
 ---@field start_line number

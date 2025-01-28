@@ -41,6 +41,7 @@ describe('highlighter', function()
   end
 
   after_each(function()
+    api.nvim_buf_clear_namespace(0, ns_id, 0, -1)
     vim.cmd([[%bw!]])
     ---@diagnostic disable-next-line: inject-field
     config.ts_hl_enabled = false
@@ -240,14 +241,13 @@ describe('highlighter', function()
       local extmarks = get_extmarks({
         'I have [[https://google.com]] link',
       })
-      assert.are.same(4, #extmarks)
+      assert.are.same(3, #extmarks)
+      assert_extmark(extmarks[1], { line = 0, start_col = 7, end_col = 9, conceal = '' })
       assert_extmark(
-        extmarks[1],
+        extmarks[2],
         { line = 0, start_col = 7, end_col = 29, hl_group = '@org.hyperlink', url = 'https://google.com' }
       )
-      assert_extmark(extmarks[2], { line = 0, start_col = 7, end_col = 9, conceal = '' })
-      assert_extmark(extmarks[3], { line = 0, start_col = 9, end_col = 27, spell = false })
-      assert_extmark(extmarks[4], { line = 0, start_col = 27, end_col = 29, conceal = '' })
+      assert_extmark(extmarks[3], { line = 0, start_col = 27, end_col = 29, conceal = '' })
     end)
 
     it('should highlight links with label', function()
@@ -255,27 +255,43 @@ describe('highlighter', function()
         'I have [[https://google.com][google]] link',
       })
       assert.are.same(4, #extmarks)
+      assert_extmark(extmarks[1], { line = 0, start_col = 7, end_col = 29, conceal = '' })
       assert_extmark(
-        extmarks[1],
-        { line = 0, start_col = 7, end_col = 37, hl_group = '@org.hyperlink', url = 'https://google.com' }
+        extmarks[2],
+        { line = 0, start_col = 7, end_col = 28, hl_group = '@org.hyperlink', url = 'https://google.com' }
       )
-      assert_extmark(extmarks[2], { line = 0, start_col = 7, end_col = 29, conceal = '' })
-      assert_extmark(extmarks[3], { line = 0, start_col = 9, end_col = 27, spell = false })
+      assert_extmark(
+        extmarks[3],
+        { line = 0, start_col = 28, end_col = 37, hl_group = '@org.hyperlink', url = 'https://google.com' }
+      )
       assert_extmark(extmarks[4], { line = 0, start_col = 35, end_col = 37, conceal = '' })
     end)
 
-    it('should highlight links with label and not render any markup inside', function()
+    it('should highlight links with label and render markup only in label', function()
       local extmarks = get_extmarks({
-        'I have [[https://google.com][google I am *not bold*]] link',
+        'I have [[https://google.com][google I am *bold* text]] link',
       })
-      assert.are.same(4, #extmarks)
+      assert.are.same(7, #extmarks)
+      assert_extmark(extmarks[1], { line = 0, start_col = 7, end_col = 29, conceal = '' })
       assert_extmark(
-        extmarks[1],
-        { line = 0, start_col = 7, end_col = 53, hl_group = '@org.hyperlink', url = 'https://google.com' }
+        extmarks[2],
+        { line = 0, start_col = 7, end_col = 28, hl_group = '@org.hyperlink', url = 'https://google.com' }
       )
-      assert_extmark(extmarks[2], { line = 0, start_col = 7, end_col = 29, conceal = '' })
-      assert_extmark(extmarks[3], { line = 0, start_col = 9, end_col = 27, spell = false })
-      assert_extmark(extmarks[4], { line = 0, start_col = 51, end_col = 53, conceal = '' })
+      assert_extmark(
+        extmarks[3],
+        { line = 0, start_col = 28, end_col = 54, hl_group = '@org.hyperlink', url = 'https://google.com' }
+      )
+      assert_extmark(extmarks[4], { line = 0, start_col = 41, end_col = 42, hl_group = '@org.bold.delimiter' })
+      assert_extmark(extmarks[5], { line = 0, start_col = 42, end_col = 46, hl_group = '@org.bold' })
+      assert_extmark(extmarks[6], { line = 0, start_col = 46, end_col = 47, hl_group = '@org.bold.delimiter' })
+      assert_extmark(extmarks[7], { line = 0, start_col = 52, end_col = 54, conceal = '' })
+    end)
+
+    it('should not highlight invalid link with description', function()
+      local extmarks = get_extmarks({
+        'I am not a [https://google.com][text]] link',
+      })
+      assert.are.same(0, #extmarks)
     end)
 
     it('should not highlight invalid link', function()

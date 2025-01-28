@@ -132,6 +132,7 @@ function OrgMarkup:get_node_highlights(root_node, source, line)
         char = item.char,
         from = item.self_contained and item.range or from.range,
         to = item.range,
+        metadata = item.metadata,
       })
 
       if last_seek and last_seek.type == item.type then
@@ -171,9 +172,9 @@ function OrgMarkup:get_prepared_headline_highlights(headline)
   for type, highlight in pairs(highlights) do
     vim.list_extend(
       result,
-      self.parsers[type]:prepare_highlights(highlight, function(markup_highlight)
+      self.parsers[type]:prepare_highlights(highlight, function(start_col, end_col)
         local text = headline.file:get_node_text(headline:node())
-        return text:sub(markup_highlight.from.start_col + 1, markup_highlight.to.end_col)
+        return text:sub(start_col, end_col)
       end)
     )
   end
