@@ -6,7 +6,6 @@ local utils = require('orgmode.utils')
 ---@class OrgFoldtextHighlighter
 ---@field highlighter OrgHighlighter
 ---@field namespace number
----@field enabled number
 ---@field cache table<number, table<number, OrgFoldtextLineValue>>
 local OrgFoldtext = {}
 
@@ -14,7 +13,6 @@ local OrgFoldtext = {}
 function OrgFoldtext:new(opts)
   local data = {
     highlighter = opts.highlighter,
-    enabled = utils.has_version_10(),
     cache = setmetatable({}, { __mode = 'k' }),
   }
   setmetatable(data, self)
@@ -39,10 +37,6 @@ function OrgFoldtext:_highlight(bufnr, line, value)
 end
 
 function OrgFoldtext:on_line(bufnr, line)
-  if not self.enabled then
-    return false
-  end
-
   local is_current_buf = bufnr == vim.api.nvim_get_current_buf()
 
   if not is_current_buf then

@@ -323,10 +323,6 @@ local function foldtext()
 end
 
 local function setup_virtual_indent()
-  if not utils.has_version_10() then
-    return
-  end
-
   local virtualIndent = VirtualIndent:new()
 
   if config.org_startup_indented or vim.b.org_indent_mode then

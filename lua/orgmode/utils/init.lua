@@ -557,11 +557,6 @@ function utils.edit_file(filename)
   }
 end
 
-function utils.has_version_10()
-  local v = vim.version()
-  return not vim.version.lt({ v.major, v.minor, v.patch }, { 0, 10, 0 })
-end
-
 ---@generic EntryType : any
 ---@param entries EntryType[]
 ---@param check_fn fun(entry: EntryType, index: number): boolean
