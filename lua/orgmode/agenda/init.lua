@@ -90,10 +90,6 @@ function Agenda:render()
       vim.w.org_window_pos = nil
     end
   end
-
-  if #self.views > 1 then
-    vim.fn.cursor({ 1, 0 })
-  end
 end
 
 function Agenda:agenda(opts)
@@ -174,7 +170,11 @@ function Agenda:_build_custom_commands()
           table.insert(views, AgendaTypes[agenda_type.type]:new(opts))
         end
         self.views = views
-        return self:prepare_and_render()
+        return self:prepare_and_render():next(function()
+          if #self.views > 1 then
+            vim.fn.cursor({ 1, 0 })
+          end
+        end)
       end,
     })
   end
