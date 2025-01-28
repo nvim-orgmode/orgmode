@@ -1,7 +1,12 @@
 ---@class OrgLinkHighlighter : OrgMarkupHighlighter
 ---@field private markup OrgMarkupHighlighter
 ---@field private has_extmark_url_support boolean
-local OrgLink = {}
+local OrgLink = {
+  valid_capture_names = {
+    ['link.start'] = true,
+    ['link.end'] = true,
+  },
+}
 
 ---@param opts { markup: OrgMarkupHighlighter }
 function OrgLink:new(opts)
@@ -15,8 +20,12 @@ function OrgLink:new(opts)
 end
 
 ---@param node TSNode
+---@param name string
 ---@return OrgMarkupNode | false
-function OrgLink:parse_node(node)
+function OrgLink:parse_node(node, name)
+  if not self.valid_capture_names[name] then
+    return false
+  end
   local type = node:type()
   if type == '[' then
     return self:_parse_start_node(node)

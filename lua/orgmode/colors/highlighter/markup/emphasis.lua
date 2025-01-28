@@ -3,7 +3,16 @@ local ts_utils = require('orgmode.utils.treesitter')
 
 ---@class OrgEmphasisHighlighter : OrgMarkupHighlighter
 ---@field private markup OrgMarkupHighlighter
-local OrgEmphasis = {}
+local OrgEmphasis = {
+  valid_capture_names = {
+    ['bold'] = true,
+    ['italic'] = true,
+    ['underline'] = true,
+    ['strikethrough'] = true,
+    ['code'] = true,
+    ['verbatim'] = true,
+  },
+}
 
 local valid_pre_marker_chars = { ' ', '(', '-', "'", '"', '{', '*', '/', '_', '+' }
 local valid_post_marker_chars =
@@ -137,10 +146,24 @@ function OrgEmphasis:prepare_highlights(highlights)
 end
 
 ---@param node TSNode
+---@param name string
 ---@return OrgMarkupNode | false
-function OrgEmphasis:parse_node(node)
+function OrgEmphasis:parse_node(node, name)
+  if not self.valid_capture_names[name] then
+    return false
+  end
   local node_type = node:type()
   if not markers[node_type] then
+    return false
+  end
+  local prev_node = node:prev_sibling()
+  local next_node = node:next_sibling()
+
+  if prev_node and prev_node:type() == node_type then
+    return false
+  end
+
+  if next_node and next_node:type() == node_type then
     return false
   end
 

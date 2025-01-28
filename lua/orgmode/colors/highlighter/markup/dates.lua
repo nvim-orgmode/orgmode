@@ -1,6 +1,13 @@
 ---@class OrgDatesHighlighter : OrgMarkupHighlighter
 ---@field private markup OrgMarkupHighlighter
-local OrgDates = {}
+local OrgDates = {
+  valid_capture_names = {
+    ['date_active.start'] = true,
+    ['date_active.end'] = true,
+    ['date_inactive.start'] = true,
+    ['date_inactive.end'] = true,
+  },
+}
 
 ---@param opts { markup: OrgMarkupHighlighter }
 function OrgDates:new(opts)
@@ -13,8 +20,12 @@ function OrgDates:new(opts)
 end
 
 ---@param node TSNode
+---@param name string
 ---@return OrgMarkupNode | false
-function OrgDates:parse_node(node)
+function OrgDates:parse_node(node, name)
+  if not self.valid_capture_names[name] then
+    return false
+  end
   local type = node:type()
   if type == '[' or type == '<' then
     return self:_parse_start_node(node)
@@ -93,8 +104,9 @@ function OrgDates:_parse_end_node(node)
   local prev_sibling = node:prev_sibling()
   local next_sibling = node:next_sibling()
   local is_prev_sibling_valid = not prev_sibling or prev_sibling:type() == 'str' or prev_sibling:type() == 'num'
-  -- Ensure it's not a link
-  local is_next_sibling_valid = not next_sibling or (node_type == ']' and next_sibling:type() ~= ']')
+  -- Ensure it's not a link or a link alias
+  local is_next_sibling_valid = not next_sibling
+    or (node_type == ']' and next_sibling:type() ~= ']' and next_sibling:type() ~= '[')
   if is_prev_sibling_valid and is_next_sibling_valid then
     local id = table.concat({ 'date', node_type }, '_')
     local seek_id = table.concat({ 'date', node_type == ']' and '[' or '<' }, '_')

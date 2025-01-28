@@ -125,6 +125,33 @@ describe('highlighter', function()
       assert_extmark(extmarks[9], { line = 0, start_col = 35, end_col = 36, hl_group = '@org.bold.delimiter' })
     end)
 
+    it('should not highlight two same emphasis one beside another', function()
+      local extmarks = get_extmarks({
+        'I am not italic // text',
+      })
+      assert.are.same(0, #extmarks)
+      extmarks = get_extmarks({
+        'I am not italic / / text',
+      })
+      assert.are.same(0, #extmarks)
+      extmarks = get_extmarks({
+        'I am not bold ** text',
+      })
+      assert.are.same(0, #extmarks)
+      extmarks = get_extmarks({
+        'I am not bold * * text',
+      })
+      assert.are.same(0, #extmarks)
+      extmarks = get_extmarks({
+        'I am not verbatim == text',
+      })
+      assert.are.same(0, #extmarks)
+      extmarks = get_extmarks({
+        'I am not verbatim = = text',
+      })
+      assert.are.same(0, #extmarks)
+    end)
+
     it('should conceal markers if org_hide_emphasis_markers is true', function()
       config.opts.org_hide_emphasis_markers = true
       local extmarks = get_extmarks({

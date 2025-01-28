@@ -78,10 +78,10 @@ function OrgMarkup:get_node_highlights(root_node, source, line)
   ---@type OrgMarkupNode[]
   local entries = {}
 
-  for _, node in self.query:iter_captures(root_node, source, line, line + 1) do
+  for capture_id, node in self.query:iter_captures(root_node, source, line, line + 1) do
     local entry = nil
     for _, parser in pairs(self.parsers) do
-      entry = parser:parse_node(node)
+      entry = parser:parse_node(node, self.query.captures[capture_id])
       if entry then
         table.insert(entries, entry)
         break
