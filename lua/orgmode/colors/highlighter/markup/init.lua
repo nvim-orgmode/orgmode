@@ -24,6 +24,7 @@ function OrgMarkup:_init_highlighters()
     emphasis = require('orgmode.colors.highlighter.markup.emphasis'):new({ markup = self }),
     link = require('orgmode.colors.highlighter.markup.link'):new({ markup = self }),
     date = require('orgmode.colors.highlighter.markup.dates'):new({ markup = self }),
+    footnote = require('orgmode.colors.highlighter.markup.footnotes'):new({ markup = self }),
     latex = require('orgmode.colors.highlighter.markup.latex'):new({ markup = self }),
   }
 end
@@ -74,6 +75,7 @@ function OrgMarkup:get_node_highlights(root_node, source, line)
     link = {},
     latex = {},
     date = {},
+    footnote = {},
   }
   ---@type OrgMarkupNode[]
   local entries = {}
@@ -240,6 +242,10 @@ function OrgMarkup:has_valid_parent(item)
 
   if parent:type() == 'contents' and p then
     return p:type() == 'drawer' or p:type() == 'cell'
+  end
+
+  if parent:type() == 'description' and p and p:type() == 'fndef' then
+    return true
   end
 
   if self.parsers[item.type].has_valid_parent then

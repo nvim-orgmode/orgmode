@@ -10,6 +10,8 @@
  (expr "]" @date_inactive.end)
  (expr "<" @date_active.start "num" "-" "num" "-" "num")
  (expr ">" @date_active.end)
+ (expr "[" @footnote.start "str" @_fn ":" (#eq? @_fn "fn"))
+ (expr "]" @footnote.end)
  (expr "\\" "str" @latex.plain)
  (expr "\\" "(" @latex.bracket.start)
  (expr "\\" ")" @latex.bracket.end)

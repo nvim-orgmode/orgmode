@@ -7,6 +7,7 @@ local config = require('orgmode.config')
 local Block = require('orgmode.files.elements.block')
 local Hyperlink = require('orgmode.org.links.hyperlink')
 local Range = require('orgmode.files.elements.range')
+local Footnote = require('orgmode.objects.footnote')
 local Memoize = require('orgmode.utils.memoize')
 
 ---@class OrgFileMetadata
@@ -750,6 +751,61 @@ function OrgFile:get_links()
     end
   end
   return links
+end
+
+memoize('get_footnote_references')
+---@return OrgFootnote[]
+function OrgFile:get_footnote_references()
+  self:parse(true)
+  local ts_query = ts_utils.get_query([[
+      (paragraph (expr) @footnotes)
+      (drawer (contents (expr) @footnotes))
+      (headline (item (expr)) @footnotes)
+      (fndef) @footnotes
+  ]])
+
+  local footnotes = {}
+  local processed_lines = {}
+  for _, match in ts_query:iter_captures(self.root, self:get_source()) do
+    local line_start, _, line_end = match:range()
+    if not processed_lines[line_start] then
+      if line_start == line_end then
+        vim.list_extend(footnotes, Footnote.all_from_line(self.lines[line_start + 1], line_start + 1))
+        processed_lines[line_start] = true
+      else
+        for line = line_start, line_end - 1 do
+          vim.list_extend(footnotes, Footnote.all_from_line(self.lines[line + 1], line + 1))
+          processed_lines[line] = true
+        end
+      end
+    end
+  end
+  return footnotes
+end
+
+---@param footnote_reference OrgFootnote
+---@return OrgFootnote | nil
+function OrgFile:find_footnote(footnote_reference)
+  local footnotes = self:get_footnote_references()
+  for i = #footnotes, 1, -1 do
+    if footnotes[i].value:lower() == footnote_reference.value:lower() and footnotes[i].range.start_col == 1 then
+      return footnotes[i]
+    end
+  end
+end
+
+---@param footnote OrgFootnote
+---@return OrgFootnote | nil
+function OrgFile:find_footnote_reference(footnote)
+  local footnotes = self:get_footnote_references()
+  for i = #footnotes, 1, -1 do
+    if
+      footnotes[i].value:lower() == footnote.value:lower()
+      and footnotes[i].range.start_line < footnote.range.start_line
+    then
+      return footnotes[i]
+    end
+  end
 end
 
 memoize('get_directive')
