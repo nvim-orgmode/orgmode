@@ -47,6 +47,25 @@ local function generate_capture_object(orgmode, config)
 end
 
 ---@param orgmode Org
+---@param config OrgConfig
+local function generate_attach_object(orgmode, config)
+  local Attach = setmetatable({}, {
+    __call = function()
+      return orgmode.attach:prompt()
+    end,
+  })
+
+  local attach_keys = { 'a', 'c', 'm', 'l', 'y', 'u', 'b', 'n', 'z', 'o', 'O', 'f', 'F', 'd', 'D', 's', 'S' }
+  for _, key in ipairs(attach_keys) do
+    Attach[key] = function()
+      return orgmode.agenda:open_by_key(key)
+    end
+  end
+
+  return Attach
+end
+
+---@param orgmode Org
 local build = function(orgmode)
   local config = require('orgmode.config')
 
@@ -75,6 +94,7 @@ local build = function(orgmode)
 
     agenda = generate_agenda_object(orgmode, config),
     capture = generate_capture_object(orgmode, config),
+    attach = generate_attach_object(orgmode, config),
   }
 
   _G.Org = OrgGlobal
