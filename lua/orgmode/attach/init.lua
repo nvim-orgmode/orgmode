@@ -32,49 +32,49 @@ function Attach:_build_menu()
   })
 
   menu:add_option({
-    label = 'Select a file and attach it to the task.',
+    label = 'Attach a file to this task.',
     key = 'a',
     action = function()
       return self:attach()
     end,
   })
   menu:add_option({
-    label = 'Attach a file using copy method.',
+    label = 'Attach a file by copying it.',
     key = 'c',
     action = function()
       return self:attach_cp()
     end,
   })
   menu:add_option({
-    label = 'Attach a file using move method.',
+    label = 'Attach a file by moving it.',
     key = 'm',
     action = function()
       return self:attach_mv()
     end,
   })
   menu:add_option({
-    label = 'Attach a file using link method.',
+    label = 'Attach a file by hard-linking it',
     key = 'l',
     action = function()
       return self:attach_ln()
     end,
   })
   menu:add_option({
-    label = 'Attach a file using symbolic-link method.',
+    label = 'Attach a file by symbolic-linking it.',
     key = 'y',
     action = function()
       return self:attach_lns()
     end,
   })
   menu:add_option({
-    label = 'Attach a file from URL (downloading it).',
+    label = 'Attach a file by download from URL.',
     key = 'u',
     action = function()
       return self:attach_url()
     end,
   })
   menu:add_option({
-    label = 'Select a buffer and attach its contents to the task.',
+    label = "Attach a buffer's contents.",
     key = 'b',
     action = function()
       return self:attach_buffer()
@@ -87,67 +87,69 @@ function Attach:_build_menu()
       return self:attach_new()
     end,
   })
+  menu:add_separator({ length = #menu.title })
   menu:add_option({
-    label = 'Synchronize current node with its attachment directory.',
-    key = 'z',
-    action = function()
-      return self:sync()
-    end,
-  })
-  menu:add_option({
-    label = "Open current node's attachments.",
+    label = 'Open an attachment externally.',
     key = 'o',
     action = function()
       return self:open()
     end,
   })
   menu:add_option({
-    label = "Open current node's attachments in vim.",
+    label = 'Open an attachment in vim.',
     key = 'O',
     action = function()
       return self:open_in_vim()
     end,
   })
   menu:add_option({
-    label = "Open current node's attachment directory. Create if missing.",
+    label = 'Open the attachment directory externally.',
     key = 'f',
     action = function()
       return self:reveal()
     end,
   })
   menu:add_option({
-    label = "Open current node's attachment directory in vim.",
+    label = 'Open the attachment directory in vim.',
     key = 'F',
     action = function()
       return self:reveal_nvim()
     end,
   })
+  menu:add_separator({ length = #menu.title })
   menu:add_option({
-    label = 'Select and delete one attachment',
+    label = 'Delete an attachment',
     key = 'd',
     action = function()
       return self:delete_one()
     end,
   })
   menu:add_option({
-    label = 'Delete all attachments of the current node.',
+    label = 'Delete all attachments.',
     key = 'D',
     action = function()
       return self:delete_all()
     end,
   })
   menu:add_option({
-    label = 'Set specific attachment directory for current node.',
+    label = 'Set specific attachment directory for this task.',
     key = 's',
     action = function()
       return self:set_directory()
     end,
   })
   menu:add_option({
-    label = 'Unset specific attachment directory for current node.',
+    label = 'Unset specific attachment directory for this task.',
     key = 'S',
     action = function()
       return self:unset_directory()
+    end,
+  })
+  menu:add_option({
+    label = 'Synchronize this task with its attachment directory.',
+    key = 'z',
+    action = function()
+      return self:sync()
     end,
   })
   menu:add_option({ label = 'Quit', key = 'q' })
