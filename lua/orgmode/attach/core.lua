@@ -308,7 +308,13 @@ end
 function AttachCore:unset_directory(node, opts)
   local old_dir = self:get_dir(node, true)
   node:set_dir()
-  local new_dir = self:get_dir(node, true) -- new dir potentially via parent nodes
+  -- After removal, there might be a new DIR directory via inheritance.
+  local new_dir = self:get_dir_or_nil(node, true)
+  if not new_dir then
+    -- There is no parent node with a DIR property. Switch back to ID-based
+    -- directory.
+    new_dir = node:id_dir_get_or_create()
+  end
   -- Ordering matters here: both `opts` should be evaluated before the
   -- operations (copy if desired, delete if desired) start.
   ---@param do_copy? boolean
