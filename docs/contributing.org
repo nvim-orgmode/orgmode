@@ -96,3 +96,9 @@ make test FILE=./tests/plenary/api/api_spec.lua
 :CUSTOM_ID: parser
 :END:
 Parsing is done via builtin treesitter parser and the [[https://github.com/milisims/tree-sitter-org][tree-sitter-org]] grammar.
+
+**** Commits
+:PROPERTIES:
+:CUSTOM_ID: commits
+:END:
+Ensure that you follow the [[https://www.conventionalcommits.org/][Conventional Commits]] specification (e.g., =feat: add new feature=, =fix: correct bug=, =docs: update documentation=).
