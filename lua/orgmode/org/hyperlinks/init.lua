@@ -57,7 +57,7 @@ function Hyperlinks.as_custom_id_anchors(url)
   return function(headlines)
     return vim.tbl_map(function(headline)
       ---@cast headline OrgHeadline
-      local custom_id = headline:get_property('custom_id')
+      local custom_id = headline:get_property('custom_id', false)
       return ('%s#%s'):format(prefix, custom_id)
     end, headlines)
   end

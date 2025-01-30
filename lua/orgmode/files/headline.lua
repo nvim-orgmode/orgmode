@@ -422,7 +422,7 @@ end
 function Headline:set_property(name, value)
   local bufnr = self.file:get_valid_bufnr()
   if not value then
-    local existing_property, property_node = self:get_property(name)
+    local existing_property, property_node = self:get_property(name, false)
     if existing_property and property_node then
       vim.fn.deletebufline(bufnr, property_node:start() + 1)
     end
@@ -443,7 +443,7 @@ function Headline:set_property(name, value)
   end
 
   local property = (':%s: %s'):format(name, value)
-  local existing_property, property_node = self:get_property(name)
+  local existing_property, property_node = self:get_property(name, false)
   if existing_property then
     return self:_set_node_text(property_node, property)
   end
@@ -472,7 +472,10 @@ function Headline:add_note(note)
 end
 
 ---@param property_name string
----@param search_parents? boolean
+---@param search_parents? boolean if true, search parent headlines;
+---                               if false, only search this headline;
+---                               if nil (default), check
+---                               `org_use_property_inheritance`
 ---@return string | nil, TSNode | nil
 function Headline:get_property(property_name, search_parents)
   local _, properties = self:get_properties()
@@ -486,6 +489,10 @@ function Headline:get_property(property_name, search_parents)
     end
   end
 
+  if search_parents == nil then
+    search_parents = config:use_property_inheritance(property_name)
+  end
+
   if not search_parents then
     return nil, nil
   end
@@ -495,7 +502,7 @@ function Headline:get_property(property_name, search_parents)
     local headline_node = parent_section:field('headline')[1]
     if headline_node then
       local headline = Headline:new(headline_node, self.file)
-      local property, property_node = headline:get_property(property_name)
+      local property, property_node = headline:get_property(property_name, false)
       if property then
         return property, property_node
       end
@@ -918,7 +925,7 @@ function Headline:is_same(other_headline)
 end
 
 function Headline:id_get_or_create()
-  local id_prop = self:get_property('ID')
+  local id_prop = self:get_property('ID', false)
   if id_prop then
     return vim.trim(id_prop)
   end

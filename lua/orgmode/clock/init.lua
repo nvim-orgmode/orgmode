@@ -118,7 +118,7 @@ function Clock:get_statusline()
     return ''
   end
 
-  local effort = self.clocked_headline:get_property('effort')
+  local effort = self.clocked_headline:get_property('effort', false)
   local total = self.clocked_headline:get_logbook():get_total_with_active():to_string()
   if effort then
     return string.format('(Org) [%s/%s] (%s)', total, effort or '', self.clocked_headline:get_title())

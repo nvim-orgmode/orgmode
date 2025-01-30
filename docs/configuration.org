@@ -533,6 +533,22 @@ Prefix added to the generated id when [[#org_id_method][org_id_method]] is set t
 If =true=, generate ID with the Org ID module and append it to the
 headline as property. More info on [[#org_store_link][org_store_link]]
 
+*** =org_use_property_inheritance=
+:PROPERTIES:
+:CUSTOM_ID: org_use_property_inheritance
+:END:
+- Type: =boolean | string | string[]=
+- Default: =false=
+Determine whether properties of one headline are inherited by sub-headlines.
+
+- =false= - properties only pertain to the file or headline that defines them
+- =true= - properties of a headlines also pertain to all its sub-headlines
+- =string[]= - only the properties named in the given list are inherited
+- =string= - only properties matching the given regex are inherited
+
+Note that for a select few properties, the inheritance behavior is hard-coded withing their special applications.
+See [[https://orgmode.org/manual/Property-Inheritance.html][Property Inheritance]] for details.
+
 *** =org_babel_default_header_args=
 :PROPERTIES:
 :CUSTOM_ID: org_babel_default_header_args
