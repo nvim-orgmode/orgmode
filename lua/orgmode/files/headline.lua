@@ -390,9 +390,9 @@ function Headline:get_title_with_priority()
   return title
 end
 
-memoize('get_properties')
+memoize('get_own_properties')
 ---@return table<string, string>, TSNode | nil
-function Headline:get_properties()
+function Headline:get_own_properties()
   local section = self:node():parent()
   local properties_node = section and section:field('property_drawer')[1]
 
@@ -416,6 +416,33 @@ function Headline:get_properties()
   return properties, properties_node
 end
 
+memoize('get_properties')
+---@return table<string, string>, TSNode | nil
+function Headline:get_properties()
+  local properties, own_properties_node = self:get_own_properties()
+
+  if not config.org_use_property_inheritance then
+    -- TODO: Do we have to filter non-inherited properties here? (see `Headline:get_tags()`)
+    return properties, own_properties_node
+  end
+
+  local parent_section = self:node():parent():parent()
+  while parent_section do
+    local headline_node = parent_section:field('headline')[1]
+    if headline_node then
+      local headline = Headline:new(headline_node, self.file)
+      for name, value in pairs(headline:get_own_properties()) do
+        if properties[name] == nil and config:use_property_inheritance(name) then
+          properties[name] = value
+        end
+      end
+    end
+    parent_section = parent_section:parent()
+  end
+
+  return properties, own_properties_node
+end
+
 ---@param name string
 ---@param value? string
 ---@return OrgHeadline
@@ -427,19 +454,19 @@ function Headline:set_property(name, value)
       vim.fn.deletebufline(bufnr, property_node:start() + 1)
     end
     self:refresh()
-    local properties, properties_node = self:get_properties()
+    local properties, properties_node = self:get_own_properties()
     if vim.tbl_isempty(properties) then
       self:_set_node_lines(properties_node, {})
     end
     return self:refresh()
   end
 
-  local _, properties = self:get_properties()
+  local _, properties = self:get_own_properties()
   if not properties then
     local append_line = self:get_append_line()
     local property_drawer = self:_apply_indent({ ':PROPERTIES:', ':END:' }) --[[ @as string[] ]]
     vim.api.nvim_buf_set_lines(bufnr, append_line, append_line, false, property_drawer)
-    _, properties = self:refresh():get_properties()
+    _, properties = self:refresh():get_own_properties()
   end
 
   local property = (':%s: %s'):format(name, value)
@@ -478,7 +505,7 @@ end
 ---                               `org_use_property_inheritance`
 ---@return string | nil, TSNode | nil
 function Headline:get_property(property_name, search_parents)
-  local _, properties = self:get_properties()
+  local _, properties = self:get_own_properties()
   if properties then
     for _, node in ipairs(ts_utils.get_named_children(properties)) do
       local name = node:field('name')[1]
@@ -550,6 +577,7 @@ memoize('get_tags')
 function Headline:get_tags()
   local tags, own_tags_node = self:get_own_tags()
   if not config.org_use_tag_inheritance then
+    -- TODO: Why exclude the headline's own tags here?
     return config:exclude_tags(tags), own_tags_node
   end
 
@@ -636,7 +664,7 @@ end
 
 ---@return number
 function Headline:get_append_line()
-  local _, properties = self:get_properties()
+  local _, properties = self:get_own_properties()
   if properties then
     local row = properties:end_()
     return row
