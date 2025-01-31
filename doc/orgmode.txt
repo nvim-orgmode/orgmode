@@ -15,6 +15,7 @@ Table of Contents                                  *orgmode-table-of-contents*
   - Indentation is not working|orgmode-troubleshooting-indentation-is-not-working|
   - I get treesitter/query.lua errors when opening agenda/capture prompt or org files|orgmode-troubleshooting-i-get-treesitter/query.lua-errors-when-opening-agenda/capture-prompt-or-org-files|
   - Dates are not in English|orgmode-troubleshooting-dates-are-not-in-english|
+  - Chinese characters are not displayed correctly in agenda|orgmode-troubleshooting-chinese-characters-are-not-displayed-correctly-in-agenda|
   - Links are not concealed  |orgmode-troubleshooting-links-are-not-concealed|
   - Jumping to file path is not working for paths with forward slash|orgmode-troubleshooting-jumping-to-file-path-is-not-working-for-paths-with-forward-slash|
 
@@ -2968,6 +2969,19 @@ To use different locale you can add this to your `init.lua`:
 Just make sure you have `en_US` locale installed on your system. To see what
 you have available on the system you can start the command `:language` and
 press `<TAB>` to autocomplete possible options.
+
+
+CHINESE CHARACTERS ARE NOT DISPLAYED CORRECTLY IN AGENDA*orgmode-troubleshooting-chinese-characters-are-not-displayed-correctly-in-agenda*
+
+In case you use chinese characters in your Neovim, and characters appear as
+encoded, try setting the language to `zh_CN.UTF-8` with the same command as
+above:
+
+>lua
+    vim.cmd('language zh_CN.utf8')
+<
+
+See related issue: <https://github.com/nvim-orgmode/orgmode/issues/879>
 
 
 LINKS ARE NOT CONCEALED      *orgmode-troubleshooting-links-are-not-concealed*
