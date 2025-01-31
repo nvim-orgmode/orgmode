@@ -21,6 +21,16 @@ vim.cmd('language en_US.utf8')
 Just make sure you have ~en_US~ locale installed on your system. To see what you have available on the system you can
 start the command ~:language~ and press ~<TAB>~ to autocomplete possible options.
 
+** Chinese characters are not displayed correctly in agenda
+In case you use chinese characters in your Neovim, and characters appear as encoded,
+try setting the language to =zh_CN.UTF-8= with the same command as above:
+
+#+begin_src lua
+vim.cmd('language zh_CN.utf8')
+#+end_src
+
+See related issue: [[https://github.com/nvim-orgmode/orgmode/issues/879]]
+
 ** Links are not concealed
 Links are concealed with Vim's conceal feature (see ~:help conceal~). To enable concealing, add this to your ~init.lua~:
 
