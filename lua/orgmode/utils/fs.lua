@@ -54,7 +54,7 @@ function M.trim_common_root(paths)
   end)
 
   local result = {}
-  local root = vim.pesc(vim.fn.fnamemodify(filepaths[1], ':h')) .. '/'
+  local root = vim.fn.fnamemodify(filepaths[1], ':h') .. '/'
 
   for _, path in ipairs(paths) do
     local relative_path = path:sub(#root + 1)

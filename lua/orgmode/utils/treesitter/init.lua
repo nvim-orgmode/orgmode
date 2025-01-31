@@ -54,7 +54,6 @@ end
 
 -- returns the nearest headline
 function M.closest_headline_node(cursor)
-  M.parse_current_file()
   local node = M.get_node_at_cursor(cursor)
 
   if not node then

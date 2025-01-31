@@ -34,7 +34,6 @@ end
 ---@param cursor? table
 ---@return OrgTable | nil
 function Table.from_current_node(cursor)
-  ts_utils.parse_current_file()
   -- Get node from last column so we are sure we can find the table.
   -- If column is less than indentation of table, we will miss it.
   if not cursor then
