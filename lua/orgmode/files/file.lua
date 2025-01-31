@@ -278,7 +278,7 @@ function OrgFile:apply_search(search, todo_only)
     local deadline = item:get_deadline_date()
     local scheduled = item:get_scheduled_date()
     local closed = item:get_closed_date()
-    local properties = item:get_properties()
+    local properties = item:get_own_properties()
     local priority = item:get_priority()
 
     return search:check({

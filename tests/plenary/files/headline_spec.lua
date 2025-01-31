@@ -97,6 +97,29 @@ describe('Headline', function()
       assert.are.same('some/dir/', file:get_headlines()[2]:get_property('dir'))
       assert.is.Nil(file:get_headlines()[2]:get_property('dir', false))
     end)
+    it('does not affect get_own_properties', function()
+      config:extend({ org_use_property_inheritance = true })
+      file.metadata.mtime = file.metadata.mtime + 1 -- invalidate cache
+      assert.are.same({}, file:get_headlines()[2]:get_own_properties())
+    end)
+    it('affects get_properties', function()
+      config:extend({ org_use_property_inheritance = true })
+      file.metadata.mtime = file.metadata.mtime + 1 -- invalidate cache
+      local expected = { dir = 'some/dir/', thing = '0', columns = '' }
+      assert.are.same(expected, file:get_headlines()[2]:get_properties())
+    end)
+    it('makes get_properties selective if a list', function()
+      config:extend({ org_use_property_inheritance = { 'dir' } })
+      file.metadata.mtime = file.metadata.mtime + 1 -- invalidate cache
+      local expected = { dir = 'some/dir/' }
+      assert.are.same(expected, file:get_headlines()[2]:get_properties())
+    end)
+    it('makes get_properties selective if a regex', function()
+      config:extend({ org_use_property_inheritance = '^th...$' })
+      file.metadata.mtime = file.metadata.mtime + 1 -- invalidate cache
+      local expected = { thing = '0' }
+      assert.are.same(expected, file:get_headlines()[2]:get_properties())
+    end)
   end)
 
   describe('get_all_dates', function()
