@@ -53,9 +53,14 @@ function utils.readfile(file, opts)
   end)
 end
 
-function utils.writefile(file, data)
+---@param file string
+---@param data string|string[]
+---@param opts? {excl?: boolean}
+---@return OrgPromise<integer> bytes
+function utils.writefile(file, data, opts)
   return Promise.new(function(resolve, reject)
-    uv.fs_open(file, 'w', 438, function(err1, fd)
+    local flags = opts and opts.excl and 'wx' or 'w'
+    uv.fs_open(file, flags, 438, function(err1, fd)
       if err1 then
         return reject(err1)
       end
@@ -88,23 +93,6 @@ function utils.system_notification(message)
 
   if vim.fn.executable('terminal-notifier') == 1 then
     vim.loop.spawn('terminal-notifier', { args = { '-message', message } })
-  end
-end
-
-function utils.open(target)
-  if vim.fn.executable('xdg-open') == 1 then
-    vim.system({ 'xdg-open', target }, { text = false })
-    return 0
-  end
-
-  if vim.fn.executable('open') == 1 then
-    vim.system({ 'open', target }, { text = false })
-    return 0
-  end
-
-  if vim.fn.has('win32') == 1 then
-    vim.system({ 'start', target }, { text = false })
-    return 0
   end
 end
 
@@ -502,6 +490,7 @@ function utils.is_list(value)
   if vim.islist then
     return vim.islist(value)
   end
+  ---@diagnostic disable-next-line: deprecated
   return vim.tbl_islist(value)
 end
 

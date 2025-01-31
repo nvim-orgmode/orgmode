@@ -60,7 +60,7 @@ function OrgLinkCustomId:autocomplete(link)
   local prefix = opts.type == 'internal' and '' or opts.link_url:get_path_with_protocol() .. '::'
 
   return vim.tbl_map(function(headline)
-    local custom_id = headline:get_property('custom_id')
+    local custom_id = headline:get_property('custom_id', false)
     return prefix .. '#' .. custom_id
   end, headlines)
 end

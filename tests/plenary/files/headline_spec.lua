@@ -1,4 +1,5 @@
 local helpers = require('tests.plenary.helpers')
+local config = require('orgmode.config')
 
 describe('Headline', function()
   describe('get_category', function()
@@ -51,6 +52,73 @@ describe('Headline', function()
       file:reload_sync()
 
       assert.are.same('headline_2_category', file:get_headlines()[2]:get_category())
+    end)
+  end)
+
+  describe('use_property_inheritance', function()
+    local file = helpers.create_file_instance({
+      '#+CATEGORY: file_category',
+      '* Headline 1',
+      ':PROPERTIES:',
+      ':DIR: some/dir/',
+      ':THING: 0',
+      ':COLUMNS:',
+      ':END:',
+      '** Headline 2',
+      '   some body text',
+    }, 'category.org')
+    after_each(function()
+      config:extend({ org_use_property_inheritance = false })
+    end)
+    it('is false by default', function()
+      assert.is.Nil(file:get_headlines()[2]:get_property('dir'))
+    end)
+    it('is active if true', function()
+      config:extend({ org_use_property_inheritance = true })
+      assert.are.same('some/dir/', file:get_headlines()[2]:get_property('dir'))
+      assert.are.same('0', file:get_headlines()[2]:get_property('thing'))
+    end)
+    it('is selective if a list', function()
+      config:extend({ org_use_property_inheritance = { 'dir' } })
+      assert.are.same('some/dir/', file:get_headlines()[2]:get_property('dir'))
+      assert.is.Nil(file:get_headlines()[2]:get_property('thing'))
+    end)
+    it('is selective if a regex', function()
+      config:extend({ org_use_property_inheritance = '^di.$' })
+      assert.are.same('some/dir/', file:get_headlines()[2]:get_property('dir'))
+      assert.is.Nil(file:get_headlines()[2]:get_property('thing'))
+    end)
+    it('can be overridden with true', function()
+      assert.is.Nil(file:get_headlines()[2]:get_property('dir'))
+      assert.are.same('some/dir/', file:get_headlines()[2]:get_property('dir', true))
+    end)
+    it('can be overridden with false', function()
+      config:extend({ org_use_property_inheritance = true })
+      assert.are.same('some/dir/', file:get_headlines()[2]:get_property('dir'))
+      assert.is.Nil(file:get_headlines()[2]:get_property('dir', false))
+    end)
+    it('does not affect get_own_properties', function()
+      config:extend({ org_use_property_inheritance = true })
+      file.metadata.mtime = file.metadata.mtime + 1 -- invalidate cache
+      assert.are.same({}, file:get_headlines()[2]:get_own_properties())
+    end)
+    it('affects get_properties', function()
+      config:extend({ org_use_property_inheritance = true })
+      file.metadata.mtime = file.metadata.mtime + 1 -- invalidate cache
+      local expected = { dir = 'some/dir/', thing = '0', columns = '' }
+      assert.are.same(expected, file:get_headlines()[2]:get_properties())
+    end)
+    it('makes get_properties selective if a list', function()
+      config:extend({ org_use_property_inheritance = { 'dir' } })
+      file.metadata.mtime = file.metadata.mtime + 1 -- invalidate cache
+      local expected = { dir = 'some/dir/' }
+      assert.are.same(expected, file:get_headlines()[2]:get_properties())
+    end)
+    it('makes get_properties selective if a regex', function()
+      config:extend({ org_use_property_inheritance = '^th...$' })
+      file.metadata.mtime = file.metadata.mtime + 1 -- invalidate cache
+      local expected = { thing = '0' }
+      assert.are.same(expected, file:get_headlines()[2]:get_properties())
     end)
   end)
 
