@@ -11,9 +11,10 @@ local function populate_section(content, name, list)
   )
   content[#content + 1] = ''
 end
-local function generate_changelog()
+
+local function get_changes()
   local latest_tag = vim.fn.system('git describe --tags `git rev-list --tags --max-count=1`'):gsub('\n', '')
-  local commits = vim.fn.systemlist('git log ' .. latest_tag .. "..master --pretty=format:'%s'")
+  local commits = vim.fn.systemlist('git log ' .. latest_tag .. "..feat/changelog --pretty=format:'%s'")
   local fixes = {}
   local features = {}
   local breaking_changes = {}
@@ -32,26 +33,39 @@ local function generate_changelog()
       end
     end
   end
+  local content = {}
+
+  populate_section(content, 'Breaking changes', breaking_changes)
+  populate_section(content, 'Features', features)
+  populate_section(content, 'Bug fixes', fixes)
+
+  return content
+end
+
+local function generate_changelog()
   local new_tag = arg[1]
-  local changelog = vim.fn.readfile('./docs/changelog.org')
-  local start = { unpack(changelog, 1, 2) }
-  local remaining = { unpack(changelog, 3) }
 
   local new_content = {
     '** ' .. new_tag,
     '- Date: [[' .. os.date('%Y-%m-%d') .. ']]',
     ('- [[https://github.com/nvim-orgmode/orgmode/compare/%s...%s][Compare]]'):format(latest_tag, new_tag),
-    ('- [[https://github.com/nvim-orgmode/orgmode/releases/tag/%s][Link to release]]'):format(latest_tag),
+    ('- [[https://github.com/nvim-orgmode/orgmode/releases/tag/%s][Link to release]]'):format(new_tag),
     '',
   }
-  populate_section(new_content, 'Breaking changes', breaking_changes)
-  populate_section(new_content, 'Features', features)
-  populate_section(new_content, 'Bug fixes', fixes)
+  vim.list_extend(new_content, get_changes())
+
+  local changelog = vim.fn.readfile('./docs/changelog.org')
+  local start = { unpack(changelog, 1, 2) }
+  local remaining = { unpack(changelog, 3) }
 
   local new_changelog = vim.list_extend(start, new_content)
   new_changelog = vim.list_extend(new_changelog, remaining)
 
   vim.fn.writefile(new_changelog, './docs/changelog.org')
+end
+
+if arg[2] and arg[2] == 'print' then
+  return print(table.concat(get_changes(), '\n'))
 end
 
 generate_changelog()
