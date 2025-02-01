@@ -1,16 +1,11 @@
 * Changelog
-
-** 0.4.2
-- Date: [[2025-02-01]]
-- [[https://github.com/nvim-orgmode/orgmode/compare/0.4.1...0.4.2][Compare]]
-- [[https://github.com/nvim-orgmode/orgmode/releases/tag/0.4.2][Link to release]]
-
+** [[https://github.com/nvim-orgmode/orgmode/compare/0.4.1...0.4.2][0.4.2]] (2025-02-01)
 *** Features
-- Add support for footnotes (#874)
+- Add support for footnotes (#874) ([[https://github.com/nvim-orgmode/orgmode/commit/4f62b7f][4f62b7f]])
 
 *** Bug fixes
-- default to current time when switching to time input
-- Set correct archive category on archived headline
-- remove unnecessary escaping for refile autocompletion
-- remove double ts parsing
+- default to current time when switching to time input ([[https://github.com/nvim-orgmode/orgmode/commit/c68a87c][c68a87c]])
+- Set correct archive category on archived headline ([[https://github.com/nvim-orgmode/orgmode/commit/63d2cbb][63d2cbb]])
+- remove unnecessary escaping for refile autocompletion ([[https://github.com/nvim-orgmode/orgmode/commit/d56c691][d56c691]])
+- remove double ts parsing ([[https://github.com/nvim-orgmode/orgmode/commit/b587545][b587545]])
 
