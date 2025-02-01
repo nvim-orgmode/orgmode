@@ -983,6 +983,14 @@ function OrgDate:set_todays_date()
   })
 end
 
+function OrgDate:set_current_time()
+  local time = os_date(os.time())
+  return self:set({
+    hour = tonumber(time.hour) or 0,
+    min = tonumber(time.min) or 0,
+  })
+end
+
 ---@return OrgDate
 function OrgDate:apply_repeater()
   local repeater = self:get_repeater()

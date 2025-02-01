@@ -632,7 +632,9 @@ end
 
 function Calendar:set_time()
   self.date = self:get_selected_date()
-  self.date = self.date:set({ date_only = false })
+  if self.date.date_only then
+    self.date = self.date:set({ date_only = false }):set_current_time()
+  end
   --self:rerender_time()
   self:set_sel_hour()
   self:render() -- because we want to highlight the currently selected date, we have to render everything
