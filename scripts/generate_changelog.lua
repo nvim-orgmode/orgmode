@@ -1,8 +1,9 @@
-local function populate_section(content, name, list)
+local function populate_section(content, name, list, format)
   if #list == 0 then
     return
   end
-  content[#content + 1] = '*** ' .. name
+  local heading = format == 'md' and '### ' or '*** '
+  content[#content + 1] = heading .. name
   vim.list_extend(
     content,
     vim.tbl_map(function(item)
@@ -12,11 +13,18 @@ local function populate_section(content, name, list)
   content[#content + 1] = ''
 end
 
-local function get_changes(latest_tag)
-  if not latest_tag then
-    latest_tag = vim.fn.system('git describe --tags `git rev-list --tags --max-count=1`'):gsub('\n', '')
+---@param format 'org' | 'md'
+---@param latest_tag? string
+---@return string[]
+local function get_changes(format, latest_tag)
+  format = format or 'org'
+  latest_tag = latest_tag or vim.fn.system('git describe --tags `git rev-list --tags --max-count=1`'):gsub('\n', '')
+  local commit_format = '[[https://github.com/nvim-orgmode/orgmode/commit/%h][%h]]'
+  if format == 'md' then
+    commit_format = '[%h](https://github.com/nvim-orgmode/orgmode/commit/%h)'
   end
-  local commits = vim.fn.systemlist('git log ' .. latest_tag .. "..master --pretty=format:'%s'")
+
+  local commits = vim.fn.systemlist(("git log %s..master --pretty=format:'%%s (%s)'"):format(latest_tag, commit_format))
   local fixes = {}
   local features = {}
   local breaking_changes = {}
@@ -37,9 +45,9 @@ local function get_changes(latest_tag)
   end
   local content = {}
 
-  populate_section(content, 'Breaking changes', breaking_changes)
-  populate_section(content, 'Features', features)
-  populate_section(content, 'Bug fixes', fixes)
+  populate_section(content, 'Breaking changes', breaking_changes, format)
+  populate_section(content, 'Features', features, format)
+  populate_section(content, 'Bug fixes', fixes, format)
 
   return content
 end
@@ -49,13 +57,15 @@ local function generate_changelog()
   local new_tag = arg[1]
 
   local new_content = {
-    '** ' .. new_tag,
-    '- Date: [[' .. os.date('%Y-%m-%d') .. ']]',
-    ('- [[https://github.com/nvim-orgmode/orgmode/compare/%s...%s][Compare]]'):format(latest_tag, new_tag),
-    ('- [[https://github.com/nvim-orgmode/orgmode/releases/tag/%s][Link to release]]'):format(new_tag),
-    '',
+    ('** [[https://github.com/nvim-orgmode/orgmode/compare/%s...%s][%s]] (%s)'):format(latest_tag, new_tag, new_tag, os.date('%Y-%m-%d')),
   }
-  vim.list_extend(new_content, get_changes(latest_tag))
+
+  local changes = get_changes('org', latest_tag)
+  if #changes == 0 then
+    print('No changes since last release\n')
+    return os.exit(1)
+  end
+  vim.list_extend(new_content, changes)
 
   local changelog = vim.fn.readfile('./docs/changelog.org')
   local start = { unpack(changelog, 1, 2) }
@@ -65,10 +75,11 @@ local function generate_changelog()
   new_changelog = vim.list_extend(new_changelog, remaining)
 
   vim.fn.writefile(new_changelog, './docs/changelog.org')
+  return os.exit()
 end
 
 if arg[2] and arg[2] == 'print' then
-  return io.write(table.concat(get_changes(), '\n'))
+  return io.write(table.concat(get_changes('md'), '\n'))
 end
 
 generate_changelog()
