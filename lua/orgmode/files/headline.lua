@@ -576,7 +576,7 @@ memoize('get_tags')
 function Headline:get_tags()
   local tags, own_tags_node = self:get_own_tags()
   if not config.org_use_tag_inheritance then
-    return config:exclude_tags(tags), own_tags_node
+    return tags, own_tags_node
   end
 
   local parent_tags = {}
