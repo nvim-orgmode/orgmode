@@ -1,11 +1,171 @@
 * Changelog
+
 ** [[https://github.com/nvim-orgmode/orgmode/compare/0.4.1...0.4.2][0.4.2]] (2025-02-01)
 *** Features
 - Add support for footnotes (#874) ([[https://github.com/nvim-orgmode/orgmode/commit/4f62b7f][4f62b7f]])
 
 *** Bug fixes
-- default to current time when switching to time input ([[https://github.com/nvim-orgmode/orgmode/commit/c68a87c][c68a87c]])
-- Set correct archive category on archived headline ([[https://github.com/nvim-orgmode/orgmode/commit/63d2cbb][63d2cbb]])
-- remove unnecessary escaping for refile autocompletion ([[https://github.com/nvim-orgmode/orgmode/commit/d56c691][d56c691]])
 - remove double ts parsing ([[https://github.com/nvim-orgmode/orgmode/commit/b587545][b587545]])
+- *refile*: remove unnecessary escaping for refile autocompletion ([[https://github.com/nvim-orgmode/orgmode/commit/d56c691][d56c691]])
+- *archive*: Set correct archive category on archived headline ([[https://github.com/nvim-orgmode/orgmode/commit/63d2cbb][63d2cbb]])
+- *calendar*: default to current time when switching to time input ([[https://github.com/nvim-orgmode/orgmode/commit/c68a87c][c68a87c]])
+
+** [[https://github.com/nvim-orgmode/orgmode/compare/0.4.0...0.4.1][0.4.1]] (2025-02-01)
+*** Features
+- *api*: Add get_headline_at_cursor to Agenda api ([[https://github.com/nvim-orgmode/orgmode/commit/2c806ca][2c806ca]])
+- *input*: Add async input (#871) ([[https://github.com/nvim-orgmode/orgmode/commit/377c295][377c295]])
+- *links*: Add support for visual mode for insert link ([[https://github.com/nvim-orgmode/orgmode/commit/0ef840a][0ef840a]])
+- *folds*: Add org_cycle_separator_lines ([[https://github.com/nvim-orgmode/orgmode/commit/ab87a9b][ab87a9b]])
+- *markup*: Allow markup in link descriptions ([[https://github.com/nvim-orgmode/orgmode/commit/f7c669a][f7c669a]])
+
+*** Bug fixes
+- *note*: Fix capturing note ([[https://github.com/nvim-orgmode/orgmode/commit/e65a661][e65a661]])
+- *filter*: Fix or matching for todos in tags match filter ([[https://github.com/nvim-orgmode/orgmode/commit/429409b][429409b]])
+- *agenda*: Do not jump cursor to first line ([[https://github.com/nvim-orgmode/orgmode/commit/271a6fa][271a6fa]])
+
+** [[https://github.com/nvim-orgmode/orgmode/compare/0.3.9...0.4.0][0.4.0]] (2025-02-01)
+*** Features
+- *notifications*: Show icon in cron notify-send notification ([[https://github.com/nvim-orgmode/orgmode/commit/1881ac9][1881ac9]])
+- *globals*: Add install_treesitter_grammar to global command ([[https://github.com/nvim-orgmode/orgmode/commit/0939e49][0939e49]])
+
+*** Bug fixes
+- *indents*: Trigger reindent when closing block or drawers ([[https://github.com/nvim-orgmode/orgmode/commit/e385fcf][e385fcf]])
+- *checkboxes*: Do not uncheck current line checkbox on new entry ([[https://github.com/nvim-orgmode/orgmode/commit/f18a66b][f18a66b]])
+
+** [[https://github.com/nvim-orgmode/orgmode/compare/0.3.8...0.3.9][0.3.9]] (2025-02-01)
+*** Breaking changes
+- *agenda*: rewrite agenda rendering and fix filters (#848) ([[https://github.com/nvim-orgmode/orgmode/commit/8667167][8667167]])
+
+*** Features
+- Rename search arguments to agenda views ([[https://github.com/nvim-orgmode/orgmode/commit/6d23709][6d23709]])
+- *api*: Add match_query and header to agenda api ([[https://github.com/nvim-orgmode/orgmode/commit/ed49550][ed49550]])
+- *agenda*: Add custom agenda commands (#850) ([[https://github.com/nvim-orgmode/orgmode/commit/e6ae773][e6ae773]])
+- *edit_src*: Add mapping to write and close special edit buffer ([[https://github.com/nvim-orgmode/orgmode/commit/c9027f9][c9027f9]])
+- *api*: Add more options for agenda ([[https://github.com/nvim-orgmode/orgmode/commit/7e815f0][7e815f0]])
+- *api*: Add todo_ignore opts for tags and tags_todo views ([[https://github.com/nvim-orgmode/orgmode/commit/91f5a9e][91f5a9e]])
+- *api*: Add open_by_key function for agenda ([[https://github.com/nvim-orgmode/orgmode/commit/1afac86][1afac86]])
+- *docs*: Add orgmode docs (#864) ([[https://github.com/nvim-orgmode/orgmode/commit/9801148][9801148]])
+- Add global `:Org` command and global `Org` lua variable ([[https://github.com/nvim-orgmode/orgmode/commit/b2285be][b2285be]])
+- *globals*: Add Org.capture global helper ([[https://github.com/nvim-orgmode/orgmode/commit/3b120ea][3b120ea]])
+- *globals*: Rename `open` to `agenda`, add default prompt for `agenda` and `capture` ([[https://github.com/nvim-orgmode/orgmode/commit/940b067][940b067]])
+- *indent*: Add filetype indentation in src blocks ([[https://github.com/nvim-orgmode/orgmode/commit/7092f81][7092f81]])
+- Publish event when heading is toggled with <prefix>* ([[https://github.com/nvim-orgmode/orgmode/commit/8b92e84][8b92e84]])
+
+*** Bug fixes
+- *indent*: Default block indent to 0 ([[https://github.com/nvim-orgmode/orgmode/commit/738de39][738de39]])
+- *autocompletion*: correctly autocomplete non-absolute paths ([[https://github.com/nvim-orgmode/orgmode/commit/7f975b1][7f975b1]])
+- *filters*: Fix parsing dates in tags filter ([[https://github.com/nvim-orgmode/orgmode/commit/43361ba][43361ba]])
+- *dates*: Check if date is without a time when doing comparison ([[https://github.com/nvim-orgmode/orgmode/commit/fccccd4][fccccd4]])
+- *sort*: Sort associative tables alphabetically where necessary ([[https://github.com/nvim-orgmode/orgmode/commit/1e97173][1e97173]])
+- *agenda*: Use custom header for tags and tags_todo agenda if provided ([[https://github.com/nvim-orgmode/orgmode/commit/9a3f009][9a3f009]])
+- *windows*: Correctly read file with any fileformat ([[https://github.com/nvim-orgmode/orgmode/commit/b1922c6][b1922c6]])
+- *agenda*: use only available filters for matching ([[https://github.com/nvim-orgmode/orgmode/commit/4dcba70][4dcba70]])
+- *agenda*: Pass global agenda filter to custom commands ([[https://github.com/nvim-orgmode/orgmode/commit/d62fd3c][d62fd3c]])
+- *filter*: Fix tags agenda view matcher to allow -tags at start ([[https://github.com/nvim-orgmode/orgmode/commit/95cecdd][95cecdd]])
+- *filter*: Exclude & in property match ([[https://github.com/nvim-orgmode/orgmode/commit/e3e8204][e3e8204]])
+- *input*: stop action when input prompt is canceled ([[https://github.com/nvim-orgmode/orgmode/commit/86ed523][86ed523]])
+- *links*: Unfold when jumping to headline ([[https://github.com/nvim-orgmode/orgmode/commit/51ed95f][51ed95f]])
+- *tags*: Allow non-ascii chars in tags ([[https://github.com/nvim-orgmode/orgmode/commit/122c534][122c534]])
+- *filter*: Use start of day for relative date matching ([[https://github.com/nvim-orgmode/orgmode/commit/f25f96d][f25f96d]])
+- *syntax*: Enable vim syntax hl if latex highlights are enabled ([[https://github.com/nvim-orgmode/orgmode/commit/ebbf28c][ebbf28c]])
+- *input*: Do not set completion function if not provided ([[https://github.com/nvim-orgmode/orgmode/commit/3ba6db7][3ba6db7]])
+- *mappings*: Correctly fall back to previously defined <CR> mapping ([[https://github.com/nvim-orgmode/orgmode/commit/6566b69][6566b69]])
+- *filters*: Use start of day for dates in match filter ([[https://github.com/nvim-orgmode/orgmode/commit/c889000][c889000]])
+- *tags*: Do not sort tags in tags change prompt ([[https://github.com/nvim-orgmode/orgmode/commit/42a4ccf][42a4ccf]])
+- *agenda*: Get last line from buffer for separator ([[https://github.com/nvim-orgmode/orgmode/commit/e0ba9dc][e0ba9dc]])
+
+** [[https://github.com/nvim-orgmode/orgmode/compare/0.3.7...0.3.8][0.3.8]] (2025-02-01)
+*** Breaking changes
+- *version*: Drop support for Neovim < v0.10.0 ([[https://github.com/nvim-orgmode/orgmode/commit/e5562a0][e5562a0]])
+
+*** Features
+- *archive*: set outline path when archiving (#746) ([[https://github.com/nvim-orgmode/orgmode/commit/dfcb945][dfcb945]])
+- *priority*: improve priority cycling (#817) ([[https://github.com/nvim-orgmode/orgmode/commit/1657948][1657948]])
+- *refile*: improve ux by matching files more fuzzily (#815) ([[https://github.com/nvim-orgmode/orgmode/commit/625f060][625f060]])
+- *completion*: Add blink.cmp source ([[https://github.com/nvim-orgmode/orgmode/commit/73f3263][73f3263]])
+- *log-state*: align with the emacs orgmode format (#837) ([[https://github.com/nvim-orgmode/orgmode/commit/f8c0fd3][f8c0fd3]])
+
+*** Bug fixes
+- *calendar*: Re-center once Neovim is resized ([[https://github.com/nvim-orgmode/orgmode/commit/8ead368][8ead368]])
+- fix autocomplete for tags search prompt (#812) ([[https://github.com/nvim-orgmode/orgmode/commit/a38f5c4][a38f5c4]])
+- *nightly*: Toggle headline checkbox cookie ([[https://github.com/nvim-orgmode/orgmode/commit/c654095][c654095]])
+- *completion*: Do not complete plan types on headline line ([[https://github.com/nvim-orgmode/orgmode/commit/8b1dfcd][8b1dfcd]])
+- *virtual indent*: handle invalid buffer gracefully (#825) ([[https://github.com/nvim-orgmode/orgmode/commit/1d8c9b9][1d8c9b9]])
+- *refile*: Autocomplete nested paths (#835) ([[https://github.com/nvim-orgmode/orgmode/commit/956897b][956897b]])
+- *float*: Set filetype for capture window ([[https://github.com/nvim-orgmode/orgmode/commit/94894f3][94894f3]])
+- *buffer*: Disable tmp flag on buffer after edit ([[https://github.com/nvim-orgmode/orgmode/commit/6c39469][6c39469]])
+- *formatexpr*: Correctly fallback to internal formatexpr ([[https://github.com/nvim-orgmode/orgmode/commit/3f37829][3f37829]])
+- retain direct tags even if they are excluded from inheritance (#839) ([[https://github.com/nvim-orgmode/orgmode/commit/92e8b51][92e8b51]])
+- *help*: ignore disabled mappings (#840) ([[https://github.com/nvim-orgmode/orgmode/commit/4c2528a][4c2528a]])
+- *template*: expandable variables in lua expr (#841) ([[https://github.com/nvim-orgmode/orgmode/commit/db7f044][db7f044]])
+- *mininit*: Ensure minimal init works on 0.11 ([[https://github.com/nvim-orgmode/orgmode/commit/12d2324][12d2324]])
+- *mininit*: Ensure minimal init works on 0.11 ([[https://github.com/nvim-orgmode/orgmode/commit/bf65774][bf65774]])
+- *tests*: Move validator version check outside ([[https://github.com/nvim-orgmode/orgmode/commit/2e45a6a][2e45a6a]])
+
+** [[https://github.com/nvim-orgmode/orgmode/compare/0.3.61...0.3.7][0.3.7]] (2025-02-01)
+*** Bug fixes
+- *calendar*: Do not modify time when switching months ([[https://github.com/nvim-orgmode/orgmode/commit/ac6e02a][ac6e02a]])
+
+** [[https://github.com/nvim-orgmode/orgmode/compare/0.3.6...0.3.61][0.3.61]] (2025-02-01)
+*** Bug fixes
+- *loader*: Fix typo in persisting loaded file ([[https://github.com/nvim-orgmode/orgmode/commit/08d763d][08d763d]])
+
+** [[https://github.com/nvim-orgmode/orgmode/compare/0.3.5...0.3.6][0.3.6]] (2025-02-01)
+*** Breaking changes
+- *links*: Use refactor links structure (#803) ([[https://github.com/nvim-orgmode/orgmode/commit/c5940d3][c5940d3]])
+
+*** Features
+- *links*: Add unused refactored links structure (#802) ([[https://github.com/nvim-orgmode/orgmode/commit/c6bdb07][c6bdb07]])
+- Setting filetype to org will treat file as an org file ([[https://github.com/nvim-orgmode/orgmode/commit/a006c93][a006c93]])
+- *dev*: Add persist option to load_file method ([[https://github.com/nvim-orgmode/orgmode/commit/2a10172][2a10172]])
+- *dev*: Update add_to_paths to behave as load_file with persist option ([[https://github.com/nvim-orgmode/orgmode/commit/fd95708][fd95708]])
+
+*** Bug fixes
+- *nightly*: Fix compatibility with Neovim nightly ([[https://github.com/nvim-orgmode/orgmode/commit/e3500ad][e3500ad]])
+- *loader*: Load files concurrently with a limit to avoid "too many open files" errors ([[https://github.com/nvim-orgmode/orgmode/commit/1692af5][1692af5]])
+
+** [[https://github.com/nvim-orgmode/orgmode/compare/0.3.4...0.3.5][0.3.5]] (2025-02-01)
+*** Breaking changes
+- *closing note*: Use different title per closing note type ([[https://github.com/nvim-orgmode/orgmode/commit/f874118][f874118]])
+- Drop official support for v0.9.4 ([[https://github.com/nvim-orgmode/orgmode/commit/2ce9a8d][2ce9a8d]])
+- *injections*: Do not use vim.filetype.match for injections ([[https://github.com/nvim-orgmode/orgmode/commit/7ee1f13][7ee1f13]])
+
+*** Features
+- *injection*: Add some languages to TS injection blocks ([[https://github.com/nvim-orgmode/orgmode/commit/d2fde79][d2fde79]])
+- support org_toggle_timestamp_type (#651) ([[https://github.com/nvim-orgmode/orgmode/commit/82af22f][82af22f]])
+- *api*: Allow to insert links through API (#731) ([[https://github.com/nvim-orgmode/orgmode/commit/36c76c2][36c76c2]])
+- enhance calendar widget with time picker (#650) ([[https://github.com/nvim-orgmode/orgmode/commit/7af6cbd][7af6cbd]])
+- Add support for org log repeat (#738) ([[https://github.com/nvim-orgmode/orgmode/commit/b26b1f2][b26b1f2]])
+- Bump minimum version to 0.9.4 ([[https://github.com/nvim-orgmode/orgmode/commit/ac9a6e0][ac9a6e0]])
+- *folds*: Add option to use old folds highlights ([[https://github.com/nvim-orgmode/orgmode/commit/c69245e][c69245e]])
+- support cursor keys for calendar navigation (#767) ([[https://github.com/nvim-orgmode/orgmode/commit/a84a748][a84a748]])
+- *core*: enhance org-insert-link, add completion for `~/`  prefix. (#749) ([[https://github.com/nvim-orgmode/orgmode/commit/47c3d92][47c3d92]])
+- *highlights*: Add hlgroups for priority high and low ([[https://github.com/nvim-orgmode/orgmode/commit/c8877c7][c8877c7]])
+- allow configuring keymap descriptions (#789) ([[https://github.com/nvim-orgmode/orgmode/commit/5169ac3][5169ac3]])
+- *hyperlinks*: Add OSC 8 hyperlink support to links ([[https://github.com/nvim-orgmode/orgmode/commit/eb7a110][eb7a110]])
+- *hyperlinks*: Add OSC 8 hyperlink support ([[https://github.com/nvim-orgmode/orgmode/commit/0683da9][0683da9]])
+- *luarocks*: Add dev version to luarocks ([[https://github.com/nvim-orgmode/orgmode/commit/4616941][4616941]])
+
+*** Bug fixes
+- *ts*: Fix TS injections on mac os ([[https://github.com/nvim-orgmode/orgmode/commit/4bbe8ea][4bbe8ea]])
+- *deprecated*: Update deprecated tbl_islist call ([[https://github.com/nvim-orgmode/orgmode/commit/dbcff9e][dbcff9e]])
+- *archive*: Properly archive headlines with level > 1 ([[https://github.com/nvim-orgmode/orgmode/commit/2c82236][2c82236]])
+- *archive*: Set archive properties on correct headline ([[https://github.com/nvim-orgmode/orgmode/commit/2bc0072][2bc0072]])
+- *date*: persist all attributes passed by options (#735) ([[https://github.com/nvim-orgmode/orgmode/commit/46c839b][46c839b]])
+- *calendar*: Exit time mode when switching month ([[https://github.com/nvim-orgmode/orgmode/commit/52f85be][52f85be]])
+- *perf*: Memoize few headline methods ([[https://github.com/nvim-orgmode/orgmode/commit/772c7c6][772c7c6]])
+- *links*: insert id link properly (#742) ([[https://github.com/nvim-orgmode/orgmode/commit/8e319bf][8e319bf]])
+- *calendar*: Properly go to previous/next year ([[https://github.com/nvim-orgmode/orgmode/commit/c9bf6d8][c9bf6d8]])
+- *calendar*: fix bug with empty date (#744) ([[https://github.com/nvim-orgmode/orgmode/commit/3e4dbeb][3e4dbeb]])
+- *listitems*: Handle text edits order on Neovim nightly ([[https://github.com/nvim-orgmode/orgmode/commit/ab5183c][ab5183c]])
+- fix file type detection in `org-edit-special` on macOS. (#757) ([[https://github.com/nvim-orgmode/orgmode/commit/d7d0fc5][d7d0fc5]])
+- *injection*: Default to lower filetype if not detected ([[https://github.com/nvim-orgmode/orgmode/commit/225eba8][225eba8]])
+- *nightly*: Remove reversing of lsp edits ([[https://github.com/nvim-orgmode/orgmode/commit/328ef85][328ef85]])
+- *tests*: Fix tests that causes false negative results ([[https://github.com/nvim-orgmode/orgmode/commit/de02a0c][de02a0c]])
+- *highlights*: Highlight table hr line separately ([[https://github.com/nvim-orgmode/orgmode/commit/e365b85][e365b85]])
+- explicitly pass treesitter language to `get_node()` (#795) ([[https://github.com/nvim-orgmode/orgmode/commit/56c8246][56c8246]])
+- *dates*: Fix parsing dates from headlines ([[https://github.com/nvim-orgmode/orgmode/commit/d0baf31][d0baf31]])
+- *Enter*: Return early if mapping callback returns nil ([[https://github.com/nvim-orgmode/orgmode/commit/16cf859][16cf859]])
+- *ci*: Inherit secrets in reusable workflows ([[https://github.com/nvim-orgmode/orgmode/commit/1dd91cc][1dd91cc]])
+
 
