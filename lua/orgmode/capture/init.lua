@@ -297,6 +297,8 @@ function Capture:refile_file_headline_to_archive(headline)
 
   local destination_file = self.files:get(archive_location)
   local todo_state = headline:get_todo()
+  local headline_category = headline:get_category()
+  local outline_path = headline:get_outline_path()
 
   return self
     :_refile_from_org_file({
@@ -310,11 +312,10 @@ function Capture:refile_file_headline_to_archive(headline)
         local archived_headline = archive_file:get_closest_headline({ target_line, 0 })
         archived_headline:set_property('ARCHIVE_TIME', Date.now():to_string())
         archived_headline:set_property('ARCHIVE_FILE', file.filename)
-        local outline_path = headline:get_outline_path()
         if outline_path ~= '' then
           archived_headline:set_property('ARCHIVE_OLPATH', outline_path)
         end
-        archived_headline:set_property('ARCHIVE_CATEGORY', headline:get_category())
+        archived_headline:set_property('ARCHIVE_CATEGORY', headline_category)
         archived_headline:set_property('ARCHIVE_TODO', todo_state or '')
       end)
     end)
