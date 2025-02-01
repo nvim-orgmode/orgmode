@@ -1,4 +1,4 @@
-#+OPTIONS: H:9
+#+OPTIONS: H:9 ^:nil
 * Configuration
 
 This page contains information about all configuration that can be provided to the plugin.

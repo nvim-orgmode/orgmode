@@ -1,4 +1,4 @@
-#+OPTIONS: H:9
+#+OPTIONS: H:9 ^:nil
 
 * Overview
 Org-mode is a flexible note-taking system that was originally created for

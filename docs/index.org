@@ -1,4 +1,4 @@
-#+OPTIONS: H:9
+#+OPTIONS: H:9 ^:nil
 * Nvim Orgmode
 
 Nvim orgmode is a clone of Emacs Orgmode for Neovim 0.10.0+.
