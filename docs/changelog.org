@@ -10,7 +10,7 @@
 - *archive*: Set correct archive category on archived headline ([[https://github.com/nvim-orgmode/orgmode/commit/63d2cbb][63d2cbb]])
 - *calendar*: default to current time when switching to time input ([[https://github.com/nvim-orgmode/orgmode/commit/c68a87c][c68a87c]])
 
-** [[https://github.com/nvim-orgmode/orgmode/compare/0.4.0...0.4.1][0.4.1]] (2025-02-01)
+** [[https://github.com/nvim-orgmode/orgmode/compare/0.4.0...0.4.1][0.4.1]] (2025-01-28)
 *** Features
 - *api*: Add get_headline_at_cursor to Agenda api ([[https://github.com/nvim-orgmode/orgmode/commit/2c806ca][2c806ca]])
 - *input*: Add async input (#871) ([[https://github.com/nvim-orgmode/orgmode/commit/377c295][377c295]])
@@ -23,7 +23,7 @@
 - *filter*: Fix or matching for todos in tags match filter ([[https://github.com/nvim-orgmode/orgmode/commit/429409b][429409b]])
 - *agenda*: Do not jump cursor to first line ([[https://github.com/nvim-orgmode/orgmode/commit/271a6fa][271a6fa]])
 
-** [[https://github.com/nvim-orgmode/orgmode/compare/0.3.9...0.4.0][0.4.0]] (2025-02-01)
+** [[https://github.com/nvim-orgmode/orgmode/compare/0.3.9...0.4.0][0.4.0]] (2025-01-24)
 *** Features
 - *notifications*: Show icon in cron notify-send notification ([[https://github.com/nvim-orgmode/orgmode/commit/1881ac9][1881ac9]])
 - *globals*: Add install_treesitter_grammar to global command ([[https://github.com/nvim-orgmode/orgmode/commit/0939e49][0939e49]])
@@ -32,7 +32,7 @@
 - *indents*: Trigger reindent when closing block or drawers ([[https://github.com/nvim-orgmode/orgmode/commit/e385fcf][e385fcf]])
 - *checkboxes*: Do not uncheck current line checkbox on new entry ([[https://github.com/nvim-orgmode/orgmode/commit/f18a66b][f18a66b]])
 
-** [[https://github.com/nvim-orgmode/orgmode/compare/0.3.8...0.3.9][0.3.9]] (2025-02-01)
+** [[https://github.com/nvim-orgmode/orgmode/compare/0.3.8...0.3.9][0.3.9]] (2025-01-21)
 *** Breaking changes
 - *agenda*: rewrite agenda rendering and fix filters (#848) ([[https://github.com/nvim-orgmode/orgmode/commit/8667167][8667167]])
 
@@ -74,7 +74,7 @@
 - *tags*: Do not sort tags in tags change prompt ([[https://github.com/nvim-orgmode/orgmode/commit/42a4ccf][42a4ccf]])
 - *agenda*: Get last line from buffer for separator ([[https://github.com/nvim-orgmode/orgmode/commit/e0ba9dc][e0ba9dc]])
 
-** [[https://github.com/nvim-orgmode/orgmode/compare/0.3.7...0.3.8][0.3.8]] (2025-02-01)
+** [[https://github.com/nvim-orgmode/orgmode/compare/0.3.7...0.3.8][0.3.8]] (2025-01-06)
 *** Breaking changes
 - *version*: Drop support for Neovim < v0.10.0 ([[https://github.com/nvim-orgmode/orgmode/commit/e5562a0][e5562a0]])
 
@@ -102,15 +102,15 @@
 - *mininit*: Ensure minimal init works on 0.11 ([[https://github.com/nvim-orgmode/orgmode/commit/bf65774][bf65774]])
 - *tests*: Move validator version check outside ([[https://github.com/nvim-orgmode/orgmode/commit/2e45a6a][2e45a6a]])
 
-** [[https://github.com/nvim-orgmode/orgmode/compare/0.3.61...0.3.7][0.3.7]] (2025-02-01)
+** [[https://github.com/nvim-orgmode/orgmode/compare/0.3.61...0.3.7][0.3.7]] (2024-09-24)
 *** Bug fixes
 - *calendar*: Do not modify time when switching months ([[https://github.com/nvim-orgmode/orgmode/commit/ac6e02a][ac6e02a]])
 
-** [[https://github.com/nvim-orgmode/orgmode/compare/0.3.6...0.3.61][0.3.61]] (2025-02-01)
+** [[https://github.com/nvim-orgmode/orgmode/compare/0.3.6...0.3.61][0.3.61]] (2024-09-23)
 *** Bug fixes
 - *loader*: Fix typo in persisting loaded file ([[https://github.com/nvim-orgmode/orgmode/commit/08d763d][08d763d]])
 
-** [[https://github.com/nvim-orgmode/orgmode/compare/0.3.5...0.3.6][0.3.6]] (2025-02-01)
+** [[https://github.com/nvim-orgmode/orgmode/compare/0.3.5...0.3.6][0.3.6]] (2024-09-23)
 *** Breaking changes
 - *links*: Use refactor links structure (#803) ([[https://github.com/nvim-orgmode/orgmode/commit/c5940d3][c5940d3]])
 
@@ -124,7 +124,7 @@
 - *nightly*: Fix compatibility with Neovim nightly ([[https://github.com/nvim-orgmode/orgmode/commit/e3500ad][e3500ad]])
 - *loader*: Load files concurrently with a limit to avoid "too many open files" errors ([[https://github.com/nvim-orgmode/orgmode/commit/1692af5][1692af5]])
 
-** [[https://github.com/nvim-orgmode/orgmode/compare/0.3.4...0.3.5][0.3.5]] (2025-02-01)
+** [[https://github.com/nvim-orgmode/orgmode/compare/0.3.4...0.3.5][0.3.5]] (2024-08-22)
 *** Breaking changes
 - *closing note*: Use different title per closing note type ([[https://github.com/nvim-orgmode/orgmode/commit/f874118][f874118]])
 - Drop official support for v0.9.4 ([[https://github.com/nvim-orgmode/orgmode/commit/2ce9a8d][2ce9a8d]])
