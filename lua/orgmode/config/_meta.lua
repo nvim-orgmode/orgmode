@@ -235,6 +235,7 @@
 ---@field org_id_method? 'uuid' | 'ts' | 'org' What method to use to generate ids via org.id module. Default: 'uuid'
 ---@field org_id_prefix? string | nil Prefix to apply to id when `org_id_method = 'org'`. Default: nil
 ---@field org_id_link_to_org_use_id? boolean If true, Storing a link to the headline will automatically generate ID for that headline. Default: false
+---@field org_use_property_inheritance boolean | string | string[] If true, properties are inherited by sub-headlines; may also be a regex or list of property names. Default: false
 ---@field org_babel_default_header_args? table<string, string> Default header args for org-babel blocks: Default: { [':tangle'] = 'no', [':noweb'] = 'no' }
 ---@field win_split_mode? 'horizontal' | 'vertical' | 'auto' | 'float' | string[] How to open agenda and capture windows. Default: 'horizontal'
 ---@field win_border? 'none' | 'single' | 'double' | 'rounded' | 'solid' | 'shadow' | string[] Border configuration for `win_split_mode = 'float'`. Default: 'single'

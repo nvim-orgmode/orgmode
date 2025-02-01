@@ -539,6 +539,25 @@ function Config:parse_header_args(args)
   return results
 end
 
+---@param property_name string
+---@return boolean uses_inheritance
+function Config:use_property_inheritance(property_name)
+  property_name = string.lower(property_name)
+
+  local use_inheritance = self.opts.org_use_property_inheritance or false
+
+  if type(use_inheritance) == 'table' then
+    return vim.tbl_contains(use_inheritance, function(value)
+      return vim.stricmp(value, property_name) == 0
+    end, { predicate = true })
+  elseif type(use_inheritance) == 'string' then
+    local regex = vim.regex(use_inheritance)
+    return regex:match_str(property_name) and true or false
+  else
+    return use_inheritance and true or false
+  end
+end
+
 ---@type OrgConfig
 instance = Config:new()
 return instance
