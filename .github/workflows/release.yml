@@ -51,7 +51,7 @@ jobs:
           git push
       - name: Tag new version
         run: |
-          git tag -a ${{ github.event.inputs.version }} -m "Release ${{ github.event.inputs.version }}"
+          git tag -a ${{ github.event.inputs.version }} -m "${{ github.event.inputs.version }}"
           git push --tags
       - name: Create Release
         id: create_release
