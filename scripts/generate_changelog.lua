@@ -23,6 +23,7 @@ local function get_changes(format, latest_tag)
   if format == 'md' then
     commit_format = '[%h](https://github.com/nvim-orgmode/orgmode/commit/%h)'
   end
+  local feature_format = format == 'md' and '**%s**' or '*%s*'
 
   local commits = vim.fn.systemlist(("git log %s..master --pretty=format:'%%s (%s)'"):format(latest_tag, commit_format))
   local fixes = {}
@@ -32,8 +33,11 @@ local function get_changes(format, latest_tag)
   for _, commit in ipairs(commits) do
     local type = commit:match('^(.-):')
     if type then
-      type = type
+      local feature = type:match('%((.-)%)')
       local message = vim.trim(commit:sub(#type + 2))
+      if feature then
+        message = ('%s: %s'):format(feature_format:format(feature), message)
+      end
       if vim.endswith(type, '!') then
         table.insert(breaking_changes, message)
       elseif vim.startswith(type, 'fix') then
