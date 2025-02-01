@@ -1,0 +1,1 @@
+* Check [[file:./docs/changelog.org][changelog]] for more information
