@@ -37,7 +37,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
           COMMIT_MSG: |
-            [docgen] Update docs
+            chore(docs): Update docs
         run: |
           rm lemmy-help
           git config user.name github-actions
