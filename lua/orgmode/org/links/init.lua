@@ -23,14 +23,26 @@ function OrgLinks:new(opts)
     types_by_name = {},
   }, OrgLinks)
   this:_setup_builtin_types()
+  this:_add_custom_sources()
   return this
+end
+
+---@private
+function OrgLinks:_add_custom_sources()
+  for i, source in ipairs(config.hyperlinks.sources) do
+    if type(source.get_name) == 'function' then
+      self:add_type(source)
+    else
+      vim.notify(('Hyperlink source at index %d must have a get_name method'):format(i), vim.log.levels.ERROR)
+    end
+  end
 end
 
 ---@param link string
 ---@return boolean
 function OrgLinks:follow(link)
   for _, source in ipairs(self.types) do
-    if source:follow(link) then
+    if source.follow and source:follow(link) then
       return true
     end
   end
@@ -54,7 +66,9 @@ function OrgLinks:autocomplete(link)
   end, vim.tbl_keys(self.stored_links))
 
   for _, source in ipairs(self.types) do
-    utils.concat(items, source:autocomplete(link))
+    if source.autocomplete then
+      utils.concat(items, source:autocomplete(link))
+    end
   end
 
   utils.concat(items, self.headline_search:autocomplete(link))
