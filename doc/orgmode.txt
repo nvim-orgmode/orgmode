@@ -96,12 +96,10 @@ org_todo_repeat_to_state                    *orgmode-org_todo_repeat_to_state*
 - Type: `string | nil`
 - Default: `nil`
 
-Path to a file that will be used as a default target file when refiling.
+Set an entry from |orgmode-org_todo_keywords| to use as the "starting" state
+for repeatable todos.
 
-Set an entry from |orgmode-org_todokeywords| to use as the "starting" state for
-repeatable todos.
-
-If provided value does not exist in |orgmode-org_todokeywords|, first entry
+If provided value does not exist in |orgmode-org_todo_keywords|, first entry
 from that list is used.
 
 
@@ -223,8 +221,6 @@ Full configuration example with additional todo keywords and their colors:
       }
     })
 <
-
-*****
 
 
 org_archive_location                            *orgmode-org_archive_location*
@@ -383,8 +379,8 @@ org_indent_mode_turns_off_org_adapt_indentation*orgmode-org_indent_mode_turns_of
 
 Possible values:
 
-- `true` - Disable |orgmode-org_adaptindentation| by default when |orgmode-org_startupindented| is enabled.
-- `false` - Do not disable |orgmode-org_adaptindentation| by default when |orgmode-org_startupindented| is enabled.
+- `true` - Disable |orgmode-org_adapt_indentation| by default when |orgmode-org_startup_indented| is enabled.
+- `false` - Do not disable |orgmode-org_adapt_indentation| by default when |orgmode-org_startup_indented| is enabled.
 
 
 org_indent_mode_turns_on_hiding_stars*orgmode-org_indent_mode_turns_on_hiding_stars*
@@ -394,8 +390,8 @@ org_indent_mode_turns_on_hiding_stars*orgmode-org_indent_mode_turns_on_hiding_st
 
 Possible values:
 
-- `true` - Enable |orgmode-org_hideleadingstars| by default when |orgmode-org_indentmode| is enabled for buffer (`vim.b.org_indent_mode = true`).
-- `false` - Do not modify the value in |orgmode-org_hideleadingstars| by default when |orgmode-org_indentmode| is enabled for buffer (`vim.b.org_indent_mode = true`).
+- `true` - Enable |orgmode-org_hide_leading_stars| by default when |orgmode-org_indent_mode| is enabled for buffer (`vim.b.org_indent_mode = true`).
+- `false` - Do not modify the value in |orgmode-org_hide_leading_stars| by default when |orgmode-org_indent_mode| is enabled for buffer (`vim.b.org_indent_mode = true`).
 
 
 org_src_window_setup                            *orgmode-org_src_window_setup*
@@ -486,7 +482,7 @@ org_time_stamp_rounding_minutes      *orgmode-org_time_stamp_rounding_minutes*
 - Default: `5`
 
 Number of minutes to increase/decrease when using
-|orgmode-org_timestampup|/|orgmode-org_timestampdown|
+|orgmode-org_timestamp_up|/|orgmode-org_timestamp_down|
 
 
 org_cycle_separator_lines                  *orgmode-org_cycle_separator_lines*
@@ -556,7 +552,7 @@ org_id_ts_format                                    *orgmode-org_id_ts_format*
 - Type: `string`
 - Default: `%Y%m%d%H%M%S`
 
-Format of the id generated when |orgmode-org_idmethod| is set to `ts`.
+Format of the id generated when |orgmode-org_id_method| is set to `ts`.
 
 
 org_id_method                                          *orgmode-org_id_method*
@@ -566,10 +562,10 @@ org_id_method                                          *orgmode-org_id_method*
 
 What method to use to generate ids via org id module.
 
-- `uuid` - Use |orgmode-org_iduuidprogram| to generate
+- `uuid` - Use |orgmode-org_id_uuid_program| to generate
     the id
-- `ts` - Generate id from current timestamp using format |orgmode-org_idtsformat|
-- `org` - Generate a random 12 digit number and prepend |orgmode-org_idprefix|
+- `ts` - Generate id from current timestamp using format |orgmode-org_id_ts_format|
+- `org` - Generate a random 12 digit number and prepend |orgmode-org_id_prefix|
 
 
 org_id_prefix                                          *orgmode-org_id_prefix*
@@ -577,7 +573,7 @@ org_id_prefix                                          *orgmode-org_id_prefix*
 - Type: `string | nil`
 - Default: `nil`
 
-Prefix added to the generated id when |orgmode-org_idmethod| is set to `org`.
+Prefix added to the generated id when |orgmode-org_id_method| is set to `org`.
 
 
 org_id_link_to_org_use_id                  *orgmode-org_id_link_to_org_use_id*
@@ -586,7 +582,7 @@ org_id_link_to_org_use_id                  *orgmode-org_id_link_to_org_use_id*
 - Default: `false`
 
 If `true`, generate ID with the Org ID module and append it to the headline as
-property. More info on |orgmode-org_storelink|
+property. More info on |orgmode-org_store_link|
 
 
 org_babel_default_header_args          *orgmode-org_babel_default_header_args*
@@ -750,24 +746,24 @@ Available options for each agenda type are explained down below the example:
 These arguments are shared between all of the agenda types:
 
 - `org_agenda_overriding_header` `(string)` - Override the header of the agenda view
-- `org_agenda_files` `(string | string[])` - Set custom files to be loaded into this view. In same format as |orgmode-org_agendafiles|
-- `org_agenda_tag_filter_preset` `string` - Custom tags filter for the view. Same format as |orgmode-org_agendafiles|, but applies only for tags.
-- `org_agenda_category_filter_preset` `string` - Custom category filter for the view. Same format as |orgmode-org_agendafiles|, but applies only for categories.
-- `org_agenda_sorting_strategy` `string[]` - List of sorting functions. See |orgmode-org_agendasortingstrategy|
+- `org_agenda_files` `(string | string[])` - Set custom files to be loaded into this view. In same format as |orgmode-org_agenda_files|
+- `org_agenda_tag_filter_preset` `string` - Custom tags filter for the view. Same format as |orgmode-org_agenda_files|, but applies only for tags.
+- `org_agenda_category_filter_preset` `string` - Custom category filter for the view. Same format as |orgmode-org_agenda_files|, but applies only for categories.
+- `org_agenda_sorting_strategy` `string[]` - List of sorting functions. See |orgmode-org_agenda_sorting_strategy|
 - `org_agenda_remove_tags` `boolean` - Remove tags from the view. Default: `false`
 
 `agenda` type arguments:
 
-- `org_agenda_span` `string|number` - Set custom span for the view. In same format as |orgmode-org_agendaspan|
-- `org_agenda_start_on_weekday` `number` - Set custom start day for the view. In same format as |orgmode-org_agendastartonweekday|
-- `org_agenda_start_day` `string` - Set custom start day offset for the view. In same format as |orgmode-org_agendastartday|
+- `org_agenda_span` `string|number` - Set custom span for the view. In same format as |orgmode-org_agenda_span|
+- `org_agenda_start_on_weekday` `number` - Set custom start day for the view. In same format as |orgmode-org_agenda_start_on_weekday|
+- `org_agenda_start_day` `string` - Set custom start day offset for the view. In same format as |orgmode-org_agenda_start_day|
 
 `tags` and `tags_todo` type arguments:
 
 - `org_agenda_todo_ignore_scheduled` `('past' | 'future' | 'all' | nil')` - Do not show headlines that have scheduled task according to the value. Default: `nil`
 - `org_agenda_todo_ignore_deadlines` `('near' | 'far' | 'all' | 'past' | 'future' | nil')` - Do not show headlines that have deadline task according to the value. Default: `nil`
-    - `far` - Do not show deadlines that are too far in future (over |orgmode-org_deadlinewarningdays|)
-    - `near` - Do not show deadlines that are too near in future (under |orgmode-org_deadlinewarningdays|)
+    - `far` - Do not show deadlines that are too far in future (over |orgmode-org_deadline_warning_days|)
+    - `near` - Do not show deadlines that are too near in future (under |orgmode-org_deadline_warning_days|)
 
 
 org_agenda_sorting_strategy              *orgmode-org_agenda_sorting_strategy*
@@ -806,7 +802,7 @@ org_agenda_block_separator                *orgmode-org_agenda_block_separator*
 - Default: `-`
 
 Separator used to separate multiple agenda views generated by
-|orgmode-org_agendacustomcommands|. To change the highlight, override
+|orgmode-org_agenda_custom_commands|. To change the highlight, override
 `@org.agenda.separator` hl group.
 
 
@@ -874,7 +870,7 @@ Templates have the following fields:
     used when creating capture
 - `target` (`string?`) — name of the file to which the capture content
     will be added. If the target is not specified, the content will be
-    added to the |orgmode-org_defaultnotesfile| file
+    added to the |orgmode-org_default_notes_file| file
 - `headline` (`string?`) — title of the headline after which the
     capture content will be added. If no headline is specified, the
     content will be appended to the end of the file
@@ -1111,7 +1107,7 @@ The step size for changing the minutes while the cursor is on the first digit.
 calendar.min_small_step                      *orgmode-calendar.min_small_step*
 
 - Type: `number`
-- Default: same as |orgmode-org_timestamproundingminutes|
+- Default: same as |orgmode-org_time_stamp_rounding_minutes|
 
 The step size for changing the minutes while the cursor is on the second digit.
 
@@ -1239,8 +1235,8 @@ You can find the configuration file that holds all default mappings here
 Use Enter in insert mode to add list items/checkboxes/todos*orgmode-Use-Enter-in-insert-mode-to-add-list-items/checkboxes/todos*
 
 By default, adding list items/checkboxes/todos is done with
-|orgmode-org_metareturn| which is a normal mode mapping. If you want to have an
-insert mode mapping there are two options:
+|orgmode-org_meta_return| which is a normal mode mapping. If you want to have
+an insert mode mapping there are two options:
 
 1. If your terminal supports it, map a key like `Shift + Enter` to the
 meta return mapping (Recommended):
@@ -1684,7 +1680,7 @@ in examples references cursor position.
 - Hour - Example date: `<2021-10-01 Fri 1|0:30>` becomes
     `<2022-10-02 Sat 1|1:30>`.
 - Minute - Example date: `<2021-10-01 Fri 10:3|0>` becomes
-    `<2022-10-02 Sat 11:3|5>`. See |orgmode-org_timestamproundingminutes| for steps configuration.
+    `<2022-10-02 Sat 11:3|5>`. See |orgmode-org_time_stamp_rounding_minutes| for steps configuration.
 - Repeater/Delay range (`h->d->w->m->y`) - Example date:
     `<2021-10-01 Fri 10:30 +1|w>` becomes `<2021-10-01 Fri 10:30 +1|m>`
 - Active/Inactive state - (`<` to `[` and vice versa) - Example date:
@@ -1695,7 +1691,7 @@ org_timestamp_down                                *orgmode-org_timestamp_down*
 
 - Mapped to: `<C-x>`
 
-Decrease date part under under cursor. Same as |orgmode-org_timestampup|, just
+Decrease date part under under cursor. Same as |orgmode-org_timestamp_up|, just
 opposite direction.
 
 
@@ -1753,7 +1749,7 @@ org_todo                                                    *orgmode-org_todo*
 - Mapped to: `cit`
 
 Cycle todo keyword forward on current headline or open fast access to TODO
-states prompt (see |orgmode-org_todokeywords|) if it's enabled.
+states prompt (see |orgmode-org_todo_keywords|) if it's enabled.
 
 
 org_todo_prev                                          *orgmode-org_todo_prev*
@@ -1784,7 +1780,7 @@ org_insert_link                                      *orgmode-org_insert_link*
 
 Insert a hyperlink at cursor position. When the cursor is on a hyperlink, edit
 that hyperlink. In visual mode, uses selected text as link description. If
-there are any links stored with |orgmode-org_storelink|, pressing `<TAB>` to
+there are any links stored with |orgmode-org_store_link|, pressing `<TAB>` to
 autocomplete the input will show list of all stored links to select. Links
 generated with ID are properly expanded to valid links after selection.
 
@@ -1793,10 +1789,10 @@ org_store_link                                        *orgmode-org_store_link*
 
 - Mapped to: `<Leader>ols`
 
-Generate a link to the closest headline. If |orgmode-org_idlinktoorguseid| is
-`true`, it appends the `ID` property to the headline, and generates link with
-that id to be inserted via |orgmode-org_insertlink|. When
-|orgmode-org_idlinktoorguseid| is `false`, it generates the standard
+Generate a link to the closest headline. If |orgmode-org_id_link_to_org_use_id|
+is `true`, it appends the `ID` property to the headline, and generates link
+with that id to be inserted via |orgmode-org_insert_link|. When
+|orgmode-org_id_link_to_org_use_id| is `false`, it generates the standard
 file::*headline link (example: `file:/path/to/my/todos.org::*My headline`)
 
 
@@ -1939,7 +1935,7 @@ org_export                                                *orgmode-org_export*
 
 Open export options. **NOTE**: Exports are handled via `emacs` and `pandoc`.
 This means that `emacs` and/or `pandoc` must be in `$PATH`. See
-|orgmode-org_customexports| if you want to add your own export options.
+|orgmode-org_custom_exports| if you want to add your own export options.
 
 
 org_next_visible_heading                    *orgmode-org_next_visible_heading*
@@ -2306,7 +2302,7 @@ AUTOMATIC UPDATES OF TOTALS
 
 When updating closed logbook dates that have a total at the right (`example:
 ==> 1:05`), updating any of the dates via
-|orgmode-org_timestampup|/|orgmode-org_timestampdown| automatically
+|orgmode-org_timestamp_up|/|orgmode-org_timestamp_down| automatically
 recalculates this value.
 
 
@@ -2655,7 +2651,7 @@ There is basic support for extracting source code with `tangle` and `noweb`.
 <https://orgmode.org/manual/Extracting-Source-Code.html>) These options are
 supported:
 
-1. Setting `header-args` on multiple levels:1. Configuration (|orgmode-org_babeldefaultheaderargs|)
+1. Setting `header-args` on multiple levels:1. Configuration (|orgmode-org_babel_default_header_args|)
 
 
 2. File level property (`#+property: header-args :tangle yes`)
@@ -2699,7 +2695,7 @@ Block below will pick up reference from the 2nd block name
 `#+name: headline2block` `#+begin_src lua :tangle yes` `print('Headline 2')`
 `#+end_src` `#+end_src`
 
-Running |orgmode-org_babeltangle| will create file `~/org/todos.lua` with this
+Running |orgmode-org_babel_tangle| will create file `~/org/todos.lua` with this
 content:
 
 `#+begin_src lua` `print('Headline 2')` `print('Headline 1')` ==
@@ -2717,7 +2713,7 @@ Here we disable tangling, so only first block will give results with the noweb
 `#+name: headline2block` `#+begin_src lua :tangle no` `print('Headline 2')`
 `#+end_src`
 
-Running |orgmode-org_babeltangle| will create file `~/org/my_tangled_file.lua`
+Running |orgmode-org_babel_tangle| will create file `~/org/my_tangled_file.lua`
 with this content:
 
 `#+begin_src lua` `print('Headline 2')` `print('Headline 1')` `#+end_src`

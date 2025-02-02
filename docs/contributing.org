@@ -1,4 +1,4 @@
-#+OPTIONS: H:9
+#+OPTIONS: H:9 ^:nil
 * Contributing Guide
 :PROPERTIES:
 :CUSTOM_ID: contributing-guide

@@ -1,4 +1,4 @@
-#+OPTIONS: H:9
+#+OPTIONS: H:9 ^:nil
 * Troubleshooting
 ** Indentation is not working
 

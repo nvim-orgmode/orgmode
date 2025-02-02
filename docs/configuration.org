@@ -1,4 +1,4 @@
-#+OPTIONS: H:9
+#+OPTIONS: H:9 ^:nil
 * Configuration
 
 This page contains information about all configuration that can be provided to the plugin.
@@ -15,7 +15,7 @@ This page contains information about all configuration that can be provided to t
 :PROPERTIES:
 :CUSTOM_ID: global-settings
 :END:
-*** =org_agenda_files=
+*** org_agenda_files
 :PROPERTIES:
 :CUSTOM_ID: org_agenda_files
 :END:
@@ -26,7 +26,7 @@ Single or multiple paths from where the org files are being read.
 Examples:
 - =~/org/*=
 - ={'~/Dropbox/org/**/*', '~/orgfiles/*'}=
-*** =org_default_notes_file=
+*** org_default_notes_file
 :PROPERTIES:
 :CUSTOM_ID: org_default_notes_file
 :END:
@@ -35,7 +35,7 @@ Examples:
 Path to a file that will be used as a default target file when refiling.
 
 Example: =~/orgfiles/refile.org=
-*** =org_todo_keywords=
+*** org_todo_keywords
 :PROPERTIES:
 :CUSTOM_ID: org_todo_keywords
 :END:
@@ -59,18 +59,16 @@ Examples (With fast access):
 - ={'TODO(t)', 'NEXT', '|', 'DONE'}= - Same as above. Fast key is derived from first char.
 
 NOTE: Make sure fast access keys do not overlap. If that happens, first entry in list gets it.
-*** =org_todo_repeat_to_state=
+*** org_todo_repeat_to_state
 :PROPERTIES:
 :CUSTOM_ID: org_todo_repeat_to_state
 :END:
 - Type: =string | nil=
 - Default: =nil=
-Path to a file that will be used as a default target file when refiling.
-
 Set an entry from [[#org_todo_keywords][org_todo_keywords]] to use as the "starting" state for repeatable todos.
 
 If provided value does not exist in [[#org_todo_keywords][org_todo_keywords]], first entry from that list is used.
-*** =win_split_mode=
+*** win_split_mode
 :PROPERTIES:
 :CUSTOM_ID: win_split_mode
 :END:
@@ -116,7 +114,7 @@ If none of the options above suit your needs, there are 2 other ways to customiz
    end
    #+end_src
 
-*** =win_border=
+*** win_border
 :PROPERTIES:
 :CUSTOM_ID: win_border
 :END:
@@ -139,7 +137,7 @@ Applies to:
 - always - calendar pop-up, help pop-up, notification pop-up
 - =win_split_mode= is set to =float= - agenda window , capture window
 
-*** =org_startup_folded=
+*** org_startup_folded
 :PROPERTIES:
 :CUSTOM_ID: org_startup_folded
 :END:
@@ -152,7 +150,7 @@ Available options:
 - =showeverything= - Show all elements
 - =inherit= - Use the fold level set in Neovim's global =foldlevel= option
 
-*** =org_todo_keyword_faces=
+*** org_todo_keyword_faces
 :PROPERTIES:
 :CUSTOM_ID: org_todo_keyword_faces
 :END:
@@ -179,8 +177,8 @@ require('orgmode').setup({
   }
 })
 #+end_src
-***
-*** =org_archive_location=
+
+*** org_archive_location
 :PROPERTIES:
 :CUSTOM_ID: org_archive_location
 :END:
@@ -197,7 +195,7 @@ Example value: ='~/my-orgs/default-archive-file.org::'=
 
 
 
-*** =org_hide_leading_stars=
+*** org_hide_leading_stars
 :PROPERTIES:
 :CUSTOM_ID: org_hide_leading_stars
 :END:
@@ -229,7 +227,7 @@ vim.cmd[[autocmd ColorScheme * hi link @org.leading.stars MyCustomHlGroup]]
 To set specific characters instead of using asterisk, check [[file:./plugins.org::#org-bulletsnvim][org-bullets.nvim]] plugin plugin.
 
 
-*** =org_hide_emphasis_markers=
+*** org_hide_emphasis_markers
 :PROPERTIES:
 :CUSTOM_ID: org_hide_emphasis_markers
 :END:
@@ -239,7 +237,7 @@ Conceal bold/italic/underline/code/verbatim markers.
 
 Ensure your =:h conceallevel= is set properly in order for this to function.
 
-*** =org_ellipsis=
+*** org_ellipsis
 :PROPERTIES:
 :CUSTOM_ID: org_ellipsis
 :END:
@@ -247,7 +245,7 @@ Ensure your =:h conceallevel= is set properly in order for this to function.
 - Default: ='...'=
 Marker used to indicate a folded headline.
 
-*** =org_log_done=
+*** org_log_done
 :PROPERTIES:
 :CUSTOM_ID: org_log_done
 :END:
@@ -259,7 +257,7 @@ Possible values:
   Confirm note with =org_note_finalize= (Default =<C-c>=), or ignore providing note via =org_note_kill= (Default =<Leader>ok=)
 - =false= - Disable any logging
 
-*** =org_log_repeat=
+*** org_log_repeat
 :PROPERTIES:
 :CUSTOM_ID: org_log_repeat
 :END:
@@ -272,7 +270,7 @@ Possible values:
   Confirm note with =org_note_finalize= (Default =<C-c>=), or ignore providing note via =org_note_kill= (Default =<Leader>ok=)
 - =false= - Disable logging the =LAST_REPEAT= date
 
-*** =org_log_into_drawer=
+*** org_log_into_drawer
 :PROPERTIES:
 :CUSTOM_ID: org_log_into_drawer
 :END:
@@ -281,7 +279,7 @@ Possible values:
 Log TODO state changes into a drawer with the given name. The recommended value is =LOGBOOK=.
 If =nil=, log into the section body.
 
-*** =org_highlight_latex_and_related=
+*** org_highlight_latex_and_related
 :PROPERTIES:
 :CUSTOM_ID: org_highlight_latex_and_related
 :END:
@@ -299,7 +297,7 @@ Possible values:
   - between ~\[~ and ~\]~ delimiters - example: ~\[ a=-\sqrt{2} \]~
   - between ~\(~ and ~\)~ delimiters - example: ~\( b=2 \)~
 
-*** =org_startup_indented=
+*** org_startup_indented
 :PROPERTIES:
 :CUSTOM_ID: org_startup_indented
 :END:
@@ -313,7 +311,7 @@ You can toggle Virtual indents on the fly by setting =vim.b.org_indent_mode= to 
 buffer. For example, if virtual indents were enabled in the current buffer then you could disable them immediately by
 setting ~vim.b.org_indent_mode = false~.
 
-*** =org_adapt_indentation=
+*** org_adapt_indentation
 :PROPERTIES:
 :CUSTOM_ID: org_adapt_indentation
 :END:
@@ -323,7 +321,7 @@ Possible values:
 - =true= - Use /hard/ indents for content under headlines. Files will save with indents relative to headlines.
 - =false= - Do not add any /hard/ indents. Files will save without indentation relative to headlines.
 
-*** =org_indent_mode_turns_off_org_adapt_indentation=
+*** org_indent_mode_turns_off_org_adapt_indentation
 :PROPERTIES:
 :CUSTOM_ID: org_indent_mode_turns_off_org_adapt_indentation
 :END:
@@ -333,7 +331,7 @@ Possible values:
 - =true= - Disable [[#org_adapt_indentation][org_adapt_indentation]] by default when [[#org_startup_indented][org_startup_indented]] is enabled.
 - =false= - Do not disable [[#org_adapt_indentation][org_adapt_indentation]] by default when [[#org_startup_indented][org_startup_indented]] is enabled.
 
-*** =org_indent_mode_turns_on_hiding_stars=
+*** org_indent_mode_turns_on_hiding_stars
 :PROPERTIES:
 :CUSTOM_ID: org_indent_mode_turns_on_hiding_stars
 :END:
@@ -343,7 +341,7 @@ Possible values:
 - =true= - Enable [[#org_hide_leading_stars][org_hide_leading_stars]] by default when [[#org_startup_indented][org_indent_mode]] is enabled for buffer (~vim.b.org_indent_mode = true~).
 - =false= - Do not modify the value in [[#org_hide_leading_stars][org_hide_leading_stars]] by default when [[#org_startup_indented][org_indent_mode]] is enabled for buffer (~vim.b.org_indent_mode = true~).
 
-*** =org_src_window_setup=
+*** org_src_window_setup
 :PROPERTIES:
 :CUSTOM_ID: org_src_window_setup
 :END:
@@ -356,7 +354,7 @@ window) to show the special edit buffer. The content of the buffer will
 be set automatically, so this option only needs to handle opening an
 empty buffer.
 
-*** =org_edit_src_content_indentation=
+*** org_edit_src_content_indentation
 :PROPERTIES:
 :CUSTOM_ID: org_edit_src_content_indentation
 :END:
@@ -366,7 +364,7 @@ The indent value for content within =SRC= block types beyond the
 existing indent of the block itself. Only applied when exiting from an
 =org_edit_special= action on a =SRC= block.
 
-*** =org_custom_exports=
+*** org_custom_exports
 :PROPERTIES:
 :CUSTOM_ID: org_custom_exports
 :END:
@@ -427,7 +425,7 @@ require('orgmode').setup({
 })
 #+end_src
 
-*** =org_time_stamp_rounding_minutes=
+*** org_time_stamp_rounding_minutes
 :PROPERTIES:
 :CUSTOM_ID: org_time_stamp_rounding_minutes
 :END:
@@ -436,7 +434,7 @@ require('orgmode').setup({
 Number of minutes to increase/decrease when using
 [[#org_timestamp_up][org_timestamp_up]]/[[#org_timestamp_down][org_timestamp_down]]
 
-*** =org_cycle_separator_lines=
+*** org_cycle_separator_lines
 :PROPERTIES:
 :CUSTOM_ID: org_cycle_separator_lines
 :END:
@@ -475,7 +473,7 @@ When folded, it will appear like this:
 When value is =0=, all empty lines are folded together with headline.
 
 Cannot be negative.
-*** =org_blank_before_new_entry=
+*** org_blank_before_new_entry
 :PROPERTIES:
 :CUSTOM_ID: org_blank_before_new_entry
 :END:
@@ -486,7 +484,7 @@ Determine if blank line should be prepended when:
 - Adding heading via =org_meta_return= and =org_insert_*= mappings
 - Adding a list item via =org_meta_return=
 
-*** =org_id_uuid_program=
+*** org_id_uuid_program
 :PROPERTIES:
 :CUSTOM_ID: org_id_uuid_program
 :END:
@@ -494,7 +492,7 @@ Determine if blank line should be prepended when:
 - Default: =uuidgen=
 External program used to generate uuid's for id module
 
-*** =org_id_ts_format=
+*** org_id_ts_format
 :PROPERTIES:
 :CUSTOM_ID: org_id_ts_format
 :END:
@@ -503,7 +501,7 @@ External program used to generate uuid's for id module
 Format of the id generated when [[#org_id_method][org_id_method]] is set
 to =ts=.
 
-*** =org_id_method=
+*** org_id_method
 :PROPERTIES:
 :CUSTOM_ID: org_id_method
 :END:
@@ -516,7 +514,7 @@ What method to use to generate ids via org id module.
 - =ts= - Generate id from current timestamp using format [[#org_id_ts_format][org_id_ts_format]]
 - =org= - Generate a random 12 digit number and prepend [[#org_id_prefix][org_id_prefix]]
 
-*** =org_id_prefix=
+*** org_id_prefix
 :PROPERTIES:
 :CUSTOM_ID: org_id_prefix
 :END:
@@ -524,7 +522,7 @@ What method to use to generate ids via org id module.
 - Default: =nil=
 Prefix added to the generated id when [[#org_id_method][org_id_method]] is set to =org=.
 
-*** =org_id_link_to_org_use_id=
+*** org_id_link_to_org_use_id
 :PROPERTIES:
 :CUSTOM_ID: org_id_link_to_org_use_id
 :END:
@@ -533,7 +531,7 @@ Prefix added to the generated id when [[#org_id_method][org_id_method]] is set t
 If =true=, generate ID with the Org ID module and append it to the
 headline as property. More info on [[#org_store_link][org_store_link]]
 
-*** =org_use_property_inheritance=
+*** org_use_property_inheritance
 :PROPERTIES:
 :CUSTOM_ID: org_use_property_inheritance
 :END:
@@ -549,7 +547,7 @@ Determine whether properties of one headline are inherited by sub-headlines.
 Note that for a select few properties, the inheritance behavior is hard-coded withing their special applications.
 See [[https://orgmode.org/manual/Property-Inheritance.html][Property Inheritance]] for details.
 
-*** =org_babel_default_header_args=
+*** org_babel_default_header_args
 :PROPERTIES:
 :CUSTOM_ID: org_babel_default_header_args
 :END:
@@ -557,7 +555,7 @@ See [[https://orgmode.org/manual/Property-Inheritance.html][Property Inheritance
 - Default: ~{ [':tangle'] = 'no', [':noweb']  = no }~
 Default header args for extracting source code. See [[#extract-source-code-tangle][Extract source code (tangle)]] for more details.
 
-*** =calendar_week_start_day=
+*** calendar_week_start_day
 :PROPERTIES:
 :CUSTOM_ID: calendar_week_start_day
 :END:
@@ -570,7 +568,7 @@ Available options:
 
 Determine on which day the week will start in calendar modal (ex:[[#org_change_date][changing the date under cursor]])
 
-*** =emacs_config=
+*** emacs_config
 :PROPERTIES:
 :CUSTOM_ID: emacs_config
 :END:
@@ -595,7 +593,7 @@ without the configuration file.
 :PROPERTIES:
 :CUSTOM_ID: agenda-settings
 :END:
-*** =org_deadline_warning_days=
+*** org_deadline_warning_days
 :PROPERTIES:
 :CUSTOM_ID: org_deadline_warning_days
 :END:
@@ -610,7 +608,7 @@ Example: If Today is =2021-06-10=, and we have these tasks:
 - =Task 1= is visible in today's agenda
 - =Task 2= is not visible in today's agenda until =2021-06-16=
 
-*** =org_agenda_span=
+*** org_agenda_span
 :PROPERTIES:
 :CUSTOM_ID: org_agenda_span
 :END:
@@ -619,7 +617,7 @@ Example: If Today is =2021-06-10=, and we have these tasks:
 /possible string values/: =day=, =week=, =month=, =year=
 Default time span shown when agenda is opened.
 
-*** =org_agenda_start_on_weekday=
+*** org_agenda_start_on_weekday
 :PROPERTIES:
 :CUSTOM_ID: org_agenda_start_on_weekday
 :END:
@@ -629,7 +627,7 @@ From which day in week (ISO weekday, 1 is Monday) to show the agenda.
 Applies only to =week= and number span.
 If set to =false=, starts from today
 
-*** =org_agenda_start_day=
+*** org_agenda_start_day
 :PROPERTIES:
 :CUSTOM_ID: org_agenda_start_day
 :END:
@@ -642,7 +640,7 @@ If =org_agenda_start_on_weekday= is =false=, and =org_agenda_start_day=
 is =-2d=,
 agenda will always show current week from today - 2 days
 
-*** =org_agenda_custom_commands=
+*** org_agenda_custom_commands
 :PROPERTIES:
 :CUSTOM_ID: org_agenda_custom_commands
 :END:
@@ -733,7 +731,7 @@ These arguments are shared between all of the agenda types:
   - =far= - Do not show deadlines that are too far in future (over [[#org_deadline_warning_days][org_deadline_warning_days]])
   - =near= - Do not show deadlines that are too near in future (under [[#org_deadline_warning_days][org_deadline_warning_days]])
 
-*** =org_agenda_sorting_strategy=
+*** org_agenda_sorting_strategy
 :PROPERTIES:
 :CUSTOM_ID: org_agenda_sorting_strategy
 :END:
@@ -761,7 +759,7 @@ strategies:
 - =category-keep= - Keep default category sorting, as it appears in
   org-agenda-files
 
-*** =org_agenda_block_separator=
+*** org_agenda_block_separator
 :PROPERTIES:
 :CUSTOM_ID: org_agenda_block_separator
 :END:
@@ -771,7 +769,7 @@ Separator used to separate multiple agenda views generated by
 [[#org_agenda_custom_commands][org_agenda_custom_commands]].
 To change the highlight, override =@org.agenda.separator= hl group.
 
-*** =org_agenda_remove_tags=
+*** org_agenda_remove_tags
 :PROPERTIES:
 :CUSTOM_ID: org_agenda_remove_tags
 :END:
@@ -779,7 +777,7 @@ To change the highlight, override =@org.agenda.separator= hl group.
 - Default: =false=
 Should tags be hidden from all agenda views.
 
-*** =org_capture_templates=
+*** org_capture_templates
 :PROPERTIES:
 :CUSTOM_ID: org_capture_templates
 :END:
@@ -966,7 +964,7 @@ Lua expression example:
 }
 #+end_src
 
-*** =org_agenda_min_height=
+*** org_agenda_min_height
 :PROPERTIES:
 :CUSTOM_ID: org_agenda_min_height
 :END:
@@ -974,7 +972,7 @@ Lua expression example:
 - Default: =16=
 Indicates the minimum height that the agenda window will occupy.
 
-*** =org_priority_highest=
+*** org_priority_highest
 :PROPERTIES:
 :CUSTOM_ID: org_priority_highest
 :END:
@@ -986,7 +984,7 @@ Example:
  * TODO [#A] This task has the highest priority
 #+end_src
 
-*** =org_priority_default=
+*** org_priority_default
 :PROPERTIES:
 :CUSTOM_ID: org_priority_default
 :END:
@@ -1000,7 +998,7 @@ Example:
 * TODO And this one has the same priority
 #+end_src
 
-*** =org_priority_lowest=
+*** org_priority_lowest
 :PROPERTIES:
 :CUSTOM_ID: org_priority_lowest
 :END:
@@ -1014,7 +1012,7 @@ Example:
 * TODO [#C] I'm lowest in priority
 #+end_src
 
-*** =org_agenda_skip_scheduled_if_done=
+*** org_agenda_skip_scheduled_if_done
 :PROPERTIES:
 :CUSTOM_ID: org_agenda_skip_scheduled_if_done
 :END:
@@ -1023,7 +1021,7 @@ Example:
 
 Hide scheduled entries from agenda if they are in a "DONE" state.
 
-*** =org_agenda_skip_deadline_if_done=
+*** org_agenda_skip_deadline_if_done
 :PROPERTIES:
 :CUSTOM_ID: org_agenda_skip_deadline_if_done
 :END:
@@ -1032,7 +1030,7 @@ Hide scheduled entries from agenda if they are in a "DONE" state.
 
 Hide deadline entries from agenda if they are in a "DONE" state.
 
-*** =org_agenda_text_search_extra_files=
+*** org_agenda_text_search_extra_files
 :PROPERTIES:
 :CUSTOM_ID: org_agenda_text_search_extra_files
 :END:
@@ -1048,7 +1046,7 @@ Example value: ={'agenda-archives'}=
 :END:
 Adjust behavior of the calendar modal (ex: [[#org_change_date][changing the date under cursor]]).
 
-*** =calendar.round_min_with_hours=
+*** calendar.round_min_with_hours
 :PROPERTIES:
 :CUSTOM_ID: calendarround_min_with_hours
 :END:
@@ -1059,7 +1057,7 @@ fluently when changing the hours, especially when scheduling from the
 current time (which can be something odd). If set to false, the minutes
 are unchanged while changing the hours.
 
-*** =calendar.min_big_step=
+*** calendar.min_big_step
 :PROPERTIES:
 :CUSTOM_ID: calendarmin_big_step
 :END:
@@ -1068,7 +1066,7 @@ are unchanged while changing the hours.
 The step size for changing the minutes while the cursor is on the first
 digit.
 
-*** =calendar.min_small_step=
+*** calendar.min_small_step
 :PROPERTIES:
 :CUSTOM_ID: calendarmin_small_step
 :END:
@@ -1081,7 +1079,7 @@ digit.
 :PROPERTIES:
 :CUSTOM_ID: tags-settings
 :END:
-*** =org_tags_column=
+*** org_tags_column
 :PROPERTIES:
 :CUSTOM_ID: org_tags_column
 :END:
@@ -1093,7 +1091,7 @@ that the tags should be flushright to that column. For example, -80
 works well for a normal 80 character screen. When 0, place tags directly
 after headline text, with only one space in between.
 
-*** =org_use_tag_inheritance=
+*** org_use_tag_inheritance
 :PROPERTIES:
 :CUSTOM_ID: org_use_tag_inheritance
 :END:
@@ -1113,7 +1111,7 @@ First headline has tag =MYTAG= Second headline has tags =MYTAG= and
 =CHILDTAG= Third headline has tags =MYTAG= and =CHILDTAG=.
 When disabled, headlines have only tags that are directly applied to them.
 
-*** =org_tags_exclude_from_inheritance=
+*** org_tags_exclude_from_inheritance
 :PROPERTIES:
 :CUSTOM_ID: org_tags_exclude_from_inheritance
 :END:
@@ -1249,14 +1247,14 @@ can give undesired results.
 :END:
 There are only 2 global mappings that are accessible from everywhere.
 
-**** =org_agenda=
+**** org_agenda
 :PROPERTIES:
 :CUSTOM_ID: org_agenda
 :END:
 - Mapped to: =<Leader>oa=
 Opens up agenda prompt.
 
-**** =org_capture=
+**** org_capture
 :PROPERTIES:
 :CUSTOM_ID: org_capture
 :END:
@@ -1300,98 +1298,98 @@ require('orgmode').setup({
 :END:
 Mappings used in agenda view window.
 
-**** =org_agenda_later=
+**** org_agenda_later
 :PROPERTIES:
 :CUSTOM_ID: org_agenda_later
 :END:
 - Mapped to: =f=
 Go to next agenda span.
 
-**** =org_agenda_earlier=
+**** org_agenda_earlier
 :PROPERTIES:
 :CUSTOM_ID: org_agenda_earlier
 :END:
 - Mapped to: =b=
 Go to previous agenda span.
 
-**** =org_agenda_goto_today=
+**** org_agenda_goto_today
 :PROPERTIES:
 :CUSTOM_ID: org_agenda_goto_today
 :END:
 - Mapped to: =.=
 Go to span with for today.
 
-**** =org_agenda_day_view=
+**** org_agenda_day_view
 :PROPERTIES:
 :CUSTOM_ID: org_agenda_day_view
 :END:
 - Mapped to: =vd=
 Show agenda day view.
 
-**** =org_agenda_week_view=
+**** org_agenda_week_view
 :PROPERTIES:
 :CUSTOM_ID: org_agenda_week_view
 :END:
 - Mapped to: =vw=
 Show agenda week view.
 
-**** =org_agenda_month_view=
+**** org_agenda_month_view
 :PROPERTIES:
 :CUSTOM_ID: org_agenda_month_view
 :END:
 - Mapped to: =vm=
 Show agenda month view.
 
-**** =org_agenda_year_view=
+**** org_agenda_year_view
 :PROPERTIES:
 :CUSTOM_ID: org_agenda_year_view
 :END:
 - Mapped to: =vy=
 Show agenda year view.
 
-**** =org_agenda_quit=
+**** org_agenda_quit
 :PROPERTIES:
 :CUSTOM_ID: org_agenda_quit
 :END:
 - Mapped to: =q=
 Close agenda.
 
-**** =org_agenda_switch_to=
+**** org_agenda_switch_to
 :PROPERTIES:
 :CUSTOM_ID: org_agenda_switch_to
 :END:
 - Mapped to: =<CR>=
 Open selected agenda item in the same buffer.
 
-**** =org_agenda_goto=
+**** org_agenda_goto
 :PROPERTIES:
 :CUSTOM_ID: org_agenda_goto
 :END:
 - Mapped to: ={'<TAB>'}=
 Open selected agenda item in split window.
 
-**** =org_agenda_goto_date=
+**** org_agenda_goto_date
 :PROPERTIES:
 :CUSTOM_ID: org_agenda_goto_date
 :END:
 - Mapped to: =J=
 Open calendar that allows selecting date to jump to.
 
-**** =org_agenda_redo=
+**** org_agenda_redo
 :PROPERTIES:
 :CUSTOM_ID: org_agenda_redo
 :END:
 - Mapped to: =r=
 Reload all org files and refresh current agenda view.
 
-**** =org_agenda_todo=
+**** org_agenda_todo
 :PROPERTIES:
 :CUSTOM_ID: org_agenda_todo
 :END:
 - Mapped to: =t=
 Change =TODO= state of an item in both agenda and original Org file.
 
-**** =org_agenda_clock_in=
+**** org_agenda_clock_in
 :PROPERTIES:
 :CUSTOM_ID: org_agenda_clock_in
 :END:
@@ -1399,7 +1397,7 @@ Change =TODO= state of an item in both agenda and original Org file.
 Clock in item under cursor.
 See [[#clocking][Clocking]] for more details.
 
-**** =org_agenda_clock_out=
+**** org_agenda_clock_out
 :PROPERTIES:
 :CUSTOM_ID: org_agenda_clock_out
 :END:
@@ -1407,7 +1405,7 @@ See [[#clocking][Clocking]] for more details.
 Clock out currently active clock item.
 See [[#clocking][Clocking]] for more details.
 
-**** =org_agenda_clock_cancel=
+**** org_agenda_clock_cancel
 :PROPERTIES:
 :CUSTOM_ID: org_agenda_clock_cancel
 :END:
@@ -1415,7 +1413,7 @@ See [[#clocking][Clocking]] for more details.
 Cancel clock on currently active clock item.
 See [[#clocking][Clocking]] for more details.
 
-**** =org_agenda_clock_goto=
+**** org_agenda_clock_goto
 :PROPERTIES:
 :CUSTOM_ID: org_agenda_clock_goto
 :END:
@@ -1423,7 +1421,7 @@ See [[#clocking][Clocking]] for more details.
 Jump to currently clocked in headline.
 See [[#clocking][Clocking]] for more details.
 
-**** =org_agenda_clockreport_mode=
+**** org_agenda_clockreport_mode
 :PROPERTIES:
 :CUSTOM_ID: org_agenda_clockreport_mode
 :END:
@@ -1432,77 +1430,77 @@ Show clock report at the end of the agenda for current agenda time
 range
 See [[#clocking][Clocking]] for more details.
 
-**** =org_agenda_priority=
+**** org_agenda_priority
 :PROPERTIES:
 :CUSTOM_ID: org_agenda_priority
 :END:
 - Mapped to: =<Leader>o,=
 Choose the priority of a headline item.
 
-**** =org_agenda_priority_up=
+**** org_agenda_priority_up
 :PROPERTIES:
 :CUSTOM_ID: org_agenda_priority_up
 :END:
 - Mapped to: =+=
 Increase the priority of a headline item.
 
-**** =org_agenda_priority_down=
+**** org_agenda_priority_down
 :PROPERTIES:
 :CUSTOM_ID: org_agenda_priority_down
 :END:
 - Mapped to: =-=
 Decrease the priority of a headline item.
 
-**** =org_agenda_archive=
+**** org_agenda_archive
 :PROPERTIES:
 :CUSTOM_ID: org_agenda_archive
 :END:
 - Mapped to: =<Leader>o$=
 Archive headline item to archive location.
 
-**** =org_agenda_toggle_archive_tag=
+**** org_agenda_toggle_archive_tag
 :PROPERTIES:
 :CUSTOM_ID: org_agenda_toggle_archive_tag
 :END:
 - Mapped to: =<Leader>oA=
 Toggle "ARCHIVE" tag of a headline item.
 
-**** =org_agenda_set_tags=
+**** org_agenda_set_tags
 :PROPERTIES:
 :CUSTOM_ID: org_agenda_set_tags
 :END:
 - Mapped to: =<Leader>ot=
 Set tags on current headline item.
 
-**** =org_agenda_deadline=
+**** org_agenda_deadline
 :PROPERTIES:
 :CUSTOM_ID: org_agenda_deadline
 :END:
 - Mapped to: =<Leader>oid=
 Insert/Update deadline date on current headline item.
 
-**** =org_agenda_schedule=
+**** org_agenda_schedule
 :PROPERTIES:
 :CUSTOM_ID: org_agenda_schedule
 :END:
 - Mapped to: =<Leader>ois=
 Insert/Update scheduled date on current headline item.
 
-**** =org_agenda_refile=
+**** org_agenda_refile
 :PROPERTIES:
 :CUSTOM_ID: org_agenda_refile
 :END:
 - Mapped to: =<Leader>or=
 Refile current headline to a destination org-file. Same as [[#org_refile][org_refile]] but from agenda view.
 
-**** =org_agenda_add_note=
+**** org_agenda_add_note
 :PROPERTIES:
 :CUSTOM_ID: org_agenda_add_note
 :END:
 - Mapped to: =<Leader>ona=
 Add note to the current headline
 
-**** =org_agenda_filter=
+**** org_agenda_filter
 :PROPERTIES:
 :CUSTOM_ID: org_agenda_filter
 :END:
@@ -1521,7 +1519,7 @@ Use vim regex flag =\c= to make it case insensitive. See
 =:help vim.regex()= and =:help /magic=.
 Pressing =<TAB>= in filter prompt autocompletes categories and tags.
 
-**** =org_agenda_show_help=
+**** org_agenda_show_help
 :PROPERTIES:
 :CUSTOM_ID: org_agenda_show_help
 :END:
@@ -1551,28 +1549,28 @@ require('orgmode').setup({
 :END:
 Mappings used in capture window.
 
-**** =org_capture_finalize=
+**** org_capture_finalize
 :PROPERTIES:
 :CUSTOM_ID: org_capture_finalize
 :END:
 - Mapped to: =<C-c>=
 Save current capture content to =org_default_notes_file= and close capture window.
 
-**** =org_capture_refile=
+**** org_capture_refile
 :PROPERTIES:
 :CUSTOM_ID: org_capture_refile
 :END:
 - Mapped to: =<Leader>or=
 Refile capture content to specific destination.
 
-**** =org_capture_kill=
+**** org_capture_kill
 :PROPERTIES:
 :CUSTOM_ID: org_capture_kill
 :END:
 - Mapped to: =<Leader>ok=
 Close capture window without saving anything.
 
-**** =org_capture_show_help=
+**** org_capture_show_help
 :PROPERTIES:
 :CUSTOM_ID: org_capture_show_help
 :END:
@@ -1602,14 +1600,14 @@ require('orgmode').setup({
 :END:
 Mappings used in closing note window.
 
-**** =org_note_finalize=
+**** org_note_finalize
 :PROPERTIES:
 :CUSTOM_ID: org_note_finalize
 :END:
 - Mapped to: =<C-c>=
 Save note window content as closing note for a headline. Ignores first comment (if exists).
 
-**** =org_note_kill=
+**** org_note_kill
 :PROPERTIES:
 :CUSTOM_ID: org_note_kill
 :END:
@@ -1635,7 +1633,7 @@ require('orgmode').setup({
 :END:
 Mappings for =org= files.
 
-**** =org_refile=
+**** org_refile
 :PROPERTIES:
 :CUSTOM_ID: org_refile
 :END:
@@ -1647,7 +1645,7 @@ can be specified with =destination.org/<headline>=. If there are
 multiple headlines with the same name in the destination file, the first
 occurence will be used.
 
-**** =org_timestamp_up=
+**** org_timestamp_up
 :PROPERTIES:
 :CUSTOM_ID: org_timestamp_up
 :END:
@@ -1672,7 +1670,7 @@ Increase date part under under cursor. Accepts count: (Example:
 - Active/Inactive state - (=<= to =[= and vice versa) - Example date:
   =|<2021-10-01 Fri 10:30>= becomes =|[2021-10-01 Fri 10:30]=
 
-**** =org_timestamp_down=
+**** org_timestamp_down
 :PROPERTIES:
 :CUSTOM_ID: org_timestamp_down
 :END:
@@ -1681,7 +1679,7 @@ Decrease date part under under cursor.
 Same as [[#org_timestamp_up][org_timestamp_up]], just opposite
 direction.
 
-**** =org_timestamp_up_day=
+**** org_timestamp_up_day
 :PROPERTIES:
 :CUSTOM_ID: org_timestamp_up_day
 :END:
@@ -1689,7 +1687,7 @@ direction.
 Increase date under cursor by 1 or "count" day(s) (Example count:
 =5<S-UP>=).
 
-**** =org_timestamp_down_day=
+**** org_timestamp_down_day
 :PROPERTIES:
 :CUSTOM_ID: org_timestamp_down_day
 :END:
@@ -1697,42 +1695,42 @@ Increase date under cursor by 1 or "count" day(s) (Example count:
 Decrease date under cursor by 1 or "count" day(s) (Example count:
 =5<S-UP>=).
 
-**** =org_change_date=
+**** org_change_date
 :PROPERTIES:
 :CUSTOM_ID: org_change_date
 :END:
 - Mapped to: =cid=
 Change date under cursor. Opens calendar to select new date.
 
-**** =org_toggle_timestamp_type=
+**** org_toggle_timestamp_type
 :PROPERTIES:
 :CUSTOM_ID: org_toggle_timestamp_type
 :END:
 - Mapped to: =<Leader>od!=
 Switches the timestamp under the cursor between inactive and active.
 
-**** =org_priority=
+**** org_priority
 :PROPERTIES:
 :CUSTOM_ID: org_priority
 :END:
 - Mapped to: =<Leader>o,=
 Choose the priority of a headline item.
 
-**** =org_priority_up=
+**** org_priority_up
 :PROPERTIES:
 :CUSTOM_ID: org_priority_up
 :END:
 - Mapped to: =ciR=
 Increase the priority of a headline item.
 
-**** =org_priority_down=
+**** org_priority_down
 :PROPERTIES:
 :CUSTOM_ID: org_priority_down
 :END:
 - Mapped to: =cir=
 Decrease the priority of a headline item.
 
-**** =org_todo=
+**** org_todo
 :PROPERTIES:
 :CUSTOM_ID: org_todo
 :END:
@@ -1740,28 +1738,28 @@ Decrease the priority of a headline item.
 Cycle todo keyword forward on current headline or open fast access to
 TODO states prompt (see [[#org_todo_keywords][org_todo_keywords]]) if it's enabled.
 
-**** =org_todo_prev=
+**** org_todo_prev
 :PROPERTIES:
 :CUSTOM_ID: org_todo_prev
 :END:
 - Mapped to: =ciT=
 Cycle todo keyword backward on current headline.
 
-**** =org_toggle_checkbox=
+**** org_toggle_checkbox
 :PROPERTIES:
 :CUSTOM_ID: org_toggle_checkbox
 :END:
 - Mapped to: =<C-Space>=
 Toggle current line checkbox state.
 
-**** =org_toggle_heading=
+**** org_toggle_heading
 :PROPERTIES:
 :CUSTOM_ID: org_toggle_heading
 :END:
 - Mapped to: =<Leader>o*=
 Toggle current line to headline and vice versa. Checkboxes will turn into TODO headlines.
 
-**** =org_insert_link=
+**** org_insert_link
 :PROPERTIES:
 :CUSTOM_ID: org_insert_link
 :END:
@@ -1772,7 +1770,7 @@ If there are any links stored with [[#org_store_link][org_store_link]], pressing
 list of all stored links to select. Links generated with ID are properly expanded to valid links after
 selection.
 
-**** =org_store_link=
+**** org_store_link
 :PROPERTIES:
 :CUSTOM_ID: org_store_link
 :END:
@@ -1782,7 +1780,7 @@ Generate a link to the closest headline. If [[#org_id_link_to_org_use_id][org_id
 [[#org_insert_link][org_insert_link]]. When [[#org_id_link_to_org_use_id][org_id_link_to_org_use_id]] is =false=,
 it generates the standard file::*headline link (example: =file:/path/to/my/todos.org::*My headline=)
 
-**** =org_open_at_point=
+**** org_open_at_point
 :PROPERTIES:
 :CUSTOM_ID: org_open_at_point
 :END:
@@ -1790,7 +1788,7 @@ it generates the standard file::*headline link (example: =file:/path/to/my/todos
 Open hyperlink or date under cursor. When date is under the cursor, open
 the agenda for that day.
 
-**** =org_edit_special=
+**** org_edit_special
 :PROPERTIES:
 :CUSTOM_ID: org_edit_special
 :END:
@@ -1803,119 +1801,119 @@ the original Org file is updated.
 special edit buffer is closed, the edits will not be applied. The special edit
 buffer contents can be recovered from :messages output
 
-**** =org_add_note=
+**** org_add_note
 :PROPERTIES:
 :CUSTOM_ID: org_add_note
 :END:
 - Mapped to: =<Leader>ona=
 Add note to the current headline.
 
-**** =org_cycle=
+**** org_cycle
 :PROPERTIES:
 :CUSTOM_ID: org_cycle
 :END:
 - Mapped to: =<TAB>=
 Cycle folding for current headline.
 
-**** =org_global_cycle=
+**** org_global_cycle
 :PROPERTIES:
 :CUSTOM_ID: org_global_cycle
 :END:
 - Mapped to: =<S-TAB>=
 Cycle global folding.
 
-**** =org_archive_subtree=
+**** org_archive_subtree
 :PROPERTIES:
 :CUSTOM_ID: org_archive_subtree
 :END:
 - Mapped to: =<Leader>o$=
 Archive current headline to archive location.
 
-**** =org_set_tags_command=
+**** org_set_tags_command
 :PROPERTIES:
 :CUSTOM_ID: org_set_tags_command
 :END:
 - Mapped to: =<Leader>ot=
 Set tags on current headline.
 
-**** =org_toggle_archive_tag=
+**** org_toggle_archive_tag
 :PROPERTIES:
 :CUSTOM_ID: org_toggle_archive_tag
 :END:
 - Mapped to: =<Leader>oA=
 Toggle "ARCHIVE" tag on current headline.
 
-**** =org_do_promote=
+**** org_do_promote
 :PROPERTIES:
 :CUSTOM_ID: org_do_promote
 :END:
 - Mapped to: =<<=
 Promote headline.
 
-**** =org_do_demote=
+**** org_do_demote
 :PROPERTIES:
 :CUSTOM_ID: org_do_demote
 :END:
 - Mapped to: =>>=
 Demote headline.
 
-**** =org_promote_subtree=
+**** org_promote_subtree
 :PROPERTIES:
 :CUSTOM_ID: org_promote_subtree
 :END:
 - Mapped to: =<s=
 Promote subtree.
 
-**** =org_demote_subtree=
+**** org_demote_subtree
 :PROPERTIES:
 :CUSTOM_ID: org_demote_subtree
 :END:
 - Mapped to: =>s=
 Demote subtree.
 
-**** =org_meta_return=
+**** org_meta_return
 :PROPERTIES:
 :CUSTOM_ID: org_meta_return
 :END:
 - Mapped to: =<Leader><CR>=
 Add headline, list item or checkbox below, depending on current line.
 
-**** =org_insert_heading_respect_content=
+**** org_insert_heading_respect_content
 :PROPERTIES:
 :CUSTOM_ID: org_insert_heading_respect_content
 :END:
 - Mapped to: =<Leader>oih=
 Add headline after current headline + it's content with same level.
 
-**** =org_insert_todo_heading=
+**** org_insert_todo_heading
 :PROPERTIES:
 :CUSTOM_ID: org_insert_todo_heading
 :END:
 - Mapped to: =<Leader>oiT=
 Add TODO headline right after the current headline.
 
-**** =org_insert_todo_heading_respect_content=
+**** org_insert_todo_heading_respect_content
 :PROPERTIES:
 :CUSTOM_ID: org_insert_todo_heading_respect_content
 :END:
 - Mapped to: =<Leader>oit=
 Add TODO headliner after current headline + it's content.
 
-**** =org_move_subtree_up=
+**** org_move_subtree_up
 :PROPERTIES:
 :CUSTOM_ID: org_move_subtree_up
 :END:
 - Mapped to: =<Leader>oK=
 Move current headline + it's content up by one headline.
 
-**** =org_move_subtree_down=
+**** org_move_subtree_down
 :PROPERTIES:
 :CUSTOM_ID: org_move_subtree_down
 :END:
 - Mapped to: =<Leader>oJ=
 Move current headline + it's content down by one headline.
 
-**** =org_export=
+**** org_export
 :PROPERTIES:
 :CUSTOM_ID: org_export
 :END:
@@ -1924,70 +1922,70 @@ Open export options.
 *NOTE*: Exports are handled via =emacs= and =pandoc=. This means that =emacs= and/or =pandoc= must be in
 =$PATH=. See [[#org_custom_exports][org_custom_exports]] if you want to add your own export options.
 
-**** =org_next_visible_heading=
+**** org_next_visible_heading
 :PROPERTIES:
 :CUSTOM_ID: org_next_visible_heading
 :END:
 - Mapped to: =}=
 Go to next heading (any level).
 
-**** =org_previous_visible_heading=
+**** org_previous_visible_heading
 :PROPERTIES:
 :CUSTOM_ID: org_previous_visible_heading
 :END:
 - Mapped to: ={=
 Go to previous heading (any level).
 
-**** =org_forward_heading_same_level=
+**** org_forward_heading_same_level
 :PROPERTIES:
 :CUSTOM_ID: org_forward_heading_same_level
 :END:
 - Mapped to: =]]=
 Go to next heading on same level. Doesn't go outside of parent.
 
-**** =org_backward_heading_same_level=
+**** org_backward_heading_same_level
 :PROPERTIES:
 :CUSTOM_ID: org_backward_heading_same_level
 :END:
 - Mapped to: =[[=
 Go to previous heading on same level. Doesn't go outside of parent.
 
-**** =outline_up_heading=
+**** outline_up_heading
 :PROPERTIES:
 :CUSTOM_ID: outline_up_heading
 :END:
 - Mapped to: =g{=
 Go to parent heading.
 
-**** =org_deadline=
+**** org_deadline
 :PROPERTIES:
 :CUSTOM_ID: org_deadline
 :END:
 - Mapped to: =<Leader>oid=
 Insert/Update deadline date.
 
-**** =org_schedule=
+**** org_schedule
 :PROPERTIES:
 :CUSTOM_ID: org_schedule
 :END:
 - Mapped to: =<Leader>ois=
 Insert/Update scheduled date.
 
-**** =org_time_stamp=
+**** org_time_stamp
 :PROPERTIES:
 :CUSTOM_ID: org_time_stamp
 :END:
 - Mapped to: =<Leader>oi.=
 Insert/Update date under cursor.
 
-**** =org_time_stamp_inactive=
+**** org_time_stamp_inactive
 :PROPERTIES:
 :CUSTOM_ID: org_time_stamp_inactive
 :END:
 - Mapped to: =<Leader>oi!=
 Insert/Update inactive date under cursor.
 
-**** =org_clock_in=
+**** org_clock_in
 :PROPERTIES:
 :CUSTOM_ID: org_clock_in
 :END:
@@ -1995,7 +1993,7 @@ Insert/Update inactive date under cursor.
 Clock in headline under cursor.
 See [[#clocking][Clocking]] for more details.
 
-**** =org_clock_out=
+**** org_clock_out
 :PROPERTIES:
 :CUSTOM_ID: org_clock_out
 :END:
@@ -2003,7 +2001,7 @@ See [[#clocking][Clocking]] for more details.
 Clock out headline under cursor.
 See [[#clocking][Clocking]] for more details.
 
-**** =org_clock_cancel=
+**** org_clock_cancel
 :PROPERTIES:
 :CUSTOM_ID: org_clock_cancel
 :END:
@@ -2011,7 +2009,7 @@ See [[#clocking][Clocking]] for more details.
 Cancel currently active clock on current headline.
 See [[#clocking][Clocking]] for more details.
 
-**** =org_clock_goto=
+**** org_clock_goto
 :PROPERTIES:
 :CUSTOM_ID: org_clock_goto
 :END:
@@ -2019,7 +2017,7 @@ See [[#clocking][Clocking]] for more details.
 Jump to currently clocked in headline.
 See [[#clocking][Clocking]] for more details.
 
-**** =org_set_effort=
+**** org_set_effort
 :PROPERTIES:
 :CUSTOM_ID: org_set_effort
 :END:
@@ -2027,14 +2025,14 @@ See [[#clocking][Clocking]] for more details.
 Set effort estimate property on for current headline.
 See [[#clocking][Clocking]] for more details.
 
-**** =org_babel_tangle=
+**** org_babel_tangle
 :PROPERTIES:
 :CUSTOM_ID: org_babel_tangle
 :END:
 - Mapped to: =<leader>obt=
 Tangle current file. See [[#extract-source-code-tangle][Extract source code (tangle)]] for more details.
 
-**** =org_show_help=
+**** org_show_help
 :PROPERTIES:
 :CUSTOM_ID: org_show_help
 :END:
@@ -2062,28 +2060,28 @@ require('orgmode').setup({
 :END:
 Mappings applied when editing a =SRC= block content via =org_edit_special=.
 
-**** =org_edit_src_abort=
+**** org_edit_src_abort
 :PROPERTIES:
 :CUSTOM_ID: org_edit_src_abort
 :END:
 - Mapped to: =<Leader>ok=
 Abort changes made to temporary buffer created from the content of a =SRC= block, see above.
 
-**** =org_edit_src_save=
+**** org_edit_src_save
 :PROPERTIES:
 :CUSTOM_ID: org_edit_src_save
 :END:
 - Mapped to: =<Leader>ow=
 Apply changes from the special buffer to the source Org buffer.
 
-**** =org_edit_src_save_exit=
+**** org_edit_src_save_exit
 :PROPERTIES:
 :CUSTOM_ID: org_edit_src_save_exit
 :END:
 - Mapped to: =<Leader>'=
 Apply changes from the special buffer to the source Org buffer and close the edit special window.
 
-**** =org_edit_src_show_help=
+**** org_edit_src_show_help
 :PROPERTIES:
 :CUSTOM_ID: org_edit_src_show_help
 :END:
@@ -2101,42 +2099,42 @@ child. =inner= means that it doesn't select the stars, where =around= selects =i
 
 📝 NOTE: Some mappings can clash with other plugin mappings, like [[https://github.com/lewis6991/gitsigns.nvim][gitsigns.nvim]] which also has =ih= operator mapping.
 
-**** =inner_heading=
+**** inner_heading
 :PROPERTIES:
 :CUSTOM_ID: inner_heading
 :END:
 - Mapped to: =ih=
 Select inner heading with content.
 
-**** =around_heading=
+**** around_heading
 :PROPERTIES:
 :CUSTOM_ID: around_heading
 :END:
 - Mapped to: =ah=
 Select around heading with content.
 
-**** =inner_subtree=
+**** inner_subtree
 :PROPERTIES:
 :CUSTOM_ID: inner_subtree
 :END:
 - Mapped to: =ir=
 Select whole inner subtree.
 
-**** =around_subtree=
+**** around_subtree
 :PROPERTIES:
 :CUSTOM_ID: around_subtree
 :END:
 - Mapped to: =ar=
 Select around whole subtree.
 
-**** =inner_heading_from_root=
+**** inner_heading_from_root
 :PROPERTIES:
 :CUSTOM_ID: inner_heading_from_root
 :END:
 - Mapped to: =Oh= (big letter =o=)
 select everything from first level heading to the current heading.
 
-**** =around_heading_from_root=
+**** around_heading_from_root
 :PROPERTIES:
 :CUSTOM_ID: around_heading_from_root
 :END:
@@ -2144,14 +2142,14 @@ select everything from first level heading to the current heading.
 select around everything from first level heading to the current
 heading.
 
-**** =inner_subtree_from_root=
+**** inner_subtree_from_root
 :PROPERTIES:
 :CUSTOM_ID: inner_subtree_from_root
 :END:
 - Mapped to: =Or= (big letter =o=)
 select everything from first level subtree to the current subtree.
 
-**** =around_subtree_from_root=
+**** around_subtree_from_root
 :PROPERTIES:
 :CUSTOM_ID: around_subtree_from_root
 :END:

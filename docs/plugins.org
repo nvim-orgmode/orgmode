@@ -1,4 +1,4 @@
-#+OPTIONS: H:9
+#+OPTIONS: H:9 ^:nil
 * Plugins
 
 📝 NOTE: If you create a plugin for orgmode, make sure to tag it with =orgmode-nvim= on github and submit an issue/PR to add it to this list.
