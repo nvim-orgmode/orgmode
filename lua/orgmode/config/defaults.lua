@@ -66,6 +66,7 @@ local DefaultConfig = {
   org_id_method = 'uuid',
   org_id_prefix = nil,
   org_id_link_to_org_use_id = false,
+  org_use_property_inheritance = false,
   org_babel_default_header_args = {
     [':tangle'] = 'no',
     [':noweb'] = 'no',
