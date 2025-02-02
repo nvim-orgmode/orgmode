@@ -65,8 +65,6 @@ NOTE: Make sure fast access keys do not overlap. If that happens, first entry in
 :END:
 - Type: =string | nil=
 - Default: =nil=
-Path to a file that will be used as a default target file when refiling.
-
 Set an entry from [[#org_todo_keywords][org_todo_keywords]] to use as the "starting" state for repeatable todos.
 
 If provided value does not exist in [[#org_todo_keywords][org_todo_keywords]], first entry from that list is used.
@@ -179,7 +177,7 @@ require('orgmode').setup({
   }
 })
 #+end_src
-***
+
 *** org_archive_location
 :PROPERTIES:
 :CUSTOM_ID: org_archive_location
