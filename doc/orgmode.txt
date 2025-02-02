@@ -96,8 +96,6 @@ org_todo_repeat_to_state                    *orgmode-org_todo_repeat_to_state*
 - Type: `string | nil`
 - Default: `nil`
 
-Path to a file that will be used as a default target file when refiling.
-
 Set an entry from |orgmode-org_todo_keywords| to use as the "starting" state
 for repeatable todos.
 
@@ -223,8 +221,6 @@ Full configuration example with additional todo keywords and their colors:
       }
     })
 <
-
-*****
 
 
 org_archive_location                            *orgmode-org_archive_location*
