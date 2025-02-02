@@ -249,9 +249,9 @@ describe('Meta return mappings', function()
     vim.cmd([[exe "norm ,\<CR>"]])
     assert.are.same({
       '  - this list item',
+      '  - ',
       '    spans more than',
       '    one line',
-      '  - ',
     }, vim.api.nvim_buf_get_lines(0, 3, 7, false))
   end)
 

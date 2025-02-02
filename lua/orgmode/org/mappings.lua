@@ -644,9 +644,24 @@ function OrgMappings:meta_return(suffix)
     return
   end
 
+  local get_new_line_text = function(line_nr)
+    local col = vim.fn.col('.')
+
+    if vim.fn.mode():match('^i') then
+      return vim.fn.getline(line_nr):sub(col), col
+    end
+
+    return '', col
+  end
+
   if item:type() == 'headline' then
     local linenr = vim.fn.line('.') or 0
     local _, level = item:field('stars')[1]:end_()
+    local text_after_col, col = get_new_line_text(linenr)
+    if suffix == '' and text_after_col ~= '' then
+      vim.fn.setline(linenr, vim.fn.getline(linenr):sub(0, col - 1))
+      suffix = text_after_col
+    end
     local content = config:respect_blank_before_new_entry({ ('*'):rep(level) .. ' ' .. suffix })
     vim.fn.append(linenr, content)
     vim.fn.cursor(linenr + #content, 1)
@@ -661,86 +676,48 @@ function OrgMappings:meta_return(suffix)
   if not item then
     return
   end
+
   local type = item:type()
-  if vim.tbl_contains({ 'paragraph', 'bullet', 'checkbox', 'status' }, type) then
-    local listitem = item:parent()
-    if not listitem or listitem:type() ~= 'listitem' then
-      return
-    end
-    local line = vim.fn.getline(listitem:start() + 1)
-    local srow, _, end_row, end_col = listitem:range()
-    local is_multiline = (end_row - srow) > 1 or end_col == 0
-    -- For last item in file, ts grammar is not parsing the end column as 0
-    -- while in other cases end column is always 0
-    local is_last_item_in_file = end_col ~= 0
-    if not is_multiline or is_last_item_in_file then
-      end_row = end_row + 1
-    end
-    local range = {
-      start = { line = end_row, character = 0 },
-      ['end'] = { line = end_row, character = 0 },
-    }
+  if not vim.tbl_contains({ 'paragraph', 'bullet', 'checkbox', 'status' }, type) then
+    return
+  end
 
-    local checkbox = line:match('^(%s*[%+%-%*])%s*%[[%sXx%-]?%]')
-    local plain_list = line:match('^%s*[%+%-%*]')
-    local indent, number_in_list, closer = line:match('^(%s*)(%d+)([%)%.])%s?')
-    local text_edits = config:respect_blank_before_new_entry({}, 'plain_list_item', {
-      range = range,
-      newText = '\n',
-    })
-    local add_empty_line = #text_edits > 0
-    if checkbox then
-      table.insert(text_edits, {
-        range = range,
-        newText = checkbox .. ' [ ] \n',
-      })
-    elseif plain_list then
-      table.insert(text_edits, {
-        range = range,
-        newText = plain_list .. ' \n',
-      })
-    elseif number_in_list then
-      local next_sibling = listitem
-      local counter = 1
-      while next_sibling do
-        local bullet = next_sibling:child(0)
-        local text = bullet and vim.treesitter.get_node_text(bullet, 0) or ''
-        local new_text = tostring(tonumber(text:match('%d+')) + 1) .. closer
+  local listitem = item:parent()
+  if not listitem or listitem:type() ~= 'listitem' then
+    return
+  end
 
-        if counter == 1 then
-          table.insert(text_edits, {
-            range = range,
-            newText = indent .. new_text .. ' ' .. '\n',
-          })
-        else
-          table.insert(text_edits, {
-            range = ts_utils.node_to_lsp_range(bullet),
-            newText = new_text,
-          })
-        end
+  local linenr = vim.fn.line('.') or 0
+  local text_after_col, col = get_new_line_text(linenr)
+  if text_after_col ~= '' then
+    vim.fn.setline(linenr, vim.fn.getline(linenr):sub(0, col - 1))
+  end
+  local line = vim.fn.getline(linenr)
+  local checkbox = line:match('^(%s*[%+%-%*])%s*%[[%sXx%-]?%]')
+  local plain_list = line:match('^%s*[%+%-%*]')
+  local indent, number_in_list, closer = line:match('^(%s*)(%d+)([%)%.])%s?')
+  local new_line = ''
+  if checkbox then
+    new_line = checkbox .. ' [ ] ' .. text_after_col
+  elseif plain_list then
+    new_line = plain_list .. ' ' .. text_after_col
+  elseif number_in_list then
+    new_line = indent .. (tonumber(number_in_list) + 1) .. closer .. ' ' .. text_after_col
+  end
 
-        counter = counter + 1
-        next_sibling = next_sibling:next_sibling()
-      end
-    end
+  local content = config:respect_blank_before_new_entry({ new_line }, 'plain_list_item')
+  vim.fn.append(linenr, content)
+  vim.fn.cursor(linenr + #content, 1)
+  vim.cmd([[startinsert!]])
 
-    if #text_edits > 0 then
-      vim.lsp.util.apply_text_edits(text_edits, vim.api.nvim_get_current_buf(), constants.default_offset_encoding)
-
-      vim.fn.cursor(end_row + 1 + (add_empty_line and 1 or 0), 1) -- +1 for next line
-
-      -- update all parents when we insert a new checkbox
-      if checkbox then
-        local new_listitem = self.files:get_closest_listitem()
-        if new_listitem then
-          new_listitem:update_checkbox('off')
-        end
-      end
-
-      vim.cmd([[startinsert!]])
-      return true
+  if checkbox then
+    local new_listitem = self.files:get_closest_listitem()
+    if new_listitem then
+      new_listitem:update_checkbox('off')
     end
   end
+
+  return true
 end
 
 function OrgMappings:insert_heading_respect_content(suffix)
