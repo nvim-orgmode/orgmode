@@ -376,7 +376,7 @@ function OrgFiles:_files(skip_resolve)
       return false
     end
 
-    local stat = vim.loop.fs_stat(file)
+    local stat = vim.uv.fs_stat(file)
     return stat and stat.type == 'file' or false
   end, all_files)
 end

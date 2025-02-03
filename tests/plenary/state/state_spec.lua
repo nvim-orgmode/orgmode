@@ -14,7 +14,7 @@ describe('State', function()
   end)
 
   it("should create a state file if it doesn't exist", function()
-    local stat = vim.loop.fs_stat(cache_path)
+    local stat = vim.uv.fs_stat(cache_path)
     if stat then
       error('Cache file existed before it should! Ensure it is deleted before each test run!')
     end
@@ -27,7 +27,7 @@ describe('State', function()
       return state._ctx.saved
     end, 10)
 
-    local stat, err, _ = vim.loop.fs_stat(cache_path)
+    local stat, err, _ = vim.uv.fs_stat(cache_path)
     if not stat then
       error(err)
     end

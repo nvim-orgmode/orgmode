@@ -18,7 +18,7 @@ describe('OrgFile', function()
       assert.are.same(filename, file.filename)
       assert.are.same({ '* Headline 1' }, file.lines)
       assert.are.same('* Headline 1', file.content)
-      local stat = vim.loop.fs_stat(filename) or {}
+      local stat = vim.uv.fs_stat(filename) or {}
       assert.are.same(stat.mtime.nsec, file.metadata.mtime)
       assert.are.same(0, file.metadata.changedtick)
     end)
@@ -37,7 +37,7 @@ describe('OrgFile', function()
       assert.are.same(filename, file.filename)
       assert.are.same({ '* Headline 2' }, file.lines)
       assert.are.same('* Headline 2', file.content)
-      local stat = vim.loop.fs_stat(filename) or {}
+      local stat = vim.uv.fs_stat(filename) or {}
       assert.are.same(stat.mtime.nsec, file.metadata.mtime)
       assert.are.same(0, file.metadata.changedtick)
       vim.cmd('write!')
