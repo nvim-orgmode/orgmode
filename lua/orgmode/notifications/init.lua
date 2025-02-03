@@ -23,7 +23,7 @@ end
 
 function Notifications:start_timer()
   self:stop_timer()
-  self.timer = vim.loop.new_timer()
+  self.timer = vim.uv.new_timer()
   self:notify(Date.now())
   self.timer:start(
     (60 - os.date('%S')) * 1000,

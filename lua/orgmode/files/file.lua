@@ -40,7 +40,7 @@ end)
 ---@param opts OrgFileOpts
 ---@return OrgFile
 function OrgFile:new(opts)
-  local stat = vim.loop.fs_stat(opts.filename)
+  local stat = vim.uv.fs_stat(opts.filename)
   local data = {
     filename = opts.filename,
     lines = opts.lines,
@@ -72,7 +72,7 @@ function OrgFile.load(filename)
     }))
   end
 
-  if not vim.loop.fs_stat(filename) or not utils.is_org_file(filename) then
+  if not vim.uv.fs_stat(filename) or not utils.is_org_file(filename) then
     return Promise.resolve(false)
   end
 
@@ -146,7 +146,7 @@ function OrgFile:is_modified()
     local cur_changedtick = vim.api.nvim_buf_get_changedtick(bufnr)
     return cur_changedtick ~= self.metadata.changedtick
   end
-  local stat = vim.loop.fs_stat(self.filename)
+  local stat = vim.uv.fs_stat(self.filename)
   if not stat then
     return false
   end
@@ -865,7 +865,7 @@ function OrgFile:_update_lines(lines, bufnr)
   if bufnr then
     self.metadata.changedtick = vim.api.nvim_buf_get_changedtick(bufnr)
   end
-  local stat = vim.loop.fs_stat(self.filename)
+  local stat = vim.uv.fs_stat(self.filename)
   if stat then
     self.metadata.mtime = stat.mtime.nsec
   end

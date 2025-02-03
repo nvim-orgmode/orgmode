@@ -291,7 +291,7 @@ function Capture:refile_file_headline_to_archive(headline)
   if vim.fn.isdirectory(archive_directory) == 0 then
     vim.fn.mkdir(archive_directory, 'p')
   end
-  if not vim.loop.fs_stat(archive_location) then
+  if not vim.uv.fs_stat(archive_location) then
     vim.fn.writefile({}, archive_location)
   end
 

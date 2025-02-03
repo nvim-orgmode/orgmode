@@ -1,5 +1,5 @@
 local Promise = require('orgmode.utils.promise')
-local uv = vim.loop
+local uv = vim.uv
 local utils = {}
 local debounce_timers = {}
 local tmp_window_augroup = vim.api.nvim_create_augroup('OrgTmpWindow', { clear = true })
@@ -86,11 +86,11 @@ end
 
 function utils.system_notification(message)
   if vim.fn.executable('notify-send') == 1 then
-    vim.loop.spawn('notify-send', { args = { message } })
+    uv.spawn('notify-send', { args = { message } })
   end
 
   if vim.fn.executable('terminal-notifier') == 1 then
-    vim.loop.spawn('terminal-notifier', { args = { '-message', message } })
+    uv.spawn('terminal-notifier', { args = { '-message', message } })
   end
 end
 
@@ -332,9 +332,9 @@ end
 ---@param name string
 ---@return function
 function utils.profile(name)
-  local start_time = vim.loop.hrtime()
+  local start_time = uv.hrtime()
   return function()
-    return print(name, string.format('%.2f', (vim.loop.hrtime() - start_time) / 1000000))
+    return print(name, string.format('%.2f', (uv.hrtime() - start_time) / 1000000))
   end
 end
 

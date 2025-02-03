@@ -1,7 +1,7 @@
 local Promise = require('orgmode.utils.promise')
 local utils = require('orgmode.utils')
 local ts_revision = 'f8c6b1e72f82f17e41004e04e15f62a83ecc27b0'
-local uv = vim.loop
+local uv = vim.uv
 local M = {
   compilers = { vim.fn.getenv('CC'), 'cc', 'gcc', 'clang', 'cl', 'zig' },
 }

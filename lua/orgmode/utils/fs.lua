@@ -29,7 +29,7 @@ function M.get_real_path(filepath)
   if not substituted then
     return false
   end
-  local real = vim.loop.fs_realpath(substituted)
+  local real = vim.uv.fs_realpath(substituted)
   if real and filepath:sub(-1, -1) == '/' then
     -- make sure if filepath gets a trailing slash, the realpath gets one, too.
     real = real .. '/'

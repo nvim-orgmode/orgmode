@@ -12,7 +12,7 @@ describe('Tangle', function()
       })
       vim.cmd('norm ,obt')
       local tangled_file = vim.fn.fnamemodify(file.filename, ':r') .. '.lua'
-      assert.is.Nil(vim.loop.fs_stat(tangled_file))
+      assert.is.Nil(vim.uv.fs_stat(tangled_file))
     end)
 
     it('should tangle a file when enabled in config', function()
@@ -30,7 +30,7 @@ describe('Tangle', function()
       })
       vim.cmd('norm ,obt')
       local tangled_file = vim.fn.fnamemodify(file.filename, ':r') .. '.lua'
-      assert.is.Not.Nil(vim.loop.fs_stat(tangled_file))
+      assert.is.Not.Nil(vim.uv.fs_stat(tangled_file))
       assert.are.same({
         'print("test first line")',
         'print("test first second line")',
@@ -54,7 +54,7 @@ describe('Tangle', function()
       })
       vim.cmd('norm ,obt')
       local tangled_file = vim.fn.fnamemodify(file.filename, ':r') .. '.lua'
-      assert.is.Not.Nil(vim.loop.fs_stat(tangled_file))
+      assert.is.Not.Nil(vim.uv.fs_stat(tangled_file))
       assert.are.same({
         'print("test first line")',
         'print("test first second line")',
@@ -74,7 +74,7 @@ describe('Tangle', function()
       })
       vim.cmd('norm ,obt')
       local tangled_file = vim.fn.fnamemodify(file.filename, ':r') .. '.lua'
-      assert.is.Not.Nil(vim.loop.fs_stat(tangled_file))
+      assert.is.Not.Nil(vim.uv.fs_stat(tangled_file))
       assert.are.same({
         'print("test first line")',
         'print("test first second line")',
@@ -91,7 +91,7 @@ describe('Tangle', function()
       })
       vim.cmd('norm ,obt')
       local tangled_file = vim.fn.fnamemodify(file.filename, ':r') .. '.lua'
-      assert.is.Not.Nil(vim.loop.fs_stat(tangled_file))
+      assert.is.Not.Nil(vim.uv.fs_stat(tangled_file))
       assert.are.same({
         'print("test first line")',
         'print("test first second line")',
@@ -109,7 +109,7 @@ describe('Tangle', function()
       })
       vim.cmd('norm ,obt')
       local tangled_file = vim.fn.fnamemodify(file.filename, ':r') .. '.lua'
-      assert.is.Nil(vim.loop.fs_stat(tangled_file))
+      assert.is.Nil(vim.uv.fs_stat(tangled_file))
     end)
   end)
 
@@ -131,7 +131,7 @@ describe('Tangle', function()
       vim.cmd('norm ,obt')
 
       local tangled_file = vim.fn.fnamemodify(file.filename, ':r') .. '.lua'
-      assert.is.Not.Nil(vim.loop.fs_stat(tangled_file))
+      assert.is.Not.Nil(vim.uv.fs_stat(tangled_file))
       assert.are.same({
         'print("Headline first line")',
         'print("Headline second line")',
@@ -158,7 +158,7 @@ describe('Tangle', function()
       vim.cmd('norm ,obt')
 
       local tangled_file = vim.fn.fnamemodify(file.filename, ':r') .. '.lua'
-      assert.is.Not.Nil(vim.loop.fs_stat(tangled_file))
+      assert.is.Not.Nil(vim.uv.fs_stat(tangled_file))
       assert.are.same({
         'print("Other headline first line")',
         'print("Other headline second line")',
@@ -184,7 +184,7 @@ describe('Tangle', function()
       })
       vim.cmd('norm ,obt')
 
-      assert.is.Not.Nil(vim.loop.fs_stat(abs_path))
+      assert.is.Not.Nil(vim.uv.fs_stat(abs_path))
       assert.are.same({
         'print("Headline first line")',
         'print("Headline second line")',
@@ -212,7 +212,7 @@ describe('Tangle', function()
       })
       vim.cmd('norm ,obt')
 
-      assert.is.Not.Nil(vim.loop.fs_stat(abs_path))
+      assert.is.Not.Nil(vim.uv.fs_stat(abs_path))
       assert.are.same({
         'print("Headline first line")',
         'print("Headline second line")',
@@ -240,7 +240,7 @@ describe('Tangle', function()
       })
       vim.cmd('norm ,obt')
 
-      assert.is.Not.Nil(vim.loop.fs_stat(abs_path))
+      assert.is.Not.Nil(vim.uv.fs_stat(abs_path))
       assert.are.same({
         'print("Headline first line")',
         'print("Headline second line")',
@@ -269,8 +269,8 @@ describe('Tangle', function()
       })
       vim.cmd('norm ,obt')
 
-      assert.is.Not.Nil(vim.loop.fs_stat(abs_path))
-      assert.is.Not.Nil(vim.loop.fs_stat(single_block_abs_path))
+      assert.is.Not.Nil(vim.uv.fs_stat(abs_path))
+      assert.is.Not.Nil(vim.uv.fs_stat(single_block_abs_path))
       assert.are.same({
         'print("Headline first line")',
         'print("Headline second line")',
@@ -302,7 +302,7 @@ describe('Tangle', function()
       vim.cmd('norm ,obt')
 
       local tangled_file = vim.fn.fnamemodify(file.filename, ':r') .. '.lua'
-      assert.is.Not.Nil(vim.loop.fs_stat(tangled_file))
+      assert.is.Not.Nil(vim.uv.fs_stat(tangled_file))
       assert.are.same({
         'print("Other headline first line")',
         'print("Other headline second line")',
@@ -333,7 +333,7 @@ describe('Tangle', function()
       vim.cmd('norm ,obt')
 
       local tangled_file = vim.fn.fnamemodify(file.filename, ':r') .. '.lua'
-      assert.is.Not.Nil(vim.loop.fs_stat(tangled_file))
+      assert.is.Not.Nil(vim.uv.fs_stat(tangled_file))
       assert.are.same({
         'print("Other headline first line")',
         'print("Other headline second line")',
@@ -361,7 +361,7 @@ describe('Tangle', function()
       vim.cmd('norm ,obt')
 
       local tangled_file = vim.fn.fnamemodify(file.filename, ':r') .. '.lua'
-      assert.is.Not.Nil(vim.loop.fs_stat(tangled_file))
+      assert.is.Not.Nil(vim.uv.fs_stat(tangled_file))
       assert.are.same({
         '<<otherblock>>',
         'print("Headline first line")',
@@ -391,7 +391,7 @@ describe('Tangle', function()
       vim.cmd('norm ,obt')
 
       local tangled_file = vim.fn.fnamemodify(file.filename, ':r') .. '.lua'
-      assert.is.Not.Nil(vim.loop.fs_stat(tangled_file))
+      assert.is.Not.Nil(vim.uv.fs_stat(tangled_file))
       assert.are.same({
         'print("Other headline first line")',
         'print("Other headline second line")',
