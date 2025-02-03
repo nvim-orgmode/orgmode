@@ -6,7 +6,9 @@ local Listeners = require('orgmode.events.listeners')
 ---@field private _listeners table<string, fun(...:any)[]>
 local EventManager = {
   initialized = false,
-  _listeners = {},
+  _listeners = vim.defaulttable(function()
+    return {}
+  end),
   event = Events,
 }
 
@@ -22,17 +24,15 @@ end
 ---@param event OrgEvent
 ---@param listener fun(...)
 function EventManager.listen(event, listener)
-  if not EventManager._listeners[event.type] then
-    EventManager._listeners[event.type] = {}
-  end
-  if not vim.tbl_contains(EventManager._listeners[event.type], listener) then
-    table.insert(EventManager._listeners[event.type], listener)
+  local listeners = EventManager._listeners[event.type]
+  if not vim.tbl_contains(listeners, listener) then
+    table.insert(listeners, listener)
   end
 end
 
 function EventManager.init()
   if EventManager.initialized then
-    return
+    return EventManager
   end
   for event, listeners in pairs(Listeners) do
     for _, listener in ipairs(listeners) do
