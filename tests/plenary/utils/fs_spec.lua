@@ -49,6 +49,12 @@ describe('substitute_path', function()
   it('fails on all other relative paths', function()
     assert.is.False(fs_utils.substitute_path('a/b/c'))
   end)
+
+  it('allows passing a custom base', function()
+    local output = fs_utils.substitute_path('./b/c', 'a/')
+    assert(output)
+    assert.are.same(output, 'a//b/c')
+  end)
 end)
 
 describe('get_real_path', function()
@@ -84,5 +90,53 @@ describe('get_real_path', function()
 
   it('fails on bare dot "."', function()
     assert.is.False(fs_utils.get_real_path('.'))
+  end)
+end)
+
+describe('make_relative', function()
+  local path = fs_utils.get_real_path(file.filename) ---@cast path string
+  local basename = vim.fs.basename(path)
+  local dirname = vim.fs.dirname(path)
+  local dirname_slash = vim.fs.joinpath(dirname, '')
+  local root = path
+  for parent in vim.fs.parents(path) do
+    root = parent
+  end
+
+  it('gets the basename', function()
+    local expected = vim.fs.joinpath('.', basename)
+    local actual = fs_utils.make_relative(path, dirname)
+    assert.are.same(expected, actual)
+  end)
+
+  it('gets the basename with trailing slash', function()
+    local expected = vim.fs.joinpath('.', basename)
+    local actual = fs_utils.make_relative(path, dirname_slash)
+    assert.are.same(expected, actual)
+  end)
+
+  it('works one level up', function()
+    local parent_name = vim.fs.basename(dirname)
+    local expected = vim.fs.joinpath('.', parent_name, basename)
+    local actual = fs_utils.make_relative(path, vim.fs.dirname(dirname))
+    assert.are.same(expected, actual)
+  end)
+
+  it('works one level up with trailing slash', function()
+    local parent_name = vim.fs.basename(dirname)
+    local expected = vim.fs.joinpath('.', parent_name, basename)
+    local actual = fs_utils.make_relative(path, vim.fs.dirname(dirname) .. '/')
+    assert.are.same(expected, actual)
+  end)
+
+  it('produces a relative path even at the root', function()
+    local relpath = fs_utils.make_relative(path, root)
+    assert(vim.endswith(path, relpath))
+  end)
+
+  it('climbs up via ..', function()
+    local relpath = fs_utils.make_relative(root, path)
+    local only_cdup = vim.regex('\\V\\(../\\)\\+')
+    assert(only_cdup:match_str(relpath))
   end)
 end)

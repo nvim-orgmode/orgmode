@@ -288,6 +288,28 @@ function Headline:set_tags(tags)
   vim.api.nvim_buf_set_text(bufnr, pred_end_row, pred_end_col, pred_end_row, end_col, { text })
 end
 
+---@param tag string
+---@param onoff? boolean true=>add, false=>remove, nil=>toggle the tag
+function Headline:toggle_tag(tag, onoff)
+  local current_tags = self:get_own_tags()
+
+  local present = vim.tbl_contains(current_tags, tag)
+  if onoff == nil then
+    onoff = not present
+  end
+
+  if onoff and not present then
+    table.insert(current_tags, tag)
+  elseif not onoff and present then
+    current_tags = vim.tbl_filter(function(i)
+      return i ~= tag
+    end, current_tags)
+  end
+
+  self:set_tags(utils.tags_to_string(current_tags))
+  return onoff
+end
+
 function Headline:align_tags()
   local own_tags, node = self:get_own_tags()
   if node then
