@@ -57,7 +57,7 @@ function OrgMappings:set_tags(tags)
         end)
       end
       if type(tags) == 'table' then
-        tags = string.format(':%s:', table.concat(tags, ':'))
+        tags = utils.tags_to_string(tags)
       end
 
       return tags

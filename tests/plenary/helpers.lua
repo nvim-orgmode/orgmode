@@ -1,19 +1,49 @@
 local OrgFile = require('orgmode.files.file')
 local orgmode = require('orgmode')
 
-local function load_file(path)
-  vim.cmd(string.format('e %s', path))
+local M = {}
+
+---Temporarily change a variable.
+---@param ctx table<string, any>
+---@param name string
+---@param value any
+---@param inner fun()
+function M.with_var(ctx, name, value, inner)
+  local old = ctx[name]
+  ctx[name] = value
+  local ok, err = pcall(inner)
+  ctx[name] = old
+  assert(ok, err)
+end
+
+---Temporarily change the working directory.
+---@param new_path string
+---@param inner fun()
+function M.with_cwd(new_path, inner)
+  local old_path = vim.fn.getcwd()
+  vim.cmd.cd(new_path)
+  local ok, err = pcall(inner)
+  vim.cmd.cd(old_path)
+  assert(ok, err)
+end
+
+---@param path string
+function M.load_file(path)
+  vim.cmd.edit(path)
   return orgmode.files:get(path)
 end
 
-local function create_file(lines)
+---@param lines string[]
+function M.create_file(lines)
   local fname = vim.fn.tempname() .. '.org'
   vim.fn.writefile(lines or {}, fname)
-  return load_file(fname)
+  return M.load_file(fname)
 end
 
+---@param lines string[]
+---@param config? table
 ---@return OrgFile
-local function create_agenda_file(lines, config)
+function M.create_agenda_file(lines, config)
   local fname = vim.fn.tempname() .. '.org'
   vim.fn.writefile(lines or {}, fname)
 
@@ -22,11 +52,13 @@ local function create_agenda_file(lines, config)
   }, config or {})
   local org = orgmode.setup(cfg)
   org:init()
-  return load_file(fname)
+  return M.load_file(fname)
 end
 
+---@param lines string[]
+---@param filename string
 ---@return OrgFile
-local function create_file_instance(lines, filename)
+function M.create_file_instance(lines, filename)
   local file = OrgFile:new({
     filename = filename or vim.fn.tempname() .. '.org',
     lines = lines,
@@ -36,9 +68,9 @@ local function create_file_instance(lines, filename)
 end
 
 ---@param fixtures {filename: string, content: string[] }[]
----@param config table?
+---@param config? table
 ---@return table
-local function create_agenda_files(fixtures, config)
+function M.create_agenda_files(fixtures, config)
   -- NOTE: content is only 1 line for 1 file
   local temp_fname = vim.fn.tempname()
   local temp_dir = vim.fn.fnamemodify(temp_fname, ':p:h')
@@ -65,10 +97,4 @@ local function create_agenda_files(fixtures, config)
   return files
 end
 
-return {
-  load_file = load_file,
-  create_file = create_file,
-  create_file_instance = create_file_instance,
-  create_agenda_file = create_agenda_file,
-  create_agenda_files = create_agenda_files,
-}
+return M
