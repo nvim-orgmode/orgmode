@@ -2358,6 +2358,80 @@ Hyperlink types supported:
 - Headline title target within the same file (starts with =*=) (Example: =*Specific headline=)
 - Headline with =CUSTOM_ID= property within the same file (starts with =#=) (Example: =#my-custom-id=)
 - Fallback: If file path, opens the file, otherwise, tries to find the headline title in the current file.
+- Your own custom type ([[#custom-hyperlink-types][see below]])
+
+**** Custom hyperlink types
+:PROPERTIES:
+:CUSTOM_ID: custom-hyperlink-types
+:END:
+To add your own custom hyperlink type, provide a custom handler to =hyperlinks.sources= setting.
+Each handler needs to have a =get_name()= method that returns a name for the handler.
+Additionally, =follow(link)= and =autocomplete(link)= optional methods are available to open the link and provide the autocompletion.
+Here's an example of adding a custom "ping" hyperlink type that opens the terminal and pings the provided URL
+and provides some autocompletion with few predefined URLs:
+
+#+begin_src lua
+local LinkPingType = {}
+
+---Unique name for the handler. MUST NOT be one of these: "http", "id", "line_number", "custom_id", "headline"
+---This method is required
+---@return string
+function LinkPingType:get_name()
+  return 'ping'
+end
+
+---This method is in charge of "executing" the link. For "http" links, it would open the browser, for example.
+---In this example, it will open the terminal and ping the value of the link.
+---The value of the link is passed as an argument.
+---For example, if you have a link [[ping:google.com][ping_google]], doing an `org_open_at_point` (<leader>oo by default)
+---anywhere within the square brackets, will call this method with `ping:google.com` as an argument.
+---It's on this method to figure out what to do with the value.
+---If this method returns `true`, it means that the link was successfully followed.
+---If it returns `false`, it means that this handler cannot handle the link, and it will continue to the next source.
+---This method is optional.
+---@param link string - The current value of the link, for example: "ping:google.com"
+---@return boolean - When true, link was handled, when false, continue to the next source
+function LinkPingType:follow(link)
+  if not vim.startswith(link, 'ping:') then
+    return false
+  end
+  -- Get the part after the `ping:` part
+  local url = link:sub(6)
+  -- Open terminal in vertical split and ping the URL
+  vim.cmd('vsplit | term ping ' .. url)
+  return true
+end
+
+---This is an optional method that will provide autocompletion for your link type.
+---This method needs to pre-filter the list of possible completions based on the current value of the link.
+---For example, if this source has `ping:google.com` and `ping:github.com` as possible completions,
+---And the current value of the link is `ping:go`, this method should return `{'ping:google.com'}`.
+---This method is optional.
+---@param link string - The current value of the link, for example: "ping:go"
+---@return string[]
+function LinkPingType:autocomplete(link)
+  local items = {
+    'ping:google.com',
+    'ping:github.com'
+  }
+  return vim.tbl_filter(function(item) return vim.startswith(item, link) end, items)
+end
+
+require('orgmode').setup({
+  hyperlinks = {
+    sources = {
+      LinkPingType,
+      -- Simpler types can be inlined like this:
+      {
+        get_name = function() return 'my_custom_type' end,
+        follow = function(self, link) print('Following link:', link) return true end,
+        autocomplete = function(self, link) return {'my_custom_type:my_custom_link'} end
+      }
+    }
+  }
+})
+#+end_src
+
 *** Notifications
 :PROPERTIES:
 :CUSTOM_ID: notifications

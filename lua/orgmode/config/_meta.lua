@@ -48,6 +48,9 @@
 ---@field org_agenda? string Mappings used to open agenda prompt. Default: '<prefix>a'
 ---@field org_capture? string Mappings used to open capture prompt. Default: '<prefix>c'
 
+---@class OrgHyperlinksConfig
+---@field sources OrgLinkType[]
+
 ---@class OrgMappingsAgenda
 ---@field org_agenda_later? string Default: 'f'
 ---@field org_agenda_earlier? string Default: 'b'
@@ -242,4 +245,5 @@
 ---@field notifications? OrgNotificationsConfig Notification settings
 ---@field mappings? OrgMappingsConfig Mappings configuration
 ---@field emacs_config? OrgEmacsConfig Emacs cnfiguration
----@field ui? OrgUiConfig UI configuration,
+---@field ui? OrgUiConfig UI configuration
+---@field hyperlinks OrgHyperlinksConfig  Custom sources for hyperlinks

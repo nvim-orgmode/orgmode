@@ -82,6 +82,9 @@ local DefaultConfig = {
     deadline_reminder = true,
     scheduled_reminder = true,
   },
+  hyperlinks = {
+    sources = {},
+  },
   mappings = {
     disable_all = false,
     org_return_uses_meta_return = false,
