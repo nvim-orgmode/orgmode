@@ -42,7 +42,7 @@ function Export._exporter(cmd, target, on_success, on_error)
         label = 'Yes',
         key = 'y',
         action = function()
-          return utils.open(target)
+          return vim.ui.open(target)
         end,
       })
       menu:add_option({ label = 'No', key = 'n' })
