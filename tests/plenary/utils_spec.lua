@@ -38,4 +38,91 @@ describe('Util', function()
       end)
     end)
   end)
+
+  describe('readfile', function()
+    ---@type OrgFile
+    local file
+    before_each(function()
+      if not file then
+        file = helpers.create_file({
+          'First line',
+          '',
+          '* Headline',
+          'Contents',
+        })
+      end
+    end)
+
+    it('returns lines', function()
+      local contents = utils.readfile(file.filename):wait()
+      assert.are.same(contents, {
+        'First line',
+        '',
+        '* Headline',
+        'Contents',
+      })
+    end)
+
+    it('returns raw contents', function()
+      local contents = utils.readfile(file.filename, { raw = true }):wait()
+      assert.are.equal(contents, 'First line\n\n* Headline\nContents\n')
+    end)
+
+    it('schedules its results for later', function()
+      utils
+        .readfile(file.filename, { schedule = true })
+        :next(function(contents)
+          -- Without `schedule = true`, this line would run inside `fast-api`
+          -- and thus fail.
+          vim.fn.setreg('', contents)
+        end)
+        :wait()
+      local contents = vim.fn.getreg('')
+      assert.are.equal(contents, 'First line\n\n* Headline\nContents\n')
+    end)
+  end)
+
+  describe('writefile', function()
+    ---@type string
+    local filename
+    before_each(function()
+      if not filename then
+        filename = vim.fn.tempname()
+      end
+    end)
+
+    local contents = {
+      'First line',
+      '',
+      '* Headline',
+      'Contents',
+    }
+
+    it('writes bare strings', function()
+      local bytes = utils.writefile(filename, table.concat(contents, '\n')):wait()
+      assert.are.equal(bytes, 31)
+      local reread = vim.fn.readfile(filename)
+      assert.are.same(reread, contents)
+    end)
+
+    it('writes lists of strings by concatenation', function()
+      local bytes = utils.writefile(filename, contents):wait()
+      assert.are.equal(bytes, 28)
+      local reread = vim.fn.readfile(filename)
+      assert.are.same(reread, { 'First line* HeadlineContents' })
+    end)
+
+    it('does not schedule its results', function()
+      local promise = utils.writefile(filename, contents):next(function(bytes)
+        return vim.fn.setreg('', bytes)
+      end)
+      ---@type boolean, string?
+      local ok, err = pcall(promise.wait, promise)
+      assert.is.False(ok)
+      assert(err)
+      local expected = 'E5560: Vimscript function must not be called in a lua loop callback'
+      local msg = err:sub(#err - #expected)
+      assert.are.equal(expected, msg)
+    end)
+  end)
 end)
