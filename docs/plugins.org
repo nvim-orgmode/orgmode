@@ -12,6 +12,7 @@ Orgmode supports various plugins to extend its functionality or make it more pre
 - [[#completion-plugins][Completion plugins]]
   - [[#blinkcmp][blink.cmp]]
   - [[#nvim-cmp][nvim-cmp]]
+  - [[#rolodexnvim][rolodex.nvim]]
 - [[#aesthetics][Aestehtics]]
   - [[#org-bulletsnvim][org-bullets.nvim]]
   - [[#headlinesnvim][headlines.nvim]]
@@ -82,6 +83,21 @@ Add the =orgmode= source to =nvim-cmp= ~sources~ list.
 require('cmp').setup({
   sources = {
     { name = 'orgmode' }
+  }
+})
+#+END_SRC
+
+*** rolodex.nvim
+:PROPERTIES:
+:CUSTOM_ID: rolodexnvim
+:END:
+Link: [[https://github.com/michhernand/rolodex.nvim][rolodex.nvim]]
+1. Add [[https://github.com/michhernand/rolodex.nvim][rolodex.nvim]] plugin to Neovim.
+2. Add the =cmp_rolodex= source to =nvim-cmp= ~sources~ list.
+#+BEGIN_SRC lua
+require('cmp').setup({
+  sources = {
+    { name = 'cmp_rolodex' }
   }
 })
 #+END_SRC
