@@ -288,6 +288,49 @@ function Headline:set_tags(tags)
   vim.api.nvim_buf_set_text(bufnr, pred_end_row, pred_end_col, pred_end_row, end_col, { text })
 end
 
+---@param tag string
+---@return boolean newly_added
+function Headline:add_tag(tag)
+  local current_tags = self:get_own_tags()
+  local present = vim.tbl_contains(current_tags, tag)
+  if not present then
+    table.insert(current_tags, tag)
+  end
+  self:set_tags(utils.tags_to_string(current_tags))
+  return not present
+end
+
+---@param tag string
+---@return boolean newly_removed
+function Headline:remove_tag(tag)
+  local current_tags = self:get_own_tags()
+  ---@type string[]
+  local new_tags = vim.tbl_filter(function(i)
+    return i ~= tag
+  end, current_tags)
+  local present = #new_tags ~= #current_tags
+  if present then
+    self:set_tags(utils.tags_to_string(new_tags))
+  end
+  return present
+end
+
+---@param tag string
+---@return boolean newly_added
+function Headline:toggle_tag(tag)
+  local current_tags = self:get_own_tags()
+  local present = vim.tbl_contains(current_tags, tag)
+  if present then
+    current_tags = vim.tbl_filter(function(i)
+      return i ~= tag
+    end, current_tags)
+  else
+    table.insert(current_tags, tag)
+  end
+  self:set_tags(utils.tags_to_string(current_tags))
+  return not present
+end
+
 function Headline:align_tags()
   local own_tags, node = self:get_own_tags()
   if node then
