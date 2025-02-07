@@ -87,7 +87,7 @@ require('cmp').setup({
 })
 #+END_SRC
 
-*** rolodex-nvim
+*** rolodex.nvim
 :PROPERTIES:
 :CUSTOM_ID: rolodex-nvim
 :END:
