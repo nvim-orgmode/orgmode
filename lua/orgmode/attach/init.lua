@@ -14,9 +14,10 @@ local MAX_TIMEOUT = 2 ^ 31
 local Attach = {}
 Attach.__index = Attach
 
----@param opts {files:OrgFiles}
+---@param opts {files:OrgFiles, links:OrgLinks}
 function Attach:new(opts)
   local data = setmetatable({ core = Core.new(opts) }, self)
+  data.core.links:add_type(require('orgmode.org.links.types.attachment'):new({ attach = data }))
   return data
 end
 
