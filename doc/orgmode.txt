@@ -3029,6 +3029,9 @@ autocompletion for better experience. snacks.nvim
 ==============================================================================
 2. Troubleshooting                                   *orgmode-troubleshooting*
 
+💡 TIP: Run `:checkhealth orgmode` to check if Orgmode is correctly installed
+and configured.
+
 
 INDENTATION IS NOT WORKING*orgmode-troubleshooting-indentation-is-not-working*
 
