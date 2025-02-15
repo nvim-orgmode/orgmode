@@ -1,5 +1,7 @@
 #+OPTIONS: H:9 ^:nil
 * Troubleshooting
+💡 TIP: Run ~:checkhealth orgmode~ to check if Orgmode is correctly installed and configured.
+
 ** Indentation is not working
 
 Make sure you are not overriding indentexpr in Org buffers with [[https://github.com/nvim-treesitter/nvim-treesitter#indentation][nvim-treesitter indentation]]

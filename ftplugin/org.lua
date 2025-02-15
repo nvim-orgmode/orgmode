@@ -5,7 +5,6 @@ end
 vim.b.did_ftplugin = true
 
 local config = require('orgmode.config')
-local utils = require('orgmode.utils')
 
 vim.b.org_bufnr = vim.api.nvim_get_current_buf()
 

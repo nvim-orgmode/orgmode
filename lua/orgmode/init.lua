@@ -16,6 +16,7 @@ local auto_instance_keys = {
 
 ---@class Org
 ---@field initialized boolean
+---@field setup_called boolean
 ---@field files OrgFiles
 ---@field highlighter OrgHighlighter
 ---@field agenda OrgAgenda
@@ -38,6 +39,7 @@ setmetatable(Org, {
 function Org:new()
   require('orgmode.org.global')(self)
   self.initialized = false
+  self.setup_called = false
   self:setup_autocmds()
   require('orgmode.config'):setup_ts_predicates()
   return self
@@ -112,12 +114,6 @@ function Org:setup_autocmds()
   })
 end
 
-function Org.setup_ts_grammar()
-  require('orgmode.utils').echo_info(
-    'calling require("orgmode").setup_ts_grammar() is no longer necessary. Dependency on nvim-treesitter was removed'
-  )
-end
-
 ---@param opts? OrgConfigOpts
 ---@return Org
 function Org.setup(opts)
@@ -125,6 +121,7 @@ function Org.setup(opts)
   local config = require('orgmode.config'):extend(opts)
   config:install_grammar()
   instance = Org:new()
+  instance.setup_called = true
   vim.defer_fn(function()
     if config.notifications.enabled and #vim.api.nvim_list_uis() > 0 then
       Org.files:load():next(vim.schedule_wrap(function()
@@ -222,6 +219,13 @@ function Org.destroy()
     instance = nil
     collectgarbage()
   end
+end
+
+function Org.is_setup_called()
+  if not instance then
+    return false
+  end
+  return instance.setup_called
 end
 
 function _G.orgmode.statusline()
