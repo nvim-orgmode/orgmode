@@ -1,5 +1,6 @@
 local Input = require('orgmode.ui.input')
 local Promise = require('orgmode.utils.promise')
+local fileops = require('orgmode.attach.fileops')
 local utils = require('orgmode.utils')
 
 local M = {}
@@ -63,6 +64,95 @@ function M.ask_new_method()
       end
     end)
   end)
+end
+
+---Helper for `make_completion()`.
+---
+---@param directory string
+---@param show_hidden? boolean
+---@return string[] file_names
+local function list_files(directory, show_hidden)
+  ---@param path string
+  ---@return string ftype
+  local function resolve_links(path)
+    local target = vim.uv.fs_realpath(path)
+    local stat = target and vim.uv.fs_stat(target)
+    return stat and stat.type or 'file'
+  end
+  local filter = show_hidden and function()
+    return true
+  end or function(name)
+    return not vim.startswith(name, '.') and not vim.endswith(name, '~')
+  end
+  local dirs = {}
+  local files = {}
+  fileops
+    .iterdir(directory)
+    :filter(filter)
+    :map(
+      ---@param name string
+      ---@param ftype string
+      ---@return string name
+      ---@return string ftype
+      function(name, ftype)
+        if ftype == 'link' then
+          ftype = resolve_links(vim.fs.joinpath(directory, name))
+        end
+        ---@diagnostic disable-next-line: redundant-return-value
+        return name, ftype
+      end
+    )
+    ---@param name string
+    ---@param ftype string
+    :each(function(name, ftype)
+      if ftype == 'directory' then
+        dirs[#dirs + 1] = name .. '/'
+      else
+        files[#files + 1] = name
+      end
+    end)
+  -- Ensure that directories are sorted before files.
+  table.sort(dirs)
+  table.sort(files)
+  return vim.list_extend(dirs, files)
+end
+
+---Return a completion function for attachments.
+---
+---@param root string the attachment directory
+---@return fun(arglead: string): string[]
+local function make_completion(root)
+  ---@param arglead string
+  ---@return string[]
+  return function(arglead)
+    local dirname = vim.fs.dirname(arglead)
+    local searchdir = vim.fs.normalize(vim.fs.joinpath(root, dirname))
+    local basename = vim.fs.basename(arglead)
+    local show_hidden = vim.startswith(basename, '.')
+    local candidates = list_files(searchdir, show_hidden)
+    -- Only call matchfuzzy() if it won't break.
+    if basename ~= '' and basename:len() <= 256 then
+      candidates = vim.fn.matchfuzzy(candidates, basename)
+    end
+    -- Don't prefix `./` to the paths.
+    if dirname ~= '.' then
+      candidates = vim.tbl_map(function(name)
+        return vim.fs.joinpath(dirname, name)
+      end, candidates)
+    end
+    return candidates
+  end
+end
+
+---Dialog that has user select an existing attachment file.
+---
+---Returns nil if the user cancels with `<Esc>`.
+---
+---@param action string
+---@param attach_dir string
+---@return OrgPromise<string> attach_file
+function M.select_attachment(action, attach_dir)
+  return Input.open(action .. ' attachment: ', '', make_completion(attach_dir))
 end
 
 ---Like `vim.fn.bufnr()`, but error instead of returning `-1`.
