@@ -27,6 +27,145 @@ function AttachCore:get_current_node()
   return AttachNode.at_cursor(self.files:get_current_file())
 end
 
+---Get an attachment node for an arbitrary window.
+---
+---An error occurs if the given window doesn't point at a loaded org file.
+---
+---@param winid integer window-ID or 0 for the current window
+---@return OrgAttachNode
+function AttachCore:get_node_by_winid(winid)
+  local bufnr = vim.api.nvim_win_get_buf(winid)
+  local path = vim.api.nvim_buf_get_name(bufnr)
+  local file = self.files:get(path)
+  local cursor = vim.api.nvim_win_get_cursor(winid)
+  return AttachNode.at_cursor(file, cursor)
+end
+
+---@param self OrgAttachCore
+---@param bufnr integer
+---@return OrgFile | nil
+local function get_file_by_bufnr(self, bufnr)
+  if not vim.api.nvim_buf_is_loaded(bufnr) then
+    return
+  end
+  local path = vim.api.nvim_buf_get_name(bufnr)
+  return self.files:load_file_sync(path) or nil
+end
+
+---Get all attachment nodes that are pointed at in a given buffer.
+---
+---If the buffer is not loaded, or if it's not an org file, this returns an
+---empty list.
+---
+---If the buffer is loaded but hidden, this returns a table mapping from 0 to
+---the only attachment node pointed at by the mark `"` (position at last exit
+---from the buffer).
+---
+---If the buffer is active, this returns a table mapping from window-ID to
+---attachment node containing the curser in that window. Note that two windows
+---may point at the same attachment node.
+---
+---See `:help windows-intro` for terminology.
+---
+---@param bufnr integer
+---@return OrgAttachNode[]
+function AttachCore:get_nodes_by_buffer(bufnr)
+  local file = get_file_by_bufnr(self, bufnr)
+  if not file then
+    return {}
+  end
+  local windows = vim.fn.win_findbuf(bufnr)
+  if #windows == 0 then
+    -- Org file is loaded but hidden.
+    local cursor = vim.api.nvim_buf_get_mark(bufnr, '"')
+    return { AttachNode.at_cursor(file, cursor) }
+  end
+  -- Org file is active, collect all windows.
+  -- Because all nodes are in the same buffer, we use the fact that their
+  -- starting-line numbers are unique. This lets us deduplicate multiple
+  -- windows that show the same node.
+  local nodes = {} ---@type table<integer, OrgAttachNode>
+  for _, winid in ipairs(windows) do
+    local cursor = vim.api.nvim_win_get_cursor(winid)
+    local node = AttachNode.at_cursor(file, cursor)
+    nodes[node:get_start_line()] = node
+  end
+  return vim.tbl_values(nodes)
+end
+
+---Like `get_nodes_by_buffer()`, but only accept an unambiguous result.
+---
+---If the buffer is displayed in multiple windows, *and* those windows have
+---their cursors at different attachment nodes, return nil.
+---
+---@param bufnr integer
+---@return OrgAttachNode|nil
+function AttachCore:get_single_node_by_buffer(bufnr)
+  local file = get_file_by_bufnr(self, bufnr)
+  if not file then
+    return {}
+  end
+  local windows = vim.fn.win_findbuf(bufnr)
+  if #windows == 0 then
+    -- Org file is loaded but hidden.
+    local cursor = vim.api.nvim_buf_get_mark(bufnr, '"')
+    return AttachNode.at_cursor(file, cursor)
+  end
+  -- Org file is active. Check that all cursors are on the same node.
+  -- (This is a very cold loop, so it being a bit awkward is acceptable.)
+  local node
+  for _, winid in ipairs(windows) do
+    local cursor = vim.api.nvim_win_get_cursor(winid)
+    local next_node = AttachNode.at_cursor(file, cursor)
+    -- Because all nodes are in the same buffer, we use the fact that their
+    -- starting-line numbers are unique. This lets us detect when two windows
+    -- point at different nodes.
+    if node and node:get_start_line() ~= next_node:get_start_line() then
+      return
+    end
+    node = AttachNode.at_cursor(file, cursor)
+  end
+  return node
+end
+
+---List attachment nodes across buffers.
+---
+---By default, the result includes all nodes pointed at by a cursor in
+---a window. If `include_hidden` is true, the result also includes buffers that
+---are loaded but hidden. In their case, the node that contains the `"` mark is
+---used.
+---
+---@param opts? { include_hidden?: boolean }
+---@return OrgAttachNode[]
+function AttachCore:list_current_nodes(opts)
+  local nodes = {} ---@type OrgAttachNode[]
+  local seen_bufs = {} ---@type table<integer, true>
+  for _, winid in vim.api.nvim_list_wins() do
+    local bufnr = vim.api.nvim_win_get_buf(winid)
+    local path = vim.api.nvim_buf_get_name(bufnr)
+    local file = self.files:load_file_sync(path)
+    if file then
+      local cursor = vim.api.nvim_win_get_cursor(winid)
+      nodes[#nodes + 1] = AttachNode.at_cursor(file, cursor)
+    end
+    seen_bufs[bufnr] = true
+  end
+  if opts and opts.include_hidden or false then
+    for _, bufnr in vim.api.nvim_list_bufs() do
+      if not seen_bufs[bufnr] then
+        local file = get_file_by_bufnr(self, bufnr)
+        if file then
+          -- Hidden buffers don't have cursors, only windows do; instead, we
+          -- use the mark where the buffer was last exited.
+          local cursor = vim.api.nvim_buf_get_mark(bufnr, '"')
+          nodes[#nodes + 1] = AttachNode.at_cursor(file, cursor)
+        end
+      end
+    end
+  end
+  return nodes
+end
+
 ---Return the directory associated with the current outline node.
 ---
 ---First check for DIR property, then ID property.
