@@ -260,4 +260,12 @@ function OrgMarkup:use_ephemeral()
   return self.highlighter._ephemeral
 end
 
+function OrgMarkup:get_links_for_line(bufnr, line)
+  local cache = self.cache[bufnr]
+  if not cache or not cache[line] then
+    return
+  end
+  return cache[line].highlights.link
+end
+
 return OrgMarkup

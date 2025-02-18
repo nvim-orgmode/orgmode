@@ -8,16 +8,57 @@ local OrgLink = {
     ['link.end'] = true,
   },
 }
+OrgLink.__index = OrgLink
 
 ---@param opts { markup: OrgMarkupHighlighter }
 function OrgLink:new(opts)
-  local data = {
+  local this = setmetatable({
     markup = opts.markup,
     has_extmark_url_support = vim.fn.has('nvim-0.10.2') == 1,
-  }
-  setmetatable(data, self)
-  self.__index = self
-  return data
+  }, OrgLink)
+  this:_set_directive()
+  return this
+end
+
+---@private
+function OrgLink:_set_directive()
+  ---@diagnostic disable-next-line: undefined-field
+  if not _G.Snacks then
+    return
+  end
+
+  vim.treesitter.query.add_directive('org-set-link!', function(match, _, source, pred, metadata)
+    ---@type TSNode
+    local capture_id = pred[2]
+    local node = match[capture_id]
+
+    if not node or not self.has_extmark_url_support then
+      metadata['image.ignore'] = true
+      return
+    end
+
+    local start_row, start_col = node:range()
+    local line_cache = self.markup:get_links_for_line(source, start_row)
+    if not line_cache or #line_cache == 0 then
+      metadata['image.ignore'] = true
+      return
+    end
+    local entry_for_node = vim.tbl_filter(function(item)
+      return item.url and item.from.start_col == start_col and item.metadata.type == 'link_end'
+    end, line_cache)[1]
+
+    if not entry_for_node then
+      metadata['image.ignore'] = true
+      return
+    end
+
+    local url = entry_for_node.url
+    local prefix = url:sub(1, 5)
+    if prefix == 'file:' then
+      url = url:sub(6)
+    end
+    metadata['image.src'] = url
+  end, { force = true, all = false })
 end
 
 ---@param node TSNode
@@ -229,6 +270,7 @@ function OrgLink:highlight(highlights, bufnr)
           conceal = '',
         })
       end
+      entry.url = link_opts.url
       -- Conceal the end marker (marked with << and >>)
       -- [[https://neovim.io][Neovim<<]]>>
       vim.api.nvim_buf_set_extmark(bufnr, namespace, entry.from.line, entry.to.end_col - 2, {
