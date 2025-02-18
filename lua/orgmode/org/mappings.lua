@@ -882,6 +882,11 @@ function OrgMappings:open_at_point()
   local link = OrgHyperlink.at_cursor()
 
   if link then
+    local url = link.url:to_string()
+    if url:find("^[/~.]") then
+      vim.ui.open(url)
+      return true
+    end
     return self.links:follow(link.url:to_string())
   end
 
