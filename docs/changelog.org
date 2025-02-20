@@ -1,5 +1,9 @@
 #+OPTIONS: H:9 ^:nil
 * Changelog
+** [[https://github.com/nvim-orgmode/orgmode/compare/0.4.3...0.4.31][0.4.31]] (2025-02-20)
+*** Bug fixes
+- *images*: Ignore image link matches that does not have valid extension ([[https://github.com/nvim-orgmode/orgmode/commit/e4a89b8][e4a89b8]])
+
 ** [[https://github.com/nvim-orgmode/orgmode/compare/0.4.2...0.4.3][0.4.3]] (2025-02-20)
 *** Features
 - *images*: add support for image previewing with Snacks (#907) ([[https://github.com/nvim-orgmode/orgmode/commit/80ca17e][80ca17e]])
