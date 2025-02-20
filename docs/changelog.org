@@ -1,5 +1,19 @@
 #+OPTIONS: H:9 ^:nil
 * Changelog
+** [[https://github.com/nvim-orgmode/orgmode/compare/0.4.2...0.4.3][0.4.3]] (2025-02-20)
+*** Features
+- *images*: add support for image previewing with Snacks (#907) ([[https://github.com/nvim-orgmode/orgmode/commit/80ca17e][80ca17e]])
+- *health*: Add healthcheck ([[https://github.com/nvim-orgmode/orgmode/commit/a802d2e][a802d2e]])
+- *files*: add methods for tag addition/removal/toggling (#894) ([[https://github.com/nvim-orgmode/orgmode/commit/09c1595][09c1595]])
+- *#895*: //github.com/nvim-orgmode/orgmode/commit/ba7e04e][ba7e04e]])
+- *utils*: add optional flag to `utils.writefile()` for exclusive writes (#893) ([[https://github.com/nvim-orgmode/orgmode/commit/500004f][500004f]])
+- *hyperlinks*: add ability to add custom hyperlink sources (#892) ([[https://github.com/nvim-orgmode/orgmode/commit/356ff3f][356ff3f]])
+- *tests*: add tests for `utils.fs` and `utils.current_file_path()` (#890) ([[https://github.com/nvim-orgmode/orgmode/commit/3583fac][3583fac]])
+- *properties*: add option `org_use_property_inheritance` (#880) ([[https://github.com/nvim-orgmode/orgmode/commit/48f32e6][48f32e6]])
+
+*** Bug fixes
+- *ui*: allow built-in completions in orgmode.ui.input (#903) ([[https://github.com/nvim-orgmode/orgmode/commit/af90f8f][af90f8f]])
+
 
 ** [[https://github.com/nvim-orgmode/orgmode/compare/0.4.1...0.4.2][0.4.2]] (2025-02-01)
 *** Features
