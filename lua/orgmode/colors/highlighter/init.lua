@@ -7,7 +7,6 @@
 ---@field private _ephemeral boolean
 ---@field private buffers table<number, { language_tree: vim.treesitter.LanguageTree, tree: TSTree }>
 local OrgHighlighter = {}
-local config = require('orgmode.config')
 
 function OrgHighlighter:new()
   local data = {
