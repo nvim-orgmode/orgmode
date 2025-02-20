@@ -103,8 +103,9 @@ function M.get_path(url)
 end
 
 ---@param url? string
-function M.run(url)
+function M.run(url, name)
   url = url or 'https://github.com/nvim-orgmode/tree-sitter-org'
+  name = name or 'org'
   local compiler = vim.tbl_filter(function(exe)
     return exe ~= vim.NIL and vim.fn.executable(exe) == 1
   end, M.compilers)[1]
@@ -129,7 +130,7 @@ function M.run(url)
       if code ~= 0 then
         error('[orgmode] Failed to compile parser', 0)
       end
-      local renamed = vim.fn.rename(path .. '/parser.so', package_path .. '/parser/org.so')
+      local renamed = vim.fn.rename(path .. '/parser.so', package_path .. '/parser/' .. name .. '.so')
       if renamed ~= 0 then
         error('[orgmode] Failed to move generated tree-sitter parser to runtime folder', 0)
       end

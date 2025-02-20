@@ -33,6 +33,7 @@ function Config:install_grammar()
   local ok, result, err = pcall(vim.treesitter.language.add, 'org')
   if not ok or (not result and err ~= nil) then
     require('orgmode.utils.treesitter.install').run()
+    require('orgmode.utils.treesitter.install').run('/home/kristijan/github/tree-sitter-org-inline', 'org_inline')
     return true
   end
   return false
@@ -40,6 +41,7 @@ end
 
 ---@param url? string
 function Config:reinstall_grammar(url)
+  require('orgmode.utils.treesitter.install').run('/home/kristijan/github/tree-sitter-org-inline', 'org_inline')
   return require('orgmode.utils.treesitter.install').run(url)
 end
 
