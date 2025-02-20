@@ -31,16 +31,15 @@ function OrgLink:_set_directive()
     ---@type TSNode
     local capture_id = pred[2]
     local node = match[capture_id]
+    metadata['image.ignore'] = true
 
     if not node or not self.has_extmark_url_support then
-      metadata['image.ignore'] = true
       return
     end
 
     local start_row, start_col = node:range()
     local line_cache = self.markup:get_links_for_line(source, start_row)
     if not line_cache or #line_cache == 0 then
-      metadata['image.ignore'] = true
       return
     end
     local entry_for_node = vim.tbl_filter(function(item)
@@ -48,7 +47,6 @@ function OrgLink:_set_directive()
     end, line_cache)[1]
 
     if not entry_for_node then
-      metadata['image.ignore'] = true
       return
     end
 
@@ -57,6 +55,13 @@ function OrgLink:_set_directive()
     if prefix == 'file:' then
       url = url:sub(6)
     end
+    local has_valid_ext = vim.iter(_G.Snacks.image.config.formats):find(function(ext)
+      return vim.endswith(url, ext)
+    end)
+    if not has_valid_ext then
+      return
+    end
+    metadata['image.ignore'] = nil
     metadata['image.src'] = url
   end, { force = true, all = false })
 end
