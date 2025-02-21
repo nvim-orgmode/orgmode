@@ -127,9 +127,9 @@ describe('Meta return mappings', function()
     vim.cmd([[exe "norm ,\<CR>"]])
     assert.are.same({
       '* DONE top level todo :WORK:',
+      'content for top level todo',
       '',
       '* ',
-      'content for top level todo',
       '* TODO top level todo with multiple tags :OFFICE:PROJECT:',
       '  - [ ] The checkbox',
     }, vim.api.nvim_buf_get_lines(0, 2, 8, false))
@@ -158,8 +158,8 @@ describe('Meta return mappings', function()
     vim.cmd([[exe "norm ,\<CR>"]])
     assert.are.same({
       '* DONE top level todo :WORK:',
-      '* ',
       'content for top level todo',
+      '* ',
       '* TODO top level todo with multiple tags :OFFICE:PROJECT:',
       '  - [ ] The checkbox',
     }, vim.api.nvim_buf_get_lines(0, 2, 7, false))
@@ -168,7 +168,7 @@ describe('Meta return mappings', function()
     })
   end)
 
-  it('should add headline with Enter right after the current headline (org_meta_return)', function()
+  it('should add headline with Enter after all the content of the current headline (org_meta_return)', function()
     helpers.create_agenda_file({
       '#TITLE: Test',
       '',
@@ -194,13 +194,13 @@ describe('Meta return mappings', function()
     vim.cmd([[exe "norm ,\<CR>"]])
     assert.are.same({
       '* TODO Test orgmode',
-      '',
-      '* ',
       '  DEADLINE: <2021-07-21 Wed 22:02>',
       '** TODO [#A] Test orgmode level 2 :PRIVATE:',
       'Some content for level 2',
       '*** NEXT [#1] Level 3',
       'Content Level 3',
+      '',
+      '* ',
       '* DONE top level todo :WORK:',
     }, vim.api.nvim_buf_get_lines(0, 2, 11, false))
   end)
