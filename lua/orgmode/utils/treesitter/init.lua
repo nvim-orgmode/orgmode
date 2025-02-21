@@ -63,16 +63,22 @@ function M.closest_headline_node(cursor)
   return M.find_headline(node)
 end
 
+---@param node TSNode | nil
+---@param node_type string | string[]
 ---@return TSNode | nil
-function M.closest_node(node, type)
+function M.closest_node(node, node_type)
   if not node then
     return nil
   end
-  if node:type() == type then
-    return node
+  local types = type(node_type) == 'table' and node_type or { node_type }
+
+  for _, t in ipairs(types) do
+    if node:type() == t then
+      return node
+    end
   end
 
-  return M.closest_node(node:parent(), type)
+  return M.closest_node(node:parent(), types)
 end
 
 ---@param node? TSNode

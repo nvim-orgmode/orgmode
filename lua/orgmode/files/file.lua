@@ -735,21 +735,17 @@ memoize('get_links')
 ---@return OrgHyperlink[]
 function OrgFile:get_links()
   self:parse(true)
-  local ts_query = ts_utils.get_query([[
-      (paragraph (expr) @links)
-      (drawer (contents (expr) @links))
-      (headline (item (expr)) @links)
+  local links = {}
+  local matches = self:get_ts_matches([[
+    (link) @link
+    (link_desc) @link
   ]])
 
-  local links = {}
-  local processed_lines = {}
-  for _, match in ts_query:iter_captures(self.root, self:get_source()) do
-    local line = match:start()
-    if not processed_lines[line] then
-      vim.list_extend(links, Hyperlink.all_from_line(self.lines[line + 1], line + 1))
-      processed_lines[line] = true
-    end
+  local source = self:get_source()
+  for _, match in ipairs(matches) do
+    table.insert(links, Hyperlink.from_node(match.link.node, source))
   end
+
   return links
 end
 

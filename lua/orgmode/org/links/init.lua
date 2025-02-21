@@ -141,11 +141,11 @@ function OrgLinks:insert_link(link_location, desc)
     local target_col = #link_location + #link_description + 2
 
     -- check if currently on link
-    local link, position = OrgHyperlink.at_cursor()
-    if link and position then
-      insert_from = position.from - 1
-      insert_to = position.to + 1
-      target_col = target_col + position.from
+    local link = OrgHyperlink.at_cursor()
+    if link then
+      insert_from = link.range.start_col - 1
+      insert_to = link.range.end_col + 1
+      target_col = target_col + link.range.start_col
     elseif vim.fn.mode() == 'v' then
       local start_pos = vim.fn.getpos('v')
       local end_pos = vim.fn.getpos('.')

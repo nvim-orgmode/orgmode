@@ -145,7 +145,8 @@ end
 
 ---@param type? 'install' | 'update' | 'reinstall''
 function M.run(type)
-  local url = 'https://github.com/nvim-orgmode/tree-sitter-org'
+  -- local url = 'https://github.com/nvim-orgmode/tree-sitter-org'
+  local url = '/home/kristijan/github/tree-sitter-org'
   local compiler = vim.tbl_filter(function(exe)
     return exe ~= vim.NIL and vim.fn.executable(exe) == 1
   end, M.compilers)[1]
