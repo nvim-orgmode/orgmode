@@ -405,6 +405,7 @@ function Config:setup_ts_predicates()
   end, { force = true, all = false })
 
   vim.treesitter.query.add_predicate('org-is-valid-priority?', function(match, _, source, predicate)
+    ---@type TSNode | nil
     local node = match[predicate[2]]
     local type = predicate[3]
     if not node then
@@ -412,31 +413,7 @@ function Config:setup_ts_predicates()
     end
 
     local text = vim.treesitter.get_node_text(node, source)
-    local is_valid = valid_priorities[text] and valid_priorities[text].type == type
-    if not is_valid then
-      return false
-    end
-    local priority_text = '[#' .. text .. ']'
-    local full_node_text = vim.treesitter.get_node_text(node:parent(), source)
-    if priority_text ~= full_node_text then
-      return false
-    end
-
-    local prev_sibling = node:parent():prev_sibling()
-    -- If first child, consider it valid
-    if not prev_sibling then
-      return true
-    end
-
-    -- If prev sibling has more prev siblings, it means that the prev_sibling is not a todo keyword
-    -- so this priority is not valid
-    if prev_sibling:prev_sibling() then
-      return false
-    end
-
-    local todo_text = vim.treesitter.get_node_text(prev_sibling, source)
-    local is_prev_sibling_todo_keyword = todo_keywords[todo_text] and true or false
-    return is_prev_sibling_todo_keyword
+    return valid_priorities[text] and valid_priorities[text].type == type
   end, { force = true, all = false })
 
   vim.treesitter.query.add_directive('org-set-block-language!', function(match, _, bufnr, pred, metadata)

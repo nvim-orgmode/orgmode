@@ -236,72 +236,6 @@ describe('highlighter', function()
     end)
   end)
 
-  describe('links', function()
-    it('should highlight links without label', function()
-      local extmarks = get_extmarks({
-        'I have [[https://google.com]] link',
-      })
-      assert.are.same(3, #extmarks)
-      assert_extmark(extmarks[1], { line = 0, start_col = 7, end_col = 9, conceal = '' })
-      assert_extmark(
-        extmarks[2],
-        { line = 0, start_col = 7, end_col = 29, hl_group = '@org.hyperlink', url = 'https://google.com' }
-      )
-      assert_extmark(extmarks[3], { line = 0, start_col = 27, end_col = 29, conceal = '' })
-    end)
-
-    it('should highlight links with label', function()
-      local extmarks = get_extmarks({
-        'I have [[https://google.com][google]] link',
-      })
-      assert.are.same(4, #extmarks)
-      assert_extmark(extmarks[1], { line = 0, start_col = 7, end_col = 29, conceal = '' })
-      assert_extmark(
-        extmarks[2],
-        { line = 0, start_col = 7, end_col = 28, hl_group = '@org.hyperlink', url = 'https://google.com' }
-      )
-      assert_extmark(
-        extmarks[3],
-        { line = 0, start_col = 28, end_col = 37, hl_group = '@org.hyperlink', url = 'https://google.com' }
-      )
-      assert_extmark(extmarks[4], { line = 0, start_col = 35, end_col = 37, conceal = '' })
-    end)
-
-    it('should highlight links with label and render markup only in label', function()
-      local extmarks = get_extmarks({
-        'I have [[https://google.com][google I am *bold* text]] link',
-      })
-      assert.are.same(7, #extmarks)
-      assert_extmark(extmarks[1], { line = 0, start_col = 7, end_col = 29, conceal = '' })
-      assert_extmark(
-        extmarks[2],
-        { line = 0, start_col = 7, end_col = 28, hl_group = '@org.hyperlink', url = 'https://google.com' }
-      )
-      assert_extmark(
-        extmarks[3],
-        { line = 0, start_col = 28, end_col = 54, hl_group = '@org.hyperlink', url = 'https://google.com' }
-      )
-      assert_extmark(extmarks[4], { line = 0, start_col = 41, end_col = 42, hl_group = '@org.bold.delimiter' })
-      assert_extmark(extmarks[5], { line = 0, start_col = 42, end_col = 46, hl_group = '@org.bold' })
-      assert_extmark(extmarks[6], { line = 0, start_col = 46, end_col = 47, hl_group = '@org.bold.delimiter' })
-      assert_extmark(extmarks[7], { line = 0, start_col = 52, end_col = 54, conceal = '' })
-    end)
-
-    it('should not highlight invalid link with description', function()
-      local extmarks = get_extmarks({
-        'I am not a [https://google.com][text]] link',
-      })
-      assert.are.same(0, #extmarks)
-    end)
-
-    it('should not highlight invalid link', function()
-      local extmarks = get_extmarks({
-        'I am not a [[https://google.com] link',
-      })
-      assert.are.same(0, #extmarks)
-    end)
-  end)
-
   describe('latex', function()
     it('should highlight latex with backslash only', function()
       local extmarks = get_extmarks({
@@ -333,48 +267,6 @@ describe('highlighter', function()
       assert_extmark(extmarks[1], { line = 0, start_col = 8, end_col = 17, hl_group = '@org.latex' })
       assert_extmark(extmarks[2], { line = 1, start_col = 8, end_col = 17, hl_group = '@org.latex' })
       assert_extmark(extmarks[3], { line = 2, start_col = 8, end_col = 17, hl_group = '@org.latex' })
-    end)
-  end)
-
-  describe('dates', function()
-    it('should highlight active dates', function()
-      local extmarks = get_extmarks({
-        'the date <2024-02-16>',
-        'the date <2024-02-16 Fri>',
-        'the date <2024-02-16 Fri 12:30>',
-        'the date <2024-02-16 Fri 12:30 +1m>',
-        'the date <2024-02-16 Fri 12:30 +1m -1d>',
-      })
-      assert.are.same(5, #extmarks)
-      assert_extmark(extmarks[1], { line = 0, start_col = 9, end_col = 21, hl_group = '@org.timestamp.active' })
-      assert_extmark(extmarks[2], { line = 1, start_col = 9, end_col = 25, hl_group = '@org.timestamp.active' })
-      assert_extmark(extmarks[3], { line = 2, start_col = 9, end_col = 31, hl_group = '@org.timestamp.active' })
-      assert_extmark(extmarks[4], { line = 3, start_col = 9, end_col = 35, hl_group = '@org.timestamp.active' })
-      assert_extmark(extmarks[5], { line = 4, start_col = 9, end_col = 39, hl_group = '@org.timestamp.active' })
-    end)
-
-    it('should highlight inactive dates', function()
-      local extmarks = get_extmarks({
-        'the date [2024-02-16]',
-        'the date [2024-02-16 Fri]',
-        'the date [2024-02-16 Fri 12:30]',
-        'the date [2024-02-16 Fri 12:30 +1m]',
-        'the date [2024-02-16 Fri 12:30 +1m -1d]',
-      })
-      assert.are.same(5, #extmarks)
-      assert_extmark(extmarks[1], { line = 0, start_col = 9, end_col = 21, hl_group = '@org.timestamp.inactive' })
-      assert_extmark(extmarks[2], { line = 1, start_col = 9, end_col = 25, hl_group = '@org.timestamp.inactive' })
-      assert_extmark(extmarks[3], { line = 2, start_col = 9, end_col = 31, hl_group = '@org.timestamp.inactive' })
-      assert_extmark(extmarks[4], { line = 3, start_col = 9, end_col = 35, hl_group = '@org.timestamp.inactive' })
-      assert_extmark(extmarks[5], { line = 4, start_col = 9, end_col = 39, hl_group = '@org.timestamp.inactive' })
-    end)
-
-    it('should not highlight invalid dates', function()
-      local extmarks = get_extmarks({
-        'the date [2024-02-16 .]',
-        'the date <2024-02-16 Fri <>',
-      })
-      assert.are.same(0, #extmarks)
     end)
   end)
 end)

@@ -1,6 +1,5 @@
 local Range = require('orgmode.files.elements.range')
 local utils = require('orgmode.utils')
-local config = require('orgmode.config')
 local Date = require('orgmode.objects.date')
 local Duration = require('orgmode.objects.duration')
 

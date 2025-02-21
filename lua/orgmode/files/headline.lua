@@ -67,26 +67,21 @@ end
 memoize('get_priority')
 ---@return string, TSNode | nil
 function Headline:get_priority()
-  local _, todo_node = self:get_todo()
   local item = self:_get_child_node('item')
 
-  local priority_node = item and item:named_child(1)
+  local priority_node = item and item:field('priority')[1]
 
-  if not todo_node then
-    priority_node = item and item:named_child(0)
+  if not priority_node then
+    return '', nil
   end
 
-  if priority_node then
-    local text = self.file:get_node_text(priority_node)
-    local priority = text:match('%[#(%w+)%]')
-    if priority then
-      local priorities = config:get_priorities()
-      if priorities[priority] then
-        return priority, priority_node
-      end
-    end
+  local value = self.file:get_node_text(priority_node:field('value')[1])
+
+  if not value then
+    return '', nil
   end
-  return '', nil
+
+  return value, priority_node
 end
 
 ---@param amount number
@@ -422,15 +417,6 @@ function Headline:get_title()
     title = new_title
   end
   return title, offset
-end
-
-function Headline:get_title_with_priority()
-  local priority = self:get_priority()
-  local title = self:get_title()
-  if priority ~= '' then
-    return ('[#%s] %s'):format(priority, self:get_title())
-  end
-  return title
 end
 
 memoize('get_own_properties')

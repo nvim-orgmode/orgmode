@@ -171,17 +171,4 @@ function OrgDates:prepare_highlights(highlights)
   return extmarks
 end
 
----@param item OrgMarkupNode
----@return boolean
-function OrgDates:has_valid_parent(item)
-  ---At this point we know that node has 2 valid parents
-  local parent = item.node:parent():parent()
-
-  if parent and parent:type() == 'value' then
-    return parent:parent() and parent:parent():type() == 'property' or false
-  end
-
-  return false
-end
-
 return OrgDates
