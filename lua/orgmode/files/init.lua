@@ -230,6 +230,9 @@ end
 function OrgFiles:get_closest_listitem()
   local get_listitem_node = function()
     local node_at_cursor = ts_utils.get_node_at_cursor()
+    if node_at_cursor and node_at_cursor:type() == 'list' then
+      return node_at_cursor:named_child(0)
+    end
     return ts_utils.closest_node(node_at_cursor, 'listitem')
   end
 

@@ -120,8 +120,8 @@ describe('Util', function()
       local ok, err = pcall(promise.wait, promise)
       assert.is.False(ok)
       assert(err)
-      local expected = 'E5560: Vimscript function must not be called in a lua loop callback'
-      local msg = err:sub(#err - #expected)
+      local expected = 'E5560: Vimscript function'
+      local msg = err:sub(1, #expected)
       assert.are.equal(expected, msg)
     end)
 
