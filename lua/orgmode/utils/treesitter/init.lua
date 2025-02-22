@@ -118,6 +118,23 @@ function M.parents_until(node, type)
   end
 end
 
+---@param node TSNode
+---@param drawer string
+---@param source? number|string
+---@return boolean
+function M.is_date_in_drawer(node, drawer, source)
+  if
+    (node:parent() and node:parent():type() == 'contents')
+    and (node:parent():parent() and node:parent():parent():type() == 'drawer')
+  then
+    local drawer_node = node:parent():parent() --[[@as TSNode]]
+    local drawer_name = vim.treesitter.get_node_text(drawer_node:field('name')[1], source or 0)
+    return drawer_name:lower() == drawer
+  end
+
+  return false
+end
+
 function M.node_to_lsp_range(node)
   local start_line, start_col, end_line, end_col = vim.treesitter.get_node_range(node)
   local rtn = {}

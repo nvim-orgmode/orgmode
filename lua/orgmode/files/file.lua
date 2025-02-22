@@ -172,6 +172,9 @@ end
 function OrgFile:get_ts_matches(query, node)
   self:parse()
   node = node or self.root
+  if not node then
+    return {}
+  end
   local ts_query = ts_utils.get_query(query)
   local matches = {}
 

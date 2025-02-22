@@ -16,6 +16,7 @@ local Babel = require('orgmode.babel')
 local Promise = require('orgmode.utils.promise')
 local Input = require('orgmode.ui.input')
 local Footnote = require('orgmode.objects.footnote')
+local Range = require('orgmode.files.elements.range')
 
 ---@class OrgMappings
 ---@field capture OrgCapture
@@ -1123,19 +1124,22 @@ function OrgMappings:_get_date_under_cursor(col_offset)
   local item = self.files:get_closest_headline_or_nil()
   local dates = {}
   if item then
-    dates = vim.tbl_filter(function(date)
-      return date.range:is_in_range(line, col)
-    end, item:get_all_dates())
+    dates = item:get_all_dates()
   else
-    dates = Date.parse_all_from_line(vim.fn.getline('.'), line)
+    local date_node = ts_utils.closest_node(ts_utils.get_node(), 'timestamp')
+    if not date_node then
+      return nil
+    end
+    dates = Date.from_org_date(vim.treesitter.get_node_text(date_node, 0), {
+      range = Range.from_node(date_node),
+      type = ts_utils.is_date_in_drawer(date_node, 'logbook') and 'LOGBOOK' or 'NONE',
+    })
   end
 
-  if #dates == 0 then
-    return nil
-  end
-
-  -- TODO: this will result in a bug, when more than one date is in the line
-  return dates[1]
+  local valid_dates = vim.tbl_filter(function(date)
+    return date.range:is_in_range(line, col)
+  end, dates)
+  return valid_dates[1]
 end
 
 ---@param amount number
