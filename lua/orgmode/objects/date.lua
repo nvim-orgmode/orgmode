@@ -127,34 +127,6 @@ local function parse_date(date, adjustments, data)
   return OrgDate:new(opts)
 end
 
----@param line string
----@param lnum number
----@param open string
----@param datetime string
----@param close string
----@param last_match? OrgDate
----@param type? string
----@return OrgDate | nil
-local function from_match(line, lnum, open, datetime, close, last_match, type)
-  local search_from = last_match ~= nil and last_match.range.end_col or 0
-  local from, to = line:find(vim.pesc(open .. datetime .. close), search_from)
-  local is_date_range_end = last_match and last_match.is_date_range_start and line:sub(from - 2, from - 1) == '--'
-  local opts = {
-    type = type,
-    active = open == '<',
-    range = Range:new({ start_line = lnum, end_line = lnum, start_col = from, end_col = to }),
-    is_date_range_start = line:sub(to + 1, to + 2) == '--',
-  }
-  local parsed_date = OrgDate.from_string(vim.trim(datetime), opts)
-  if is_date_range_end then
-    parsed_date.is_date_range_end = true
-    parsed_date.related_date = last_match
-    last_match.related_date = parsed_date
-  end
-
-  return parsed_date
-end
-
 ---@param opts OrgDateOpts
 ---@return OrgDate
 function OrgDate:new(opts)
@@ -338,24 +310,6 @@ end
 ---@return boolean
 function OrgDate.is_date_instance(value)
   return getmetatable(value) == OrgDate
-end
-
----@param line string
----@param lnum number
----@return OrgDate[]
-function OrgDate.parse_all_from_line(line, lnum)
-  local is_comment = line:match('^%s*#[^%+]')
-  if is_comment then
-    return {}
-  end
-  local dates = {}
-  for open, datetime, close in line:gmatch(pattern) do
-    local parsed_date = from_match(line, lnum, open, datetime, close, dates[#dates])
-    if parsed_date then
-      table.insert(dates, parsed_date)
-    end
-  end
-  return dates
 end
 
 ---@param datestr string
