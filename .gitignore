@@ -42,3 +42,6 @@ luac.out
 
 # Auto-generated vim helptags
 doc/tags
+
+# Lock file
+.org-ts-lock.json
