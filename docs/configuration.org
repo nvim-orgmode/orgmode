@@ -2825,6 +2825,8 @@ The following highlight groups are used:
 - =@org.drawer=: Drawer start/end delimiters - linked to =@property=
 - =@org.tag=: A tag for a headline item, shown on the righthand side like =:foo:= - linked to =@tag.attribute=
 - =@org.plan=: =SCHEDULED=, =DEADLINE=, =CLOSED=, etc. keywords - linked to =Constant=
+- =@org.block=: A =begin/end= block (example: =#begin_src=) - linked to =@comment=
+- =@org.inline_block=: A =src_lang= block (example: src_lua{ print('foo') } ) - linked to =@comment=
 - =@org.comment=: A comment block - linked to =@comment=
 - =@org.latex_env=: LaTeX block - linked to =@markup.environment=
 - =@org.directive=: Blocks starting with =#+= - linked to =@comment=

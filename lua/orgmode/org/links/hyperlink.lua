@@ -8,8 +8,6 @@ local ts_utils = require('orgmode.utils.treesitter')
 ---@field range? OrgRange
 local OrgHyperlink = {}
 
-local pattern = '%[%[([^%]]+.-)%]%]'
-
 ---@param str string
 ---@param range? OrgRange
 ---@return OrgHyperlink
