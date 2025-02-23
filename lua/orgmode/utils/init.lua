@@ -565,12 +565,14 @@ end
 function utils.detect_filetype(name, skip_ftmatch)
   local map = {
     ['emacs-lisp'] = 'lisp',
+    elisp = 'lisp',
     js = 'javascript',
     ts = 'typescript',
     md = 'markdown',
     ex = 'elixir',
     pl = 'perl',
     sh = 'bash',
+    shell = 'bash',
     uxn = 'uxntal',
   }
   if not skip_ftmatch then
