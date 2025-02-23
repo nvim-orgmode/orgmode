@@ -10,6 +10,7 @@ local PriorityState = require('orgmode.objects.priority_state')
 ---@class OrgConfig:OrgConfigOpts
 ---@field opts table
 ---@field todo_keywords OrgTodoKeywords
+---@field priorities table<string, { type: string, hl_group: string }>
 local Config = {}
 
 ---@param opts? table
@@ -17,6 +18,7 @@ function Config:new(opts)
   local data = {
     opts = vim.tbl_deep_extend('force', defaults, opts or {}),
     todo_keywords = nil,
+    priorities = nil,
   }
   setmetatable(data, self)
   return data
@@ -41,6 +43,7 @@ end
 ---@return OrgConfig
 function Config:extend(opts)
   self.todo_keywords = nil
+  self.priorities = nil
   opts = opts or {}
   self:_deprecation_notify(opts)
   if not self:_are_priorities_valid(opts) then
@@ -326,6 +329,10 @@ function Config:get_priority_range()
 end
 
 function Config:get_priorities()
+  if self.priorities then
+    return self.priorities
+  end
+
   local priorities = {
     [self.opts.org_priority_highest] = { type = 'highest', hl_group = '@org.priority.highest' },
   }
@@ -350,6 +357,9 @@ function Config:get_priorities()
 
   -- we need to overwrite the lowest value set by the second loop
   priorities[self.opts.org_priority_lowest] = { type = 'lowest', hl_group = '@org.priority.lowest' }
+
+  -- Cache priorities to avoid unnecessary recalculations
+  self.priorities = priorities
 
   return priorities
 end
@@ -413,6 +423,8 @@ function Config:setup_ts_predicates()
     end
 
     local text = vim.treesitter.get_node_text(node, source)
+    -- Leave only priority cookie: [#A] -> A
+    text = text:sub(3, -2)
     return valid_priorities[text] and valid_priorities[text].type == type
   end, { force = true, all = false })
 
@@ -425,6 +437,22 @@ function Config:setup_ts_predicates()
     if not text or vim.trim(text) == '' then
       return
     end
+    metadata['injection.language'] = utils.detect_filetype(text, true)
+  end, { force = true, all = false })
+
+  vim.treesitter.query.add_directive('org-set-inline-block-language!', function(match, _, bufnr, pred, metadata)
+    local lang_node = match[pred[2]]
+    if not lang_node then
+      return
+    end
+    local text = vim.treesitter.get_node_text(lang_node, bufnr)
+    if not text or vim.trim(text) == '' then
+      return
+    end
+    -- Remove `src_` part: src_lua -> lua
+    text = text:sub(5)
+    -- Remove opening brackend and parameters: lua[params]{ -> lua
+    text = text:gsub('[%{%[].*', '')
     metadata['injection.language'] = utils.detect_filetype(text, true)
   end, { force = true, all = false })
 

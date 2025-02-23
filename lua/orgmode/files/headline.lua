@@ -75,13 +75,15 @@ function Headline:get_priority()
     return '', nil
   end
 
-  local value = self.file:get_node_text(priority_node:field('value')[1])
+  local value = self.file:get_node_text(priority_node)
+  -- Parse only the priority cookie, [#A] -> A
+  local priority = value:sub(3, -2)
 
-  if not value then
+  if not config:get_priorities()[priority] then
     return '', nil
   end
 
-  return value, priority_node
+  return priority, priority_node
 end
 
 ---@param amount number
