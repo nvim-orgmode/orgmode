@@ -393,8 +393,12 @@ function Capture:get_destination()
       return false
     end
 
-    local path = destination:match('^.*%.org/')
+    local path = destination:match('^.*%.org/?')
     local headline_title = path and destination:sub(#path + 1) or ''
+
+    if not vim.endswith(path, '/') then
+      path = path .. '/'
+    end
 
     if not valid_destinations[path] then
       utils.echo_error(
