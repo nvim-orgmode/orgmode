@@ -52,6 +52,13 @@ body:
     validations:
       required: true
     attributes:
+      label: nvim-orgmode version
+      placeholder: |
+        e.g. 0.4.32. If you are not using version, provide the commit hash
+  - type: input
+    validations:
+      required: true
+    attributes:
       label: OS / Distro
       placeholder: e.g. Windows 10, Ubuntu 20.04, Arch Linux, macOS 10.15...
   - type: input
