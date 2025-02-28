@@ -26,17 +26,7 @@ function OrgLinkHttp:follow(link)
     return false
   end
 
-  if vim.ui['open'] then
-    vim.ui.open(url)
-    return true
-  end
-
-  if not vim.g.loaded_netrwPlugin then
-    utils.echo_warning('Netrw plugin must be loaded in order to open urls.')
-    return false
-  end
-
-  vim.fn['netrw#BrowseX'](url, vim.fn['netrw#CheckIfRemote']())
+  vim.ui.open(url)
   return true
 end
 

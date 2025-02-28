@@ -1,10 +1,27 @@
 local utils = require('orgmode.utils')
 local link_utils = {}
 
+local external_filetypes = {
+  -- pdf is considered a valid filetype even though it cannot be correctly read
+  'pdf',
+}
+
+---@param filename string
+---@return boolean - if editable, returns true, otherwise false
+local function edit_file(filename)
+  local filetype = vim.filetype.match({ filename = filename })
+  if not filetype or vim.tbl_contains(external_filetypes, filetype) then
+    vim.ui.open(filename)
+    return false
+  end
+  vim.cmd(('edit %s'):format(filename))
+  return true
+end
+
 ---@param file OrgFile
 ---@return boolean
 function link_utils.goto_file(file)
-  vim.cmd(('edit %s'):format(file.filename))
+  edit_file(file.filename)
   return true
 end
 
@@ -54,7 +71,11 @@ function link_utils.open_file_and_search(file_path, search_text)
     return true
   end
   if file_path ~= utils.current_file_path() then
-    vim.cmd(('edit %s'):format(file_path))
+    local editable = edit_file(file_path)
+    -- Return without attempt to find text. File is not editable.
+    if not editable then
+      return true
+    end
   end
 
   if not search_text or search_text == '' then
