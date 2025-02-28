@@ -10,9 +10,12 @@ function M.check()
 end
 
 function M.check_has_treesitter()
-  local ok, result, err = pcall(vim.treesitter.language.add, 'org')
-  if not ok or (not result and err ~= nil) then
+  local ts = require('orgmode.utils.treesitter.install')
+  if ts.not_installed() then
     return h.error('Treesitter grammar is not installed. Run `:Org install_treesitter_grammar` to install it.')
+  end
+  if ts.outdated() then
+    return h.error('Treesitter grammar is out of date. Run `:Org install_treesitter_grammar` to update it.')
   end
   return h.ok('Treesitter grammar installed')
 end

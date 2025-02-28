@@ -5,7 +5,7 @@ local M = {
   compilers = { vim.fn.getenv('CC'), 'cc', 'gcc', 'clang', 'cl', 'zig' },
 }
 
-local required_version = '1.3.4'
+local required_version = '2.0.0'
 
 function M.install()
   if M.not_installed() then
@@ -55,7 +55,7 @@ function M.get_package_path()
 end
 
 function M.get_lock_file()
-  return M.get_package_path() .. '/.org-ts-lock.json'
+  return vim.fs.joinpath(M.get_package_path(), '.org-ts-lock.json')
 end
 
 function M.select_compiler_args(compiler)
@@ -119,7 +119,7 @@ function M.get_path(url, type)
   local is_local_path = vim.fn.isdirectory(local_path) == 1
 
   if is_local_path then
-    utils.echo_info('Using local version of tree-sitter grammar...')
+    utils.notify('Using local version of tree-sitter grammar...')
     return Promise.resolve(local_path)
   end
 
@@ -132,7 +132,7 @@ function M.get_path(url, type)
     reinstall = 'Reinstalling',
   }
 
-  utils.echo_info(('%s tree-sitter grammar...'):format(msg[type]))
+  utils.notify(('%s tree-sitter grammar...'):format(msg[type]))
   return M.exe('git', {
     args = { 'clone', '--filter=blob:none', '--depth=1', '--branch=' .. required_version, url, path },
   }):next(function(code)
@@ -145,8 +145,7 @@ end
 
 ---@param type? 'install' | 'update' | 'reinstall''
 function M.run(type)
-  -- local url = 'https://github.com/nvim-orgmode/tree-sitter-org'
-  local url = '/home/kristijan/github/tree-sitter-org'
+  local url = 'https://github.com/nvim-orgmode/tree-sitter-org'
   local compiler = vim.tbl_filter(function(exe)
     return exe ~= vim.NIL and vim.fn.executable(exe) == 1
   end, M.compilers)[1]
@@ -171,12 +170,19 @@ function M.run(type)
       if code ~= 0 then
         error('[orgmode] Failed to compile parser', 0)
       end
-      local renamed = vim.fn.rename(path .. '/parser.so', package_path .. '/parser/org.so')
+      local source = vim.fs.joinpath(path, 'parser.so')
+      local destination = vim.fs.joinpath(package_path, 'parser', 'org.so')
+      local renamed = vim.fn.rename(source, destination)
       if renamed ~= 0 then
         error('[orgmode] Failed to move generated tree-sitter parser to runtime folder', 0)
       end
       utils.writefile(M.get_lock_file(), vim.json.encode({ version = required_version })):wait()
-      utils.echo_info('Done!')
+      local msg = { 'Done!' }
+      if type == 'update' then
+        table.insert(msg, 'Please restart Neovim to apply the changes.')
+      end
+      utils.notify(msg)
+      vim.treesitter.language.add('org')
       return true
     end))
     :wait(60000)
