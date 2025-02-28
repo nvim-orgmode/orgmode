@@ -24,15 +24,6 @@ jobs:
         uses: baptiste0928/cargo-install@v3
         with:
           crate: tree-sitter-cli
-      - name: Install Lua
-        uses: leso-kn/gh-actions-lua@master
-        with:
-          luaVersion: "5.1"
-      - name: Install Luarocks
-        uses: hishamhm/gh-actions-luarocks@master
-      - name: Install `luarocks-build-treesitter-parser` Package
-        run: |
-          luarocks --verbose --local --lua-version=5.1 install luarocks-build-treesitter-parser
       - name: LuaRocks Upload
         uses: nvim-neorocks/luarocks-tag-release@v7
         env:
