@@ -1,6 +1,5 @@
 local Promise = require('orgmode.utils.promise')
 local utils = require('orgmode.utils')
-local ts_revision = 'f8c6b1e72f82f17e41004e04e15f62a83ecc27b0'
 local uv = vim.uv
 local M = {
   compilers = { vim.fn.getenv('CC'), 'cc', 'gcc', 'clang', 'cl', 'zig' },
@@ -136,22 +135,12 @@ function M.get_path(url, type)
   utils.echo_info(('%s tree-sitter grammar...'):format(msg[type]))
   return M.exe('git', {
     args = { 'clone', '--filter=blob:none', '--depth=1', '--branch=' .. required_version, url, path },
-  })
-    :next(function(code)
-      if code ~= 0 then
-        error('[orgmode] Failed to clone tree-sitter-org', 0)
-      end
-      return M.exe('git', {
-        args = { 'checkout', ts_revision },
-        cwd = path,
-      })
-    end)
-    :next(function(code)
-      if code ~= 0 then
-        error('[orgmode] Failed to checkout to correct revision on tree-sitter-org', 0)
-      end
-      return path
-    end)
+  }):next(function(code)
+    if code ~= 0 then
+      error('[orgmode] Failed to clone tree-sitter-org', 0)
+    end
+    return path
+  end)
 end
 
 ---@param type? 'install' | 'update' | 'reinstall''
