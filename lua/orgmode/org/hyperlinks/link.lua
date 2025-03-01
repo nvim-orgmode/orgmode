@@ -9,6 +9,7 @@ local Link = {}
 
 local pattern = '%[%[([^%]]+.-)%]%]'
 
+---@deprecated Use OrgHyperlink instead ('orgmode.org.links.hyperlink')
 ---@param str string
 ---@param range? OrgRange
 ---@return OrgLink
@@ -30,6 +31,7 @@ function Link:to_str()
   end
 end
 
+---@deprecated Use OrgHyperlink instead ('orgmode.org.links.hyperlink')
 ---@param line string
 ---@param pos number
 ---@return OrgLink | nil, table | nil
