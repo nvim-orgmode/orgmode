@@ -1,5 +1,16 @@
 #+OPTIONS: H:9 ^:nil
 * Changelog
+** [[https://github.com/nvim-orgmode/orgmode/compare/0.4.32...0.5.0][0.5.0]] (2025-03-02)
+*** Breaking changes
+- *ts*: add link and timestamp tree-sitter captures (#912) ([[https://github.com/nvim-orgmode/orgmode/commit/aaa327a][aaa327a]])
+
+*** Features
+- *links*: Open non-editable links with vim.ui.open ([[https://github.com/nvim-orgmode/orgmode/commit/2eebc98][2eebc98]])
+
+*** Bug fixes
+- *treesitter*: remove unnecessary git checkout on tree-sitter install ([[https://github.com/nvim-orgmode/orgmode/commit/998035a][998035a]])
+- *refile*: allow slash to be omitted when refiling to file ([[https://github.com/nvim-orgmode/orgmode/commit/585190e][585190e]])
+
 ** [[https://github.com/nvim-orgmode/orgmode/compare/0.4.31...0.4.32][0.4.32]] (2025-02-23)
 *** Features
 - *treesitter*: track installed tree-sitter parser version ([[https://github.com/nvim-orgmode/orgmode/commit/54aeadb][54aeadb]])
