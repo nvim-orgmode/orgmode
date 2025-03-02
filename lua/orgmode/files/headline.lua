@@ -736,8 +736,7 @@ function Headline:get_plan_dates()
     if name ~= 'NONE' then
       has_plan_dates = true
     end
-    dates[name:upper()] = Date.from_org_date(self.file:get_node_text(timestamp), {
-      range = Range.from_node(timestamp),
+    dates[name:upper()] = Date.from_node(timestamp, self.file:get_source(), {
       type = name:upper(),
     })
     dates_nodes[name:upper()] = node
@@ -769,16 +768,16 @@ function Headline:get_non_plan_dates()
   local property_node = section:field('property_drawer')[1]
   local matches = {}
 
-  local headline_matches = self.file:get_ts_matches('(item (timestamp) @timestamp)', headline_node)
+  local headline_matches = self.file:get_ts_captures('(item (timestamp) @timestamp)', headline_node)
   vim.list_extend(matches, headline_matches)
 
   if property_node then
-    local property_matches = self.file:get_ts_matches('(property (value (timestamp) @timestamp))', property_node)
+    local property_matches = self.file:get_ts_captures('(property (value (timestamp) @timestamp))', property_node)
     vim.list_extend(matches, property_matches)
   end
 
   if body_node then
-    local body_matches = self.file:get_ts_matches(
+    local body_matches = self.file:get_ts_captures(
       [[
         (paragraph (timestamp) @timestamp)
         (table (row (cell (contents (timestamp) @timestamp))))
@@ -793,10 +792,7 @@ function Headline:get_non_plan_dates()
   local all_dates = {}
   local source = self.file:get_source()
   for _, match in ipairs(matches) do
-    local dates = Date.from_org_date(match.timestamp.text, {
-      range = Range.from_node(match.timestamp.node),
-      type = ts_utils.is_date_in_drawer(match.timestamp.node, 'logbook', source) and 'LOGBOOK' or 'NONE',
-    })
+    local dates = Date.from_node(match, source)
     vim.list_extend(all_dates, dates)
   end
 

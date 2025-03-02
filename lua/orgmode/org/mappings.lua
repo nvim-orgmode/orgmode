@@ -1126,14 +1126,7 @@ function OrgMappings:_get_date_under_cursor(col_offset)
   if item then
     dates = item:get_all_dates()
   else
-    local date_node = ts_utils.closest_node(ts_utils.get_node(), 'timestamp')
-    if not date_node then
-      return nil
-    end
-    dates = Date.from_org_date(vim.treesitter.get_node_text(date_node, 0), {
-      range = Range.from_node(date_node),
-      type = ts_utils.is_date_in_drawer(date_node, 'logbook') and 'LOGBOOK' or 'NONE',
-    })
+    dates = Date.from_node(ts_utils.closest_node(ts_utils.get_node(), 'timestamp'))
   end
 
   local valid_dates = vim.tbl_filter(function(date)

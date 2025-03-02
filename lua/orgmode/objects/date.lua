@@ -2,6 +2,7 @@
 local spans = { d = 'day', m = 'month', y = 'year', h = 'hour', w = 'week', M = 'min' }
 local config = require('orgmode.config')
 local utils = require('orgmode.utils')
+local ts_utils = require('orgmode.utils.treesitter')
 local Range = require('orgmode.files.elements.range')
 local pattern = '([<%[])(%d%d%d%d%-%d?%d%-%d%d[^>%]]*)([>%]])'
 local date_format = '%Y-%m-%d'
@@ -244,6 +245,23 @@ function OrgDate.from_timestamp(timestamp, opts)
     data = vim.tbl_extend('force', opts, data)
   end
   return OrgDate:new(data)
+end
+
+---@param node TSNode | nil
+---@param source? integer | string
+---@param opts? OrgDateOpts
+---@return OrgDate[]
+function OrgDate.from_node(node, source, opts)
+  if not node then
+    return {}
+  end
+  opts = opts or {}
+  opts.range = opts.range or Range.from_node(node)
+  source = source or 0
+  if not opts.type then
+    opts.type = ts_utils.is_date_in_drawer(node, 'logbook', source) and 'LOGBOOK' or 'NONE'
+  end
+  return OrgDate.from_org_date(vim.treesitter.get_node_text(node, source), opts)
 end
 
 ---Accept org format date, for example <2025-22-01 Wed> or range <2025-22-01 Wed>--<2025-24-01 Fri>

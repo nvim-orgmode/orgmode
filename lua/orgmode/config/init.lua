@@ -370,13 +370,14 @@ function Config:setup_ts_predicates()
 
   vim.treesitter.query.add_predicate('org-is-todo-keyword?', function(match, _, source, predicate)
     local node = match[predicate[2]]
+    node = node and node[#node]
     if node then
       local text = vim.treesitter.get_node_text(node, source)
       return todo_keywords[text] and todo_keywords[text].type == predicate[3] or false
     end
 
     return false
-  end, { force = true, all = false })
+  end, { force = true, all = true })
 
   local org_cycle_separator_lines = math.max(self.opts.org_cycle_separator_lines, 0)
 
@@ -384,9 +385,9 @@ function Config:setup_ts_predicates()
     if org_cycle_separator_lines == 0 then
       return
     end
-    ---@type TSNode | nil
     local capture_id = pred[2]
     local section_node = match[capture_id]
+    section_node = section_node and section_node[#section_node]
     if not capture_id or not section_node or section_node:type() ~= 'section' then
       return
     end
@@ -412,24 +413,26 @@ function Config:setup_ts_predicates()
     end
     range[3] = range[3] - 1
     metadata[capture_id].range = range
-  end, { force = true, all = false })
+  end, { force = true, all = true })
 
   vim.treesitter.query.add_predicate('org-is-valid-priority?', function(match, _, source, predicate)
     ---@type TSNode | nil
     local node = match[predicate[2]]
-    local type = predicate[3]
+    node = node and node[#node]
     if not node then
       return false
     end
 
+    local type = predicate[3]
     local text = vim.treesitter.get_node_text(node, source)
     -- Leave only priority cookie: [#A] -> A
     text = text:sub(3, -2)
     return valid_priorities[text] and valid_priorities[text].type == type
-  end, { force = true, all = false })
+  end, { force = true, all = true })
 
   vim.treesitter.query.add_directive('org-set-block-language!', function(match, _, bufnr, pred, metadata)
     local lang_node = match[pred[2]]
+    lang_node = lang_node and lang_node[#lang_node]
     if not lang_node then
       return
     end
@@ -438,10 +441,11 @@ function Config:setup_ts_predicates()
       return
     end
     metadata['injection.language'] = utils.detect_filetype(text, true)
-  end, { force = true, all = false })
+  end, { force = true, all = true })
 
   vim.treesitter.query.add_directive('org-set-inline-block-language!', function(match, _, bufnr, pred, metadata)
     local lang_node = match[pred[2]]
+    lang_node = lang_node and lang_node[#lang_node]
     if not lang_node then
       return
     end
@@ -454,18 +458,18 @@ function Config:setup_ts_predicates()
     -- Remove opening brackend and parameters: lua[params]{ -> lua
     text = text:gsub('[%{%[].*', '')
     metadata['injection.language'] = utils.detect_filetype(text, true)
-  end, { force = true, all = false })
+  end, { force = true, all = true })
 
   vim.treesitter.query.add_predicate('org-is-headline-level?', function(match, _, _, predicate)
-    ---@type TSNode
     local node = match[predicate[2]]
-    local level = tonumber(predicate[3])
+    node = node and node[#node]
     if not node then
       return false
     end
+    local level = tonumber(predicate[3])
     local _, _, _, node_end_col = node:range()
     return ((node_end_col - 1) % 8) + 1 == level
-  end, { force = true, all = false })
+  end, { force = true, all = true })
 end
 
 ---@param content table
