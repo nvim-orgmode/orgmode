@@ -628,7 +628,6 @@ end
 function utils.notify(msg, opts)
   opts = vim.tbl_extend('force', {
     title = 'Orgmode',
-    id = 'orgmode',
     level = 'info',
   }, opts or {})
 

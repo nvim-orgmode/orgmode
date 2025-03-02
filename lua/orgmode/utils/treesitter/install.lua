@@ -8,13 +8,19 @@ local M = {
 local required_version = '2.0.0'
 
 function M.install()
-  if M.not_installed() then
+  local version_info = M.get_version_info()
+  if not version_info.installed then
     M.run('install')
     return true
   end
 
-  if M.outdated() then
+  if version_info.outdated then
     M.run('update')
+    return true
+  end
+
+  if version_info.version_mismatch then
+    M.reinstall()
     return true
   end
 
@@ -25,9 +31,25 @@ function M.reinstall()
   return M.run('reinstall')
 end
 
-function M.outdated()
+function M.get_version_info()
+  local not_installed = M.not_installed()
+  if not_installed then
+    return {
+      installed = false,
+      installed_version = nil,
+      outdated = false,
+      required_version = required_version,
+      version_mismatch = false,
+    }
+  end
   local installed_version = M.get_installed_version()
-  return vim.version.lt(installed_version, required_version)
+  return {
+    installed = true,
+    installed_version = installed_version,
+    outdated = vim.version.lt(installed_version, required_version),
+    required_version = required_version,
+    version_mismatch = installed_version ~= required_version,
+  }
 end
 
 function M.not_installed()
@@ -119,11 +141,11 @@ function M.get_path(url, type)
   local is_local_path = vim.fn.isdirectory(local_path) == 1
 
   if is_local_path then
-    utils.notify('Using local version of tree-sitter grammar...')
+    utils.notify('Using local version of tree-sitter grammar...', { id = 'orgmode-treesitter-install' })
     return Promise.resolve(local_path)
   end
 
-  local path = ('%s/tree-sitter-org'):format(vim.fn.stdpath('cache'))
+  local path = vim.fs.joinpath(vim.fn.stdpath('cache'), 'tree-sitter-org')
   vim.fn.delete(path, 'rf')
 
   local msg = {
@@ -132,7 +154,7 @@ function M.get_path(url, type)
     reinstall = 'Reinstalling',
   }
 
-  utils.notify(('%s tree-sitter grammar...'):format(msg[type]))
+  utils.notify(('%s tree-sitter grammar...'):format(msg[type]), { id = 'orgmode-treesitter-install' })
   return M.exe('git', {
     args = { 'clone', '--filter=blob:none', '--depth=1', '--branch=' .. required_version, url, path },
   }):next(function(code)
@@ -177,12 +199,16 @@ function M.run(type)
         error('[orgmode] Failed to move generated tree-sitter parser to runtime folder', 0)
       end
       utils.writefile(M.get_lock_file(), vim.json.encode({ version = required_version })):wait()
-      local msg = { 'Done!' }
+      local msg = {
+        'Tree-sitter grammar installed!',
+        ('Version: %s'):format(required_version),
+      }
       if type == 'update' then
         table.insert(msg, 'Please restart Neovim to apply the changes.')
       end
-      utils.notify(msg)
-      vim.treesitter.language.add('org')
+      utils.notify(msg, {
+        id = 'orgmode-treesitter-install',
+      })
       return true
     end))
     :wait(60000)
