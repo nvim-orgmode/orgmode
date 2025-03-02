@@ -167,31 +167,50 @@ function OrgFile:parse(skip_if_not_modified)
 end
 
 ---Parse the given tree-sitter query
+---Prefer get_ts_captures if detailed node information is not required
 ---@param query string
----@param node? TSNode
-function OrgFile:get_ts_matches(query, node)
+---@param parent_node? TSNode
+function OrgFile:get_ts_matches(query, parent_node)
   self:parse()
-  node = node or self.root
+  parent_node = parent_node or self.root
+  if not parent_node then
+    return {}
+  end
   local ts_query = ts_utils.get_query(query)
   local matches = {}
 
-  local from, _, to = node:range()
-  for _, match, _ in ts_query:iter_matches(node, self:get_source(), from, to + 1, { all = false }) do
+  for _, match, _ in ts_query:iter_matches(parent_node, self:get_source(), nil, nil, { all = true }) do
     local items = {}
-    for id, matched_nodes in pairs(match) do
+    for id, nodes in pairs(match) do
       local name = ts_query.captures[id]
-      local matched_node = matched_nodes
-      if type(matched_nodes) == 'table' then
-        matched_node = matched_nodes[#matched_nodes]
+      for _, node in ipairs(nodes) do
+        local node_text = self:get_node_text_list(node)
+        items[name] = {
+          node = node,
+          text_list = node_text,
+          text = node_text[1],
+        }
       end
-      local node_text = self:get_node_text_list(matched_node)
-      items[name] = {
-        node = matched_node,
-        text_list = node_text,
-        text = node_text[1],
-      }
     end
     table.insert(matches, items)
+  end
+  return matches
+end
+
+---@param query string
+---@param node? TSNode
+---@return TSNode[]
+function OrgFile:get_ts_captures(query, node)
+  self:parse()
+  node = node or self.root
+  if not node then
+    return {}
+  end
+  local ts_query = ts_utils.get_query(query)
+  local matches = {}
+
+  for _, match in ts_query:iter_captures(node, self:get_source()) do
+    table.insert(matches, match)
   end
   return matches
 end
@@ -202,9 +221,9 @@ function OrgFile:get_headlines()
   if self:is_archive_file() then
     return {}
   end
-  local matches = self:get_ts_matches('(section (headline) @headline)')
-  return vim.tbl_map(function(match)
-    return Headline:new(match.headline.node, self)
+  local matches = self:get_ts_captures('(section (headline) @headline)')
+  return vim.tbl_map(function(node)
+    return Headline:new(node, self)
   end, matches)
 end
 
@@ -214,18 +233,18 @@ function OrgFile:get_top_level_headlines()
   if self:is_archive_file() then
     return {}
   end
-  local matches = self:get_ts_matches('(document (section (headline) @headline))')
-  return vim.tbl_map(function(match)
-    return Headline:new(match.headline.node, self)
+  local matches = self:get_ts_captures('(document (section (headline) @headline))')
+  return vim.tbl_map(function(node)
+    return Headline:new(node, self)
   end, matches)
 end
 
 memoize('get_headlines_including_archived')
 ---@return OrgHeadline[]
 function OrgFile:get_headlines_including_archived()
-  local matches = self:get_ts_matches('(section (headline) @headline)')
-  return vim.tbl_map(function(match)
-    return Headline:new(match.headline.node, self)
+  local matches = self:get_ts_captures('(section (headline) @headline)')
+  return vim.tbl_map(function(node)
+    return Headline:new(node, self)
   end, matches)
 end
 
@@ -528,9 +547,9 @@ end
 memoize('get_blocks')
 --- @return OrgBlock[]
 function OrgFile:get_blocks()
-  local matches = self:get_ts_matches('(block) @block')
-  return vim.tbl_map(function(match)
-    return Block:new(match.block.node, self)
+  local matches = self:get_ts_captures('(block) @block')
+  return vim.tbl_map(function(node)
+    return Block:new(node, self)
   end, matches)
 end
 
@@ -735,21 +754,17 @@ memoize('get_links')
 ---@return OrgHyperlink[]
 function OrgFile:get_links()
   self:parse(true)
-  local ts_query = ts_utils.get_query([[
-      (paragraph (expr) @links)
-      (drawer (contents (expr) @links))
-      (headline (item (expr)) @links)
+  local links = {}
+  local matches = self:get_ts_captures([[
+    (link) @link
+    (link_desc) @link
   ]])
 
-  local links = {}
-  local processed_lines = {}
-  for _, match in ts_query:iter_captures(self.root, self:get_source()) do
-    local line = match:start()
-    if not processed_lines[line] then
-      vim.list_extend(links, Hyperlink.all_from_line(self.lines[line + 1], line + 1))
-      processed_lines[line] = true
-    end
+  local source = self:get_source()
+  for _, node in ipairs(matches) do
+    table.insert(links, Hyperlink.from_node(node, source))
   end
+
   return links
 end
 

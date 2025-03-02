@@ -67,26 +67,23 @@ end
 memoize('get_priority')
 ---@return string, TSNode | nil
 function Headline:get_priority()
-  local _, todo_node = self:get_todo()
   local item = self:_get_child_node('item')
 
-  local priority_node = item and item:named_child(1)
+  local priority_node = item and item:field('priority')[1]
 
-  if not todo_node then
-    priority_node = item and item:named_child(0)
+  if not priority_node then
+    return '', nil
   end
 
-  if priority_node then
-    local text = self.file:get_node_text(priority_node)
-    local priority = text:match('%[#(%w+)%]')
-    if priority then
-      local priorities = config:get_priorities()
-      if priorities[priority] then
-        return priority, priority_node
-      end
-    end
+  local value = self.file:get_node_text(priority_node)
+  -- Parse only the priority cookie, [#A] -> A
+  local priority = value:sub(3, -2)
+
+  if not config:get_priorities()[priority] then
+    return '', nil
   end
-  return '', nil
+
+  return priority, priority_node
 end
 
 ---@param amount number
@@ -424,15 +421,6 @@ function Headline:get_title()
   return title, offset
 end
 
-function Headline:get_title_with_priority()
-  local priority = self:get_priority()
-  local title = self:get_title()
-  if priority ~= '' then
-    return ('[#%s] %s'):format(priority, self:get_title())
-  end
-  return title
-end
-
 memoize('get_own_properties')
 ---@return table<string, string>, TSNode | nil
 function Headline:get_own_properties()
@@ -748,8 +736,7 @@ function Headline:get_plan_dates()
     if name ~= 'NONE' then
       has_plan_dates = true
     end
-    dates[name:upper()] = Date.from_org_date(self.file:get_node_text(timestamp), {
-      range = Range.from_node(timestamp),
+    dates[name:upper()] = Date.from_node(timestamp, self.file:get_source(), {
       type = name:upper(),
     })
     dates_nodes[name:upper()] = node
@@ -773,39 +760,43 @@ memoize('get_non_plan_dates')
 function Headline:get_non_plan_dates()
   local headline_node = self:node()
   local section = headline_node:parent()
-  local body = section and section:field('body')[1]
-  local headline_text = self.file:get_node_text(headline_node) or ''
-  local dates = Date.parse_all_from_line(headline_text, self:node():start() + 1)
-  local properties_node = section and section:field('property_drawer')[1]
-
-  if properties_node then
-    local properties_text = self.file:get_node_text_list(properties_node) or {}
-    local start = properties_node:start()
-    for i, line in ipairs(properties_text) do
-      vim.list_extend(dates, Date.parse_all_from_line(line, start + i))
-    end
+  if not section then
+    return {}
   end
 
-  if not body then
-    return dates
+  local body_node = section:field('body')[1]
+  local property_node = section:field('property_drawer')[1]
+  local matches = {}
+
+  local headline_matches = self.file:get_ts_captures('(item (timestamp) @timestamp)', headline_node)
+  vim.list_extend(matches, headline_matches)
+
+  if property_node then
+    local property_matches = self.file:get_ts_captures('(property (value (timestamp) @timestamp))', property_node)
+    vim.list_extend(matches, property_matches)
   end
 
-  local start_line = body:range()
-  local lines = self.file:get_node_text_list(body, ts_utils.range_with_zero_start_col(body))
-  for i, line in ipairs(lines) do
-    local line_dates = Date.parse_all_from_line(line, start_line + i)
-    local is_clock_line = line:match('^%s*:?CLOCK:') ~= nil
-    for _, date in ipairs(line_dates) do
-      -- Assume that the date is part of logbook if line starts with clock
-      -- TODO: Make this more reliable
-      if not date.active and is_clock_line then
-        date.type = 'LOGBOOK'
-      end
-    end
-    vim.list_extend(dates, line_dates)
+  if body_node then
+    local body_matches = self.file:get_ts_captures(
+      [[
+        (paragraph (timestamp) @timestamp)
+        (table (row (cell (contents (timestamp) @timestamp))))
+        (drawer (contents (timestamp) @timestamp))
+        (fndef (description (timestamp) @timestamp))
+      ]],
+      body_node
+    )
+    vim.list_extend(matches, body_matches)
   end
 
-  return dates
+  local all_dates = {}
+  local source = self.file:get_source()
+  for _, match in ipairs(matches) do
+    local dates = Date.from_node(match, source)
+    vim.list_extend(all_dates, dates)
+  end
+
+  return all_dates
 end
 
 ---@param sorted? boolean

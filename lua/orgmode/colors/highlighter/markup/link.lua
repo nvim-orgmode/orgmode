@@ -31,6 +31,7 @@ function OrgLink:_set_directive()
     ---@type TSNode
     local capture_id = pred[2]
     local node = match[capture_id]
+    node = node and node[#node]
     metadata['image.ignore'] = true
 
     if not node or not self.has_extmark_url_support then
@@ -63,7 +64,7 @@ function OrgLink:_set_directive()
     end
     metadata['image.ignore'] = nil
     metadata['image.src'] = url
-  end, { force = true, all = false })
+  end, { force = true, all = true })
 end
 
 ---@param node TSNode

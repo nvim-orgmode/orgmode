@@ -2,6 +2,7 @@
 local spans = { d = 'day', m = 'month', y = 'year', h = 'hour', w = 'week', M = 'min' }
 local config = require('orgmode.config')
 local utils = require('orgmode.utils')
+local ts_utils = require('orgmode.utils.treesitter')
 local Range = require('orgmode.files.elements.range')
 local pattern = '([<%[])(%d%d%d%d%-%d?%d%-%d%d[^>%]]*)([>%]])'
 local date_format = '%Y-%m-%d'
@@ -127,34 +128,6 @@ local function parse_date(date, adjustments, data)
   return OrgDate:new(opts)
 end
 
----@param line string
----@param lnum number
----@param open string
----@param datetime string
----@param close string
----@param last_match? OrgDate
----@param type? string
----@return OrgDate | nil
-local function from_match(line, lnum, open, datetime, close, last_match, type)
-  local search_from = last_match ~= nil and last_match.range.end_col or 0
-  local from, to = line:find(vim.pesc(open .. datetime .. close), search_from)
-  local is_date_range_end = last_match and last_match.is_date_range_start and line:sub(from - 2, from - 1) == '--'
-  local opts = {
-    type = type,
-    active = open == '<',
-    range = Range:new({ start_line = lnum, end_line = lnum, start_col = from, end_col = to }),
-    is_date_range_start = line:sub(to + 1, to + 2) == '--',
-  }
-  local parsed_date = OrgDate.from_string(vim.trim(datetime), opts)
-  if is_date_range_end then
-    parsed_date.is_date_range_end = true
-    parsed_date.related_date = last_match
-    last_match.related_date = parsed_date
-  end
-
-  return parsed_date
-end
-
 ---@param opts OrgDateOpts
 ---@return OrgDate
 function OrgDate:new(opts)
@@ -274,6 +247,23 @@ function OrgDate.from_timestamp(timestamp, opts)
   return OrgDate:new(data)
 end
 
+---@param node TSNode | nil
+---@param source? integer | string
+---@param opts? OrgDateOpts
+---@return OrgDate[]
+function OrgDate.from_node(node, source, opts)
+  if not node then
+    return {}
+  end
+  opts = opts or {}
+  opts.range = opts.range or Range.from_node(node)
+  source = source or 0
+  if not opts.type then
+    opts.type = ts_utils.is_date_in_drawer(node, 'logbook', source) and 'LOGBOOK' or 'NONE'
+  end
+  return OrgDate.from_org_date(vim.treesitter.get_node_text(node, source), opts)
+end
+
 ---Accept org format date, for example <2025-22-01 Wed> or range <2025-22-01 Wed>--<2025-24-01 Fri>
 ---@param datestr string
 ---@param opts? OrgDateOpts
@@ -338,24 +328,6 @@ end
 ---@return boolean
 function OrgDate.is_date_instance(value)
   return getmetatable(value) == OrgDate
-end
-
----@param line string
----@param lnum number
----@return OrgDate[]
-function OrgDate.parse_all_from_line(line, lnum)
-  local is_comment = line:match('^%s*#[^%+]')
-  if is_comment then
-    return {}
-  end
-  local dates = {}
-  for open, datetime, close in line:gmatch(pattern) do
-    local parsed_date = from_match(line, lnum, open, datetime, close, dates[#dates])
-    if parsed_date then
-      table.insert(dates, parsed_date)
-    end
-  end
-  return dates
 end
 
 ---@param datestr string

@@ -565,12 +565,14 @@ end
 function utils.detect_filetype(name, skip_ftmatch)
   local map = {
     ['emacs-lisp'] = 'lisp',
+    elisp = 'lisp',
     js = 'javascript',
     ts = 'typescript',
     md = 'markdown',
     ex = 'elixir',
     pl = 'perl',
     sh = 'bash',
+    shell = 'bash',
     uxn = 'uxntal',
   }
   if not skip_ftmatch then
@@ -618,6 +620,19 @@ end
 ---@return string
 function utils.get_visual_selection()
   return table.concat(vim.fn.getregion(vim.fn.getpos('v'), vim.fn.getpos('.')), '\n')
+end
+
+---@param msg string|string[]
+---@param opts? { level?: 'info' | 'warn' | 'error', id: string  }
+---@return string
+function utils.notify(msg, opts)
+  opts = vim.tbl_extend('force', {
+    title = 'Orgmode',
+    level = 'info',
+  }, opts or {})
+
+  local message = type(msg) == 'table' and table.concat(msg, '\n') or msg --[[@as string]]
+  vim.notify(message, vim.log.levels[opts.level:upper()], opts)
 end
 
 return utils

@@ -22,8 +22,6 @@ end
 function OrgMarkup:_init_highlighters()
   self.parsers = {
     emphasis = require('orgmode.colors.highlighter.markup.emphasis'):new({ markup = self }),
-    link = require('orgmode.colors.highlighter.markup.link'):new({ markup = self }),
-    date = require('orgmode.colors.highlighter.markup.dates'):new({ markup = self }),
     footnote = require('orgmode.colors.highlighter.markup.footnotes'):new({ markup = self }),
     latex = require('orgmode.colors.highlighter.markup.latex'):new({ markup = self }),
   }
@@ -72,9 +70,7 @@ end
 function OrgMarkup:get_node_highlights(root_node, source, line)
   local result = {
     emphasis = {},
-    link = {},
     latex = {},
-    date = {},
     footnote = {},
   }
   ---@type OrgMarkupNode[]
@@ -230,7 +226,7 @@ function OrgMarkup:has_valid_parent(item)
     return false
   end
 
-  if parent:type() == 'paragraph' then
+  if parent:type() == 'paragraph' or parent:type() == 'link_desc' then
     return true
   end
 
@@ -248,8 +244,8 @@ function OrgMarkup:has_valid_parent(item)
     return true
   end
 
-  if self.parsers[item.type].has_valid_parent then
-    return self.parsers[item.type]:has_valid_parent(item)
+  if parent:type() == 'value' then
+    return p and p:type() == 'property' or false
   end
 
   return false

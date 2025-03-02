@@ -11,11 +11,11 @@
 (headline (stars) @stars (#org-is-headline-level? @stars "8")) @org.headline.level8
 (item . (expr) @org.keyword.todo @nospell (#org-is-todo-keyword? @org.keyword.todo "TODO"))
 (item . (expr) @org.keyword.done @nospell (#org-is-todo-keyword? @org.keyword.done "DONE"))
-(item (expr "[" "#" "str" @_priority "]") @org.priority.highest (#org-is-valid-priority? @_priority "highest"))
-(item (expr "[" "#" "str" @_priority "]") @org.priority.high (#org-is-valid-priority? @_priority "high"))
-(item (expr "[" "#" "str" @_priority "]") @org.priority.default (#org-is-valid-priority? @_priority "default"))
-(item (expr "[" "#" "str" @_priority "]") @org.priority.low (#org-is-valid-priority? @_priority "low"))
-(item (expr "[" "#" "str" @_priority "]") @org.priority.lowest (#org-is-valid-priority? @_priority "lowest"))
+(item priority: (priority) @org.priority.highest (#org-is-valid-priority? @org.priority.highest "highest"))
+(item priority: (priority) @org.priority.high (#org-is-valid-priority? @org.priority.high "high"))
+(item priority: (priority) @org.priority.default (#org-is-valid-priority? @org.priority.default "default"))
+(item priority: (priority) @org.priority.low (#org-is-valid-priority? @org.priority.low "low"))
+(item priority: (priority) @org.priority.lowest (#org-is-valid-priority? @org.priority.lowest "lowest"))
 (list (listitem (paragraph) @spell))
 (body (paragraph) @spell)
 (bullet) @org.bullet
@@ -23,6 +23,7 @@
 (checkbox status: (expr "-") @org.checkbox.halfchecked)
 (checkbox status: (expr "str") @org.checkbox.checked (#any-of? @org.checkbox.checked "x" "X"))
 (block "#+begin_" @org.block "#+end_" @org.block)
+(inline_code_block open: (open) @org.inline_block close: (close) @org.inline_block)
 (block name: (expr) @org.block)
 (block end_name: (expr) @org.block)
 (block parameter: (expr) @org.block)
@@ -42,3 +43,8 @@
 (table (row (cell (contents) @org.table.heading)))
 (table (hr) @org.table.delimiter)
 (fndef label: (expr) @org.footnote (#offset! @org.footnote 0 -4 0 1))
+(link) @org.hyperlink
+(link_desc) @org.hyperlink
+(link "[[" @_link_open "]]" @_link_close (#set! conceal ""))
+(link_desc "[[" @_link_open "][" @_link_separator "]]" @_link_close (#set! conceal ""))
+((link_desc url: (expr)+ @_link_url (#set! @_link_url conceal "")) @_link (#set! @_link url @_link_url))

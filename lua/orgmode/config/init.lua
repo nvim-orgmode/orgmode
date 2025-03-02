@@ -10,6 +10,7 @@ local PriorityState = require('orgmode.objects.priority_state')
 ---@class OrgConfig:OrgConfigOpts
 ---@field opts table
 ---@field todo_keywords OrgTodoKeywords
+---@field priorities table<string, { type: string, hl_group: string }>
 local Config = {}
 
 ---@param opts? table
@@ -17,6 +18,7 @@ function Config:new(opts)
   local data = {
     opts = vim.tbl_deep_extend('force', defaults, opts or {}),
     todo_keywords = nil,
+    priorities = nil,
   }
   setmetatable(data, self)
   return data
@@ -41,6 +43,7 @@ end
 ---@return OrgConfig
 function Config:extend(opts)
   self.todo_keywords = nil
+  self.priorities = nil
   opts = opts or {}
   self:_deprecation_notify(opts)
   if not self:_are_priorities_valid(opts) then
@@ -326,6 +329,10 @@ function Config:get_priority_range()
 end
 
 function Config:get_priorities()
+  if self.priorities then
+    return self.priorities
+  end
+
   local priorities = {
     [self.opts.org_priority_highest] = { type = 'highest', hl_group = '@org.priority.highest' },
   }
@@ -351,6 +358,9 @@ function Config:get_priorities()
   -- we need to overwrite the lowest value set by the second loop
   priorities[self.opts.org_priority_lowest] = { type = 'lowest', hl_group = '@org.priority.lowest' }
 
+  -- Cache priorities to avoid unnecessary recalculations
+  self.priorities = priorities
+
   return priorities
 end
 
@@ -360,13 +370,14 @@ function Config:setup_ts_predicates()
 
   vim.treesitter.query.add_predicate('org-is-todo-keyword?', function(match, _, source, predicate)
     local node = match[predicate[2]]
+    node = node and node[#node]
     if node then
       local text = vim.treesitter.get_node_text(node, source)
       return todo_keywords[text] and todo_keywords[text].type == predicate[3] or false
     end
 
     return false
-  end, { force = true, all = false })
+  end, { force = true, all = true })
 
   local org_cycle_separator_lines = math.max(self.opts.org_cycle_separator_lines, 0)
 
@@ -374,9 +385,9 @@ function Config:setup_ts_predicates()
     if org_cycle_separator_lines == 0 then
       return
     end
-    ---@type TSNode | nil
     local capture_id = pred[2]
     local section_node = match[capture_id]
+    section_node = section_node and section_node[#section_node]
     if not capture_id or not section_node or section_node:type() ~= 'section' then
       return
     end
@@ -402,45 +413,26 @@ function Config:setup_ts_predicates()
     end
     range[3] = range[3] - 1
     metadata[capture_id].range = range
-  end, { force = true, all = false })
+  end, { force = true, all = true })
 
   vim.treesitter.query.add_predicate('org-is-valid-priority?', function(match, _, source, predicate)
+    ---@type TSNode | nil
     local node = match[predicate[2]]
-    local type = predicate[3]
+    node = node and node[#node]
     if not node then
       return false
     end
 
+    local type = predicate[3]
     local text = vim.treesitter.get_node_text(node, source)
-    local is_valid = valid_priorities[text] and valid_priorities[text].type == type
-    if not is_valid then
-      return false
-    end
-    local priority_text = '[#' .. text .. ']'
-    local full_node_text = vim.treesitter.get_node_text(node:parent(), source)
-    if priority_text ~= full_node_text then
-      return false
-    end
-
-    local prev_sibling = node:parent():prev_sibling()
-    -- If first child, consider it valid
-    if not prev_sibling then
-      return true
-    end
-
-    -- If prev sibling has more prev siblings, it means that the prev_sibling is not a todo keyword
-    -- so this priority is not valid
-    if prev_sibling:prev_sibling() then
-      return false
-    end
-
-    local todo_text = vim.treesitter.get_node_text(prev_sibling, source)
-    local is_prev_sibling_todo_keyword = todo_keywords[todo_text] and true or false
-    return is_prev_sibling_todo_keyword
-  end, { force = true, all = false })
+    -- Leave only priority cookie: [#A] -> A
+    text = text:sub(3, -2)
+    return valid_priorities[text] and valid_priorities[text].type == type
+  end, { force = true, all = true })
 
   vim.treesitter.query.add_directive('org-set-block-language!', function(match, _, bufnr, pred, metadata)
     local lang_node = match[pred[2]]
+    lang_node = lang_node and lang_node[#lang_node]
     if not lang_node then
       return
     end
@@ -449,18 +441,35 @@ function Config:setup_ts_predicates()
       return
     end
     metadata['injection.language'] = utils.detect_filetype(text, true)
-  end, { force = true, all = false })
+  end, { force = true, all = true })
+
+  vim.treesitter.query.add_directive('org-set-inline-block-language!', function(match, _, bufnr, pred, metadata)
+    local lang_node = match[pred[2]]
+    lang_node = lang_node and lang_node[#lang_node]
+    if not lang_node then
+      return
+    end
+    local text = vim.treesitter.get_node_text(lang_node, bufnr)
+    if not text or vim.trim(text) == '' then
+      return
+    end
+    -- Remove `src_` part: src_lua -> lua
+    text = text:sub(5)
+    -- Remove opening brackend and parameters: lua[params]{ -> lua
+    text = text:gsub('[%{%[].*', '')
+    metadata['injection.language'] = utils.detect_filetype(text, true)
+  end, { force = true, all = true })
 
   vim.treesitter.query.add_predicate('org-is-headline-level?', function(match, _, _, predicate)
-    ---@type TSNode
     local node = match[predicate[2]]
-    local level = tonumber(predicate[3])
+    node = node and node[#node]
     if not node then
       return false
     end
+    local level = tonumber(predicate[3])
     local _, _, _, node_end_col = node:range()
     return ((node_end_col - 1) % 8) + 1 == level
-  end, { force = true, all = false })
+  end, { force = true, all = true })
 end
 
 ---@param content table
