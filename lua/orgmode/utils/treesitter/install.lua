@@ -199,16 +199,18 @@ function M.run(type)
         error('[orgmode] Failed to move generated tree-sitter parser to runtime folder', 0)
       end
       utils.writefile(M.get_lock_file(), vim.json.encode({ version = required_version })):wait()
-      local msg = {
-        'Tree-sitter grammar installed!',
-        ('Version: %s'):format(required_version),
-      }
+      local msg = { 'Tree-sitter grammar installed!' }
+
       if type == 'update' then
-        table.insert(msg, 'Please restart Neovim to apply the changes.')
+        msg = {
+          'Tree-sitter grammar updated!',
+          'Please restart Neovim to apply the changes.',
+        }
       end
       utils.notify(msg, {
         id = 'orgmode-treesitter-install',
       })
+      vim.treesitter.language.add('org')
       return true
     end))
     :wait(60000)
