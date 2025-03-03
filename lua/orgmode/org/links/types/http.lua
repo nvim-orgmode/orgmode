@@ -1,5 +1,3 @@
-local utils = require('orgmode.utils')
-
 ---@class OrgLinkHttp:OrgLinkType
 ---@field private files OrgFiles
 local OrgLinkHttp = {}
@@ -39,7 +37,7 @@ end
 ---@param link string
 ---@return string | nil
 function OrgLinkHttp:_parse(link)
-  local is_url = link:match('^https?://(.+)$')
+  local is_url = link:match('^https?:.+$')
   if is_url then
     return link
   end
