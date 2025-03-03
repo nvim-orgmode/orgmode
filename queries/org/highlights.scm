@@ -40,7 +40,7 @@
 (directive) @org.directive
 (row "|" @org.table.delimiter)
 (cell "|" @org.table.delimiter)
-(table (row (cell (contents) @org.table.heading)))
+(table . (row (cell (contents) @org.table.heading)))
 (table (hr) @org.table.delimiter)
 (fndef label: (expr) @org.footnote (#offset! @org.footnote 0 -4 0 1))
 (link) @org.hyperlink
