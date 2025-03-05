@@ -10,7 +10,8 @@ function M.check()
 end
 
 function M.check_has_treesitter()
-  local version_info = require('orgmode.utils.treesitter.install').get_version_info()
+  local ts = require('orgmode.utils.treesitter.install')
+  local version_info = ts.get_version_info()
   if not version_info.installed then
     return h.error('Treesitter grammar is not installed. Run `:Org install_treesitter_grammar` to install it.')
   end
@@ -23,6 +24,18 @@ function M.check_has_treesitter()
       ('Treesitter grammar version mismatch (installed %s, required %s). Run `:Org install_treesitter_grammar` to update it.'):format(
         version_info.installed_version,
         version_info.required_version
+      )
+    )
+  end
+  local installed_org_parsers = vim.api.nvim_get_runtime_file('parser/org.so', true)
+  local parser_path = ts.get_parser_path()
+  local extra_unexpected_parsers = vim.tbl_filter(function(parser)
+    return parser ~= parser_path
+  end, installed_org_parsers)
+  if #extra_unexpected_parsers > 0 then
+    return h.error(
+      ('There are conflicting org parser(s) installed in these locations: \n%s\nRemove them to avoid conflicts.'):format(
+        table.concat(extra_unexpected_parsers, '\n')
       )
     )
   end

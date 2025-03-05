@@ -80,6 +80,10 @@ function M.get_lock_file()
   return vim.fs.joinpath(M.get_package_path(), '.org-ts-lock.json')
 end
 
+function M.get_parser_path()
+  return vim.fs.joinpath(M.get_package_path(), 'parser', 'org.so')
+end
+
 function M.select_compiler_args(compiler)
   if string.match(compiler, 'cl$') or string.match(compiler, 'cl.exe$') then
     return {
@@ -177,7 +181,6 @@ function M.run(type)
   end
 
   local compiler_args = M.select_compiler_args(compiler)
-  local package_path = M.get_package_path()
   local path = nil
 
   return M.get_path(url, type)
@@ -193,7 +196,7 @@ function M.run(type)
         error('[orgmode] Failed to compile parser', 0)
       end
       local source = vim.fs.joinpath(path, 'parser.so')
-      local destination = vim.fs.joinpath(package_path, 'parser', 'org.so')
+      local destination = M.get_parser_path()
       local renamed = vim.fn.rename(source, destination)
       if renamed ~= 0 then
         error('[orgmode] Failed to move generated tree-sitter parser to runtime folder', 0)
