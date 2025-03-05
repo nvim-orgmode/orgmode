@@ -14,6 +14,13 @@ function M.install()
     return true
   end
 
+  -- Parser found but in invalid location
+  if not version_info.install_location then
+    M.run('install')
+    M.notify_conflicting_parsers(version_info.conflicting_parsers)
+    return true
+  end
+
   if version_info.outdated then
     M.run('update')
     return true
@@ -24,7 +31,26 @@ function M.install()
     return true
   end
 
+  M.notify_conflicting_parsers(version_info.conflicting_parsers)
+
   return false
+end
+
+function M.notify_conflicting_parsers(conflicting_parsers)
+  if #conflicting_parsers > 0 then
+    local list = vim.tbl_map(function(parser)
+      return ('- `%s`'):format(parser)
+    end, conflicting_parsers)
+    utils.notify(
+      ('Conflicting org parser(s) found in these locations:\n%s\nRemove them to avoid conflicts.'):format(
+        table.concat(list, '\n')
+      ),
+      {
+        level = 'warn',
+        timeout = 5000,
+      }
+    )
+  end
 end
 
 function M.reinstall()
@@ -32,23 +58,56 @@ function M.reinstall()
 end
 
 function M.get_version_info()
-  local not_installed = M.not_installed()
-  if not_installed then
-    return {
-      installed = false,
-      installed_version = nil,
-      outdated = false,
-      required_version = required_version,
-      version_mismatch = false,
-    }
-  end
-  local installed_version = M.get_installed_version()
-  return {
-    installed = true,
-    installed_version = installed_version,
-    outdated = vim.version.lt(installed_version, required_version),
+  local result = {
+    installed = false,
+    correct_location = false,
+    install_location = nil,
+    installed_version = nil,
+    outdated = false,
     required_version = required_version,
-    version_mismatch = installed_version ~= required_version,
+    version_mismatch = false,
+    conflicting_parsers = {},
+  }
+
+  if M.not_installed() then
+    return result
+  end
+
+  result.installed = true
+
+  local parser_locations = M.get_parser_locations()
+  result.conflicting_parsers = parser_locations.conflicting_parsers
+
+  if not parser_locations.install_location then
+    return result
+  end
+
+  result.install_location = parser_locations.install_location
+
+  local installed_version = M.get_installed_version()
+  result.installed_version = installed_version
+  result.outdated = vim.version.lt(installed_version, required_version)
+  result.version_mismatch = installed_version ~= required_version
+
+  return result
+end
+
+function M.get_parser_locations()
+  local installed_org_parsers = vim.api.nvim_get_runtime_file('parser/org.so', true)
+  local parser_path = M.get_parser_path()
+  local install_location = nil
+  local conflicting_parsers = {}
+  for _, parser in ipairs(installed_org_parsers) do
+    if parser == parser_path then
+      install_location = parser
+    else
+      table.insert(conflicting_parsers, parser)
+    end
+  end
+
+  return {
+    install_location = install_location,
+    conflicting_parsers = conflicting_parsers,
   }
 end
 
