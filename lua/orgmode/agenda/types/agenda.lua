@@ -133,8 +133,18 @@ function OrgAgendaType:change_span(span)
       return
     end
   end
+  local from = nil
+  if self.view and self.view:is_in_range() then
+    local agenda_line = self:get_line(vim.fn.line('.'))
+    local metadata = agenda_line and agenda_line.metadata or {}
+    ---@type OrgDate
+    local cursor_date = metadata.agenda_day or (metadata.agenda_item and metadata.agenda_item.date)
+    if cursor_date and type(span) == 'string' then
+      from = cursor_date:start_of(span)
+    end
+  end
   self.span = span
-  self:_set_date_range()
+  self:_set_date_range(from)
   return self
 end
 
@@ -430,11 +440,13 @@ end
 function OrgAgendaType:_set_date_range(from)
   local span = self.span
   from = from or self.from
-  local is_week = span == 'week' or span == '7'
-  if is_week and self.start_on_weekday then
-    from = from:set_isoweekday(self.start_on_weekday)
-  end
 
+  if self.start_on_weekday then
+    local is_week = span == 'week' or span == '7'
+    if is_week and from:is_same(Date.today(), 'week') then
+      from = from:set_isoweekday(self.start_on_weekday)
+    end
+  end
   local to = nil
   local modifier = { [span] = 1 }
   if type(span) == 'number' then
@@ -463,9 +475,7 @@ function OrgAgendaType:_get_title()
     span = string.format('%d days', span)
   end
   local span_number = ''
-  if span == 'week' then
-    span_number = string.format(' (W%s)', self.from:get_week_number())
-  end
+  span_number = string.format(' (W%s)', self.from:format('%V'))
   return utils.capitalize(span) .. '-agenda' .. span_number .. ':'
 end
 
