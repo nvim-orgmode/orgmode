@@ -635,4 +635,19 @@ function utils.notify(msg, opts)
   vim.notify(message, vim.log.levels[opts.level:upper()], opts)
 end
 
+---Return first non-nil value
+---@generic T
+---@param ... T
+---@return T
+function utils.if_nil(...)
+  local nargs = select('#', ...)
+  for i = 1, nargs do
+    local v = select(i, ...)
+    if v ~= nil then
+      return v
+    end
+  end
+  return nil
+end
+
 return utils

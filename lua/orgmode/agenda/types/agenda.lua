@@ -69,13 +69,13 @@ function OrgAgendaType:new(opts)
     to = nil,
     clock_report = nil,
     show_clock_report = opts.show_clock_report or false,
-    start_on_weekday = opts.start_on_weekday or config.org_agenda_start_on_weekday,
-    start_day = opts.start_day or config.org_agenda_start_day,
+    start_on_weekday = utils.if_nil(opts.start_on_weekday, config.org_agenda_start_on_weekday),
+    start_day = utils.if_nil(opts.start_day, config.org_agenda_start_day),
     agenda_files = opts.agenda_files,
     header = opts.header,
     sorting_strategy = opts.sorting_strategy or vim.tbl_get(config.org_agenda_sorting_strategy, 'agenda') or {},
     id = opts.id,
-    remove_tags = type(opts.remove_tags) == 'boolean' and opts.remove_tags or config.org_agenda_remove_tags,
+    remove_tags = utils.if_nil(opts.remove_tags, config.org_agenda_remove_tags),
   }
   data.valid_filters = vim.tbl_filter(function(filter)
     return filter and true or false

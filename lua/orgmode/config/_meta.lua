@@ -13,7 +13,7 @@
 ---@class OrgAgendaCustomCommandAgenda:OrgAgendaCustomCommandTypeInterface
 ---@field org_agenda_span? OrgAgendaSpan Default: 'week'
 ---@field org_agenda_start_day? string Modifier from today, example '+1d'
----@field org_agenda_start_on_weekday? number
+---@field org_agenda_start_on_weekday? number | false
 
 ---@class OrgAgendaCustomCommandTags:OrgAgendaCustomCommandTypeInterface
 ---@field match? string
