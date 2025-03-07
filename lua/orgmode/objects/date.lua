@@ -198,6 +198,19 @@ function OrgDate:set(opts)
   return OrgDate:new(data)
 end
 
+---@param value string date in string format, example: 2025-03-07 Fri
+---@return OrgDate | nil
+function OrgDate:set_from_string(value)
+  return OrgDate.from_string(value, {
+    type = self.type,
+    range = self.range,
+    active = self.active,
+    is_date_range_start = self.is_date_range_start,
+    is_date_range_end = self.is_date_range_end,
+    related_date = self.related_date,
+  })
+end
+
 ---@param opts? OrgDateOpts
 function OrgDate:clone(opts)
   return self:set(opts or {})

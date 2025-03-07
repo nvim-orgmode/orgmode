@@ -5,6 +5,7 @@ local config = require('orgmode.config')
 local namespace = vim.api.nvim_create_namespace('org_calendar')
 local colors = require('orgmode.colors')
 local Range = require('orgmode.files.elements.range')
+local Input = require('orgmode.ui.input')
 
 ---@alias OrgCalendarOnRenderDayOpts { line: number, from: number, to: number, buf: number, namespace: number }
 ---@alias OrgCalendarOnRenderDay fun(day: OrgDate, opts: OrgCalendarOnRenderDayOpts)
@@ -71,6 +72,7 @@ function Calendar:open()
       title_pos = 'center',
     }
   end
+  self.prev_win = vim.api.nvim_get_current_win()
 
   self.buf = vim.api.nvim_create_buf(false, true)
   vim.api.nvim_buf_set_name(self.buf, 'orgcalendar')
@@ -592,6 +594,7 @@ function Calendar:select()
 
   vim.cmd([[echon]])
   vim.api.nvim_win_close(0, true)
+  vim.api.nvim_set_current_win(self.prev_win)
   return cb(selected_date)
 end
 
@@ -600,6 +603,7 @@ function Calendar:dispose()
   self.buf = nil
   if self.callback then
     self.callback(nil)
+    vim.api.nvim_set_current_win(self.prev_win)
     self.callback = nil
   end
 end
@@ -609,15 +613,16 @@ function Calendar:clear_date()
   self.callback = nil
   vim.cmd([[echon]])
   vim.api.nvim_win_close(0, true)
+  vim.api.nvim_set_current_win(self.prev_win)
   cb(nil, true)
 end
 
 function Calendar:read_date()
   self:_ensure_day()
   local current_date = self:get_selected_date() or Date.today()
-  vim.ui.input({ prompt = 'Enter date: ', default = current_date:to_string() }, function(result)
+  Input.open('Enter date: ', current_date:to_string()):next(function(result)
     if result then
-      local date = Date.from_string(result)
+      local date = current_date:set_from_string(result)
       if not date then
         date = current_date:adjust(result)
       end
