@@ -98,7 +98,7 @@ function M.get_parser_locations()
   local install_location = nil
   local conflicting_parsers = {}
   for _, parser in ipairs(installed_org_parsers) do
-    if parser == parser_path then
+    if vim.fs.normalize(parser) == vim.fs.normalize(parser_path) then
       install_location = parser
     else
       table.insert(conflicting_parsers, parser)
