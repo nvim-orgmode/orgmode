@@ -385,15 +385,18 @@ end
 function OrgAgendaType:_get_agenda_days()
   local dates = self.from:get_range_until(self.to)
   local agenda_days = {}
+  local three_days_before = self.from:adjust('-3d')
 
   local headline_dates = {}
   for _, orgfile in ipairs(self.files:all()) do
     for _, headline in ipairs(orgfile:get_opened_headlines()) do
       for _, headline_date in ipairs(headline:get_valid_dates_for_agenda()) do
-        table.insert(headline_dates, {
-          headline_date = headline_date,
-          headline = headline,
-        })
+        if headline_date >= three_days_before then
+          table.insert(headline_dates, {
+            headline_date = headline_date,
+            headline = headline,
+          })
+        end
       end
     end
   end
