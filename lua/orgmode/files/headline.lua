@@ -357,12 +357,14 @@ end
 function Headline:set_todo(keyword)
   local todo, node = self:get_todo()
   if todo then
-    return self:_set_node_text(node, keyword)
+    self:_set_node_text(node, keyword)
+    return self:update_parent_cookie()
   end
 
   local stars = self:_get_child_node('stars')
   local _, level = stars:end_()
-  return self:_set_node_text(stars, ('%s %s'):format(('*'):rep(level), keyword))
+  self:_set_node_text(stars, ('%s %s'):format(('*'):rep(level), keyword))
+  return self:update_parent_cookie()
 end
 
 memoize('get_todo')
@@ -891,35 +893,53 @@ function Headline:get_cookie()
 end
 
 function Headline:update_cookie()
-  local section = self:node():parent()
-  if not section then
+  -- Return early if the headline doesn't have a cookie
+  local cookie = self:get_cookie()
+  if not cookie then
     return self
   end
 
-  -- Go through all the lists in this headline and gather checked_boxes
-  local num_boxes, num_checked_boxes = 0, 0
-  local body = section:field('body')[1]
-  for node in body:iter_children() do
-    if node:type() == 'list' then
-      local boxes = self:child_checkboxes(node)
-      num_boxes = num_boxes + #boxes
-      local checked_boxes = vim.tbl_filter(function(box)
-        return box:match('%[%w%]')
-      end, boxes)
-      num_checked_boxes = num_checked_boxes + #checked_boxes
+  local num, denum = 0, 0
+  -- Count checked boxes from all lists
+  local section = self:node():parent()
+  if section then
+    local body = section:field('body')[1]
+    if body then
+      for node in body:iter_children() do
+        if node:type() == 'list' then
+          local boxes = self:child_checkboxes(node)
+          denum = denum + #boxes
+          local checked_boxes = vim.tbl_filter(function(box)
+            return box:match('%[%w%]')
+          end, boxes)
+          num = num + #checked_boxes
+        end
+      end
     end
   end
 
+  -- Count done children headlines
+  local children = self:get_child_headlines()
+  local dones = vim.tbl_filter(function(h)
+    return h:is_done()
+  end, children)
+  num = num + #dones
+  denum = denum + #children
+
   -- Update the cookie
-  local cookie = self:get_cookie()
-  if cookie then
-    local new_cookie_val
-    if self.file:get_node_text(cookie):find('%%') then
-      new_cookie_val = ('[%d%%]'):format((num_checked_boxes / num_boxes) * 100)
-    else
-      new_cookie_val = ('[%d/%d]'):format(num_checked_boxes, num_boxes)
-    end
-    return self:_set_node_text(cookie, new_cookie_val)
+  local new_cookie_val
+  if self.file:get_node_text(cookie):find('%%') then
+    new_cookie_val = ('[%d%%]'):format((num / denum) * 100)
+  else
+    new_cookie_val = ('[%d/%d]'):format(num, denum)
+  end
+  return self:_set_node_text(cookie, new_cookie_val)
+end
+
+function Headline:update_parent_cookie()
+  local parent = self:get_parent_headline()
+  if parent and parent.headline then
+    parent:update_cookie()
   end
   return self
 end
