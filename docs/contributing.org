@@ -91,6 +91,9 @@ specific spec you want to test. Example:
 make test FILE=./tests/plenary/api/api_spec.lua
 #+end_example
 
+📝 NOTE: Tests are currently not working on Windows. Test run will only verify if tree-sitter grammar
+can be installed, and exit with a success message.
+
 **** Parser
 :PROPERTIES:
 :CUSTOM_ID: parser

@@ -1,5 +1,11 @@
 #+OPTIONS: H:9 ^:nil
 * Changelog
+** [[https://github.com/nvim-orgmode/orgmode/compare/0.5.1...0.5.2][0.5.2]] (2025-03-07)
+*** Bug fixes
+- *calendar*: fix custom date input ([[https://github.com/nvim-orgmode/orgmode/commit/2aa966f][2aa966f]])
+- *windows*: normalize parser path ([[https://github.com/nvim-orgmode/orgmode/commit/de15ddf][de15ddf]])
+- *agenda*: respect start on weekday from custom agenda command ([[https://github.com/nvim-orgmode/orgmode/commit/bad7aaa][bad7aaa]])
+
 ** [[https://github.com/nvim-orgmode/orgmode/compare/0.5.0...0.5.1][0.5.1]] (2025-03-05)
 *** Features
 - *ts*: install parser if not installed in correct location ([[https://github.com/nvim-orgmode/orgmode/commit/dca37ff][dca37ff]])

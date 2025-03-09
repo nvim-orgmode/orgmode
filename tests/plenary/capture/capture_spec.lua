@@ -146,7 +146,7 @@ describe('Refile', function()
         destination_file = destination_file,
       })
       :wait()
-    vim.cmd('edit' .. vim.fn.fnameescape(destination_file.filename))
+    vim.cmd('edit ' .. vim.fn.fnameescape(destination_file.filename))
     assert.are.same({
       '* foo',
     }, vim.api.nvim_buf_get_lines(0, 0, -1, false))
@@ -177,7 +177,7 @@ describe('Refile', function()
         source_headline = item,
       })
       :wait()
-    vim.cmd('edit' .. vim.fn.fnameescape(destination_file.filename))
+    vim.cmd('edit ' .. vim.fn.fnameescape(destination_file.filename))
     assert.are.same({
       '* foobar',
       '* baz',
@@ -208,7 +208,7 @@ describe('Refile', function()
         destination_headline = destination_file:get_headlines()[1],
       })
       :wait()
-    vim.cmd('edit' .. vim.fn.fnameescape(destination_file.filename))
+    vim.cmd('edit ' .. vim.fn.fnameescape(destination_file.filename))
     assert.are.same({
       '* foobar',
       '** baz',
@@ -242,7 +242,7 @@ describe('Capture', function()
         },
       }),
     })
-    vim.cmd('edit' .. vim.fn.fnameescape(destination_file.filename))
+    vim.cmd('edit ' .. vim.fn.fnameescape(destination_file.filename))
     assert.are.same({
       '',
       '',
@@ -279,7 +279,7 @@ describe('Capture', function()
         },
       }),
     })
-    vim.cmd('edit' .. vim.fn.fnameescape(destination_file.filename))
+    vim.cmd('edit ' .. vim.fn.fnameescape(destination_file.filename))
     assert.are.same({
       '* foobar',
       '',
@@ -320,7 +320,7 @@ describe('Capture', function()
         },
       }),
     })
-    vim.cmd('edit' .. vim.fn.fnameescape(destination_file.filename))
+    vim.cmd('edit ' .. vim.fn.fnameescape(destination_file.filename))
     assert.are.same({
       '* foobar',
       '',
@@ -356,7 +356,7 @@ describe('Capture', function()
         regexp = 'appendhere',
       }),
     })
-    vim.cmd('edit' .. vim.fn.fnameescape(destination_file.filename))
+    vim.cmd('edit ' .. vim.fn.fnameescape(destination_file.filename))
     assert.are.same({
       '#+title foo',
       'appendhere',

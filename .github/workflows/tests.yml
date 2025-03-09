@@ -24,13 +24,17 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        os:
+          - ubuntu-latest
+          - windows-latest
+          - macos-latest
         version:
           - v0.10.1
           - v0.10.2
           - v0.10.3
           - v0.10.4
           - nightly
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
       - name: Install Neovim

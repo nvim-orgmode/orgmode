@@ -1,3 +1,18 @@
+-- Ensure that tree-sitter grammar can be correctly installed, exit early on error
+vim.opt.runtimepath:prepend(vim.fn.fnamemodify(debug.getinfo(1, 'S').source:sub(2), ':p:h:h'))
+local ok, err = pcall(function()
+  return require('orgmode.utils.treesitter.install').install()
+end)
+if not ok then
+  print(vim.inspect(err), '\n')
+  return os.exit(1)
+end
+
+-- Do not run tests on Windows, just ensure that tree-sitter grammar can be installed.
+if vim.fn.has('win32') > 0 then
+  return os.exit(0)
+end
+
 require('tests.minimal_init')
 ---@type string
 local test_file = vim.v.argv[#vim.v.argv]

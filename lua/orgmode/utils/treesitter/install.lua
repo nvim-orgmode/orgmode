@@ -10,25 +10,22 @@ local required_version = '2.0.0'
 function M.install()
   local version_info = M.get_version_info()
   if not version_info.installed then
-    M.run('install')
-    return true
+    return M.run('install')
   end
 
   -- Parser found but in invalid location
   if not version_info.install_location then
-    M.run('install')
+    local result = M.run('install')
     M.notify_conflicting_parsers(version_info.conflicting_parsers)
-    return true
+    return result
   end
 
   if version_info.outdated then
-    M.run('update')
-    return true
+    return M.run('update')
   end
 
   if version_info.version_mismatch then
-    M.reinstall()
-    return true
+    return M.reinstall()
   end
 
   M.notify_conflicting_parsers(version_info.conflicting_parsers)
@@ -93,7 +90,9 @@ function M.get_version_info()
 end
 
 function M.get_parser_locations()
-  local installed_org_parsers = vim.api.nvim_get_runtime_file('parser/org.so', true)
+  local installed_org_parsers = vim.tbl_map(function(item)
+    return vim.fn.fnamemodify(item, ':p')
+  end, vim.api.nvim_get_runtime_file('parser/org.so', true))
   local parser_path = M.get_parser_path()
   local install_location = nil
   local conflicting_parsers = {}
@@ -229,6 +228,7 @@ function M.get_path(url, type)
 end
 
 ---@param type? 'install' | 'update' | 'reinstall''
+---@return OrgPromise<boolean>
 function M.run(type)
   local url = 'https://github.com/nvim-orgmode/tree-sitter-org'
   local compiler = vim.tbl_filter(function(exe)
@@ -241,6 +241,7 @@ function M.run(type)
 
   local compiler_args = M.select_compiler_args(compiler)
   local path = nil
+  local lock_file = M.get_lock_file()
 
   return M.get_path(url, type)
     :next(function(directory)
@@ -250,17 +251,18 @@ function M.run(type)
         cwd = directory,
       })
     end)
-    :next(vim.schedule_wrap(function(code)
+    :next(function(code)
       if code ~= 0 then
         error('[orgmode] Failed to compile parser', 0)
       end
       local source = vim.fs.joinpath(path, 'parser.so')
-      local destination = M.get_parser_path()
-      local renamed = vim.fn.rename(source, destination)
-      if renamed ~= 0 then
-        error('[orgmode] Failed to move generated tree-sitter parser to runtime folder', 0)
+      local copied, err = vim.uv.fs_copyfile(source, M.get_parser_path())
+      if not copied then
+        error('[orgmode] Failed to copy generated tree-sitter parser to runtime folder: ' .. err, 0)
       end
-      utils.writefile(M.get_lock_file(), vim.json.encode({ version = required_version })):wait()
+      return utils.writefile(lock_file, vim.json.encode({ version = required_version }))
+    end)
+    :next(vim.schedule_wrap(function()
       local msg = { 'Tree-sitter grammar installed!' }
 
       if type == 'update' then
