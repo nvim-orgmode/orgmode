@@ -14,6 +14,15 @@ Orgmode clone written in Lua for Neovim
 
 #+HTML:</div>
 
+** fork information 
+I keep this fork to personally customise the original nvim for my workflow on issues that are not easily solved through configuration tweaking or with plugin development.
+
+Most of the changes are ugly fixes that once they are fixed upstream will be removed. Currently these fixes are:
+
+- [[https://github.com/lyz-code/orgmode/pull/4][Allow the user to set the default todo keyword]] until [[https://github.com/nvim-orgmode/orgmode/issues/897][#897 is solved]]
+- [[https://github.com/lyz-code/orgmode/pull/5][Only show the overdue elements of the last three days in the agenda]] until [[https://github.com/nvim-orgmode/orgmode/issues/898][#898]] or [[https://github.com/nvim-orgmode/orgmode/issues/896][#896]] are solved
+
+The fork is [[https://github.com/nvim-orgmode/orgmode/blob/master/.github/workflows/update-fork.yml][updated with upstream changes each night]].
 ** Quickstart
 
 *** Requirements
