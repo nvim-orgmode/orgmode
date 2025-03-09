@@ -71,7 +71,7 @@ function Listitem:update_checkbox(action)
   else
     local parent_headline = self.file:get_closest_headline_or_nil()
     if parent_headline then
-      parent_headline:update_cookie(parent_list)
+      parent_headline:update_cookie()
     end
   end
 end
