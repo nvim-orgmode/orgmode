@@ -46,6 +46,17 @@ jobs:
           else
             echo "PAT authentication failed with status: $STATUS"
           fi
+      - name: Check repository permissions
+        run: |
+          RESP=$(curl -s -H "Authorization: token ${{ secrets.PERSONAL_TOKEN }}" https://api.github.com/repos/${{ github.repository }})
+          if echo $RESP | grep -q "permissions"; then
+            echo "Repository is accessible with the PAT"
+            echo "Has push permission: $(echo $RESP | jq .permissions.push)"
+            echo "Has admin permission: $(echo $RESP | jq .permissions.admin)"
+          else
+            echo "Could not verify repository permissions"
+            echo "Response: $RESP"
+          fi
       - name: Push changes
         run: |
           git remote set-url origin https://x-access-token:${{ secrets.PERSONAL_TOKEN }}@github.com/${{ github.repository }}.git
