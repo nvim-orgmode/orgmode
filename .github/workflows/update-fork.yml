@@ -1,0 +1,46 @@
+name: Sync Fork with Upstream
+
+on:
+  schedule:
+    # Run daily at midnight UTC
+    - cron: "0 0 * * *"
+  # Optional: Allow manual triggering
+  workflow_dispatch:
+
+jobs:
+  sync-fork:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configure Git
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+
+      - name: Add upstream remote
+        run: |
+          # Replace the URL below with your upstream repository URL
+          git remote add upstream https://github.com/nvim-orgmode/orgmode.git
+
+      - name: Fetch upstream
+        run: |
+          git fetch upstream
+
+      - name: Merge upstream changes
+        run: |
+          # Check which branch we're on
+          CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
+
+          # Sync the current branch with upstream
+          git merge upstream/$CURRENT_BRANCH --no-edit
+
+      - name: Push changes
+        uses: ad-m/github-push-action@master
+        with:
+          github_token: ${{ secrets.PERSONAL_TOKEN }}
+          branch: master
