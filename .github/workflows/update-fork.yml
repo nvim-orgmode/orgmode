@@ -38,19 +38,16 @@ jobs:
           # Sync the current branch with upstream
           git merge upstream/$CURRENT_BRANCH --no-edit
 
-      - name: Set up GitHub CLI
-        uses: actions/setup-node@v4
-        with:
-          node-version: "16"
-
-      - name: Install GitHub CLI
+      - name: Push excluding workflow files
         run: |
-          curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg
-          echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null
-          sudo apt update
-          sudo apt install gh
+          # Create a temporary branch without the workflow file
+          git checkout -b temp-push-branch
+          git rm .github/workflows/tests.yml
+          git commit -m "Temporarily remove workflow file for sync"
 
-      - name: Push with GitHub CLI
-        run: |
-          echo "${{ secrets.PERSONAL_TOKEN }}" | gh auth login --with-token
-          git push origin HEAD:master
+          # Push the branch without the workflow file
+          git push -f origin temp-push-branch:master
+
+          # Clean up
+          git checkout master
+          git branch -D temp-push-branch
