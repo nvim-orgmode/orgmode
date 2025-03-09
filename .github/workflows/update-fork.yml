@@ -37,7 +37,7 @@ jobs:
 
           # Sync the current branch with upstream
           git merge upstream/$CURRENT_BRANCH --no-edit
-          j
+
       - name: Set up GitHub CLI
         uses: actions/setup-node@v4
         with:
