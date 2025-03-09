@@ -40,7 +40,8 @@ jobs:
           git merge upstream/$CURRENT_BRANCH --no-edit
 
       - name: Push changes
-        uses: ad-m/github-push-action@master
+        run: |
+          git remote set-url origin https://x-access-token:${{ secrets.PERSONAL_TOKEN }}@github.com/${{ github.repository }}.git
+          git push origin
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          branch: main
+          token: ${{ secrets.PERSONAL_TOKEN }}
