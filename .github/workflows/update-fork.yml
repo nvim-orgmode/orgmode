@@ -37,37 +37,20 @@ jobs:
 
           # Sync the current branch with upstream
           git merge upstream/$CURRENT_BRANCH --no-edit
+          j
+      - name: Set up GitHub CLI
+        uses: actions/setup-node@v4
+        with:
+          node-version: "16"
 
-      - name: Test PAT validity
+      - name: Install GitHub CLI
         run: |
-          STATUS=$(curl -s -o /dev/null -w "%{http_code}" -H "Authorization: token ${{ secrets.PERSONAL_TOKEN }}" https://api.github.com/user)
-          if [ $STATUS -eq 200 ]; then
-            echo "PAT is valid and working"
-          else
-            echo "PAT authentication failed with status: $STATUS"
-          fi
-      - name: Check repository permissions
+          curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg
+          echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null
+          sudo apt update
+          sudo apt install gh
+
+      - name: Push with GitHub CLI
         run: |
-          RESP=$(curl -s -H "Authorization: token ${{ secrets.PERSONAL_TOKEN }}" https://api.github.com/repos/${{ github.repository }})
-          if echo $RESP | grep -q "permissions"; then
-            echo "Repository is accessible with the PAT"
-            echo "Has push permission: $(echo $RESP | jq .permissions.push)"
-            echo "Has admin permission: $(echo $RESP | jq .permissions.admin)"
-          else
-            echo "Could not verify repository permissions"
-            echo "Response: $RESP"
-          fi
-      - name: Push changes with explicit authentication
-        run: |
-          # Configure git with explicit authentication
-          git config --local user.email "github-actions[bot]@users.noreply.github.com"
-          git config --local user.name "github-actions[bot]"
-
-          # Remove any existing origin
-          git remote remove origin
-
-          # Set the new origin with explicit PAT in the URL
-          git remote add origin "https://${{ secrets.PERSONAL_TOKEN }}@github.com/${{ github.repository }}.git"
-
-          # Push to the branch
+          echo "${{ secrets.PERSONAL_TOKEN }}" | gh auth login --with-token
           git push origin HEAD:master
