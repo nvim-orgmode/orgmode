@@ -3,16 +3,18 @@ local TodoKeyword = require('orgmode.objects.todo_keywords.todo_keyword')
 
 ---@class OrgTodoKeywords
 ---@field org_todo_keywords string[]
+---@field org_default_todo_keyword string[]
 ---@field org_todo_keyword_faces table<string, string>
 ---@field todo_keywords OrgTodoKeyword[]
 local TodoKeywords = {}
 TodoKeywords.__index = TodoKeywords
 
----@param opts { org_todo_keywords: string[], org_todo_keyword_faces: table<string, string> }
+---@param opts { org_todo_keywords: string[], org_default_todo_keyword: string[], org_todo_keyword_faces: table<string, string> }
 ---@return OrgTodoKeywords
 function TodoKeywords:new(opts)
   local this = setmetatable({
     org_todo_keywords = opts.org_todo_keywords,
+    org_default_todo_keyword = opts.org_default_todo_keyword,
     org_todo_keyword_faces = opts.org_todo_keyword_faces,
   }, self)
   this:_parse()
@@ -47,6 +49,12 @@ end
 ---@param type OrgTodoKeywordType
 ---@return OrgTodoKeyword
 function TodoKeywords:first_by_type(type)
+  if type == 'TODO' and self.org_default_todo_keyword ~= nil then
+    local default_todo = self:find(self.org_default_todo_keyword)
+    if default_todo ~= nil then
+      return default_todo
+    end
+  end
   for _, keyword in ipairs(self.todo_keywords) do
     if type == keyword.type then
       return keyword

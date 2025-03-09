@@ -200,6 +200,7 @@ function Config:get_todo_keywords()
   end
   self.todo_keywords = TodoKeywords:new({
     org_todo_keywords = self.opts.org_todo_keywords,
+    org_default_todo_keyword = self.opts.org_default_todo_keyword,
     org_todo_keyword_faces = self.opts.org_todo_keyword_faces,
   })
   return self.todo_keywords
