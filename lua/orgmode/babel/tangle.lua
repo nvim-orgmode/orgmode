@@ -54,6 +54,13 @@ function Tangle:tangle()
         end
       end
     end
+
+    if info.header_args[':mkdirp'] == 'yes' then
+      local path = vim.fn.fnamemodify(info.filename, ':h')
+      utils.echo_info(('Should create the directory %s'):format(path))
+      vim.fn.mkdir(path, "p")
+    end
+
     if info.name then
       block_content_by_name[info.name] = parsed_content
     end
