@@ -57,7 +57,6 @@ function Tangle:tangle()
 
     if info.header_args[':mkdirp'] == 'yes' then
       local path = vim.fn.fnamemodify(info.filename, ':h')
-      utils.echo_info(('Should create the directory %s'):format(path))
       vim.fn.mkdir(path, "p")
     end
 
