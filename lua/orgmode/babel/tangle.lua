@@ -57,7 +57,7 @@ function Tangle:tangle()
 
     if info.header_args[':mkdirp'] == 'yes' then
       local path = vim.fn.fnamemodify(info.filename, ':h')
-      vim.fn.mkdir(path, "p")
+      vim.fn.mkdir(path, 'p')
     end
 
     if info.name then
