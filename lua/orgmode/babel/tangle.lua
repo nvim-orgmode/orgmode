@@ -83,7 +83,6 @@ function Tangle:tangle()
     local shebang = info.header_args[':shebang']
     if shebang then
       shebang = shebang:gsub('[\'"]', '')
-      utils.echo_info(('shebang: %s'):format(shebang))
       table.insert(parsed_content, 1, shebang)
     end
 
