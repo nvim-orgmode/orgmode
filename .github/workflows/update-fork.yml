@@ -42,7 +42,7 @@ jobs:
         run: |
           # Create a temporary branch without the workflow file as it triggered problems when merging
           git checkout -b temp-push-branch
-          git rm .github/workflows/tests.yml
+          git rm .github/workflows/tests.yml || true
           git commit -m "Temporarily remove workflow file for sync"
 
           # Push the branch without the workflow file
