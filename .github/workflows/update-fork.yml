@@ -45,11 +45,17 @@ jobs:
           if [ -f .github/workflow/tests.yml ]; then
             git rm .github/workflows/tests.yml || true
           fi
-          git commit -m "Temporarily remove workflow file for sync"
+          # Check if there are changes to commit
+          if git diff-index --quiet HEAD --; then
+            echo "No changes to commit, continuing pipeline"
+          else
+            # There are changes, so commit them
+            git commit -m "Remove tests.yml file"
 
-          # Push the branch without the workflow file
-          git push -f origin temp-push-branch:master
+            # Push the branch without the workflow file
+            git push -f origin temp-push-branch:master
 
-          # Clean up
-          git checkout master
-          git branch -D temp-push-branch
+            # Clean up
+            git checkout master
+            git branch -D temp-push-branch
+          fi
