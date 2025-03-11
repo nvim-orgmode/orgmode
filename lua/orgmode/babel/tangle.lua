@@ -75,6 +75,11 @@ function Tangle:tangle()
       filemode = tangle_mode:gsub('[\'"]', '')
     end
 
+    if info.header_args[':mkdirp'] == 'yes' then
+      local path = vim.fn.fnamemodify(info.filename, ':h')
+      vim.fn.mkdir(path, "p")
+    end
+
     if info.name then
       block_content_by_name[info.name] = parsed_content
     end
