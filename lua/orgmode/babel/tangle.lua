@@ -35,11 +35,12 @@ function Tangle:tangle()
 
   for _, info in ipairs(valid_blocks) do
     if tangle_info[info.filename] then
-      table.insert(tangle_info[info.filename], '')
+      table.insert(tangle_info[info.filename]['content'], '')
     else
-      tangle_info[info.filename] = {}
+      tangle_info[info.filename] = {content = {}}
     end
 
+    local filemode = tangle_info[info.filename]['mode']
     local do_noweb = info.header_args[':noweb'] == 'yes' or info.header_args[':noweb'] == 'tangle'
     local parsed_content = info.content
 
@@ -63,19 +64,33 @@ function Tangle:tangle()
     local shebang = info.header_args[':shebang']
     if shebang then
       shebang = shebang:gsub('[\'"]', '')
-      utils.echo_info(('shebang: %s'):format(shebang))
       table.insert(parsed_content, 1, shebang)
+      if filemode == nil then
+        filemode = "o755"
+      end
+    end
+
+    local tangle_mode = info.header_args[':tangle-mode']
+    if tangle_mode then
+      filemode = tangle_mode:gsub('[\'"]', '')
     end
 
     if info.name then
       block_content_by_name[info.name] = parsed_content
     end
-    vim.list_extend(tangle_info[info.filename], parsed_content)
+    vim.list_extend(tangle_info[info.filename]['content'], parsed_content)
+    tangle_info[info.filename]['mode'] = filemode
   end
 
   local promises = {}
-  for filename, content in pairs(tangle_info) do
-    table.insert(promises, utils.writefile(filename, table.concat(self:_remove_obsolete_indent(content), '\n')))
+  for filename, block in pairs(tangle_info) do
+    table.insert(promises, utils.writefile(filename, table.concat(self:_remove_obsolete_indent(block['content']), '\n')))
+    local mode_str = block['mode']
+    if mode_str and mode_str:sub(1, 1) == 'o' then
+      mode_str = mode_str:sub(2)
+      local mode_num = tonumber(mode_str, 8)
+      vim.loop.fs_chmod(filename, mode_num)
+    end
   end
   Promise.all(promises):wait()
   utils.echo_info(('Tangled %d blocks from %s'):format(#valid_blocks, vim.fn.fnamemodify(self.file.filename, ':t')))
