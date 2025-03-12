@@ -492,6 +492,7 @@ function OrgFile:set_node_text(node, text, front_trim)
     end_col = vim.api.nvim_buf_get_lines(bufnr, end_row, end_row + 1, false)[1]:len()
   end
   local ok = pcall(vim.api.nvim_buf_set_text, bufnr, start_row, start_col, end_row, end_col, replacement)
+  vim.cmd('normal! zX') -- Refresh folds
   return ok
 end
 
