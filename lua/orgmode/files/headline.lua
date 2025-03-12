@@ -890,22 +890,38 @@ function Headline:get_cookie()
   return self:_parse_title_part('%[%d?%d?%d?%%%]')
 end
 
-function Headline:update_cookie(list_node)
-  local total_boxes = self:child_checkboxes(list_node)
-  local checked_boxes = vim.tbl_filter(function(box)
-    return box:match('%[%w%]')
-  end, total_boxes)
+function Headline:update_cookie()
+  local section = self:node():parent()
+  if not section then
+    return self
+  end
 
+  -- Go through all the lists in this headline and gather checked_boxes
+  local num_boxes, num_checked_boxes = 0, 0
+  local body = section:field('body')[1]
+  for node in body:iter_children() do
+    if node:type() == 'list' then
+      local boxes = self:child_checkboxes(node)
+      num_boxes = num_boxes + #boxes
+      local checked_boxes = vim.tbl_filter(function(box)
+        return box:match('%[%w%]')
+      end, boxes)
+      num_checked_boxes = num_checked_boxes + #checked_boxes
+    end
+  end
+
+  -- Update the cookie
   local cookie = self:get_cookie()
   if cookie then
     local new_cookie_val
     if self.file:get_node_text(cookie):find('%%') then
-      new_cookie_val = ('[%d%%]'):format((#checked_boxes / #total_boxes) * 100)
+      new_cookie_val = ('[%d%%]'):format((num_checked_boxes / num_boxes) * 100)
     else
-      new_cookie_val = ('[%d/%d]'):format(#checked_boxes, #total_boxes)
+      new_cookie_val = ('[%d/%d]'):format(num_checked_boxes, num_boxes)
     end
     return self:_set_node_text(cookie, new_cookie_val)
   end
+  return self
 end
 
 function Headline:child_checkboxes(list_node)
