@@ -6,8 +6,6 @@ local Calendar = require('orgmode.objects.calendar')
 local Promise = require('orgmode.utils.promise')
 local Input = require('orgmode.ui.input')
 
-local is_windows = vim.loop.os_uname().sysname == 'Windows_NT'
-
 local expansions = {
   ['%%f'] = function()
     return vim.fn.expand('%')
@@ -16,7 +14,10 @@ local expansions = {
     return vim.fn.expand('%:p')
   end,
   ['%%n'] = function()
-    return is_windows and os.getenv('USERNAME') or os.getenv('USER')
+    if vim.fn.has('win32') == 1 then
+      return os.getenv('USERNAME')
+    end
+    return os.getenv('USER')
   end,
   ['%%x'] = function()
     return vim.fn.getreg('+')
