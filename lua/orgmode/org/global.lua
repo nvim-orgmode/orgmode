@@ -88,7 +88,11 @@ local build = function(orgmode)
         require('orgmode.utils').echo_error('No headline found')
         return
       end
-      orgmode.links:store_link_to_headline(headline)
+      headline.file
+        :update(function()
+          orgmode.links:store_link_to_headline(headline)
+        end)
+        :wait()
       return require('orgmode.utils').echo_info('Stored: ' .. headline:get_title())
     end,
     indent_mode = function()
