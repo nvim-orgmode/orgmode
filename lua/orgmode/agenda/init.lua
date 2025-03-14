@@ -585,6 +585,21 @@ function Agenda:_remote_edit(opts)
   end)
 end
 
+---@return OrgHeadline | nil
+function Agenda:get_headline_at_cursor()
+  local line_nr = vim.fn.line('.')
+
+  for _, view in ipairs(self.views) do
+    local agenda_line = view:get_line(line_nr)
+    if agenda_line then
+      local headline = agenda_line.headline
+      if headline then
+        return headline
+      end
+    end
+  end
+end
+
 function Agenda:quit()
   vim.api.nvim_win_close(0, true)
 end
