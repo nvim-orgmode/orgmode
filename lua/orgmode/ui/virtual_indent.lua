@@ -1,11 +1,9 @@
 local tree_utils = require('orgmode.utils.treesitter')
-local dict_watcher = require('orgmode.utils.dict_watcher')
 ---@class OrgVirtualIndent
 ---@field private _ns_id number extmarks namespace id
 ---@field private _bufnr integer Buffer VirtualIndent is attached to
 ---@field private _attached boolean Whether or not VirtualIndent is attached for its buffer
 ---@field private _bufnrs table<integer, OrgVirtualIndent> Buffers with VirtualIndent attached
----@field private _watcher_running boolean Whether or not VirtualIndent is reacting to `vim.b.org_indent_mode`
 local VirtualIndent = {
   _ns_id = vim.api.nvim_create_namespace('orgmode.ui.indent'),
   _bufnrs = {},
@@ -23,11 +21,24 @@ function VirtualIndent:new(bufnr)
   end
   local this = setmetatable({
     _bufnr = bufnr,
-    _watcher_running = false,
     _attached = false,
   }, self)
   self._bufnrs[bufnr] = this
   return this
+end
+
+function VirtualIndent.toggle_buffer_indent_mode(bufnr)
+  bufnr = bufnr or vim.api.nvim_get_current_buf()
+  local instance = VirtualIndent:new(bufnr)
+  local message = ''
+  if vim.b[bufnr].org_indent_mode then
+    message = 'disabled'
+    instance:detach()
+  else
+    message = 'enabled'
+    instance:attach()
+  end
+  require('orgmode.utils').echo_info('Org-Indent mode ' .. message .. ' in current buffer')
 end
 
 function VirtualIndent:_delete_old_extmarks(start_line, end_line)
@@ -117,32 +128,12 @@ function VirtualIndent:set_indent(start_line, end_line, ignore_ts)
   end
 end
 
---- Make all VirtualIndent instances react to changes in `org_indent_mode`
-function VirtualIndent:start_watch_org_indent()
-  if self._watcher_running then
-    return
-  end
-  dict_watcher.watch_buffer_variable('org_indent_mode', function(indent_mode, _, buf_vars)
-    local instance = self._bufnrs[buf_vars.org_bufnr]
-    if not instance then
-      return
-    end
-    local indent_mode_enabled = indent_mode.new or false
-    if indent_mode_enabled then
-      return instance:attach()
-    end
-    return instance:detach()
-  end)
-  self._watcher_running = true
-end
-
 --- Enables virtual indentation in registered buffer
 function VirtualIndent:attach()
   if self._attached then
     return
   end
   self:set_indent(0, vim.api.nvim_buf_line_count(self._bufnr) - 1, true)
-  self:start_watch_org_indent()
 
   vim.api.nvim_buf_attach(self._bufnr, false, {
     on_lines = function(_, _, _, start_line, _, end_line)
@@ -163,6 +154,7 @@ function VirtualIndent:attach()
     end,
   })
   self._attached = true
+  vim.b[self._bufnr].org_indent_mode = true
 end
 
 function VirtualIndent:detach()
@@ -171,6 +163,7 @@ function VirtualIndent:detach()
   end
   self:_delete_old_extmarks(0, vim.api.nvim_buf_line_count(self._bufnr) - 1)
   self._attached = false
+  vim.b[self._bufnr].org_indent_mode = false
 end
 
 return VirtualIndent

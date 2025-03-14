@@ -45,7 +45,6 @@ function Config:extend(opts)
   self.todo_keywords = nil
   self.priorities = nil
   opts = opts or {}
-  self:_deprecation_notify(opts)
   if not self:_are_priorities_valid(opts) then
     opts.org_priority_highest = self.opts.org_priority_highest
     opts.org_priority_lowest = self.opts.org_priority_lowest
@@ -136,24 +135,6 @@ function Config:_are_priorities_valid(opts)
   end
 
   return true
-end
-
-function Config:_deprecation_notify(opts)
-  local messages = {}
-  if opts.org_indent_mode and type(opts.org_indent_mode) == 'string' then
-    table.insert(
-      messages,
-      '"org_indent_mode" is deprecated in favor of "org_startup_indented". Check the documentation about the new option.'
-    )
-    opts.org_startup_indented = (opts.org_indent_mode == 'indent')
-  end
-
-  if #messages > 0 then
-    -- Schedule so it gets printed out once whole init.vim is loaded
-    vim.schedule(function()
-      utils.echo_warning(table.concat(messages, '\n'))
-    end)
-  end
 end
 
 ---@return number
