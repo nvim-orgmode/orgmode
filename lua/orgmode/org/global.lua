@@ -91,6 +91,9 @@ local build = function(orgmode)
       orgmode.links:store_link_to_headline(headline)
       return require('orgmode.utils').echo_info('Stored: ' .. headline:get_title())
     end,
+    indent_mode = function()
+      require('orgmode.ui.virtual_indent').toggle_buffer_indent_mode()
+    end,
   }
 
   _G.Org = OrgGlobal
