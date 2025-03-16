@@ -892,6 +892,17 @@ function Headline:get_cookie()
   return self:_parse_title_part('%[%d?%d?%d?%%%]')
 end
 
+function Headline:set_cookie(cookie, num, denum)
+  -- Update the cookie
+  local new_cookie_val
+  if self.file:get_node_text(cookie):find('%%') then
+    new_cookie_val = ('[%d%%]'):format((num / denum) * 100)
+  else
+    new_cookie_val = ('[%d/%d]'):format(num, denum)
+  end
+  return self:_set_node_text(cookie, new_cookie_val)
+end
+
 function Headline:update_cookie()
   -- Return early if the headline doesn't have a cookie
   local cookie = self:get_cookie()
@@ -927,13 +938,7 @@ function Headline:update_cookie()
   denum = denum + #children
 
   -- Update the cookie
-  local new_cookie_val
-  if self.file:get_node_text(cookie):find('%%') then
-    new_cookie_val = ('[%d%%]'):format((num / denum) * 100)
-  else
-    new_cookie_val = ('[%d/%d]'):format(num, denum)
-  end
-  return self:_set_node_text(cookie, new_cookie_val)
+  return self:set_cookie(cookie, num, denum)
 end
 
 function Headline:update_parent_cookie()
