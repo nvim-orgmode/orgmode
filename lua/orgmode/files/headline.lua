@@ -904,52 +904,56 @@ function Headline:set_cookie(cookie, num, denum)
 end
 
 function Headline:update_cookie()
+  -- Update cookie state from a check box state change
+
   -- Return early if the headline doesn't have a cookie
   local cookie = self:get_cookie()
   if not cookie then
     return self
   end
 
-  local num, denum = 0, 0
-  -- Count checked boxes from all lists
   local section = self:node():parent()
-  if section then
-    local body = section:field('body')[1]
-    if body then
-      for node in body:iter_children() do
-        if node:type() == 'list' then
-          local boxes = self:child_checkboxes(node)
-          denum = denum + #boxes
-          local checked_boxes = vim.tbl_filter(function(box)
-            return box:match('%[%w%]')
-          end, boxes)
-          num = num + #checked_boxes
-        end
+  if not section then
+    return self
+  end
+
+  -- Count checked boxes from all lists
+  local num_checked_boxes, num_boxes = 0, 0
+  local body = section:field('body')[1]
+  if body then
+    for node in body:iter_children() do
+      if node:type() == 'list' then
+        local boxes = self:child_checkboxes(node)
+        num_boxes = num_boxes + #boxes
+        local checked_boxes = vim.tbl_filter(function(box)
+          return box:match('%[%w%]')
+        end, boxes)
+        num_checked_boxes = num_checked_boxes + #checked_boxes
       end
     end
   end
 
   -- Update the cookie
-  return self:set_cookie(cookie, num, denum)
+  return self:set_cookie(cookie, num_checked_boxes, num_boxes)
 end
 
 function Headline:update_todo_cookie()
-  -- Count done children headlines
+  -- Update cookie state from a TODO state change
+
   -- Return early if the headline doesn't have a cookie
   local cookie = self:get_cookie()
   if not cookie then
     return self
   end
-  local num, denum = 0, 0
+
+  -- Count done children headlines
   local children = self:get_child_headlines()
   local dones = vim.tbl_filter(function(h)
     return h:is_done()
   end, children)
-  num = num + #dones
-  denum = denum + #children
 
   -- Update the cookie
-  return self:set_cookie(cookie, num, denum)
+  return self:set_cookie(cookie, #dones, #children)
 end
 
 function Headline:update_parent_cookie()
