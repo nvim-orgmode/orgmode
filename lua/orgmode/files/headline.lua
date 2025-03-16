@@ -892,7 +892,7 @@ function Headline:get_cookie()
   return self:_parse_title_part('%[%d?%d?%d?%%%]')
 end
 
-function Headline:set_cookie(cookie, num, denum)
+function Headline:_set_cookie(cookie, num, denum)
   -- Update the cookie
   local new_cookie_val
   if self.file:get_node_text(cookie):find('%%') then
@@ -933,8 +933,8 @@ function Headline:update_cookie()
     end
   end
 
-  -- Update the cookie
-  return self:set_cookie(cookie, num_checked_boxes, num_boxes)
+  -- Set the cookie
+  return self:_set_cookie(cookie, num_checked_boxes, num_boxes)
 end
 
 function Headline:update_todo_cookie()
@@ -952,8 +952,8 @@ function Headline:update_todo_cookie()
     return h:is_done()
   end, children)
 
-  -- Update the cookie
-  return self:set_cookie(cookie, #dones, #children)
+  -- Set the cookie
+  return self:_set_cookie(cookie, #dones, #children)
 end
 
 function Headline:update_parent_cookie()
