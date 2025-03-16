@@ -929,7 +929,18 @@ function Headline:update_cookie()
     end
   end
 
+  -- Update the cookie
+  return self:set_cookie(cookie, num, denum)
+end
+
+function Headline:update_todo_cookie()
   -- Count done children headlines
+  -- Return early if the headline doesn't have a cookie
+  local cookie = self:get_cookie()
+  if not cookie then
+    return self
+  end
+  local num, denum = 0, 0
   local children = self:get_child_headlines()
   local dones = vim.tbl_filter(function(h)
     return h:is_done()
@@ -944,7 +955,7 @@ end
 function Headline:update_parent_cookie()
   local parent = self:get_parent_headline()
   if parent and parent.headline then
-    parent:update_cookie()
+    parent:update_todo_cookie()
   end
   return self
 end
