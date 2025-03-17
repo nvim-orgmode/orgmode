@@ -946,14 +946,19 @@ function Headline:update_todo_cookie()
     return self
   end
 
-  -- Count done children headlines
+  -- Count done children headlines and total children with TODO keywords
   local children = self:get_child_headlines()
-  local dones = vim.tbl_filter(function(h)
-    return h:is_done()
+  local headlines_with_todo = vim.tbl_filter(function(h)
+    local todo, _, _ = h:get_todo()
+    return todo ~= nil
   end, children)
 
+  local dones = vim.tbl_filter(function(h)
+    return h:is_done()
+  end, headlines_with_todo)
+
   -- Set the cookie
-  return self:_set_cookie(cookie, #dones, #children)
+  return self:_set_cookie(cookie, #dones, #headlines_with_todo)
 end
 
 function Headline:update_parent_cookie()
