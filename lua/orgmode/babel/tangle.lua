@@ -66,7 +66,7 @@ function Tangle:tangle()
       shebang = shebang:gsub('[\'"]', '')
       table.insert(parsed_content, 1, shebang)
       if filemode == nil then
-        filemode = "o755"
+        filemode = 'o755'
       end
     end
 
