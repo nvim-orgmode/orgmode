@@ -620,15 +620,7 @@ function OrgMappings:meta_return(suffix)
   suffix = suffix or ''
   local item = ts_utils.get_node_at_cursor()
 
-  if not item then
-    return
-  end
-
-  if item:type() == 'expr' then
-    item = item:parent()
-  end
-
-  if item and item:parent() and item:parent():type() == 'headline' then
+  if item and item:type() == 'expr' then
     item = item:parent()
   end
 
@@ -636,12 +628,21 @@ function OrgMappings:meta_return(suffix)
     return
   end
 
-  if item:type() == 'headline' then
-    local linenr = vim.fn.line('.') or 0
-    local _, level = item:field('stars')[1]:end_()
+  local headline = (item:type() == 'headline') and item
+    or (item:parent() and item:parent():type() == 'headline') and item:parent()
+    or nil
+  if headline then
+    local _, level = headline:field('stars')[1]:end_()
     local content = config:respect_blank_before_new_entry({ ('*'):rep(level) .. ' ' .. suffix })
-    vim.fn.append(linenr, content)
-    vim.fn.cursor(linenr + #content, 1)
+
+    local section = headline:parent()
+    if not section or section:type() ~= 'section' then
+      return
+    end
+    local end_row = section:end_()
+
+    vim.fn.append(end_row, content)
+    vim.fn.cursor(end_row + #content, 1)
     vim.cmd([[startinsert!]])
     return true
   end
@@ -741,10 +742,8 @@ function OrgMappings:insert_heading_respect_content(suffix)
   if not item then
     self:_insert_heading_from_plain_line(suffix)
   else
-    local line = config:respect_blank_before_new_entry({ string.rep('*', item:get_level()) .. ' ' .. suffix })
-    local end_line = item:get_range().end_line
-    vim.fn.append(end_line, line)
-    vim.fn.cursor(end_line + #line, 1)
+    vim.fn.cursor(item:get_range().start_line, 1)
+    return self:meta_return(suffix)
   end
   return vim.cmd([[startinsert!]])
 end
@@ -755,13 +754,16 @@ end
 
 function OrgMappings:insert_todo_heading()
   local item = self.files:get_closest_headline_or_nil()
-  local first_todo_keyword = config:get_todo_keywords():first_by_type('TODO')
+  local first_todo_keyword = config:get_todo_keywords():first_by_type('TODO').value .. ' '
   if not item then
-    self:_insert_heading_from_plain_line(first_todo_keyword.value .. ' ')
+    self:_insert_heading_from_plain_line(first_todo_keyword)
     return vim.cmd([[startinsert!]])
   else
-    vim.fn.cursor(item:get_range().start_line, 1)
-    return self:meta_return(first_todo_keyword.value .. ' ')
+    local level = string.rep('*', item:get_level()) .. ' '
+    local line = config:respect_blank_before_new_entry({ level .. first_todo_keyword })
+    local start_line = item:get_range().start_line
+    vim.fn.append(start_line, line)
+    vim.fn.cursor(start_line + #line, 1)
   end
 end
 
