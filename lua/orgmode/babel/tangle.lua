@@ -96,7 +96,7 @@ function Tangle:tangle()
   local promises = {}
   for filename, block in pairs(tangle_info) do
     table.insert(
-      promises, 
+      promises,
       utils.writefile(filename, table.concat(self:_remove_obsolete_indent(block['content']), '\n'))
     )
 
