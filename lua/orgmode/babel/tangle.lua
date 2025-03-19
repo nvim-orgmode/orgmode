@@ -37,7 +37,7 @@ function Tangle:tangle()
     if tangle_info[info.filename] then
       table.insert(tangle_info[info.filename]['content'], '')
     else
-      tangle_info[info.filename] = {content = {}}
+      tangle_info[info.filename] = { content = {} }
     end
 
     local filemode = tangle_info[info.filename]['mode']
@@ -95,7 +95,11 @@ function Tangle:tangle()
 
   local promises = {}
   for filename, block in pairs(tangle_info) do
-    table.insert(promises, utils.writefile(filename, table.concat(self:_remove_obsolete_indent(block['content']), '\n')))
+    table.insert(
+      promises, 
+      utils.writefile(filename, table.concat(self:_remove_obsolete_indent(block['content']), '\n'))
+    )
+
     local mode_str = block['mode']
     if mode_str and mode_str:sub(1, 1) == 'o' then
       mode_str = mode_str:sub(2)
