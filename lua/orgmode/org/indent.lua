@@ -322,18 +322,7 @@ local function foldtext()
   return line .. config.org_ellipsis
 end
 
-local function setup_virtual_indent()
-  local virtualIndent = VirtualIndent:new()
-
-  if config.org_startup_indented or vim.b.org_indent_mode then
-    return virtualIndent:attach()
-  end
-
-  return virtualIndent:start_watch_org_indent()
-end
-
 return {
-  setup_virtual_indent = setup_virtual_indent,
   indentexpr = indentexpr,
   foldtext = foldtext,
 }

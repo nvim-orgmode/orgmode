@@ -66,11 +66,15 @@ List of available actions:
 - =:Org capture {type?}= - Open capture template by the shortcut, for example =:Org capture t=. When =type= is omitted, it opens up Capture prompt.
 - =:Org install_treesitter_grammar= - Install the treesitter grammar for Orgmode. If installed, prompt to reinstall. Grammar is installed automatically
   on first run, but this is useful in case when there are issues with the grammar.
+- =:Org store_link= - [[file:./configuration.org::#org_store_link][Store link]] to the headline under cursor. Works in both agenda and org files.
+- =:Org indent_mode= - Toggle virtual indent mode in the current buffer. See [[file:./configuration.org::#org_startup_indented][osg_startup_indented]] for additional info.
 
 All of the commands above can be executed through the global Lua =Org= variable. Examples:
 - =Org.help()=
 - =Org.helpgrep()=
 - =Org.install_treesitter_grammar()=
+- =Org.store_link()=
+- =Org.indent_mode()=
 - =Org.agenda()= - Opens =agenda= prompt
 - =Org.agenda.m()= - Opens =tags= view
 - =Org.capture()= - Opens capture prompt

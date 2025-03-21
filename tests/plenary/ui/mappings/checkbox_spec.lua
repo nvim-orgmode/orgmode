@@ -151,4 +151,25 @@ describe('Checkbox mappings', function()
       '- [ ] checkbox item',
     }, vim.api.nvim_buf_get_lines(0, 0, 6, false))
   end)
+
+  it('should update headline cookies from multiple lists', function()
+    helpers.create_file({
+      '* Test orgmode [/]',
+      'First List',
+      '- [ ] checkbox item',
+      '- [ ] checkbox item',
+      'Second List',
+      '- [ ] checkbox item',
+    })
+    vim.fn.cursor(4, 1)
+    vim.cmd([[exe "norm \<C-space>"]])
+    assert.are.same({
+      '* Test orgmode [1/3]',
+      'First List',
+      '- [ ] checkbox item',
+      '- [X] checkbox item',
+      'Second List',
+      '- [ ] checkbox item',
+    }, vim.api.nvim_buf_get_lines(0, 0, 6, false))
+  end)
 end)

@@ -105,18 +105,11 @@ end
 ---Get the headline at the cursor position in the agenda view
 ---@return OrgApiHeadline | nil
 function OrgAgenda.get_headline_at_cursor()
-  local line_nr = vim.fn.line('.')
-  local agenda_views = orgmode.agenda.views
+  local headline = orgmode.agenda:get_headline_at_cursor()
 
-  for _, view in ipairs(agenda_views) do
-    local agenda_line = view:get_line(line_nr)
-    if agenda_line then
-      local headline = agenda_line.headline
-      if headline then
-        local file = require('orgmode.api').load(headline.file.filename)
-        return file:get_headline_on_line(headline:get_range().start_line)
-      end
-    end
+  if headline then
+    local file = require('orgmode.api').load(headline.file.filename)
+    return file:get_headline_on_line(headline:get_range().start_line)
   end
 end
 

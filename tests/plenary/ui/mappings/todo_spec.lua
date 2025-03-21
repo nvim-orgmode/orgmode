@@ -408,4 +408,47 @@ describe('Todo mappings', function()
       '  :END:',
     }, vim.api.nvim_buf_get_lines(0, 2, 11, false))
   end)
+
+  it('should update headline cookies when children todo state changes', function()
+    helpers.create_file({
+      '* Test orgmode [/]',
+      '** TODO item',
+      '** TODO item',
+      '** TODO item',
+      '** TODO item',
+    })
+    vim.fn.cursor(4, 1)
+    local now = Date.now()
+    -- Changing to DONE and adding closed date
+    vim.cmd([[norm citd]])
+    assert.are.same({
+      '* Test orgmode [1/4]',
+      '** TODO item',
+      '** TODO item',
+      '** DONE item',
+      '   CLOSED: [' .. now:to_string() .. ']',
+      '** TODO item',
+    }, vim.api.nvim_buf_get_lines(0, 0, 6, false))
+  end)
+  it('should update headline cookies when children todo state changes', function()
+    helpers.create_file({
+      '* Test orgmode [/]',
+      '** TODO item',
+      '** TODO item',
+      '** TODO item',
+      '** Non-todo item',
+    })
+    vim.fn.cursor(4, 1)
+    local now = Date.now()
+    -- Changing to DONE and adding closed date
+    vim.cmd([[norm citd]])
+    assert.are.same({
+      '* Test orgmode [1/3]',
+      '** TODO item',
+      '** TODO item',
+      '** DONE item',
+      '   CLOSED: [' .. now:to_string() .. ']',
+      '** Non-todo item',
+    }, vim.api.nvim_buf_get_lines(0, 0, 6, false))
+  end)
 end)

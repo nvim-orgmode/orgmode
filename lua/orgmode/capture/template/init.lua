@@ -14,6 +14,9 @@ local expansions = {
     return vim.fn.expand('%:p')
   end,
   ['%%n'] = function()
+    if vim.fn.has('win32') == 1 then
+      return os.getenv('USERNAME')
+    end
     return os.getenv('USER')
   end,
   ['%%x'] = function()

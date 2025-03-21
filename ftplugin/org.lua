@@ -6,18 +6,17 @@ vim.b.did_ftplugin = true
 
 local config = require('orgmode.config')
 
-vim.b.org_bufnr = vim.api.nvim_get_current_buf()
-
 vim.treesitter.start()
 
-config:setup_mappings('org', vim.b.org_bufnr)
-config:setup_mappings('text_objects', vim.b.org_bufnr)
+local bufnr = vim.api.nvim_get_current_buf()
+
+config:setup_mappings('org', bufnr)
+config:setup_mappings('text_objects', bufnr)
 config:setup_foldlevel()
 
 if config.org_startup_indented then
-  vim.b.org_indent_mode = true
+  require('orgmode.ui.virtual_indent'):new(bufnr):attach()
 end
-require('orgmode.org.indent').setup_virtual_indent()
 
 vim.bo.modeline = false
 vim.opt_local.fillchars:append('fold: ')
@@ -56,7 +55,7 @@ for _, char in ipairs({ '*', '=', '/', '+', '~', '_' }) do
 end
 
 if config.org_highlight_latex_and_related then
-  vim.bo[vim.b.org_bufnr].syntax = 'ON'
+  vim.bo[bufnr].syntax = 'ON'
 end
 
 vim.b.undo_ftplugin = table.concat({
@@ -70,5 +69,5 @@ vim.b.undo_ftplugin = table.concat({
   'formatexpr<',
   'omnifunc<',
   'indentkeys<',
-  '| unlet! b:org_bufnr b:org_tmp_edit_window',
+  '| unlet! b:org_tmp_edit_window',
 }, ' ')
