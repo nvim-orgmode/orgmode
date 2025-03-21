@@ -522,4 +522,24 @@ describe('Meta return mappings', function()
       }, vim.api.nvim_buf_get_lines(0, 3, 10, false))
     end
   )
+
+  it('should add list item after a link with Enter (org_meta_return)', function()
+    helpers.create_agenda_file({
+      '#TITLE: Test',
+      '',
+      '* TODO Test orgmode',
+      '  - Regular item',
+      '  - [[http://www.com][a link]]',
+      '  - [x] Checkbox item',
+    })
+
+    vim.fn.cursor(5, 14)
+    vim.cmd([[exe "norm ,\<CR>"]])
+    assert.are.same({
+      '  - Regular item',
+      '  - [[http://www.com][a link]]',
+      '  - ',
+      '  - [x] Checkbox item',
+    }, vim.api.nvim_buf_get_lines(0, 3, 10, false))
+  end)
 end)
