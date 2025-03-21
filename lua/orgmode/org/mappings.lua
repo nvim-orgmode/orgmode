@@ -618,19 +618,7 @@ end
 
 function OrgMappings:meta_return(suffix)
   suffix = suffix or ''
-  local item = ts_utils.get_node_at_cursor()
-
-  if not item then
-    return
-  end
-
-  if item:type() == 'expr' then
-    item = item:parent()
-  end
-
-  if item and item:parent() and item:parent():type() == 'headline' then
-    item = item:parent()
-  end
+  local item = ts_utils.closest_item_or_headline_node()
 
   if not item then
     return
@@ -646,21 +634,8 @@ function OrgMappings:meta_return(suffix)
     return true
   end
 
-  if item:type() == 'list' or item:type() == 'listitem' then
-    vim.cmd([[normal! ^]])
-    item = ts_utils.get_node_at_cursor()
-  end
-  if not item then
-    return
-  end
-  local type = item:type()
-  if vim.tbl_contains({ 'paragraph', 'bullet', 'checkbox', 'status' }, type) then
-    local listitem = item:parent()
-    if not listitem or listitem:type() ~= 'listitem' then
-      return
-    end
-    return self:_insert_item_below(listitem)
-  end
+  -- item is a listitem here
+  return self:_insert_item_below(item)
 end
 
 ---@private
