@@ -34,12 +34,11 @@ jobs:
         run: |
           # Check which branch we're on
           CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
+          CURRENT_COMMIT=$(git rev-parse HEAD)
 
           # Sync the current branch with upstream
           git merge upstream/$CURRENT_BRANCH --no-edit
 
-      - name: Push excluding workflow files
-        run: |
           # Create a temporary branch without the workflow file as it triggered problems when merging
           git checkout -b temp-push-branch
           if [ -f .github/workflow/tests.yml ]; then
@@ -52,10 +51,10 @@ jobs:
             # There are changes, so commit them
             git commit -m "Remove tests.yml file"
 
-            # Push the branch without the workflow file
-            git push -f origin temp-push-branch:master
-
-            # Clean up
-            git checkout master
-            git branch -D temp-push-branch
           fi
+          # Push the branch without the workflow file
+          git push -f origin temp-push-branch:master
+
+          # Clean up
+          git checkout master
+          git branch -D temp-push-branch
