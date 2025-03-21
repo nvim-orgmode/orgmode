@@ -659,79 +659,83 @@ function OrgMappings:meta_return(suffix)
     if not listitem or listitem:type() ~= 'listitem' then
       return
     end
-    local line = vim.fn.getline(listitem:start() + 1)
-    local srow, _, end_row, end_col = listitem:range()
-    local is_multiline = (end_row - srow) > 1 or end_col == 0
-    -- For last item in file, ts grammar is not parsing the end column as 0
-    -- while in other cases end column is always 0
-    local is_last_item_in_file = end_col ~= 0
-    if not is_multiline or is_last_item_in_file then
-      end_row = end_row + 1
-    end
-    local range = {
-      start = { line = end_row, character = 0 },
-      ['end'] = { line = end_row, character = 0 },
-    }
+    return self:insert_item_below_this(listitem)
+  end
+end
 
-    local checkbox = line:match('^(%s*[%+%-%*])%s*%[[%sXx%-]?%]')
-    local plain_list = line:match('^%s*[%+%-%*]')
-    local indent, number_in_list, closer = line:match('^(%s*)(%d+)([%)%.])%s?')
-    local text_edits = config:respect_blank_before_new_entry({}, 'plain_list_item', {
+function OrgMappings:insert_item_below_this(listitem)
+  local line = vim.fn.getline(listitem:start() + 1)
+  local srow, _, end_row, end_col = listitem:range()
+  local is_multiline = (end_row - srow) > 1 or end_col == 0
+  -- For last item in file, ts grammar is not parsing the end column as 0
+  -- while in other cases end column is always 0
+  local is_last_item_in_file = end_col ~= 0
+  if not is_multiline or is_last_item_in_file then
+    end_row = end_row + 1
+  end
+  local range = {
+    start = { line = end_row, character = 0 },
+    ['end'] = { line = end_row, character = 0 },
+  }
+
+  local checkbox = line:match('^(%s*[%+%-%*])%s*%[[%sXx%-]?%]')
+  local plain_list = line:match('^%s*[%+%-%*]')
+  local indent, number_in_list, closer = line:match('^(%s*)(%d+)([%)%.])%s?')
+  local text_edits = config:respect_blank_before_new_entry({}, 'plain_list_item', {
+    range = range,
+    newText = '\n',
+  })
+  local add_empty_line = #text_edits > 0
+  if checkbox then
+    table.insert(text_edits, {
       range = range,
-      newText = '\n',
+      newText = checkbox .. ' [ ] \n',
     })
-    local add_empty_line = #text_edits > 0
+  elseif plain_list then
+    table.insert(text_edits, {
+      range = range,
+      newText = plain_list .. ' \n',
+    })
+  elseif number_in_list then
+    local next_sibling = listitem
+    local counter = 1
+    while next_sibling do
+      local bullet = next_sibling:child(0)
+      local text = bullet and vim.treesitter.get_node_text(bullet, 0) or ''
+      local new_text = tostring(tonumber(text:match('%d+')) + 1) .. closer
+
+      if counter == 1 then
+        table.insert(text_edits, {
+          range = range,
+          newText = indent .. new_text .. ' ' .. '\n',
+        })
+      else
+        table.insert(text_edits, {
+          range = ts_utils.node_to_lsp_range(bullet),
+          newText = new_text,
+        })
+      end
+
+      counter = counter + 1
+      next_sibling = next_sibling:next_sibling()
+    end
+  end
+
+  if #text_edits > 0 then
+    vim.lsp.util.apply_text_edits(text_edits, vim.api.nvim_get_current_buf(), constants.default_offset_encoding)
+
+    vim.fn.cursor(end_row + 1 + (add_empty_line and 1 or 0), 1) -- +1 for next line
+
+    -- update all parents when we insert a new checkbox
     if checkbox then
-      table.insert(text_edits, {
-        range = range,
-        newText = checkbox .. ' [ ] \n',
-      })
-    elseif plain_list then
-      table.insert(text_edits, {
-        range = range,
-        newText = plain_list .. ' \n',
-      })
-    elseif number_in_list then
-      local next_sibling = listitem
-      local counter = 1
-      while next_sibling do
-        local bullet = next_sibling:child(0)
-        local text = bullet and vim.treesitter.get_node_text(bullet, 0) or ''
-        local new_text = tostring(tonumber(text:match('%d+')) + 1) .. closer
-
-        if counter == 1 then
-          table.insert(text_edits, {
-            range = range,
-            newText = indent .. new_text .. ' ' .. '\n',
-          })
-        else
-          table.insert(text_edits, {
-            range = ts_utils.node_to_lsp_range(bullet),
-            newText = new_text,
-          })
-        end
-
-        counter = counter + 1
-        next_sibling = next_sibling:next_sibling()
+      local new_listitem = self.files:get_closest_listitem()
+      if new_listitem then
+        new_listitem:update_checkbox('off')
       end
     end
 
-    if #text_edits > 0 then
-      vim.lsp.util.apply_text_edits(text_edits, vim.api.nvim_get_current_buf(), constants.default_offset_encoding)
-
-      vim.fn.cursor(end_row + 1 + (add_empty_line and 1 or 0), 1) -- +1 for next line
-
-      -- update all parents when we insert a new checkbox
-      if checkbox then
-        local new_listitem = self.files:get_closest_listitem()
-        if new_listitem then
-          new_listitem:update_checkbox('off')
-        end
-      end
-
-      vim.cmd([[startinsert!]])
-      return true
-    end
+    vim.cmd([[startinsert!]])
+    return true
   end
 end
 
