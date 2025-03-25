@@ -8,6 +8,6 @@
   parameter: (expr) @lang
   contents: (contents (expr) @image.content)
   (#match? @name "(src|SRC)")
-  (#eq? @lang "math")
+  (#eq? @lang "(math|latex)")
   (#set! injection.language "latex")
   (#set! image.ext "math.tex"))
