@@ -659,7 +659,7 @@ function OrgMappings:meta_return(suffix)
     if not listitem or listitem:type() ~= 'listitem' then
       return
     end
-    return self:insert_item_below_this(listitem)
+    return self:_insert_item_below(listitem)
   end
 end
 
