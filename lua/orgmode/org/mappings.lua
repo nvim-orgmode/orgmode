@@ -663,7 +663,9 @@ function OrgMappings:meta_return(suffix)
   end
 end
 
-function OrgMappings:insert_item_below_this(listitem)
+---@private
+---@param listitem OrgListitem
+function OrgMappings:_insert_item_below(listitem)
   local line = vim.fn.getline(listitem:start() + 1)
   local srow, _, end_row, end_col = listitem:range()
   local is_multiline = (end_row - srow) > 1 or end_col == 0
