@@ -372,7 +372,7 @@ function OrgFiles:_files(skip_resolve)
     end, vim.fn.glob(vim.fn.fnamemodify(file, ':p'), false, true))
   end, self.paths)
 
-  all_files = vim.tbl_flatten(all_files)
+  all_files = utils.flatten(all_files)
 
   return vim.tbl_filter(function(file)
     if not utils.is_org_file(file) then
