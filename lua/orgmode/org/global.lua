@@ -127,7 +127,7 @@ vim.api.nvim_create_user_command('Org', function(opts)
   end
   require('orgmode.utils').echo_error(('Invalid command "Org %s"'):format(opts.args))
 end, {
-  nargs = '*',
+  nargs = '+',
   complete = function(arg_lead, cmd_line)
     local opts = vim.split(cmd_line:sub(5), '%s+')
     local item = resolve_item(opts)
