@@ -237,6 +237,19 @@ local function test_add_line_breaks_to_existing_file()
   expect_whole_buffer(expected)
 end
 
+local function test_insertion_from_normal_mode()
+  helpers.create_file({ '- first item' })
+  vim.cmd([[normal! o]])
+  local user_input = vim.api.nvim_replace_termcodes('i- second item<Esc>ocontent', true, true, true)
+  vim.api.nvim_feedkeys(user_input, 'ntix', false)
+  local expected = {
+    '- first item',
+    '- second item',
+    '  content',
+  }
+  expect_whole_buffer(expected)
+end
+
 -- The actual tests are here.
 
 describe('with "indent",', function()
@@ -258,6 +271,10 @@ describe('with "indent",', function()
 
   it('adding line breaks to list items maintains indent', function()
     test_add_line_breaks_to_existing_file()
+  end)
+
+  it('inserting content from nomral mode is well indented', function()
+    test_insertion_from_normal_mode()
   end)
 end)
 
