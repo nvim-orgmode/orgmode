@@ -15,9 +15,7 @@ local OrgApi = {}
 ---@param name? string|string[] specific file names to return (absolute path). If ommitted, returns all loaded files
 ---@return OrgApiFile|OrgApiFile[]
 function OrgApi.load(name)
-  validator.validate({
-    name = { name, { 'string', 'table' }, true },
-  })
+  validator.validate('name', name, { 'string', 'table' }, true)
   if not name then
     return vim.tbl_map(function(file)
       return OrgFile._build_from_internal_file(file)
@@ -57,10 +55,8 @@ end
 ---@param opts OrgApiRefileOpts
 ---@return OrgPromise<boolean>
 function OrgApi.refile(opts)
-  validator.validate({
-    source = { opts.source, 'table' },
-    destination = { opts.destination, 'table' },
-  })
+  validator.validate('source', opts.source, 'table')
+  validator.validate('destination', opts.destination, 'table')
 
   if getmetatable(opts.source) ~= OrgHeadline then
     error('Source must be an OrgApiHeadline', 0)

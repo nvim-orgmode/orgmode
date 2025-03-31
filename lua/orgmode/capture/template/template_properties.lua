@@ -6,9 +6,7 @@ local TemplateProperties = {}
 function TemplateProperties:new(opts)
   opts = opts or {}
 
-  validator.validate({
-    empty_lines = { opts.empty_lines, { 'table', 'number' }, true },
-  })
+  validator.validate('empty_lines', opts.empty_lines, { 'table', 'number' }, true)
 
   local empty_lines = opts.empty_lines or {}
   if type(empty_lines) == 'number' then

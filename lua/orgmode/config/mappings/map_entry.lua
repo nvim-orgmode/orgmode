@@ -52,13 +52,12 @@ end
 ---@param opts? table<string, any>
 function MapEntry:new(handler, opts)
   opts = opts or {}
-  validator.validate({
-    handler = { handler, { 'string', 'function' } },
-    modes = { opts.modes, 'table', true },
-    desc = { opts.desc, 'string', true },
-    help_desc = { opts.help_desc, 'string', true },
-    type = { opts.type, 'string', true },
-  })
+  validator.validate('handler', handler, { 'string', 'function' })
+  validator.validate('modes', opts.modes, 'table', true)
+  validator.validate('desc', opts.desc, 'string', true)
+  validator.validate('help_desc', opts.help_desc, 'string', true)
+  validator.validate('type', opts.type, 'string', true)
+
   local data = {}
   data.provided_opts = opts
   data.handler = handler
