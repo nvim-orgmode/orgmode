@@ -62,8 +62,10 @@ local function get_indent_for_match(matches, linenr, mode, bufnr)
     end
     return indent
   end
-  if mode:match('^[iR]') and prev_line_match.type == 'listitem' and linenr - prev_linenr < 3 then
-    -- In insert mode, we also count the non-listitem line *after* a listitem as
+  -- node type is nil while inserting!
+  local is_inserting = (not match.type) or mode:match('^[iR]')
+  if is_inserting and prev_line_match.type == 'listitem' and linenr - prev_linenr < 3 then
+    -- While inserting, we also count the non-listitem line *after* a listitem as
     -- part of the listitem. Keep in mind that double empty lines end a list as
     -- per Orgmode syntax.
     --
@@ -217,6 +219,9 @@ local get_matches = ts_utils.memoize_by_buf_tick(function(bufnr)
       end
     elseif type == 'paragraph' or type == 'drawer' or type == 'property_drawer' then
       opts.indent_type = 'other'
+      for i = range.start.line, range['end'].line - 1 do
+        matches[i + 1] = opts
+      end
     end
   end
 
@@ -254,9 +259,7 @@ local function indentexpr(linenr, bufnr)
   end
 
   local indentexpr_cache = buf_indentexpr_cache[bufnr] or { prev_linenr = -1 }
-  if indentexpr_cache.prev_linenr ~= linenr - 1 or not mode:lower():find('n') then
-    indentexpr_cache.matches = get_matches(bufnr)
-  end
+  indentexpr_cache.matches = get_matches(bufnr)
 
   -- Treesitter failed to parse the document (due to errors or missing tree)
   -- So we just fallback to autoindent
