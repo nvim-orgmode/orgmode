@@ -269,6 +269,7 @@ function OrgFile:find_headline_by_title(title)
   end)
 end
 
+memoize('get_todo_keywords')
 function OrgFile:get_todo_keywords()
   local todo_directive = self:_get_directive('todo')
   if not todo_directive then
