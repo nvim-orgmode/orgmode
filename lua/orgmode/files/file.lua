@@ -276,7 +276,7 @@ function OrgFile:get_todo_keywords()
     return config:get_todo_keywords()
   end
 
-  local keywords = vim.split(todo_directive, '%s+')
+  local keywords = vim.split(vim.trim(todo_directive), '%s+')
   local todo_keywords = require('orgmode.objects.todo_keywords'):new({
     org_todo_keywords = keywords,
     org_todo_keyword_faces = config.org_todo_keyword_faces,
