@@ -7,11 +7,11 @@ local TodoKeyword = require('orgmode.objects.todo_keywords.todo_keyword')
 ---@field todos OrgTodoKeywords
 local TodoState = {}
 
----@param data { current_state: string | nil }
+---@param data { current_state: string | nil, todos: table | nil }
 ---@return OrgTodoState
 function TodoState:new(data)
   local opts = {}
-  opts.todos = config:get_todo_keywords()
+  opts.todos = data.todos or config:get_todo_keywords()
   opts.current_state = data.current_state and opts.todos:find(data.current_state) or TodoKeyword:empty()
   setmetatable(opts, self)
   self.__index = self

@@ -1048,7 +1048,8 @@ end
 function OrgMappings:_change_todo_state(direction, use_fast_access)
   local headline = self.files:get_closest_headline()
   local current_keyword = headline:get_todo()
-  local todo_state = TodoState:new({ current_state = current_keyword })
+  local todos = headline.file:get_todo_keywords()
+  local todo_state = TodoState:new({ current_state = current_keyword, todos = todos })
   local next_state = nil
   if use_fast_access and todo_state:has_fast_access() then
     next_state = todo_state:open_fast_access()

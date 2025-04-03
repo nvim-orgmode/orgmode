@@ -451,4 +451,92 @@ describe('Todo mappings', function()
       '** Non-todo item',
     }, vim.api.nvim_buf_get_lines(0, 0, 6, false))
   end)
+
+  it('should respect file-local todo keywords', function()
+    helpers.create_file({
+      '#+TODO: OPEN DOING | FINISHED ABORTED',
+      '* OPEN Test with file-local todo keywords',
+      '** DOING Subtask',
+    })
+
+    vim.fn.cursor(2, 1)
+    vim.cmd([[norm cit]])
+    assert.are.same({
+      '#+TODO: OPEN DOING | FINISHED ABORTED',
+      '* DOING Test with file-local todo keywords',
+      '** DOING Subtask',
+    }, vim.api.nvim_buf_get_lines(0, 0, 3, false))
+
+    vim.cmd([[norm cit]])
+    local lines = vim.api.nvim_buf_get_lines(0, 0, 4, false)
+    assert.are.same('#+TODO: OPEN DOING | FINISHED ABORTED', lines[1])
+    assert.are.same('* FINISHED Test with file-local todo keywords', lines[2])
+    assert.is_true(lines[3]:match('^%s+CLOSED: %[%d%d%d%d%-%d%d%-%d%d') ~= nil)
+    assert.are.same('** DOING Subtask', lines[4])
+
+    vim.cmd([[norm cit]])
+    lines = vim.api.nvim_buf_get_lines(0, 0, 4, false)
+    assert.are.same('#+TODO: OPEN DOING | FINISHED ABORTED', lines[1])
+    assert.are.same('* ABORTED Test with file-local todo keywords', lines[2])
+    assert.is_true(lines[3]:match('^%s+CLOSED: %[%d%d%d%d%-%d%d%-%d%d') ~= nil)
+    assert.are.same('** DOING Subtask', lines[4])
+
+    vim.cmd([[norm cit]])
+    assert.are.same({
+      '#+TODO: OPEN DOING | FINISHED ABORTED',
+      '* Test with file-local todo keywords',
+      '** DOING Subtask',
+    }, vim.api.nvim_buf_get_lines(0, 0, 3, false))
+
+    vim.cmd([[norm cit]])
+    assert.are.same({
+      '#+TODO: OPEN DOING | FINISHED ABORTED',
+      '* OPEN Test with file-local todo keywords',
+      '** DOING Subtask',
+    }, vim.api.nvim_buf_get_lines(0, 0, 3, false))
+  end)
+  local todos_with_shortcuts = '#+TODO: OPEN(o) DOING(d) | FINISHED(f) ABORTED(a)'
+  it('should respect file-local todo keywords with shortcut keys', function()
+    helpers.create_file({
+      todos_with_shortcuts,
+      '* OPEN Test with file-local todo keywords',
+      '** DOING Subtask',
+    })
+
+    vim.fn.cursor(2, 1)
+    vim.cmd([[norm citd]])
+    assert.are.same({
+      todos_with_shortcuts,
+      '* DOING Test with file-local todo keywords',
+      '** DOING Subtask',
+    }, vim.api.nvim_buf_get_lines(0, 0, 3, false))
+
+    vim.cmd([[norm citf]])
+    local lines = vim.api.nvim_buf_get_lines(0, 0, 4, false)
+    assert.are.same(todos_with_shortcuts, lines[1])
+    assert.are.same('* FINISHED Test with file-local todo keywords', lines[2])
+    assert.is_true(lines[3]:match('^%s+CLOSED: %[%d%d%d%d%-%d%d%-%d%d') ~= nil)
+    assert.are.same('** DOING Subtask', lines[4])
+
+    vim.cmd([[norm cita]])
+    lines = vim.api.nvim_buf_get_lines(0, 0, 4, false)
+    assert.are.same(todos_with_shortcuts, lines[1])
+    assert.are.same('* ABORTED Test with file-local todo keywords', lines[2])
+    assert.is_true(lines[3]:match('^%s+CLOSED: %[%d%d%d%d%-%d%d%-%d%d') ~= nil)
+    assert.are.same('** DOING Subtask', lines[4])
+
+    vim.cmd([[exe "norm cit\<Space>"]])
+    assert.are.same({
+      todos_with_shortcuts,
+      '* Test with file-local todo keywords',
+      '** DOING Subtask',
+    }, vim.api.nvim_buf_get_lines(0, 0, 3, false))
+
+    vim.cmd([[norm cito]])
+    assert.are.same({
+      todos_with_shortcuts,
+      '* OPEN Test with file-local todo keywords',
+      '** DOING Subtask',
+    }, vim.api.nvim_buf_get_lines(0, 0, 3, false))
+  end)
 end)
