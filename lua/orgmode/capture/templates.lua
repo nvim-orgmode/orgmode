@@ -13,9 +13,7 @@ local Templates = {}
 function Templates:new(templates)
   local opts = {}
 
-  validator.validate({
-    templates = { templates, 'table', true },
-  })
+  validator.validate('templates', templates, 'table', true)
 
   opts.templates = {}
   for key, template in pairs(templates or config.org_capture_templates) do

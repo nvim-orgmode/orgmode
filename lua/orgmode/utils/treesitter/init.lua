@@ -52,6 +52,37 @@ function M.find_headline(node)
   return nil
 end
 
+-- walks the tree to find an item or headline
+---@param node TSNode | nil
+---@return TSNode | nil
+function M.find_item_or_headline(node)
+  if not node then
+    return nil
+  end
+
+  local node_type = node:type()
+  if node_type == 'headline' or node_type == 'listitem' then
+    return node
+  end
+
+  if node_type == 'list' then
+    -- Move right one character to pick up the current listitem
+    vim.cmd([[norm l]])
+    return M.find_item_or_headline(M.get_node_at_cursor())
+  end
+
+  if node_type == 'section' then
+    -- The headline is always the first child of a section
+    return node:field('headline')[1]
+  end
+  return M.find_item_or_headline(node:parent())
+end
+
+-- returns the nearest item or headline
+function M.closest_item_or_headline_node(cursor)
+  return M.find_item_or_headline(M.get_node_at_cursor(cursor))
+end
+
 -- returns the nearest headline
 function M.closest_headline_node(cursor)
   local node = M.get_node_at_cursor(cursor)

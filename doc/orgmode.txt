@@ -14,6 +14,7 @@ Table of Contents                                  *orgmode-table-of-contents*
 2. Troubleshooting                                   |orgmode-troubleshooting|
   - Indentation is not working|orgmode-troubleshooting-indentation-is-not-working|
   - I get treesitter/query.lua errors when opening agenda/capture prompt or org files|orgmode-troubleshooting-i-get-treesitter/query.lua-errors-when-opening-agenda/capture-prompt-or-org-files|
+  - I get .../orgmode/parser/org.so is not a valid Win32 application on Windows|orgmode-troubleshooting-i-get-.../orgmode/parser/org.so-is-not-a-valid-win32-application-on-windows|
   - Dates are not in English|orgmode-troubleshooting-dates-are-not-in-english|
   - Chinese characters are not displayed correctly in agenda|orgmode-troubleshooting-chinese-characters-are-not-displayed-correctly-in-agenda|
   - Links are not concealed  |orgmode-troubleshooting-links-are-not-concealed|
@@ -3046,6 +3047,26 @@ I GET TREESITTER/QUERY.LUA ERRORS WHEN OPENING AGENDA/CAPTURE PROMPT OR ORG FILE
 
 Tree-sitter parser might not be installed. Try running `:Org
 install_treesitter_grammar` to reinstall it.
+
+
+I GET .../ORGMODE/PARSER/ORG.SO IS NOT A VALID WIN32 APPLICATION ON WINDOWS*orgmode-troubleshooting-i-get-.../orgmode/parser/org.so-is-not-a-valid-win32-application-on-windows*
+
+This issue can happen due to wrong C compiler being used for building the
+parser. By default, first one available from this list is chosen: `cc, gcc,
+clang, cl, zig` If you want to use a specific parser, you can override the
+`compilers` list before calling the `setup()` like this:
+
+>lua
+    require('orgmode.utils.treesitter.install').compilers = { 'clang' }
+    require('orgmode').setup()
+<
+
+After that, restart Neovim and run `:Org install_treesitter_grammar` to
+reinstall the parser.
+
+nvim-treesitter
+<https://github.com/nvim-treesitter/nvim-treesitter/wiki/Windows-support#which-c-compiler-will-be-used>
+mentions the similar issue as part of their Windows troubleshooting section.
 
 
 DATES ARE NOT IN ENGLISH    *orgmode-troubleshooting-dates-are-not-in-english*

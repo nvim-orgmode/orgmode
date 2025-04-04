@@ -830,4 +830,52 @@ describe('OrgFile', function()
       assert.are.same('somevalue', file:get_directive('somedirective'))
     end)
   end)
+
+  describe('get_todos', function()
+    local has_correct_type = function(todos)
+      assert.are.same('TODO', todos.todo_keywords[1].type)
+      assert.are.same('TODO', todos.todo_keywords[2].type)
+      assert.are.same('DONE', todos.todo_keywords[3].type)
+      assert.are.same('DONE', todos.todo_keywords[4].type)
+    end
+
+    local has_correct_values = function(todos)
+      assert.are.same('OPEN', todos.todo_keywords[1].value)
+      assert.are.same('DOING', todos.todo_keywords[2].value)
+      assert.are.same('FINISHED', todos.todo_keywords[3].value)
+      assert.are.same('ABORTED', todos.todo_keywords[4].value)
+    end
+    it('should get todo keywords from config by default', function()
+      config:extend({
+        org_todo_keywords = { 'TODO', 'DOING', '|', 'DONE', 'CANCELED' },
+      })
+      local file = load_file_sync({
+        '* TODO Headline 1',
+      })
+      local todos = file:get_todo_keywords()
+      assert.are.same({ 'TODO', 'DOING', '|', 'DONE', 'CANCELED' }, todos.org_todo_keywords)
+    end)
+
+    it('should parse custom todo keywords from file directive', function()
+      local file = load_file_sync({
+        '#+TODO: OPEN DOING | FINISHED ABORTED',
+        '* OPEN Headline 1',
+      })
+      local todos = file:get_todo_keywords()
+      has_correct_type(todos)
+      has_correct_values(todos)
+      assert.are.same({ 'OPEN', 'DOING', '|', 'FINISHED', 'ABORTED' }, todos.org_todo_keywords)
+    end)
+
+    it('should handle todo keywords with shortcut keys', function()
+      local file = load_file_sync({
+        '#+TODO: OPEN(o) DOING(d) | FINISHED(f) ABORTED(a)',
+        '* OPEN Headline 1',
+      })
+      local todos = file:get_todo_keywords()
+      has_correct_type(todos)
+      has_correct_values(todos)
+      assert.are.same({ 'OPEN(o)', 'DOING(d)', '|', 'FINISHED(f)', 'ABORTED(a)' }, todos.org_todo_keywords)
+    end)
+  end)
 end)

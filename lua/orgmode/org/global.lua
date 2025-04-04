@@ -122,12 +122,12 @@ end
 
 vim.api.nvim_create_user_command('Org', function(opts)
   local item = resolve_item(opts.fargs)
-  if item and (type(item) == 'function' or getmetatable(item).__call) then
+  if item and (type(item) == 'function' or (getmetatable(item) and getmetatable(item).__call)) then
     return item()
   end
   require('orgmode.utils').echo_error(('Invalid command "Org %s"'):format(opts.args))
 end, {
-  nargs = '*',
+  nargs = '+',
   complete = function(arg_lead, cmd_line)
     local opts = vim.split(cmd_line:sub(5), '%s+')
     local item = resolve_item(opts)

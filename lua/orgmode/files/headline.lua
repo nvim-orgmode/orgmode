@@ -379,7 +379,7 @@ function Headline:get_todo()
     return nil, nil, nil
   end
 
-  local todo_keywords = config:get_todo_keywords()
+  local todo_keywords = self.file:get_todo_keywords()
 
   local text = self.file:get_node_text(todo_node)
   local keyword_by_value = todo_keywords:find(text)

@@ -11,6 +11,20 @@ Make sure you are not overriding indentexpr in Org buffers with [[https://github
 Tree-sitter parser might not be installed.
 Try running ~:Org install_treesitter_grammar~ to reinstall it.
 
+** I get =.../orgmode/parser/org.so is not a valid Win32 application= on Windows
+
+This issue can happen due to wrong C compiler being used for building the parser.
+By default, first one available from this list is chosen: =cc, gcc, clang, cl, zig=
+If you want to use a specific parser, you can override the =compilers= list
+before calling the =setup()= like this:
+#+begin_src lua
+require('orgmode.utils.treesitter.install').compilers = { 'clang' }
+require('orgmode').setup()
+#+end_src
+After that, restart Neovim and run =:Org install_treesitter_grammar= to reinstall the parser.
+
+[[https://github.com/nvim-treesitter/nvim-treesitter/wiki/Windows-support#which-c-compiler-will-be-used][nvim-treesitter]] mentions the similar issue as part of their Windows troubleshooting section.
+
 ** Dates are not in English
 Dates are generated with Lua native date support, and it reads your current locale when creating them.
 #+HTML: <br/>

@@ -1,5 +1,24 @@
 #+OPTIONS: H:9 ^:nil
 * Changelog
+** [[https://github.com/nvim-orgmode/orgmode/compare/0.5.2...0.5.3][0.5.3]] (2025-03-26)
+*** Breaking changes
+- *indent*: Add `Org indent_mode` command in favor of toggling `vim.b.org_indent_mode` (#932) ([[https://github.com/nvim-orgmode/orgmode/commit/5368c0b][5368c0b]])
+
+*** Features
+- *luarocks*: remove dependency on tree-sitter-orgmode ([[https://github.com/nvim-orgmode/orgmode/commit/7684799][7684799]])
+- *image*: match latex code tag for math preview (#945) ([[https://github.com/nvim-orgmode/orgmode/commit/3f8114e][3f8114e]])
+- *images*: add support for rendering latex math expressions (#935) ([[https://github.com/nvim-orgmode/orgmode/commit/0ebe2e3][0ebe2e3]])
+- support  headline's cookie from TODOs (#926) ([[https://github.com/nvim-orgmode/orgmode/commit/abf8890][abf8890]])
+- *global*: Add store_link command to Org global ([[https://github.com/nvim-orgmode/orgmode/commit/98776eb][98776eb]])
+- support updating a headline's cookie from multiple lists (#925) ([[https://github.com/nvim-orgmode/orgmode/commit/22094c4][22094c4]])
+- *babel*: add directory creation support with :mkdirp header argument (#928) ([[https://github.com/nvim-orgmode/orgmode/commit/fb9580c][fb9580c]])
+
+*** Bug fixes
+- meta_return on a link item (#943) ([[https://github.com/nvim-orgmode/orgmode/commit/b42236a][b42236a]])
+- *statistics cookie*: count only TODO headlines (#938) ([[https://github.com/nvim-orgmode/orgmode/commit/5d7c03a][5d7c03a]])
+- *links*: Allow storing links from agenda with org_use_id enabled ([[https://github.com/nvim-orgmode/orgmode/commit/2c95512][2c95512]])
+- *template*: Use env variable USERNAME in Windows (#931) ([[https://github.com/nvim-orgmode/orgmode/commit/8b4555b][8b4555b]])
+
 ** [[https://github.com/nvim-orgmode/orgmode/compare/0.5.1...0.5.2][0.5.2]] (2025-03-07)
 *** Bug fixes
 - *calendar*: fix custom date input ([[https://github.com/nvim-orgmode/orgmode/commit/2aa966f][2aa966f]])

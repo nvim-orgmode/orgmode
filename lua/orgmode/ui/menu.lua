@@ -40,18 +40,14 @@ end
 
 ---@param option OrgMenuOption
 function Menu:_validate_option(option)
-  validator.validate({
-    label = { option.label, 'string' },
-    key = { option.key, 'string' },
-    action = { option.action, 'function', true },
-  })
+  validator.validate('label', option.label, 'string')
+  validator.validate('key', option.key, 'string')
+  validator.validate('action', option.action, 'function', true)
 end
 
 ---@param items OrgMenuItem[]?
 function Menu:_validate_items(items)
-  validator.validate({
-    items = { items, 'table', true },
-  })
+  validator.validate('items', items, 'table', true)
   if not items then
     return
   end
@@ -69,23 +65,17 @@ end
 
 ---@param separator OrgMenuSeparator?
 function Menu:_validate_separator(separator)
-  validator.validate({
-    separator = { separator, 'table', true },
-  })
+  validator.validate('separator', separator, 'table', true)
   if separator then
-    validator.validate({
-      icon = { separator.icon, 'string', true },
-      length = { separator.length, 'number', true },
-    })
+    validator.validate('icon', separator.icon, 'string', true)
+    validator.validate('length', separator.length, 'number', true)
   end
 end
 
 ---@param data OrgMenuOpts
 function Menu:_validate_data(data)
-  validator.validate({
-    title = { data.title, 'string' },
-    prompt = { data.prompt, 'string' },
-  })
+  validator.validate('title', data.title, 'string')
+  validator.validate('prompt', data.prompt, 'string')
   self:_validate_items(data.items)
   self:_validate_separator(data.separator)
 end
