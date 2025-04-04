@@ -269,6 +269,22 @@ function OrgFile:find_headline_by_title(title)
   end)
 end
 
+memoize('get_todo_keywords')
+function OrgFile:get_todo_keywords()
+  local todo_directive = self:_get_directive('todo')
+  if not todo_directive then
+    return config:get_todo_keywords()
+  end
+
+  local keywords = vim.split(vim.trim(todo_directive), '%s+')
+  local todo_keywords = require('orgmode.objects.todo_keywords'):new({
+    org_todo_keywords = keywords,
+    org_todo_keyword_faces = config.org_todo_keyword_faces,
+  })
+
+  return todo_keywords
+end
+
 ---@return OrgHeadline[]
 function OrgFile:get_unfinished_todo_entries()
   if self:is_archive_file() then

@@ -379,7 +379,7 @@ function OrgMappings:toggle_heading()
   line = line:gsub('^(%s*)', '')
   if line:match('^[%*-]%s') then -- handle lists
     line = line:gsub('^[%*-]%s', '') -- strip bullet
-    local todo_keywords = config:get_todo_keywords()
+    local todo_keywords = self.files:get_current_file():get_todo_keywords()
     line = line:gsub('^%[([X%s])%]%s', function(checkbox_state)
       if checkbox_state == 'X' then
         return todo_keywords:first_by_type('DONE').value .. ' '
@@ -731,12 +731,14 @@ function OrgMappings:insert_heading_respect_content(suffix)
 end
 
 function OrgMappings:insert_todo_heading_respect_content()
-  return self:insert_heading_respect_content(config:get_todo_keywords():first_by_type('TODO').value .. ' ')
+  local todo_keywords = self.files:get_current_file():get_todo_keywords()
+  return self:insert_heading_respect_content(todo_keywords:first_by_type('TODO').value .. ' ')
 end
 
 function OrgMappings:insert_todo_heading()
   local item = self.files:get_closest_headline_or_nil()
-  local first_todo_keyword = config:get_todo_keywords():first_by_type('TODO')
+  local todo_keywords = self.files:get_current_file():get_todo_keywords()
+  local first_todo_keyword = todo_keywords:first_by_type('TODO')
   if not item then
     self:_insert_heading_from_plain_line(first_todo_keyword.value .. ' ')
     return vim.cmd([[startinsert!]])
@@ -1048,7 +1050,8 @@ end
 function OrgMappings:_change_todo_state(direction, use_fast_access)
   local headline = self.files:get_closest_headline()
   local current_keyword = headline:get_todo()
-  local todo_state = TodoState:new({ current_state = current_keyword })
+  local todos = headline.file:get_todo_keywords()
+  local todo_state = TodoState:new({ current_state = current_keyword, todos = todos })
   local next_state = nil
   if use_fast_access and todo_state:has_fast_access() then
     next_state = todo_state:open_fast_access()
