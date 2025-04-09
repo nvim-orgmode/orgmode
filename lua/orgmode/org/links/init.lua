@@ -76,8 +76,11 @@ function OrgLinks:autocomplete(link)
 end
 
 ---@param headline OrgHeadline
+---@return string url
 function OrgLinks:store_link_to_headline(headline)
-  self.stored_links[self:get_link_to_headline(headline)] = headline:get_title()
+  local url = self:get_link_to_headline(headline)
+  self.stored_links[url] = headline:get_title()
+  return url
 end
 
 ---@param headline OrgHeadline
@@ -108,6 +111,41 @@ function OrgLinks:get_link_to_file(file)
   end
 
   return ('file:%s::*%s'):format(file.filename, title)
+end
+
+---@param params {attach_dir: string, original: string}
+---@return string | nil url
+function OrgLinks:store_link_to_attachment(params)
+  local url = self:get_link_to_attachment(params)
+  if url then
+    self.stored_links[url] = vim.fs.basename(params.original)
+  end
+  return url
+end
+
+---@param params {attach_dir: string, original: string}
+---@return string | nil url
+function OrgLinks:get_link_to_attachment(params)
+  vim.validate({
+    attach_dir = { params.attach_dir, 'string' },
+    original = { params.original, 'string' },
+  })
+  local basename = vim.fs.basename(params.original)
+  local choice = config.org_attach_store_link_p
+  if choice == 'attached' then
+    return string.format('attachment:%s', basename)
+  elseif choice == 'file' then
+    local attach_file = vim.fs.joinpath(params.attach_dir, basename)
+    return string.format('file:%s', attach_file)
+  elseif choice == 'original' then
+    -- Sanity check: `original` might be a URL. Check for that and return it
+    -- unmodified if yes.
+    if params.original:match('^[A-Za-z]+://') then
+      return params.original
+    end
+    return string.format('file:%s', params.original)
+  end
+  return nil
 end
 
 ---@param link_location string
