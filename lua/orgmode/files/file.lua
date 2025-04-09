@@ -315,6 +315,7 @@ function OrgFile:apply_search(search, todo_only)
     local closed = item:get_closed_date()
     local properties = item:get_own_properties()
     local priority = item:get_priority()
+    local level = item:get_level()
 
     return search:check({
       props = vim.tbl_extend('keep', {}, properties, {
@@ -324,6 +325,7 @@ function OrgFile:apply_search(search, todo_only)
         closed = closed and closed:to_wrapped_string(false),
         priority = priority,
         todo = item:get_todo() or '',
+        level = level,
       }),
       tags = item:get_tags(),
       todo = item:get_todo() or '',
