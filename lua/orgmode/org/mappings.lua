@@ -701,7 +701,7 @@ function OrgMappings:_insert_item_below(listitem)
   if #text_edits > 0 then
     vim.lsp.util.apply_text_edits(text_edits, vim.api.nvim_get_current_buf(), constants.default_offset_encoding)
 
-    vim.fn.cursor(end_row + 1 + (add_empty_line and 1 or 0), 1) -- +1 for next line
+    vim.fn.cursor(end_row + 1 + (add_empty_line and 1 or 0), 99999) -- +1 for next line, go to end of line with arbitrary big column number
 
     -- update all parents when we insert a new checkbox
     if checkbox then
