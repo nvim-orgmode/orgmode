@@ -118,12 +118,6 @@ function Tangle:tangle()
       vim.fn.mkdir(path, 'p')
     end
 
-    local shebang = info.header_args[':shebang']
-    if shebang then
-      shebang = shebang:gsub('[\'"]', '')
-      table.insert(parsed_content, 1, shebang)
-    end
-
     if info.name then
       block_content_by_name[info.name] = parsed_content
     end
