@@ -14,6 +14,44 @@ function Tangle:new(opts)
   }, self)
 end
 
+function mode_to_string(mode)
+    local permissions = {"---", "--x", "-w-", "-wx", "r--", "r-x", "rw-", "rwx"}
+    local result = ""
+    
+    -- File type
+    local file_type = bit.band(bit.rshift(mode, 12), 15)
+    local type_char = {
+        [0] = "-", -- regular file
+        [1] = "p", -- named pipe (fifo)
+        [2] = "c", -- character special
+        [4] = "d", -- directory
+        [6] = "b", -- block special
+        [8] = "f", -- regular file (rarely used)
+        [10] = "l", -- symbolic link
+        [12] = "s"  -- socket
+    }
+    result = result .. (type_char[file_type] or "-")
+    
+    -- Owner, group, others permissions
+    for i = 2, 0, -1 do
+        local perm = bit.band(bit.rshift(mode, i * 3), 7)
+        result = result .. permissions[perm + 1]
+    end
+    
+    -- Special bits
+    if bit.band(mode, 0x800) ~= 0 then -- sticky bit
+        result = result:sub(1, 9) .. (result:sub(10, 10) == "-" and "T" or "t")
+    end
+    if bit.band(mode, 0x400) ~= 0 then -- setgid
+        result = result:sub(1, 6) .. (result:sub(7, 7) == "-" and "S" or "s")
+    end
+    if bit.band(mode, 0x200) ~= 0 then -- setuid
+        result = result:sub(1, 3) .. (result:sub(4, 4) == "-" and "S" or "s")
+    end
+    
+    return result
+end
+
 function Tangle:tangle()
   local block_content_by_name = {}
   ---@type OrgBlockTangleInfo[]
@@ -95,17 +133,17 @@ function Tangle:tangle()
 
   local promises = {}
   for filename, block in pairs(tangle_info) do
-    table.insert(
-      promises,
-      utils.writefile(filename, table.concat(self:_remove_obsolete_indent(block['content']), '\n'))
-    )
-
     local mode_str = block['mode']
     if mode_str and mode_str:sub(1, 1) == 'o' then
-      mode_str = mode_str:sub(2)
-      local mode_num = tonumber(mode_str, 8)
-      vim.loop.fs_chmod(filename, mode_num)
+      mode_str[1] = 0
+      mode_str = mode_to_string(mode_str)
     end
+
+    table.insert(
+      promises,
+      utils.writefile(filename, table.concat(self:_remove_obsolete_indent(block['content']), '\n'), mode_str)
+    )
+
   end
   Promise.all(promises):wait()
   utils.echo_info(('Tangled %d blocks from %s'):format(#valid_blocks, vim.fn.fnamemodify(self.file.filename, ':t')))
