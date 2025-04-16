@@ -155,12 +155,14 @@ function Tangle:tangle()
     local mode_str = block['mode']
     local mode = nil
 
-    if mode_str and mode_str:sub(1, 1) == 'o' then
-      mode = tonumber(mode_str:sub(2), 8)
-    elseif mode_str then
-      mode = chmod_style_to_octal(mode_str)
-      if mode == nil then
-        mode = ls_style_to_octal(mode_str)
+    if mode_str then
+      if mode_str:sub(1, 1) == 'o' then
+        mode = tonumber(mode_str:sub(2), 8)
+      else
+        mode = chmod_style_to_octal(mode_str)
+        if mode == nil then
+          mode = ls_style_to_octal(mode_str)
+        end
       end
     end
 
