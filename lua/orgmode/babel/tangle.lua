@@ -27,7 +27,6 @@ function ls_style_to_octal(rwx_string)
       if chunk:sub(3, 3) == 'x' then value = value + 1 end
 
       result = result * 8 + value
-      utils.echo_info(("ls style mode: %o"):format(result))
     end
 
     return result
@@ -38,9 +37,7 @@ function chmod_style_to_octal(chmod_string)
     local owner, group, other = 0, 0, 0
 
     for part in chmod_string:gmatch('[^,]+') do
-      utils.echo_info(('part: %s'):format(part))
       local who, what = part:match('(%a+)[=+](.+)')
-      utils.echo_info(('who: %s what: %s'):format(who, what))
       if not who or not what then
         return nil
       end
