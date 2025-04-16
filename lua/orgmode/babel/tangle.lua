@@ -19,19 +19,24 @@ function ls_style_to_octal(rwx_string)
   local value = 0
 
   for i = 1, #rwx_string, 3 do
-    local chunk = rwx_string:sub(i, i+2)
+    local chunk = rwx_string:sub(i, i + 2)
     value = 0
 
-    if chunk:sub(1, 1) == 'r' then value = value + 4 end
-    if chunk:sub(2, 2) == 'w' then value = value + 2 end
-    if chunk:sub(3, 3) == 'x' then value = value + 1 end
+    if chunk:sub(1, 1) == 'r' then
+      value = value + 4
+    end
+    if chunk:sub(2, 2) == 'w' then
+      value = value + 2
+    end
+    if chunk:sub(3, 3) == 'x' then
+      value = value + 1
+    end
 
     result = result * 8 + value
   end
 
   return result
 end
-
 
 function chmod_style_to_octal(chmod_string)
   local owner, group, other = 0, 0, 0
@@ -42,15 +47,26 @@ function chmod_style_to_octal(chmod_string)
       return nil
     end
 
-
     local perm = 0
-    if what:find('r') then perm = perm + 4 end
-    if what:find('w') then perm = perm + 2 end
-    if what:find('x') then perm = perm + 1 end
+    if what:find('r') then
+      perm = perm + 4
+    end
+    if what:find('w') then
+      perm = perm + 2
+    end
+    if what:find('x') then
+      perm = perm + 1
+    end
 
-    if who:find('u') or who:find('a') then owner = bit.bor(owner, perm) end
-    if who:find('g') or who:find('a') then group = bit.bor(group, perm) end
-    if who:find('o') or who:find('a') then other = bit.bor(other, perm) end
+    if who:find('u') or who:find('a') then
+      owner = bit.bor(owner, perm)
+    end
+    if who:find('g') or who:find('a') then
+      group = bit.bor(group, perm)
+    end
+    if who:find('o') or who:find('a') then
+      other = bit.bor(other, perm)
+    end
   end
 
   return owner * 64 + group * 8 + other
@@ -131,7 +147,6 @@ function Tangle:tangle()
 
   local promises = {}
   for filename, block in pairs(tangle_info) do
-
     table.insert(
       promises,
       utils.writefile(filename, table.concat(self:_remove_obsolete_indent(block['content']), '\n'))
