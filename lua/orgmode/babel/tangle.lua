@@ -157,7 +157,7 @@ function Tangle:tangle()
 
     if mode_str and mode_str:sub(1, 1) == 'o' then
       mode = tonumber(mode_str:sub(2), 8)
-    else
+    elseif mode_str then
       mode = chmod_style_to_octal(mode_str)
       if mode == nil then
         mode = ls_style_to_octal(mode_str)
