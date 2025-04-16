@@ -14,42 +14,49 @@ function Tangle:new(opts)
   }, self)
 end
 
-function mode_to_string(mode)
-    local permissions = {"---", "--x", "-w-", "-wx", "r--", "r-x", "rw-", "rwx"}
-    local result = ""
-    
-    -- File type
-    local file_type = bit.band(bit.rshift(mode, 12), 15)
-    local type_char = {
-        [0] = "-", -- regular file
-        [1] = "p", -- named pipe (fifo)
-        [2] = "c", -- character special
-        [4] = "d", -- directory
-        [6] = "b", -- block special
-        [8] = "f", -- regular file (rarely used)
-        [10] = "l", -- symbolic link
-        [12] = "s"  -- socket
-    }
-    result = result .. (type_char[file_type] or "-")
-    
-    -- Owner, group, others permissions
-    for i = 2, 0, -1 do
-        local perm = bit.band(bit.rshift(mode, i * 3), 7)
-        result = result .. permissions[perm + 1]
+function ls_style_to_octal(rwx_string)
+    local result = 0
+    local value = 0
+
+    for i = 1, #rwx_string, 3 do
+      local chunk = rwx_string:sub(i, i+2)
+      value = 0
+
+      if chunk:sub(1, 1) == 'r' then value = value + 4 end
+      if chunk:sub(2, 2) == 'w' then value = value + 2 end
+      if chunk:sub(3, 3) == 'x' then value = value + 1 end
+
+      result = result * 8 + value
+      utils.echo_info(("ls style mode: %o"):format(result))
     end
-    
-    -- Special bits
-    if bit.band(mode, 0x800) ~= 0 then -- sticky bit
-        result = result:sub(1, 9) .. (result:sub(10, 10) == "-" and "T" or "t")
-    end
-    if bit.band(mode, 0x400) ~= 0 then -- setgid
-        result = result:sub(1, 6) .. (result:sub(7, 7) == "-" and "S" or "s")
-    end
-    if bit.band(mode, 0x200) ~= 0 then -- setuid
-        result = result:sub(1, 3) .. (result:sub(4, 4) == "-" and "S" or "s")
-    end
-    
+
     return result
+end
+
+
+function chmod_style_to_octal(chmod_string)
+    local owner, group, other = 0, 0, 0
+
+    for part in chmod_string:gmatch('[^,]+') do
+      utils.echo_info(('part: %s'):format(part))
+      local who, what = part:match('(%a+)[=+](.+)')
+      utils.echo_info(('who: %s what: %s'):format(who, what))
+      if not who or not what then
+        return nil
+      end
+
+
+      local perm = 0
+      if what:find('r') then perm = perm + 4 end
+      if what:find('w') then perm = perm + 2 end
+      if what:find('x') then perm = perm + 1 end
+
+      if who:find('u') or who:find('a') then owner = bit.bor(owner, perm) end
+      if who:find('g') or who:find('a') then group = bit.bor(group, perm) end
+      if who:find('o') or who:find('a') then other = bit.bor(other, perm) end
+    end
+
+    return owner * 64 + group * 8 + other
 end
 
 function Tangle:tangle()
@@ -127,17 +134,28 @@ function Tangle:tangle()
 
   local promises = {}
   for filename, block in pairs(tangle_info) do
-    local mode_str = block['mode']
-    if mode_str and mode_str:sub(1, 1) == 'o' then
-      mode_str[1] = 0
-      mode_str = mode_to_string(mode_str)
-    end
 
     table.insert(
       promises,
-      utils.writefile(filename, table.concat(self:_remove_obsolete_indent(block['content']), '\n'), mode_str)
+      utils.writefile(filename, table.concat(self:_remove_obsolete_indent(block['content']), '\n'))
     )
 
+    local mode_str = block['mode']
+    local mode = nil
+
+    if mode_str and mode_str:sub(1, 1) == 'o' then
+      mode = tonumber(mode_str:sub(2), 8)
+    else
+      mode = chmod_style_to_octal(mode_str)
+      if mode == nil then
+        mode = ls_style_to_octal(mode_str)
+      end
+    end
+
+    if mode then
+      utils.echo_info(('change mode %s mode %o'):format(filename, mode))
+      vim.loop.fs_chmod(filename, mode)
+    end
   end
   Promise.all(promises):wait()
   utils.echo_info(('Tangled %d blocks from %s'):format(#valid_blocks, vim.fn.fnamemodify(self.file.filename, ':t')))
