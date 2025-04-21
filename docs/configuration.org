@@ -544,7 +544,7 @@ Determine whether properties of one headline are inherited by sub-headlines.
 - =string[]= - only the properties named in the given list are inherited
 - =string= - only properties matching the given regex are inherited
 
-Note that for a select few properties, the inheritance behavior is hard-coded withing their special applications.
+Note that for a select few properties, the inheritance behavior is hard-coded within their special applications.
 See [[https://orgmode.org/manual/Property-Inheritance.html][Property Inheritance]] for details.
 
 *** org_babel_default_header_args
@@ -566,7 +566,7 @@ Available options:
 - =0= - start week on Sunday
 - =1= - start week on Monday
 
-Determine on which day the week will start in calendar modal (ex:[[#org_change_date][changing the date under cursor]])
+Determine on which day the week will start in calendar modal (ex: [[#org_change_date][changing the date under cursor]])
 
 *** emacs_config
 :PROPERTIES:
@@ -736,7 +736,7 @@ These arguments are shared between all of the agenda types:
 :CUSTOM_ID: org_agenda_sorting_strategy
 :END:
 - Type:
-=table<'agenda' | 'todo' | 'tags', OrgAgendaSortingStrategy[]><=
+=table<'agenda' | 'todo' | 'tags', OrgAgendaSortingStrategy[]>=
 - Default:
 ~{ agenda = {'time-up', 'priority-down', 'category-keep'}, todo = {'priority-down', 'category-keep'}, tags = {'priority-down', 'category-keep'}}~
 List of sorting strategies to apply to a given view. Available
