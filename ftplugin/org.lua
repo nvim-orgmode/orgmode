@@ -71,3 +71,9 @@ vim.b.undo_ftplugin = table.concat({
   'indentkeys<',
   '| unlet! b:org_tmp_edit_window',
 }, ' ')
+
+-- Manually attach Snacks.image module to ensure that images are shown.
+-- Snacks usually handles this automatically, but if Orgmode plugin is loaded after Snacks, it will not pick it up.
+if vim.tbl_get(_G, 'Snacks', 'image', 'config', 'enabled') and vim.tbl_get(_G, 'Snacks', 'image', 'config', 'doc', 'enabled') then
+  require('snacks.image.doc').attach(bufnr)
+end
