@@ -277,18 +277,27 @@ end
 
 memoize('get_todo_keywords')
 function OrgFile:get_todo_keywords()
-  local todo_directive = self:_get_directive('todo')
-  if not todo_directive then
+  local todo_directives = self:_get_directive('todo', true)
+
+  -- Fall back to config if no TODO directives were found
+  if not todo_directives then
     return config:get_todo_keywords()
   end
 
-  local keywords = vim.split(vim.trim(todo_directive), '%s+')
-  local todo_keywords = require('orgmode.objects.todo_keywords'):new({
-    org_todo_keywords = keywords,
+  if type(todo_directives) ~= 'table' then
+    todo_directives = { todo_directives }
+  end
+
+  local keywords_data = {}
+  for _, directive in ipairs(todo_directives) do
+    local keywords = vim.split(vim.trim(directive), '%s+')
+    table.insert(keywords_data, keywords)
+  end
+
+  return require('orgmode.objects.todo_keywords'):new({
+    org_todo_keywords = keywords_data,
     org_todo_keyword_faces = config.org_todo_keyword_faces,
   })
-
-  return todo_keywords
 end
 
 ---@return OrgHeadline[]
@@ -849,7 +858,7 @@ end
 
 memoize('get_directive')
 ---@param directive_name string
----@return string | nil
+---@return string[] | string | nil
 function OrgFile:get_directive(directive_name)
   return self:_get_directive(directive_name)
 end
@@ -867,8 +876,10 @@ function OrgFile:id_get_or_create()
 end
 
 ---@private
----@return string | nil
-function OrgFile:_get_directive(directive_name)
+---@param directive_name string
+---@param all_matches? boolean If true, returns an array of all matching directive values
+---@return  string[] | string | nil
+function OrgFile:_get_directive(directive_name, all_matches)
   self:parse(true)
   local directives_body = self.root:field('body')[1]
   if not directives_body then
@@ -877,6 +888,22 @@ function OrgFile:_get_directive(directive_name)
   local directives = directives_body:field('directive')
   if not directives or #directives == 0 then
     return nil
+  end
+
+  if all_matches then
+    local results = {}
+    for _, directive in ipairs(directives) do
+      local name = directive:field('name')[1]
+      local value = directive:field('value')[1]
+
+      if name and value then
+        local name_text = self:get_node_text(name)
+        if name_text:lower() == directive_name:lower() then
+          table.insert(results, self:get_node_text(value))
+        end
+      end
+    end
+    return #results > 0 and results or nil
   end
 
   for _, directive in ipairs(directives) do
