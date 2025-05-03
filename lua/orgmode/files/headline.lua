@@ -1200,4 +1200,18 @@ function Headline:_handle_promote_demote(recursive, modifier, dryRun)
   return self:refresh()
 end
 
+---@param drawer_name string
+---@param content string
+---@return OrgHeadline
+function Headline:add_to_drawer(drawer_name, content)
+  local append_line = self:get_drawer_append_line(drawer_name)
+  local bufnr = self.file:get_valid_bufnr()
+
+  -- Add the content indented appropriately
+  local indented_content = self:_apply_indent(content) --[[ @as string ]]
+  vim.api.nvim_buf_set_lines(bufnr, append_line, append_line, false, { indented_content })
+
+  return self:refresh()
+end
+
 return Headline
