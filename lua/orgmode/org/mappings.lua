@@ -352,7 +352,7 @@ function OrgMappings:todo_next_state()
 end
 
 function OrgMappings:todo_prev_state()
-  self:_todo_change_state('prev')
+  return self:_todo_change_state('prev')
 end
 
 function OrgMappings:toggle_heading()
@@ -470,8 +470,20 @@ function OrgMappings:_todo_change_state(direction)
   for _, date in ipairs(repeater_dates) do
     self:_replace_date(date:apply_repeater())
   end
+
   local new_todo = item:get_todo()
-  self:_change_todo_state('reset')
+
+  -- Reset to first TODO of the same sequence for repeating tasks
+  local todos = item.file:get_todo_keywords()
+  local todo_state = TodoState:new({ current_state = new_todo, todos = todos })
+  local reset_keyword = todo_state:get_reset_todo(item)
+
+  if reset_keyword then
+    item:set_todo(reset_keyword.value)
+  else
+    self:_change_todo_state('reset')
+    new_todo = item:get_todo()
+  end
 
   local prompt_repeat_note = config.org_log_repeat == 'note'
   local log_repeat_enabled = config.org_log_repeat ~= false
@@ -1050,10 +1062,21 @@ end
 ---@return boolean
 function OrgMappings:_change_todo_state(direction, use_fast_access)
   local headline = self.files:get_closest_headline()
-  local current_keyword = headline:get_todo()
+  local current_keyword = headline:get_todo() or ''
+
   local todos = headline.file:get_todo_keywords()
+
+  -- Store the sequence index of the original keyword, if any
+  local original_sequence_index = nil
+  local current_keyword_obj = todos:find(current_keyword)
+
+  if current_keyword_obj then
+    original_sequence_index = current_keyword_obj.sequence_index
+  end
+
   local todo_state = TodoState:new({ current_state = current_keyword, todos = todos })
   local next_state = nil
+
   if use_fast_access and todo_state:has_fast_access() then
     next_state = todo_state:open_fast_access()
   else
