@@ -600,7 +600,7 @@ Determine whether properties of one headline are inherited by sub-headlines.
 - `string` - only properties matching the given regex are inherited
 
 Note that for a select few properties, the inheritance behavior is hard-coded
-withing their special applications. See Property Inheritance
+within their special applications. See Property Inheritance
 <https://orgmode.org/manual/Property-Inheritance.html> for details.
 
 
@@ -623,8 +623,8 @@ Available options:
 - `0` - start week on Sunday
 - `1` - start week on Monday
 
-Determine on which day the week will start in calendar modal
-(ex:|orgmode-changing-the-date-under-cursor|)
+Determine on which day the week will start in calendar modal (ex:
+|orgmode-changing-the-date-under-cursor|)
 
 
 emacs_config                                            *orgmode-emacs_config*
@@ -789,7 +789,7 @@ org_agenda_sorting_strategy              *orgmode-org_agenda_sorting_strategy*
 
 - Type:
 
-`table<'agenda' | 'todo' | 'tags', OrgAgendaSortingStrategy[]><`
+`table<'agenda' | 'todo' | 'tags', OrgAgendaSortingStrategy[]>`
 
 - Default:
 

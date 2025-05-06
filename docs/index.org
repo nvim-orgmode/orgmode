@@ -26,7 +26,7 @@ To view this documentation offline in Neovim, run =:Org help=. More info in [[#g
     end,
   }
   #+end_src
-- Capture youf first note with =<leader>oc=
+- Capture your first note with =<leader>oc=
 - Open up the prompt for agenda with =<leader>oa=
 
 For more details about the installation and usage, check [[./installation.org][Installation page]].
