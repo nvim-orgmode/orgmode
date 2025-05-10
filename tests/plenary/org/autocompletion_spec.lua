@@ -382,3 +382,64 @@ describe('Autocompletion', function()
     end)
   end)
 end)
+
+describe('Blink completion', function()
+  after_each(function()
+    vim.cmd([[silent! %bw!]])
+  end)
+
+  it('should preserve `#+` prefix when completing directives', function()
+    helpers.create_file({
+      '#+fi',
+    })
+
+    vim.fn.cursor(1, 5)
+
+    local blink = require('orgmode.org.autocompletion.blink')
+    local source = blink.new()
+
+    local line = vim.fn.getline('.')
+    local col = vim.fn.col('.') - 1 -- blink uses 0-indexed columns
+
+    local ctx = {
+      line = line,
+      cursor = { 1, col },
+      bufnr = vim.api.nvim_get_current_buf(),
+    }
+
+    local completion_result = nil
+    local completed = false
+
+    source:get_completions(ctx, function(result)
+      completion_result = result
+      completed = true
+    end)
+
+    vim.wait(500, function()
+      return completed
+    end)
+
+    assert(completed, 'Completion should have finished')
+    assert(completion_result and completion_result.items, 'Should have completion items')
+
+    if #completion_result.items == 0 then
+      error('No completion items returned')
+    end
+
+    local directive_item = nil
+    for _, item in ipairs(completion_result.items) do
+      if item.label and item.label:match('^#%+.*') then
+        directive_item = item
+        break
+      end
+    end
+
+    assert(directive_item, 'Should find a directive completion item')
+    assert(
+      directive_item.insertText:match('^#%+'),
+      string.format("insertText should start with '+#', got: %s", directive_item.insertText)
+    )
+
+    assert(line:sub(1, 4) == '#+fi', "Original line should contain '#+fi'")
+  end)
+end)
