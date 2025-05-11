@@ -1,5 +1,23 @@
 #+OPTIONS: H:9 ^:nil
 * Changelog
+** [[https://github.com/nvim-orgmode/orgmode/compare/0.5.3...0.6.0][0.6.0]] (2025-05-11)
+*** Breaking changes
+- *links*: allow granular highlighting of links (#965) ([[https://github.com/nvim-orgmode/orgmode/commit/b371b9e][b371b9e]])
+
+*** Features
+- *search*: add ability to search on LEVEL (#959) ([[https://github.com/nvim-orgmode/orgmode/commit/08873bf][08873bf]])
+- *todos*: support file-specific todo definitions (#956) ([[https://github.com/nvim-orgmode/orgmode/commit/689f20a][689f20a]])
+- *validator*: use new vim.validator structure for neovim 0.11 ([[https://github.com/nvim-orgmode/orgmode/commit/2929054][2929054]])
+
+*** Bug fixes
+- *treesitter*: Allow tree-sitter grammar installation outside of orgmode folder (#979) ([[https://github.com/nvim-orgmode/orgmode/commit/b22523c][b22523c]])
+- indent an item's content when entering a new line from normal mode (#950) ([[https://github.com/nvim-orgmode/orgmode/commit/15d66ea][15d66ea]])
+- *images*: manually load images with snacks in ftplugin ([[https://github.com/nvim-orgmode/orgmode/commit/27ab1cf][27ab1cf]])
+- *images*: add svg to list of supported image types (#968) ([[https://github.com/nvim-orgmode/orgmode/commit/59593cf][59593cf]])
+- *checkbox*: Go to correct location after adding new checkbox list item ([[https://github.com/nvim-orgmode/orgmode/commit/e66a641][e66a641]])
+- *global*: require at least one argument for Org command ([[https://github.com/nvim-orgmode/orgmode/commit/83df5bf][83df5bf]])
+- handle empty :Org arguments. (#952) ([[https://github.com/nvim-orgmode/orgmode/commit/6df9314][6df9314]])
+
 ** [[https://github.com/nvim-orgmode/orgmode/compare/0.5.2...0.5.3][0.5.3]] (2025-03-26)
 *** Breaking changes
 - *indent*: Add `Org indent_mode` command in favor of toggling `vim.b.org_indent_mode` (#932) ([[https://github.com/nvim-orgmode/orgmode/commit/5368c0b][5368c0b]])
