@@ -73,6 +73,10 @@ function M.get_version_info()
   result.parser_locations = parser_locations.parser_locations
   result.installed_in_orgmode_dir = parser_locations.installed_in_orgmode_dir
 
+  if not result.installed_in_orgmode_dir then
+    return result
+  end
+
   local installed_version = M.get_installed_version()
   result.installed_version = installed_version
   result.outdated = vim.version.lt(installed_version, required_version)
