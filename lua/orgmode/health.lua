@@ -16,13 +16,21 @@ function M.check_has_treesitter()
     return h.error('Treesitter grammar is not installed. Run `:Org install_treesitter_grammar` to install it.')
   end
 
-  if not version_info.install_location then
+  if #version_info.parser_locations > 1 then
     local list = vim.tbl_map(function(parser)
       return ('- `%s`'):format(parser)
-    end, version_info.conflicting_parsers)
-    return h.error(
-      ('Installed org parser found in incorrect location. Run `:Org install_treesitter_grammar` to install it in correct location and remove the conflicting parsers from these locations:\n%s'):format(
+    end, version_info.parser_locations)
+    return h.warn(
+      ('Multiple org parsers found in these locations:\n%s\nDelete unused ones to avoid conflicts.'):format(
         table.concat(list, '\n')
+      )
+    )
+  end
+
+  if not version_info.installed_in_orgmode_dir then
+    return h.ok(
+      ('Tree-sitter grammar is installed, but not by nvim-orgmode plugin. Any issues or version mismatch will need to be handled manually.\nIf you want nvim-orgmode to manage the parser installation (recommended), remove the installed parser at "%s" and restart Neovim.'):format(
+        version_info.parser_locations[1]
       )
     )
   end
@@ -36,17 +44,6 @@ function M.check_has_treesitter()
       ('Treesitter grammar version mismatch (installed %s, required %s). Run `:Org install_treesitter_grammar` to update it.'):format(
         version_info.installed_version,
         version_info.required_version
-      )
-    )
-  end
-
-  if #version_info.conflicting_parsers > 0 then
-    local list = vim.tbl_map(function(parser)
-      return ('- `%s`'):format(parser)
-    end, version_info.conflicting_parsers)
-    return h.warn(
-      ('Conflicting org parser(s) found in these locations:\n%s\nRemove them to avoid conflicts.'):format(
-        table.concat(list, '\n')
       )
     )
   end
