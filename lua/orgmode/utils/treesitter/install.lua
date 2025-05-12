@@ -9,15 +9,17 @@ local required_version = '2.0.0'
 
 function M.install()
   local version_info = M.get_version_info()
+
   if not version_info.installed then
     return M.run('install')
   end
 
-  -- Parser found but in invalid location
-  if not version_info.install_location then
-    local result = M.run('install')
-    M.notify_conflicting_parsers(version_info.conflicting_parsers)
-    return result
+  if #version_info.parser_locations > 1 then
+    M.notify_conflicting_parsers(version_info.parser_locations)
+  end
+
+  if not version_info.installed_in_orgmode_dir then
+    return false
   end
 
   if version_info.outdated then
@@ -28,26 +30,22 @@ function M.install()
     return M.reinstall()
   end
 
-  M.notify_conflicting_parsers(version_info.conflicting_parsers)
-
   return false
 end
 
 function M.notify_conflicting_parsers(conflicting_parsers)
-  if #conflicting_parsers > 0 then
-    local list = vim.tbl_map(function(parser)
-      return ('- `%s`'):format(parser)
-    end, conflicting_parsers)
-    utils.notify(
-      ('Conflicting org parser(s) found in these locations:\n%s\nRemove them to avoid conflicts.'):format(
-        table.concat(list, '\n')
-      ),
-      {
-        level = 'warn',
-        timeout = 5000,
-      }
-    )
-  end
+  local list = vim.tbl_map(function(parser)
+    return ('- `%s`'):format(parser)
+  end, conflicting_parsers)
+  utils.notify(
+    ('Multiple org parsers found in these locations:\n%s\nDelete unused ones to avoid conflicts.'):format(
+      table.concat(list, '\n')
+    ),
+    {
+      level = 'warn',
+      timeout = 5000,
+    }
+  )
 end
 
 function M.reinstall()
@@ -57,13 +55,12 @@ end
 function M.get_version_info()
   local result = {
     installed = false,
-    correct_location = false,
-    install_location = nil,
     installed_version = nil,
     outdated = false,
     required_version = required_version,
     version_mismatch = false,
-    conflicting_parsers = {},
+    parser_locations = {},
+    installed_in_orgmode_dir = false,
   }
 
   if M.not_installed() then
@@ -73,13 +70,12 @@ function M.get_version_info()
   result.installed = true
 
   local parser_locations = M.get_parser_locations()
-  result.conflicting_parsers = parser_locations.conflicting_parsers
+  result.parser_locations = parser_locations.parser_locations
+  result.installed_in_orgmode_dir = parser_locations.installed_in_orgmode_dir
 
-  if not parser_locations.install_location then
+  if not result.installed_in_orgmode_dir then
     return result
   end
-
-  result.install_location = parser_locations.install_location
 
   local installed_version = M.get_installed_version()
   result.installed_version = installed_version
@@ -90,23 +86,26 @@ function M.get_version_info()
 end
 
 function M.get_parser_locations()
-  local installed_org_parsers = vim.tbl_map(function(item)
-    return vim.fn.fnamemodify(item, ':p')
-  end, vim.api.nvim_get_runtime_file('parser/org.so', true))
-  local parser_path = M.get_parser_path()
-  local install_location = nil
-  local conflicting_parsers = {}
-  for _, parser in ipairs(installed_org_parsers) do
-    if vim.fs.normalize(parser) == vim.fs.normalize(parser_path) then
-      install_location = parser
-    else
-      table.insert(conflicting_parsers, parser)
+  local runtime_files = vim.api.nvim_get_runtime_file('parser/org.so', true)
+  local parser_locations = {}
+  local valid_paths = {}
+  for _, runtime_file in ipairs(runtime_files) do
+    local path = vim.fn.fnamemodify(runtime_file, ':p')
+    if not valid_paths[path] then
+      valid_paths[path] = path
+      table.insert(parser_locations, path)
     end
   end
 
+  local installed_in_orgmode_dir = false
+
+  if #parser_locations == 1 and vim.fs.normalize(parser_locations[1]) == vim.fs.normalize(M.get_parser_path()) then
+    installed_in_orgmode_dir = true
+  end
+
   return {
-    install_location = install_location,
-    conflicting_parsers = conflicting_parsers,
+    parser_locations = parser_locations,
+    installed_in_orgmode_dir = installed_in_orgmode_dir,
   }
 end
 
@@ -198,6 +197,41 @@ function M.exe(cmd, opts)
   end)
 end
 
+-- Returns the move command based on the OS
+---@param from string
+---@param to string
+---@param cwd string
+---@param is_win boolean
+---@param shellslash boolean
+function M.select_mv_cmd(from, to, cwd, is_win, shellslash)
+  if is_win then
+    local function cmdpath(p)
+      if shellslash then
+        local r = p:gsub('/', '\\')
+        return r
+      end
+      return p
+    end
+
+    return {
+      cmd = 'cmd',
+      opts = {
+        args = { '/C', 'move', '/Y', cmdpath(from), cmdpath(to) },
+        cwd = cwd,
+      },
+    }
+  end
+
+  return {
+    cmd = 'mv',
+    opts = {
+      args = { '-f', from, to },
+      cwd = cwd,
+    },
+  }
+end
+
+-- Get path to the directory that holds the tree-sitter grammar.
 function M.get_path(url, type)
   local local_path = vim.fn.expand(url)
   local is_local_path = vim.fn.isdirectory(local_path) == 1
@@ -240,12 +274,14 @@ function M.run(type)
   end
 
   local compiler_args = M.select_compiler_args(compiler)
-  local path = nil
+  local ts_grammar_dir = nil
   local lock_file = M.get_lock_file()
+  local is_win = vim.fn.has('win32') == 1
+  local shellslash = is_win and vim.opt.shellslash:get() or false
 
   return M.get_path(url, type)
     :next(function(directory)
-      path = directory
+      ts_grammar_dir = directory
       return M.exe(compiler, {
         args = compiler_args,
         cwd = directory,
@@ -255,10 +291,12 @@ function M.run(type)
       if code ~= 0 then
         error('[orgmode] Failed to compile parser', 0)
       end
-      local source = vim.fs.joinpath(path, 'parser.so')
-      local copied, err = vim.uv.fs_copyfile(source, M.get_parser_path())
-      if not copied then
-        error('[orgmode] Failed to copy generated tree-sitter parser to runtime folder: ' .. err, 0)
+      local move_cmd = M.select_mv_cmd('parser.so', M.get_parser_path(), ts_grammar_dir or '', is_win, shellslash)
+      return M.exe(move_cmd.cmd, move_cmd.opts)
+    end)
+    :next(function(code)
+      if code ~= 0 then
+        error('[orgmode] Failed to move generated tree-sitter parser to runtime folder', 0)
       end
       return utils.writefile(lock_file, vim.json.encode({ version = required_version }))
     end)
