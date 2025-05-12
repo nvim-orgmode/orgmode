@@ -43,8 +43,8 @@
 (table . (row (cell (contents) @org.table.heading)))
 (table (hr) @org.table.delimiter)
 (fndef label: (expr) @org.footnote (#offset! @org.footnote 0 -4 0 1))
-(link url: (expr) @org.hyperlink.url) @org.hyperlink
-(link_desc url: (expr) @org.hyperlink.url desc: (expr) @org.hyperlink.desc) @org.hyperlink
+(link url: (expr) @org.hyperlink.url @nospell) @org.hyperlink
+(link_desc url: (expr) @org.hyperlink.url @nospell desc: (expr) @org.hyperlink.desc) @org.hyperlink
 (link "[[" @_link_open "]]" @_link_close (#set! conceal ""))
 (link_desc "[[" @_link_open "][" @_link_separator "]]" @_link_close (#set! conceal ""))
 ((link_desc url: (expr)+ @_link_url (#set! @_link_url conceal "")) @_link (#set! @_link url @_link_url))
