@@ -2,18 +2,20 @@ local utils = require('orgmode.utils')
 local TodoKeyword = require('orgmode.objects.todo_keywords.todo_keyword')
 
 ---@class OrgTodoKeywords
----@field org_todo_keywords string[]
+---@field org_todo_keywords string[][]|string[]
 ---@field org_todo_keyword_faces table<string, string>
 ---@field todo_keywords OrgTodoKeyword[]
+---@field sequences OrgTodoKeyword[][] Array of todo keyword sequences
 local TodoKeywords = {}
 TodoKeywords.__index = TodoKeywords
 
----@param opts { org_todo_keywords: string[], org_todo_keyword_faces: table<string, string> }
+---@param opts { org_todo_keywords: string[][]|string[], org_todo_keyword_faces: table<string, string> }
 ---@return OrgTodoKeywords
 function TodoKeywords:new(opts)
   local this = setmetatable({
     org_todo_keywords = opts.org_todo_keywords,
     org_todo_keyword_faces = opts.org_todo_keyword_faces,
+    sequences = {},
   }, self)
   this:_parse()
   return this
@@ -44,6 +46,19 @@ function TodoKeywords:find(keyword)
   end)
 end
 
+---@param keyword string
+---@return number | nil sequence index this keyword belongs to
+function TodoKeywords:find_sequence_index(keyword)
+  for seq_idx, seq in ipairs(self.sequences) do
+    for _, todo_keyword in ipairs(seq) do
+      if todo_keyword.value == keyword then
+        return seq_idx
+      end
+    end
+  end
+  return nil
+end
+
 ---@param type OrgTodoKeywordType
 ---@return OrgTodoKeyword
 function TodoKeywords:first_by_type(type)
@@ -58,6 +73,12 @@ end
 ---@return OrgTodoKeyword[]
 function TodoKeywords:all()
   return self.todo_keywords
+end
+
+---@param sequence_idx? number
+---@return OrgTodoKeyword[]
+function TodoKeywords:sequence(sequence_idx)
+  return self.sequences[sequence_idx or 1] or {}
 end
 
 ---@return OrgTodoKeyword
@@ -79,29 +100,105 @@ end
 
 ---@private
 function TodoKeywords:_parse()
-  local todo, done = self:_split_todo_and_done()
+  local first_sequence = self.org_todo_keywords[1]
+
+  if type(first_sequence) ~= 'table' then
+    self:_parse_single_sequence(self.org_todo_keywords)
+    return
+  end
+
+  if #self.org_todo_keywords == 1 then
+    self:_parse_single_sequence(first_sequence)
+    return
+  end
+
+  self:_parse_multiple_sequences(self.org_todo_keywords)
+end
+
+---@private
+---@param keyword string
+---@param status_type string 'TODO' or 'DONE'
+---@param index number
+---@param seq_idx number
+---@param used_shortcuts table<string, boolean>
+---@return OrgTodoKeyword
+function TodoKeywords:_create_keyword(keyword, status_type, index, seq_idx, used_shortcuts)
+  local todo_keyword = TodoKeyword:new({
+    type = status_type,
+    keyword = keyword,
+    index = index,
+    sequence_index = seq_idx,
+  })
+
+  -- Track used shortcuts to avoid conflicts
+  if todo_keyword.has_fast_access then
+    used_shortcuts[todo_keyword.shortcut] = true
+  elseif not used_shortcuts[todo_keyword.shortcut] then
+    -- Mark it as a fast access key when we have multiple sequences
+    if type(self.org_todo_keywords[1]) == 'table' and #self.org_todo_keywords > 1 then
+      todo_keyword.has_fast_access = true
+      used_shortcuts[todo_keyword.shortcut] = true
+    end
+  end
+
+  todo_keyword.hl = self:_get_hl(todo_keyword.value, status_type)
+  return todo_keyword
+end
+
+---@private
+---@param keywords string[]
+---@param seq_idx number
+---@param used_shortcuts table<string, boolean>
+---@param keyword_offset number
+---@return OrgTodoKeyword[] keywords for the sequence
+---@return OrgTodoKeyword[] seq_keywords keywords in this sequence
+function TodoKeywords:_parse_sequence(keywords, seq_idx, used_shortcuts, keyword_offset)
+  keyword_offset = keyword_offset or 0
+  local todo, done = self:_split_todo_and_done(keywords)
   local list = {}
+  local seq_keywords = {}
+
+  -- Process TODO keywords
   for i, keyword in ipairs(todo) do
-    local todo_keyword = TodoKeyword:new({
-      type = 'TODO',
-      keyword = keyword,
-      index = i,
-    })
-    todo_keyword.hl = self:_get_hl(todo_keyword.value, 'TODO')
+    local todo_keyword = self:_create_keyword(keyword, 'TODO', keyword_offset + i, seq_idx, used_shortcuts)
     table.insert(list, todo_keyword)
+    table.insert(seq_keywords, todo_keyword)
   end
 
+  -- Process DONE keywords
   for i, keyword in ipairs(done) do
-    local todo_keyword = TodoKeyword:new({
-      type = 'DONE',
-      keyword = keyword,
-      index = #todo + i,
-    })
-    todo_keyword.hl = self:_get_hl(todo_keyword.value, 'DONE')
+    local todo_keyword = self:_create_keyword(keyword, 'DONE', keyword_offset + #todo + i, seq_idx, used_shortcuts)
     table.insert(list, todo_keyword)
+    table.insert(seq_keywords, todo_keyword)
   end
 
-  self.todo_keywords = list
+  return list, seq_keywords
+end
+
+---@param todo_keywords string[]
+function TodoKeywords:_parse_single_sequence(todo_keywords)
+  local keywords, seq_keywords = self:_parse_sequence(todo_keywords, 1, {}, 0)
+  self.todo_keywords = keywords
+  self.sequences = { seq_keywords }
+end
+
+---@param todo_keywords string[][]
+---@private
+function TodoKeywords:_parse_multiple_sequences(todo_keywords)
+  self.todo_keywords = {}
+  self.sequences = {}
+  local used_shortcuts = {}
+
+  for seq_idx, sequence in ipairs(todo_keywords) do
+    local keyword_offset = #self.todo_keywords
+    local keywords, seq_keywords = self:_parse_sequence(sequence, seq_idx, used_shortcuts, keyword_offset)
+
+    -- Add keywords to the main list and the sequence
+    for _, keyword in ipairs(keywords) do
+      table.insert(self.todo_keywords, keyword)
+    end
+    table.insert(self.sequences, seq_keywords)
+  end
 end
 
 ---@private
@@ -116,9 +213,9 @@ function TodoKeywords:_get_hl(keyword, type)
 end
 
 ---@private
+---@param keywords string[]
 ---@return string[], string[]
-function TodoKeywords:_split_todo_and_done()
-  local keywords = self.org_todo_keywords
+function TodoKeywords:_split_todo_and_done(keywords)
   local has_separator = vim.tbl_contains(keywords, '|')
   if not has_separator then
     return { unpack(keywords, 1, #keywords - 1) }, { keywords[#keywords] }
