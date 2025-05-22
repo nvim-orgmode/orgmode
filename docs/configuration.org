@@ -1097,7 +1097,7 @@ after headline text, with only one space in between.
 :END:
 - Type: =boolean=
 - Default: =true=
-  When set to =true=, tags are
+When set to =true=, tags are
 inherited from parents for purposes of searching. Which means that if
 you have this structure:
 
