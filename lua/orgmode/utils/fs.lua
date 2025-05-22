@@ -46,16 +46,40 @@ end
 ---@param paths string[]
 ---@return string[]
 function M.trim_common_root(paths)
-  local filepaths = vim.deepcopy(paths)
+  local filepaths = vim.tbl_map(function(value)
+    return vim.split(vim.fn.fnamemodify(value, ':h'), '/', { trimempty = true, plain = true })
+  end, paths)
+
   table.sort(filepaths, function(a, b)
-    local _, count_a = a:gsub('/', '')
-    local _, count_b = b:gsub('/', '')
-    return count_a < count_b
+    return #a < #b
   end)
 
-  local result = {}
-  local root = vim.fn.fnamemodify(filepaths[1], ':h') .. '/'
+  local get_common_root = function()
+    local common_root = {}
+    local counter = 1
 
+    while counter <= #filepaths[1] do
+      local current = filepaths[1][counter]
+      for _, filepath in ipairs(filepaths) do
+        if filepath[counter] ~= current then
+          return common_root
+        end
+      end
+      table.insert(common_root, current)
+      counter = counter + 1
+    end
+
+    return common_root
+  end
+
+  local common_root = get_common_root()
+
+  if #common_root == 0 then
+    return paths
+  end
+
+  local root = table.concat(common_root, '/') .. '/'
+  local result = {}
   for _, path in ipairs(paths) do
     local relative_path = path:sub(#root + 1)
     table.insert(result, relative_path)
