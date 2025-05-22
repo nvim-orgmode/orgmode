@@ -1150,10 +1150,9 @@ org_use_tag_inheritance                      *orgmode-org_use_tag_inheritance*
 
 - Type: `boolean`
 - Default: `true`
-    When set to `true`, tags are
 
-inherited from parents for purposes of searching. Which means that if you have
-this structure:
+When set to `true`, tags are inherited from parents for purposes of searching.
+Which means that if you have this structure:
 
 >org
     * TODO My top task :MYTAG:
