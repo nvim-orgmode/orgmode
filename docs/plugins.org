@@ -78,6 +78,7 @@ require('blink.cmp').setup({
 :CUSTOM_ID: nvim-cmp
 :END:
 Link: [[https://github.com/hrsh7th/nvim-cmp][nvim-cmp]]
+
 Add the =orgmode= source to =nvim-cmp= ~sources~ list.
 #+BEGIN_SRC lua
 require('cmp').setup({
