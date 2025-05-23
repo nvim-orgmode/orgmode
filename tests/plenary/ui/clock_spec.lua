@@ -185,4 +185,30 @@ describe('Clock', function()
     assert.are.same('Test 1', file:get_headlines()[2]:get_title())
     assert.is_false(file:get_headlines()[2]:is_clocked_in())
   end)
+
+  it('should clock out and entry when its marked as done', function()
+    local file = helpers.create_agenda_file({
+      '* TODO Test 1',
+      '  Content',
+      '* TODO Test 2',
+      '  :LOGBOOK:',
+      '  CLOCK: ' .. Date.now():to_wrapped_string(false),
+      '  :END:',
+      '* TODO Test 3',
+    })
+
+    vim.cmd('edit ' .. file.filename)
+    vim.fn.cursor({ 3, 1 })
+    vim.cmd([[norm cit]])
+    assert.are.same({
+      '* TODO Test 1',
+      '  Content',
+      '* DONE Test 2',
+      '  CLOSED: ' .. Date.now():to_wrapped_string(false),
+      '  :LOGBOOK:',
+      '  CLOCK: ' .. Date.now():to_wrapped_string(false) .. '--' .. Date.now():to_wrapped_string(false) .. ' => 0:00',
+      '  :END:',
+      '* TODO Test 3',
+    }, vim.api.nvim_buf_get_lines(0, 0, -1, false))
+  end)
 end)
