@@ -80,6 +80,18 @@ local DefaultConfig = {
     [':tangle'] = 'no',
     [':noweb'] = 'no',
   },
+  org_attach_id_dir = './data/',
+  org_attach_auto_tag = 'ATTACH',
+  org_attach_preferred_new_method = 'id',
+  org_attach_method = 'cp',
+  org_attach_copy_directory_create_symlink = false,
+  org_attach_use_inheritance = 'selective',
+  org_attach_id_to_path_function_list = {
+    'uuid_folder_format',
+    'ts_folder_format',
+    'fallback_folder_format',
+  },
+  org_attach_sync_delete_empty_dir = 'ask',
   win_split_mode = 'horizontal',
   win_border = 'single',
   notifications = {
@@ -200,6 +212,7 @@ local DefaultConfig = {
       org_set_effort = '<prefix>xe',
       org_show_help = 'g?',
       org_babel_tangle = '<prefix>bt',
+      org_attach = '<prefix><C-A>',
     },
     edit_src = {
       org_edit_src_abort = '<prefix>k',
