@@ -48,7 +48,7 @@ that demonstrates how the similar Orgmode clone [[https://github.com/dhruvasagar
 :PROPERTIES:
 :CUSTOM_ID: api-docs
 :END:
-Nvim-orgmode exposes a Lua API that can be used to interact with the orgmode. To view it, check [[file:../docs/orgmode-api.txt][orgmode-api.txt]]
+Nvim-orgmode exposes a Lua API that can be used to interact with the orgmode. To view it, check [[file:../doc/orgmode_api.txt][orgmode_api.txt]]
 or do =:h OrgApi= in Neovim.
 
 ** Globals and commands
