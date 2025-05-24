@@ -261,6 +261,8 @@
 ---@field org_attach_archive_delete 'always' | 'ask' | 'never' Determines whether to delete a headline's attachments when it is archived. Default: 'never'
 ---@field org_attach_id_to_path_function_list (string | fun(id: string): (string|nil))[] List of functions used to derive the attachments directory from an ID property.
 ---@field org_attach_sync_delete_empty_dir 'always' | 'ask' | 'never' Determines whether to delete empty directories when using `org.attach.sync()`. Default: 'ask'
+---@field org_resource_download_policy 'always' | 'prompt' | 'safe' | 'never' Policy for downloading files from the Internet. Default: 'prompt'
+---@field org_safe_remote_resources string[] List of regex patterns for URIs considered always safe to download from. Default: {}
 ---@field win_split_mode? 'horizontal' | 'vertical' | 'auto' | 'float' | string[] How to open agenda and capture windows. Default: 'horizontal'
 ---@field win_border? 'none' | 'single' | 'double' | 'rounded' | 'solid' | 'shadow' | string[] Border configuration for `win_split_mode = 'float'`. Default: 'single'
 ---@field notifications? OrgNotificationsConfig Notification settings

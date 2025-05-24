@@ -307,10 +307,35 @@ function AttachCore:attach(node, file, opts)
   end)
 end
 
----@class orgmode.attach.core.attach_buffer.opts
+---@class orgmode.attach.core.attach_url.opts
 ---@inlinedoc
 ---@field set_dir_method fun(): OrgPromise<orgmode.attach.core.new_method>
 ---@field new_dir fun(): OrgPromise<string | nil>
+
+---Download a file from a URL and attach it to the current outline node.
+---
+---@param node OrgAttachNode
+---@param url string URL to the file to attach
+---@param opts orgmode.attach.core.attach_url.opts
+---@return OrgPromise<string|nil> attachment_name
+function AttachCore:attach_url(node, url, opts)
+  local basename = basename_safe(url)
+  return self:get_dir_or_create(node, opts.set_dir_method, opts.new_dir):next(function(attach_dir)
+    local attach_file = vim.fs.joinpath(attach_dir, basename)
+    return fileops.download_file(url, attach_file, { exist_ok = false }):next(function(success)
+      if not success then
+        return nil
+      end
+      EventManager.dispatch(EventManager.event.AttachChanged:new(node, attach_dir))
+      node:add_auto_tag()
+      local link = self.links:store_link_to_attachment({ attach_dir = attach_dir, original = url })
+      vim.fn.setreg(vim.v.register, link)
+      return basename
+    end)
+  end)
+end
+
+---@alias orgmode.attach.core.attach_buffer.opts orgmode.attach.core.attach_url.opts
 
 ---Attach buffer's contents to current outline node.
 ---

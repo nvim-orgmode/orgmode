@@ -339,4 +339,52 @@ function M.remove_directory(path, opts)
   end)
 end
 
+--[[
+-- File downloads, based on <https://github.com/neovim/neovim/pull/33964>
+-- In a future Neovim version, this might land as `vim.net.download()`.
+--]]
+
+---Download a file via `curl`.
+---Curl is invoked via `vim.system` and downloads the file at the given `url`
+---to the file at the path `dest.
+---A non-zero exit code or any output to standard error is treated as an error.
+---Curl follows redirects with no limit.
+---If `exist_ok` is true, the returned promise is immediately rejected if
+---`dest` already exists.
+---The options `retry` and `verbose` are passed through directly to curl as
+---the corresponding command-line arguments.
+---@param url string
+---@param dest string
+---@param opts? {clobber: boolean?, retry: integer?, verbose: boolean?}
+---@return OrgPromise<true> success
+function M.download_file(url, dest, opts)
+  opts = opts or {}
+  if not opts.exist_ok and M.exists(dest) then
+    return Promise.reject('EEXIST: ' .. dest)
+  end
+  local args = { 'curl' }
+  if opts.verbose then
+    table.insert(args, '--verbose')
+  else
+    vim.list_extend(args, { '--silent', '--show-error', '--fail' })
+  end
+  vim.list_extend(args, {
+    '--retry',
+    tostring(opts.retry or 3),
+    '--location',
+    '--output',
+    dest,
+    url,
+  })
+  return Promise.new(function(resolve, reject)
+    vim.system(args, { text = true }, function(res)
+      if res.code ~= 0 or res.stderr ~= '' then
+        reject(res.stderr ~= '' and res.stderr or 'Download failed')
+      else
+        resolve(true)
+      end
+    end)
+  end)
+end
+
 return M
