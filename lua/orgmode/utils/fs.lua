@@ -124,4 +124,39 @@ function M.trim_common_root(paths)
   return result
 end
 
+---Return a path to the same file as `filepath` but relative to `base`.
+---Starting with nvim 0.11, we can replace this with `vim.fs.relpath()`.
+---@param filepath string an absolute path
+---@param base string an absolute path to an ancestor of filepath;
+---                   here, `'.'` represents the current working directory, and
+---                   *not* the current file's directory.
+---@return string filepath_relative_to_base
+function M.make_relative(filepath, base)
+  vim.validate({
+    filepath = { filepath, 'string', false },
+    base = { base, 'string', false },
+  })
+  filepath = vim.fn.fnamemodify(filepath, ':p')
+  base = vim.fn.fnamemodify(base, ':p')
+  if base:sub(-1) ~= '/' then
+    base = base .. '/'
+  end
+  local levels_up = 0
+  for parent in vim.fs.parents(base) do
+    if parent:sub(-1) ~= '/' then
+      parent = parent .. '/'
+    end
+    if vim.startswith(filepath, parent) then
+      filepath = filepath:sub(parent:len() + 1)
+      if levels_up > 0 then
+        return vim.fs.joinpath(string.rep('..', levels_up, '/'), filepath)
+      end
+      return vim.fs.joinpath('.', filepath)
+    end
+    levels_up = levels_up + 1
+  end
+  -- No common root, just return the absolute path.
+  return filepath
+end
+
 return M
