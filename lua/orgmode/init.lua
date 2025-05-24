@@ -6,6 +6,7 @@ local instance = nil
 local auto_instance_keys = {
   files = true,
   agenda = true,
+  attach = true,
   capture = true,
   clock = true,
   org_mappings = true,
@@ -61,6 +62,7 @@ function Org:init()
   -- is not blocked by it. Anything that needs all files waits via `ensure_loaded`.
   self.files:load()
   self.links = require('orgmode.org.links'):new({ files = self.files })
+  self.attach = require('orgmode.attach'):new({ files = self.files })
   self.agenda = require('orgmode.agenda'):new({
     files = self.files,
     highlighter = self.highlighter,
