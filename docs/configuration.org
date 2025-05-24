@@ -1198,6 +1198,16 @@ is copied due to the [[https://orgmode.org/manual/Attachment-defaults-and-dispat
 symlink itself. The default is to treat the symlink transparently as
 a directory.
 
+*** org_attach_visit_command
+:PROPERTIES:
+:CUSTOM_ID: org_attach_visit_command
+:END:
+- Type: =string|fun(path: string)=
+- Default: ='edit'=
+
+Command or function used to open a directory. The default opens NetRW if it
+is available.
+
 *** org_attach_use_inheritance
 :PROPERTIES:
 :CUSTOM_ID: org_attach_use_inheritance
