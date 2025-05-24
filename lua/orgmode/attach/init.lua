@@ -136,6 +136,13 @@ function Attach:prompt()
       return self:unset_directory()
     end,
   })
+  menu:add_option({
+    label = 'Synchronize this task with its attachment directory.',
+    key = 'z',
+    action = function()
+      return self:sync()
+    end,
+  })
   menu:add_option({ label = 'Quit', key = 'q' })
   menu:add_separator({ icon = ' ', length = 1 })
 
@@ -587,6 +594,32 @@ function Attach:delete_all(force, node)
       return nil
     end)
     :wait(MAX_TIMEOUT)
+end
+
+---Synchronize the current outline node with its attachments.
+---
+---Useful after files have been added/removed externally. The Option
+---`org_attach_sync_delete_empty_dir` controls the behavior for empty
+---attachment directories. (This ignores files whose name ends with
+---a tilde `~`.)
+---
+---@param node? OrgAttachNode
+---@return nil
+function Attach:sync(node)
+  node = node or self.core:get_current_node()
+  local function delete_empty_dir()
+    local opt = config.org_attach_sync_delete_empty_dir
+    if opt == 'always' then
+      return Promise.resolve(true)
+    elseif opt == 'never' then
+      return Promise.resolve(false)
+    elseif opt == 'ask' then
+      return ui.yes_or_no_or_cancel_slow('Attachment directory is empty. Delete? ')
+    else
+      return Promise.reject(('invalid value for org_attach_sync_delete_empty_dir: %s'):format(opt))
+    end
+  end
+  return self.core:sync(node, delete_empty_dir):wait(MAX_TIMEOUT)
 end
 
 return Attach
