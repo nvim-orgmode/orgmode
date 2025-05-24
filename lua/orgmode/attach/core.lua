@@ -497,4 +497,49 @@ function AttachCore:delete_all(node, recursive)
   end)
 end
 
+---Return true if the directory contains any files without trailing `~` in
+---their name. Trailing `~` is Emacs convention for swap files.
+---
+---@param directory string
+---@return boolean
+local function has_any_non_litter_files(directory)
+  ---@param name string
+  return fileops.iterdir(directory):any(function(name)
+    return not vim.endswith(name, '~')
+  end)
+end
+
+---Synchronize the current outline node with its attachments.
+---
+---Useful after files have been added/removed externally. The Option
+---`org_attach_sync_delete_empty_dir` controls the behavior for empty
+---attachment directories. (This ignores files whose name ends with
+---a tilde `~`.)
+---
+---@param node OrgAttachNode
+---@param delete_empty_dir fun(): OrgPromise<boolean>
+---@return OrgPromise<string|nil> attach_dir_if_deleted
+function AttachCore:sync(node, delete_empty_dir)
+  local attach_dir = self:get_dir_or_nil(node)
+  if not attach_dir then
+    self:untag(node)
+    return Promise.resolve()
+  end
+  local non_empty = has_any_non_litter_files(attach_dir)
+  if non_empty then
+    node:add_auto_tag()
+    return Promise.resolve()
+  else
+    node:remove_auto_tag()
+  end
+  return delete_empty_dir():next(function(do_delete)
+    if not do_delete then
+      return Promise.resolve()
+    end
+    return fileops.remove_directory(attach_dir, { recursive = true }):next(function()
+      return attach_dir
+    end)
+  end)
+end
+
 return AttachCore
