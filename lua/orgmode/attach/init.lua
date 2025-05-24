@@ -107,6 +107,21 @@ function Attach:prompt()
       return self:reveal_nvim()
     end,
   })
+  menu:add_separator({ length = #menu.title })
+  menu:add_option({
+    label = 'Delete an attachment',
+    key = 'd',
+    action = function()
+      return self:delete_one()
+    end,
+  })
+  menu:add_option({
+    label = 'Delete all attachments.',
+    key = 'D',
+    action = function()
+      return self:delete_all()
+    end,
+  })
   menu:add_option({
     label = 'Set specific attachment directory for this task.',
     key = 's',
@@ -526,6 +541,50 @@ function Attach:open_in_vim(name, node)
         return
       end
       self.core:open_in_vim(chosen_name, node)
+    end)
+    :wait(MAX_TIMEOUT)
+end
+
+---Delete a single attachment.
+---
+---@param name? string the name of the attachment to delete
+---@param node? OrgAttachNode
+---@return nil
+function Attach:delete_one(name, node)
+  node = node or self.core:get_current_node()
+  local attach_dir = self.core:get_dir(node)
+  return Promise.resolve(name or ui.select_attachment('Delete', attach_dir))
+    :next(function(chosen_name)
+      if not chosen_name then
+        return
+      end
+      return self.core:delete_one(node, chosen_name)
+    end)
+    :wait(MAX_TIMEOUT)
+end
+
+---Delete all attachments from the current outline node.
+---
+---This actually deletes the entire attachment directory. A safer way is to
+---open the directory with `reveal` and delete from there.
+---
+---@param force? boolean if true, delete directory will recursively deleted with no prompts.
+---@param node? OrgAttachNode
+---@return nil
+function Attach:delete_all(force, node)
+  node = node or self.core:get_current_node()
+  return Promise.resolve(force or ui.yes_or_no_or_cancel_slow('Remove all attachments? '))
+    :next(function(do_delete)
+      if not do_delete then
+        return Promise.reject('Cancelled')
+      end
+      return self.core:delete_all(node, function()
+        return Promise.resolve(force or ui.yes_or_no_or_cancel_slow('Recursive? '))
+      end)
+    end)
+    :next(function()
+      utils.echo_info('Attachment directory removed')
+      return nil
     end)
     :wait(MAX_TIMEOUT)
 end
