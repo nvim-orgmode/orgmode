@@ -1217,15 +1217,30 @@ is available.
 
 Attachment inheritance for the outline.
 
-Enabling inheritance implies that running =attach= inside a node without
-attachments will operate on the first parent headline that has an
-attachment.
+Enabling inheritance implies two things:
+1. Attachment links will look through all parent headlines until they find
+   the linked attachment.
+2. Running =attach= inside a node without attachments will operate on the
+   first parent headline that has an attachment.
 
 Possible values are:
 
 - =always= - inherit attachments
 - =selective= - respect [[#org_use_property_inheritance][org_use_property_inheritance]] for the properties =DIR= and =ID=
 - =never= - don't inherit attachments
+
+*** org_attach_store_link_p
+:PROPERTIES:
+:CUSTOM_ID: org_attach_store_link_p
+:END:
+- Type: ='attached' | 'file' | 'original' | false=
+- Default: ='attached'=
+
+If not =false=, store a link with [[#org_store_link][org_store_link]] when attaching a file.
+
+- =attach= - store a =[[attachment:name]]= link
+- =file= - store a =[[file:attach_dir/name]]= link
+- =original= - store a =[[file:original/location]]= link
 
 *** org_attach_id_to_path_function_list
 :PROPERTIES:
@@ -2960,6 +2975,14 @@ Based on [[#org_attach_preferred_new_method][org_attach_preferred_new_method]], 
 the =DIR= property. See also [[#org_attach_id_dir][org_attach_id_dir]],
 [[#org_attach_id_to_path_function_list][org_attach_id_to_path_function_list]] and [[#org_attach_use_inheritance][org_attach_use_inheritance]] on how
 to further customize the attachments directory.
+
+Attachment links are supported. A link like =[[attachment:file.txt]]=
+looks up =file.txt= in the current node's attachments directory and opens
+it. Attaching a file stores a link to the attachment. See
+[[#org_attach_store_link_p][org_attach_store_link_p]] on how to configure this behavior.
+
+The only missing feature is expansion of attachment links before exporting
+a file with [[#org_export][org_exporting]].
 
 ** User interface
 :PROPERTIES:
