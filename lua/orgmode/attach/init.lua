@@ -4,6 +4,7 @@ local Input = require('orgmode.ui.input')
 local Menu = require('orgmode.ui.menu')
 local Promise = require('orgmode.utils.promise')
 local config = require('orgmode.config')
+local remote_resource = require('orgmode.objects.remote_resource')
 local ui = require('orgmode.attach.ui')
 local utils = require('orgmode.utils')
 
@@ -63,6 +64,13 @@ function Attach:_build_menu()
     key = 'y',
     action = function()
       return self:attach_lns()
+    end,
+  })
+  menu:add_option({
+    label = 'Attach a file by download from URL.',
+    key = 'u',
+    action = function()
+      return self:attach_url()
     end,
   })
   menu:add_option({
@@ -356,18 +364,62 @@ function Attach:attach(file, opts)
     :wait(MAX_TIMEOUT)
 end
 
----@class orgmode.attach.attach_buffer.Options
+---@class orgmode.attach.attach_url.Options
 ---@inlinedoc
 ---@field visit_dir? boolean if true, visit the directory subsequently using
 ---                          `org_attach_visit_command`
 ---@field node? OrgAttachNode
+
+---Download a URL.
+---
+---@param url? string
+---@param opts? orgmode.attach.attach_url.Options
+---@return string|nil attachment_name
+function Attach:attach_url(url, opts)
+  local node = opts and opts.node or self.core:get_current_node()
+  local visit_dir = opts and opts.visit_dir or false
+  return Promise
+    .resolve()
+    :next(function()
+      if not url then
+        return Input.open('URL of the file to attach: ')
+      end
+      return remote_resource.should_fetch(url):next(function(ok)
+        if not ok then
+          error(("remote resource %s is unsafe, won't download"):format(url))
+        end
+        return url
+      end)
+    end)
+    ---@param chosen_url? string
+    :next(function(chosen_url)
+      if not chosen_url then
+        return nil
+      end
+      return self.core:attach_url(node, chosen_url, {
+        set_dir_method = get_set_dir_method(),
+        new_dir = ui.ask_attach_dir_property,
+      })
+    end)
+    :next(function(attachment_name)
+      if attachment_name then
+        utils.echo_info(('File %s is now an attachment'):format(attachment_name))
+        if visit_dir then
+          local attach_dir = self.core:get_dir(node)
+          self.core:reveal_nvim(attach_dir)
+        end
+      end
+      return attachment_name
+    end)
+    :wait(MAX_TIMEOUT)
+end
 
 ---Attach buffer's contents to current outline node.
 ---
 ---Throws a file-exists error if it would overwrite an existing filename.
 ---
 ---@param buffer? string | integer A buffer number or name.
----@param opts? orgmode.attach.attach_buffer.Options
+---@param opts? orgmode.attach.attach_url.Options
 ---@return string|nil attachment_name
 function Attach:attach_buffer(buffer, opts)
   local node = opts and opts.node or self.core:get_current_node()

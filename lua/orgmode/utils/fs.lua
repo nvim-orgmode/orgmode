@@ -21,6 +21,7 @@ function M.substitute_path(path_str)
 end
 
 ---@param filepath string
+---@return string | false
 function M.get_real_path(filepath)
   if not filepath then
     return false
