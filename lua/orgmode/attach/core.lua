@@ -401,4 +401,47 @@ function AttachCore:attach_new(node, name, opts)
   end)
 end
 
+---Open the attachments directory via `vim.ui.open()`.
+---
+---@param attach_dir string the directory to open
+---@return vim.SystemObj
+function AttachCore:reveal(attach_dir)
+  return assert(vim.ui.open(attach_dir))
+end
+
+---Open the attachments directory via `org_attach_visit_command`.
+---
+---@param attach_dir string the directory to open
+---@return nil
+function AttachCore:reveal_nvim(attach_dir)
+  local command = config.org_attach_visit_command or 'edit'
+  if type(command) == 'string' then
+    vim.cmd[command](attach_dir)
+  else
+    command(attach_dir)
+  end
+end
+
+---Open an attached file via `vim.ui.open()`.
+---
+---@param node OrgAttachNode
+---@param name string name of the file to open
+---@return vim.SystemObj
+function AttachCore:open(name, node)
+  local attach_dir = self:get_dir(node)
+  local path = vim.fs.joinpath(attach_dir, name)
+  return assert(vim.ui.open(path))
+end
+
+---Open an attached file via `:edit`.
+---
+---@param node OrgAttachNode
+---@param name string name of the file to open
+---@return nil
+function AttachCore:open_in_vim(name, node)
+  local attach_dir = self:get_dir(node)
+  local path = vim.fs.joinpath(attach_dir, name)
+  vim.cmd.edit(path)
+end
+
 return AttachCore
