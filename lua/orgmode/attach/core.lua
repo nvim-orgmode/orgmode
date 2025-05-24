@@ -444,4 +444,57 @@ function AttachCore:open_in_vim(name, node)
   vim.cmd.edit(path)
 end
 
+---Delete a single attachment.
+---
+---@param node OrgAttachNode
+---@param name string the name of the attachment to delete
+---@return OrgPromise<nil>
+function AttachCore:delete_one(node, name)
+  if name == '' then
+    utils.echo_warning('No attachment selected')
+    return Promise.resolve()
+  end
+  local attach_dir = self:get_dir(node)
+  local path = vim.fs.joinpath(attach_dir, name)
+  return fileops.unlink(path):next(function()
+    return nil
+  end)
+end
+
+---Delete all attachments from the current outline node.
+---
+---This actually deletes the entire attachment directory. A safer way is to
+---open the directory with `reveal` and delete from there.
+---
+---@param node OrgAttachNode
+---@param recursive fun(): OrgPromise<boolean>
+---@return OrgPromise<string> deleted_dir
+function AttachCore:delete_all(node, recursive)
+  local attach_dir = self:get_dir(node)
+  -- A few synchronous FS operations here, can't really be avoided. The
+  -- alternative would be to evaluate `recursive` before it's necessary.
+  local uv = vim.uv or vim.loop
+  local ok, errmsg, err = uv.fs_unlink(attach_dir)
+  if ok then
+    return Promise.resolve()
+  elseif err ~= 'EISDIR' then
+    return Promise.reject(errmsg)
+  end
+  ok, errmsg, err = uv.fs_rmdir(attach_dir)
+  if ok then
+    return Promise.resolve()
+  elseif err ~= 'ENOTEMPTY' then
+    return Promise.reject(errmsg)
+  end
+  return recursive():next(function(do_recursive)
+    if not do_recursive then
+      return Promise.reject(errmsg)
+    end
+    return fileops.remove_directory(attach_dir, { recursive = true }):next(function()
+      node:remove_auto_tag()
+      return attach_dir
+    end)
+  end)
+end
+
 return AttachCore
