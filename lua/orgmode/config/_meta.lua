@@ -255,6 +255,7 @@
 ---@field org_babel_default_header_args? table<string, string> Default header args for org-babel blocks: Default: { [':tangle'] = 'no', [':noweb'] = 'no' }
 ---@field org_attach_preferred_new_method 'id' | 'dir' | 'ask' | false If true, create attachments directory when necessary according to the given method. Default: 'id'
 ---@field org_attach_method 'mv' | 'cp' | 'ln' | 'lns' Default method of attacahing files. Default: 'cp'
+---@field org_attach_visit_command string | fun(dir: string) Command or Lua function used to open a directory. Default: 'edit'
 ---@field org_attach_use_inheritance 'always' | 'selective' | 'never' Determines whether headlines inherit the attachments directory of their parents. Default: 'selective'
 ---@field org_attach_id_to_path_function_list (string | fun(id: string): (string|nil))[] List of functions used to derive the attachments directory from an ID property.
 ---@field org_attach_sync_delete_empty_dir 'always' | 'ask' | 'never' Determines whether to delete empty directories when using `org.attach.sync()`. Default: 'ask'
