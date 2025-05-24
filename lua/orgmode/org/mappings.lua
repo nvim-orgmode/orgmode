@@ -477,10 +477,10 @@ function OrgMappings:_todo_change_state(direction)
   local repeat_note_template = ('%s- State %-12s from %-12s [%s]'):format(
     indent,
     [["]] .. new_todo .. [["]],
-    [["]] .. old_state .. [["]],
+    [["]] .. (old_state or '') .. [["]],
     Date.now():to_string()
   )
-  local repeat_note_title = ('Insert note for state change from "%s" to "%s"'):format(old_state, new_todo)
+  local repeat_note_title = ('Insert note for state change from "%s" to "%s"'):format(old_state or '', new_todo)
 
   if log_repeat_enabled then
     item:set_property('LAST_REPEAT', Date.now():to_wrapped_string(false))
