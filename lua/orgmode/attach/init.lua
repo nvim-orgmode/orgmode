@@ -1,0 +1,425 @@
+local AttachNode = require('orgmode.attach.node')
+local Core = require('orgmode.attach.core')
+local Input = require('orgmode.ui.input')
+local Menu = require('orgmode.ui.menu')
+local Promise = require('orgmode.utils.promise')
+local config = require('orgmode.config')
+local ui = require('orgmode.attach.ui')
+local utils = require('orgmode.utils')
+
+local MAX_TIMEOUT = 2 ^ 31
+
+---@class OrgAttach
+---@field private core OrgAttachCore
+local Attach = {}
+Attach.__index = Attach
+
+---@param opts {files:OrgFiles}
+function Attach:new(opts)
+  local data = setmetatable({ core = Core.new(opts) }, self)
+  return data
+end
+
+---The dispatcher for attachment commands.
+---Shows a list of commands and prompts for another key to execute a command.
+---@return nil
+function Attach:prompt()
+  local menu = Menu:new({
+    title = 'Press key for an attach command',
+    prompt = 'Press key for an attach command',
+  })
+
+  menu:add_option({
+    label = 'Attach a file to this task.',
+    key = 'a',
+    action = function()
+      return self:attach()
+    end,
+  })
+  menu:add_option({
+    label = 'Attach a file by copying it.',
+    key = 'c',
+    action = function()
+      return self:attach_cp()
+    end,
+  })
+  menu:add_option({
+    label = 'Attach a file by moving it.',
+    key = 'm',
+    action = function()
+      return self:attach_mv()
+    end,
+  })
+  menu:add_option({
+    label = 'Attach a file by hard-linking it',
+    key = 'l',
+    action = function()
+      return self:attach_ln()
+    end,
+  })
+  menu:add_option({
+    label = 'Attach a file by symbolic-linking it.',
+    key = 'y',
+    action = function()
+      return self:attach_lns()
+    end,
+  })
+  menu:add_option({
+    label = "Attach a buffer's contents.",
+    key = 'b',
+    action = function()
+      return self:attach_buffer()
+    end,
+  })
+  menu:add_option({
+    label = 'Create a new attachment, as a vim buffer.',
+    key = 'n',
+    action = function()
+      return self:attach_new()
+    end,
+  })
+  menu:add_option({
+    label = 'Set specific attachment directory for this task.',
+    key = 's',
+    action = function()
+      return self:set_directory()
+    end,
+  })
+  menu:add_option({
+    label = 'Unset specific attachment directory for this task.',
+    key = 'S',
+    action = function()
+      return self:unset_directory()
+    end,
+  })
+  menu:add_option({ label = 'Quit', key = 'q' })
+  menu:add_separator({ icon = ' ', length = 1 })
+
+  return menu:open()
+end
+
+---Get the current attachment node.
+---
+---@return OrgAttachNode
+function Attach:get_current_node()
+  return self.core:get_current_node()
+end
+
+---Get attachment node in a given file at a given position.
+---
+---@param file OrgFile
+---@param cursor [integer, integer] The (1,0)-indexed cursor position in the buffer
+---@return OrgAttachNode
+function Attach:get_node(file, cursor)
+  return AttachNode.at_cursor(file, cursor)
+end
+
+---Return the directory associated with the current outline node.
+---
+---First check for DIR property, then ID property.
+---`org_attach_use_inheritance' determines whether inherited
+---properties also will be considered.
+---
+---If an ID property is found the default mechanism using that ID
+---will be invoked to access the directory for the current entry.
+---Note that this method returns the directory as declared by ID or
+---DIR even if the directory doesn't exist in the filesystem.
+---
+---@param node? OrgAttachNode
+---@param no_fs_check? boolean if true, return the directory even if it doesn't
+---                            exist
+---@return string|nil attach_dir
+function Attach:get_dir(node, no_fs_check)
+  node = node or self.core:get_current_node()
+  return self.core:get_dir_or_nil(node, no_fs_check)
+end
+
+---Helper function to handle `org_attach_preferred_new_method()` lazily.
+---
+---@return fun(): OrgPromise<orgmode.attach.core.new_method>
+local function get_set_dir_method()
+  local method = config.org_attach_preferred_new_method
+  if not method then
+    error('No existing directory. DIR or ID property has to be explicitly created')
+  end
+  if method == 'id' or method == 'dir' then
+    return function()
+      return Promise.resolve(method)
+    end
+  end
+  if method == 'ask' then
+    return ui.ask_new_method
+  end
+  error(('invalid value for org_attach_preferred_new_method: %s'):format(method))
+end
+
+---Return existing or new directory associated with the current outline node.
+---
+---`org_attach_preferred_new_method` decides how to attach new directory if
+---neither ID nor DIR property exist.
+---
+---If the attachment by some reason cannot be created an error will be raised.
+---
+---@param node? OrgAttachNode
+---@return string
+function Attach:get_dir_or_create(node)
+  node = node or self.core:get_current_node()
+  return self.core:get_dir_or_create(node, get_set_dir_method(), ui.ask_attach_dir_property):wait(MAX_TIMEOUT)
+end
+
+---Set the DIR node property and ask to move files there.
+---
+---The property defines the directory that is used for attachments
+---of the entry.
+---
+---@param node? OrgAttachNode
+---@return string | nil new_dir
+function Attach:set_directory(node)
+  node = node or self.core:get_current_node()
+  return ui
+    .ask_attach_dir_property(node:get_dir())
+    ---@return string | nil
+    :next(function(new_dir)
+      if not new_dir then
+        return nil
+      end
+      return self.core:set_directory(node, new_dir, {
+        do_copy = function(old, new)
+          return ui.yes_or_no_or_cancel_slow(('Copy attachments from "%s" to "%s"? '):format(old, new))
+        end,
+        do_delete = function(old)
+          return ui.yes_or_no_or_cancel_slow(('Delete "%s"? '):format(old))
+        end,
+      })
+    end)
+    :wait(MAX_TIMEOUT)
+end
+
+---Remove DIR node property.
+---
+---If attachment folder is changed due to removal of DIR-property
+---ask to move attachments to new location and ask to delete old
+---attachment folder.
+---
+---Change of attachment-folder due to unset might be if an ID
+---property is set on the node, or if a separate inherited
+---DIR-property exists (that is different from the unset one).
+---
+---@param node? OrgAttachNode
+---@return string | nil new_dir
+function Attach:unset_directory(node)
+  node = node or self.core:get_current_node()
+  return self.core
+    :unset_directory(node, {
+      do_copy = function(old, new)
+        return ui.yes_or_no_or_cancel_slow(('Copy attachments from "%s" to "%s"? '):format(old, new))
+      end,
+      do_delete = function(old)
+        return ui.yes_or_no_or_cancel_slow(('Delete "%s"? '):format(old))
+      end,
+    })
+    :wait(MAX_TIMEOUT)
+end
+
+---Turn the autotag on.
+---
+---If autotagging is disabled, this does nothing.
+---
+---@param node? OrgAttachNode
+---@return nil
+function Attach:tag(node)
+  self.core:tag(node or self.core:get_current_node())
+end
+
+---Turn the autotag off.
+---
+---If autotagging is disabled, this does nothing.
+---
+---@param node? OrgAttachNode
+---@return nil
+function Attach:untag(node)
+  self.core:untag(node or self.core:get_current_node())
+end
+
+---@class orgmode.attach.attach.Options
+---@inlinedoc
+---@field method? OrgAttachMethod The method via which to attach `file`;
+---                               default is taken from `org_attach_method`
+---@field node? OrgAttachNode
+
+---Move/copy/link file into attachment directory of the current outline node.
+---
+---@param file? string The file to attach.
+---@param opts? orgmode.attach.attach.Options
+---@return string|nil attachment_name
+function Attach:attach(file, opts)
+  local node = opts and opts.node or self.core:get_current_node()
+  local method = opts and opts.method or config.org_attach_method
+  return Promise
+    .resolve(file or Input.open('File to keep as an attachment: ', '', 'file'))
+    ---@param chosen_file? string
+    :next(function(chosen_file)
+      if not chosen_file then
+        return nil
+      end
+      -- Remove `~` and environment variables, `vim.uv.fs_*` cannot deal with
+      -- them.
+      chosen_file = vim.fs.normalize(chosen_file)
+      return self.core:attach(node, chosen_file, {
+        attach_method = method,
+        set_dir_method = get_set_dir_method(),
+        new_dir = ui.ask_attach_dir_property,
+      })
+    end)
+    :next(function(attachment_name)
+      if attachment_name then
+        utils.echo_info(('File %s is now an attachment'):format(attachment_name))
+      end
+      return attachment_name
+    end)
+    :wait(MAX_TIMEOUT)
+end
+
+---@class orgmode.attach.attach_buffer.Options
+---@inlinedoc
+---@field node? OrgAttachNode
+
+---Attach buffer's contents to current outline node.
+---
+---Throws a file-exists error if it would overwrite an existing filename.
+---
+---@param buffer? string | integer A buffer number or name.
+---@param opts? orgmode.attach.attach_buffer.Options
+---@return string|nil attachment_name
+function Attach:attach_buffer(buffer, opts)
+  local node = opts and opts.node or self.core:get_current_node()
+  return Promise
+    .resolve(buffer and ui.get_bufnr_verbose(buffer) or ui.select_buffer())
+    ---@param bufnr? integer
+    :next(function(bufnr)
+      if not bufnr then
+        return nil
+      end
+      return self.core:attach_buffer(node, bufnr, {
+        set_dir_method = get_set_dir_method(),
+        new_dir = ui.ask_attach_dir_property,
+      })
+    end)
+    :next(function(attachment_name)
+      if attachment_name then
+        utils.echo_info(('File %s is now an attachment'):format(attachment_name))
+      end
+      return attachment_name
+    end)
+    :wait(MAX_TIMEOUT)
+end
+
+---Move/copy/link many files into attachment directory.
+---
+---@param files string[]
+---@param opts? orgmode.attach.attach.Options
+---@return string|nil attachment_name
+function Attach:attach_many(files, opts)
+  local node = opts and opts.node or self.core:get_current_node()
+  local method = opts and opts.method or config.org_attach_method
+
+  return self.core
+    :attach_many(node, files, {
+      set_dir_method = get_set_dir_method(),
+      new_dir = ui.ask_attach_dir_property,
+      attach_method = method,
+    })
+    :next(function(res)
+      if res.successes + res.failures > 0 then
+        local function plural(count)
+          return count == 1 and '' or 's'
+        end
+        local msg = ('attached %d file%s to %s'):format(res.successes, plural(res.successes), node:get_title())
+        local extra = res.failures > 0
+            and { { ('failed to attach %d file%s'):format(res.failures, plural(res.failures)), 'ErrorMsg' } }
+          or nil
+        utils.echo_info(msg, extra)
+      end
+      return nil
+    end)
+    :wait(MAX_TIMEOUT)
+end
+
+---@class orgmode.attach.attach_new.Options
+---@inlinedoc
+---@field bang? boolean if true, open the new file with `:edit!`
+---@field mods? table<string,any> command modifiers to pass to `:edit[!]`; see
+---                               docs for `nvim_parse_cmd()` for a list
+
+---Create a new attachment FILE for the current outline node.
+---
+---The attachment is opened as a new buffer.
+---
+---@param name? string
+---@param node? OrgAttachNode
+---@param edit_opts? orgmode.attach.attach_new.Options
+---@return string? attachment_name
+function Attach:attach_new(name, node, edit_opts)
+  node = node or self.core:get_current_node()
+  return Promise
+    .resolve(name or Input.open('Create attachnment named: '))
+    ---@param chosen_name? string
+    :next(function(chosen_name)
+      if not chosen_name or chosen_name == '' then
+        return nil
+      end
+      return self.core:attach_new(node, chosen_name, {
+        set_dir_method = get_set_dir_method(),
+        new_dir = ui.ask_attach_dir_property,
+        edit_bang = edit_opts and edit_opts.bang or false,
+        edit_mods = edit_opts and edit_opts.mods or {},
+      })
+    end)
+    :next(function(attachment_name)
+      if attachment_name then
+        utils.echo_info(('new attachment %s'):format(attachment_name))
+      end
+      return attachment_name
+    end)
+    :wait(MAX_TIMEOUT)
+end
+
+---Attach a file by copying it.
+---
+---@param node? OrgAttachNode
+---@return string|nil attachment_name
+function Attach:attach_cp(node)
+  return self:attach(nil, { method = 'cp', node = node })
+end
+
+---Attach a file by moving (renaming) it.
+---
+---@param node? OrgAttachNode
+---@return string|nil attachment_name
+function Attach:attach_mv(node)
+  return self:attach(nil, { method = 'mv', node = node })
+end
+
+---Attach a file by creating a hard link to it.
+---
+---Beware that this does not work on systems that do not support hard links.
+---On some systems, this apparently does copy the file instead.
+---
+---@param node? OrgAttachNode
+---@return string|nil attachment_name
+function Attach:attach_ln(node)
+  return self:attach(nil, { method = 'ln', node = node })
+end
+
+---Attach a file by creating a symbolic link to it.
+---
+---Beware that this does not work on systems that do not support symbolic
+---links. On some systems, this apparently does copy the file instead.
+---
+---@param node? OrgAttachNode
+---@return string|nil attachment_name
+function Attach:attach_lns(node)
+  return self:attach(nil, { method = 'lns', node = node })
+end
+
+return Attach
