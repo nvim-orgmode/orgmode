@@ -155,6 +155,7 @@
 ---@field org_set_effort? OrgMappingValue Default: '<prefix>xe'
 ---@field org_show_help? OrgMappingValue Default: 'g?'
 ---@field org_babel_tangle? OrgMappingValue Default: '<prefix>bt'
+---@field org_attach? OrgMappingValue Default: '<prefix><C-A>'
 
 ---@class OrgMappingsTextObjects
 ---@field inner_heading? OrgMappingValue Default: 'ih'
@@ -252,6 +253,11 @@
 ---@field org_id_link_to_org_use_id? boolean If true, Storing a link to the headline will automatically generate ID for that headline. Default: false
 ---@field org_use_property_inheritance boolean | string | string[] If true, properties are inherited by sub-headlines; may also be a regex or list of property names. Default: false
 ---@field org_babel_default_header_args? table<string, string> Default header args for org-babel blocks: Default: { [':tangle'] = 'no', [':noweb'] = 'no' }
+---@field org_attach_preferred_new_method 'id' | 'dir' | 'ask' | false If true, create attachments directory when necessary according to the given method. Default: 'id'
+---@field org_attach_method 'mv' | 'cp' | 'ln' | 'lns' Default method of attacahing files. Default: 'cp'
+---@field org_attach_use_inheritance 'always' | 'selective' | 'never' Determines whether headlines inherit the attachments directory of their parents. Default: 'selective'
+---@field org_attach_id_to_path_function_list (string | fun(id: string): (string|nil))[] List of functions used to derive the attachments directory from an ID property.
+---@field org_attach_sync_delete_empty_dir 'always' | 'ask' | 'never' Determines whether to delete empty directories when using `org.attach.sync()`. Default: 'ask'
 ---@field win_split_mode? 'horizontal' | 'vertical' | 'auto' | 'float' | string[] How to open agenda and capture windows. Default: 'horizontal'
 ---@field win_border? 'none' | 'single' | 'double' | 'rounded' | 'solid' | 'shadow' | string[] Border configuration for `win_split_mode = 'float'`. Default: 'single'
 ---@field notifications? OrgNotificationsConfig Notification settings
