@@ -14,9 +14,10 @@ local MAX_TIMEOUT = 2 ^ 31
 local Attach = {}
 Attach.__index = Attach
 
----@param opts {files:OrgFiles}
+---@param opts {files:OrgFiles, links:OrgLinks}
 function Attach:new(opts)
   local data = setmetatable({ core = Core.new(opts) }, self)
+  data.core.links:add_type(require('orgmode.org.links.types.attachment'):new({ attach = data }))
   return data
 end
 
@@ -270,6 +271,14 @@ function Attach:unset_directory(node)
       end,
     })
     :wait(MAX_TIMEOUT)
+end
+
+---@param node? OrgAttachNode
+---@param fuzzy? boolean
+function Attach:make_completion(node, fuzzy)
+  node = node or self.core:get_current_node()
+  local attach_dir = self.core:get_dir(node)
+  return ui.make_completion(attach_dir, fuzzy)
 end
 
 ---Turn the autotag on.
