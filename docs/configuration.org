@@ -7,6 +7,7 @@ This page contains information about all configuration that can be provided to t
 - [[#agenda-settings][Agenda settings]]
 - [[#calendar-settings][Calendar settings]]
 - [[#tags-settings][Tags settings]]
+- [[#attachment-settings][Attachments settings]]
 - [[#mappings][Mappings]]
 - [[#features][Features]]
 - [[#user-interface][User interface]]
@@ -1132,6 +1133,113 @@ Using the example above, setting this variable to ={'MYTAG'}=, second
 and third headline would have only =CHILDTAG=, where =MYTAG= would not
 be inherited.
 
+** Attachments settings
+:PROPERTIES:
+:CUSTOM_ID: attachment-settings
+:END:
+
+*** org_attach_id_dir
+:PROPERTIES:
+:CUSTOM_ID: org_attach_id_dir
+:END:
+- Type: =string=
+- Default: ='./data/'=
+
+The directory where attachments are stored. If this is a relative path, it
+will be interpreted relative to the directory where the Org file lives.
+
+*** org_attach_auto_tag
+:PROPERTIES:
+:CUSTOM_ID: org_attach_auto_tag
+:END:
+- Type: =string=
+- Default: ='ATTACH'=
+
+Tag that is added automatically when attaching files to a headline.
+
+*** org_attach_preferred_new_method
+:PROPERTIES:
+:CUSTOM_ID: org_attach_preferred_new_method
+:END:
+- Type: ='id'|'dir'|'ask'|false=
+- Default: ='id'=
+
+This setting is used when attaching files to nodes that have neither an
+=ID= nor a =DIR= property.
+
+- =id= - create and use an =ID= property
+- =dir= - create and use a =DIR= property
+- =ask= - ask the user which method to use
+- =false= - don't create a property; the user has to define it explicitly before attaching files
+
+*** org_attach_method
+:PROPERTIES:
+:CUSTOM_ID: org_attach_method
+:END:
+- Type: ='cp'|'mv'|'ln'|'lns'=
+- Default: ='cp'=
+
+The preferred method to add files to the attachment directory.
+
+- =mv= - move (rename) the file
+- =cp= - copy the file
+- =ln= - create a hard link; not supported on all systems
+- =lns= - create a symbol link;  not supported on all systems; on Windows, this always creates a /junction/
+
+*** org_attach_copy_directory_create_symlink
+:PROPERTIES:
+:CUSTOM_ID: org_attach_copy_directory_create_symlink
+:END:
+- Type: =boolean=
+- Default: =false=
+
+If =true=, whenever the attachments directory itself is a symlink, and it
+is copied due to the [[https://orgmode.org/manual/Attachment-defaults-and-dispatcher.html*index-C_002dc-C_002da-s][set_directory]] or [[https://orgmode.org/manual/Attachment-defaults-and-dispatcher.html*index-C_002dc-C_002da-S][unset_directory]] action, copy the
+symlink itself. The default is to treat the symlink transparently as
+a directory.
+
+*** org_attach_use_inheritance
+:PROPERTIES:
+:CUSTOM_ID: org_attach_use_inheritance
+:END:
+- Type: ='always'|'selective'|'never'=
+- Default: ='selective'=
+
+Attachment inheritance for the outline.
+
+Enabling inheritance implies that running =attach= inside a node without
+attachments will operate on the first parent headline that has an
+attachment.
+
+Possible values are:
+
+- =always= - inherit attachments
+- =selective= - respect [[#org_use_property_inheritance][org_use_property_inheritance]] for the properties =DIR= and =ID=
+- =never= - don't inherit attachments
+
+*** org_attach_id_to_path_function_list
+:PROPERTIES:
+:CUSTOM_ID: org_attach_id_to_path_function_list
+:END:
+- Type: =(string | fun(id: string): (string|nil))[]=
+- Default: ={ 'uuid_folder_format', 'ts_folder_format', 'fallback_folder_format' }=
+
+List of functions that are tried sequentially to derive an attachment path
+from an =ID= property. The functions are called with a single =id= argument
+until the return value is an existing folder. The ID format passed to the
+functions is usually defined by [[#org_id_method][org_id_method]].
+
+If no folder has been created yet for the given ID, then the first truthy
+value defines the path of the folder to be created.
+
+The default functions avoid putting all attachment directories directly
+inside [[#org_attach_id_dir][org_attach_id_dir]]. Some file systems have performance issues in
+such scenarios.
+
+Be careful when changing this setting. If you remove a function, previously
+created attachment folders may be no longer mapped correctly and Org may be
+unable to detect them.
+
 ** Mappings
 :PROPERTIES:
 :CUSTOM_ID: mappings
@@ -2049,6 +2157,13 @@ See [[#clocking][Clocking]] for more details.
 - Mapped to: =<leader>obt=
 Tangle current file. See [[#extract-source-code-tangle][Extract source code (tangle)]] for more details.
 
+**** org_attach
+:PROPERTIES:
+:CUSTOM_ID: org_attach
+:END:
+- Mapped to: =<Leader>o<C-A>=
+Open the attach dispatcher. See [[#attachments][Attachments]] for more details.
+
 **** org_show_help
 :PROPERTIES:
 :CUSTOM_ID: org_show_help
@@ -2806,6 +2921,22 @@ Running [[#org_babel_tangle][org_babel_tangle]] will create file =~/org/my_tangl
 =print('Headline 2')=
 =print('Headline 1')=
 =#+end_src=
+
+*** Attachments
+:PROPERTIES:
+:CUSTOM_ID: attachments
+:END:
+
+There is almost complete support for file attachments (Orgmode link:
+[[https://orgmode.org/manual/Attachments.html][Attachments]]). You can use [[#org_attach][org_attach]] to open the dispatcher and attach
+files to an "attachment node" (either a headline or an entire org
+file).
+
+Attaching a file puts it in a directory associated with the attachment node.
+Based on [[#org_attach_preferred_new_method][org_attach_preferred_new_method]], this either uses the =ID= or
+the =DIR= property. See also [[#org_attach_id_dir][org_attach_id_dir]],
+[[#org_attach_id_to_path_function_list][org_attach_id_to_path_function_list]] and [[#org_attach_use_inheritance][org_attach_use_inheritance]] on how
+to further customize the attachments directory.
 
 ** User interface
 :PROPERTIES:
