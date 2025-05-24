@@ -87,6 +87,8 @@ local DefaultConfig = {
     'fallback_folder_format',
   },
   org_attach_sync_delete_empty_dir = 'ask',
+  org_resource_download_policy = 'prompt',
+  org_safe_remote_resources = {},
   win_split_mode = 'horizontal',
   win_border = 'single',
   notifications = {
