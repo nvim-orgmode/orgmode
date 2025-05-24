@@ -80,6 +80,7 @@ local DefaultConfig = {
   org_attach_visit_command = 'edit',
   org_attach_use_inheritance = 'selective',
   org_attach_store_link_p = 'attached',
+  org_attach_archive_delete = 'never',
   org_attach_id_to_path_function_list = {
     'uuid_folder_format',
     'ts_folder_format',

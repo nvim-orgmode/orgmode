@@ -1242,6 +1242,16 @@ If not =false=, store a link with [[#org_store_link][org_store_link]] when attac
 - =file= - store a =[[file:attach_dir/name]]= link
 - =original= - store a =[[file:original/location]]= link
 
+*** org_attach_archive_delete
+:PROPERTIES:
+:CUSTOM_ID: org_attach_archive_delete
+:END:
+- Type: ='always' | 'ask' | 'never'=
+- Default: ='never'=
+
+Determines whether attachments are deleted automatically whenever a subtree
+is moved to an archive file. The value ='ask'= means to ask the user.
+
 *** org_attach_id_to_path_function_list
 :PROPERTIES:
 :CUSTOM_ID: org_attach_id_to_path_function_list

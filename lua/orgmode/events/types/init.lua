@@ -8,4 +8,5 @@ return {
   HeadingToggled = require('orgmode.events.types.heading_toggled'),
   AttachChanged = require('orgmode.events.types.attach_changed_event'),
   AttachOpened = require('orgmode.events.types.attach_opened_event'),
+  HeadlineArchived = require('orgmode.events.types.headline_archived_event'),
 }
