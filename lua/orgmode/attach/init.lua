@@ -191,6 +191,29 @@ function Attach:get_node(file, cursor)
   return AttachNode.at_cursor(file, cursor)
 end
 
+---Get attachment node pointed at in a window
+---
+---@param window? integer | string window-ID, window number or any argument
+---                                accepted by `winnr()`; if 0 or nil, use the
+---                                current window
+---@return OrgAttachNode
+function Attach:get_node_by_window(window)
+  local winid
+  if not window or window == 0 then
+    winid = vim.api.nvim_get_current_win()
+  elseif type(window) == 'string' then
+    winid = vim.fn.win_getid(vim.fn.winnr(window))
+  elseif vim.fn.win_id2win(window) ~= 0 then
+    winid = window
+  else
+    winid = vim.fn.win_getid(window)
+  end
+  if winid == 0 then
+    error(('invalid window: %s'):format(window))
+  end
+  return self.core:get_node_by_winid(winid)
+end
+
 ---Return the directory associated with the current outline node.
 ---
 ---First check for DIR property, then ID property.
@@ -557,6 +580,141 @@ end
 ---@return string|nil attachment_name
 function Attach:attach_lns(node)
   return self:attach(nil, { method = 'lns', node = node })
+end
+
+---@class orgmode.attach.attach_to_other_buffer.Options
+---@inlinedoc
+---@field window? integer | string if passed, attach to the node pointed at in
+---               the given window; you can pass a window-ID, window number, or
+---               `winnr()`-style strings, e.g. `#` to use the previously
+---               active window. Pass 0 for the current window. It's an error
+---               if the window doesn't display an org file.
+---@field ask? 'always'|'multiple' determines what to do if `window` is nil;
+---            if 'always', collect all nodes displayed in a window and ask the
+---            user to select one. If 'multiple', only ask if more than one
+---            node is displayed. If false or nil, never ask the user; accept
+---            the unambiguous choice or abort.
+---@field prefer_recent? 'ask'|'buffer'|'window'|boolean if not nil but
+---                      `window` is nil, and more than one node is displayed,
+---                      and one of them is more preferable than the others,
+---                      this one is used without asking the user.
+---                      Preferred nodes are those displayed in the current
+---                      window's current buffer and alternate buffer, as well
+---                      as the previous window's current buffer. Pass 'buffer'
+---                      to prefer the alternate buffer over the previous
+---                      window. Pass 'window' for the same vice versa. Pass
+---                      'ask' to ask the user in case of conflict. Pass 'true'
+---                      to prefer only an unambiguous recent node over
+---                      non-recent ones.
+---@field include_hidden? boolean If not nil, include not only displayed nodes,
+---                       but also those in hidden buffers; for those, the node
+---                       pointed at by the `"` mark (position when last
+---                       exiting the buffer) is chosen.
+---@field visit_dir? boolean if not nil, open the relevant attachment directory
+---                          after attaching the file.
+---@field method? 'cp' | 'mv' | 'ln' | 'lns' The attachment method, same values
+---               as in `org_attach_method`.
+
+---@param file_or_files string | string[]
+---@param opts? orgmode.attach.attach_to_other_buffer.Options
+---@return string|nil attachment_name
+function Attach:attach_to_other_buffer(file_or_files, opts)
+  local files = utils.ensure_array(file_or_files) ---@type string[]
+  return self
+    :find_other_node(opts)
+    :next(function(node)
+      if not node then
+        return nil
+      end
+      return self:attach_many(files, {
+        node = node,
+        method = opts and opts.method,
+        visit_dir = opts and opts.visit_dir,
+      })
+    end)
+    :wait(MAX_TIMEOUT)
+end
+
+---Helper to `Attach:attach_to_other_buffer`, unfortunately really complicated.
+---@param opts? orgmode.attach.attach_to_other_buffer.Options
+---@return OrgPromise<OrgAttachNode | nil>
+function Attach:find_other_node(opts)
+  local window = opts and opts.window
+  local ask = opts and opts.ask
+  local prefer_recent = opts and opts.prefer_recent
+  local include_hidden = opts and opts.include_hidden or false
+  if window then
+    return Promise.resolve(self:get_node_by_window(window))
+  end
+  if prefer_recent then
+    local ok, node = pcall(self.core.get_current_node, self.core)
+    if ok then
+      return Promise.resolve(node)
+    end
+    local altbuf_nodes, altwin_node
+    if prefer_recent == 'buffer' then
+      altbuf_nodes = self.core:get_single_node_by_buffer(vim.fn.bufnr('#'))
+      if altbuf_nodes then
+        return Promise.resolve(altbuf_nodes)
+      end
+      ok, altwin_node = pcall(self.get_node_by_window, self, '#')
+      if ok then
+        return Promise.resolve(altwin_node)
+      end
+    elseif prefer_recent == 'window' then
+      ok, altwin_node = pcall(self.get_node_by_window, self, '#')
+      if ok then
+        return Promise.resolve(altwin_node)
+      end
+      altbuf_nodes = self.core:get_single_node_by_buffer(vim.fn.bufnr('#'))
+      if altbuf_nodes then
+        return Promise.resolve(altbuf_nodes)
+      end
+    else
+      local altbuf = vim.fn.bufnr('#')
+      local altwin = vim.fn.win_getid(vim.fn.winnr('#'))
+      -- altwin falls back to current window if previous window doesn't exist;
+      -- that's fine, we've handled it earlier.
+      ok, altwin_node = pcall(self.core.get_node_by_winid, self.core, altwin)
+      altwin_node = ok and altwin_node or nil
+      altbuf_nodes = self.core:get_nodes_by_buffer(altbuf)
+      if altwin_node and (#altbuf_nodes == 0 or vim.api.nvim_win_get_buf(altwin) == altbuf) then
+        return Promise.resolve(altwin_node)
+      end
+      if #altbuf_nodes == 1 and not altwin_node then
+        return Promise.resolve(altbuf_nodes[1])
+      end
+      if prefer_recent == 'ask' then
+        local candidates = altbuf_nodes
+        if altwin_node then
+          table.insert(candidates, 1, altwin_node)
+        end
+        return ui.select_node(candidates)
+      end
+      -- More than one possible attachment location and not asking; fall back
+      -- to regular behavior.
+    end
+  end
+  local candidates = self.core:list_current_nodes({ include_hidden = include_hidden })
+  if #candidates == 0 then
+    return Promise.reject('nowhere to attach to')
+  end
+  if ask == 'always' then
+    return ui.select_node(candidates)
+  end
+  if ask == 'multiple' then
+    if #candidates == 1 then
+      return Promise.resolve(candidates[1])
+    end
+    return ui.select_node(candidates)
+  end
+  if ask then
+    return Promise.reject(('invalid value for ask: %s'):format(ask))
+  end
+  if #candidates == 1 then
+    return Promise.resolve(candidates[1])
+  end
+  return Promise.reject('more than one possible attachment location')
 end
 
 ---Open the attachments directory via `vim.ui.open()`.
