@@ -73,6 +73,7 @@ local DefaultConfig = {
     [':noweb'] = 'no',
   },
   org_attach_id_dir = './data/',
+  org_attach_dir_relative = false,
   org_attach_auto_tag = 'ATTACH',
   org_attach_preferred_new_method = 'id',
   org_attach_method = 'cp',

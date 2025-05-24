@@ -1178,6 +1178,16 @@ be inherited.
 The directory where attachments are stored. If this is a relative path, it
 will be interpreted relative to the directory where the Org file lives.
 
+*** org_attach_dir_relative
+:PROPERTIES:
+:CUSTOM_ID: org_attach_dir_relative
+:END:
+- Type: =boolean=
+- Default: =false=
+
+If =true=, whenever you add a =DIR= property to a headline, it is added as
+a relative path. The default is to only add absolute paths.
+
 *** org_attach_auto_tag
 :PROPERTIES:
 :CUSTOM_ID: org_attach_auto_tag
@@ -3013,8 +3023,9 @@ file).
 Attaching a file puts it in a directory associated with the attachment node.
 Based on [[#org_attach_preferred_new_method][org_attach_preferred_new_method]], this either uses the =ID= or
 the =DIR= property. See also [[#org_attach_id_dir][org_attach_id_dir]],
-[[#org_attach_id_to_path_function_list][org_attach_id_to_path_function_list]] and [[#org_attach_use_inheritance][org_attach_use_inheritance]] on how
-to further customize the attachments directory.
+[[#org_attach_dir_relative][org_attach_dir_relative]], [[#org_attach_id_to_path_function_list][org_attach_id_to_path_function_list]] and
+[[#org_attach_use_inheritance][org_attach_use_inheritance]] on how to further customize the attachments
+directory.
 
 Attachment links are supported. A link like =[[attachment:file.txt]]=
 looks up =file.txt= in the current node's attachments directory and opens
