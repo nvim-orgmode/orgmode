@@ -640,4 +640,36 @@ function Attach:sync(node)
   return self.core:sync(node, delete_empty_dir):wait(MAX_TIMEOUT)
 end
 
+---Expand links in current buffer.
+---
+---It is meant to be added to `org_export_before_parsing_hook`."
+---TODO: Add this hook. Will require refactoring `orgmode.export`.
+---
+---@param bufnr? integer
+---@return nil
+function Attach:expand_links(bufnr)
+  bufnr = bufnr or 0
+  local file = self.core.files:get(vim.api.nvim_buf_get_name(bufnr))
+  local total = 0
+  local miss = 0
+  self.core
+    :on_every_attachment_link(file, function(attach_dir, basename)
+      total = total + 1
+      if not attach_dir then
+        miss = miss + 1
+        return
+      end
+      return 'file:' .. vim.fs.joinpath(attach_dir, basename)
+    end)
+    :next(function()
+      if miss > 0 then
+        utils.echo_warning(('failed to expand %d/%d attachment links'):format(miss, total))
+      else
+        utils.echo_info(('expanded %d attachment links'):format(total))
+      end
+      return nil
+    end)
+    :wait(MAX_TIMEOUT)
+end
+
 return Attach
