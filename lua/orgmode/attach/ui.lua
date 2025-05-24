@@ -1,3 +1,4 @@
+local AttachNode = require('orgmode.attach.node')
 local Input = require('orgmode.ui.input')
 local Promise = require('orgmode.utils.promise')
 local fileops = require('orgmode.attach.fileops')
@@ -63,6 +64,36 @@ function M.ask_new_method()
         reject('Input canceled')
       end
     end)
+  end)
+end
+
+---Dialog that has user select one among a given number of attachment nodes.
+---
+---Returns nil if the user cancels with `<Esc>`.
+---
+---Errors if the user's selection doesn't match a single node.
+---
+---@param nodes OrgAttachNode[]
+---@return OrgPromise<OrgAttachNode | nil> selection
+function M.select_node(nodes)
+  ---@param arglead string
+  ---@return OrgAttachNode[]
+  local function get_matches(arglead)
+    return vim.fn.matchfuzzy(nodes, arglead, { matchseq = true, text_cb = AttachNode.get_title })
+  end
+  return Input.open('Select an attachment node: ', '', get_matches):next(function(choice)
+    if not choice then
+      return nil
+    end
+    local matches = get_matches(choice)
+    if #matches == 1 then
+      return matches[1]
+    end
+    if #matches > 1 then
+      error('more than one match for ' .. tostring(choice))
+    else
+      error('no matching buffer for ' .. tostring(choice))
+    end
   end)
 end
 
