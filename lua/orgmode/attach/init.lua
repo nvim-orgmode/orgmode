@@ -23,8 +23,8 @@ end
 
 ---The dispatcher for attachment commands.
 ---Shows a list of commands and prompts for another key to execute a command.
----@return nil
-function Attach:prompt()
+---@return OrgMenu
+function Attach:_build_menu()
   local menu = Menu:new({
     title = 'Press key for an attach command',
     prompt = 'Press key for an attach command',
@@ -147,7 +147,24 @@ function Attach:prompt()
   menu:add_option({ label = 'Quit', key = 'q' })
   menu:add_separator({ icon = ' ', length = 1 })
 
+  return menu
+end
+
+---@return nil
+function Attach:prompt()
+  local menu = self:_build_menu()
   return menu:open()
+end
+
+---@param key string
+---@return string?
+function Attach:open_by_key(key)
+  local menu = self:_build_menu()
+  local item = menu:get_entry_by_key(key)
+  if not item then
+    return utils.echo_error('No attachment action with key ' .. key)
+  end
+  return item.action()
 end
 
 ---Get the current attachment node.

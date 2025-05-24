@@ -64,6 +64,7 @@ List of available actions:
 - =:Org helpgrep= - Open search agenda view that allows searching through the documentation
 - =:Org agenda {type?}= - Open agenda view by the shortcut, for example =:Org agenda M= will open =tags_todo= view. When =type= is omitted, it opens up Agenda view.
 - =:Org capture {type?}= - Open capture template by the shortcut, for example =:Org capture t=. When =type= is omitted, it opens up Capture prompt.
+- =:Org attach {type?}= - Take attachment action by the shortcut, for example =:Org attach o= will prompt for an attached file to open. When =type= is omitted, it opens up Attach prompt.
 - =:Org install_treesitter_grammar= - Install the treesitter grammar for Orgmode. If installed, prompt to reinstall. Grammar is installed automatically
   on first run, but this is useful in case when there are issues with the grammar.
 - =:Org store_link= - [[file:./configuration.org::#org_store_link][Store link]] to the headline under cursor. Works in both agenda and org files.
@@ -79,3 +80,5 @@ All of the commands above can be executed through the global Lua =Org= variable.
 - =Org.agenda.m()= - Opens =tags= view
 - =Org.capture()= - Opens capture prompt
 - =Org.capture.t()= - Opens capture template for =t= shortcut
+- =Org.attach()= - Opens attach prompt
+- =Org.attach.c()= - Opens attach template for =c= shortcut
