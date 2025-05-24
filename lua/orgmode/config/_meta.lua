@@ -258,6 +258,7 @@
 ---@field org_attach_visit_command string | fun(dir: string) Command or Lua function used to open a directory. Default: 'edit'
 ---@field org_attach_use_inheritance 'always' | 'selective' | 'never' Determines whether headlines inherit the attachments directory of their parents. Default: 'selective'
 ---@field org_attach_store_link_p 'original' | 'file' | 'attached' | false If true, attaching a file stores a link to it. Default: 'attached'
+---@field org_attach_archive_delete 'always' | 'ask' | 'never' Determines whether to delete a headline's attachments when it is archived. Default: 'never'
 ---@field org_attach_id_to_path_function_list (string | fun(id: string): (string|nil))[] List of functions used to derive the attachments directory from an ID property.
 ---@field org_attach_sync_delete_empty_dir 'always' | 'ask' | 'never' Determines whether to delete empty directories when using `org.attach.sync()`. Default: 'ask'
 ---@field win_split_mode? 'horizontal' | 'vertical' | 'auto' | 'float' | string[] How to open agenda and capture windows. Default: 'horizontal'

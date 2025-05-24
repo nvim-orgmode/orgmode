@@ -597,6 +597,23 @@ function Attach:delete_all(force, node)
     :wait(MAX_TIMEOUT)
 end
 
+---Maybe delete subtree attachments when archiving.
+---
+---This function is called via the `OrgHeadlineArchivedEvent`. The option
+---`org_attach_archive_delete' controls its behavior."
+---
+---@param headline OrgHeadline
+---@return nil
+function Attach:maybe_delete_archived(headline)
+  local delete = config.org_attach_archive_delete
+  if delete == 'always' then
+    self:delete_all(true, AttachNode.from_headline(headline))
+  end
+  if delete == 'ask' then
+    self:delete_all(false, AttachNode.from_headline(headline))
+  end
+end
+
 ---Synchronize the current outline node with its attachments.
 ---
 ---Useful after files have been added/removed externally. The Option
