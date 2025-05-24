@@ -172,7 +172,7 @@ function OrgState:wipe(overwrite)
   self._ctx.saved = false
   self._ctx.dirty = true
   if overwrite then
-    state:save_sync()
+    self:save_sync()
   end
 end
 
