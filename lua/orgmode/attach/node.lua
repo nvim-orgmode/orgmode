@@ -178,15 +178,19 @@ end
 
 ---Set the attachment directory on the current node.
 ---
----In addition to `set_property()`, this also ensures that the path is always
----absolute.
+---In addition to `set_property()`, this also adjusts the path to be relative,
+---if required by `org_attach_dir_relative`.
 ---
 ---@param dir string
 ---@return string new_dir absolute attachment directory
 ---@overload fun(): nil
 function AttachNode:set_dir(dir)
   if dir then
-    dir = vim.fn.fnamemodify(dir, ':p')
+    if config.org_attach_dir_relative then
+      dir = fs_utils.make_relative(dir, vim.fs.dirname(self.file.filename))
+    else
+      dir = vim.fn.fnamemodify(dir, ':p')
+    end
   end
   self:set_property('DIR', dir)
   return dir and self:_make_absolute(dir)
