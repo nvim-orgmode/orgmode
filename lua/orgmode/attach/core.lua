@@ -115,7 +115,8 @@ end
 ---Set the DIR node property and ask to move files there.
 ---
 ---The property defines the directory that is used for attachments
----of the entry.
+---of the entry. Creates relative links if `org_attach_dir_relative'
+---is true.
 ---
 ---@param node OrgAttachNode
 ---@param new_dir string
