@@ -6,13 +6,15 @@ local utils = require('orgmode.utils')
 
 ---@class OrgAttachCore
 ---@field files OrgFiles
+---@field links OrgLinks
 local AttachCore = {}
 AttachCore.__index = AttachCore
 
----@param opts {files:OrgFiles}
+---@param opts {files:OrgFiles, links:OrgLinks}
 function AttachCore.new(opts)
   local data = {
     files = opts and opts.files,
+    links = opts and opts.links,
   }
   return setmetatable(data, AttachCore)
 end
@@ -288,7 +290,17 @@ function AttachCore:attach(node, file, opts)
         return nil
       end
       node:add_auto_tag()
-      return basename
+      local link = self.links:store_link_to_attachment({ attach_dir = attach_dir, original = file })
+      return Promise.new(function(resolve, reject)
+        vim.schedule(function()
+          local ok, err = pcall(vim.fn.setreg, vim.v.register, link)
+          if ok then
+            resolve(basename)
+          else
+            reject(err)
+          end
+        end)
+      end)
     end)
   end)
 end
@@ -314,6 +326,14 @@ function AttachCore:attach_buffer(node, bufnr, opts)
     local data = table.concat(vim.api.nvim_buf_get_lines(bufnr, 0, -1, false), '\n')
     return utils.writefile(attach_file, data, { excl = true }):next(function()
       node:add_auto_tag()
+      -- Ignore all errors here, this is just to determine whether we can store
+      -- a link to `bufname`.
+      local bufname_exists = vim.uv.fs_stat(bufname)
+      local link = self.links:store_link_to_attachment({
+        attach_dir = attach_dir,
+        original = bufname_exists and bufname or attach_file,
+      })
+      vim.fn.setreg(vim.v.register, link)
       return basename
     end)
   end)
@@ -341,7 +361,10 @@ function AttachCore:attach_many(node, files, opts)
       .mapSeries(function(to_be_attached)
         local basename = basename_safe(to_be_attached)
         local attach_file = vim.fs.joinpath(attach_dir, basename)
-        return attach(to_be_attached, attach_file)
+        return attach(to_be_attached, attach_file):next(function(success)
+          self.links:store_link_to_attachment({ attach_dir = attach_dir, original = to_be_attached })
+          return success
+        end)
       end, files)
       ---@param successes boolean[]
       :next(function(successes)
