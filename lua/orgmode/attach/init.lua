@@ -78,6 +78,35 @@ function Attach:prompt()
       return self:attach_new()
     end,
   })
+  menu:add_separator({ length = #menu.title })
+  menu:add_option({
+    label = 'Open an attachment externally.',
+    key = 'o',
+    action = function()
+      return self:open()
+    end,
+  })
+  menu:add_option({
+    label = 'Open an attachment in vim.',
+    key = 'O',
+    action = function()
+      return self:open_in_vim()
+    end,
+  })
+  menu:add_option({
+    label = 'Open the attachment directory externally.',
+    key = 'f',
+    action = function()
+      return self:reveal()
+    end,
+  })
+  menu:add_option({
+    label = 'Open the attachment directory in vim.',
+    key = 'F',
+    action = function()
+      return self:reveal_nvim()
+    end,
+  })
   menu:add_option({
     label = 'Set specific attachment directory for this task.',
     key = 's',
@@ -243,6 +272,8 @@ end
 
 ---@class orgmode.attach.attach.Options
 ---@inlinedoc
+---@field visit_dir? boolean if true, visit the directory subsequently using
+---                          `org_attach_visit_command`
 ---@field method? OrgAttachMethod The method via which to attach `file`;
 ---                               default is taken from `org_attach_method`
 ---@field node? OrgAttachNode
@@ -254,6 +285,7 @@ end
 ---@return string|nil attachment_name
 function Attach:attach(file, opts)
   local node = opts and opts.node or self.core:get_current_node()
+  local visit_dir = opts and opts.visit_dir or false
   local method = opts and opts.method or config.org_attach_method
   return Promise
     .resolve(file or Input.open('File to keep as an attachment: ', '', 'file'))
@@ -274,6 +306,10 @@ function Attach:attach(file, opts)
     :next(function(attachment_name)
       if attachment_name then
         utils.echo_info(('File %s is now an attachment'):format(attachment_name))
+        if visit_dir then
+          local attach_dir = self.core:get_dir(node)
+          self.core:reveal_nvim(attach_dir)
+        end
       end
       return attachment_name
     end)
@@ -282,6 +318,8 @@ end
 
 ---@class orgmode.attach.attach_buffer.Options
 ---@inlinedoc
+---@field visit_dir? boolean if true, visit the directory subsequently using
+---                          `org_attach_visit_command`
 ---@field node? OrgAttachNode
 
 ---Attach buffer's contents to current outline node.
@@ -293,6 +331,7 @@ end
 ---@return string|nil attachment_name
 function Attach:attach_buffer(buffer, opts)
   local node = opts and opts.node or self.core:get_current_node()
+  local visit_dir = opts and opts.visit_dir or false
   return Promise
     .resolve(buffer and ui.get_bufnr_verbose(buffer) or ui.select_buffer())
     ---@param bufnr? integer
@@ -321,6 +360,7 @@ end
 ---@return string|nil attachment_name
 function Attach:attach_many(files, opts)
   local node = opts and opts.node or self.core:get_current_node()
+  local visit_dir = opts and opts.visit_dir or false
   local method = opts and opts.method or config.org_attach_method
 
   return self.core
@@ -339,6 +379,10 @@ function Attach:attach_many(files, opts)
             and { { ('failed to attach %d file%s'):format(res.failures, plural(res.failures)), 'ErrorMsg' } }
           or nil
         utils.echo_info(msg, extra)
+        if res.successes > 0 and visit_dir then
+          local attach_dir = self.core:get_dir(node)
+          self.core:reveal_nvim(attach_dir)
+        end
       end
       return nil
     end)
@@ -420,6 +464,70 @@ end
 ---@return string|nil attachment_name
 function Attach:attach_lns(node)
   return self:attach(nil, { method = 'lns', node = node })
+end
+
+---Open the attachments directory via `vim.ui.open()`.
+---
+---@param attach_dir? string the directory to open
+---@return nil
+function Attach:reveal(attach_dir)
+  attach_dir = attach_dir or self:get_dir_or_create()
+  local res = self.core:reveal(attach_dir):wait()
+  if res.code ~= 0 then
+    error(('exit code %d for opening: %s'):format(res.code, attach_dir))
+  end
+end
+
+---Open the attachments directory via `org_attach_visit_command`.
+---
+---@param attach_dir? string the directory to open
+---@return nil
+function Attach:reveal_nvim(attach_dir)
+  attach_dir = attach_dir or self:get_dir_or_create()
+  return self.core:reveal_nvim(attach_dir)
+end
+
+---Open an attached file via `vim.ui.open()`.
+---
+---@param name? string name of the file to open
+---@param node? OrgAttachNode
+---@return nil
+function Attach:open(name, node)
+  node = node or self.core:get_current_node()
+  local attach_dir = self.core:get_dir(node)
+  ---@type vim.SystemObj?
+  local obj = Promise.resolve(name or ui.select_attachment('Open', attach_dir))
+    :next(function(chosen_name)
+      if not chosen_name then
+        return
+      end
+      return self.core:open(chosen_name, node)
+    end)
+    :wait(MAX_TIMEOUT)
+  if obj then
+    local res = obj:wait()
+    if res.code ~= 0 then
+      error(('exit code %d for command: %s'):format(res.code, obj.cmd))
+    end
+  end
+end
+
+---Open an attached file via `:edit`.
+---
+---@param name? string name of the file to open
+---@param node? OrgAttachNode
+---@return nil
+function Attach:open_in_vim(name, node)
+  node = node or self.core:get_current_node()
+  local attach_dir = self.core:get_dir(node)
+  return Promise.resolve(name or ui.select_attachment('Open', attach_dir))
+    :next(function(chosen_name)
+      if not chosen_name then
+        return
+      end
+      self.core:open_in_vim(chosen_name, node)
+    end)
+    :wait(MAX_TIMEOUT)
 end
 
 return Attach
