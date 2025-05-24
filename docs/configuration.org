@@ -1250,6 +1250,19 @@ Be careful when changing this setting. If you remove a function, previously
 created attachment folders may be no longer mapped correctly and Org may be
 unable to detect them.
 
+*** org_attach_sync_delete_empty_dir
+:PROPERTIES:
+:CUSTOM_ID: org_attach_sync_delete_empty_dir
+:END:
+- Type: ='always'|'ask'|'never'=
+- Default: ='ask'=
+
+Determines whether to delete empty directories during [[https://orgmode.org/manual/Attachment-defaults-and-dispatcher.html*index-C_002dc-C_002da-z][org_attach_sync]].
+
+- =never= - never delete empty directories
+- =ask= - ask the user whether to delete
+- =always= - delete empty directories without asking
+
 ** Mappings
 :PROPERTIES:
 :CUSTOM_ID: mappings
