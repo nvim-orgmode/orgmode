@@ -447,7 +447,7 @@ function Calendar:beginning()
     return
   end
   local line = vim.fn.line('.')
-  vim.fn.cursor(line, 2)
+  vim.fn.cursor(line, vim.fn.getline('.'):match('^%s*'):len() + 1)
   self.date = self:get_selected_date()
   self:render()
 end
