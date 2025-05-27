@@ -568,7 +568,10 @@ function Calendar:get_selected_date()
   local line = vim.fn.line('.')
   vim.cmd([[redraw!]])
   if line < 3 or not char:match('%d') then
-    return utils.echo_warning('Please select valid day number.', nil, false)
+    utils.notify('Please select valid day number.', {
+      level = 'warn',
+    })
+    return self.date
   end
   return self.date:set({
     day = day,
