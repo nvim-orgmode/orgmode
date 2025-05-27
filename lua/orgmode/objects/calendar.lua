@@ -130,6 +130,12 @@ function Calendar:open()
   vim.keymap.set('n', '<Left>', function()
     return self:cursor_left()
   end, map_opts)
+  vim.keymap.set('n', '0', function()
+    return self:beginning()
+  end, map_opts)
+  vim.keymap.set('n', '$', function()
+    return self:ending()
+  end, map_opts)
   vim.keymap.set('n', '<Right>', function()
     return self:cursor_right()
   end, map_opts)
@@ -432,6 +438,27 @@ function Calendar:cursor_left()
       vim.fn.cursor(line, offset)
     end
   end
+  self.date = self:get_selected_date()
+  self:render()
+end
+
+function Calendar:beginning()
+  if self.select_state ~= SelState.DAY then
+    return
+  end
+  local line = vim.fn.line('.')
+  vim.fn.cursor(line, vim.fn.getline('.'):match('^%s*'):len() + 1)
+  self.date = self:get_selected_date()
+  self:render()
+end
+
+function Calendar:ending()
+  if self.select_state ~= SelState.DAY then
+    return
+  end
+  local line = vim.fn.line('.')
+  local line_no_trailing_space = vim.fn.getline('.'):gsub('%s*$', '')
+  vim.fn.cursor(line, line_no_trailing_space:len())
   self.date = self:get_selected_date()
   self:render()
 end
