@@ -457,7 +457,8 @@ function Calendar:ending()
     return
   end
   local line = vim.fn.line('.')
-  vim.fn.cursor(line, vim.fn.winwidth(0) - 3)
+  local line_no_trailing_space = vim.fn.getline('.'):gsub('%s*$', '')
+  vim.fn.cursor(line, line_no_trailing_space:len())
   self.date = self:get_selected_date()
   self:render()
 end
