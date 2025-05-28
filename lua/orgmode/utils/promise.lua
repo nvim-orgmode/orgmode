@@ -66,7 +66,13 @@ local new_pending = function(on_fullfilled, on_rejected)
     end
     self._handled = true
     vim.schedule(function()
-      local values = vim.inspect({ self._value:unpack() }, { newline = '', indent = '' })
+      local value = self._value:unpack()
+      -- Do not report keyboard interrupt errors as unhandled.
+      -- There is no way to handle pressed "<C-c>" while waiting for a promise.
+      if value == 'Keyboard interrupt' then
+        return
+      end
+      local values = vim.inspect({ value }, { newline = '', indent = '' })
       error('unhandled promise rejection: ' .. values, 0)
     end)
   end

@@ -90,9 +90,9 @@ end)
 describe('trim_common_root', function()
   it('trims the common root when all files share the same root with the shortest one', function()
     local result = fs_utils.trim_common_root({
-      'foo/bar/baz.org',
-      'foo/bar/baz/bar.org',
-      'foo/bar/baz3.org',
+      '/foo/bar/baz.org',
+      '/foo/bar/baz/bar.org',
+      '/foo/bar/baz3.org',
     })
     assert.are.same({
       'baz.org',
@@ -103,11 +103,11 @@ describe('trim_common_root', function()
 
   it('trims the common root when there are multiple different roots', function()
     local result = fs_utils.trim_common_root({
-      'foo/bar/tea/notes.org',
-      'foo/bar/tea/todos.org',
-      'foo/bar/baz/work.org',
-      'foo/bar/baz/personal.org',
-      'foo/bar/baz/project.org',
+      '/foo/bar/tea/notes.org',
+      '/foo/bar/tea/todos.org',
+      '/foo/bar/baz/work.org',
+      '/foo/bar/baz/personal.org',
+      '/foo/bar/baz/project.org',
     })
 
     assert.are.same({
@@ -121,11 +121,11 @@ describe('trim_common_root', function()
 
   it('returns paths as they are if they do not share the common root', function()
     local result = fs_utils.trim_common_root({
-      'foo/bar/tea/notes.org',
-      'foo/bar/tea/todos.org',
-      'foo/bar/baz/work.org',
-      'foo/bar/baz/personal.org',
-      'other/bar/baz/project.org',
+      '/foo/bar/tea/notes.org',
+      '/foo/bar/tea/todos.org',
+      '/foo/bar/baz/work.org',
+      '/foo/bar/baz/personal.org',
+      '/other/bar/baz/project.org',
     })
 
     assert.are.same({

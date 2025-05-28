@@ -731,7 +731,7 @@ Available options for each agenda type are explained down below the example:
               type = 'agenda',
               org_agenda_overriding_header = 'Whole week overview',
               org_agenda_span = 'week', -- 'week' is default, so it's not necessary here, just an example
-              org_agenda_start_on_weekday = 1 -- Start on Monday
+              org_agenda_start_on_weekday = 1, -- Start on Monday
               org_agenda_remove_tags = true -- Do not show tags only for this view
             },
           }

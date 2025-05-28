@@ -75,10 +75,12 @@ function M.trim_common_root(paths)
   local common_root = get_common_root()
 
   if #common_root == 0 then
-    return paths
+    return vim.tbl_map(function(path)
+      return path:gsub('^/', '')
+    end, paths)
   end
 
-  local root = table.concat(common_root, '/') .. '/'
+  local root = '/' .. table.concat(common_root, '/') .. '/'
   local result = {}
   for _, path in ipairs(paths) do
     local relative_path = path:sub(#root + 1)
