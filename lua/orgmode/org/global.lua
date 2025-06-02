@@ -98,6 +98,18 @@ local build = function(orgmode)
     indent_mode = function()
       require('orgmode.ui.virtual_indent').toggle_buffer_indent_mode()
     end,
+    cookie_mode = function()
+      local virtcookie = require('orgmode.ui.virtcookie').get()
+      if virtcookie then
+        virtcookie:toggle()
+      end
+    end,
+    cookie_type = function()
+      local virtcookie = require('orgmode.ui.virtcookie').get()
+      if virtcookie then
+        virtcookie:toggle_cookie_type()
+      end
+    end,
   }
 
   _G.Org = OrgGlobal

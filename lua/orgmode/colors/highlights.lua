@@ -71,6 +71,11 @@ function M.link_highlights()
     ['@org.table.delimiter'] = '@punctuation.special',
     ['@org.table.heading'] = '@markup.heading',
     ['@org.edit_src'] = 'Visual',
+
+    -- For cookie extmarks (applicable if enabled)
+    ['@org.cookie.delimiter'] = 'Delimiter',
+    ['@org.cookie.sign'] = 'Special',
+    ['@org.cookie.number'] = 'Number',
   }
 
   for src, def in pairs(links) do

@@ -18,6 +18,10 @@ if config.org_startup_indented then
   require('orgmode.ui.virtual_indent'):new(bufnr):attach()
 end
 
+if config.ui.virt_cookies.enabled then
+  require('orgmode.ui.virtcookie').new(bufnr, config.ui.virt_cookies.type):attach()
+end
+
 vim.bo.modeline = false
 vim.opt_local.fillchars:append('fold: ')
 vim.opt_local.foldmethod = 'expr'
@@ -74,6 +78,9 @@ vim.b.undo_ftplugin = table.concat({
 
 -- Manually attach Snacks.image module to ensure that images are shown.
 -- Snacks usually handles this automatically, but if Orgmode plugin is loaded after Snacks, it will not pick it up.
-if vim.tbl_get(_G, 'Snacks', 'image', 'config', 'enabled') and vim.tbl_get(_G, 'Snacks', 'image', 'config', 'doc', 'enabled') then
+if
+  vim.tbl_get(_G, 'Snacks', 'image', 'config', 'enabled')
+  and vim.tbl_get(_G, 'Snacks', 'image', 'config', 'doc', 'enabled')
+then
   require('snacks.image.doc').attach(bufnr)
 end
