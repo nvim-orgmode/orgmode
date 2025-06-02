@@ -221,6 +221,10 @@ local DefaultConfig = {
     input = {
       use_vim_ui = false,
     },
+    virt_cookies = {
+      enabled = false,
+      type = '/',
+    },
   },
 }
 

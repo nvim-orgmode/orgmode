@@ -903,22 +903,16 @@ function Headline:_set_cookie(cookie, num, denum)
   return self:_set_node_text(cookie, new_cookie_val)
 end
 
-function Headline:update_cookie()
-  -- Update cookie state from a check box state change
-
-  -- Return early if the headline doesn't have a cookie
-  local cookie = self:get_cookie()
-  if not cookie then
-    return self
-  end
-
+---@return { [1]: integer, [2]: integer }? checked_unchecked The first integer is the number of checked boxes, the second integer is the total boxes
+function Headline:_get_checkbox_progress()
+  -- Count done checkboxes  and total checkboxes for the headline
   local section = self:node():parent()
+  local num_checked_boxes, num_boxes = 0, 0
   if not section then
-    return self
+    return
   end
 
   -- Count checked boxes from all lists
-  local num_checked_boxes, num_boxes = 0, 0
   local body = section:field('body')[1]
   if body then
     for node in body:iter_children() do
@@ -933,6 +927,53 @@ function Headline:update_cookie()
     end
   end
 
+  if num_boxes == 0 then
+    return
+  end
+
+  return { num_checked_boxes, num_boxes }
+end
+
+---@return { [1]: integer, [2]: integer }? done_total The first integer is the number of "DONE" todos, the second integer is the total todos
+function Headline:_get_todo_progress()
+  -- Count done children headlines and total children with TODO keywords
+  local children = self:get_child_headlines()
+  local headlines_with_todo = vim.tbl_filter(function(h)
+    local todo, _, _ = h:get_todo()
+    return todo ~= nil
+  end, children)
+
+  local dones = vim.tbl_filter(function(h)
+    return h:is_done()
+  end, headlines_with_todo)
+
+  if #headlines_with_todo == 0 then
+    return
+  end
+
+  return { #dones, #headlines_with_todo }
+end
+
+function Headline:update_cookie()
+  -- Update cookie state from a check box state change
+
+  -- Return early if the headline doesn't have a cookie
+  local cookie = self:get_cookie()
+  if not cookie then
+    return self
+  end
+
+  local section = self:node():parent()
+  if not section then
+    return self
+  end
+
+  local progress = self:_get_checkbox_progress()
+  if not progress then
+    return self
+  end
+  local num_checked_boxes, num_boxes = unpack(progress)
+
   -- Set the cookie
   return self:_set_cookie(cookie, num_checked_boxes, num_boxes)
 end
@@ -946,19 +987,15 @@ function Headline:update_todo_cookie()
     return self
   end
 
-  -- Count done children headlines and total children with TODO keywords
-  local children = self:get_child_headlines()
-  local headlines_with_todo = vim.tbl_filter(function(h)
-    local todo, _, _ = h:get_todo()
-    return todo ~= nil
-  end, children)
+  local progress = self:_get_todo_progress()
+  if not progress then
+    return self
+  end
 
-  local dones = vim.tbl_filter(function(h)
-    return h:is_done()
-  end, headlines_with_todo)
+  local dones, headlines_with_todo = unpack(progress)
 
   -- Set the cookie
-  return self:_set_cookie(cookie, #dones, #headlines_with_todo)
+  return self:_set_cookie(cookie, dones, headlines_with_todo)
 end
 
 function Headline:update_parent_cookie()

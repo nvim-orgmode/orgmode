@@ -3012,3 +3012,46 @@ require('orgmode').setup({
 #+end_src
 
 📝 NOTE: If you are using a plugin for =vim.ui.input=, make sure it supports autocompletion for better experience. [[https://github.com/folke/snacks.nvim][snacks.nvim]] input module supports autocompletion.
+
+*** virt_cookies
+:PROPERTIES:
+:CUSTOM_ID: virt_cookies
+:END:
+
+You can toggle Virtual cookies on the fly by executing command =:Org cookie_mode= when in a org buffer.
+This additionally sets the buffer variable =vim.b.org_cookie_mode= to =true= or =false=, depending on the current state.
+
+Currently this only applies Virtual cookies to headlines.
+
+Uses the following highlights:
+- ~@org.cookie.delimiter~: The highlight to use for the delimiters (brackets: ~[~ & ~]~)
+  - ~@org.cookie.delimiter.left~: A more granular highlight for just the left ~[~ bracket
+  - ~@org.cookie.delimiter.right~: A more granular highlight for just the right ~]~ bracket
+- ~@org.cookie.number~: The numbers used in the cookie (~50~)
+  - ~org.cookie.number.complete~: A more granular highlight for the left side of ~[1/5]~ (in this case the ~1~)
+  - ~org.cookie.number.total~: A more granular highlight for the right side of ~[1/5]~ (in this case the ~5~)
+- ~@org.cookie.sign~: The sign used in the cookie (e.g. ~/~, ~%~, or ~???~)
+  - ~@org.cookie.sign.div~: More granular for the div sign, the ~/~ in ~[1/5]~
+  - ~@org.cookie.sign.percent~: More granular for the percent sign, the ~%~ in ~[100%]~
+
+**** enabled
+:PROPERTIES:
+:CUSTOM_ID: virt_cookies_enabled
+:END:
+
+- Type: =boolean=
+- Default: =false=
+Possible values:
+- =true= - Uses /Virtual/ cookies to show live progress for applicable headlines.
+- =false= - Do not add any /Virtual/ cookies.
+
+**** type
+:PROPERTIES:
+:CUSTOM_ID: virt_cookies_type
+:END:
+
+- Type: ='%' | '/'=
+- Default: ='/'=
+
+The type of virtual cookie to draw for headlines that do not contain a "real" cookie. If a headline contains a real cookie, then it will opt to use the cookie type from that real cookie.
+
