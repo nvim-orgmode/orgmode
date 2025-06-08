@@ -7,7 +7,7 @@ Here are few examples:
 
 1. [[https://github.com/folke/lazy.nvim][lazy.nvim]] (Recommended)
    #+begin_src lua
-   {
+   return {
      'nvim-orgmode/orgmode',
      event = 'VeryLazy',
      config = function()
