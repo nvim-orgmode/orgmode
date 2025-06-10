@@ -2991,7 +2991,7 @@ In order for the menu to work as expected, the handler must call `action` from
 
 Folds                                                          *orgmode-Folds*
 
-In Neovim 0.10+, folds are colored with the same highlight as when they are
+In Neovim 0.10.3+, folds are colored with the same highlight as when they are
 expanded. This is enabled by default to be in line with how Emacs work.
 
 To use the old way of highlighting folds with `Folded` highlight group, add

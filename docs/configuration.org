@@ -2974,7 +2974,7 @@ In order for the menu to work as expected, the handler must call =action= from =
 :PROPERTIES:
 :CUSTOM_ID: folds
 :END:
-In Neovim 0.10+, folds are colored with the same highlight as when they
+In Neovim 0.10.3+, folds are colored with the same highlight as when they
 are expanded. This is enabled by default to be in line with how Emacs
 work.
 

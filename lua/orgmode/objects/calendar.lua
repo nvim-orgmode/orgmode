@@ -164,11 +164,12 @@ function Calendar:open()
   vim.keymap.set('n', 't', function()
     self:set_time()
   end, map_opts)
-  if self:has_time() then
-    vim.keymap.set('n', 'T', function()
-      self:clear_time()
-    end, map_opts)
-  end
+  vim.keymap.set('n', 'T', function()
+    self:clear_time()
+  end, map_opts)
+  vim.keymap.set('n', 'd', function()
+    self:set_day()
+  end, map_opts)
   self:jump_day()
   return Promise.new(function(resolve)
     self.callback = resolve
@@ -235,8 +236,8 @@ function Calendar:render()
     table.insert(content, ' [i] - enter date')
   end
 
-  if self:has_time() or self.select_state ~= SelState.DAY then
-    if self.select_state == SelState.DAY then
+  if self:has_time() or self:_time_picker_active() then
+    if not self:_time_picker_active() then
       table.insert(content, ' [t] - enter time  [T] - clear time')
     else
       table.insert(content, ' [d] - select day  [T] - clear time')
@@ -345,17 +346,10 @@ function Calendar:rerender_time()
   vim.api.nvim_set_option_value('modifiable', true, { buf = self.buf })
   vim.api.nvim_buf_set_lines(self.buf, 8, 9, true, { self:render_time() })
   if self:has_time() then
-    local map_opts = { buffer = self.buf, silent = true, nowait = true }
-    vim.keymap.set('n', 'T', function()
-      self:clear_time()
-    end, map_opts)
-    vim.keymap.set('n', 'd', function()
-      self:set_day()
-    end, map_opts)
-    if self.select_state == SelState.DAY then
-      vim.api.nvim_buf_set_lines(self.buf, 13, 14, true, { ' [t] - select day  [T] - clear time' })
-    else
+    if self:_time_picker_active() then
       vim.api.nvim_buf_set_lines(self.buf, 13, 14, true, { ' [d] - select day  [T] - clear time' })
+    else
+      vim.api.nvim_buf_set_lines(self.buf, 13, 14, true, { ' [t] - enter time  [T] - clear time' })
     end
     self:_apply_hl('Normal', 8, 0, -1)
     self:_apply_hl('Comment', 13, 0, -1)
@@ -373,7 +367,7 @@ end
 
 ---@private
 function Calendar:_ensure_day()
-  if self.select_state ~= SelState.DAY then
+  if self:_time_picker_active() then
     self:set_day()
   end
 end
@@ -397,7 +391,7 @@ function Calendar:backward()
 end
 
 function Calendar:cursor_right()
-  if self.select_state ~= SelState.DAY then
+  if self:_time_picker_active() then
     if self.select_state == SelState.HOUR then
       self:set_min_big()
     elseif self.select_state == SelState.MIN_BIG then
@@ -420,7 +414,7 @@ function Calendar:cursor_right()
 end
 
 function Calendar:cursor_left()
-  if self.select_state ~= SelState.DAY then
+  if self:_time_picker_active() then
     if self.select_state == SelState.HOUR then
       self:set_min_small()
     elseif self.select_state == SelState.MIN_BIG then
@@ -443,7 +437,7 @@ function Calendar:cursor_left()
 end
 
 function Calendar:beginning()
-  if self.select_state ~= SelState.DAY then
+  if self:_time_picker_active() then
     return
   end
   local line = vim.fn.line('.')
@@ -453,7 +447,7 @@ function Calendar:beginning()
 end
 
 function Calendar:ending()
-  if self.select_state ~= SelState.DAY then
+  if self:_time_picker_active() then
     return
   end
   local line = vim.fn.line('.')
@@ -495,7 +489,7 @@ local function step_hour(direction, current, count)
 end
 
 function Calendar:cursor_up()
-  if self.select_state ~= SelState.DAY then
+  if self:_time_picker_active() then
     -- to avoid unexpectedly changing the day we cache it ...
     local day = self.date.day
     if self.select_state == SelState.HOUR then
@@ -537,7 +531,7 @@ function Calendar:cursor_up()
 end
 
 function Calendar:cursor_down()
-  if self.select_state ~= SelState.DAY then
+  if self:_time_picker_active() then
     local day = self.date.day
     if self.select_state == SelState.HOUR then
       self.date = self.date:subtract(step_hour('down', self.date, vim.v.count1))
@@ -586,7 +580,7 @@ end
 
 ---@return OrgDate?
 function Calendar:get_selected_date()
-  if self.select_state ~= SelState.DAY then
+  if self:_time_picker_active() then
     return self.date
   end
   local col = vim.fn.col('.')
@@ -608,7 +602,7 @@ end
 
 function Calendar:select()
   local selected_date
-  if self.select_state == SelState.DAY then
+  if not self:_time_picker_active() then
     selected_date = self:get_selected_date()
   else
     selected_date = self.date:set({
@@ -670,17 +664,22 @@ function Calendar:set_time()
   if self.date.date_only then
     self.date = self.date:set({ date_only = false }):set_current_time()
   end
-  --self:rerender_time()
   self:set_sel_hour()
   self:render() -- because we want to highlight the currently selected date, we have to render everything
 end
 
 function Calendar:set_day()
+  if not self:_time_picker_active() then
+    return
+  end
   self:set_sel_day()
   self:rerender_time()
 end
 
 function Calendar:clear_time()
+  if not self:has_time() then
+    return
+  end
   self.date = self.date:set({ hour = 0, min = 0, date_only = true })
   self:set_sel_day()
   self:rerender_time()
@@ -710,6 +709,10 @@ function Calendar:jump_day()
   local search_day = (self.date or Date.today()):format('%d')
   vim.fn.cursor(2, 1)
   vim.fn.search(search_day, 'W')
+end
+
+function Calendar:_time_picker_active()
+  return self.select_state ~= SelState.DAY
 end
 
 return Calendar
