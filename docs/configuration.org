@@ -1519,6 +1519,13 @@ Use vim regex flag =\c= to make it case insensitive. See
 =:help vim.regex()= and =:help /magic=.
 Pressing =<TAB>= in filter prompt autocompletes categories and tags.
 
+**** org_agenda_preview
+:PROPERTIES:
+:CUSTOM_ID: org_agenda_preview
+:END:
+- Mapped to: =K=
+  Preview the agenda item in a floating window. For configuring the floating window, check [[#agenda][Agenda section in ui configuration]].
+
 **** org_agenda_show_help
 :PROPERTIES:
 :CUSTOM_ID: org_agenda_show_help
@@ -2995,8 +3002,6 @@ require('orgmode').setup({
 :PROPERTIES:
 :CUSTOM_ID: input
 :END:
-- Type: =boolean=
-- Default: =false=
 
 By default, Vim's built-in =input()= function is used for input prompts.
 To use Neovim's =vim.ui.input()= function, add this to config:
@@ -3012,3 +3017,26 @@ require('orgmode').setup({
 #+end_src
 
 📝 NOTE: If you are using a plugin for =vim.ui.input=, make sure it supports autocompletion for better experience. [[https://github.com/folke/snacks.nvim][snacks.nvim]] input module supports autocompletion.
+
+*** Agenda
+:PROPERTIES:
+:CUSTOM_ID: agenda
+:END:
+Use this section to customize the styling of the Agenda preview floating window (See [[#org_agenda_preview][org_agenda_preview]] mapping).
+To see available options for the preview window, check =:help vim.lsp.util.open_floating_preview.Opts=.
+Here's an example how to configure it:
+
+#+begin_src lua
+require('orgmode').setup({
+  ui = {
+    agenda = {
+      preview_window = {
+        wrap = false, -- This option is set by default
+        border = 'single'
+      }
+    }
+  }
+})
+#+end_src
+
+📝 NOTE: This preview should be used only as read only view of the headline and it's content. Modifying the file from the preview window is not supported.

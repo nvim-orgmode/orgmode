@@ -124,6 +124,7 @@ local DefaultConfig = {
       org_agenda_filter = '/',
       org_agenda_refile = '<prefix>r',
       org_agenda_add_note = '<prefix>na',
+      org_agenda_preview = 'K',
       org_agenda_show_help = 'g?',
     },
     capture = {
@@ -220,6 +221,11 @@ local DefaultConfig = {
     },
     input = {
       use_vim_ui = false,
+    },
+    agenda = {
+      preview_window = {
+        wrap = false,
+      },
     },
   },
 }
