@@ -123,6 +123,12 @@ return {
         help_desc = 'Refile headline to specific destination',
       },
     }),
+    org_agenda_preview = m.action('agenda.preview_item', {
+      opts = {
+        desc = 'org preview',
+        help_desc = 'Preview agenda item in floating window',
+      },
+    }),
     org_agenda_add_note = m.action(
       'agenda.add_note',
       { opts = { desc = 'org add note', help_desc = 'Add a note to the current headline' } }

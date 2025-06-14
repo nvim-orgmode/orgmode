@@ -382,6 +382,28 @@ function Agenda:refile()
   })
 end
 
+function Agenda:preview_item()
+  local headline = self:get_headline_at_cursor()
+  if not headline then
+    return
+  end
+
+  local lines = headline:get_lines()
+  local offset = 4
+  local width = lines[1]:len() + offset
+
+  vim.tbl_map(function(line)
+    width = math.max(width, line:len() + offset)
+  end, lines)
+
+  local win_opts = vim.tbl_deep_extend('force', {
+    width = width,
+  }, config.ui.agenda.preview_window or {})
+
+  local buf = vim.lsp.util.open_floating_preview(lines, '', win_opts)
+  vim.api.nvim_set_option_value('filetype', 'org', { buf = buf })
+end
+
 function Agenda:clock_out()
   return self:_remote_edit({
     action = 'clock.org_clock_out',
@@ -591,11 +613,8 @@ function Agenda:get_headline_at_cursor()
 
   for _, view in ipairs(self.views) do
     local agenda_line = view:get_line(line_nr)
-    if agenda_line then
-      local headline = agenda_line.headline
-      if headline then
-        return headline
-      end
+    if agenda_line and agenda_line.headline then
+      return agenda_line.headline
     end
   end
 end
