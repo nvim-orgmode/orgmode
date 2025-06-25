@@ -29,44 +29,52 @@ local function map_child_headlines(headline, headlines_by_id)
   return headline
 end
 
+---@param instance OrgApiFile
+local function load_headlines(instance)
+  local headlines = {}
+  local headlines_by_id = {}
+  for i, section in ipairs(instance._file:get_headlines()) do
+    local headline = OrgHeadline._build_from_internal_headline(section, i)
+    table.insert(headlines, headline)
+    headlines_by_id[section:get_range().start_line] = headline
+  end
+
+  for _, headline in ipairs(headlines) do
+    map_child_headlines(headline, headlines_by_id)
+    headline.file = instance
+  end
+
+  rawset(instance, 'headlines', headlines)
+end
+
 ---@private
 function OrgFile:_new(opts)
   local data = {}
   data.category = opts.category
   data.filename = opts.filename
-  data.headlines = opts.headlines
   data.is_archive_file = opts.is_archive_file or false
   data._file = opts._file
-  setmetatable(data, self)
-  self.__index = self
+  setmetatable(data, {
+    __index = function(tbl, key)
+      if key == 'headlines' and rawget(tbl, 'headlines') == nil then
+        load_headlines(tbl)
+      end
+
+      return rawget(tbl, key)
+    end,
+  })
   return data
 end
 
 ---@param file OrgFile
 ---@private
 function OrgFile._build_from_internal_file(file)
-  local headlines = {}
-  local headlines_by_id = {}
-  for i, section in ipairs(file:get_headlines()) do
-    local headline = OrgHeadline._build_from_internal_headline(section, i)
-    table.insert(headlines, headline)
-    headlines_by_id[section:get_range().start_line] = headline
-  end
-
-  local instance = OrgFile:_new({
+  return OrgFile:_new({
     _file = file,
     category = file:get_category(),
     filename = file.filename,
-    headlines = headlines,
     is_archive_file = file:is_archive_file(),
   })
-
-  for _, headline in ipairs(instance.headlines) do
-    map_child_headlines(headline, headlines_by_id)
-    headline.file = instance
-  end
-
-  return instance
 end
 
 --- Return refreshed instance of the file
