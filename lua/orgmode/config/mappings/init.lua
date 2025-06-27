@@ -368,6 +368,7 @@ return {
       'org_mappings.org_toggle_timestamp_type',
       { opts = { desc = 'org toggle timestamp type', help_desc = 'Toggle timestamp active/inactive type' } }
     ),
+    org_attach = m.action('attach.prompt', { opts = { desc = 'org attach', help_desc = 'open attachment prompt' } }),
   },
   edit_src = {
     org_edit_src_abort = m.custom(
