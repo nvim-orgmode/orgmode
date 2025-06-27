@@ -532,6 +532,7 @@ function utils.edit_file(filename)
         zindex = 1,
         style = 'minimal',
       })
+      vim.api.nvim_set_option_value('swapfile', false, { buf = bufnr })
     end,
     close = function()
       vim.cmd('silent! w')
