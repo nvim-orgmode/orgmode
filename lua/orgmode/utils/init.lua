@@ -564,6 +564,7 @@ end
 ---@param skip_ftmatch? boolean
 ---@return string
 function utils.detect_filetype(name, skip_ftmatch)
+  local config = require('orgmode.config')
   local map = {
     ['emacs-lisp'] = 'lisp',
     elisp = 'lisp',
@@ -585,6 +586,9 @@ function utils.detect_filetype(name, skip_ftmatch)
   end
   if map[name] then
     return map[name]
+  end
+  if config.org_edit_src_filetype_map[name] then
+    return config.org_edit_src_filetype_map[name]
   end
   return name:lower()
 end

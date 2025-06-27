@@ -61,6 +61,7 @@ local DefaultConfig = {
   },
   org_src_window_setup = 'top 16new',
   org_edit_src_content_indentation = 0,
+  org_edit_src_filetype_map = {},
   org_id_uuid_program = 'uuidgen',
   org_id_ts_format = '%Y%m%d%H%M%S',
   org_id_method = 'uuid',
