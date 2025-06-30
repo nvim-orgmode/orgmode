@@ -53,7 +53,7 @@ function Notifications:notify(time)
   for _, task in ipairs(tasks) do
     utils.concat(result, {
       string.format('# %s (%s)', task.category, task.humanized_duration),
-      string.format('%s %s %s', string.rep('*', task.level), task.todo, task.title),
+      string.format('%s %s %s', string.rep('*', task.level), task.todo or '', task.title),
       string.format('%s: <%s>', task.type, task.time:to_string()),
     })
   end
@@ -77,7 +77,7 @@ end
 function Notifications:_cron_notifier(tasks)
   for _, task in ipairs(tasks) do
     local title = string.format('%s (%s)', task.category, task.humanized_duration)
-    local subtitle = string.format('%s %s %s', string.rep('*', task.level), task.todo, task.title)
+    local subtitle = string.format('%s %s %s', string.rep('*', task.level), task.todo or '', task.title)
     local date = string.format('%s: %s', task.type, task.time:to_string())
 
     if vim.fn.executable('notify-send') == 1 then
