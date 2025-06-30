@@ -101,7 +101,7 @@ function Notifications:get_tasks(time)
   local tasks = {}
   for _, orgfile in ipairs(self.files:all()) do
     for _, headline in ipairs(orgfile:get_opened_unfinished_headlines()) do
-      for _, date in ipairs(headline:get_deadline_and_scheduled_dates()) do
+      for _, date in ipairs(headline:get_valid_dates_for_agenda()) do
         local reminders = self:_check_reminders(date, time)
         for _, reminder in ipairs(reminders) do
           table.insert(tasks, {
@@ -138,6 +138,9 @@ function Notifications:_check_reminders(date, time)
     return result
   end
   if date:is_scheduled() and not notifications.scheduled_reminder then
+    return result
+  end
+  if date.is_date_range_end then
     return result
   end
 
