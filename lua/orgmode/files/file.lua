@@ -261,6 +261,112 @@ function OrgFile:find_headlines_by_title(title, exact)
   end, self:get_headlines())
 end
 
+---Extract title from headline item node text (remove TODO keywords and priority)
+---@param item_text string
+---@return string title
+function OrgFile:_parse_headline_title(item_text)
+  -- Remove TODO keywords
+  local todo_keywords = config:get_todo_keywords():all_values()
+  for _, keyword in ipairs(todo_keywords) do
+    local pattern = '^' .. vim.pesc(keyword) .. '%s+'
+    if item_text:match(pattern) then
+      item_text = item_text:gsub(pattern, '')
+      break
+    end
+  end
+
+  -- Remove priority - use dynamic priority range
+  local prio_range = config:get_priority_range()
+  local priority_pattern = '^%[#[' .. prio_range.highest .. '-' .. prio_range.lowest .. ']%]%s*'
+  item_text = item_text:gsub(priority_pattern, '')
+
+  return vim.trim(item_text)
+end
+
+---Extract shallow data from a single headline node for headline search.
+---Extracts only title, level, tags, and position - no complex object creation.
+---@param node TSNode
+---@return { title: string, level: number, line_number: number, all_tags: string[], is_archived: boolean }
+function OrgFile:_extract_shallow_headline_data(node)
+  if not node then
+    return { title = '', level = 0, line_number = 0, all_tags = {}, is_archived = false }
+  end
+
+  -- Extract level from stars
+  local stars_node = node:field('stars')[1]
+  local level = stars_node and select(2, stars_node:end_()) or 0
+
+  -- Extract title from item node
+  local item_node = node:field('item')[1]
+  local title = ''
+  if item_node then
+    local item_text = self:get_node_text(item_node) or ''
+    title = self:_parse_headline_title(item_text)
+  end
+
+  -- Extract tags from tags node using existing utils
+  local tags_node = node:field('tags')[1]
+  local all_tags = {}
+  local is_archived = false
+  if tags_node then
+    local tags_text = self:get_node_text(tags_node) or ''
+    all_tags = utils.parse_tags_string(tags_text)
+    -- Check for archive tag using consistent pattern
+    for _, tag in ipairs(all_tags) do
+      if tag:upper() == 'ARCHIVE' then
+        is_archived = true
+        break
+      end
+    end
+  end
+
+  -- Get line number
+  local start_row = node:start()
+  local line_number = start_row + 1
+
+  return {
+    title = title,
+    level = level,
+    line_number = line_number,
+    all_tags = all_tags,
+    is_archived = is_archived,
+  }
+end
+
+---Extract shallow headline data for fast headline search across agenda files.
+---
+---Why shallow extraction? Headline search tools (telescope, fzf.lua, snacks.picker, etc.)
+---need title/tags/level for ALL headlines across ALL agenda files. Creating full OrgHeadline
+---objects triggers expensive lazy loading that search tools immediately consume anyway.
+---This pre-computes only the search-relevant data in a single efficient pass.
+---
+---@param opts? { archived: boolean, max_depth: number }
+---@return { title: string, level: number, line_number: number, all_tags: string[], is_archived: boolean }[]
+function OrgFile:get_headlines_shallow(opts)
+  if self:is_archive_file() and not (opts and opts.archived) then
+    return {}
+  end
+
+  self:parse()
+  if not self.root then
+    return {}
+  end
+
+  local matches = self:get_ts_captures('(section (headline) @headline)')
+  local results = vim.tbl_map(function(node)
+    return self:_extract_shallow_headline_data(node)
+  end, matches)
+
+  -- Apply max_depth filtering if specified
+  if opts and opts.max_depth then
+    results = vim.tbl_filter(function(headline)
+      return headline.level <= opts.max_depth
+    end, results)
+  end
+
+  return results
+end
+
 ---@param title string
 ---@return OrgHeadline | nil
 function OrgFile:find_headline_by_title(title)

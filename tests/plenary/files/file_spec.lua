@@ -831,6 +831,134 @@ describe('OrgFile', function()
     end)
   end)
 
+  describe('get_headlines_shallow', function()
+    it('should get all headlines with correct structure', function()
+      local file = load_file_sync({
+        '* TODO Headline 1',
+        '** [#A] Priority Headline :tag1:tag2:',
+        '*** DONE Archived Headline :ARCHIVE:',
+        '* Plain Headline',
+      })
+
+      local headlines = file:get_headlines_shallow()
+
+      assert.are.same(4, #headlines)
+
+      -- Verify data structure
+      local headline = headlines[1]
+      assert.is.not_nil(headline.title)
+      assert.is.not_nil(headline.level)
+      assert.is.not_nil(headline.line_number)
+      assert.is.not_nil(headline.all_tags)
+      assert.is.not_nil(headline.is_archived)
+
+      -- Verify specific values
+      assert.are.same('Headline 1', headlines[1].title)
+      assert.are.same(1, headlines[1].level)
+      assert.are.same(1, headlines[1].line_number)
+      assert.are.same({}, headlines[1].all_tags)
+      assert.is.False(headlines[1].is_archived)
+
+      assert.are.same('Priority Headline', headlines[2].title)
+      assert.are.same(2, headlines[2].level)
+      assert.are.same({ 'tag1', 'tag2' }, headlines[2].all_tags)
+
+      assert.are.same('Archived Headline', headlines[3].title)
+      assert.are.same({ 'ARCHIVE' }, headlines[3].all_tags)
+      assert.is.True(headlines[3].is_archived)
+    end)
+
+    it('should return same count as get_headlines for regular files', function()
+      local file = load_file_sync({
+        '* TODO Headline 1',
+        '* TODO Headline 2',
+        '** Headline 2.1',
+        '*** Headline 2.1.1',
+        '* DONE Headline 3',
+      })
+
+      local shallow = file:get_headlines_shallow()
+      local heavy = file:get_headlines()
+
+      assert.are.same(#heavy, #shallow)
+    end)
+
+    -- Parameterized archive tests
+    local archive_test_cases = {
+      {
+        name = 'regular file without archived option',
+        filename = nil, -- will use .org
+        opts = {},
+        content = { '* Headline', '* Archived :ARCHIVE:' },
+        expected_count = 2,
+      },
+      {
+        name = 'archive file without archived option',
+        filename = 'test.org_archive',
+        opts = {},
+        content = { '* Headline', '* Archived :ARCHIVE:' },
+        expected_count = 0,
+      },
+      {
+        name = 'archive file with archived=true',
+        filename = 'test.org_archive',
+        opts = { archived = true },
+        content = { '* Headline', '* Archived :ARCHIVE:' },
+        expected_count = 2,
+      },
+    }
+
+    for _, case in ipairs(archive_test_cases) do
+      it('should handle archives: ' .. case.name, function()
+        local filename = case.filename and (vim.fn.tempname() .. case.filename) or nil
+        local file = load_file_sync(case.content, filename)
+        local headlines = file:get_headlines_shallow(case.opts)
+        assert.are.same(case.expected_count, #headlines)
+      end)
+    end
+
+    it('should respect max_depth filtering', function()
+      local file = load_file_sync({
+        '* Level 1',
+        '** Level 2',
+        '*** Level 3',
+        '**** Level 4',
+      })
+
+      local all_headlines = file:get_headlines_shallow()
+      local depth_2 = file:get_headlines_shallow({ max_depth = 2 })
+
+      assert.are.same(4, #all_headlines)
+      assert.are.same(2, #depth_2)
+    end)
+
+    it('should match get_headlines filtering behavior', function()
+      local content = {
+        '* TODO Headline 1',
+        '** Headline 1.1',
+        '*** TODO Headline 1.1.1 :ARCHIVE:',
+        '**** Headline 1.1.1.1',
+        '* DONE Headline 2',
+      }
+      local file = load_file_sync(content)
+
+      -- Compare filtering with different options
+      local shallow_all = file:get_headlines_shallow()
+      local heavy_all = file:get_headlines()
+      assert.are.same(#heavy_all, #shallow_all)
+
+      local shallow_archived = file:get_headlines_shallow({ archived = true })
+      local heavy_archived = file:get_headlines_including_archived()
+      assert.are.same(#heavy_archived, #shallow_archived)
+    end)
+
+    it('should handle empty files gracefully', function()
+      local file = load_file_sync({})
+      local headlines = file:get_headlines_shallow()
+      assert.are.same(0, #headlines)
+    end)
+  end)
+
   describe('get_todos', function()
     local has_correct_type = function(todos)
       assert.are.same('TODO', todos.todo_keywords[1].type)
