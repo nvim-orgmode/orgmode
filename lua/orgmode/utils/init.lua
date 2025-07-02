@@ -560,39 +560,6 @@ function utils.find(entries, check_fn)
   return nil
 end
 
----@param name string
----@param skip_ftmatch? boolean
----@return string
-function utils.detect_filetype(name, skip_ftmatch)
-  local config = require('orgmode.config')
-  local map = {
-    ['emacs-lisp'] = 'lisp',
-    elisp = 'lisp',
-    js = 'javascript',
-    ts = 'typescript',
-    md = 'markdown',
-    ex = 'elixir',
-    pl = 'perl',
-    sh = 'bash',
-    shell = 'bash',
-    uxn = 'uxntal',
-  }
-  if not skip_ftmatch then
-    local filename = '__org__detect_filetype__.' .. (map[name] or name)
-    local ft = vim.filetype.match({ filename = filename })
-    if ft then
-      return ft
-    end
-  end
-  if map[name] then
-    return map[name]
-  end
-  if config.org_edit_src_filetype_map[name] then
-    return config.org_edit_src_filetype_map[name]
-  end
-  return name:lower()
-end
-
 ---@param filename string
 ---@return boolean
 function utils.is_org_file(filename)

@@ -421,7 +421,7 @@ function Config:setup_ts_predicates()
     if not text or vim.trim(text) == '' then
       return
     end
-    metadata['injection.language'] = utils.detect_filetype(text, true)
+    metadata['injection.language'] = self:detect_filetype(text)
   end, { force = true, all = true })
 
   vim.treesitter.query.add_directive('org-set-inline-block-language!', function(match, _, bufnr, pred, metadata)
@@ -438,7 +438,7 @@ function Config:setup_ts_predicates()
     text = text:sub(5)
     -- Remove opening brackend and parameters: lua[params]{ -> lua
     text = text:gsub('[%{%[].*', '')
-    metadata['injection.language'] = utils.detect_filetype(text, true)
+    metadata['injection.language'] = self:detect_filetype(text)
   end, { force = true, all = true })
 
   vim.treesitter.query.add_predicate('org-is-headline-level?', function(match, _, _, predicate)
@@ -540,6 +540,60 @@ function Config:use_property_inheritance(property_name)
   else
     return use_inheritance and true or false
   end
+end
+
+---@param filetype_name string
+---@param use_ftmatch? boolean Use vim.filetype.match to detect filetype
+function Config:detect_filetype(filetype_name, use_ftmatch)
+  local name = filetype_name:lower()
+
+  if not self._ft_map then
+    self._ft_map = {}
+  end
+
+  if self._ft_map[name] then
+    return self._ft_map[name]
+  end
+
+  local filetype = self:_get_filetype_name(name)
+
+  if use_ftmatch then
+    local filename = '__org__detect_filetype__.' .. filetype
+    local ft = vim.filetype.match({ filename = filename })
+    if ft then
+      self._ft_map[name] = ft
+      return ft
+    end
+  end
+
+  self._ft_map[name] = filetype
+  return filetype
+end
+
+---@private
+---@param filetype string
+function Config:_get_filetype_name(filetype)
+  local map = {
+    ['emacs-lisp'] = 'lisp',
+    elisp = 'lisp',
+    js = 'javascript',
+    ts = 'typescript',
+    md = 'markdown',
+    ex = 'elixir',
+    pl = 'perl',
+    sh = 'bash',
+    shell = 'bash',
+    uxn = 'uxntal',
+  }
+  if map[filetype] then
+    return map[filetype]
+  end
+
+  if self.opts.org_edit_src_filetype_map[filetype] then
+    return self.opts.org_edit_src_filetype_map[filetype]
+  end
+
+  return filetype
 end
 
 ---@type OrgConfig
