@@ -418,6 +418,15 @@ indent of the block itself. Only applied when exiting from an
 `org_edit_special` action on a `SRC` block.
 
 
+org_edit_src_filetype_map                  *orgmode-org_edit_src_filetype_map*
+
+- Type: `table<string, string>`
+- Default: `{}`
+
+This filetype map associates the language name from an Org source block with
+the corresponding Vim filetype, which is then applied to the temporary buffer.
+
+
 org_custom_exports                                *orgmode-org_custom_exports*
 
 - Type: `table`

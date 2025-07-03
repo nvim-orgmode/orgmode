@@ -76,7 +76,7 @@ function Block:get_language()
   if not language or language == '' then
     return nil
   end
-  return utils.detect_filetype(language)
+  return config:detect_filetype(language, true)
 end
 
 ---@return table<string, string>

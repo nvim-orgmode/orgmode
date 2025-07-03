@@ -74,7 +74,7 @@ function EditSpecialSrc:init()
   -- so base the range off of the name of the block
   local ft = self.src_block.children.parameters.text
   if ft then
-    ft = utils.detect_filetype(ft)
+    ft = config:detect_filetype(ft, true)
   end
 
   local bufnr = es_utils.make_temp_buf()
