@@ -20,6 +20,7 @@ describe('OrgFile', function()
       assert.are.same('* Headline 1', file.content)
       local stat = vim.uv.fs_stat(filename) or {}
       assert.are.same(stat.mtime.nsec, file.metadata.mtime)
+      assert.are.same(stat.mtime.sec, file.metadata.mtime_sec)
       assert.are.same(0, file.metadata.changedtick)
     end)
 
@@ -39,6 +40,7 @@ describe('OrgFile', function()
       assert.are.same('* Headline 2', file.content)
       local stat = vim.uv.fs_stat(filename) or {}
       assert.are.same(stat.mtime.nsec, file.metadata.mtime)
+      assert.are.same(stat.mtime.sec, file.metadata.mtime_sec)
       assert.are.same(0, file.metadata.changedtick)
       vim.cmd('write!')
       file:reload_sync()
