@@ -11,7 +11,8 @@ local Footnote = require('orgmode.objects.footnote')
 local Memoize = require('orgmode.utils.memoize')
 
 ---@class OrgFileMetadata
----@field mtime number
+---@field mtime number File modified time in nanoseconds
+---@field mtime_sec number File modified time in seconds
 ---@field changedtick number
 
 ---@class OrgFileOpts
@@ -48,6 +49,7 @@ function OrgFile:new(opts)
     index = 0,
     metadata = {
       mtime = stat and stat.mtime.nsec or 0,
+      mtime_sec = stat and stat.mtime.sec or 0,
       changedtick = opts.bufnr and vim.api.nvim_buf_get_changedtick(opts.bufnr) or 0,
     },
   }
@@ -150,7 +152,11 @@ function OrgFile:is_modified()
   if not stat then
     return false
   end
-  return stat.mtime.nsec ~= self.metadata.mtime
+  if stat.mtime.nsec > 0 then
+    return stat.mtime.nsec ~= self.metadata.mtime
+  end
+
+  return stat.mtime.sec ~= self.metadata.mtime_sec
 end
 
 ---Parse the file and update the root node
@@ -901,6 +907,7 @@ function OrgFile:_update_lines(lines, bufnr)
   local stat = vim.uv.fs_stat(self.filename)
   if stat then
     self.metadata.mtime = stat.mtime.nsec
+    self.metadata.mtime_sec = stat.mtime.sec
   end
   return self
 end
