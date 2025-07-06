@@ -55,10 +55,15 @@ end
 
 function OrgCompletion:_get_valid_results(results, context)
   local base = context.base or ''
+  local framework = context.framework or 'nvim-cmp'
 
   local valid_results = {}
   for _, item in ipairs(results) do
-    if base == '' or item:find('^' .. vim.pesc(base)) then
+    -- For blink.cmp, skip prefix filtering and return all results
+    -- Let blink.cmp's fuzzy matcher handle the filtering
+    local should_include = framework == 'blink' or base == '' or item:find('^' .. vim.pesc(base))
+
+    if should_include then
       table.insert(valid_results, {
         word = item,
         menu = self.menu,

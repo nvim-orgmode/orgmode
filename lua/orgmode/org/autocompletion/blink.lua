@@ -17,10 +17,34 @@ end
 function Source:get_completions(ctx, callback)
   local line = ctx.line:sub(1, ctx.cursor[2])
   local offset = org.completion:get_start({ line = line }) + 1
-  local base = string.sub(line, offset)
+  local full_base = string.sub(line, offset)
+
+  -- Create a simplified base that preserves completion context but avoids over-filtering
+  local simplified_base = full_base
+
+  -- For file links, keep only the protocol part to preserve context
+  if full_base:match('^file:') then
+    simplified_base = 'file:'
+  elseif full_base:match('^~/') then
+    simplified_base = '~/'
+  elseif full_base:match('^%./') then
+    simplified_base = './'
+  elseif full_base:match('^/') then
+    simplified_base = '/'
+  -- For other contexts, use a minimal base to get all results
+  elseif full_base:match('^%*') then
+    simplified_base = '*'
+  elseif full_base:match('^#%+') then
+    simplified_base = '#+'
+  elseif full_base:match('^:') then
+    simplified_base = ':'
+  end
+
+  -- Pass simplified base to orgmode sources to preserve context but get more results
   local results = org.completion:complete({
     line = line,
-    base = base,
+    base = simplified_base,
+    framework = 'blink', -- Still signal framework for any remaining filtering
   })
 
   local cb = function(items)
@@ -55,7 +79,8 @@ function Source:get_completions(ctx, callback)
     return 0
   end
 
-  local baseOffset = getInsertTextOffset(base)
+  -- Use full_base for insertText calculation
+  local baseOffset = getInsertTextOffset(full_base)
   local insertTextOffset = baseOffset > 0 and math.max(2, baseOffset) or 0
 
   local items = {}
@@ -63,6 +88,7 @@ function Source:get_completions(ctx, callback)
   for _, item in ipairs(results) do
     table.insert(items, {
       label = item.word,
+      filterText = item.word, -- Text to fuzzy match against
       insertText = insertTextOffset > 0 and item.word:sub(insertTextOffset) or item.word,
       labelDetails = item.menu and { description = item.menu } or nil,
     })

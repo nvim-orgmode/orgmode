@@ -436,8 +436,8 @@ describe('Blink completion', function()
 
     assert(directive_item, 'Should find a directive completion item')
     assert(
-      directive_item.insertText:match('^#%+'),
-      string.format("insertText should start with '+#', got: %s", directive_item.insertText)
+      directive_item.insertText and directive_item.insertText:match('^#%+'),
+      string.format("completion text should start with '#+', got: %s", directive_item.insertText or 'nil')
     )
 
     assert(line:sub(1, 4) == '#+fi', "Original line should contain '#+fi'")
