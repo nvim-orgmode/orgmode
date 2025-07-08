@@ -170,9 +170,12 @@ function Org.action(cmd, opts)
       item = item[part]
     end
   end
-  if item and item[parts[#parts]] then
-    local method = item[parts[#parts]]
-    local success, result = pcall(method, item, opts)
+  if not item or not item[parts[#parts]] then
+    return
+  end
+
+  return _G.Org.async.run(function()
+    local success, result = pcall(item[parts[#parts]], item, opts)
     if not success then
       if result.message then
         return require('orgmode.utils').echo_error(result.message)
@@ -183,7 +186,7 @@ function Org.action(cmd, opts)
     end
     Org._set_dot_repeat(cmd, opts)
     return result
-  end
+  end)
 end
 
 function Org.cron(opts)

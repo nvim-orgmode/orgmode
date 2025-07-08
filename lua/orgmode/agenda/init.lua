@@ -335,15 +335,15 @@ function Agenda:goto_date()
     return utils.echo_error('No available views to jump to date.')
   end
 
-  return Calendar.new({ date = Date.now(), title = 'Go to agenda date' }):open():next(function(date)
-    if not date then
-      return nil
-    end
-    for _, view in ipairs(views) do
-      view:goto_date(date)
-    end
-    return self:render()
-  end)
+  local date = Calendar.new({ date = Date.now(), title = 'Go to agenda date' }):open()
+
+  if not date then
+    return nil
+  end
+  for _, view in ipairs(views) do
+    view:goto_date(date)
+  end
+  return self:render()
 end
 
 function Agenda:switch_to_item()

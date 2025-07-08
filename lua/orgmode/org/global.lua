@@ -51,6 +51,7 @@ local build = function(orgmode)
   local config = require('orgmode.config')
 
   local OrgGlobal = {
+    async = require('orgmode.utils.async'),
     help = function()
       vim.cmd(('tabnew %s'):format(('%s/%s'):format(docs_dir, 'index.org')))
       vim.cmd(('tcd %s'):format(docs_dir))
@@ -134,7 +135,9 @@ end, {
     if type(item) ~= 'table' then
       return {}
     end
-    local list = vim.tbl_keys(item)
+    local list = vim.tbl_filter(function(key)
+      return key ~= 'async'
+    end, vim.tbl_keys(item))
 
     if arg_lead == '' then
       return list
