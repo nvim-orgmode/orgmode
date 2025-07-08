@@ -9,6 +9,7 @@ local Input = require('orgmode.ui.input')
 
 ---@alias OrgCalendarOnRenderDayOpts { line: number, from: number, to: number, buf: number, namespace: number }
 ---@alias OrgCalendarOnRenderDay fun(day: OrgDate, opts: OrgCalendarOnRenderDayOpts)
+---@alias OrgCalendarCallback fun(date: OrgDate | nil, cleared?: boolean)
 
 local SelState = { DAY = 0, HOUR = 1, MIN_BIG = 2, MIN_SMALL = 3 }
 local big_minute_step = config.calendar.min_big_step
@@ -17,7 +18,7 @@ local small_minute_step = config.calendar.min_small_step or config.org_time_stam
 ---@class OrgCalendar
 ---@field win number?
 ---@field buf number?
----@field callback fun(date: OrgDate | nil, cleared?: boolean)
+---@field callback OrgCalendarCallback
 ---@field date OrgDate?
 ---@field title? string
 ---@field on_day? OrgCalendarOnRenderDay
@@ -57,7 +58,8 @@ local height = 14
 local x_offset = 1 -- one border cell
 local y_offset = 2 -- one border cell and one padding cell
 
----@return OrgPromise<OrgDate | nil>
+---@async
+---@return OrgDate|nil,boolean|nil
 function Calendar:open()
   local get_window_opts = function()
     return {
@@ -171,8 +173,10 @@ function Calendar:open()
     self:set_day()
   end, map_opts)
   self:jump_day()
-  return Promise.new(function(resolve)
-    self.callback = resolve
+  ---@param cb OrgCalendarCallback
+  ---@diagnostic disable-next-line: return-type-mismatch
+  return Org.async.await(1, function(cb)
+    self.callback = cb
   end)
 end
 
