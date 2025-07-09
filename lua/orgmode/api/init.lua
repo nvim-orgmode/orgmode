@@ -81,7 +81,7 @@ function OrgApi.refile(opts)
     refile_opts.destination_headline = opts.destination._section
   end
 
-  local source_bufnr = vim.fn.bufnr(opts.source.file.filename) or -1
+  local source_bufnr = vim.fn.bufnr('^' .. opts.source.file.filename .. '$') or -1
   local is_capture = source_bufnr > -1 and vim.b[source_bufnr].org_capture
 
   if is_capture and orgmode.capture._window then
