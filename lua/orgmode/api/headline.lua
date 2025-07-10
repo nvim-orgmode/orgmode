@@ -276,7 +276,7 @@ end
 --- @return string
 function OrgHeadline:get_link()
   local filename = self.file.filename
-  local bufnr = vim.fn.bufnr(filename)
+  local bufnr = vim.fn.bufnr('^' .. filename .. '$')
 
   if bufnr == -1 or not vim.api.nvim_buf_is_loaded(bufnr) then
     -- do remote edit
