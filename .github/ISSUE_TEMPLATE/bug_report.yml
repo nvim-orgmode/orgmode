@@ -12,6 +12,12 @@ body:
     validations:
       required: true
     attributes:
+      label: checkhealth
+      description: Run `:checkhealth orgmode` and paste the output here
+  - type: textarea
+    validations:
+      required: true
+    attributes:
       label: Steps to reproduce
       description: |
         Steps to reproduce the problem.
