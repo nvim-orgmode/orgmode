@@ -90,11 +90,35 @@ function VirtualIndent:_get_indent_size(line, tree_has_errors)
   return 0
 end
 
+local function get_wrappoints_of_luastring(line_str, wrap_col)
+  local wrap_arr = {
+    [1] = 0,
+  }
+  local function calc_diff_to_visual_len(lua_str)
+    return vim.api.nvim_strwidth(lua_str) - string.len(lua_str)
+  end
+
+  local len_diff = 0
+  local remaining_line = line_str
+  local wrap_pos = 0
+  local i = 2
+  while string.len(remaining_line) >= wrap_col do
+    local temp_line = string.sub(remaining_line, 1, wrap_col)
+    len_diff = calc_diff_to_visual_len(temp_line)
+    local temp_wrap = wrap_col - len_diff
+    print(temp_wrap)
+    wrap_pos = wrap_pos + temp_wrap
+    wrap_arr[i] = wrap_pos
+    remaining_line = string.sub(remaining_line, temp_wrap + 1, -2)
+    i = i + 1
+  end
+  return wrap_arr
+end
+
 ---@param start_line number start line number to set the indentation, 0-based inclusive
 ---@param end_line number end line number to set the indentation, 0-based inclusive
 ---@param ignore_ts? boolean whether or not to skip the treesitter start & end lookup
 function VirtualIndent:set_indent(start_line, end_line, ignore_ts)
-  print(start_line, ' a ', end_line)
   ignore_ts = ignore_ts or false
   local headline = tree_utils.closest_headline_node({ start_line + 1, 1 })
   if headline and not ignore_ts then
@@ -104,11 +128,9 @@ function VirtualIndent:set_indent(start_line, end_line, ignore_ts)
       end_line = math.max(parent:end_(), end_line)
     end
   end
-  print(start_line, ' b ', end_line)
   if start_line > 0 then
     start_line = start_line - 1
   end
-  print(start_line, ' c ', end_line)
 
   local node_at_cursor = tree_utils.get_node()
   local tree_has_errors = false
@@ -118,8 +140,6 @@ function VirtualIndent:set_indent(start_line, end_line, ignore_ts)
 
   local org_lines = vim.api.nvim_buf_get_lines(0, start_line, end_line, false)
   local win_width = utils.winwidth(0)
-
-  -- local win_width = vim.api.nvim_win_get_width(0)
 
   self:_delete_old_extmarks(start_line, end_line)
   for line = start_line, end_line do
@@ -133,19 +153,19 @@ function VirtualIndent:set_indent(start_line, end_line, ignore_ts)
       --   right_gravity = false,
       --   priority = 110,
       -- })
-      -- Try to make correct breakline
-      -- 12 13 14 15 16 17
-      -- 0 1 2 3 4 5
+
+      -- Trying to make correct breakline
       local wrap_col = win_width - indent
       local arr_index = (line - start_line) + 1
       print(arr_index)
       if org_lines[arr_index] then
-        local line_length = string.len(org_lines[arr_index])
-        local wrap_iterations = (line_length / wrap_col)
-        -- local v_break_iter = 0
+        local wrap_arr = get_wrappoints_of_luastring(org_lines[arr_index], wrap_col)
+        -- local line_length = string.len(org_lines[arr_index])
+        -- local wrap_iterations = (line_length / wrap_col)
 
-        for v_break_iter = 0, wrap_iterations do
-          local wrap_pos = wrap_col * v_break_iter
+        -- for v_break_iter = 0, wrap_iterations do
+        for _, wrap_pos in ipairs(wrap_arr) do
+          -- local wrap_pos = wrap_col * v_break_iter
           pcall(vim.api.nvim_buf_set_extmark, self._bufnr, self._ns_id, line, wrap_pos, {
             virt_text = { { string.rep(' ', indent), 'OrgIndent' } },
             virt_text_pos = 'inline',
