@@ -1,4 +1,5 @@
 local tree_utils = require('orgmode.utils.treesitter')
+local utils = require('orgmode.utils')
 ---@class OrgVirtualIndent
 ---@field private _ns_id number extmarks namespace id
 ---@field private _bufnr integer Buffer VirtualIndent is attached to
@@ -93,6 +94,7 @@ end
 ---@param end_line number end line number to set the indentation, 0-based inclusive
 ---@param ignore_ts? boolean whether or not to skip the treesitter start & end lookup
 function VirtualIndent:set_indent(start_line, end_line, ignore_ts)
+  print(start_line, ' a ', end_line)
   ignore_ts = ignore_ts or false
   local headline = tree_utils.closest_headline_node({ start_line + 1, 1 })
   if headline and not ignore_ts then
@@ -102,9 +104,11 @@ function VirtualIndent:set_indent(start_line, end_line, ignore_ts)
       end_line = math.max(parent:end_(), end_line)
     end
   end
+  print(start_line, ' b ', end_line)
   if start_line > 0 then
     start_line = start_line - 1
   end
+  print(start_line, ' c ', end_line)
 
   local node_at_cursor = tree_utils.get_node()
   local tree_has_errors = false
@@ -112,20 +116,47 @@ function VirtualIndent:set_indent(start_line, end_line, ignore_ts)
     tree_has_errors = node_at_cursor:tree():root():has_error()
   end
 
+  local org_lines = vim.api.nvim_buf_get_lines(0, start_line, end_line, false)
+  local win_width = utils.winwidth(0)
+
+  -- local win_width = vim.api.nvim_win_get_width(0)
+
   self:_delete_old_extmarks(start_line, end_line)
   for line = start_line, end_line do
     local indent = self:_get_indent_size(line, tree_has_errors)
 
     if indent > 0 then
       -- NOTE: `ephemeral = true` is not implemented for `inline` virt_text_pos :(
-      pcall(vim.api.nvim_buf_set_extmark, self._bufnr, self._ns_id, line, 0, {
-        virt_text = { { string.rep(' ', indent), 'OrgIndent' } },
-        virt_text_pos = 'inline',
-        right_gravity = false,
-        priority = 110,
-      })
+      -- pcall(vim.api.nvim_buf_set_extmark, self._bufnr, self._ns_id, line, 0, {
+      --   virt_text = { { string.rep(' ', indent), 'OrgIndent' } },
+      --   virt_text_pos = 'inline',
+      --   right_gravity = false,
+      --   priority = 110,
+      -- })
+      -- Try to make correct breakline
+      -- 12 13 14 15 16 17
+      -- 0 1 2 3 4 5
+      local wrap_col = win_width - indent
+      local arr_index = (line - start_line) + 1
+      print(arr_index)
+      if org_lines[arr_index] then
+        local line_length = string.len(org_lines[arr_index])
+        local wrap_iterations = (line_length / wrap_col)
+        -- local v_break_iter = 0
+
+        for v_break_iter = 0, wrap_iterations do
+          local wrap_pos = wrap_col * v_break_iter
+          pcall(vim.api.nvim_buf_set_extmark, self._bufnr, self._ns_id, line, wrap_pos, {
+            virt_text = { { string.rep(' ', indent), 'OrgIndent' } },
+            virt_text_pos = 'inline',
+            right_gravity = false,
+            priority = 120,
+          })
+        end
+      end
     end
   end
+  -- pcall(vim.api.nvim_set_current_line(start_line))
 end
 
 --- Enables virtual indentation in registered buffer
@@ -133,7 +164,7 @@ function VirtualIndent:attach()
   if self._attached then
     return
   end
-  self:set_indent(0, vim.api.nvim_buf_line_count(self._bufnr) - 1, true)
+  self:set_indent(0, vim.api.nvim_buf_line_count(self._bufnr), true)
 
   vim.api.nvim_buf_attach(self._bufnr, false, {
     on_lines = function(_, _, _, start_line, _, end_line)
@@ -146,7 +177,7 @@ function VirtualIndent:attach()
       end)
     end,
     on_reload = function()
-      self:set_indent(0, vim.api.nvim_buf_line_count(self._bufnr) - 1, true)
+      self:set_indent(0, vim.api.nvim_buf_line_count(self._bufnr), true)
     end,
     on_detach = function(_, bufnr)
       self:detach()
