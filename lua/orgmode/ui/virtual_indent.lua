@@ -91,25 +91,31 @@ function VirtualIndent:_get_indent_size(line, tree_has_errors)
 end
 
 local function get_wrappoints_of_luastring(line_str, wrap_col)
+  local function correct_for_visual_len(byte_str)
+    return string.len(byte_str) - vim.api.nvim_strwidth(byte_str)
+  end
+
   local wrap_arr = {
     [1] = 0,
   }
-  local function calc_diff_to_visual_len(lua_str)
-    return vim.api.nvim_strwidth(lua_str) - string.len(lua_str)
-  end
 
   local len_diff = 0
   local remaining_line = line_str
-  local wrap_pos = 0
   local i = 2
+
   while string.len(remaining_line) >= wrap_col do
     local temp_line = string.sub(remaining_line, 1, wrap_col)
-    len_diff = calc_diff_to_visual_len(temp_line)
-    local temp_wrap = wrap_col - len_diff
-    print(temp_wrap)
-    wrap_pos = wrap_pos + temp_wrap
-    wrap_arr[i] = wrap_pos
-    remaining_line = string.sub(remaining_line, temp_wrap + 1, -2)
+    len_diff = correct_for_visual_len(temp_line)
+    local wrap_pos = wrap_col + len_diff + 7
+    temp_line = string.sub(remaining_line, 1, wrap_pos)
+
+    while vim.api.nvim_strwidth(temp_line) > wrap_col do
+      temp_line = string.sub(temp_line, 1, -2)
+    end
+
+    wrap_pos = string.len(temp_line)
+    wrap_arr[i] = wrap_arr[i - 1] + wrap_pos
+    remaining_line = string.sub(remaining_line, wrap_pos + 1, -1)
     i = i + 1
   end
   return wrap_arr
