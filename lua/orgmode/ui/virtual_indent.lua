@@ -91,33 +91,30 @@ function VirtualIndent:_get_indent_size(line, tree_has_errors)
 end
 
 local function get_wrappoints_of_luastring(line_str, wrap_col)
-  local function correct_for_visual_len(byte_str)
-    return string.len(byte_str) - vim.api.nvim_strwidth(byte_str)
-  end
-
   local wrap_arr = {
     [1] = 0,
   }
 
-  local len_diff = 0
   local remaining_line = line_str
   local i = 2
+  local wrap_pos = 0
+  local utf_iter = 0
 
-  while string.len(remaining_line) >= wrap_col do
-    local temp_line = string.sub(remaining_line, 1, wrap_col)
-    len_diff = correct_for_visual_len(temp_line)
-    local wrap_pos = wrap_col + len_diff + 7
-    temp_line = string.sub(remaining_line, 1, wrap_pos)
-
-    while vim.api.nvim_strwidth(temp_line) > wrap_col do
-      temp_line = string.sub(temp_line, 1, -2)
+  for idx = 1, #remaining_line do
+    if remaining_line:byte(idx) < 128 then
+      wrap_pos = wrap_pos + 1
+      -- 191 128
     end
-
-    wrap_pos = string.len(temp_line)
-    wrap_arr[i] = wrap_arr[i - 1] + wrap_pos
-    remaining_line = string.sub(remaining_line, wrap_pos + 1, -1)
-    i = i + 1
+    if (remaining_line:byte(idx) > 127) and (remaining_line:byte(idx) < 192) then
+      wrap_pos = wrap_pos + 1
+    end
+    if wrap_pos == wrap_col then
+      wrap_arr[i] = idx
+      i = i + 1
+      wrap_pos = 0
+    end
   end
+
   return wrap_arr
 end
 
