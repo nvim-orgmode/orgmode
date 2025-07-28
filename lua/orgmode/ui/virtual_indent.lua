@@ -95,24 +95,63 @@ local function get_wrappoints_of_luastring(line_str, wrap_col)
     [1] = 0,
   }
 
-  local remaining_line = line_str
+  local opt_linebreak = vim.o.linebreak
+  -- if opt_linebreak then
+  --   wrap_col = wrap_col + 1
+  -- end
+
   local i = 2
   local wrap_pos = 0
-  local utf_iter = 0
+  local last_space = 0
+  local prev_last_space = 0
+  local prev_char_was_space = false
 
-  for idx = 1, #remaining_line do
-    if remaining_line:byte(idx) < 128 then
+  -- @,48-57,_,192-255 is keyword is a problem!
+  -- iterating over lines seems inefficient but i havent experienced problems yet.
+  local idx = 1
+  while idx < line_str:len() do
+    local curr_byte = line_str:byte(idx)
+
+    if curr_byte < 128 then
       wrap_pos = wrap_pos + 1
-      -- 191 128
     end
-    if (remaining_line:byte(idx) > 127) and (remaining_line:byte(idx) < 192) then
+
+    if (curr_byte > 127) and (curr_byte < 192) then
+      -- bytes between 191 and 128 are non-continuation characters.
       wrap_pos = wrap_pos + 1
     end
+
     if wrap_pos == wrap_col then
-      wrap_arr[i] = idx
+      print(curr_byte)
+      if opt_linebreak then
+        wrap_arr[i] = last_space
+        if curr_byte == 32 then
+          wrap_arr[i] = idx
+        end
+        -- if line_str:byte(idx + 1) == 32 then
+        --   wrap_arr[i] = last_space
+        -- end
+        idx = wrap_arr[i]
+      else
+        wrap_arr[i] = idx
+      end
+
       i = i + 1
       wrap_pos = 0
     end
+
+    if opt_linebreak and (curr_byte == 32) then
+      prev_last_space = last_space
+      last_space = idx
+    end
+    idx = idx + 1
+    -- if opt_linebreak and (curr_byte == 32) then
+    --   if not prev_char_was_space then
+    --     last_space = idx
+    --   end
+    -- else
+    --   prev_char_was_space = false
+    -- end
   end
 
   return wrap_arr
@@ -141,6 +180,8 @@ function VirtualIndent:set_indent(start_line, end_line, ignore_ts)
     tree_has_errors = node_at_cursor:tree():root():has_error()
   end
 
+  -- getting lines since folded lines dont seem to be arent visible to
+  -- other commands i found.
   local org_lines = vim.api.nvim_buf_get_lines(0, start_line, end_line, false)
   local win_width = utils.winwidth(0)
 
@@ -149,26 +190,13 @@ function VirtualIndent:set_indent(start_line, end_line, ignore_ts)
     local indent = self:_get_indent_size(line, tree_has_errors)
 
     if indent > 0 then
-      -- NOTE: `ephemeral = true` is not implemented for `inline` virt_text_pos :(
-      -- pcall(vim.api.nvim_buf_set_extmark, self._bufnr, self._ns_id, line, 0, {
-      --   virt_text = { { string.rep(' ', indent), 'OrgIndent' } },
-      --   virt_text_pos = 'inline',
-      --   right_gravity = false,
-      --   priority = 110,
-      -- })
-
       -- Trying to make correct breakline
       local wrap_col = win_width - indent
       local arr_index = (line - start_line) + 1
-      print(arr_index)
+
       if org_lines[arr_index] then
         local wrap_arr = get_wrappoints_of_luastring(org_lines[arr_index], wrap_col)
-        -- local line_length = string.len(org_lines[arr_index])
-        -- local wrap_iterations = (line_length / wrap_col)
-
-        -- for v_break_iter = 0, wrap_iterations do
         for _, wrap_pos in ipairs(wrap_arr) do
-          -- local wrap_pos = wrap_col * v_break_iter
           pcall(vim.api.nvim_buf_set_extmark, self._bufnr, self._ns_id, line, wrap_pos, {
             virt_text = { { string.rep(' ', indent), 'OrgIndent' } },
             virt_text_pos = 'inline',
@@ -179,7 +207,6 @@ function VirtualIndent:set_indent(start_line, end_line, ignore_ts)
       end
     end
   end
-  -- pcall(vim.api.nvim_set_current_line(start_line))
 end
 
 --- Enables virtual indentation in registered buffer
