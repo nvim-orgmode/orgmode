@@ -8,6 +8,7 @@ local utils = require('orgmode.utils')
 local VirtualIndent = {
   _ns_id = vim.api.nvim_create_namespace('orgmode.ui.indent'),
   _bufnrs = {},
+  _line_wrap_arr = {},
 }
 VirtualIndent.__index = VirtualIndent
 
@@ -90,25 +91,90 @@ function VirtualIndent:_get_indent_size(line, tree_has_errors)
   return 0
 end
 
-local function get_wrappoints_of_luastring(line_str, wrap_col)
-  local wrap_arr = {
-    [1] = 0,
+function VirtualIndent:_set_wrappoints_of_luastring(line, line_str, indent, wrap_col)
+  local function update_exmarks(wrap_arr)
+    local function set_extmarks(curr_line, pos, nr_spaces, extm_id)
+      pcall(vim.api.nvim_buf_set_extmark, self._bufnr, self._ns_id, curr_line, pos, {
+        virt_text = { { string.rep(' ', nr_spaces), 'OrgIndent' } },
+        virt_text_pos = 'inline',
+        right_gravity = false,
+        priority = 110,
+        id = extm_id,
+      })
+    end
+    local function get_extmarks()
+      local ok, old_extmarks = pcall(
+        vim.api.nvim_buf_get_extmarks,
+        self._bufnr,
+        self._ns_id,
+        { line, 0 },
+        { line, string.len(line_str) },
+        { type = 'virt_text' }
+      )
+      if not ok then
+        old_extmarks = {}
+      end
+      return old_extmarks
+    end
+    local function check_and_get_extmark(extm_arr, col)
+      for i = 1, #extm_arr, 1 do
+        if extm_arr[i][3] == col then
+          return extm_arr[i][1], true
+        end
+      end
+    end
+
+    local function check_for_pos(extm_pos)
+      for i = 1, #wrap_arr, 1 do
+        if wrap_arr[i].pos == extm_pos then
+          return true
+        end
+      end
+      return false
+    end
+
+    local old_extmarks = get_extmarks()
+
+    old_extmarks = get_extmarks()
+    for _, wrapped_line in ipairs(wrap_arr) do
+      local exmark_id, exmark_exists = check_and_get_extmark(old_extmarks, wrapped_line.pos)
+      if exmark_exists then
+        set_extmarks(line, wrapped_line.pos, wrapped_line.spaces, exmark_id)
+      end
+
+      if not exmark_exists then
+        set_extmarks(line, wrapped_line.pos, wrapped_line.spaces)
+      end
+    end
+
+    for _, extmark in ipairs(old_extmarks) do
+      if not check_for_pos(extmark[3]) then
+        vim.api.nvim_buf_del_extmark(self._bufnr, self._ns_id, extmark[1])
+      end
+    end
+  end
+
+  local temp_wrap_arr = {}
+  temp_wrap_arr[1] = {
+    pos = 0,
+    spaces = indent,
+    wrapped_str = '',
   }
 
-  local opt_linebreak = vim.o.linebreak
-  -- if opt_linebreak then
-  --   wrap_col = wrap_col + 1
-  -- end
+  -- have to turnoff linebreak since we only feature ' ' as linebreak.
+  local vim_opt_linebreak = vim.o.linebreak
+  local opt_linebreak = true
+  if vim_opt_linebreak then
+    vim.o.linebreak = false
+  end
 
   local i = 2
   local wrap_pos = 0
   local last_space = 0
-  local prev_last_space = 0
-  local prev_char_was_space = false
-
-  -- @,48-57,_,192-255 is keyword is a problem!
-  -- iterating over lines seems inefficient but i havent experienced problems yet.
   local idx = 1
+  local ext_pos = 0
+  local nr_spaces = indent
+
   while idx < line_str:len() do
     local curr_byte = line_str:byte(idx)
 
@@ -116,45 +182,42 @@ local function get_wrappoints_of_luastring(line_str, wrap_col)
       wrap_pos = wrap_pos + 1
     end
 
+    -- bytes between 191 and 128 are non-continuation characters.
     if (curr_byte > 127) and (curr_byte < 192) then
-      -- bytes between 191 and 128 are non-continuation characters.
       wrap_pos = wrap_pos + 1
     end
 
     if wrap_pos == wrap_col then
-      print(curr_byte)
       if opt_linebreak then
-        wrap_arr[i] = last_space
-        if curr_byte == 32 then
-          wrap_arr[i] = idx
-        end
-        -- if line_str:byte(idx + 1) == 32 then
-        --   wrap_arr[i] = last_space
-        -- end
-        idx = wrap_arr[i]
-      else
-        wrap_arr[i] = idx
-      end
+        local cut_len = idx - last_space
 
+        if curr_byte == 32 then
+          ext_pos = idx
+          nr_spaces = indent
+        elseif cut_len >= wrap_col then
+          ext_pos = idx
+          nr_spaces = indent
+        else
+          ext_pos = last_space
+          nr_spaces = indent + cut_len
+          idx = last_space
+        end
+
+        temp_wrap_arr[i] = {
+          pos = ext_pos,
+          spaces = nr_spaces,
+        }
+      end
       i = i + 1
       wrap_pos = 0
     end
 
-    if opt_linebreak and (curr_byte == 32) then
-      prev_last_space = last_space
+    if curr_byte == 32 then
       last_space = idx
     end
     idx = idx + 1
-    -- if opt_linebreak and (curr_byte == 32) then
-    --   if not prev_char_was_space then
-    --     last_space = idx
-    --   end
-    -- else
-    --   prev_char_was_space = false
-    -- end
   end
-
-  return wrap_arr
+  update_exmarks(temp_wrap_arr)
 end
 
 ---@param start_line number start line number to set the indentation, 0-based inclusive
@@ -180,12 +243,9 @@ function VirtualIndent:set_indent(start_line, end_line, ignore_ts)
     tree_has_errors = node_at_cursor:tree():root():has_error()
   end
 
-  -- getting lines since folded lines dont seem to be arent visible to
-  -- other commands i found.
   local org_lines = vim.api.nvim_buf_get_lines(0, start_line, end_line, false)
   local win_width = utils.winwidth(0)
 
-  self:_delete_old_extmarks(start_line, end_line)
   for line = start_line, end_line do
     local indent = self:_get_indent_size(line, tree_has_errors)
 
@@ -195,15 +255,7 @@ function VirtualIndent:set_indent(start_line, end_line, ignore_ts)
       local arr_index = (line - start_line) + 1
 
       if org_lines[arr_index] then
-        local wrap_arr = get_wrappoints_of_luastring(org_lines[arr_index], wrap_col)
-        for _, wrap_pos in ipairs(wrap_arr) do
-          pcall(vim.api.nvim_buf_set_extmark, self._bufnr, self._ns_id, line, wrap_pos, {
-            virt_text = { { string.rep(' ', indent), 'OrgIndent' } },
-            virt_text_pos = 'inline',
-            right_gravity = false,
-            priority = 120,
-          })
-        end
+        self:_set_wrappoints_of_luastring(line, org_lines[arr_index], indent, wrap_col)
       end
     end
   end
@@ -222,9 +274,8 @@ function VirtualIndent:attach()
         return true
       end
 
-      vim.schedule(function()
-        self:set_indent(start_line, end_line)
-      end)
+      -- had to remove vim.schedule because of extreme jitter during insertmode.
+      self:set_indent(start_line, end_line)
     end,
     on_reload = function()
       self:set_indent(0, vim.api.nvim_buf_line_count(self._bufnr), true)
