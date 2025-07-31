@@ -93,7 +93,7 @@ end
 
 function VirtualIndent:_set_wrappoints_of_luastring(line, line_str, indent, wrap_col)
   local function update_exmarks(wrap_arr)
-    local function set_extmarks(curr_line, pos, nr_spaces, extm_id)
+    local function set_extmarks(curr_line, pos, nr_spaces)
       pcall(vim.api.nvim_buf_set_extmark, self._bufnr, self._ns_id, curr_line, pos, {
         virt_text = { { string.rep(' ', nr_spaces), 'OrgIndent' } },
         virt_text_pos = 'inline',
@@ -102,55 +102,9 @@ function VirtualIndent:_set_wrappoints_of_luastring(line, line_str, indent, wrap
         id = extm_id,
       })
     end
-    local function get_extmarks()
-      local ok, old_extmarks = pcall(
-        vim.api.nvim_buf_get_extmarks,
-        self._bufnr,
-        self._ns_id,
-        { line, 0 },
-        { line, string.len(line_str) },
-        { type = 'virt_text' }
-      )
-      if not ok then
-        old_extmarks = {}
-      end
-      return old_extmarks
-    end
-    local function check_and_get_extmark(extm_arr, col)
-      for i = 1, #extm_arr, 1 do
-        if extm_arr[i][3] == col then
-          return extm_arr[i][1], true
-        end
-      end
-    end
 
-    local function check_for_pos(extm_pos)
-      for i = 1, #wrap_arr, 1 do
-        if wrap_arr[i].pos == extm_pos then
-          return true
-        end
-      end
-      return false
-    end
-
-    local old_extmarks = get_extmarks()
-
-    old_extmarks = get_extmarks()
     for _, wrapped_line in ipairs(wrap_arr) do
-      local exmark_id, exmark_exists = check_and_get_extmark(old_extmarks, wrapped_line.pos)
-      if exmark_exists then
-        set_extmarks(line, wrapped_line.pos, wrapped_line.spaces, exmark_id)
-      end
-
-      if not exmark_exists then
-        set_extmarks(line, wrapped_line.pos, wrapped_line.spaces)
-      end
-    end
-
-    for _, extmark in ipairs(old_extmarks) do
-      if not check_for_pos(extmark[3]) then
-        vim.api.nvim_buf_del_extmark(self._bufnr, self._ns_id, extmark[1])
-      end
+      set_extmarks(line, wrapped_line.pos, wrapped_line.spaces)
     end
   end
 
@@ -243,6 +197,7 @@ function VirtualIndent:set_indent(start_line, end_line, ignore_ts)
     tree_has_errors = node_at_cursor:tree():root():has_error()
   end
 
+  self:_delete_old_extmarks(start_line, end_line)
   local org_lines = vim.api.nvim_buf_get_lines(0, start_line, end_line, false)
   local win_width = utils.winwidth(0)
 
@@ -250,7 +205,6 @@ function VirtualIndent:set_indent(start_line, end_line, ignore_ts)
     local indent = self:_get_indent_size(line, tree_has_errors)
 
     if indent > 0 then
-      -- Trying to make correct breakline
       local wrap_col = win_width - indent
       local arr_index = (line - start_line) + 1
 
