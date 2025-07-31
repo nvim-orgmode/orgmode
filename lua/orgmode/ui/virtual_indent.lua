@@ -91,7 +91,7 @@ function VirtualIndent:_get_indent_size(line, tree_has_errors)
   return 0
 end
 
-function VirtualIndent:_set_wrappoints_of_luastring(line, line_str, indent, wrap_col)
+function VirtualIndent:_set_wrappoints_of_luastring(line_nr, line_str, indent, wrap_col)
   local function update_exmarks(wrap_arr)
     local function set_extmarks(curr_line, pos, nr_spaces)
       pcall(vim.api.nvim_buf_set_extmark, self._bufnr, self._ns_id, curr_line, pos, {
@@ -99,12 +99,11 @@ function VirtualIndent:_set_wrappoints_of_luastring(line, line_str, indent, wrap
         virt_text_pos = 'inline',
         right_gravity = false,
         priority = 110,
-        id = extm_id,
       })
     end
 
     for _, wrapped_line in ipairs(wrap_arr) do
-      set_extmarks(line, wrapped_line.pos, wrapped_line.spaces)
+      set_extmarks(line_nr, wrapped_line.pos, wrapped_line.spaces)
     end
   end
 
