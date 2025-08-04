@@ -114,14 +114,22 @@ function M.not_installed()
   return not ok or (not result and err ~= nil)
 end
 
+function M._write_lock_file(content)
+  local lock_file = M.get_lock_file()
+  local file = assert(io.open(lock_file, 'w'))
+  file:write(vim.json.encode(content))
+  file:close()
+end
+
 function M.get_installed_version()
   local lock_file = M.get_lock_file()
-  -- No lock file, assume that version is 1.3.4 (when lock file was introduced)
   if not vim.uv.fs_stat(lock_file) then
-    utils.writefile(lock_file, vim.json.encode({ version = '1.3.4' })):wait()
+    M._write_lock_file({ version = '1.3.4' })
     return '1.3.4'
   end
-  local file_content = vim.json.decode(utils.readfile(lock_file, { raw = true }):wait())
+  local lock_file_handle = assert(io.open(lock_file, 'r'))
+  local file_content = vim.json.decode(lock_file_handle:read('*a'))
+  lock_file_handle:close()
   return file_content.version
 end
 
@@ -275,7 +283,6 @@ function M.run(type)
 
   local compiler_args = M.select_compiler_args(compiler)
   local ts_grammar_dir = nil
-  local lock_file = M.get_lock_file()
   local is_win = vim.fn.has('win32') == 1
   local shellslash = is_win and vim.opt.shellslash:get() or false
 
@@ -298,7 +305,7 @@ function M.run(type)
       if code ~= 0 then
         error('[orgmode] Failed to move generated tree-sitter parser to runtime folder', 0)
       end
-      return utils.writefile(lock_file, vim.json.encode({ version = required_version }))
+      return M._write_lock_file({ version = required_version })
     end)
     :next(vim.schedule_wrap(function()
       local msg = { 'Tree-sitter grammar installed!' }
