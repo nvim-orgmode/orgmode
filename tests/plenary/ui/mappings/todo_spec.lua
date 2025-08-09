@@ -589,4 +589,74 @@ describe('Todo mappings', function()
       '** DOING Subtask',
     }, vim.api.nvim_buf_get_lines(0, 0, 3, false))
   end)
+
+  it('should properly toggle todo states using cycling behavior with a single sequence', function()
+    config:extend({
+      org_todo_keywords = { 'TODO', 'NEXT', '|', 'DONE' },
+    })
+
+    helpers.create_file({
+      '#+TITLE: Test Single Sequence',
+      '',
+      '* TODO Task one',
+    })
+
+    -- Test cycling through the sequence
+    vim.fn.cursor(3, 1)
+    vim.cmd([[norm cit]])
+    assert.are.same('* NEXT Task one', vim.fn.getline(3))
+    vim.cmd([[norm cit]])
+    assert.are.same('* DONE Task one', vim.fn.getline(3))
+    vim.cmd([[norm cit]])
+    assert.are.same('* Task one', vim.fn.getline(3))
+    vim.cmd([[norm cit]])
+    assert.are.same('* TODO Task one', vim.fn.getline(3))
+  end)
+
+  it('should use fast access mode when multiple sequences are defined', function()
+    config:extend({
+      org_todo_keywords = {
+        { 'TODO', 'NEXT', '|', 'DONE' },
+        { 'MEETING', 'PHONE', '|', 'COMPLETED' },
+      },
+    })
+
+    helpers.create_file({
+      '#+TITLE: Test Multiple Sequences',
+      '',
+      '* Task one',
+    })
+
+    -- Test changing states using fast access keys generated from first character
+    vim.fn.cursor(3, 1)
+    vim.cmd([[norm citn]])
+    assert.are.same('* NEXT Task one', vim.fn.getline(3))
+    vim.cmd([[norm citm]])
+    assert.are.same('* MEETING Task one', vim.fn.getline(3))
+    vim.cmd([[norm citp]])
+    assert.are.same('* PHONE Task one', vim.fn.getline(3))
+    vim.cmd([[exe "norm cit\<Space>"]])
+    assert.are.same('* Task one', vim.fn.getline(3))
+  end)
+
+  it('should use fast access mode when at least one todo has explicit shortcut', function()
+    config:extend({
+      org_todo_keywords = { 'TODO(x)', 'NEXT(y)', '|', 'DONE(z)' },
+    })
+
+    helpers.create_file({
+      '#+TITLE: Test Single Sequence with Shortcuts',
+      '',
+      '* Task one',
+    })
+
+    -- Test changing states using explicitly defined fast access keys
+    vim.fn.cursor(3, 1)
+    vim.cmd([[norm citx]])
+    assert.are.same('* TODO Task one', vim.fn.getline(3))
+    vim.cmd([[norm city]])
+    assert.are.same('* NEXT Task one', vim.fn.getline(3))
+    vim.cmd([[norm citz]])
+    assert.are.same('* DONE Task one', vim.fn.getline(3))
+  end)
 end)
