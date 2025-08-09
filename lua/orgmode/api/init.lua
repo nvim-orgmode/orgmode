@@ -4,6 +4,7 @@ local OrgHeadline = require('orgmode.api.headline')
 local orgmode = require('orgmode')
 local validator = require('orgmode.utils.validator')
 local Promise = require('orgmode.utils.promise')
+local utils = require('orgmode.utils')
 
 ---@class OrgApiRefileOpts
 ---@field source OrgApiHeadline
@@ -81,7 +82,7 @@ function OrgApi.refile(opts)
     refile_opts.destination_headline = opts.destination._section
   end
 
-  local source_bufnr = vim.fn.bufnr('^' .. opts.source.file.filename .. '$') or -1
+  local source_bufnr = utils.get_buffer_by_filename(opts.source.file.filename)
   local is_capture = source_bufnr > -1 and vim.b[source_bufnr].org_capture
 
   if is_capture and orgmode.capture._window then
