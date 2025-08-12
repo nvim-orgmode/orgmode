@@ -25,7 +25,7 @@ end
 ---@param context OrgCompletionContext
 ---@return string[]
 function OrgCompletionHyperlinks:get_results(context)
-  return self.completion.links:autocomplete(context.base)
+  return self.completion.links:autocomplete(context)
 end
 
 return OrgCompletionHyperlinks

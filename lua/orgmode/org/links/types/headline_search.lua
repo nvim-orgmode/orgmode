@@ -59,10 +59,10 @@ function OrgLinkHeadlineSearch:follow(link)
   return link_utils.open_file_and_search(opts.file_path, search_text)
 end
 
----@param link string
+---@param context OrgCompletionContext
 ---@return string[]
-function OrgLinkHeadlineSearch:autocomplete(link)
-  local opts = self:_parse(link)
+function OrgLinkHeadlineSearch:autocomplete(context)
+  local opts = self:_parse(context.base)
   if not opts then
     return {}
   end
@@ -71,22 +71,9 @@ function OrgLinkHeadlineSearch:autocomplete(link)
     local filenames = self.files:filenames()
     local valid_filenames = {}
     for _, f in ipairs(filenames) do
-      if f:find('^' .. opts.file_path) then
-        f = f:gsub('^' .. opts.file_path, opts.link_url.path)
-        table.insert(valid_filenames, f)
-      end
-
-      local real_path = opts.link_url:get_real_path()
-
-      if not real_path then
-        local substitute_path = fs.substitute_path(opts.file_path)
-        if substitute_path then
-          local full_path = vim.fn.fnamemodify(substitute_path, ':p')
-          if f:find('^' .. full_path) then
-            f = f:gsub('^' .. full_path, opts.link_url.path)
-            table.insert(valid_filenames, f)
-          end
-        end
+      local converted_path = fs.convert_path(opts.link_url.path, f)
+      if context.matcher(converted_path, opts.link_url.path) then
+        table.insert(valid_filenames, converted_path)
       end
     end
 
@@ -108,11 +95,15 @@ function OrgLinkHeadlineSearch:autocomplete(link)
     return headline:get_title()
   end, file:find_headlines_matching_search_term(pattern, true))
 
+  local matching_headlines = vim.tbl_filter(function(headline)
+    return context.matcher(headline:get_title(), opts.headline_text)
+  end, file:get_headlines())
+
   utils.concat(
     headlines,
     vim.tbl_map(function(headline)
       return headline:get_title()
-    end, file:find_headlines_by_title(opts.headline_text)),
+    end, matching_headlines),
     true
   )
   local prefix = opts.type == 'internal' and '' or opts.link_url:get_path_with_protocol() .. '::'

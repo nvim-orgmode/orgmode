@@ -20,6 +20,37 @@ function M.substitute_path(path_str)
   return false
 end
 
+--Convert absolute path to the same format as source path
+--If source path has relative parts, like ~, ./ or ../,
+--apply same to the long path and return
+---@param source_path string
+---@param long_path string
+function M.convert_path(source_path, long_path)
+  if source_path:match('^/') then
+    return long_path
+  end
+
+  if source_path:match('^~/') then
+    local home_path = os.getenv('HOME')
+    if home_path then
+      return long_path:gsub('^' .. vim.pesc(home_path), '~')
+    end
+    return long_path
+  end
+
+  if source_path:match('^%./') then
+    local base = vim.fn.fnamemodify(utils.current_file_path(), ':p:h')
+    return long_path:gsub('^' .. vim.pesc(base), '.')
+  end
+
+  if source_path:match('^%.%./') then
+    local base = vim.fn.fnamemodify(utils.current_file_path(), ':p:h:h')
+    return long_path:gsub('^' .. vim.pesc(base), '..')
+  end
+
+  return long_path
+end
+
 ---@param filepath string
 function M.get_real_path(filepath)
   if not filepath then
