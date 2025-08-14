@@ -21,6 +21,7 @@ function Source:get_completions(ctx, callback)
   local results = org.completion:complete({
     line = line,
     base = base,
+    fuzzy = true,
   })
 
   local cb = function(items)

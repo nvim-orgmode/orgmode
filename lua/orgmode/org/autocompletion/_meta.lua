@@ -1,6 +1,6 @@
 ---@meta
 
----@alias OrgCompletionContext { line: string, base?: string }
+---@alias OrgCompletionContext { line: string, base?: string, fuzzy?: boolean, matcher?: fun(value?: string, pattern?: string): boolean }
 ---@alias OrgCompletionItem { word: string, menu: string }
 
 ---@class OrgCompletionSource
