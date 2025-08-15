@@ -42,10 +42,10 @@ function OrgLinkCustomId:follow(link)
   return link_utils.open_file_and_search(opts.file_path, opts.custom_id)
 end
 
----@param link string
+---@param context OrgCompletionContext
 ---@return string[]
-function OrgLinkCustomId:autocomplete(link)
-  local opts = self:_parse(link)
+function OrgLinkCustomId:autocomplete(context)
+  local opts = self:_parse(context.base)
   if not opts then
     return {}
   end

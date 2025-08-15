@@ -44,6 +44,19 @@ end
 ---@return OrgCompletionItem
 function OrgCompletion:complete(context)
   local results = {}
+  context.base = context.base or ''
+  if not context.matcher then
+    context.matcher = function(value, pattern)
+      pattern = pattern or ''
+      if pattern == '' then
+        return true
+      end
+      if context.fuzzy then
+        return #vim.fn.matchfuzzy({ value }, pattern) > 0
+      end
+      return value:find('^' .. vim.pesc(pattern)) ~= nil
+    end
+  end
   for _, source in ipairs(self.sources) do
     if source:get_start(context) then
       vim.list_extend(results, self:_get_valid_results(source:get_results(context), context))
@@ -53,12 +66,13 @@ function OrgCompletion:complete(context)
   return results
 end
 
+---@param results string[]
+---@param context OrgCompletionContext
+---@return OrgCompletionItem[]
 function OrgCompletion:_get_valid_results(results, context)
-  local base = context.base or ''
-
   local valid_results = {}
   for _, item in ipairs(results) do
-    if base == '' or item:find('^' .. vim.pesc(base)) then
+    if context.matcher(item, context.base) then
       table.insert(valid_results, {
         word = item,
         menu = self.menu,
@@ -89,6 +103,9 @@ function OrgCompletion:omnifunc(findstart, base)
 
   self._context = self._context or { line = self:get_line() }
   self._context.base = base
+  if vim.tbl_contains(vim.opt_local.completeopt:get(), 'fuzzy') then
+    self._context.fuzzy = true
+  end
   return self:complete(self._context)
 end
 
