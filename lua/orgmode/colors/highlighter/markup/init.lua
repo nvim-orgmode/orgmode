@@ -30,8 +30,9 @@ end
 ---@param bufnr number
 ---@param line number
 ---@param tree TSTree
-function OrgMarkup:on_line(bufnr, line, tree)
-  local highlights = self:_get_highlights(bufnr, line, tree)
+---@param use_cache? boolean
+function OrgMarkup:on_line(bufnr, line, tree, use_cache)
+  local highlights = self:_get_highlights(bufnr, line, tree, use_cache)
 
   for type, highlight in pairs(highlights) do
     self.parsers[type]:highlight(highlight, bufnr)
@@ -41,11 +42,16 @@ end
 ---@param bufnr number
 ---@param line number
 ---@param tree TSTree
+---@param use_cache? boolean
 ---@return { emphasis: OrgMarkupHighlight[], link: OrgMarkupHighlight[], latex: OrgMarkupHighlight[], date: OrgMarkupHighlight[] }
-function OrgMarkup:_get_highlights(bufnr, line, tree)
+function OrgMarkup:_get_highlights(bufnr, line, tree, use_cache)
   local line_content = vim.api.nvim_buf_get_lines(bufnr, line, line + 1, false)[1]
 
-  if self.cache[bufnr] and self.cache[bufnr][line] and self.cache[bufnr][line].line_content == line_content then
+  if
+    self.cache[bufnr]
+    and self.cache[bufnr][line]
+    and (use_cache or self.cache[bufnr][line].line_content == line_content)
+  then
     return self.cache[bufnr][line].highlights
   end
 
