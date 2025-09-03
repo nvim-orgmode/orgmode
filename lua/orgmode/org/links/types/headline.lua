@@ -38,10 +38,10 @@ function OrgLinkHeadline:follow(link)
   return link_utils.open_file_and_search(opts.file_path, opts.headline)
 end
 
----@param link string
+---@param context OrgCompletionContext
 ---@return string[]
-function OrgLinkHeadline:autocomplete(link)
-  local opts = self:_parse(link)
+function OrgLinkHeadline:autocomplete(context)
+  local opts = self:_parse(context.base)
   if not opts then
     return {}
   end
@@ -52,7 +52,9 @@ function OrgLinkHeadline:autocomplete(link)
     return {}
   end
 
-  local headlines = file:find_headlines_by_title(opts.headline)
+  local headlines = vim.tbl_filter(function(headline)
+    return context.matcher(headline:get_title(), opts.headline)
+  end, file:get_headlines())
   local prefix = opts.type == 'internal' and '' or opts.link_url:get_path_with_protocol() .. '::'
 
   return vim.tbl_map(function(headline)

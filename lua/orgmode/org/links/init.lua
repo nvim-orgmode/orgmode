@@ -56,22 +56,20 @@ function OrgLinks:follow(link)
   return self.headline_search:follow(link)
 end
 
----@param link string
+---@param context OrgCompletionContext
 ---@return string[]
-function OrgLinks:autocomplete(link)
-  local pattern = '^' .. vim.pesc(link:lower())
-
+function OrgLinks:autocomplete(context)
   local items = vim.tbl_filter(function(stored_link)
-    return stored_link:lower():match(pattern)
+    return context.matcher(stored_link, context.base)
   end, vim.tbl_keys(self.stored_links))
 
   for _, source in ipairs(self.types) do
     if source.autocomplete then
-      utils.concat(items, source:autocomplete(link))
+      utils.concat(items, source:autocomplete(context))
     end
   end
 
-  utils.concat(items, self.headline_search:autocomplete(link))
+  utils.concat(items, self.headline_search:autocomplete(context))
   return items
 end
 

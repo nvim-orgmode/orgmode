@@ -30,6 +30,7 @@ function Source:complete(params, callback)
   local results = org.completion:complete({
     line = params.context.cursor_before_line,
     base = base,
+    fuzzy = true,
   })
   local items = {}
   for _, item in ipairs(results) do
