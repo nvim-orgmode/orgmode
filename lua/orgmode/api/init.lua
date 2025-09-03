@@ -84,9 +84,12 @@ function OrgApi.refile(opts)
 
   local source_bufnr = utils.get_buffer_by_filename(opts.source.file.filename)
   local is_capture = source_bufnr > -1 and vim.b[source_bufnr].org_capture
-
-  if is_capture and orgmode.capture._window then
-    refile_opts.template = orgmode.capture._window.template
+  if is_capture then
+    local capture_window = orgmode.capture._windows[vim.b[source_bufnr].org_capture_window_id]
+    if capture_window then
+      refile_opts.template = capture_window.template
+      refile_opts.capture_window = capture_window
+    end
   end
 
   return Promise.resolve()
