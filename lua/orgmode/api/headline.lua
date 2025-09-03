@@ -4,6 +4,7 @@ local PriorityState = require('orgmode.objects.priority_state')
 local Date = require('orgmode.objects.date')
 local Calendar = require('orgmode.objects.calendar')
 local Promise = require('orgmode.utils.promise')
+local utils = require('orgmode.utils')
 local org = require('orgmode')
 
 ---@class OrgApiHeadline
@@ -276,7 +277,7 @@ end
 --- @return string
 function OrgHeadline:get_link()
   local filename = self.file.filename
-  local bufnr = vim.fn.bufnr('^' .. filename .. '$')
+  local bufnr = utils.get_buffer_by_filename(filename)
 
   if bufnr == -1 or not vim.api.nvim_buf_is_loaded(bufnr) then
     -- do remote edit

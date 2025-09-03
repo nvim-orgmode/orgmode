@@ -60,7 +60,7 @@ end
 ---Load the file
 ---@return OrgPromise<OrgFile | false>
 function OrgFile.load(filename)
-  local bufnr = vim.fn.bufnr('^' .. filename .. '$') or -1
+  local bufnr = utils.get_buffer_by_filename(filename)
 
   if
     bufnr > -1
@@ -534,7 +534,7 @@ end
 
 ---@return number
 function OrgFile:bufnr()
-  local bufnr = vim.fn.bufnr('^' .. self.filename .. '$') or -1
+  local bufnr = utils.get_buffer_by_filename(self.filename)
   -- Do not consider unloaded buffers as valid
   -- Treesitter is not working in them
   if bufnr > -1 and vim.api.nvim_buf_is_loaded(bufnr) then
@@ -546,7 +546,7 @@ end
 ---Return valid buffer handle or throw an error if it's not valid
 ---@return number
 function OrgFile:get_valid_bufnr()
-  local bufnr = vim.fn.bufnr('^' .. self.filename .. '$') or -1
+  local bufnr = utils.get_buffer_by_filename(self.filename)
   if bufnr < 0 then
     error('[orgmode] No valid buffer for file ' .. self.filename .. ' to edit', 0)
   end

@@ -46,6 +46,19 @@ describe('OrgFile', function()
       file:reload_sync()
       assert.are.same(4, file.metadata.changedtick)
     end)
+
+    it('should load files with special characters in filename from buffer', function()
+      local special_filename = vim.fn.tempname() .. '[test].org'
+      local file = load_file_sync({ '* Headline with bracket filename' }, special_filename)
+      vim.cmd('edit ' .. vim.fn.fnameescape(file.filename))
+
+      -- Test that OrgFile.load can find the buffer correctly
+      local loaded_file = OrgFile.load(special_filename):wait()
+      assert.are.same(special_filename, loaded_file.filename)
+      assert.are.same({ '* Headline with bracket filename' }, loaded_file.lines)
+
+      vim.cmd('bdelete')
+    end)
   end)
 
   describe('reload', function()
@@ -563,6 +576,42 @@ describe('OrgFile', function()
       vim.cmd('bdelete')
       assert.are.same(-1, file:bufnr())
       assert.is.True(vim.fn.bufnr(file.filename) > 0)
+    end)
+
+    it('should work with filenames containing special characters', function()
+      -- Test various special characters that have regex meaning
+      local test_cases = {
+        '[test].org',
+        '(test).org',
+        'test[1].org',
+        'file.with.dots.org',
+        'file+plus.org',
+        'file*star.org',
+        'file?question.org',
+        'file$dollar.org',
+        'file^caret.org',
+      }
+
+      for _, special_filename in ipairs(test_cases) do
+        local full_filename = vim.fn.tempname() .. special_filename
+        local file = load_file_sync({
+          '* Headline with special filename',
+          '  Content in special file',
+        }, full_filename)
+
+        -- Test that bufnr() works correctly
+        assert.are.same(-1, file:bufnr())
+
+        -- Test that loading the buffer works
+        vim.cmd('edit ' .. vim.fn.fnameescape(file.filename))
+        assert.is.True(file:bufnr() > 0, 'Failed for filename: ' .. special_filename)
+
+        -- Test that get_valid_bufnr() works
+        local bufnr = file:get_valid_bufnr()
+        assert.is.True(bufnr > 0, 'get_valid_bufnr failed for filename: ' .. special_filename)
+
+        vim.cmd('bdelete')
+      end
     end)
   end)
 
