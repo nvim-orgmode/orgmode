@@ -214,7 +214,7 @@ issue.
 - [@dhruvasagar](https://github.com/dhruvasagar) and his
   [vim-dotoo](https://github.com/dhruvasagar/vim-dotoo) plugin that got
   me started using orgmode. Without him this plugin would not happen.
-- [@milisims](https://github.com/milisims) for writing a treesitter
+- [@emiasims](https://github.com/emiasims) for writing a treesitter
   parser for org
 - [vim-orgmode](https://github.com/jceb/vim-orgmode) for some parts of
   the code (mostly syntax)

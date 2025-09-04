@@ -98,7 +98,7 @@ can be installed, and exit with a success message.
 :PROPERTIES:
 :CUSTOM_ID: parser
 :END:
-Parsing is done via builtin treesitter parser and the [[https://github.com/milisims/tree-sitter-org][tree-sitter-org]] grammar.
+Parsing is done via builtin treesitter parser and the [[https://github.com/nvim-orgmode/tree-sitter-org][tree-sitter-org]] grammar.
 
 **** Commits
 :PROPERTIES:
