@@ -8,6 +8,7 @@
 
 ---@class OrgProcessCaptureOpts
 ---@field template OrgCaptureTemplate
+---@field capture_window OrgCaptureWindow
 ---@field source_file OrgFile
 ---@field source_headline? OrgHeadline
 ---@field destination_file OrgFile

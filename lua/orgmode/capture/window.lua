@@ -1,6 +1,7 @@
 local config = require('orgmode.config')
 local utils = require('orgmode.utils')
 local Promise = require('orgmode.utils.promise')
+local id_counter = 0
 
 ---@class OrgCaptureWindowOpts
 ---@field template OrgCaptureTemplate
@@ -9,6 +10,7 @@ local Promise = require('orgmode.utils.promise')
 ---@field on_close? fun(self: OrgCaptureWindow)
 
 ---@class OrgCaptureWindow :OrgCaptureWindowOpts
+---@field id number
 ---@field private _window fun() | nil
 ---@field private _bufnr number
 local CaptureWindow = {}
@@ -22,6 +24,8 @@ function CaptureWindow:new(opts)
     on_finish = opts.on_finish,
     on_close = opts.on_close,
   }
+  data.id = id_counter
+  id_counter = id_counter + 1
   return setmetatable(data, CaptureWindow)
 end
 
@@ -38,6 +42,7 @@ function CaptureWindow:open()
     vim.api.nvim_buf_set_lines(0, 0, -1, true, content)
     self.template:setup()
     vim.b.org_capture = true
+    vim.b.org_capture_window_id = self.id
     self._bufnr = vim.api.nvim_get_current_buf()
 
     if self.on_open then
@@ -78,6 +83,16 @@ function CaptureWindow:focus()
     end
   end
   return self
+end
+
+---@return boolean
+function CaptureWindow:is_modified()
+  return vim.bo[self._bufnr].modified
+end
+
+---@return number
+function CaptureWindow:get_bufnr()
+  return self._bufnr
 end
 
 function CaptureWindow:kill()

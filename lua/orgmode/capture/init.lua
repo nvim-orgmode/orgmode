@@ -21,7 +21,7 @@ local Promise = require('orgmode.utils.promise')
 ---@field on_pre_refile OrgOnCaptureClose
 ---@field on_post_refile OrgOnCaptureClose
 ---@field on_cancel_refile OrgOnCaptureCancel
----@field _window OrgCaptureWindow
+---@field private _windows table<number, OrgCaptureWindow>
 local Capture = {}
 Capture.__index = Capture
 
@@ -34,6 +34,7 @@ function Capture:new(opts)
   this.on_cancel_refile = opts.on_cancel_refile
   this.templates = opts.templates or Templates:new()
   this.closing_note = this:_setup_closing_note()
+  this._windows = {}
   return this
 end
 
@@ -72,17 +73,18 @@ end
 ---@param template OrgCaptureTemplate
 ---@return OrgPromise<OrgCaptureWindow>
 function Capture:open_template(template)
-  self._window = CaptureWindow:new({
+  local window = CaptureWindow:new({
     template = template,
-    on_open = function()
+    on_open = function(capture_window)
+      self._windows[capture_window.id] = capture_window
       return self:setup_mappings()
     end,
-    on_close = function()
-      return self:on_refile_close()
+    on_close = function(capture_window)
+      return self:on_refile_close(capture_window)
     end,
   })
 
-  return self._window:open()
+  return window:open()
 end
 
 ---@param shortcut string
@@ -94,13 +96,13 @@ function Capture:open_template_by_shortcut(shortcut)
   return self:open_template(template)
 end
 
-function Capture:on_refile_close()
-  local is_modified = vim.bo.modified
-  local opts = self:_get_refile_vars()
+---@param capture_window OrgCaptureWindow
+function Capture:on_refile_close(capture_window)
+  local opts = self:_get_refile_vars(capture_window)
   if not opts then
     return
   end
-  if is_modified then
+  if capture_window:is_modified() then
     local choice =
       vim.fn.confirm(string.format('Do you want to refile this to %s?', opts.destination_file.filename), '&Yes\n&No')
     vim.cmd([[redraw!]])
@@ -112,15 +114,15 @@ function Capture:on_refile_close()
     end
   end
 
-  vim.defer_fn(function()
+  vim.schedule(function()
     self:_refile_from_capture_buffer(opts)
-    self._window = nil
-  end, 0)
+  end)
 end
 
 ---Triggered when refiling from capture buffer
 function Capture:refile()
-  local opts = self:_get_refile_vars()
+  local capture_window = self._windows[vim.b.org_capture_window_id]
+  local opts = self:_get_refile_vars(capture_window)
   if not opts then
     return
   end
@@ -132,12 +134,14 @@ end
 function Capture:refile_to_destination()
   local source_file = self.files:get_current_file()
   local source_headline = source_file:get_headlines()[1]
+  local capture_window = self._windows[vim.b.org_capture_window_id]
   return self:get_destination():next(function(destination)
     if not destination then
       return false
     end
     return self:_refile_from_capture_buffer({
-      template = self._window.template,
+      template = capture_window.template,
+      capture_window = capture_window,
       source_file = source_file,
       source_headline = source_headline,
       destination_file = destination.file,
@@ -203,7 +207,7 @@ function Capture:_refile_from_capture_buffer(opts)
     self.on_post_refile(self, opts)
   end
   utils.echo_info(('Wrote %s'):format(destination_file.filename))
-  self:kill()
+  self:kill(false, opts.capture_window.id)
   return true
 end
 
@@ -535,22 +539,25 @@ function Capture:build_note_capture(title)
 end
 
 ---@param from_mapping? boolean
-function Capture:kill(from_mapping)
-  if self._window then
+---@param window_id? number
+function Capture:kill(from_mapping, window_id)
+  local window = self._windows[window_id or vim.b.org_capture_window_id]
+  if window then
     if from_mapping and self.on_cancel_refile then
       self.on_cancel_refile(self)
     end
-    self._window:kill()
-    self._window = nil
+    window:kill()
+    self._windows[window.id] = nil
   end
 end
 
 ---@private
+---@param capture_window OrgCaptureWindow
 ---@return OrgProcessCaptureOpts | false
-function Capture:_get_refile_vars()
-  local source_file = self.files:get_current_file()
+function Capture:_get_refile_vars(capture_window)
+  local source_file = self.files:get(vim.api.nvim_buf_get_name(capture_window:get_bufnr()))
   local source_headline = nil
-  if not self._window.template.whole_file then
+  if not capture_window.template.whole_file then
     source_headline = source_file:get_headlines()[1]
   end
 
@@ -559,7 +566,8 @@ function Capture:_get_refile_vars()
     source_headline = source_headline,
     destination_file = nil,
     destination_headline = nil,
-    template = self._window.template,
+    template = capture_window.template,
+    capture_window = capture_window,
   }
 
   if self.on_pre_refile then
