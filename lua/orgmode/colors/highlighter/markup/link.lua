@@ -1,6 +1,5 @@
 ---@class OrgLinkHighlighter : OrgMarkupHighlighter
 ---@field private markup OrgMarkupHighlighter
----@field private has_extmark_url_support boolean
 ---@field private last_start_node_id? string
 local OrgLink = {
   valid_capture_names = {
@@ -14,7 +13,6 @@ OrgLink.__index = OrgLink
 function OrgLink:new(opts)
   local this = setmetatable({
     markup = opts.markup,
-    has_extmark_url_support = vim.fn.has('nvim-0.10.2') == 1,
   }, OrgLink)
   this:_set_directive()
   return this
@@ -34,7 +32,7 @@ function OrgLink:_set_directive()
     node = node and node[#node]
     metadata['image.ignore'] = true
 
-    if not node or not self.has_extmark_url_support then
+    if not node then
       return
     end
 
@@ -199,10 +197,6 @@ function OrgLink:is_valid_end_node(entry)
 end
 
 function OrgLink:_get_url(bufnr, line, start_col, end_col)
-  if not self.has_extmark_url_support then
-    return nil
-  end
-
   return vim.api.nvim_buf_get_text(bufnr, line, start_col, line, end_col, {})[1]
 end
 

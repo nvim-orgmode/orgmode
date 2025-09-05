@@ -5,7 +5,6 @@ local api = vim.api
 
 describe('highlighter', function()
   local ns_id = api.nvim_create_namespace('org_custom_highlighter')
-  local has_extmarks_url_support = vim.fn.has('nvim-0.10.2') == 1
 
   local get_extmarks = function(content)
     ---@diagnostic disable-next-line: inject-field
@@ -35,9 +34,7 @@ describe('highlighter', function()
     if opts.spell ~= nil then
       assert.are.same(opts.spell, details.spell, 'spell is not matching')
     end
-    if has_extmarks_url_support and opts.url ~= nil then
-      assert.are.same(opts.url, details.url, 'url is not matching')
-    end
+    assert.are.same(opts.url, details.url, 'url is not matching')
   end
 
   after_each(function()
