@@ -86,7 +86,7 @@ function Menu:add_option(option)
   table.insert(self.items, option)
 end
 
----@param separator OrgMenuSeparator
+---@param separator? OrgMenuSeparator
 function Menu:add_separator(separator)
   self:_validate_separator(separator)
   table.insert(self.items, vim.tbl_deep_extend('force', self.separator, separator or {}))

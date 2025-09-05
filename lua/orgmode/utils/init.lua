@@ -2,7 +2,6 @@ local Promise = require('orgmode.utils.promise')
 local uv = vim.uv
 local utils = {}
 local debounce_timers = {}
-local tmp_window_augroup = vim.api.nvim_create_augroup('OrgTmpWindow', { clear = true })
 
 ---@param file string full path to filename
 ---@param opts? { raw: boolean, schedule: boolean } raw: Return raw results, schedule: wrap results in vim.schedule
@@ -415,17 +414,17 @@ function utils.open_tmp_org_window(height, split_mode, border, on_close)
   utils.open_window(vim.fn.tempname() .. '.org', height or 16, split_mode, border)
   vim.cmd([[setlocal filetype=org bufhidden=wipe nobuflisted nolist noswapfile nofoldenable]])
   local bufnr = vim.api.nvim_get_current_buf()
+  local augroup = vim.api.nvim_create_augroup('OrgTmpWindow_' .. bufnr, { clear = true })
 
   if on_close then
     vim.api.nvim_create_autocmd('BufWipeout', {
-      buffer = 0,
-      group = tmp_window_augroup,
+      buffer = bufnr,
+      group = augroup,
       callback = on_close,
       once = true,
     })
     vim.api.nvim_create_autocmd('VimLeavePre', {
-      buffer = 0,
-      group = tmp_window_augroup,
+      group = augroup,
       callback = on_close,
       once = true,
     })
@@ -442,7 +441,7 @@ function utils.open_tmp_org_window(height, split_mode, border, on_close)
   end
 
   return function()
-    vim.api.nvim_create_augroup('OrgTmpWindow', { clear = true })
+    vim.api.nvim_create_augroup('OrgTmpWindow_' .. bufnr, { clear = true })
     close_win()
     if prev_winnr and vim.api.nvim_win_is_valid(prev_winnr) then
       vim.api.nvim_set_current_win(prev_winnr)
