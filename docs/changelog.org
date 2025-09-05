@@ -1,5 +1,35 @@
 #+OPTIONS: H:9 ^:nil
 * Changelog
+** [[https://github.com/nvim-orgmode/orgmode/compare/0.6.0...0.7.0][0.7.0]] (2025-09-05)
+*** Breaking changes
+- *treesitter*: Use async parsing for custom highlighter (#1029) ([[https://github.com/nvim-orgmode/orgmode/commit/0ab72ad][0ab72ad]])
+- *version*: Drop support for Neovim < 0.10.3 ([[https://github.com/nvim-orgmode/orgmode/commit/cca7515][cca7515]])
+
+*** Features
+- *autocomplete*: Fuzzy match autocompletion (#1024) ([[https://github.com/nvim-orgmode/orgmode/commit/b924cbb][b924cbb]])
+- *edit_src*: Add `org_edit_src_filetype_map` for custom src block filetypes. (#1002) ([[https://github.com/nvim-orgmode/orgmode/commit/7ffb34c][7ffb34c]])
+- *agenda*: Add mapping to preview headline in agenda with "K" ([[https://github.com/nvim-orgmode/orgmode/commit/8291ba6][8291ba6]])
+- *clock*: Clock out headline when it's marked as done ([[https://github.com/nvim-orgmode/orgmode/commit/8121c22][8121c22]])
+
+*** Bug fixes
+- *capture*: Allow multiple capture buffers (#1031) ([[https://github.com/nvim-orgmode/orgmode/commit/c058767][c058767]])
+- avoid E490 when using `move_subtree_up` and `move_subtree_down` (#1013) ([[https://github.com/nvim-orgmode/orgmode/commit/52dcef1][52dcef1]])
+- Escape special regex chars in buffer lookup (#1022) ([[https://github.com/nvim-orgmode/orgmode/commit/e16452b][e16452b]])
+- *treesitter*: Use io to read file on initial load ([[https://github.com/nvim-orgmode/orgmode/commit/ffa4d80][ffa4d80]])
+- *files*: Use full match when finding bufnr for filename ([[https://github.com/nvim-orgmode/orgmode/commit/94886d6][94886d6]])
+- *files*: Fallback to seconds check if file modification status ([[https://github.com/nvim-orgmode/orgmode/commit/25b3ee8][25b3ee8]])
+- todo state in notifications (#1005) ([[https://github.com/nvim-orgmode/orgmode/commit/f88734b][f88734b]])
+- *remote_edit*: Disable swapfile in temporary edit window ([[https://github.com/nvim-orgmode/orgmode/commit/b6d14eb][b6d14eb]])
+- *calendar*: Rerender time when switching to time picker ([[https://github.com/nvim-orgmode/orgmode/commit/57c3899][57c3899]])
+- =$= and =0= motions for calendar view (#987) ([[https://github.com/nvim-orgmode/orgmode/commit/12680a3][12680a3]])
+- *calendar*: Fallback to current date if selected date is not a valid number ([[https://github.com/nvim-orgmode/orgmode/commit/3c8319f][3c8319f]])
+- *promises*: Do not report keyboard interrupt as unhandled rejection ([[https://github.com/nvim-orgmode/orgmode/commit/38e61df][38e61df]])
+- *refile*: Remove leading slash when refiling to destination ([[https://github.com/nvim-orgmode/orgmode/commit/95d7047][95d7047]])
+- *capture*: Correctly trim common root with multiple roots defined ([[https://github.com/nvim-orgmode/orgmode/commit/f67d771][f67d771]])
+- disable spell-check in URLs (#980) ([[https://github.com/nvim-orgmode/orgmode/commit/8ff03c7][8ff03c7]])
+- prevent blink.cmp from removing directive prefix (#978) ([[https://github.com/nvim-orgmode/orgmode/commit/c720d9c][c720d9c]])
+- *treesitter*: Skip version check when parser is not managed by nvim-orgmode ([[https://github.com/nvim-orgmode/orgmode/commit/23c719a][23c719a]])
+
 ** [[https://github.com/nvim-orgmode/orgmode/compare/0.5.3...0.6.0][0.6.0]] (2025-05-11)
 *** Breaking changes
 - *links*: allow granular highlighting of links (#965) ([[https://github.com/nvim-orgmode/orgmode/commit/b371b9e][b371b9e]])
