@@ -9,6 +9,7 @@ local Hyperlink = require('orgmode.org.links.hyperlink')
 local Range = require('orgmode.files.elements.range')
 local Footnote = require('orgmode.objects.footnote')
 local Memoize = require('orgmode.utils.memoize')
+local Range = require('orgmode.files.elements.range')
 
 ---@class OrgFileMetadata
 ---@field mtime number File modified time in nanoseconds
@@ -790,6 +791,55 @@ function OrgFile:get_links()
   end
 
   return links
+end
+
+---Find plain diary sexp entries anywhere in the file (outside timestamps)
+---Syntax: [optional mark like &]%%(sexp) optional text
+---@return { expr: string, text: string, range: OrgRange }[]
+function OrgFile:get_diary_sexps()
+  self:parse(true)
+  local entries = {}
+  for i, line in ipairs(self.lines) do
+    -- Avoid timestamps like <%%(...)> or [%%(...)]
+    if line:find('%%(', 1, true) and not line:find('<%%(', 1, true) and not line:find('[%%(', 1, true) then
+      local search_from = 1
+      while true do
+        local start_idx = line:find('%%(', search_from, true)
+        if not start_idx then
+          break
+        end
+        local expr_start = start_idx + 3 -- after "%%("
+        local depth = 1
+        local j = expr_start
+        local close_idx = nil
+        while j <= #line do
+          local ch = line:sub(j, j)
+          if ch == '(' then
+            depth = depth + 1
+          elseif ch == ')' then
+            depth = depth - 1
+            if depth == 0 then
+              close_idx = j
+              break
+            end
+          end
+          j = j + 1
+        end
+        if not close_idx then
+          break
+        end
+        local expr = line:sub(expr_start, close_idx - 1)
+        local after_text = vim.trim(line:sub(close_idx + 1))
+        table.insert(entries, {
+          expr = expr,
+          text = after_text,
+          range = Range.from_line(i),
+        })
+        search_from = close_idx + 1
+      end
+    end
+  end
+  return entries
 end
 
 memoize('get_footnote_references')
