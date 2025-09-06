@@ -1,5 +1,12 @@
 #+OPTIONS: H:9 ^:nil
 * Changelog
+** [[https://github.com/nvim-orgmode/orgmode/compare/0.7.0...0.7.1][0.7.1]] (2025-09-06)
+*** Breaking changes
+- *version*: Drop support for Neovim < 0.11.0 ([[https://github.com/nvim-orgmode/orgmode/commit/7987478][7987478]])
+
+*** Bug fixes
+- *windows*: do not escape slashes in filename ([[https://github.com/nvim-orgmode/orgmode/commit/780c9e4][780c9e4]])
+
 ** [[https://github.com/nvim-orgmode/orgmode/compare/0.6.0...0.7.0][0.7.0]] (2025-09-05)
 *** Breaking changes
 - *treesitter*: Use async parsing for custom highlighter (#1029) ([[https://github.com/nvim-orgmode/orgmode/commit/0ab72ad][0ab72ad]])
