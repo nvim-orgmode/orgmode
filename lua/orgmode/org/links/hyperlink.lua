@@ -20,39 +20,27 @@ function OrgHyperlink:new(str, range)
   return this
 end
 
----Get hyperlink under current cursor position by parsing the line
+---Get hyperlink under current cursor position by parsing extmarks
 ---@return OrgHyperlink | nil
-function OrgHyperlink.from_current_line_position()
-  local pos = vim.fn.getpos('.')
-  local line = vim.api.nvim_get_current_line()
-  local start_pos = 0
-  local end_pos = 0
-  for i = pos[3], 1, -1 do
-    if line:sub(i, i) == '[' and line:sub(i - 1, i - 1) == '[' then
-      start_pos = i - 1
-      break
-    end
-  end
-  for i = pos[3], #line do
-    if line:sub(i, i) == ']' and line:sub(i + 1, i + 1) == ']' then
-      end_pos = i + 1
-      break
-    end
-  end
+function OrgHyperlink.from_extmarks_at_cursor()
+  local bufnr = vim.api.nvim_get_current_buf()
+  local inspect_pos = vim.inspect_pos(bufnr, nil, nil, {
+    extmarks = true,
+  })
 
-  if start_pos == 0 or end_pos == 0 then
-    return nil
+  for _, extmark in ipairs(inspect_pos.extmarks) do
+    if extmark.opts and extmark.opts.hl_group == '@org.hyperlink' then
+      return OrgHyperlink:new(
+        vim.api.nvim_buf_get_text(bufnr, extmark.row, extmark.col + 2, extmark.row, extmark.end_col - 2, {})[1],
+        Range:new({
+          start_line = extmark.row + 1,
+          start_col = extmark.col + 1,
+          end_line = extmark.row + 1,
+          end_col = extmark.end_col,
+        })
+      )
+    end
   end
-  local str = line:sub(start_pos + 2, end_pos - 2)
-  return OrgHyperlink:new(
-    str,
-    Range:new({
-      start_line = pos[2],
-      start_col = start_pos,
-      end_line = pos[2],
-      end_col = end_pos,
-    })
-  )
 end
 
 ---@param node TSNode

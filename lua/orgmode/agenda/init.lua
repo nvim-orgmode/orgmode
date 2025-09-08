@@ -623,7 +623,7 @@ function Agenda:get_headline_at_cursor()
 end
 
 function Agenda:open_at_point()
-  local link = OrgHyperlink.from_current_line_position()
+  local link = OrgHyperlink.from_extmarks_at_cursor()
 
   if link then
     return self.links:follow(link.url:to_string())
