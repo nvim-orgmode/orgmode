@@ -65,16 +65,17 @@ function Org:init()
   self.capture = require('orgmode.capture'):new({
     files = self.files,
   })
+  self.completion = require('orgmode.org.autocompletion'):new({ files = self.files, links = self.links })
   self.org_mappings = require('orgmode.org.mappings'):new({
     capture = self.capture,
     agenda = self.agenda,
     files = self.files,
     links = self.links,
+    completion = self.completion,
   })
   self.clock = require('orgmode.clock'):new({
     files = self.files,
   })
-  self.completion = require('orgmode.org.autocompletion'):new({ files = self.files, links = self.links })
   self.statusline_debounced = require('orgmode.utils').debounce('statusline', function()
     return self.clock:get_statusline()
   end, 300)
