@@ -1,5 +1,3 @@
-local validator = require('orgmode.utils.validator')
-
 ---@class OrgMapEntry
 ---@field provided_opts table
 ---@field handler string
@@ -52,11 +50,11 @@ end
 ---@param opts? table<string, any>
 function MapEntry:new(handler, opts)
   opts = opts or {}
-  validator.validate('handler', handler, { 'string', 'function' })
-  validator.validate('modes', opts.modes, 'table', true)
-  validator.validate('desc', opts.desc, 'string', true)
-  validator.validate('help_desc', opts.help_desc, 'string', true)
-  validator.validate('type', opts.type, 'string', true)
+  vim.validate('handler', handler, { 'string', 'function' })
+  vim.validate('modes', opts.modes, 'table', true)
+  vim.validate('desc', opts.desc, 'string', true)
+  vim.validate('help_desc', opts.help_desc, 'string', true)
+  vim.validate('type', opts.type, 'string', true)
 
   local data = {}
   data.provided_opts = opts

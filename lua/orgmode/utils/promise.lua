@@ -1,4 +1,3 @@
-local validator = require('orgmode.utils.validator')
 ---@diagnostic disable: undefined-field
 -- Taken from https://github.com/notomo/promise.nvim
 
@@ -46,8 +45,8 @@ local new_empty_userdata = function()
 end
 
 local new_pending = function(on_fullfilled, on_rejected)
-  validator.validate('on_fullfilled', on_fullfilled, 'function', true)
-  validator.validate('on_rejected', on_rejected, 'function', true)
+  vim.validate('on_fullfilled', on_fullfilled, 'function', true)
+  vim.validate('on_rejected', on_rejected, 'function', true)
   local tbl = {
     _status = PromiseStatus.Pending,
     _queued = {},
@@ -84,7 +83,7 @@ end
 --- @param executor fun(resolve:fun(...:any),reject:fun(...:any))
 --- @return OrgPromise
 function Promise.new(executor)
-  validator.validate('executor', executor, 'function')
+  vim.validate('executor', executor, 'function')
 
   local self = new_pending()
 
@@ -224,8 +223,8 @@ end
 --- @param on_rejected (fun(...:any):any)?: A callback on rejected.
 --- @return OrgPromise
 function Promise.next(self, on_fullfilled, on_rejected)
-  validator.validate('on_fullfilled', on_fullfilled, 'function', true)
-  validator.validate('on_rejected', on_rejected, 'function', true)
+  vim.validate('on_fullfilled', on_fullfilled, 'function', true)
+  vim.validate('on_rejected', on_rejected, 'function', true)
   local promise = new_pending(on_fullfilled, on_rejected)
   table.insert(self._queued, promise)
   vim.schedule(function()
@@ -250,7 +249,7 @@ end
 --- @param on_finally fun()
 --- @return OrgPromise
 function Promise.finally(self, on_finally)
-  validator.validate('on_finally', on_finally, 'function', true)
+  vim.validate('on_finally', on_finally, 'function', true)
   return self
     :next(function(...)
       on_finally()
@@ -310,7 +309,7 @@ end
 --- @param list any[]: promise or non-promise values
 --- @return OrgPromise
 function Promise.all(list)
-  validator.validate('list', list, 'table')
+  vim.validate('list', list, 'table')
   return Promise.new(function(resolve, reject)
     local remain = #list
     if remain == 0 then
@@ -341,9 +340,9 @@ end
 --- @param concurrency? number: limit number of concurrent items processing
 --- @return OrgPromise
 function Promise.map(callback, list, concurrency)
-  validator.validate('list', list, 'table')
-  validator.validate('callback', callback, 'function')
-  validator.validate('concurrency', concurrency, 'number', true)
+  vim.validate('list', list, 'table')
+  vim.validate('callback', callback, 'function')
+  vim.validate('concurrency', concurrency, 'number', true)
 
   local results = {}
   local processing = 0
@@ -392,7 +391,7 @@ end
 --- @param list any[]: promise or non-promise values
 --- @return OrgPromise
 function Promise.race(list)
-  validator.validate('list', list, 'table')
+  vim.validate('list', list, 'table')
   return Promise.new(function(resolve, reject)
     for _, e in ipairs(list) do
       Promise.resolve(e)
@@ -411,7 +410,7 @@ end
 --- @param list any[]: promise or non-promise values
 --- @return OrgPromise
 function Promise.any(list)
-  validator.validate('list', list, 'table')
+  vim.validate('list', list, 'table')
   return Promise.new(function(resolve, reject)
     local remain = #list
     if remain == 0 then
@@ -441,7 +440,7 @@ end
 --- @param list any[]: promise or non-promise values
 --- @return OrgPromise
 function Promise.all_settled(list)
-  validator.validate('list', list, 'table')
+  vim.validate('list', list, 'table')
   return Promise.new(function(resolve)
     local remain = #list
     if remain == 0 then

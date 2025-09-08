@@ -3,6 +3,7 @@
 ---@field links OrgLinks
 ---@field private sources OrgCompletionSource[]
 ---@field private sources_by_name table<string, OrgCompletionSource>
+---@field private fuzzy_match? boolean does completeopt has fuzzy option
 ---@field menu string
 local OrgCompletion = {
   menu = '[Org]',
@@ -16,6 +17,7 @@ function OrgCompletion:new(opts)
     links = opts.links,
     sources = {},
     sources_by_name = {},
+    fuzzy_match = vim.tbl_contains(vim.opt_local.completeopt:get(), 'fuzzy'),
   }, OrgCompletion)
   this:setup_builtin_sources()
   this:register_frameworks()
@@ -46,16 +48,7 @@ function OrgCompletion:complete(context)
   local results = {}
   context.base = context.base or ''
   if not context.matcher then
-    context.matcher = function(value, pattern)
-      pattern = pattern or ''
-      if pattern == '' then
-        return true
-      end
-      if context.fuzzy then
-        return #vim.fn.matchfuzzy({ value }, pattern) > 0
-      end
-      return value:find('^' .. vim.pesc(pattern)) ~= nil
-    end
+    context.matcher = self:_build_matcher(context)
   end
   for _, source in ipairs(self.sources) do
     if source:get_start(context) then
@@ -103,10 +96,24 @@ function OrgCompletion:omnifunc(findstart, base)
 
   self._context = self._context or { line = self:get_line() }
   self._context.base = base
-  if vim.tbl_contains(vim.opt_local.completeopt:get(), 'fuzzy') then
-    self._context.fuzzy = true
-  end
+  self._context.fuzzy = self.fuzzy_match
   return self:complete(self._context)
+end
+
+---@private
+---@param context OrgCompletionContext
+---@return fun(value: string, pattern: string):boolean
+function OrgCompletion:_build_matcher(context)
+  return function(value, pattern)
+    pattern = pattern or ''
+    if pattern == '' then
+      return true
+    end
+    if context.fuzzy then
+      return #vim.fn.matchfuzzy({ value }, pattern) > 0
+    end
+    return value:find('^' .. vim.pesc(pattern)) ~= nil
+  end
 end
 
 function OrgCompletion:get_line()
@@ -121,6 +128,18 @@ end
 
 function OrgCompletion:register_frameworks()
   require('orgmode.org.autocompletion.cmp')
+end
+
+---@param arg_lead string
+---@return string[]
+function OrgCompletion:complete_links_from_input(arg_lead)
+  local context = {
+    base = arg_lead,
+    fuzzy = self.fuzzy_match,
+  }
+  context.matcher = self:_build_matcher(context)
+
+  return self.links:autocomplete(context)
 end
 
 return OrgCompletion

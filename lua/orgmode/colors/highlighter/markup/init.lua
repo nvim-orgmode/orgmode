@@ -30,8 +30,9 @@ end
 ---@param bufnr number
 ---@param line number
 ---@param tree TSTree
-function OrgMarkup:on_line(bufnr, line, tree)
-  local highlights = self:_get_highlights(bufnr, line, tree)
+---@param use_cache? boolean
+function OrgMarkup:on_line(bufnr, line, tree, use_cache)
+  local highlights = self:_get_highlights(bufnr, line, tree, use_cache)
 
   for type, highlight in pairs(highlights) do
     self.parsers[type]:highlight(highlight, bufnr)
@@ -41,11 +42,16 @@ end
 ---@param bufnr number
 ---@param line number
 ---@param tree TSTree
+---@param use_cache? boolean
 ---@return { emphasis: OrgMarkupHighlight[], link: OrgMarkupHighlight[], latex: OrgMarkupHighlight[], date: OrgMarkupHighlight[] }
-function OrgMarkup:_get_highlights(bufnr, line, tree)
+function OrgMarkup:_get_highlights(bufnr, line, tree, use_cache)
   local line_content = vim.api.nvim_buf_get_lines(bufnr, line, line + 1, false)[1]
 
-  if self.cache[bufnr] and self.cache[bufnr][line] and self.cache[bufnr][line].line_content == line_content then
+  if
+    self.cache[bufnr]
+    and self.cache[bufnr][line]
+    and (use_cache or self.cache[bufnr][line].line_content == line_content)
+  then
     return self.cache[bufnr][line].highlights
   end
 
@@ -168,16 +174,102 @@ function OrgMarkup:get_prepared_headline_highlights(headline)
   local result = {}
 
   for type, highlight in pairs(highlights) do
-    vim.list_extend(
-      result,
-      self.parsers[type]:prepare_highlights(highlight, function(start_col, end_col)
-        local text = headline.file:get_node_text(headline:node())
-        return text:sub(start_col, end_col)
-      end)
-    )
+    vim.list_extend(result, self.parsers[type]:prepare_highlights(highlight))
   end
 
+  vim.list_extend(result, self:_prepare_ts_highlights(headline))
+
   return result
+end
+
+---@private
+---@param headline OrgHeadline
+---@return OrgMarkupPreparedHighlight[]
+function OrgMarkup:_prepare_ts_highlights(headline)
+  local headline_item_node = headline:node():field('item')[1]
+  if not headline_item_node then
+    return {}
+  end
+  local result = {}
+  for node in headline_item_node:iter_children() do
+    if node:type() == 'link' or node:type() == 'link_desc' then
+      self:_prepare_link_higlight(headline, node, result)
+    end
+    if node:type() == 'timestamp' then
+      self:_prepare_date_highlight(node, result)
+    end
+  end
+  return result
+end
+
+---@param headline OrgHeadline
+---@param node TSNode
+---@param result OrgMarkupPreparedHighlight[]
+function OrgMarkup:_prepare_link_higlight(headline, node, result)
+  local url = node:field('url')[1]
+  local desc = node:field('desc')[1]
+  local url_target = nil
+
+  if desc then
+    local sld, scd, _, ecd = desc:range()
+    table.insert(result, {
+      start_line = sld,
+      start_col = scd,
+      end_col = ecd,
+      hl_group = '@org.hyperlink.desc',
+    })
+    table.insert(result, {
+      start_line = sld,
+      start_col = scd - 2,
+      end_col = scd,
+      conceal = '',
+    })
+  end
+
+  if url then
+    local slu, scu, _, ecu = url:range()
+    table.insert(result, {
+      start_line = slu,
+      start_col = scu,
+      end_col = ecu,
+      hl_group = '@org.hyperlink.url',
+      spell = false,
+      conceal = desc and '' or nil,
+    })
+    url_target = headline.file:get_node_text(url)
+  end
+  local sl, sc, _, ec = node:range()
+  table.insert(result, {
+    start_line = sl,
+    start_col = sc,
+    end_col = ec,
+    hl_group = '@org.hyperlink',
+    url = url_target,
+  })
+  table.insert(result, {
+    start_line = sl,
+    start_col = sc,
+    end_col = sc + 2,
+    conceal = '',
+  })
+  table.insert(result, {
+    start_line = sl,
+    start_col = ec - 2,
+    end_col = ec,
+    conceal = '',
+  })
+end
+
+---@param node TSNode
+---@param result OrgMarkupPreparedHighlight[]
+function OrgMarkup:_prepare_date_highlight(node, result)
+  local sl, sc, _, ec = node:range()
+  table.insert(result, {
+    start_line = sl,
+    start_col = sc,
+    end_col = ec,
+    hl_group = node:child(0):type() == '<' and '@org.timestamp.active' or '@org.timestamp.inactive',
+  })
 end
 
 function OrgMarkup:on_detach(bufnr)

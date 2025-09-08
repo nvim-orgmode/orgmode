@@ -1,7 +1,6 @@
 local TemplateProperties = require('orgmode.capture.template.template_properties')
 local Date = require('orgmode.objects.date')
 local utils = require('orgmode.utils')
-local validator = require('orgmode.utils.validator')
 local Calendar = require('orgmode.objects.calendar')
 local Promise = require('orgmode.utils.promise')
 local Input = require('orgmode.ui.input')
@@ -99,15 +98,15 @@ local Template = {}
 function Template:new(opts)
   opts = opts or {}
 
-  validator.validate('description', opts.description, 'string', true)
-  validator.validate('template', opts.template, { 'string', 'table' }, true)
-  validator.validate('target', opts.target, 'string', true)
-  validator.validate('regexp', opts.regexp, 'string', true)
-  validator.validate('headline', opts.headline, 'string', true)
-  validator.validate('properties', opts.properties, 'table', true)
-  validator.validate('subtemplates', opts.subtemplates, 'table', true)
-  validator.validate('datetree', opts.datetree, { 'boolean', 'table' }, true)
-  validator.validate('whole_file', opts.whole_file, 'boolean', true)
+  vim.validate('description', opts.description, 'string', true)
+  vim.validate('template', opts.template, { 'string', 'table' }, true)
+  vim.validate('target', opts.target, 'string', true)
+  vim.validate('regexp', opts.regexp, 'string', true)
+  vim.validate('headline', opts.headline, 'string', true)
+  vim.validate('properties', opts.properties, 'table', true)
+  vim.validate('subtemplates', opts.subtemplates, 'table', true)
+  vim.validate('datetree', opts.datetree, { 'boolean', 'table' }, true)
+  vim.validate('whole_file', opts.whole_file, 'boolean', true)
 
   local this = {}
   this.description = opts.description or ''

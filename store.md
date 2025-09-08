@@ -19,7 +19,7 @@ Orgmode clone written in Lua for Neovim
 
 ### Requirements
 
-- Neovim 0.10.3 or later
+- Neovim 0.11.0 or later
 
 ### Installation
 
