@@ -20,6 +20,29 @@ function OrgHyperlink:new(str, range)
   return this
 end
 
+---Get hyperlink under current cursor position by parsing extmarks
+---@return OrgHyperlink | nil
+function OrgHyperlink.from_extmarks_at_cursor()
+  local bufnr = vim.api.nvim_get_current_buf()
+  local inspect_pos = vim.inspect_pos(bufnr, nil, nil, {
+    extmarks = true,
+  })
+
+  for _, extmark in ipairs(inspect_pos.extmarks) do
+    if extmark.opts and extmark.opts.hl_group == '@org.hyperlink' then
+      return OrgHyperlink:new(
+        vim.api.nvim_buf_get_text(bufnr, extmark.row, extmark.col + 2, extmark.row, extmark.end_col - 2, {})[1],
+        Range:new({
+          start_line = extmark.row + 1,
+          start_col = extmark.col + 1,
+          end_line = extmark.row + 1,
+          end_col = extmark.end_col,
+        })
+      )
+    end
+  end
+end
+
 ---@param node TSNode
 ---@param source number | string
 ---@return OrgHyperlink
@@ -33,6 +56,7 @@ function OrgHyperlink.from_node(node, source)
   return this
 end
 
+---Get hyperlink under current cursor position by parsing the treesitter node
 ---@return OrgHyperlink | nil
 function OrgHyperlink.at_cursor()
   local link_node = ts_utils.closest_node(ts_utils.get_node(), { 'link', 'link_desc' })

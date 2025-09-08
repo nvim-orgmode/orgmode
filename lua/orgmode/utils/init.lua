@@ -625,7 +625,7 @@ end
 ---@param filename string The filename to search for
 ---@return number Buffer number or -1 if not found/loaded
 function utils.get_buffer_by_filename(filename)
-  return vim.fn.bufnr('^' .. vim.fn.escape(filename, '^$.*?/\\[]~') .. '$')
+  return vim.fn.bufnr('^' .. vim.fn.escape(filename, '^$*?[]') .. '$')
 end
 
 return utils

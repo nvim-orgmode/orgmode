@@ -16,13 +16,13 @@ local Babel = require('orgmode.babel')
 local Promise = require('orgmode.utils.promise')
 local Input = require('orgmode.ui.input')
 local Footnote = require('orgmode.objects.footnote')
-local Range = require('orgmode.files.elements.range')
 
 ---@class OrgMappings
 ---@field capture OrgCapture
 ---@field agenda OrgAgenda
 ---@field files OrgFiles
 ---@field links OrgLinks
+---@field completion OrgCompletion
 local OrgMappings = {}
 
 ---@param data table
@@ -33,6 +33,7 @@ function OrgMappings:new(data)
   opts.agenda = data.agenda
   opts.files = data.files
   opts.links = data.links
+  opts.completion = data.completion
   setmetatable(opts, self)
   self.__index = self
   return opts
@@ -781,7 +782,7 @@ end
 function OrgMappings:insert_link()
   local link = OrgHyperlink.at_cursor()
   return Input.open('Links: ', link and link.url:to_string() or '', function(arg_lead)
-    return self.links:autocomplete(arg_lead)
+    return self.completion:complete_links_from_input(arg_lead)
   end):next(function(link_location)
     if not link_location then
       return false

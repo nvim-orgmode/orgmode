@@ -117,6 +117,10 @@ return {
         help_desc = 'Open prompt that allows filtering by category, tags and title(vim regex)',
       },
     }),
+    org_agenda_open_at_point = m.action(
+      'agenda.open_at_point',
+      { opts = { desc = 'org open', help_desc = 'Open hyperlink under cursor' } }
+    ),
     org_agenda_refile = m.action('agenda.refile', {
       opts = {
         desc = 'org refile',

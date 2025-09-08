@@ -1,4 +1,3 @@
-local validator = require('orgmode.utils.validator')
 local config = require('orgmode.config')
 
 ---@class OrgMenuOption
@@ -40,14 +39,14 @@ end
 
 ---@param option OrgMenuOption
 function Menu:_validate_option(option)
-  validator.validate('label', option.label, 'string')
-  validator.validate('key', option.key, 'string')
-  validator.validate('action', option.action, 'function', true)
+  vim.validate('label', option.label, 'string')
+  vim.validate('key', option.key, 'string')
+  vim.validate('action', option.action, 'function', true)
 end
 
 ---@param items OrgMenuItem[]?
 function Menu:_validate_items(items)
-  validator.validate('items', items, 'table', true)
+  vim.validate('items', items, 'table', true)
   if not items then
     return
   end
@@ -65,17 +64,17 @@ end
 
 ---@param separator OrgMenuSeparator?
 function Menu:_validate_separator(separator)
-  validator.validate('separator', separator, 'table', true)
+  vim.validate('separator', separator, 'table', true)
   if separator then
-    validator.validate('icon', separator.icon, 'string', true)
-    validator.validate('length', separator.length, 'number', true)
+    vim.validate('icon', separator.icon, 'string', true)
+    vim.validate('length', separator.length, 'number', true)
   end
 end
 
 ---@param data OrgMenuOpts
 function Menu:_validate_data(data)
-  validator.validate('title', data.title, 'string')
-  validator.validate('prompt', data.prompt, 'string')
+  vim.validate('title', data.title, 'string')
+  vim.validate('prompt', data.prompt, 'string')
   self:_validate_items(data.items)
   self:_validate_separator(data.separator)
 end
