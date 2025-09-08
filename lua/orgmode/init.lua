@@ -61,6 +61,7 @@ function Org:init()
   self.agenda = require('orgmode.agenda'):new({
     files = self.files,
     highlighter = self.highlighter,
+    links = self.links,
   })
   self.capture = require('orgmode.capture'):new({
     files = self.files,

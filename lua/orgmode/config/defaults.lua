@@ -108,6 +108,7 @@ local DefaultConfig = {
       org_agenda_goto_date = 'J',
       org_agenda_redo = 'r',
       org_agenda_todo = 't',
+      org_agenda_open_at_point = '<prefix>o',
       org_agenda_clock_goto = '<prefix>xj',
       org_agenda_set_effort = '<prefix>xe',
       org_agenda_clock_in = 'I',

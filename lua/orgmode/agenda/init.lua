@@ -8,6 +8,7 @@ local Menu = require('orgmode.ui.menu')
 local Promise = require('orgmode.utils.promise')
 local AgendaTypes = require('orgmode.agenda.types')
 local Input = require('orgmode.ui.input')
+local OrgHyperlink = require('orgmode.org.links.hyperlink')
 
 ---@class OrgAgenda
 ---@field highlights table[]
@@ -15,9 +16,10 @@ local Input = require('orgmode.ui.input')
 ---@field filters OrgAgendaFilter
 ---@field files OrgFiles
 ---@field highlighter OrgHighlighter
+---@field links OrgLinks
 local Agenda = {}
 
----@param opts? { highlighter: OrgHighlighter, files: OrgFiles }
+---@param opts? { highlighter: OrgHighlighter, files: OrgFiles, links: OrgLinks }
 ---@return OrgAgenda
 function Agenda:new(opts)
   opts = opts or {}
@@ -28,6 +30,7 @@ function Agenda:new(opts)
     highlights = {},
     files = opts.files,
     highlighter = opts.highlighter,
+    links = opts.links,
   }
   setmetatable(data, self)
   self.__index = self
@@ -617,6 +620,16 @@ function Agenda:get_headline_at_cursor()
       return agenda_line.headline
     end
   end
+end
+
+function Agenda:open_at_point()
+  local link = OrgHyperlink.from_current_line_position()
+
+  if link then
+    return self.links:follow(link.url:to_string())
+  end
+
+  utils.echo_error('No link found under cursor')
 end
 
 function Agenda:quit()

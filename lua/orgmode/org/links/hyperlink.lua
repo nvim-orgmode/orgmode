@@ -20,6 +20,41 @@ function OrgHyperlink:new(str, range)
   return this
 end
 
+---Get hyperlink under current cursor position by parsing the line
+---@return OrgHyperlink | nil
+function OrgHyperlink.from_current_line_position()
+  local pos = vim.fn.getpos('.')
+  local line = vim.api.nvim_get_current_line()
+  local start_pos = 0
+  local end_pos = 0
+  for i = pos[3], 1, -1 do
+    if line:sub(i, i) == '[' and line:sub(i - 1, i - 1) == '[' then
+      start_pos = i - 1
+      break
+    end
+  end
+  for i = pos[3], #line do
+    if line:sub(i, i) == ']' and line:sub(i + 1, i + 1) == ']' then
+      end_pos = i + 1
+      break
+    end
+  end
+
+  if start_pos == 0 or end_pos == 0 then
+    return nil
+  end
+  local str = line:sub(start_pos + 2, end_pos - 2)
+  return OrgHyperlink:new(
+    str,
+    Range:new({
+      start_line = pos[2],
+      start_col = start_pos,
+      end_line = pos[2],
+      end_col = end_pos,
+    })
+  )
+end
+
 ---@param node TSNode
 ---@param source number | string
 ---@return OrgHyperlink
@@ -33,6 +68,7 @@ function OrgHyperlink.from_node(node, source)
   return this
 end
 
+---Get hyperlink under current cursor position by parsing the treesitter node
 ---@return OrgHyperlink | nil
 function OrgHyperlink.at_cursor()
   local link_node = ts_utils.closest_node(ts_utils.get_node(), { 'link', 'link_desc' })

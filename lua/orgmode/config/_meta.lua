@@ -83,6 +83,7 @@
 ---@field org_agenda_filter? OrgMappingValue Default: '/'
 ---@field org_agenda_refile? OrgMappingValue Default: '<prefix>r'
 ---@field org_agenda_add_note? OrgMappingValue Default: '<prefix>na'
+---@field org_agenda_open_at_point? OrgMappingValue Default: '<prefix>o'
 ---@field org_agenda_show_help? OrgMappingValue Default: 'g?'
 ---
 ---@class OrgMappingsCapture
