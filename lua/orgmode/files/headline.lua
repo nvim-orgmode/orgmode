@@ -801,6 +801,66 @@ function Headline:get_non_plan_dates()
   return all_dates
 end
 
+---Parse diary sexp occurrences (<%%(sexp)> or [%%(sexp)]) in headline title and body
+---@return { expr: string, range: OrgRange }[]
+function Headline:get_diary_sexps()
+  local results = {}
+  local source = self.file:get_source()
+  local function extract_from_node(node)
+    if not node then
+      return
+    end
+    local text = self.file:get_node_text(node) or ''
+    local start_row, start_col = node:start()
+    local idx = 1
+    while true do
+      local s, opener = text:find('([<%[]?)%%%(', idx)
+      if not s then
+        break
+      end
+      local open_char = opener ~= '' and opener:sub(1, 1) or nil
+      local expr_start = s + (open_char and 3 or 2)
+      local depth = 1
+      local j = expr_start
+      local close_idx
+      while j <= #text do
+        local ch = text:sub(j, j)
+        if ch == '(' then
+          depth = depth + 1
+        elseif ch == ')' then
+          depth = depth - 1
+          if depth == 0 then
+            close_idx = j
+            break
+          end
+        end
+        j = j + 1
+      end
+      if not close_idx then
+        break
+      end
+      local content = text:sub(expr_start, close_idx - 1)
+      local e = close_idx
+      local close_char = open_char == '<' and '>' or (open_char == '[' and ']' or nil)
+      local range = Range:new({
+        start_line = start_row + 1,
+        end_line = start_row + 1,
+        start_col = start_col + s - 1,
+        end_col = start_col + e - 1,
+      })
+      table.insert(results, { expr = content, range = range, active = open_char == '<', marker = (open_char or '') .. '%%(' .. content .. ')' .. (close_char or '') })
+      idx = e + 1
+    end
+  end
+  local headline_node = self:node()
+  local section = headline_node:parent()
+  extract_from_node(self:_get_child_node('item'))
+  if section then
+    extract_from_node(section:field('body')[1])
+  end
+  return results
+end
+
 ---@param sorted? boolean
 ---@return string, TSNode | nil
 function Headline:tags_to_string(sorted)
