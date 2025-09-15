@@ -38,7 +38,7 @@ describe('Agenda item', function()
       assert.is.same(hl_map.TODO, agenda_item:get_todo_hlgroup())
       assert.is.Nil(agenda_item:get_hlgroup())
       assert.is.Nil(agenda_item:get_priority_hlgroup())
-      assert.are.same(today:format_time() .. '...... ', agenda_item.label)
+      assert.are.same(today:format_time() .. ' ┄┄┄┄┄ ', agenda_item.label)
 
       headline = generate(string.format('Some content <%s>', today:subtract({ day = 2 }):to_string()))
       agenda_item = AgendaItem:new(headline:get_all_dates()[1], headline, today)
@@ -60,7 +60,7 @@ describe('Agenda item', function()
       assert.is.same(hl_map.TODO, agenda_item:get_todo_hlgroup())
       assert.is.same(hl_map.deadline, agenda_item:get_hlgroup())
       assert.is.Nil(agenda_item:get_priority_hlgroup())
-      assert.are.same(today:format_time() .. '...... Deadline:', agenda_item.label)
+      assert.are.same(today:format_time() .. ' ┄┄┄┄┄ Deadline:', agenda_item.label)
 
       -- past
       headline = generate(string.format('DEADLINE: <%s>', today:subtract({ day = 7 }):to_string()))
@@ -133,7 +133,7 @@ describe('Agenda item', function()
       assert.is.same(hl_map.TODO, agenda_item:get_todo_hlgroup())
       assert.is.same(hl_map.ok, agenda_item:get_hlgroup())
       assert.is.Nil(agenda_item:get_priority_hlgroup())
-      assert.are.same(today:format_time() .. '...... Scheduled:', agenda_item.label)
+      assert.are.same(today:format_time() .. ' ┄┄┄┄┄ Scheduled:', agenda_item.label)
 
       -- Past undone
       headline = generate(string.format('SCHEDULED: <%s>', today:subtract({ day = 7 }):to_string()))
@@ -190,7 +190,7 @@ describe('Agenda item', function()
       assert.is.same(hl_map.DONE, agenda_item:get_todo_hlgroup())
       assert.is.same(hl_map.ok, agenda_item:get_hlgroup())
       assert.is.Nil(agenda_item:get_priority_hlgroup())
-      assert.are.same(today:format_time() .. '...... Scheduled:', agenda_item.label)
+      assert.are.same(today:format_time() .. ' ┄┄┄┄┄ Scheduled:', agenda_item.label)
 
       -- Deadline done shown by default
       local headline_deadline = generate(string.format('DEADLINE: <%s>', today:to_string()), 'DONE')
@@ -199,7 +199,7 @@ describe('Agenda item', function()
       assert.is.same(hl_map.DONE, agenda_item:get_todo_hlgroup())
       assert.is.same(hl_map.ok, agenda_item:get_hlgroup())
       assert.is.Nil(agenda_item:get_priority_hlgroup())
-      assert.are.same(today:format_time() .. '...... Deadline:', agenda_item_deadline.label)
+      assert.are.same(today:format_time() .. ' ┄┄┄┄┄ Deadline:', agenda_item_deadline.label)
 
       config:extend({ org_agenda_skip_scheduled_if_done = true })
 
@@ -213,7 +213,7 @@ describe('Agenda item', function()
       assert.is.same(hl_map.DONE, agenda_item:get_todo_hlgroup())
       assert.is.same(hl_map.ok, agenda_item:get_hlgroup())
       assert.is.Nil(agenda_item:get_priority_hlgroup())
-      assert.are.same(today:format_time() .. '...... Deadline:', agenda_item_deadline.label)
+      assert.are.same(today:format_time() .. ' ┄┄┄┄┄ Deadline:', agenda_item_deadline.label)
 
       config:extend({ org_agenda_skip_scheduled_if_done = false })
     end)
@@ -227,7 +227,7 @@ describe('Agenda item', function()
       assert.is.same(hl_map.DONE, agenda_item:get_todo_hlgroup())
       assert.is.same(hl_map.ok, agenda_item:get_hlgroup())
       assert.is.Nil(agenda_item:get_priority_hlgroup())
-      assert.are.same(today:format_time() .. '...... Scheduled:', agenda_item.label)
+      assert.are.same(today:format_time() .. ' ┄┄┄┄┄ Scheduled:', agenda_item.label)
 
       -- Deadline done shown by default
       local headline_deadline = generate(string.format('DEADLINE: <%s>', today:to_string()), 'DONE')
@@ -236,7 +236,7 @@ describe('Agenda item', function()
       assert.is.same(hl_map.DONE, agenda_item:get_todo_hlgroup())
       assert.is.same(hl_map.ok, agenda_item:get_hlgroup())
       assert.is.Nil(agenda_item:get_priority_hlgroup())
-      assert.are.same(today:format_time() .. '...... Deadline:', agenda_item_deadline.label)
+      assert.are.same(today:format_time() .. ' ┄┄┄┄┄ Deadline:', agenda_item_deadline.label)
 
       config:extend({ org_agenda_skip_deadline_if_done = true })
 
@@ -245,7 +245,7 @@ describe('Agenda item', function()
       assert.is.same(hl_map.DONE, agenda_item:get_todo_hlgroup())
       assert.is.same(hl_map.ok, agenda_item:get_hlgroup())
       assert.is.Nil(agenda_item:get_priority_hlgroup())
-      assert.are.same(today:format_time() .. '...... Scheduled:', agenda_item.label)
+      assert.are.same(today:format_time() .. ' ┄┄┄┄┄ Scheduled:', agenda_item.label)
 
       -- Deadline done hidden
       agenda_item_deadline = AgendaItem:new(headline_deadline:get_all_dates()[1], headline_deadline, today)
@@ -309,7 +309,7 @@ describe('Agenda item', function()
       assert.is.same(hl_map.TODO, agenda_item:get_todo_hlgroup())
       assert.is.Nil(agenda_item:get_hlgroup())
       assert.is.Nil(agenda_item:get_priority_hlgroup())
-      assert.are.same(future_day:format_time() .. '...... ', agenda_item.label)
+      assert.are.same(future_day:format_time() .. ' ┄┄┄┄┄ ', agenda_item.label)
 
       -- Invalid for any other day
       headline = generate(string.format('Some content <%s>', future_day:add({ day = 1 }):to_string()))
@@ -327,7 +327,7 @@ describe('Agenda item', function()
       assert.is.same(hl_map.TODO, agenda_item:get_todo_hlgroup())
       assert.is.same(hl_map.deadline, agenda_item:get_hlgroup())
       assert.is.Nil(agenda_item:get_priority_hlgroup())
-      assert.are.same(future_day:format_time() .. '...... Deadline:', agenda_item.label)
+      assert.are.same(future_day:format_time() .. ' ┄┄┄┄┄ Deadline:', agenda_item.label)
 
       -- Green highlight if it's done
       headline = generate(string.format('DEADLINE: <%s>', future_day:to_string()), 'DONE')
@@ -336,7 +336,7 @@ describe('Agenda item', function()
       assert.is.same(hl_map.DONE, agenda_item:get_todo_hlgroup())
       assert.is.same(hl_map.ok, agenda_item:get_hlgroup())
       assert.is.Nil(agenda_item:get_priority_hlgroup())
-      assert.are.same(future_day:format_time() .. '...... Deadline:', agenda_item.label)
+      assert.are.same(future_day:format_time() .. ' ┄┄┄┄┄ Deadline:', agenda_item.label)
 
       -- Invalid for any other day
       headline = generate(string.format('DEADLINE: <%s>', future_day:add({ day = 1 }):to_string()))
@@ -354,7 +354,7 @@ describe('Agenda item', function()
       assert.is.same(hl_map.TODO, agenda_item:get_todo_hlgroup())
       assert.is.same(hl_map.ok, agenda_item:get_hlgroup())
       assert.is.Nil(agenda_item:get_priority_hlgroup())
-      assert.are.same(future_day:format_time() .. '...... Scheduled:', agenda_item.label)
+      assert.are.same(future_day:format_time() .. ' ┄┄┄┄┄ Scheduled:', agenda_item.label)
 
       -- Valid for same day, shows as yellow if it's past
       local past_day = Date.now():subtract({ day = 3 })
@@ -364,7 +364,7 @@ describe('Agenda item', function()
       assert.is.same(hl_map.TODO, agenda_item:get_todo_hlgroup())
       assert.is.same(hl_map.warning, agenda_item:get_hlgroup())
       assert.is.Nil(agenda_item:get_priority_hlgroup())
-      assert.are.same(past_day:format_time() .. '...... Scheduled:', agenda_item.label)
+      assert.are.same(past_day:format_time() .. ' ┄┄┄┄┄ Scheduled:', agenda_item.label)
 
       -- Invalid for any other day
       headline = generate(string.format('SCHEDULED: <%s>', future_day:add({ day = 1 }):to_string()))
@@ -391,7 +391,7 @@ describe('Agenda item', function()
     local day_with_only_time = Date.now():set({ hour = 10, min = 0 })
     headline = generate(string.format('SCHEDULED: <%s>', day_with_only_time:to_string()))
     agenda_item = AgendaItem:new(headline:get_all_dates()[1], headline, day_with_only_time)
-    assert.are.same('10:00...... Scheduled:', agenda_item.label)
+    assert.are.same('10:00 ┄┄┄┄┄ Scheduled:', agenda_item.label)
   end)
 
   it('should properly read same day date ranges and time ranges', function()
@@ -433,7 +433,7 @@ describe('Agenda item', function()
     assert.is.same(hl_map.DONE, agenda_item:get_todo_hlgroup())
     assert.is.same(hl_map.ok, agenda_item:get_hlgroup())
     assert.is.Nil(agenda_item:get_priority_hlgroup())
-    assert.are.same(future_day:format_time() .. '...... Scheduled:', agenda_item.label)
+    assert.are.same(future_day:format_time() .. ' ┄┄┄┄┄ Scheduled:', agenda_item.label)
 
     -- Deadline done shown by default
     local headline_deadline = generate(string.format('DEADLINE: <%s>', future_day:to_string()), 'DONE')
@@ -442,7 +442,7 @@ describe('Agenda item', function()
     assert.is.same(hl_map.DONE, agenda_item:get_todo_hlgroup())
     assert.is.same(hl_map.ok, agenda_item:get_hlgroup())
     assert.is.Nil(agenda_item:get_priority_hlgroup())
-    assert.are.same(future_day:format_time() .. '...... Deadline:', agenda_item_deadline.label)
+    assert.are.same(future_day:format_time() .. ' ┄┄┄┄┄ Deadline:', agenda_item_deadline.label)
 
     config:extend({ org_agenda_skip_scheduled_if_done = true })
 
@@ -456,7 +456,7 @@ describe('Agenda item', function()
     assert.is.same(hl_map.DONE, agenda_item:get_todo_hlgroup())
     assert.is.same(hl_map.ok, agenda_item:get_hlgroup())
     assert.is.Nil(agenda_item:get_priority_hlgroup())
-    assert.are.same(future_day:format_time() .. '...... Deadline:', agenda_item_deadline.label)
+    assert.are.same(future_day:format_time() .. ' ┄┄┄┄┄ Deadline:', agenda_item_deadline.label)
 
     config:extend({ org_agenda_skip_scheduled_if_done = false })
   end)
@@ -470,7 +470,7 @@ describe('Agenda item', function()
     assert.is.same(hl_map.DONE, agenda_item:get_todo_hlgroup())
     assert.is.same(hl_map.ok, agenda_item:get_hlgroup())
     assert.is.Nil(agenda_item:get_priority_hlgroup())
-    assert.are.same(past_day:format_time() .. '...... Scheduled:', agenda_item.label)
+    assert.are.same(past_day:format_time() .. ' ┄┄┄┄┄ Scheduled:', agenda_item.label)
 
     -- Deadline done shown by default
     local headline_deadline = generate(string.format('DEADLINE: <%s>', past_day:to_string()), 'DONE')
@@ -479,7 +479,7 @@ describe('Agenda item', function()
     assert.is.same(hl_map.DONE, agenda_item:get_todo_hlgroup())
     assert.is.same(hl_map.ok, agenda_item:get_hlgroup())
     assert.is.Nil(agenda_item:get_priority_hlgroup())
-    assert.are.same(past_day:format_time() .. '...... Deadline:', agenda_item_deadline.label)
+    assert.are.same(past_day:format_time() .. ' ┄┄┄┄┄ Deadline:', agenda_item_deadline.label)
 
     config:extend({ org_agenda_skip_deadline_if_done = true })
 
@@ -488,7 +488,7 @@ describe('Agenda item', function()
     assert.is.same(hl_map.DONE, agenda_item:get_todo_hlgroup())
     assert.is.same(hl_map.ok, agenda_item:get_hlgroup())
     assert.is.Nil(agenda_item:get_priority_hlgroup())
-    assert.are.same(past_day:format_time() .. '...... Scheduled:', agenda_item.label)
+    assert.are.same(past_day:format_time() .. ' ┄┄┄┄┄ Scheduled:', agenda_item.label)
 
     -- Deadline done hidden
     agenda_item_deadline = AgendaItem:new(headline_deadline:get_all_dates()[1], headline_deadline, past_day)

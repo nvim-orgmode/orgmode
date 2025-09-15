@@ -17,7 +17,7 @@ local SortingStrategy = {}
 
 ---@class SortableEntry
 ---@field date OrgDate Available only in agenda view
----@field headline OrgHeadline
+---@field headline? OrgHeadline
 ---@field index number Index of the entry in the fetched list
 ---@field is_day_match? boolean Is this entry a match for the given day. Available only in agenda view
 
@@ -53,6 +53,9 @@ end
 ---@param a SortableEntry
 ---@param b SortableEntry
 function SortingStrategy.priority_down(a, b)
+  if not a.headline or not b.headline then
+    return
+  end
   if a.headline:get_priority_sort_value() ~= b.headline:get_priority_sort_value() then
     return a.headline:get_priority_sort_value() > b.headline:get_priority_sort_value()
   end
@@ -77,6 +80,9 @@ end
 ---@param a SortableEntry
 ---@param b SortableEntry
 function SortingStrategy.tag_up(a, b)
+  if not a.headline or not b.headline then
+    return
+  end
   local a_tags = a.headline:tags_to_string(true)
   local b_tags = b.headline:tags_to_string(true)
   if a_tags == '' and b_tags == '' then
@@ -106,6 +112,9 @@ end
 ---@param a SortableEntry
 ---@param b SortableEntry
 function SortingStrategy.todo_state_up(a, b)
+  if not a.headline or not b.headline then
+    return
+  end
   local _, _, _, a_index = a.headline:get_todo()
   local _, _, _, b_index = b.headline:get_todo()
   if a_index and b_index then
@@ -134,6 +143,9 @@ end
 ---@param a SortableEntry
 ---@param b SortableEntry
 function SortingStrategy.category_up(a, b)
+  if not a.headline or not b.headline then
+    return
+  end
   if a.headline.file:get_category() ~= b.headline.file:get_category() then
     return a.headline.file:get_category() < b.headline.file:get_category()
   end
@@ -151,6 +163,9 @@ end
 ---@param a SortableEntry
 ---@param b SortableEntry
 function SortingStrategy.category_keep(a, b)
+  if not a.headline or not b.headline then
+    return
+  end
   if a.headline.file.index ~= b.headline.file.index then
     return a.headline.file.index < b.headline.file.index
   end
@@ -179,6 +194,9 @@ end
 ---@param a SortableEntry
 ---@param b SortableEntry
 local fallback_sort = function(a, b)
+  if not a.headline or not b.headline then
+    return
+  end
   if a.headline.file.index ~= b.headline.file.index then
     return a.headline.file.index < b.headline.file.index
   end
