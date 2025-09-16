@@ -95,6 +95,12 @@ function M.define_agenda_colors()
       string.format('hi default %s guifg=%s ctermfg=%s', hlname, keyword_colors[type].gui, keyword_colors[type].cterm)
     )
   end
+  vim.cmd(
+    ('hi default @org.agenda.time_grid guifg=%s ctermfg=%s'):format(
+      keyword_colors.warning.gui,
+      keyword_colors.warning.cterm
+    )
+  )
 
   M.define_org_todo_keyword_colors()
 end
