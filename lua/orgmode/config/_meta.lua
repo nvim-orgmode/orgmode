@@ -22,10 +22,10 @@
 ---@field org_agenda_todo_ignore_deadlines? OrgAgendaTodoIgnoreDeadlinesTypes
 
 ---@class OrgAgendaTimeGridOpts
----@field type ('daily' | 'weekly' | 'today' | 'require-timed' | 'remove-match')[]
----@field times number[]
----@field time_separator string
----@field time_label string
+---@field type? ('daily' | 'weekly' | 'today' | 'require-timed' | 'remove-match')[]
+---@field times? number[]
+---@field time_separator? string
+---@field time_label? string
 
 ---@alias OrgAgendaCustomCommandType (OrgAgendaCustomCommandAgenda | OrgAgendaCustomCommandTags)
 
