@@ -45,6 +45,17 @@ local function format()
     return 1
   end
 
+  -- When closed folds are being formatted, fallback formatting can
+  -- happen with multiple lines instead of a single line due to some side effects.
+  -- When we encounter that we need to return 0 to avoid infinite loop.
+  -- This will prevent some of the lines of being formatted correctly,
+  -- but there's no way to exit the infinite loop otherwise.
+  for linenr = start_line, end_line do
+    if formatexpr_cache[linenr] and vim.fn.foldclosed(linenr) > -1 then
+      return 0
+    end
+  end
+
   for linenr = start_line, end_line do
     local line_formatted = format_line(linenr)
     if not line_formatted then
