@@ -6,6 +6,7 @@
 Orgmode supports various plugins to extend its functionality or make it more pretty and user friendly:
 
 - [[#extend-orgmode][Extend orgmode]]
+  - [[#org-super-agendanvim][org-super-agenda.nvim]]
   - [[#org-roamnvim][org-roam.nvim]]
   - [[#sniprun][sniprun]]
   - [[#telescope-orgmodenvim][telescope-orgmode.nvim]]
@@ -24,6 +25,13 @@ Orgmode supports various plugins to extend its functionality or make it more pre
 :PROPERTIES:
 :CUSTOM_ID: extend-orgmode
 :END:
+*** org-super-agenda.nvim
+:PROPERTIES:
+:CUSTOM_ID: org-super-agendanvim
+:END:
+Link: [[https://github.com/hamidi-dev/org-super-agenda.nvim][org-super-agenda.nvim]]
+
+This is the port of Emacs [[https://github.com/alphapapa/org-super-agenda][org-super-agenda]].
 *** org-roam.nvim
 :PROPERTIES:
 :CUSTOM_ID: org-roamnvim
