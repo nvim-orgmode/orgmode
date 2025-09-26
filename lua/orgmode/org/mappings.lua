@@ -352,7 +352,7 @@ function OrgMappings:todo_next_state()
 end
 
 function OrgMappings:todo_prev_state()
-  self:_todo_change_state('prev')
+  return self:_todo_change_state('prev')
 end
 
 function OrgMappings:toggle_heading()
@@ -415,96 +415,132 @@ function OrgMappings:_get_note(template, indent, title)
   end)
 end
 
-function OrgMappings:_todo_change_state(direction)
-  local headline = self.files:get_closest_headline()
-  local old_state = headline:get_todo()
-  local was_done = headline:is_done()
-  local changed = self:_change_todo_state(direction, true)
-
-  if not changed then
-    return
-  end
-
-  local item = self.files:get_closest_headline()
-  EventManager.dispatch(events.TodoChanged:new(item, old_state, was_done))
-
-  local is_done = item:is_done() and not was_done
-  local is_undone = not item:is_done() and was_done
-
-  -- State was changed in the same group (TODO NEXT | DONE)
-  -- For example: Changed from TODO to NEXT
-  if not is_done and not is_undone then
-    return item
-  end
-
-  local prompt_done_note = config.org_log_done == 'note'
-  local log_closed_time = config.org_log_done == 'time'
-  local indent = headline:get_indent()
-
-  local closing_note_text = ('%s- CLOSING NOTE %s \\\\'):format(indent, Date.now():to_wrapped_string(false))
-  local closed_title = 'Insert note for closed todo item'
-
-  local repeater_dates = item:get_repeater_dates()
-
-  -- No dates with a repeater. Add closed date and note if enabled.
-  if #repeater_dates == 0 then
-    local set_closed_date = prompt_done_note or log_closed_time
-    if set_closed_date then
-      if is_done then
-        headline:set_closed_date()
-      elseif is_undone then
-        headline:remove_closed_date()
-      end
-      item = self.files:get_closest_headline()
-    end
-
-    if is_undone or not prompt_done_note then
-      return item
-    end
-
-    return self:_get_note(closing_note_text, indent, closed_title):next(function(closing_note)
-      return item:add_note(closing_note)
-    end)
-  end
-
-  for _, date in ipairs(repeater_dates) do
-    self:_replace_date(date:apply_repeater())
-  end
-  local new_todo = item:get_todo()
-  self:_change_todo_state('reset')
-
-  local prompt_repeat_note = config.org_log_repeat == 'note'
+---@private
+---@param headline OrgHeadline
+---@param old_state string
+---@param new_state string
+function OrgMappings:_handle_repeating_task(headline, old_state, new_state)
+  local now = Date.now()
   local log_repeat_enabled = config.org_log_repeat ~= false
+  local indent = headline:get_indent()
   local repeat_note_template = ('%s- State %-12s from %-12s [%s]'):format(
     indent,
-    [["]] .. new_todo .. [["]],
+    [["]] .. new_state .. [["]],
     [["]] .. (old_state or '') .. [["]],
     Date.now():to_string()
   )
-  local repeat_note_title = ('Insert note for state change from "%s" to "%s"'):format(old_state or '', new_todo)
+  local repeat_note_title = ('Insert note for state change from "%s" to "%s"'):format(old_state or '', new_state)
+  local repeater_dates = headline:get_repeater_dates()
+
+  for _, date in ipairs(repeater_dates) do
+    if date:is_deadline() then
+      headline:set_deadline_date(date:apply_repeater())
+    elseif date:is_scheduled() then
+      headline:set_scheduled_date(date:apply_repeater())
+    end
+  end
 
   if log_repeat_enabled then
-    item:set_property('LAST_REPEAT', Date.now():to_wrapped_string(false))
-  end
+    headline:set_property('LAST_REPEAT', '[' .. now:to_string() .. ']')
 
-  if not prompt_repeat_note and not prompt_done_note then
-    -- If user is not prompted for a note, use a default repeat note
-    if log_repeat_enabled then
-      return item:add_note({ repeat_note_template })
+    local repeat_note_template = ('- State %-12s from %-12s [%s]'):format(
+      [["]] .. new_state .. [["]],
+      [["]] .. old_state .. [["]],
+      now:to_string()
+    )
+
+    if config.org_log_into_drawer then
+      headline:add_to_drawer(config.org_log_into_drawer, repeat_note_template)
+    else
+      local indent = headline:get_indent()
+      headline:add_note({ indent .. repeat_note_template })
     end
-    return item
+  end
+end
+
+function OrgMappings:_todo_change_state(direction, use_fast_access)
+  local headline = self.files:get_closest_headline()
+  local current_keyword = headline:get_todo() or ''
+  local todos = headline.file:get_todo_keywords()
+  local old_state = current_keyword
+  local was_done = headline:is_done()
+
+  -- Create TodoState using the current keyword as starting state
+  local todo_state = TodoState:new({
+    current_state = current_keyword,
+    todos = todos,
+  })
+
+  local next_state = nil
+
+  -- Always use fast access mode when:
+  -- 1. Multiple sequences are defined, OR
+  -- 2. At least one keyword has an explicit shortcut
+  local has_fast_access = todo_state:has_fast_access()
+
+  -- Override use_fast_access if we have fast access capabilities
+  if has_fast_access then
+    use_fast_access = true
   end
 
-  -- Done note has precedence over repeat note
-  if prompt_done_note then
-    return self:_get_note(closing_note_text, indent, closed_title):next(function(closing_note)
-      return item:add_note(closing_note)
-    end)
+  if use_fast_access then
+    next_state = todo_state:open_fast_access()
+  else
+    if direction == 'next' then
+      next_state = todo_state:get_next()
+    elseif direction == 'prev' then
+      next_state = todo_state:get_prev()
+    elseif direction == 'reset' then
+      next_state = todo_state:get_reset_todo(headline)
+    end
   end
 
-  return self:_get_note(repeat_note_template .. ' \\\\', indent, repeat_note_title):next(function(closing_note)
-    return item:add_note(closing_note)
-  end)
+  if not next_state then
+    return false
+  end
+
+  if next_state.value == current_keyword then
+    if current_keyword ~= '' then
+      utils.echo_info('TODO state was already ', { {
+        next_state.value,
+        next_state.hl,
+      } })
+    end
+    return false
+  end
+
+  local new_state = next_state.value
+  local is_done = next_state.type == 'DONE'
+  local becoming_done = is_done and not was_done
+  local becoming_undone = not is_done and was_done
+
+  headline:set_todo(new_state)
+
+  if becoming_done then
+    headline:set_closed_date()
+
+    -- Special handling for repeating tasks when they're marked as done
+    local has_repeater = #headline:get_repeater_dates() > 0
+
+    if has_repeater then
+      self:_handle_repeating_task(headline, old_state, new_state)
+
+      local reset_todo = todo_state:get_reset_todo(headline)
+
+      if reset_todo then
+        headline:set_todo(reset_todo.value)
+      end
+
+      -- Remove the CLOSED date after we've applied repeaters and reset the state
+      headline:remove_closed_date()
+    end
+  elseif becoming_undone then
+    headline:remove_closed_date()
+  end
+
+  EventManager.dispatch(events.TodoChanged:new(headline, old_state, was_done))
+
+  return true
 end
 
 function OrgMappings:do_promote(whole_subtree)
@@ -1050,10 +1086,21 @@ end
 ---@return boolean
 function OrgMappings:_change_todo_state(direction, use_fast_access)
   local headline = self.files:get_closest_headline()
-  local current_keyword = headline:get_todo()
+  local current_keyword = headline:get_todo() or ''
+
   local todos = headline.file:get_todo_keywords()
+
+  -- Store the sequence index of the original keyword, if any
+  local original_sequence_index = nil
+  local current_keyword_obj = todos:find(current_keyword)
+
+  if current_keyword_obj then
+    original_sequence_index = current_keyword_obj.sequence_index
+  end
+
   local todo_state = TodoState:new({ current_state = current_keyword, todos = todos })
   local next_state = nil
+
   if use_fast_access and todo_state:has_fast_access() then
     next_state = todo_state:open_fast_access()
   else

@@ -8,10 +8,11 @@
 ---@field shortcut string
 ---@field hl string
 ---@field has_fast_access boolean
+---@field sequence_index number The sequence this keyword belongs to
 local TodoKeyword = {}
 TodoKeyword.__index = TodoKeyword
 
----@param opts { type: OrgTodoKeywordType, keyword: string, index: number }
+---@param opts { type: OrgTodoKeywordType, keyword: string, index: number, sequence_index?: number }
 ---@return OrgTodoKeyword
 function TodoKeyword:new(opts)
   local this = setmetatable({
@@ -19,6 +20,7 @@ function TodoKeyword:new(opts)
     type = opts.type,
     index = opts.index,
     has_fast_access = false,
+    sequence_index = opts.sequence_index or 1,
   }, self)
   this:parse()
   return this
@@ -32,6 +34,7 @@ function TodoKeyword:empty()
     index = 1,
     has_fast_access = false,
     hl = '',
+    sequence_index = 1,
   }, self)
 end
 
