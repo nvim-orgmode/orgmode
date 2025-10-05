@@ -4,7 +4,7 @@ local config = require('orgmode.config')
 describe('Headline', function()
   describe('get_category', function()
     it('should get category from file name', function()
-      local file = helpers.create_file_instance({
+      local file = helpers.create_file({
         '* Headline 1',
         '* Headline 2',
       }, 'category.org')
@@ -13,7 +13,7 @@ describe('Headline', function()
     end)
 
     it('should get category from category directive in file', function()
-      local file = helpers.create_file_instance({
+      local file = helpers.create_file({
         '#+CATEGORY: file_category',
         '* Headline 1',
         '* Headline 2',
@@ -24,7 +24,7 @@ describe('Headline', function()
     end)
 
     it('should get category from parent headline category prop', function()
-      local file = helpers.create_file_instance({
+      local file = helpers.create_file({
         '#+CATEGORY: file_category',
         '* Headline 1',
         ':PROPERTIES:',
@@ -38,7 +38,7 @@ describe('Headline', function()
     end)
 
     it('should get category from own category prop', function()
-      local file = helpers.create_file_instance({
+      local file = helpers.create_file({
         '#+CATEGORY: file_category',
         '* Headline 1',
         ':PROPERTIES:',
@@ -56,7 +56,7 @@ describe('Headline', function()
   end)
 
   describe('use_property_inheritance', function()
-    local file = helpers.create_file_instance({
+    local file = helpers.create_file({
       '#+CATEGORY: file_category',
       '* Headline 1',
       ':PROPERTIES:',

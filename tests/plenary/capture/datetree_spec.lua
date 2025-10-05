@@ -32,7 +32,7 @@ describe('Datetree', function()
         local date = Date.from_string('2024-02-05')
         local opts = get_template(date)
         local capture_lines = { '* baz' }
-        local capture_file = helpers.create_file_instance(capture_lines)
+        local capture_file = helpers.create_file(capture_lines)
         opts.source_file = capture_file
         opts.source_headline = capture_file:get_headlines()[1]
 
@@ -55,7 +55,7 @@ describe('Datetree', function()
           '*** ' .. in_two_years:format('%Y-%m-%d %A'),
         })
         local capture_lines = { '* baz' }
-        local capture_file = helpers.create_file_instance(capture_lines)
+        local capture_file = helpers.create_file(capture_lines)
         opts.source_file = capture_file
         opts.source_headline = capture_file:get_headlines()[1]
 
@@ -81,7 +81,7 @@ describe('Datetree', function()
           '*** ' .. two_years_ago:format('%Y-%m-%d %A'),
         })
         local capture_lines = { '* baz' }
-        local capture_file = helpers.create_file_instance(capture_lines)
+        local capture_file = helpers.create_file(capture_lines)
         opts.source_file = capture_file
         opts.source_headline = capture_file:get_headlines()[1]
 
@@ -111,7 +111,7 @@ describe('Datetree', function()
           '*** ' .. in_two_years:format('%Y-%m-%d %A'),
         })
         local capture_lines = { '* baz' }
-        local capture_file = helpers.create_file_instance(capture_lines)
+        local capture_file = helpers.create_file(capture_lines)
         opts.source_file = capture_file
         opts.source_headline = capture_file:get_headlines()[1]
 
@@ -139,7 +139,7 @@ describe('Datetree', function()
           '* ' .. date:format('%Y'),
         })
         local capture_lines = { '* baz' }
-        local capture_file = helpers.create_file_instance(capture_lines)
+        local capture_file = helpers.create_file(capture_lines)
         opts.source_file = capture_file
         opts.source_headline = capture_file:get_headlines()[1]
 
@@ -162,7 +162,7 @@ describe('Datetree', function()
           '**** future month note',
         })
         local capture_lines = { '* baz' }
-        local capture_file = helpers.create_file_instance(capture_lines)
+        local capture_file = helpers.create_file(capture_lines)
         opts.source_file = capture_file
         opts.source_headline = capture_file:get_headlines()[1]
 
@@ -191,7 +191,7 @@ describe('Datetree', function()
           '**** two months ago',
         })
         local capture_lines = { '* baz' }
-        local capture_file = helpers.create_file_instance(capture_lines)
+        local capture_file = helpers.create_file(capture_lines)
         opts.source_file = capture_file
         opts.source_headline = capture_file:get_headlines()[1]
 
@@ -225,7 +225,7 @@ describe('Datetree', function()
           '**** in two months',
         })
         local capture_lines = { '* baz' }
-        local capture_file = helpers.create_file_instance(capture_lines)
+        local capture_file = helpers.create_file(capture_lines)
         opts.source_file = capture_file
         opts.source_headline = capture_file:get_headlines()[1]
 
@@ -254,7 +254,7 @@ describe('Datetree', function()
           '** ' .. date:format('%Y-%m %B'),
         })
         local capture_lines = { '* baz' }
-        local capture_file = helpers.create_file_instance(capture_lines)
+        local capture_file = helpers.create_file(capture_lines)
         opts.source_file = capture_file
         opts.source_headline = capture_file:get_headlines()[1]
 
@@ -277,7 +277,7 @@ describe('Datetree', function()
           '**** future day note',
         })
         local capture_lines = { '* baz' }
-        local capture_file = helpers.create_file_instance(capture_lines)
+        local capture_file = helpers.create_file(capture_lines)
         opts.source_file = capture_file
         opts.source_headline = capture_file:get_headlines()[1]
 
@@ -302,7 +302,7 @@ describe('Datetree', function()
           '**** past day note',
         })
         local capture_lines = { '* baz' }
-        local capture_file = helpers.create_file_instance(capture_lines)
+        local capture_file = helpers.create_file(capture_lines)
         opts.source_file = capture_file
         opts.source_headline = capture_file:get_headlines()[1]
 
@@ -331,7 +331,7 @@ describe('Datetree', function()
           '**** future day note',
         })
         local capture_lines = { '* baz' }
-        local capture_file = helpers.create_file_instance(capture_lines)
+        local capture_file = helpers.create_file(capture_lines)
         opts.source_file = capture_file
         opts.source_headline = capture_file:get_headlines()[1]
 
@@ -361,7 +361,7 @@ describe('Datetree', function()
           '**** existing day second note',
         })
         local capture_lines = { '* baz' }
-        local capture_file = helpers.create_file_instance(capture_lines)
+        local capture_file = helpers.create_file(capture_lines)
         opts.source_file = capture_file
         opts.source_headline = capture_file:get_headlines()[1]
 
@@ -405,7 +405,7 @@ describe('Datetree', function()
         local date = Date.from_string('2024-02-05')
         local opts = get_template(date)
         local capture_lines = { '* baz' }
-        local capture_file = helpers.create_file_instance(capture_lines)
+        local capture_file = helpers.create_file(capture_lines)
         opts.source_file = capture_file
         opts.source_headline = capture_file:get_headlines()[1]
 
@@ -428,7 +428,7 @@ describe('Datetree', function()
           '*** ' .. two_years_ago:format('%Y-%m-%d %A'),
         })
         local capture_lines = { '* baz' }
-        local capture_file = helpers.create_file_instance(capture_lines)
+        local capture_file = helpers.create_file(capture_lines)
         opts.source_file = capture_file
         opts.source_headline = capture_file:get_headlines()[1]
 
@@ -454,7 +454,7 @@ describe('Datetree', function()
           '*** ' .. in_two_years:format('%Y-%m-%d %A'),
         })
         local capture_lines = { '* baz' }
-        local capture_file = helpers.create_file_instance(capture_lines)
+        local capture_file = helpers.create_file(capture_lines)
         opts.source_file = capture_file
         opts.source_headline = capture_file:get_headlines()[1]
 
@@ -484,7 +484,7 @@ describe('Datetree', function()
           '*** ' .. two_years_ago:format('%Y-%m-%d %A'),
         })
         local capture_lines = { '* baz' }
-        local capture_file = helpers.create_file_instance(capture_lines)
+        local capture_file = helpers.create_file(capture_lines)
         opts.source_file = capture_file
         opts.source_headline = capture_file:get_headlines()[1]
 
@@ -512,7 +512,7 @@ describe('Datetree', function()
           '* ' .. date:format('%Y'),
         })
         local capture_lines = { '* baz' }
-        local capture_file = helpers.create_file_instance(capture_lines)
+        local capture_file = helpers.create_file(capture_lines)
         opts.source_file = capture_file
         opts.source_headline = capture_file:get_headlines()[1]
 
@@ -535,7 +535,7 @@ describe('Datetree', function()
           '**** future month note',
         })
         local capture_lines = { '* baz' }
-        local capture_file = helpers.create_file_instance(capture_lines)
+        local capture_file = helpers.create_file(capture_lines)
         opts.source_file = capture_file
         opts.source_headline = capture_file:get_headlines()[1]
 
@@ -564,7 +564,7 @@ describe('Datetree', function()
           '**** two months ago',
         })
         local capture_lines = { '* baz' }
-        local capture_file = helpers.create_file_instance(capture_lines)
+        local capture_file = helpers.create_file(capture_lines)
         opts.source_file = capture_file
         opts.source_headline = capture_file:get_headlines()[1]
 
@@ -598,7 +598,7 @@ describe('Datetree', function()
           '**** two months ago',
         })
         local capture_lines = { '* baz' }
-        local capture_file = helpers.create_file_instance(capture_lines)
+        local capture_file = helpers.create_file(capture_lines)
         opts.source_file = capture_file
         opts.source_headline = capture_file:get_headlines()[1]
 
@@ -627,7 +627,7 @@ describe('Datetree', function()
           '** ' .. date:format('%Y-%m %B'),
         })
         local capture_lines = { '* baz' }
-        local capture_file = helpers.create_file_instance(capture_lines)
+        local capture_file = helpers.create_file(capture_lines)
         opts.source_file = capture_file
         opts.source_headline = capture_file:get_headlines()[1]
 
@@ -650,7 +650,7 @@ describe('Datetree', function()
           '**** future day note',
         })
         local capture_lines = { '* baz' }
-        local capture_file = helpers.create_file_instance(capture_lines)
+        local capture_file = helpers.create_file(capture_lines)
         opts.source_file = capture_file
         opts.source_headline = capture_file:get_headlines()[1]
 
@@ -675,7 +675,7 @@ describe('Datetree', function()
           '**** past day note',
         })
         local capture_lines = { '* baz' }
-        local capture_file = helpers.create_file_instance(capture_lines)
+        local capture_file = helpers.create_file(capture_lines)
         opts.source_file = capture_file
         opts.source_headline = capture_file:get_headlines()[1]
 
@@ -702,7 +702,7 @@ describe('Datetree', function()
           '**** past day note',
         })
         local capture_lines = { '* baz' }
-        local capture_file = helpers.create_file_instance(capture_lines)
+        local capture_file = helpers.create_file(capture_lines)
         opts.source_file = capture_file
         opts.source_headline = capture_file:get_headlines()[1]
 
@@ -732,7 +732,7 @@ describe('Datetree', function()
           '**** existing day second note',
         })
         local capture_lines = { '* baz' }
-        local capture_file = helpers.create_file_instance(capture_lines)
+        local capture_file = helpers.create_file(capture_lines)
         opts.source_file = capture_file
         opts.source_headline = capture_file:get_headlines()[1]
 
@@ -793,7 +793,7 @@ describe('Datetree', function()
         local date = Date.from_string('2024-02-05')
         local opts = get_template(date)
         local capture_lines = { '* baz' }
-        local capture_file = helpers.create_file_instance(capture_lines)
+        local capture_file = helpers.create_file(capture_lines)
         opts.source_file = capture_file
         opts.source_headline = capture_file:get_headlines()[1]
 
@@ -816,7 +816,7 @@ describe('Datetree', function()
           '*** ' .. in_two_years:format('%m/%d/%Y %A'),
         })
         local capture_lines = { '* baz' }
-        local capture_file = helpers.create_file_instance(capture_lines)
+        local capture_file = helpers.create_file(capture_lines)
         opts.source_file = capture_file
         opts.source_headline = capture_file:get_headlines()[1]
 
@@ -842,7 +842,7 @@ describe('Datetree', function()
           '*** ' .. two_years_ago:format('%m/%d/%Y %A'),
         })
         local capture_lines = { '* baz' }
-        local capture_file = helpers.create_file_instance(capture_lines)
+        local capture_file = helpers.create_file(capture_lines)
         opts.source_file = capture_file
         opts.source_headline = capture_file:get_headlines()[1]
 
@@ -872,7 +872,7 @@ describe('Datetree', function()
           '*** ' .. in_two_years:format('%m/%d/%Y %A'),
         })
         local capture_lines = { '* baz' }
-        local capture_file = helpers.create_file_instance(capture_lines)
+        local capture_file = helpers.create_file(capture_lines)
         opts.source_file = capture_file
         opts.source_headline = capture_file:get_headlines()[1]
 
@@ -900,7 +900,7 @@ describe('Datetree', function()
           '* ' .. date:format('%Y'),
         })
         local capture_lines = { '* baz' }
-        local capture_file = helpers.create_file_instance(capture_lines)
+        local capture_file = helpers.create_file(capture_lines)
         opts.source_file = capture_file
         opts.source_headline = capture_file:get_headlines()[1]
 
@@ -923,7 +923,7 @@ describe('Datetree', function()
           '**** future month note',
         })
         local capture_lines = { '* baz' }
-        local capture_file = helpers.create_file_instance(capture_lines)
+        local capture_file = helpers.create_file(capture_lines)
         opts.source_file = capture_file
         opts.source_headline = capture_file:get_headlines()[1]
 
@@ -952,7 +952,7 @@ describe('Datetree', function()
           '**** two months ago',
         })
         local capture_lines = { '* baz' }
-        local capture_file = helpers.create_file_instance(capture_lines)
+        local capture_file = helpers.create_file(capture_lines)
         opts.source_file = capture_file
         opts.source_headline = capture_file:get_headlines()[1]
 
@@ -986,7 +986,7 @@ describe('Datetree', function()
           '**** in two months',
         })
         local capture_lines = { '* baz' }
-        local capture_file = helpers.create_file_instance(capture_lines)
+        local capture_file = helpers.create_file(capture_lines)
         opts.source_file = capture_file
         opts.source_headline = capture_file:get_headlines()[1]
 
@@ -1015,7 +1015,7 @@ describe('Datetree', function()
           '** ' .. date:format('%m/%Y %B'),
         })
         local capture_lines = { '* baz' }
-        local capture_file = helpers.create_file_instance(capture_lines)
+        local capture_file = helpers.create_file(capture_lines)
         opts.source_file = capture_file
         opts.source_headline = capture_file:get_headlines()[1]
 
@@ -1038,7 +1038,7 @@ describe('Datetree', function()
           '**** future day note',
         })
         local capture_lines = { '* baz' }
-        local capture_file = helpers.create_file_instance(capture_lines)
+        local capture_file = helpers.create_file(capture_lines)
         opts.source_file = capture_file
         opts.source_headline = capture_file:get_headlines()[1]
 
@@ -1063,7 +1063,7 @@ describe('Datetree', function()
           '**** past day note',
         })
         local capture_lines = { '* baz' }
-        local capture_file = helpers.create_file_instance(capture_lines)
+        local capture_file = helpers.create_file(capture_lines)
         opts.source_file = capture_file
         opts.source_headline = capture_file:get_headlines()[1]
 
@@ -1092,7 +1092,7 @@ describe('Datetree', function()
           '**** future day note',
         })
         local capture_lines = { '* baz' }
-        local capture_file = helpers.create_file_instance(capture_lines)
+        local capture_file = helpers.create_file(capture_lines)
         opts.source_file = capture_file
         opts.source_headline = capture_file:get_headlines()[1]
 
@@ -1122,7 +1122,7 @@ describe('Datetree', function()
           '**** existing day second note',
         })
         local capture_lines = { '* baz' }
-        local capture_file = helpers.create_file_instance(capture_lines)
+        local capture_file = helpers.create_file(capture_lines)
         opts.source_file = capture_file
         opts.source_headline = capture_file:get_headlines()[1]
 

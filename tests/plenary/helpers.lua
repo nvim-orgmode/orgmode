@@ -34,8 +34,12 @@ function M.load_file(path)
 end
 
 ---@param lines string[]
-function M.create_file(lines)
+---@param filename? string
+function M.create_file(lines, filename)
   local fname = vim.fn.tempname() .. '.org'
+  if filename then
+    fname = vim.fn.fnamemodify(fname, ':p:h') .. '/' .. filename
+  end
   vim.fn.writefile(lines or {}, fname)
   return M.load_file(fname)
 end
@@ -53,18 +57,6 @@ function M.create_agenda_file(lines, config)
   local org = orgmode.setup(cfg)
   org:init()
   return M.load_file(fname)
-end
-
----@param lines string[]
----@param filename string
----@return OrgFile
-function M.create_file_instance(lines, filename)
-  local file = OrgFile:new({
-    filename = filename or vim.fn.tempname() .. '.org',
-    lines = lines,
-  })
-  file:parse()
-  return file
 end
 
 ---@param fixtures {filename: string, content: string[] }[]
