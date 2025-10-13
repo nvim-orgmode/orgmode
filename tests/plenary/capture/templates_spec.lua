@@ -39,13 +39,13 @@ describe('Capture template', function()
     vim.fn.setreg('+', clip_backup)
   end)
 
-  it('gets current date for datetree enabled with true', function()
+  it('gets current date and time for datetree enabled with true', function()
     local template = Template:new({
       template = '* %?',
       datetree = true,
     })
 
-    assert.are.same(Date.today():to_string(), template:get_datetree_opts().date:to_string())
+    assert.are.same(Date.now():to_string(), template:get_datetree_opts().date:to_string())
   end)
 
   it('gets a proper date for datetree enabled as time prompt', function()

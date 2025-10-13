@@ -111,7 +111,10 @@ function M.trim_common_root(paths)
     end, paths)
   end
 
-  local root = '/' .. table.concat(common_root, '/') .. '/'
+  local root = table.concat(common_root, '/') .. '/'
+  if vim.fn.has('win32') == 0 then
+    root = '/' .. root
+  end
   local result = {}
   for _, path in ipairs(paths) do
     local relative_path = path:sub(#root + 1)
