@@ -3,10 +3,10 @@ local hl_map = Highlights.get_agenda_hl_map()
 local config = require('orgmode.config')
 local FUTURE_DEADLINE_AS_WARNING_DAYS = math.floor(config.org_deadline_warning_days / 2)
 local function add_padding(datetime)
-  if datetime:len() >= 11 then
+  if datetime:len() >= 10 then
     return datetime .. ' '
   end
-  return datetime .. string.rep('.', 11 - datetime:len()) .. ' '
+  return datetime .. ' ' .. config.org_agenda_time_grid.time_separator .. ' '
 end
 
 ---@class OrgAgendaItem

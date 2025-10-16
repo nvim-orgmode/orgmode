@@ -11,6 +11,8 @@ local utils = require('orgmode.utils')
 local SortingStrategy = require('orgmode.agenda.sorting_strategy')
 local Promise = require('orgmode.utils.promise')
 
+---@alias OrgAgendaDay { day: OrgDate, agenda_items: OrgAgendaItem[], category_length: number, label_length: 0 }
+
 ---@class OrgAgendaTypeOpts
 ---@field files OrgFiles
 ---@field highlighter OrgHighlighter
@@ -51,6 +53,7 @@ local Promise = require('orgmode.utils.promise')
 ---@field remove_tags? boolean
 ---@field valid_filters? OrgAgendaFilter[]
 ---@field id? string
+---@field private _grid_times { hour: number, min: number }[]
 local OrgAgendaType = {}
 OrgAgendaType.__index = OrgAgendaType
 
@@ -264,7 +267,12 @@ function OrgAgendaType:render(bufnr, current_line)
     }))
 
     for _, agenda_item in ipairs(agenda_day.agenda_items) do
-      agendaView:add_line(self:_build_line(agenda_item, agenda_day))
+      -- If there is an index value, this is an AgendaItem instance
+      if agenda_item.index then
+        agendaView:add_line(self:_build_line(agenda_item, agenda_day))
+      else
+        agendaView:add_line(self:_build_time_grid_line(agenda_item, agenda_day))
+      end
     end
   end
 
@@ -316,6 +324,140 @@ function OrgAgendaType:render(bufnr, current_line)
     self:_jump_to_date(jump_to_date)
   end
   return self.view
+end
+
+---@param grid_line { real_date: OrgDate, is_same_day: boolean, is_now: boolean }
+---@param agenda_day OrgAgendaDay
+---@return OrgAgendaLine
+function OrgAgendaType:_build_time_grid_line(grid_line, agenda_day)
+  local line = AgendaLine:new({
+    hl_group = '@org.agenda.time_grid',
+    metadata = {
+      date = grid_line.real_date,
+    },
+  })
+
+  line:add_token(AgendaLineToken:new({
+    content = '  ' .. utils.pad_right(' ', agenda_day.category_length),
+  }))
+  line:add_token(AgendaLineToken:new({
+    content = grid_line.real_date:format_time() .. ' ' .. config.org_agenda_time_grid.time_separator,
+  }))
+  line:add_token(AgendaLineToken:new({
+    content = grid_line.is_now and config.org_agenda_current_time_string or config.org_agenda_time_grid.time_label,
+  }))
+
+  return line
+end
+
+---@param date_range OrgDate[]
+---@param agenda_day OrgAgendaDay
+---@return { real_date: OrgDate, is_same_day: boolean, is_now: boolean }[]
+function OrgAgendaType:_prepare_grid_lines(date_range, agenda_day)
+  if not config.org_agenda_use_time_grid then
+    return {}
+  end
+
+  local time_grid_opts = config.org_agenda_time_grid
+  if not time_grid_opts or not time_grid_opts.type or #time_grid_opts.type == 0 then
+    return {}
+  end
+
+  local today = false
+  local weekly = false
+  local daily = false
+  local require_timed = false
+  local remove_match = false
+
+  for _, t in ipairs(time_grid_opts.type) do
+    if t == 'daily' then
+      daily = true
+    end
+    if t == 'weekly' then
+      weekly = true
+    end
+    if t == 'today' then
+      today = true
+    end
+    if t == 'require-timed' then
+      require_timed = true
+    end
+    if t == 'remove-match' then
+      remove_match = true
+    end
+  end
+
+  local show_grid = (daily and #date_range == 1) or weekly
+  if not show_grid and today then
+    show_grid = agenda_day.day:is_today()
+  end
+
+  local same_day_agenda_items_with_time = {}
+
+  if require_timed or remove_match then
+    for _, agenda_item in ipairs(agenda_day.agenda_items) do
+      if agenda_item.is_same_day and agenda_item.real_date:has_time() then
+        table.insert(same_day_agenda_items_with_time, agenda_item)
+      end
+    end
+  end
+
+  if show_grid and require_timed then
+    show_grid = #same_day_agenda_items_with_time > 0
+  end
+
+  if not show_grid then
+    return {}
+  end
+
+  local grid_lines = {}
+  local now = Date.now()
+  for _, time in ipairs(self:_parse_grid_times()) do
+    local date = agenda_day.day:set({
+      hour = time.hour,
+      min = time.min,
+      date_only = false,
+    })
+    if remove_match then
+      for _, item in ipairs(same_day_agenda_items_with_time) do
+        if item.real_date:is_same(date) then
+          goto continue
+        end
+      end
+    end
+    if date:is_today() and date > now and (#grid_lines == 0 or grid_lines[#grid_lines].real_date < now) then
+      local now_line = {
+        real_date = now,
+        is_same_day = true,
+        is_now = true,
+      }
+      table.insert(grid_lines, now_line)
+    end
+    table.insert(grid_lines, {
+      real_date = date,
+      is_same_day = true,
+      is_now = false,
+    })
+
+    ::continue::
+  end
+  return grid_lines
+end
+
+function OrgAgendaType:_parse_grid_times()
+  if self._grid_times then
+    return self._grid_times
+  end
+  local grid_times = {}
+  for _, time in ipairs(config.org_agenda_time_grid.times) do
+    local str = tostring(time)
+    table.insert(grid_times, {
+      min = tonumber(str:sub(#str - 1, #str)),
+      hour = tonumber(str:sub(1, #str - 2)),
+    })
+  end
+  self._grid_times = grid_times
+  return grid_times
 end
 
 ---@private
@@ -381,7 +523,7 @@ function OrgAgendaType:rerender_agenda_line(agenda_line, headline)
   self.view:replace_line(agenda_line, line)
 end
 
----@return { day: OrgDate, agenda_items: OrgAgendaItem[], category_length: number, label_length: 0 }[]
+---@return OrgAgendaDay[]
 function OrgAgendaType:_get_agenda_days()
   local dates = self.from:get_range_until(self.to)
   local agenda_days = {}
@@ -416,6 +558,7 @@ function OrgAgendaType:_get_agenda_days()
       end
     end
 
+    vim.list_extend(date.agenda_items, self:_prepare_grid_lines(dates, date))
     date.agenda_items = self:_sort(date.agenda_items)
     date.category_length = math.max(11, date.category_length + 1)
     date.label_length = math.min(11, date.label_length)

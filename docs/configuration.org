@@ -787,6 +787,53 @@ To change the highlight, override =@org.agenda.separator= hl group.
 - Default: =false=
 Should tags be hidden from all agenda views.
 
+*** org_agenda_time_grid
+:PROPERTIES:
+:CUSTOM_ID: org_agenda_time_grid
+:END:
+- Type: ={ type: ('daily', 'weekly', 'require-timed', 'remove-match')[], times: number[], time_separator: string, time_label: string }=
+- Default:
+  #+begin_src lua
+  {
+    type = { 'daily', 'today', 'require-timed' },
+    times = { 800, 1000, 1200, 1400, 1600, 1800, 2000 },
+    time_separator = '┄┄┄┄┄',
+    time_label = '┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄'
+  }
+  #+end_src
+
+Settings for the time grid visible in agenda. To disable showing the time grid altogether, set [[#org_agenda_use_time_grid][org_agenda_use_time_grid]] to =false=.
+
+- =type=: List of options where all have to apply to show the grid
+  - =daily= - Show grid in daily agenda (1 day view)
+  - =weekly= - Show grid in any agenda type
+  - =today= - Show grid only for today
+  - =require-timed= - Show grid only if day has any entries with time specification
+  - =remove-match= - Hide grid entries that overlap with the existing time slot taken by an agenda item
+- =times=: List of times (in 24h format) to show on the grid. It should be integer value, example =1030= represents =10:30=
+- =time_separator=: Value that is showed after the grid time as a separator
+- =time_label=: Value that is showed after the =time_separator= to fill in the place that is usually for the agenda item title
+
+To customize the label for the current time, check [[#org_agenda_current_time_string][org_agenda_current_time_string]]
+
+*** org_agenda_use_time_grid
+:PROPERTIES:
+:CUSTOM_ID: org_agenda_use_time_grid
+:END:
+- Type: =boolean=
+- Default: =true=
+Show time grid in agenda. See [[#org_agenda_time_grid][org_agenda_time_grid]] for configuration options.
+
+*** org_agenda_current_time_string
+:PROPERTIES:
+:CUSTOM_ID: org_agenda_current_time_string
+:END:
+- Type: =string=
+- Default: =<- now -----------------------------------------------=
+Label value for the current time in the agenda time grid.
+See [[#org_agenda_time_grid][org_agenda_time_grid]] for time grid configuration or [[#org_agenda_use_time_grid][org_agenda_use_time_grid]] to disable the grid.
+
+
 *** org_capture_templates
 :PROPERTIES:
 :CUSTOM_ID: org_capture_templates
@@ -2872,6 +2919,7 @@ The following highlight groups are used:
 - =@org.agenda.deadline=: A item deadline in the agenda view - Parsed from =Error= (see note below)
 - =@org.agenda.scheduled=: A scheduled item in the agenda view - Parsed from =DiffAdd= (see note below)
 - =@org.agenda.scheduled_past=: A item past its scheduled date in the agenda view - Parsed from =WarningMsg= (see note below)
+- =@org.agenda.time_grid=: Time grid line - Parsed from =WarningMsg= (see note below)
 - =@org.agenda.day=: Highlight for all days in Agenda view - linked to =Statement=
 - =@org.agenda.today=: Highlight for today in Agenda view - linked to =@org.bold=
 - =@org.agenda.weekend=: Highlight for weekend days in Agenda view - linked to =@org.bold=

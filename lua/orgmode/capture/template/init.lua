@@ -220,7 +220,7 @@ function Template:get_datetree_opts()
   ---@diagnostic disable-next-line: param-type-mismatch
   local datetree = vim.deepcopy(self.datetree)
   datetree = (type(datetree) == 'table' and datetree) or {}
-  datetree.date = datetree.date or Date.today()
+  datetree.date = datetree.date or Date.now()
   datetree.tree_type = datetree.tree_type or 'day'
   return datetree
 end
