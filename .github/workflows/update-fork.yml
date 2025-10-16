@@ -34,27 +34,42 @@ jobs:
         run: |
           # Check which branch we're on
           CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
-          CURRENT_COMMIT=$(git rev-parse HEAD)
-
-          # Sync the current branch with upstream
-          git merge upstream/$CURRENT_BRANCH --no-edit
-
-          # Create a temporary branch without the workflow file as it triggered problems when merging
-          git checkout -b temp-push-branch
-          if [ -f .github/workflow/tests.yml ]; then
-            git rm .github/workflows/tests.yml || true
+          
+          # Remove tests.yml before merging to avoid the specific conflict we don't care about
+          if [ -f .github/workflows/tests.yml ]; then
+            git rm .github/workflows/tests.yml
+            git commit -m "Remove tests.yml before upstream merge"
           fi
-          # Check if there are changes to commit
-          if git diff-index --quiet HEAD --; then
-            echo "No changes to commit, continuing pipeline"
-          else
-            # There are changes, so commit them
-            git commit -m "Remove tests.yml file"
 
+          # Attempt to merge upstream changes
+          if ! git merge upstream/$CURRENT_BRANCH --no-edit; then
+            echo "Merge conflicts detected"
+            
+            # Get all conflicted files
+            CONFLICT_FILES=$(git diff --name-only --diff-filter=U)
+            
+            # Filter out tests.yml conflicts that we want to auto-resolve
+            OTHER_CONFLICTS=""
+            for file in $CONFLICT_FILES; do
+              if [[ "$file" != ".github/workflows/tests.yml" ]]; then
+                OTHER_CONFLICTS="$OTHER_CONFLICTS $file"
+              fi
+            done
+            
+            # If there are conflicts other than tests.yml, fail
+            if [ -n "$OTHER_CONFLICTS" ]; then
+              echo "Unresolved conflicts in files other than tests.yml:"
+              echo "$OTHER_CONFLICTS"
+              echo "These conflicts require manual review. Failing the workflow."
+              exit 1
+            fi
+            
+            # Only tests.yml conflict remains - resolve it by keeping it deleted
+            if echo "$CONFLICT_FILES" | grep -q ".github/workflows/tests.yml"; then
+              echo "Resolving tests.yml conflict by keeping it deleted"
+              git rm .github/workflows/tests.yml || true
+            fi
+            
+            # Complete the merge
+            git commit --no-edit
           fi
-          # Push the branch without the workflow file
-          git push -f origin temp-push-branch:master
-
-          # Clean up
-          git checkout master
-          git branch -D temp-push-branch
