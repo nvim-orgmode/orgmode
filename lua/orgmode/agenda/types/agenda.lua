@@ -368,6 +368,7 @@ function OrgAgendaType:_prepare_grid_lines(date_range, agenda_day)
   local daily = false
   local require_timed = false
   local remove_match = false
+  local remove_range_match = false
 
   for _, t in ipairs(time_grid_opts.type) do
     if t == 'daily' then
@@ -385,6 +386,9 @@ function OrgAgendaType:_prepare_grid_lines(date_range, agenda_day)
     if t == 'remove-match' then
       remove_match = true
     end
+    if t == 'remove-range-match' then
+      remove_range_match = true
+    end
   end
 
   local show_grid = (daily and #date_range == 1) or weekly
@@ -393,11 +397,18 @@ function OrgAgendaType:_prepare_grid_lines(date_range, agenda_day)
   end
 
   local same_day_agenda_items_with_time = {}
+  local agenda_items_with_range_time = {}
 
-  if require_timed or remove_match then
+  if require_timed or remove_match or remove_range_match then
     for _, agenda_item in ipairs(agenda_day.agenda_items) do
       if agenda_item.is_same_day and agenda_item.real_date:has_time() then
         table.insert(same_day_agenda_items_with_time, agenda_item)
+        if remove_range_match and agenda_item.real_date:has_time_range() then
+          table.insert(agenda_items_with_range_time, {
+            from = agenda_item.real_date,
+            to = Date.from_timestamp(agenda_item.real_date.timestamp_end),
+          })
+        end
       end
     end
   end
@@ -421,6 +432,13 @@ function OrgAgendaType:_prepare_grid_lines(date_range, agenda_day)
     if remove_match then
       for _, item in ipairs(same_day_agenda_items_with_time) do
         if item.real_date:is_same(date) then
+          goto continue
+        end
+      end
+    end
+    if remove_range_match then
+      for _, range in ipairs(agenda_items_with_range_time) do
+        if date >= range.from and date <= range.to then
           goto continue
         end
       end
