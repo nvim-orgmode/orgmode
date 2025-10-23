@@ -91,6 +91,15 @@ end
 
 function Org:setup_autocmds()
   local org_augroup = vim.api.nvim_create_augroup('orgmode_nvim', { clear = true })
+  vim.api.nvim_create_autocmd('BufWinEnter', {
+    pattern = { '*.org', '*.org_archive' },
+    group = org_augroup,
+    callback = function(event)
+      if not vim.bo[event.buf].filetype or vim.bo[event.buf].filetype == '' then
+        vim.bo[event.buf].filetype = 'org'
+      end
+    end,
+  })
   vim.api.nvim_create_autocmd('BufWritePost', {
     pattern = { '*.org', '*.org_archive' },
     group = org_augroup,
