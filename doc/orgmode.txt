@@ -844,8 +844,9 @@ Should tags be hidden from all agenda views.
 
 org_agenda_time_grid                            *orgmode-org_agenda_time_grid*
 
-- Type: `{ type: ('daily', 'weekly', 'require-timed', 'remove-match')[], times:
-    number[], time_separator: string, time_label: string }`
+- Type: `{ type: ('daily', 'weekly', 'require-timed', 'remove-match',
+    'remove-range-match')[], times: number[], time_separator: string, time_label:
+    string }`
 - Default:
     >lua
         {
@@ -865,6 +866,7 @@ altogether, set |orgmode-org_agenda_use_time_grid| to `false`.
     - `today` - Show grid only for today
     - `require-timed` - Show grid only if day has any entries with time specification
     - `remove-match` - Hide grid entries that overlap with the existing time slot taken by an agenda item
+    - `remove-range-match` - Hide grid entries that overlap with the existing time range taken by an agenda item
 - `times`: List of times (in 24h format) to show on the grid. It should be integer value, example `1030` represents `10:30`
 - `time_separator`: Value that is showed after the grid time as a separator
 - `time_label`: Value that is showed after the `time_separator` to fill in the place that is usually for the agenda item title
