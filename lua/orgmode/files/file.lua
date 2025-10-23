@@ -45,6 +45,7 @@ function OrgFile:new(opts)
     filename = opts.filename,
     index = 0,
     buf = opts.buf or -1,
+    lines = {},
     metadata = {
       mtime = stat and stat.mtime.nsec or 0,
       mtime_sec = stat and stat.mtime.sec or 0,
