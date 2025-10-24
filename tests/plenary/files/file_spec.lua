@@ -863,7 +863,7 @@ describe('OrgFile', function()
         '* TODO Headline 1',
       })
       local todos = file:get_todo_keywords()
-      assert.are.same({ 'TODO', 'DOING', '|', 'DONE', 'CANCELED' }, todos.org_todo_keywords)
+      assert.are.same({ { 'TODO', 'DOING', '|', 'DONE', 'CANCELED' } }, todos.org_todo_keywords)
     end)
 
     it('should parse custom todo keywords from file directive', function()
@@ -874,7 +874,8 @@ describe('OrgFile', function()
       local todos = file:get_todo_keywords()
       has_correct_type(todos)
       has_correct_values(todos)
-      assert.are.same({ 'OPEN', 'DOING', '|', 'FINISHED', 'ABORTED' }, todos.org_todo_keywords)
+      assert.are.equal(1, #todos.org_todo_keywords)
+      assert.are.same({ 'OPEN', 'DOING', '|', 'FINISHED', 'ABORTED' }, todos.org_todo_keywords[1])
     end)
 
     it('should handle todo keywords with shortcut keys', function()
@@ -885,7 +886,22 @@ describe('OrgFile', function()
       local todos = file:get_todo_keywords()
       has_correct_type(todos)
       has_correct_values(todos)
-      assert.are.same({ 'OPEN(o)', 'DOING(d)', '|', 'FINISHED(f)', 'ABORTED(a)' }, todos.org_todo_keywords)
+      assert.are.equal(1, #todos.org_todo_keywords)
+      assert.are.same({ 'OPEN(o)', 'DOING(d)', '|', 'FINISHED(f)', 'ABORTED(a)' }, todos.org_todo_keywords[1])
+    end)
+    it('should handle multiple todo keyword sequences from file directives', function()
+      local file = load_file_sync({
+        '#+TODO: OPEN DOING | FINISHED ABORTED',
+        '#+TODO: MEETING PHONE | COMPLETED',
+        '* OPEN Headline 1',
+      })
+      local todos = file:get_todo_keywords()
+      has_correct_type(todos)
+      has_correct_values(todos)
+      assert.are.same({
+        { 'OPEN', 'DOING', '|', 'FINISHED', 'ABORTED' },
+        { 'MEETING', 'PHONE', '|', 'COMPLETED' },
+      }, todos.org_todo_keywords)
     end)
   end)
 end)
