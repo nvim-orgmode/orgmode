@@ -311,10 +311,7 @@ function OrgFile:get_todo_keywords()
     table.insert(keywords_data, keywords)
   end
 
-  return require('orgmode.objects.todo_keywords'):new({
-    org_todo_keywords = keywords_data,
-    org_todo_keyword_faces = config.org_todo_keyword_faces,
-  })
+  return config:build_todo_keywords(keywords_data)
 end
 
 ---@return OrgHeadline[]

@@ -52,19 +52,6 @@ function TodoKeywords:find(keyword)
   end)
 end
 
----@param keyword string
----@return number | nil sequence index this keyword belongs to
-function TodoKeywords:find_sequence_index(keyword)
-  for seq_idx, seq in ipairs(self.sequences) do
-    for _, todo_keyword in ipairs(seq) do
-      if todo_keyword.value == keyword then
-        return seq_idx
-      end
-    end
-  end
-  return nil
-end
-
 ---@param type OrgTodoKeywordType
 ---@return OrgTodoKeyword
 function TodoKeywords:first_by_type(type)

@@ -176,14 +176,18 @@ end
 
 ---@return OrgTodoKeywords
 function Config:get_todo_keywords()
-  if self.todo_keywords then
-    return self.todo_keywords
+  if not self.todo_keywords then
+    self.todo_keywords = self:build_todo_keywords()
   end
-  self.todo_keywords = TodoKeywords:new({
-    org_todo_keywords = self.opts.org_todo_keywords,
+  return self.todo_keywords
+end
+
+---@param todo_keywords? string[] | string[][]
+function Config:build_todo_keywords(todo_keywords)
+  return TodoKeywords:new({
+    org_todo_keywords = todo_keywords or self.opts.org_todo_keywords,
     org_todo_keyword_faces = self.opts.org_todo_keyword_faces,
   })
-  return self.todo_keywords
 end
 
 --- Setup mappings for a given category and buffer
