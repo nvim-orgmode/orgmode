@@ -75,13 +75,7 @@ function OrgFile.load(filename)
     return Promise.resolve(false)
   end
 
-  bufnr = vim.fn.bufadd(filename)
-
-  if bufnr == 0 then
-    return Promise.resolve(false)
-  end
-
-  vim.fn.bufload(bufnr)
+  bufnr = OrgFile._load_buffer(filename)
 
   return Promise.resolve(OrgFile:new({
     filename = filename,
@@ -564,10 +558,18 @@ function OrgFile:bufnr()
   if bufnr > -1 and vim.api.nvim_buf_is_loaded(bufnr) then
     return bufnr
   end
-  local new_bufnr = vim.fn.bufadd(self.filename)
-  vim.fn.bufload(new_bufnr)
+  local new_bufnr = self._load_buffer(self.filename)
   self.buf = new_bufnr
   return new_bufnr
+end
+
+---@private
+---@param filename string
+function OrgFile._load_buffer(filename)
+  local bufnr = vim.fn.bufadd(filename)
+  vim.api.nvim_set_option_value('modeline', false, { buf = bufnr })
+  vim.fn.bufload(bufnr)
+  return bufnr
 end
 
 ---Return valid buffer handle or throw an error if it's not valid
