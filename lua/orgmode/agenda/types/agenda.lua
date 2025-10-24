@@ -438,7 +438,7 @@ function OrgAgendaType:_prepare_grid_lines(date_range, agenda_day)
     end
     if remove_range_match then
       for _, range in ipairs(agenda_items_with_range_time) do
-        if date >= range.from and date <= range.to then
+        if date >= range.from and date < range.to then
           goto continue
         end
       end
