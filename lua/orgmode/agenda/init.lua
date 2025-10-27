@@ -568,38 +568,40 @@ function Agenda:_remote_edit(opts)
   end
   local getter = opts.getter
     or function()
-      local item, agenda_line, view = self:_get_headline()
-      if not item then
+      local headline, agenda_line, view = self:_get_headline()
+      if not headline then
         return
       end
-      return item, agenda_line, view
+      return headline, agenda_line, view
     end
-  local item, agenda_line, view = getter()
-  if not item then
+  local headline, agenda_line, view = getter()
+  if not headline then
     return
   end
-  local update = item.file:update(function(_)
-    vim.fn.cursor({ item:get_range().start_line, 1 })
+  local update = headline.file:update(function(_)
+    vim.fn.cursor({ headline:get_range().start_line, 1 })
     return Promise.resolve(require('orgmode').action(action)):next(function()
       return self.files:get_closest_headline_or_nil()
     end)
   end)
 
-  update:next(function(headline)
-    ---@cast headline OrgHeadline
+  local old_range = headline:get_range()
+
+  update:next(function(updated_headline)
+    ---@cast updated_headline OrgHeadline
     if opts.redo then
       return self:redo('remote_edit', true)
     end
-    if not opts.update_in_place or not headline then
+    if not opts.update_in_place or not updated_headline then
       return
     end
-    local line_range_same = headline:get_range():is_same_line_range(item:get_range())
+    local line_range_same = updated_headline:get_range():is_same_line_range(old_range)
 
     local update_item_inline = function()
       if not agenda_line or not view then
         return
       end
-      return view:rerender_agenda_line(agenda_line, headline)
+      return view:rerender_agenda_line(agenda_line, updated_headline)
     end
 
     if line_range_same then

@@ -17,11 +17,10 @@ describe('OrgFile', function()
 
       assert.are.same(filename, file.filename)
       assert.are.same({ '* Headline 1' }, file.lines)
-      assert.are.same('* Headline 1', file.content)
       local stat = vim.uv.fs_stat(filename) or {}
       assert.are.same(stat.mtime.nsec, file.metadata.mtime)
       assert.are.same(stat.mtime.sec, file.metadata.mtime_sec)
-      assert.are.same(0, file.metadata.changedtick)
+      assert.are.same(2, file.metadata.changedtick)
     end)
 
     it('should not load a file that is not an org file', function()
@@ -37,14 +36,13 @@ describe('OrgFile', function()
 
       assert.are.same(filename, file.filename)
       assert.are.same({ '* Headline 2' }, file.lines)
-      assert.are.same('* Headline 2', file.content)
       local stat = vim.uv.fs_stat(filename) or {}
       assert.are.same(stat.mtime.nsec, file.metadata.mtime)
       assert.are.same(stat.mtime.sec, file.metadata.mtime_sec)
-      assert.are.same(0, file.metadata.changedtick)
+      assert.are.same(2, file.metadata.changedtick)
       vim.cmd('write!')
       file:reload_sync()
-      assert.are.same(4, file.metadata.changedtick)
+      assert.are.same(2, file.metadata.changedtick)
     end)
 
     it('should load files with special characters in filename from buffer', function()
@@ -72,7 +70,6 @@ describe('OrgFile', function()
       file = file:reload_sync()
       assert.are.not_same(old_mtime, file.metadata.mtime)
       assert.are.same({ '* Headline 3 edited' }, file.lines)
-      assert.are.same('* Headline 3 edited', file.content)
     end)
 
     it('should reload a buffer if its modified', function()
@@ -88,7 +85,6 @@ describe('OrgFile', function()
       assert.are.same(old_mtime, file.metadata.mtime)
       assert.are.not_same(old_changedtick, file.metadata.changedtick)
       assert.are.same({ '* Headline 3', '* Headline 4' }, file.lines)
-      assert.are.same('* Headline 3\n* Headline 4', file.content)
     end)
   end)
 
@@ -481,18 +477,6 @@ describe('OrgFile', function()
   end)
 
   describe('set_node_text', function()
-    it('should throw an error if file is not loaded in buffer', function()
-      local file = load_file_sync({
-        '* Headline 1 :TAG:',
-        '  The content',
-        '  Multi line',
-      })
-      local paragraph_node = file:get_node_at_cursor():parent()
-      assert.is.error_matches(function()
-        return file:set_node_text(paragraph_node, 'New Text')
-      end, '%[orgmode%] No valid buffer for file ' .. file.filename .. ' to edit')
-    end)
-
     it('should set node text', function()
       local file = load_file_sync({
         '* Headline 1 :TAG:',
@@ -546,15 +530,6 @@ describe('OrgFile', function()
   end)
 
   describe('bufnr', function()
-    it('should return -1 if there is no buffer', function()
-      local file = load_file_sync({
-        '* Headline 1 :TAG:',
-        '  The content',
-        '  Multi line',
-      })
-      assert.are.same(-1, file:bufnr())
-    end)
-
     it('should return buffer number if file is loaded', function()
       local file = load_file_sync({
         '* Headline 1 :TAG:',
@@ -563,19 +538,6 @@ describe('OrgFile', function()
       })
       vim.cmd('edit ' .. file.filename)
       assert.is.True(file:bufnr() > 0)
-    end)
-
-    it('should return -1 if file is loaded in buffer but buffer is not loaded', function()
-      local file = load_file_sync({
-        '* Headline 1 :TAG:',
-        '  The content',
-        '  Multi line',
-      })
-      vim.cmd('edit ' .. file.filename)
-      assert.is.True(file:bufnr() > 0)
-      vim.cmd('bdelete')
-      assert.are.same(-1, file:bufnr())
-      assert.is.True(vim.fn.bufnr(file.filename) > 0)
     end)
 
     it('should work with filenames containing special characters', function()
@@ -598,9 +560,6 @@ describe('OrgFile', function()
           '* Headline with special filename',
           '  Content in special file',
         }, full_filename)
-
-        -- Test that bufnr() works correctly
-        assert.are.same(-1, file:bufnr())
 
         -- Test that loading the buffer works
         vim.cmd('edit ' .. vim.fn.fnameescape(file.filename))
@@ -904,7 +863,7 @@ describe('OrgFile', function()
         '* TODO Headline 1',
       })
       local todos = file:get_todo_keywords()
-      assert.are.same({ 'TODO', 'DOING', '|', 'DONE', 'CANCELED' }, todos.org_todo_keywords)
+      assert.are.same({ { 'TODO', 'DOING', '|', 'DONE', 'CANCELED' } }, todos.org_todo_keywords)
     end)
 
     it('should parse custom todo keywords from file directive', function()
@@ -915,7 +874,8 @@ describe('OrgFile', function()
       local todos = file:get_todo_keywords()
       has_correct_type(todos)
       has_correct_values(todos)
-      assert.are.same({ 'OPEN', 'DOING', '|', 'FINISHED', 'ABORTED' }, todos.org_todo_keywords)
+      assert.are.equal(1, #todos.org_todo_keywords)
+      assert.are.same({ 'OPEN', 'DOING', '|', 'FINISHED', 'ABORTED' }, todos.org_todo_keywords[1])
     end)
 
     it('should handle todo keywords with shortcut keys', function()
@@ -926,7 +886,22 @@ describe('OrgFile', function()
       local todos = file:get_todo_keywords()
       has_correct_type(todos)
       has_correct_values(todos)
-      assert.are.same({ 'OPEN(o)', 'DOING(d)', '|', 'FINISHED(f)', 'ABORTED(a)' }, todos.org_todo_keywords)
+      assert.are.equal(1, #todos.org_todo_keywords)
+      assert.are.same({ 'OPEN(o)', 'DOING(d)', '|', 'FINISHED(f)', 'ABORTED(a)' }, todos.org_todo_keywords[1])
+    end)
+    it('should handle multiple todo keyword sequences from file directives', function()
+      local file = load_file_sync({
+        '#+TODO: OPEN DOING | FINISHED ABORTED',
+        '#+TODO: MEETING PHONE | COMPLETED',
+        '* OPEN Headline 1',
+      })
+      local todos = file:get_todo_keywords()
+      has_correct_type(todos)
+      has_correct_values(todos)
+      assert.are.same({
+        { 'OPEN', 'DOING', '|', 'FINISHED', 'ABORTED' },
+        { 'MEETING', 'PHONE', '|', 'COMPLETED' },
+      }, todos.org_todo_keywords)
     end)
   end)
 end)

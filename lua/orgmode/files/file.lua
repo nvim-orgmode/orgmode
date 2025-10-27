@@ -17,14 +17,13 @@ local Memoize = require('orgmode.utils.memoize')
 
 ---@class OrgFileOpts
 ---@field filename string
----@field lines string[]
----@field bufnr? number
+---@field buf number
 
 ---@class OrgFile
 ---@field filename string
+---@field buf number
 ---@field index number
 ---@field lines string[]
----@field content string
 ---@field metadata OrgFileMetadata
 ---@field parser vim.treesitter.LanguageTree
 ---@field root TSNode
@@ -44,15 +43,18 @@ function OrgFile:new(opts)
   local stat = vim.uv.fs_stat(opts.filename)
   local data = {
     filename = opts.filename,
-    lines = opts.lines,
-    content = table.concat(opts.lines, '\n'),
     index = 0,
+    buf = opts.buf or -1,
+    lines = {},
     metadata = {
       mtime = stat and stat.mtime.nsec or 0,
       mtime_sec = stat and stat.mtime.sec or 0,
-      changedtick = opts.bufnr and vim.api.nvim_buf_get_changedtick(opts.bufnr) or 0,
+      changedtick = opts.buf and vim.api.nvim_buf_get_changedtick(opts.buf) or 0,
     },
   }
+  if data.buf > 0 then
+    data.lines = self:_get_lines(data.buf)
+  end
   setmetatable(data, self)
   return data
 end
@@ -62,15 +64,10 @@ end
 function OrgFile.load(filename)
   local bufnr = utils.get_buffer_by_filename(filename)
 
-  if
-    bufnr > -1
-    and vim.api.nvim_buf_is_loaded(bufnr)
-    and vim.api.nvim_get_option_value('filetype', { buf = bufnr }) == 'org'
-  then
+  if bufnr > -1 and vim.api.nvim_buf_is_loaded(bufnr) and vim.bo[bufnr].filetype == 'org' then
     return Promise.resolve(OrgFile:new({
       filename = filename,
-      lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false),
-      bufnr = bufnr,
+      buf = bufnr,
     }))
   end
 
@@ -78,12 +75,12 @@ function OrgFile.load(filename)
     return Promise.resolve(false)
   end
 
-  return utils.readfile(filename, { schedule = true }):next(function(lines)
-    return OrgFile:new({
-      filename = filename,
-      lines = lines,
-    })
-  end)
+  bufnr = OrgFile._load_buffer(filename)
+
+  return Promise.resolve(OrgFile:new({
+    filename = filename,
+    buf = bufnr,
+  }))
 end
 
 ---Reload the file if it has been modified
@@ -94,15 +91,34 @@ function OrgFile:reload()
   end
 
   local bufnr = self:bufnr()
+  local buf_changed = false
+  local file_changed = false
 
-  if bufnr > -1 then
-    local updated_file = self:_update_lines(vim.api.nvim_buf_get_lines(bufnr, 0, -1, false), bufnr)
-    return Promise.resolve(updated_file)
+  if bufnr then
+    local new_changedtick = vim.api.nvim_buf_get_changedtick(bufnr)
+    buf_changed = self.metadata.changedtick ~= new_changedtick
+    self.metadata.changedtick = new_changedtick
+    if buf_changed then
+      self.lines = self:_get_lines(bufnr)
+    end
+  end
+  local stat = vim.uv.fs_stat(self.filename)
+  if stat then
+    local new_mtime_nsec = stat.mtime.nsec
+    local new_mtime_sec = stat.mtime.sec
+    file_changed = (new_mtime_nsec > 0 and self.metadata.mtime ~= new_mtime_nsec)
+      or self.metadata.mtime_sec ~= new_mtime_sec
+    self.metadata.mtime = new_mtime_nsec
+    self.metadata.mtime_sec = new_mtime_sec
   end
 
-  return utils.readfile(self.filename, { schedule = true }):next(function(lines)
-    return self:_update_lines(lines)
-  end)
+  if file_changed and not buf_changed then
+    return utils.readfile(self.filename, { schedule = true }):next(function(lines)
+      self.lines = lines
+      return self
+    end)
+  end
+  return Promise.resolve(self)
 end
 
 ---sync reload the file if it has been modified
@@ -146,7 +162,9 @@ function OrgFile:is_modified()
   local bufnr = self:bufnr()
   if bufnr > -1 then
     local cur_changedtick = vim.api.nvim_buf_get_changedtick(bufnr)
-    return cur_changedtick ~= self.metadata.changedtick
+    if cur_changedtick ~= self.metadata.changedtick then
+      return true
+    end
   end
   local stat = vim.uv.fs_stat(self.filename)
   if not stat then
@@ -166,7 +184,7 @@ function OrgFile:parse(skip_if_not_modified)
   if skip_if_not_modified and self.root and not self:is_modified() then
     return self.root
   end
-  self.parser = self:_get_parser()
+  self.parser = ts.get_parser(self:bufnr(), 'org', {})
   local trees = self.parser:parse()
   self.root = trees[1]:root()
   return self.root
@@ -185,7 +203,7 @@ function OrgFile:get_ts_matches(query, parent_node)
   local ts_query = ts_utils.get_query(query)
   local matches = {}
 
-  for _, match, _ in ts_query:iter_matches(parent_node, self:get_source(), nil, nil, { all = true }) do
+  for _, match, _ in ts_query:iter_matches(parent_node, self:bufnr(), nil, nil, { all = true }) do
     local items = {}
     for id, nodes in pairs(match) do
       local name = ts_query.captures[id]
@@ -215,7 +233,7 @@ function OrgFile:get_ts_captures(query, node)
   local ts_query = ts_utils.get_query(query)
   local matches = {}
 
-  for _, match in ts_query:iter_captures(node, self:get_source()) do
+  for _, match in ts_query:iter_captures(node, self:bufnr()) do
     table.insert(matches, match)
   end
   return matches
@@ -277,18 +295,23 @@ end
 
 memoize('get_todo_keywords')
 function OrgFile:get_todo_keywords()
-  local todo_directive = self:_get_directive('todo')
-  if not todo_directive then
+  local todo_directives = self:_get_directive('todo', true)
+
+  if not todo_directives then
     return config:get_todo_keywords()
   end
 
-  local keywords = vim.split(vim.trim(todo_directive), '%s+')
-  local todo_keywords = require('orgmode.objects.todo_keywords'):new({
-    org_todo_keywords = keywords,
-    org_todo_keyword_faces = config.org_todo_keyword_faces,
-  })
+  if type(todo_directives) ~= 'table' then
+    todo_directives = { todo_directives }
+  end
 
-  return todo_keywords
+  local keywords_data = {}
+  for _, directive in ipairs(todo_directives) do
+    local keywords = vim.split(vim.trim(directive), '%s+')
+    table.insert(keywords_data, keywords)
+  end
+
+  return config:build_todo_keywords(keywords_data)
 end
 
 ---@return OrgHeadline[]
@@ -466,13 +489,13 @@ function OrgFile:get_node_text(node, range)
     return ''
   end
   if range then
-    return ts.get_node_text(node, self:get_source(), {
+    return ts.get_node_text(node, self:bufnr(), {
       metadata = {
         range = range,
       },
     })
   end
-  return ts.get_node_text(node, self:get_source())
+  return ts.get_node_text(node, self:bufnr())
 end
 
 ---@param node? TSNode
@@ -534,19 +557,30 @@ end
 
 ---@return number
 function OrgFile:bufnr()
-  local bufnr = utils.get_buffer_by_filename(self.filename)
+  local bufnr = self.buf
   -- Do not consider unloaded buffers as valid
   -- Treesitter is not working in them
   if bufnr > -1 and vim.api.nvim_buf_is_loaded(bufnr) then
     return bufnr
   end
-  return -1
+  local new_bufnr = self._load_buffer(self.filename)
+  self.buf = new_bufnr
+  return new_bufnr
+end
+
+---@private
+---@param filename string
+function OrgFile._load_buffer(filename)
+  local bufnr = vim.fn.bufadd(filename)
+  vim.api.nvim_set_option_value('modeline', false, { buf = bufnr })
+  vim.fn.bufload(bufnr)
+  return bufnr
 end
 
 ---Return valid buffer handle or throw an error if it's not valid
 ---@return number
 function OrgFile:get_valid_bufnr()
-  local bufnr = utils.get_buffer_by_filename(self.filename)
+  local bufnr = self:bufnr()
   if bufnr < 0 then
     error('[orgmode] No valid buffer for file ' .. self.filename .. ' to edit', 0)
   end
@@ -784,7 +818,7 @@ function OrgFile:get_links()
     (link_desc) @link
   ]])
 
-  local source = self:get_source()
+  local source = self:bufnr()
   for _, node in ipairs(matches) do
     table.insert(links, Hyperlink.from_node(node, source))
   end
@@ -805,7 +839,7 @@ function OrgFile:get_footnote_references()
 
   local footnotes = {}
   local processed_lines = {}
-  for _, match in ts_query:iter_captures(self.root, self:get_source()) do
+  for _, match in ts_query:iter_captures(self.root, self:bufnr()) do
     local line_start, _, line_end = match:range()
     if not processed_lines[line_start] then
       if line_start == line_end then
@@ -849,7 +883,7 @@ end
 
 memoize('get_directive')
 ---@param directive_name string
----@return string | nil
+---@return string[] | string | nil
 function OrgFile:get_directive(directive_name)
   return self:_get_directive(directive_name)
 end
@@ -867,8 +901,10 @@ function OrgFile:id_get_or_create()
 end
 
 ---@private
----@return string | nil
-function OrgFile:_get_directive(directive_name)
+---@param directive_name string
+---@param all_matches? boolean If true, returns an array of all matching directive values
+---@return  string[] | string | nil
+function OrgFile:_get_directive(directive_name, all_matches)
   self:parse(true)
   local directives_body = self.root:field('body')[1]
   if not directives_body then
@@ -877,6 +913,22 @@ function OrgFile:_get_directive(directive_name)
   local directives = directives_body:field('directive')
   if not directives or #directives == 0 then
     return nil
+  end
+
+  if all_matches then
+    local results = {}
+    for _, directive in ipairs(directives) do
+      local name = directive:field('name')[1]
+      local value = directive:field('value')[1]
+
+      if name and value then
+        local name_text = self:get_node_text(name)
+        if name_text:lower() == directive_name:lower() then
+          table.insert(results, self:get_node_text(value))
+        end
+      end
+    end
+    return #results > 0 and results or nil
   end
 
   for _, directive in ipairs(directives) do
@@ -895,51 +947,14 @@ function OrgFile:_get_directive(directive_name)
 end
 
 ---@private
----@param lines string[]
----@param bufnr? number
-function OrgFile:_update_lines(lines, bufnr)
-  self.lines = lines
-  self.content = table.concat(lines, '\n')
-  self:parse()
-  if bufnr then
-    self.metadata.changedtick = vim.api.nvim_buf_get_changedtick(bufnr)
+---Get all buffer lines, ensure empty buffer returns empty table
+---@return string[]
+function OrgFile:_get_lines(bufnr)
+  local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
+  if #lines == 1 and lines[1] == '' then
+    lines = {}
   end
-  local stat = vim.uv.fs_stat(self.filename)
-  if stat then
-    self.metadata.mtime = stat.mtime.nsec
-    self.metadata.mtime_sec = stat.mtime.sec
-  end
-  return self
-end
-
----@private
----@return vim.treesitter.LanguageTree
-function OrgFile:_get_parser()
-  local bufnr = self:bufnr()
-
-  if bufnr > -1 then
-    -- Always get the fresh parser for the buffer
-    return ts.get_parser(bufnr, 'org', {})
-  end
-
-  -- In case the buffer got unloaded, go back to string parser
-  if not self.parser or self:is_modified() or type(self.parser:source()) == 'number' then
-    return ts.get_string_parser(self.content, 'org', {})
-  end
-
-  return self.parser
-end
-
---- Get the ts source for the file
---- If there is a buffer, return buffer number
---- Otherwise, return the string content
----@return integer | string
-function OrgFile:get_source()
-  local bufnr = self:bufnr()
-  if bufnr > -1 then
-    return bufnr
-  end
-  return self.content
+  return lines
 end
 
 return OrgFile

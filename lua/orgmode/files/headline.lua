@@ -738,7 +738,7 @@ function Headline:get_plan_dates()
     if name ~= 'NONE' then
       has_plan_dates = true
     end
-    dates[name:upper()] = Date.from_node(timestamp, self.file:get_source(), {
+    dates[name:upper()] = Date.from_node(timestamp, self.file:bufnr(), {
       type = name:upper(),
     })
     dates_nodes[name:upper()] = node
@@ -792,7 +792,7 @@ function Headline:get_non_plan_dates()
   end
 
   local all_dates = {}
-  local source = self.file:get_source()
+  local source = self.file:bufnr()
   for _, match in ipairs(matches) do
     local dates = Date.from_node(match, source)
     vim.list_extend(all_dates, dates)
@@ -1197,6 +1197,20 @@ function Headline:_handle_promote_demote(recursive, modifier, dryRun)
     return lines
   end
   vim.api.nvim_buf_set_lines(bufnr, start, end_line, false, lines)
+  return self:refresh()
+end
+
+---@param drawer_name string
+---@param content string
+---@return OrgHeadline
+function Headline:add_to_drawer(drawer_name, content)
+  local append_line = self:get_drawer_append_line(drawer_name)
+  local bufnr = self.file:get_valid_bufnr()
+
+  -- Add the content indented appropriately
+  local indented_content = self:_apply_indent(content) --[[ @as string ]]
+  vim.api.nvim_buf_set_lines(bufnr, append_line, append_line, false, { indented_content })
+
   return self:refresh()
 end
 
