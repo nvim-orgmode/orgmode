@@ -47,6 +47,13 @@ function OrgHighlighter:_parse_tree(bufnr, win, range)
   self.parsing[win] = self.parsing[win]
     or nil
       == self.buffers[bufnr].language_tree:parse(range, function(_, parsed_trees)
+        -- There are situations where buffer is already detached at the point of
+        -- finishing parsing. Usually during remote editing the file which closes the file
+        -- quickly. If that's the case, just return early.
+        if not self.buffers[bufnr] then
+          self.parsing[win] = false
+          return
+        end
         self.buffers[bufnr].tree = parsed_trees and parsed_trees[1]
         if self.parsing[win] then
           self.parsing[win] = false
