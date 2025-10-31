@@ -573,6 +573,7 @@ end
 function OrgFile._load_buffer(filename)
   local bufnr = vim.fn.bufadd(filename)
   vim.api.nvim_set_option_value('modeline', false, { buf = bufnr })
+  vim.api.nvim_set_option_value('swapfile', false, { buf = bufnr })
   vim.fn.bufload(bufnr)
   return bufnr
 end
