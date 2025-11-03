@@ -794,6 +794,15 @@ These arguments are shared between all of the agenda types:
     - `near` - Do not show deadlines that are too near in future (under |orgmode-org_deadline_warning_days|)
 
 
+org_agenda_hide_empty_blocks            *orgmode-org_agenda_hide_empty_blocks*
+
+- Type: `boolean`
+- Default: `false`
+
+Should custom agenda commands be hidden if they have no entries to show. Does
+not work for `agenda` type since it shows days.
+
+
 org_agenda_sorting_strategy              *orgmode-org_agenda_sorting_strategy*
 
 - Type:
