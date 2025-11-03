@@ -213,6 +213,7 @@
 ---@field org_agenda_skip_scheduled_if_done? boolean If true, scheduled entries marked as done will not be shown in the agenda. Default: false
 ---@field org_agenda_skip_deadline_if_done? boolean If true, deadline entries marked as done will not be shown in the agenda. Default: false
 ---@field org_agenda_text_search_extra_files? ('agenda-archives')[] Additional files to earch from agenda search prompt. Default: {}
+---@field org_agenda_hide_empty_blocks? boolean Hide empty custom agenda commands in agenda view. Default: false
 ---@field org_agenda_custom_commands? table<string, OrgAgendaCustomCommand> Custom commands for the agenda view. Default: {}
 ---@field org_agenda_block_separator? string Separator for blocks in the agenda view. Default: '-'
 ---@field org_agenda_sorting_strategy? table<'agenda' | 'todo' | 'tags', OrgAgendaSortingStrategy[]> Sorting strategy for the agenda view. See docs for default value

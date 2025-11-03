@@ -78,7 +78,7 @@ function Agenda:render()
   local bufnr = self:_open_window()
   for i, view in ipairs(self.views) do
     view:render(bufnr, line)
-    if #self.views > 1 and i < #self.views then
+    if #self.views > 1 and i < #self.views and #view:get_lines() > 0 then
       colors.add_hr(bufnr, vim.api.nvim_buf_line_count(bufnr), config.org_agenda_block_separator)
     end
   end
