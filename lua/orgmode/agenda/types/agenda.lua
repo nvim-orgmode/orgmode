@@ -326,12 +326,12 @@ function OrgAgendaType:render(bufnr, current_line)
   return self.view
 end
 
----@param grid_line { real_date: OrgDate, is_same_day: boolean, is_now: boolean, is_placeholder?: boolean }
+---@param grid_line { real_date: OrgDate, is_same_day: boolean, is_now: boolean, is_placeholder?: boolean, hl_group?: string }
 ---@param agenda_day OrgAgendaDay
 ---@return OrgAgendaLine
 function OrgAgendaType:_build_time_grid_line(grid_line, agenda_day)
   local line = AgendaLine:new({
-    hl_group = '@org.agenda.time_grid',
+    hl_group = grid_line.hl_group or '@org.agenda.time_grid',
     metadata = {
       date = grid_line.real_date,
     },
@@ -413,6 +413,7 @@ function OrgAgendaType:_prepare_grid_lines(date_range, agenda_day)
         if remove_range_match and agenda_item.real_date:has_time_range() then
           table.insert(agenda_items_with_range_time, {
             from = agenda_item.real_date,
+            hl_group = agenda_item:get_hlgroup(),
             to = Date.from_timestamp(agenda_item.real_date.timestamp_end),
           })
         end
@@ -451,6 +452,7 @@ function OrgAgendaType:_prepare_grid_lines(date_range, agenda_day)
             is_same_day = true,
             is_now = false,
             is_placeholder = true,
+            hl_group = range.hl_group,
           })
           goto continue
         end
