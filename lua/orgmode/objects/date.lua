@@ -1007,16 +1007,25 @@ function OrgDate:apply_repeater()
 end
 
 ---@param date OrgDate
+---@param repeat_count number | nil
 ---@return boolean
-function OrgDate:repeats_on(date)
+function OrgDate:repeats_on(date, repeat_count)
   local repeater = self:get_repeater()
   if not repeater then
+    return false
+  end
+  if repeat_count == 0 then
     return false
   end
   repeater = repeater:gsub('^%.', ''):gsub('^%+%+', '+')
   local repeat_date = self:start_of('day')
   local date_start = date:start_of('day')
+  local counter = 0
   while repeat_date.timestamp < date_start.timestamp do
+    if repeat_count and counter >= repeat_count then
+      break
+    end
+    counter = counter + 1
     repeat_date = repeat_date:adjust(repeater)
   end
   return repeat_date:is_same(date, 'day')

@@ -842,6 +842,19 @@ Show time grid in agenda. See [[#org_agenda_time_grid][org_agenda_time_grid]] fo
 Label value for the current time in the agenda time grid.
 See [[#org_agenda_time_grid][org_agenda_time_grid]] for time grid configuration or [[#org_agenda_use_time_grid][org_agenda_use_time_grid]] to disable the grid.
 
+*** org_agenda_show_future_repeats
+:PROPERTIES:
+:CUSTOM_ID: org_agenda_show_future_repeats
+:END:
+- Type: =boolean | number | 'next'=
+- Default: =true=
+How many future repeated tasks to show in agenda.
+Possible values:
+- =true= - Show all future repeats (default)
+- =false= - Do not show future repeats
+- =number= - Show only given number of future repeats
+- ='next'= - Show only the next repeat
+
 
 *** org_capture_templates
 :PROPERTIES:

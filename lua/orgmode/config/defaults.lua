@@ -42,6 +42,7 @@ local DefaultConfig = {
   },
   org_agenda_current_time_string = '<- now -----------------------------------------------',
   org_agenda_use_time_grid = true,
+  org_agenda_show_future_repeats = true,
   org_priority_highest = 'A',
   org_priority_default = 'B',
   org_priority_lowest = 'C',

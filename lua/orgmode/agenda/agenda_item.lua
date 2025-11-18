@@ -40,7 +40,8 @@ function AgendaItem:new(headline_date, headline, date, index)
   opts.repeats_on_date = false
   opts.is_same_day = headline_date:is_same(date, 'day')
   if not opts.is_same_day then
-    opts.repeats_on_date = headline_date:repeats_on(date)
+    local repeat_count = config:get_repeat_count()
+    opts.repeats_on_date = headline_date:repeats_on(date, repeat_count)
     opts.is_same_day = opts.repeats_on_date
   end
   opts.is_in_date_range = headline_date:is_none() and headline_date:is_in_date_range(date)

@@ -546,6 +546,34 @@ function Config:use_property_inheritance(property_name)
   end
 end
 
+-- Return repeat count depending on `org_agenda_show_future_repeats` value.
+-- If nil, repeat infinitely.
+-- @return number|nil
+function Config:get_repeat_count()
+  if self.org_agenda_show_future_repeats == true then
+    return nil
+  end
+
+  if self.org_agenda_show_future_repeats == false then
+    return 0
+  end
+
+  if self.org_agenda_show_future_repeats == 'next' then
+    return 1
+  end
+  if type(self.org_agenda_show_future_repeats) == 'number' and self.org_agenda_show_future_repeats >= 0 then
+    return self.org_agenda_show_future_repeats
+  end
+
+  utils.echo_error({
+    'Invalid value for `org_agenda_show_future_repeats`',
+    'Either boolean, positive number or "next" expected',
+    'Defaulting to "true"',
+  })
+
+  return nil
+end
+
 ---@param filetype_name string
 ---@param use_ftmatch? boolean Use vim.filetype.match to detect filetype
 function Config:detect_filetype(filetype_name, use_ftmatch)

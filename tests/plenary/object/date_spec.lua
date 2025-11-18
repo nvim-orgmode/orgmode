@@ -472,6 +472,12 @@ describe('Date object', function()
     local friday = Date.from_string('2021-05-14 Fri ++1w')
     assert.is.True(friday:repeats_on(friday:add({ week = 1 })))
     assert.is.False(friday:repeats_on(friday:add({ day = 5 })))
+
+    -- Check it handles the repeat count
+    local thursday = Date.from_string('2021-05-13 +1d')
+    assert.are.same('+1d', thursday:get_repeater())
+    assert.is.True(thursday:repeats_on(thursday:add({ day = 1 }), 1))
+    assert.is.False(thursday:repeats_on(thursday:add({ day = 2 }), 1))
   end)
 
   it('should apply different types of repeaters to the date', function()
