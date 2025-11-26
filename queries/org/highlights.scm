@@ -32,6 +32,8 @@
 (dynamic_block parameter: (expr) @org.block)
 (property_drawer (property name: (expr) @org.properties.name)) @org.properties
 (latex_env) @org.latex_env
+(inline_math_block) @org.latex
+(display_math_block) @org.latex
 (drawer) @org.drawer
 (tag_list) @org.tag
 (directive name: (expr) @_directive_name value: (value) @org.tag (#match? @_directive_name "\\c^filetags$"))
