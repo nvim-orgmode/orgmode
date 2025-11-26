@@ -17,7 +17,7 @@ local Memoize = require('orgmode.utils.memoize')
 
 ---@class OrgFileOpts
 ---@field filename string
----@field buf number
+---@field buf? number
 
 ---@class OrgFile
 ---@field filename string
