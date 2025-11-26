@@ -25,3 +25,12 @@
   (#set! injection.language "latex")
   (#set! image.ext "math.tex"))
 
+(inline_math_block
+  (contents) @image.content
+  (#set! injection.language "latex")
+  (#set! image.ext "math.tex"))
+
+(display_math_block
+  (contents) @image.content
+  (#set! injection.language "latex")
+  (#set! image.ext "math.tex"))
