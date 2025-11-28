@@ -738,7 +738,7 @@ function Headline:get_plan_dates()
     if name ~= 'NONE' then
       has_plan_dates = true
     end
-    dates[name:upper()] = Date.from_node(timestamp, self.file:bufnr(), {
+    dates[name:upper()] = Date.from_node(timestamp, self.file:get_source(), {
       type = name:upper(),
     })
     dates_nodes[name:upper()] = node
@@ -792,7 +792,7 @@ function Headline:get_non_plan_dates()
   end
 
   local all_dates = {}
-  local source = self.file:bufnr()
+  local source = self.file:get_source()
   for _, match in ipairs(matches) do
     local dates = Date.from_node(match, source)
     vim.list_extend(all_dates, dates)
