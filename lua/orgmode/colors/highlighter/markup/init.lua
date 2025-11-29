@@ -169,7 +169,7 @@ end
 ---@return OrgMarkupPreparedHighlight[]
 function OrgMarkup:get_prepared_headline_highlights(headline)
   local highlights =
-    self:get_node_highlights(headline:node(), headline.file:bufnr(), select(1, headline:node():range()))
+    self:get_node_highlights(headline:node(), headline.file:get_source(), select(1, headline:node():range()))
 
   local result = {}
 
