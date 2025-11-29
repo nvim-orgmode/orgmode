@@ -112,9 +112,9 @@ function OrgFile:reload()
   if bufnr > -1 then
     local new_changedtick = vim.api.nvim_buf_get_changedtick(bufnr)
     buf_changed = self.metadata.changedtick ~= new_changedtick
-    self.metadata.changedtick = new_changedtick
     if buf_changed then
       self:_update_lines(self:_get_lines(bufnr))
+      self.metadata.changedtick = new_changedtick
     end
   end
   local stat = vim.uv.fs_stat(self.filename)
@@ -123,13 +123,15 @@ function OrgFile:reload()
     local new_mtime_sec = stat.mtime.sec
     file_changed = (new_mtime_nsec > 0 and self.metadata.mtime ~= new_mtime_nsec)
       or self.metadata.mtime_sec ~= new_mtime_sec
-    self.metadata.mtime = new_mtime_nsec
-    self.metadata.mtime_sec = new_mtime_sec
   end
 
   if file_changed and not buf_changed then
     return utils.readfile(self.filename, { schedule = true }):next(function(lines)
       self:_update_lines(lines)
+      if stat then
+        self.metadata.mtime = stat.mtime.nsec
+        self.metadata.mtime_sec = stat.mtime.sec
+      end
       return self
     end)
   end
