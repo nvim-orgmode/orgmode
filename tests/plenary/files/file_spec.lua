@@ -1,6 +1,9 @@
 local OrgFile = require('orgmode.files.file')
 local config = require('orgmode.config')
 local Range = require('orgmode.files.elements.range')
+-- TODO: Remove once Neovim adds string parser back
+-- See: https://github.com/nvim-orgmode/orgmode/issues/1049
+local is_nightly = vim.fn.has('nvim-0.12') > 0
 
 describe('OrgFile', function()
   ---@return OrgFile
@@ -20,7 +23,11 @@ describe('OrgFile', function()
       local stat = vim.uv.fs_stat(filename) or {}
       assert.are.same(stat.mtime.nsec, file.metadata.mtime)
       assert.are.same(stat.mtime.sec, file.metadata.mtime_sec)
-      assert.are.same(2, file.metadata.changedtick)
+      if is_nightly then
+        assert.are.same(2, file.metadata.changedtick)
+      else
+        assert.are.same(0, file.metadata.changedtick)
+      end
     end)
 
     it('should not load a file that is not an org file', function()
@@ -39,10 +46,18 @@ describe('OrgFile', function()
       local stat = vim.uv.fs_stat(filename) or {}
       assert.are.same(stat.mtime.nsec, file.metadata.mtime)
       assert.are.same(stat.mtime.sec, file.metadata.mtime_sec)
-      assert.are.same(2, file.metadata.changedtick)
+      if is_nightly then
+        assert.are.same(2, file.metadata.changedtick)
+      else
+        assert.are.same(0, file.metadata.changedtick)
+      end
       vim.cmd('write!')
       file:reload_sync()
-      assert.are.same(2, file.metadata.changedtick)
+      if is_nightly then
+        assert.are.same(2, file.metadata.changedtick)
+      else
+        assert.are.same(4, file.metadata.changedtick)
+      end
     end)
 
     it('should load files with special characters in filename from buffer', function()
@@ -477,6 +492,20 @@ describe('OrgFile', function()
   end)
 
   describe('set_node_text', function()
+    if not is_nightly then
+      it('should throw an error if file is not loaded in buffer', function()
+        local file = load_file_sync({
+          '* Headline 1 :TAG:',
+          '  The content',
+          '  Multi line',
+        })
+        local paragraph_node = file:get_node_at_cursor():parent()
+        assert.is.error_matches(function()
+          return file:set_node_text(paragraph_node, 'New Text')
+        end, '%[orgmode%] No valid buffer for file ' .. file.filename .. ' to edit')
+      end)
+    end
+
     it('should set node text', function()
       local file = load_file_sync({
         '* Headline 1 :TAG:',
@@ -530,6 +559,30 @@ describe('OrgFile', function()
   end)
 
   describe('bufnr', function()
+    if not is_nightly then
+      it('should return -1 if there is no buffer', function()
+        local file = load_file_sync({
+          '* Headline 1 :TAG:',
+          '  The content',
+          '  Multi line',
+        })
+        assert.are.same(-1, file:bufnr())
+      end)
+
+      it('should return -1 if file is loaded in buffer but buffer is not loaded', function()
+        local file = load_file_sync({
+          '* Headline 1 :TAG:',
+          '  The content',
+          '  Multi line',
+        })
+        vim.cmd('edit ' .. file.filename)
+        assert.is.True(file:bufnr() > 0)
+        vim.cmd('bdelete')
+        assert.are.same(-1, file:bufnr())
+        assert.is.True(vim.fn.bufnr(file.filename) > 0)
+      end)
+    end
+
     it('should return buffer number if file is loaded', function()
       local file = load_file_sync({
         '* Headline 1 :TAG:',
