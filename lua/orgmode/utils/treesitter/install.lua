@@ -165,6 +165,8 @@ function M.select_compiler_args(compiler)
       'src/parser.c',
       'src/scanner.c',
       '-Os',
+      '/std:c11',
+      '/utf-8',
       '/LD',
     }
   elseif string.match(compiler, 'zig$') or string.match(compiler, 'zig.exe$') then
@@ -178,6 +180,7 @@ function M.select_compiler_args(compiler)
       '-Isrc',
       '-shared',
       '-Os',
+      '-std=c11',
     }
   else
     local args = {
@@ -187,6 +190,7 @@ function M.select_compiler_args(compiler)
       'src/parser.c',
       'src/scanner.c',
       '-Os',
+      '-std=c11',
     }
     if vim.fn.has('mac') == 1 then
       table.insert(args, '-bundle')
