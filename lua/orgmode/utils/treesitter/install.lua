@@ -2,7 +2,7 @@ local Promise = require('orgmode.utils.promise')
 local utils = require('orgmode.utils')
 local uv = vim.uv
 local M = {
-  compilers = { vim.fn.getenv('CC'), 'cc', 'gcc', 'clang', 'cl', 'zig' },
+  compilers = { 'tree-sitter', vim.fn.getenv('CC'), 'cc', 'gcc', 'clang', 'cl', 'zig' },
 }
 
 local required_version = '2.0.0'
@@ -150,6 +150,13 @@ function M.get_parser_path()
 end
 
 function M.select_compiler_args(compiler)
+  if compiler == 'tree-sitter' then
+    return {
+      'build',
+      '-o',
+      'parser.so',
+    }
+  end
   if string.match(compiler, 'cl$') or string.match(compiler, 'cl.exe$') then
     return {
       '/Fe:',
@@ -158,6 +165,8 @@ function M.select_compiler_args(compiler)
       'src/parser.c',
       'src/scanner.c',
       '-Os',
+      '/std:c11',
+      '/utf-8',
       '/LD',
     }
   elseif string.match(compiler, 'zig$') or string.match(compiler, 'zig.exe$') then
@@ -171,6 +180,7 @@ function M.select_compiler_args(compiler)
       '-Isrc',
       '-shared',
       '-Os',
+      '-std=c11',
     }
   else
     local args = {
@@ -180,6 +190,7 @@ function M.select_compiler_args(compiler)
       'src/parser.c',
       'src/scanner.c',
       '-Os',
+      '-std=c11',
     }
     if vim.fn.has('mac') == 1 then
       table.insert(args, '-bundle')
