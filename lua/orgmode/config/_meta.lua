@@ -2,6 +2,8 @@
 ---@alias OrgAgendaSpan 'day' | 'week' | 'month' | 'year' | number
 ---@alias OrgMappingValue string | string[]
 
+---@alias OrgLogLevel 'debug' | 'info' | 'warn' | 'error' | 'off'
+
 ---@class OrgAgendaCustomCommandTypeInterface
 ---@field type? 'agenda' | 'tags' | 'tags_todo'
 ---@field org_agenda_overriding_header? string
@@ -260,4 +262,4 @@
 ---@field mappings? OrgMappingsConfig Mappings configuration
 ---@field emacs_config? OrgEmacsConfig Emacs cnfiguration
 ---@field ui? OrgUiConfig UI configuration
----@field hyperlinks OrgHyperlinksConfig  Custom sources for hyperlinks
+---@field hyperlinks? OrgHyperlinksConfig  Custom sources for hyperlinks

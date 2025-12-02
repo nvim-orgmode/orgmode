@@ -1,5 +1,7 @@
 _G.orgmode = _G.orgmode or {}
-_G.Org = _G.Org or {}
+_G.Org = _G.Org or {
+  log_level = 'off',
+}
 ---@type Org | nil
 local instance = nil
 
@@ -132,10 +134,13 @@ function Org.setup(opts)
   local config = require('orgmode.config'):extend(opts)
   config:install_grammar()
   instance = Org:new()
+  local log = require('orgmode.utils.log')
+  log.debug('Calling setup with options: \n%s', vim.inspect(opts))
   instance.setup_called = true
   vim.defer_fn(function()
     if config.notifications.enabled and #vim.api.nvim_list_uis() > 0 then
       Org.files:load():next(vim.schedule_wrap(function()
+        log.debug('Starting notifications timer')
         instance.notifications = require('orgmode.notifications')
           :new({
             files = Org.files,

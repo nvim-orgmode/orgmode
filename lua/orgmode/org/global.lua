@@ -51,6 +51,7 @@ local build = function(orgmode)
   local config = require('orgmode.config')
 
   local OrgGlobal = {
+    log_level = _G.Org.log_level or 'off',
     help = function()
       vim.cmd(('tabnew %s'):format(('%s/%s'):format(docs_dir, 'index.org')))
       vim.cmd(('tcd %s'):format(docs_dir))

@@ -9,6 +9,7 @@ local Promise = require('orgmode.utils.promise')
 local AgendaTypes = require('orgmode.agenda.types')
 local Input = require('orgmode.ui.input')
 local OrgHyperlink = require('orgmode.org.links.hyperlink')
+local Log = require('orgmode.utils.log')
 
 ---@class OrgAgenda
 ---@field highlights table[]
@@ -74,6 +75,7 @@ function Agenda:prepare_and_render()
 end
 
 function Agenda:render()
+  Log.info('Rendering agenda with views: %d', #self.views)
   local line = vim.fn.line('.')
   local bufnr = self:_open_window()
   for i, view in ipairs(self.views) do
@@ -93,6 +95,7 @@ function Agenda:render()
       vim.w.org_window_pos = nil
     end
   end
+  Log.info('Finished rendering agenda with views: %d', #self.views)
 end
 
 function Agenda:agenda(opts)
