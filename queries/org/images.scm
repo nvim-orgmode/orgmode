@@ -21,16 +21,13 @@
   (#set! image.ext "math.tex"))
 
 (latex_env
-  (contents) @image.content
   (#set! injection.language "latex")
-  (#set! image.ext "math.tex"))
+  (#set! image.ext "math.tex")) @image.content @image
 
 (inline_math_block
-  (contents) @image.content
   (#set! injection.language "latex")
-  (#set! image.ext "math.tex"))
+  (#set! image.ext "math.tex")) @image.content @image
 
 (display_math_block
-  (contents) @image.content
   (#set! injection.language "latex")
-  (#set! image.ext "math.tex"))
+  (#set! image.ext "math.tex")) @image.content @image
