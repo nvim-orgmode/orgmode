@@ -133,7 +133,7 @@ end
 ---@returns table|nil
 function Notifications:_check_reminders(date, time)
   local result = {}
-  local notifications = config.notifications
+  local notifications = config.notifications or {}
   if date:is_deadline() and not notifications.deadline_reminder then
     return result
   end
@@ -145,7 +145,7 @@ function Notifications:_check_reminders(date, time)
     local repeater_time = date:apply_repeater_until(time)
     local times = utils.ensure_array(notifications.repeater_reminder_time)
     local minutes = repeater_time:diff(time, 'minute')
-    if vim.tbl_contains(times, minutes) then
+    if not date:is_same(repeater_time) and vim.tbl_contains(times, minutes) then
       table.insert(result, {
         reminder_type = 'repeater',
         time = repeater_time:without_adjustments(),
