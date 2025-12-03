@@ -5,7 +5,7 @@ local M = {
   compilers = { 'tree-sitter', vim.fn.getenv('CC'), 'cc', 'gcc', 'clang', 'cl', 'zig' },
 }
 
-local required_version = '2.0.0'
+local required_version = '2.0.2'
 
 function M.install()
   local version_info = M.get_version_info()

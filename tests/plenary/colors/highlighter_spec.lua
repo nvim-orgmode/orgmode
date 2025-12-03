@@ -260,10 +260,8 @@ describe('highlighter', function()
         [[this is \[1 + 1\] math]],
         [[this is \{1 + 1\} math]],
       })
-      assert.are.same(3, #extmarks)
-      assert_extmark(extmarks[1], { line = 0, start_col = 8, end_col = 17, hl_group = '@org.latex' })
-      assert_extmark(extmarks[2], { line = 1, start_col = 8, end_col = 17, hl_group = '@org.latex' })
-      assert_extmark(extmarks[3], { line = 2, start_col = 8, end_col = 17, hl_group = '@org.latex' })
+      assert.are.same(1, #extmarks)
+      assert_extmark(extmarks[1], { line = 2, start_col = 8, end_col = 17, hl_group = '@org.latex' })
     end)
   end)
 end)
