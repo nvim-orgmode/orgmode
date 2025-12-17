@@ -79,17 +79,6 @@ function OrgFile.load(filename)
     return Promise.resolve(false)
   end
 
-  -- TODO: Remove once Neovim adds string parser back
-  -- See: https://github.com/nvim-orgmode/orgmode/issues/1049
-  if is_nightly then
-    bufnr = OrgFile._load_buffer(filename)
-
-    return Promise.resolve(OrgFile:new({
-      filename = filename,
-      buf = bufnr,
-    }))
-  end
-
   return utils.readfile(filename, { schedule = true }):next(function(lines)
     return OrgFile:new({
       filename = filename,
@@ -574,20 +563,6 @@ end
 
 ---@return number
 function OrgFile:bufnr()
-  -- TODO: Remove once Neovim adds string parser back
-  -- See: https://github.com/nvim-orgmode/orgmode/issues/1049
-  if is_nightly then
-    local bufnr = self.buf
-    -- Do not consider unloaded buffers as valid
-    -- Treesitter is not working in them
-    if bufnr > -1 and vim.api.nvim_buf_is_loaded(bufnr) then
-      return bufnr
-    end
-    local new_bufnr = self._load_buffer(self.filename)
-    self.buf = new_bufnr
-    return new_bufnr
-  end
-
   local bufnr = utils.get_buffer_by_filename(self.filename)
   -- Do not consider unloaded buffers as valid
   -- Treesitter is not working in them
