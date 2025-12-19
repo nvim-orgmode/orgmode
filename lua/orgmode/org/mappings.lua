@@ -1,6 +1,5 @@
 local Calendar = require('orgmode.objects.calendar')
 local Date = require('orgmode.objects.date')
--- local Drawer = require('orgmode.files.elements.drawer')
 local EditSpecial = require('orgmode.objects.edit_special')
 local Help = require('orgmode.objects.help')
 local OrgHyperlink = require('orgmode.org.links.hyperlink')
@@ -795,7 +794,7 @@ end
 function OrgMappings:insert_link()
   local link = OrgHyperlink.at_cursor()
   return Input.open('Links: ', link and link.url:to_string() or '', function(arg_lead)
-    return self.completion:prompt(arg_lead)
+    return self.completion:complete_links_from_input(arg_lead)
   end):next(function(link_location)
     if not link_location then
       return false
