@@ -15,7 +15,7 @@ Orgmode supports various plugins to extend its functionality or make it more pre
   - [[#blinkcmp][blink.cmp]]
   - [[#nvim-cmp][nvim-cmp]]
   - [[#rldxnvim][RLDX.nvim]]
-- [[#aesthetics][Aestehtics]]
+- [[#aesthetics][Aesthetics]]
   - [[#org-bulletsnvim][org-bullets.nvim]]
   - [[#headlinesnvim][headlines.nvim]]
   - [[#org-modernnvim][org-modern.nvim]]
