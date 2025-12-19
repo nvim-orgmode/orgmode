@@ -329,6 +329,10 @@ return {
       args = { true },
       opts = { desc = 'org timestamp (inactive)', help_desc = 'Insert/Update inactive date under cursor' },
     }),
+    org_insert_drawer = m.action(
+      'org_mappings.insert_drawer',
+      { opts = { desc = 'org insert drawer', help_desc = 'Insert drawer' } }
+    ),
     org_insert_link = m.action('org_mappings.insert_link', {
       modes = { 'n', 'x' },
       opts = {

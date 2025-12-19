@@ -1,5 +1,6 @@
 local Calendar = require('orgmode.objects.calendar')
 local Date = require('orgmode.objects.date')
+-- local Drawer = require('orgmode.files.elements.drawer')
 local EditSpecial = require('orgmode.objects.edit_special')
 local Help = require('orgmode.objects.help')
 local OrgHyperlink = require('orgmode.org.links.hyperlink')
@@ -794,7 +795,7 @@ end
 function OrgMappings:insert_link()
   local link = OrgHyperlink.at_cursor()
   return Input.open('Links: ', link and link.url:to_string() or '', function(arg_lead)
-    return self.completion:complete_links_from_input(arg_lead)
+    return self.completion:prompt(arg_lead)
   end):next(function(link_location)
     if not link_location then
       return false
@@ -1055,6 +1056,40 @@ function OrgMappings:org_toggle_timestamp_type()
 
   date.active = not date.active
   self:_replace_date(date)
+end
+
+-- Inserts a new drawer after the cursor position with custom name,
+-- or adds PROPERTIES drawer under headline if inserted with prefix (e.g. count 1)
+function OrgMappings:insert_drawer()
+  local headline = self.files:get_closest_headline_or_nil()
+  local indent = headline and headline:get_indent() or vim.fn.matchstr(vim.fn.getline('.'), '^%s*')
+
+  if vim.v.count > 0 then
+    if not headline then
+      return utils.echo_warning('No headline found to insert a drawer under')
+    end
+
+    local drawer_lines = headline:_apply_indent({ ':PROPERTIES:', '', ':END:' }) --[[ @as string[] ]]
+    local insert_line = headline:get_range().start_line
+    vim.fn.append(insert_line, drawer_lines)
+    vim.fn.cursor(insert_line + 2, #indent + 1)
+    return vim.cmd([[startinsert!]])
+  end
+
+  return Input.open('Drawer name: '):next(function(drawer_name)
+    if not drawer_name or vim.trim(drawer_name) == '' then
+      return utils.echo_warning('Drawer name cannot be empty')
+    end
+    local insert_line = vim.fn.line('.')
+    local drawer_lines = {
+      string.format('%s:%s:', indent, drawer_name),
+      indent,
+      string.format('%s:END:', indent),
+    }
+    vim.fn.append(insert_line, drawer_lines)
+    vim.fn.cursor(insert_line + 2, #indent + 1)
+    return vim.cmd([[startinsert!]])
+  end)
 end
 
 ---@param direction string
