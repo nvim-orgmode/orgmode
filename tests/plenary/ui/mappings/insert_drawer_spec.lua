@@ -14,7 +14,6 @@ end
 
 describe('Insert drawer mappings', function()
   after_each(function()
-    vim.v.count = 0
     vim.cmd([[silent! %bw!]])
   end)
 
@@ -48,7 +47,7 @@ describe('Insert drawer mappings', function()
     })
 
     vim.fn.cursor(1, 1)
-    vim.v.count = 1
+    vim.cmd([[let v:count = 1]])
     orgmode.action('org_mappings.insert_drawer')
     vim.wait(50, function()
       return false
