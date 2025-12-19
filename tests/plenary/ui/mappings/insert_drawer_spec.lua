@@ -34,21 +34,20 @@ describe('Insert drawer mappings', function()
     assert.are.same({
       '* TODO heading',
       'content line',
-      '  :NOTES:',
-      '  ',
-      '  :END:',
+      ':NOTES:',
+      '',
+      ':END:',
     }, vim.api.nvim_buf_get_lines(0, 0, -1, false))
   end)
 
-  it('inserts PROPERTIES drawer under headline when count prefix is provided', function()
+  it('inserts PROPERTIES drawer under headline', function()
     helpers.create_file({
       '* TODO heading',
       'content line',
     })
 
     vim.fn.cursor(1, 1)
-    vim.cmd([[let v:count = 1]])
-    orgmode.action('org_mappings.insert_drawer')
+    orgmode.action('org_mappings.insert_properties_drawer')
     vim.wait(50, function()
       return false
     end)

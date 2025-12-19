@@ -333,6 +333,10 @@ return {
       'org_mappings.insert_drawer',
       { opts = { desc = 'org insert drawer', help_desc = 'Insert drawer' } }
     ),
+    org_insert_properties_drawer = m.action(
+      'org_mappings.insert_properties_drawer',
+      { opts = { desc = 'org insert properties drawer', help_desc = 'Insert Properties drawer' } }
+    ),
     org_insert_link = m.action('org_mappings.insert_link', {
       modes = { 'n', 'x' },
       opts = {
