@@ -12,11 +12,32 @@ function Clock:new(opts)
   local data = {
     files = opts.files,
     clocked_headline = nil,
+    _init_registered = false,
   }
   setmetatable(data, self)
   self.__index = self
-  data:init()
+  -- Defer init to avoid blocking startup - register callback for when files are loaded
+  vim.schedule(function()
+    data:_schedule_init()
+  end)
   return data
+end
+
+-- Schedule init to run when files are loaded
+function Clock:_schedule_init()
+  -- If files are already loaded, init immediately
+  if self.files.load_state == 'loaded' then
+    self:init()
+    return
+  end
+
+  -- Register callback to init when files finish loading
+  if not self._init_registered then
+    self._init_registered = true
+    require('orgmode'):on_files_loaded(function()
+      self:init()
+    end)
+  end
 end
 
 -- When first loading, check if there are active clocks

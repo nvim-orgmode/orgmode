@@ -55,14 +55,26 @@ function Org:init()
     return
   end
   self.buffers = require('orgmode.state.buffers').init()
+
   require('orgmode.events').init()
   self.highlighter = require('orgmode.colors.highlighter'):new()
   require('orgmode.colors.highlights').define_highlights()
-  self.files = require('orgmode.files')
-    :new({
-      paths = require('orgmode.config').org_agenda_files,
-    })
-    :load_sync(true, 20000)
+
+  self.files = require('orgmode.files'):new({
+    local config = require('orgmode.config')
+    paths = config.org_agenda_files,
+  })
+
+  -- Load files: async (non-blocking) or sync (blocking) based on config
+  if config.org_async_loading then
+    -- Defer progressive loading to next event loop to allow buffer display first
+    vim.schedule(function()
+      self:load_files({ current_buffer_first = true })
+    end)
+  else
+    self.files:load_sync(true, 20000)
+  end
+
   self.links = require('orgmode.org.links'):new({ files = self.files })
   self.agenda = require('orgmode.agenda'):new({
     files = self.files,
@@ -117,7 +129,11 @@ function Org:setup_autocmds()
     pattern = 'org',
     group = org_augroup,
     callback = function()
-      self:reload(vim.fn.expand('<afile>:p'))
+      -- Defer to let buffer display first, then initialize
+      local file = vim.fn.expand('<afile>:p')
+      vim.schedule(function()
+        self:reload(file)
+      end)
     end,
   })
   vim.api.nvim_create_autocmd('ColorScheme', {
