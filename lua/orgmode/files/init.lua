@@ -19,12 +19,24 @@ local Listitem = require('orgmode.files.elements.listitem')
 ---@field files table<string, OrgFile> table with files that are part of paths
 ---@field all_files table<string, OrgFile> all loaded files, no matter if they are part of paths
 ---@field load_state 'loading' | 'loaded' | nil
+---@field progressive_state? { loaded: number, total: number, loading: boolean } Progressive loading state
 
 ---@class OrgFileScanResult
 ---@field filename string Absolute path to the org file
 ---@field mtime_sec number File modification time in seconds (stat.mtime.sec)
 ---@field mtime_nsec number File modification time nanoseconds (stat.mtime.nsec)
 ---@field size number File size in bytes
+
+---@alias OrgLoadProgressiveSortFn fun(a: OrgFileScanResult, b: OrgFileScanResult): boolean
+
+---@class OrgLoadProgressiveOpts
+---@field order_by? 'mtime'|'name'|OrgLoadProgressiveSortFn Sort order for loading files
+---@field direction? 'asc'|'desc' Sort direction (default: 'desc' for mtime, 'asc' for name)
+---@field current_buffer_first? boolean Prioritize current buffer file (default: true)
+---@field concurrency? number Max concurrent file loads (default: 50)
+---@field on_file_loaded? fun(file: OrgFile, index: number, total: number) Callback per file loaded
+---@field on_complete? fun(files: OrgFile[]) Callback when all files loaded
+---@field filter? fun(metadata: OrgFileScanResult): boolean Pre-load filter
 
 local OrgFiles = {
   cached_instances = {},
@@ -409,6 +421,197 @@ function OrgFiles:scan()
     end
   end
   return metadata
+end
+
+---Sort metadata according to options
+---@private
+---@param metadata OrgFileScanResult[]
+---@param opts OrgLoadProgressiveOpts
+---@return OrgFileScanResult[]
+function OrgFiles:_sort_metadata(metadata, opts)
+  if type(opts.order_by) == 'function' then
+    ---@cast opts {order_by: OrgLoadProgressiveSortFn}
+    table.sort(metadata, opts.order_by)
+    return metadata
+  end
+
+  local order_by = opts.order_by or 'mtime'
+  local direction = opts.direction
+
+  ---@param attr string
+  ---@param desc boolean
+  ---@return fun(a: OrgFileScanResult, b: OrgFileScanResult): boolean
+  local function by(attr, desc)
+    return desc and function(a, b)
+      return a[attr] > b[attr]
+    end or function(a, b)
+      return a[attr] < b[attr]
+    end
+  end
+
+  if order_by == 'mtime' then
+    direction = direction or 'desc'
+    local desc = direction == 'desc'
+    table.sort(metadata, function(a, b)
+      if a.mtime_sec ~= b.mtime_sec then
+        return by('mtime_sec', desc)(a, b)
+      end
+      return by('mtime_nsec', desc)(a, b)
+    end)
+  elseif order_by == 'name' then
+    direction = direction or 'asc'
+    table.sort(metadata, by('filename', direction == 'desc'))
+  end
+
+  return metadata
+end
+
+---Load files from queue with callbacks
+---@class OrgLoadQueueState
+---@field total number Total number of files to load
+---@field loaded_count number Number of files loaded so far
+---@field loaded_files OrgFile[] Files that have been loaded
+---@field batch_start_time number High-resolution timestamp when loading started
+---@field last_callback_time number High-resolution timestamp of last callback
+
+---@private
+---Handle a single loaded file: update state, track timing, fire callback
+---@param orgfile OrgFile|nil The loaded file (nil if loading failed)
+---@param index number The index of this file in the load queue
+---@param state OrgLoadQueueState Mutable state for the load operation
+---@param opts OrgLoadProgressiveOpts Options including callbacks
+---@return OrgFile|nil
+function OrgFiles:_handle_loaded_file(orgfile, index, state, opts)
+  if not orgfile then
+    return orgfile
+  end
+
+  -- Capture timing to detect if callbacks batch without yielding
+  local now = vim.uv.hrtime()
+  orgfile._load_timing = {
+    since_last_ms = (now - state.last_callback_time) / 1e6,
+    since_start_ms = (now - state.batch_start_time) / 1e6,
+  }
+  state.last_callback_time = now
+
+  -- Update file and state
+  orgfile.index = index
+  self.files[orgfile.filename] = orgfile
+  state.loaded_count = state.loaded_count + 1
+  table.insert(state.loaded_files, orgfile)
+  self.progressive_state.loaded = state.loaded_count
+
+  -- Fire per-file callback
+  if opts.on_file_loaded then
+    opts.on_file_loaded(orgfile, state.loaded_count, state.total)
+  end
+
+  return orgfile
+end
+
+---@private
+---Handle completion of all file loading
+---@param state OrgLoadQueueState Mutable state for the load operation
+---@param opts OrgLoadProgressiveOpts Options including callbacks
+---@return OrgFiles
+function OrgFiles:_handle_all_loaded(state, opts)
+  self.progressive_state.loading = false
+  self.load_state = 'loaded'
+
+  if opts.on_complete then
+    opts.on_complete(state.loaded_files)
+  end
+
+  return self
+end
+
+---@private
+---@param queue OrgFileScanResult[]
+---@param opts OrgLoadProgressiveOpts
+---@return OrgPromise<OrgFiles>
+function OrgFiles:_load_queue(queue, opts)
+  ---@type OrgLoadQueueState
+  local state = {
+    total = #queue,
+    loaded_count = 0,
+    loaded_files = {},
+    batch_start_time = vim.uv.hrtime(),
+  }
+  state.last_callback_time = state.batch_start_time
+
+  self.progressive_state = {
+    loaded = 0,
+    total = state.total,
+    loading = true,
+  }
+
+  -- Handle empty queue
+  if state.total == 0 then
+    return Promise.resolve(self:_handle_all_loaded(state, opts))
+  end
+
+  local concurrency = opts.concurrency or 50
+  local filenames = vim.tbl_map(function(m)
+    return m.filename
+  end, queue)
+
+  return Promise.map(function(filename, index)
+    return self:load_file(filename):next(function(orgfile)
+      return self:_handle_loaded_file(orgfile, index, state, opts)
+    end)
+  end, filenames, concurrency):next(function()
+    return self:_handle_all_loaded(state, opts)
+  end)
+end
+
+---Load files progressively with configurable ordering and callbacks.
+---Files are loaded in order (e.g., by mtime) with per-file callbacks for incremental updates.
+---@param opts? OrgLoadProgressiveOpts
+---@return OrgPromise<OrgFiles>
+function OrgFiles:load_progressive(opts)
+  opts = vim.tbl_extend('force', {
+    order_by = 'mtime',
+    direction = 'desc',
+    current_buffer_first = true,
+    concurrency = 50,
+  }, opts or {})
+
+  local metadata = self:scan()
+
+  -- Apply filter if provided
+  if opts.filter then
+    metadata = vim.tbl_filter(opts.filter, metadata)
+  end
+
+  -- Sort metadata
+  self:_sort_metadata(metadata, opts)
+
+  -- Move current buffer to front if requested
+  if opts.current_buffer_first then
+    local current_file = vim.fn.resolve(vim.fn.expand('%:p'))
+    if current_file and current_file ~= '' then
+      local current_idx = nil
+      for i, m in ipairs(metadata) do
+        if m.filename == current_file then
+          current_idx = i
+          break
+        end
+      end
+      if current_idx and current_idx > 1 then
+        local current = table.remove(metadata, current_idx)
+        table.insert(metadata, 1, current)
+      end
+    end
+  end
+
+  self.load_state = 'loading'
+  return self:_load_queue(metadata, opts)
+end
+
+---Get the current progressive loading state
+---@return { loaded: number, total: number, loading: boolean }?
+function OrgFiles:get_load_progress()
+  return self.progressive_state
 end
 
 return OrgFiles

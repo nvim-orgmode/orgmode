@@ -124,4 +124,212 @@ describe('OrgFiles', function()
       assert.is_true(elapsed_ms < 100, 'scan() took ' .. elapsed_ms .. 'ms, expected < 100ms')
     end)
   end)
+
+  describe('_sort_metadata', function()
+    it('should sort by mtime descending by default', function()
+      local files = OrgFiles:new({ paths = {} })
+      local metadata = {
+        { filename = 'old.org', mtime_sec = 100, mtime_nsec = 0 },
+        { filename = 'new.org', mtime_sec = 200, mtime_nsec = 0 },
+      }
+
+      files:_sort_metadata(metadata, {})
+
+      assert.are.equal('new.org', metadata[1].filename)
+      assert.are.equal('old.org', metadata[2].filename)
+    end)
+
+    it('should sort by mtime ascending when specified', function()
+      local files = OrgFiles:new({ paths = {} })
+      local metadata = {
+        { filename = 'new.org', mtime_sec = 200, mtime_nsec = 0 },
+        { filename = 'old.org', mtime_sec = 100, mtime_nsec = 0 },
+      }
+
+      files:_sort_metadata(metadata, { order_by = 'mtime', direction = 'asc' })
+
+      assert.are.equal('old.org', metadata[1].filename)
+      assert.are.equal('new.org', metadata[2].filename)
+    end)
+
+    it('should use mtime_nsec as tiebreaker', function()
+      local files = OrgFiles:new({ paths = {} })
+      local metadata = {
+        { filename = 'first.org', mtime_sec = 100, mtime_nsec = 500 },
+        { filename = 'second.org', mtime_sec = 100, mtime_nsec = 1000 },
+      }
+
+      files:_sort_metadata(metadata, { order_by = 'mtime', direction = 'desc' })
+
+      assert.are.equal('second.org', metadata[1].filename)
+      assert.are.equal('first.org', metadata[2].filename)
+    end)
+
+    it('should sort by name ascending by default', function()
+      local files = OrgFiles:new({ paths = {} })
+      local metadata = {
+        { filename = 'zebra.org' },
+        { filename = 'alpha.org' },
+        { filename = 'middle.org' },
+      }
+
+      files:_sort_metadata(metadata, { order_by = 'name' })
+
+      assert.are.equal('alpha.org', metadata[1].filename)
+      assert.are.equal('middle.org', metadata[2].filename)
+      assert.are.equal('zebra.org', metadata[3].filename)
+    end)
+
+    it('should sort by name descending when specified', function()
+      local files = OrgFiles:new({ paths = {} })
+      local metadata = {
+        { filename = 'alpha.org' },
+        { filename = 'zebra.org' },
+      }
+
+      files:_sort_metadata(metadata, { order_by = 'name', direction = 'desc' })
+
+      assert.are.equal('zebra.org', metadata[1].filename)
+      assert.are.equal('alpha.org', metadata[2].filename)
+    end)
+
+    it('should use custom sort function', function()
+      local files = OrgFiles:new({ paths = {} })
+      local metadata = {
+        { filename = 'small.org', size = 10 },
+        { filename = 'large.org', size = 100 },
+      }
+
+      files:_sort_metadata(metadata, {
+        order_by = function(a, b)
+          return a.size > b.size
+        end,
+      })
+
+      assert.are.equal('large.org', metadata[1].filename)
+      assert.are.equal('small.org', metadata[2].filename)
+    end)
+  end)
+
+  describe('load_progressive', function()
+    it('should load all files and call on_complete callback', function()
+      create_test_file('test1.org', { '* Headline 1' })
+      create_test_file('test2.org', { '* Headline 2' })
+      create_test_file('test3.org', { '* Headline 3' })
+
+      local files = OrgFiles:new({ paths = { temp_dir .. '/*.org' } })
+      local completed = false
+      local loaded_files = {}
+
+      files
+        :load_progressive({
+          current_buffer_first = false,
+          on_complete = function(all_files)
+            completed = true
+            loaded_files = all_files
+          end,
+        })
+        :wait()
+
+      assert.is_true(completed)
+      assert.are.equal(3, #loaded_files)
+      assert.are.equal(3, #files:all())
+    end)
+
+    it('should call on_file_loaded callback for each file', function()
+      create_test_file('test1.org', { '* Headline 1' })
+      create_test_file('test2.org', { '* Headline 2' })
+
+      local files = OrgFiles:new({ paths = { temp_dir .. '/*.org' } })
+      local callback_calls = {}
+
+      files
+        :load_progressive({
+          current_buffer_first = false,
+          on_file_loaded = function(file, index, total)
+            table.insert(callback_calls, {
+              filename = file.filename,
+              index = index,
+              total = total,
+            })
+          end,
+        })
+        :wait()
+
+      assert.are.equal(2, #callback_calls)
+      for _, call in ipairs(callback_calls) do
+        assert.are.equal(2, call.total)
+        assert.is_true(call.index >= 1 and call.index <= 2)
+      end
+    end)
+
+    it('should apply filter before loading', function()
+      create_test_file('include.org', { '* Include me' })
+      create_test_file('exclude.org', { '* Exclude me' })
+
+      local files = OrgFiles:new({ paths = { temp_dir .. '/*.org' } })
+      local loaded_files = {}
+
+      files
+        :load_progressive({
+          current_buffer_first = false,
+          filter = function(metadata)
+            return metadata.filename:match('include') ~= nil
+          end,
+          on_complete = function(all_files)
+            loaded_files = all_files
+          end,
+        })
+        :wait()
+
+      assert.are.equal(1, #loaded_files)
+      assert.is_true(loaded_files[1].filename:match('include') ~= nil)
+    end)
+
+    it('should track progress state correctly', function()
+      create_test_file('test1.org', { '* Headline 1' })
+      create_test_file('test2.org', { '* Headline 2' })
+
+      local files = OrgFiles:new({ paths = { temp_dir .. '/*.org' } })
+
+      -- Initially no progress state
+      assert.is_nil(files:get_load_progress())
+
+      files
+        :load_progressive({
+          current_buffer_first = false,
+        })
+        :wait()
+
+      local progress = files:get_load_progress()
+      assert.is_not_nil(progress)
+      assert.are.equal(2, progress.loaded)
+      assert.are.equal(2, progress.total)
+      assert.is_false(progress.loading)
+    end)
+
+    it('should handle empty file list gracefully', function()
+      local empty_dir = vim.fn.tempname()
+      vim.fn.mkdir(empty_dir, 'p')
+
+      local files = OrgFiles:new({ paths = { empty_dir .. '/*.org' } })
+      local completed = false
+
+      files
+        :load_progressive({
+          on_complete = function()
+            completed = true
+          end,
+        })
+        :wait()
+
+      assert.is_true(completed)
+      local progress = files:get_load_progress()
+      assert.are.equal(0, progress.total)
+      assert.are.equal(0, progress.loaded)
+      assert.is_false(progress.loading)
+
+      vim.fn.delete(empty_dir, 'rf')
+    end)
+  end)
 end)
