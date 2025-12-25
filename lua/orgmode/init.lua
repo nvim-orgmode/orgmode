@@ -50,41 +50,189 @@ function Org:new()
   return self
 end
 
+-- Profiling data storage
+local profiling_data = {
+  init = {},
+  setup = {},
+  filetype_reload = {},
+  progressive_loading = {},
+  clock_init = {},
+}
+
+local function create_profiler(category)
+  local entries = {}
+  local start = vim.uv.hrtime()
+  local last = start
+
+  return {
+    mark = function(label)
+      local now = vim.uv.hrtime()
+      table.insert(entries, {
+        label = label,
+        total_ms = (now - start) / 1e6,
+        delta_ms = (now - last) / 1e6,
+      })
+      last = now
+    end,
+    finish = function()
+      profiling_data[category] = entries
+    end,
+  }
+end
+
+-- Expose create_profiler for use by other modules (clock, files, etc.)
+Org.create_profiler = create_profiler
+
+---Show profiling results in a floating window
+function Org.profiling()
+  local lines = { '# Orgmode Profiling Results', '' }
+
+  local function add_section(title, entries)
+    if #entries == 0 then
+      return
+    end
+    table.insert(lines, '## ' .. title)
+    table.insert(lines, '')
+    table.insert(lines, string.format('  %-40s %10s %10s', 'Step', 'Total', 'Delta'))
+    table.insert(lines, string.format('  %-40s %10s %10s', string.rep('-', 40), '----------', '----------'))
+
+    for _, entry in ipairs(entries) do
+      local delta_indicator = ''
+      if entry.delta_ms > 100 then
+        delta_indicator = ' ⚠️'
+      elseif entry.delta_ms > 1000 then
+        delta_indicator = ' 🔴'
+      end
+      table.insert(
+        lines,
+        string.format('  %-40s %8.1f ms %8.1f ms%s', entry.label, entry.total_ms, entry.delta_ms, delta_indicator)
+      )
+    end
+    table.insert(lines, '')
+  end
+
+  add_section('Org:init()', profiling_data.init)
+  add_section('Org.setup()', profiling_data.setup)
+  add_section('FileType reload (deferred)', profiling_data.filetype_reload)
+  add_section('Progressive loading (deferred)', profiling_data.progressive_loading)
+  add_section('Clock:init (deferred)', profiling_data.clock_init)
+
+  local has_data = #profiling_data.init > 0
+    or #profiling_data.setup > 0
+    or #profiling_data.filetype_reload > 0
+    or #profiling_data.progressive_loading > 0
+    or #profiling_data.clock_init > 0
+
+  if not has_data then
+    table.insert(lines, 'No profiling data available yet.')
+    table.insert(lines, 'Open an org file first to collect timing data.')
+  end
+
+  -- Create floating window
+  local buf = vim.api.nvim_create_buf(false, true)
+  vim.api.nvim_buf_set_lines(buf, 0, -1, false, lines)
+  vim.bo[buf].filetype = 'markdown'
+  vim.bo[buf].modifiable = false
+
+  local width = math.floor(vim.o.columns * 0.8)
+  local height = math.min(#lines + 2, vim.o.lines - 4)
+  local win = vim.api.nvim_open_win(buf, true, {
+    relative = 'editor',
+    width = width,
+    height = height,
+    row = math.floor((vim.o.lines - height) / 2),
+    col = math.floor((vim.o.columns - width) / 2),
+    style = 'minimal',
+    border = 'rounded',
+    title = ' Org Profiling ',
+    title_pos = 'center',
+  })
+
+  -- Close on q or <Esc>
+  vim.keymap.set('n', 'q', function()
+    vim.api.nvim_win_close(win, true)
+  end, { buffer = buf })
+  vim.keymap.set('n', '<Esc>', function()
+    vim.api.nvim_win_close(win, true)
+  end, { buffer = buf })
+end
+
 function Org:init()
   if self.initialized then
     return
   end
+
   self.buffers = require('orgmode.state.buffers').init()
 
+  local profiler = create_profiler('init')
+  profiler.mark('START')
+
+  local config = require('orgmode.config')
+  profiler.mark('require config')
+
   require('orgmode.events').init()
+  profiler.mark('events.init()')
+
   self.highlighter = require('orgmode.colors.highlighter'):new()
+  profiler.mark('highlighter:new()')
+
   require('orgmode.colors.highlights').define_highlights()
+  profiler.mark('define_highlights()')
 
   self.files = require('orgmode.files'):new({
     local config = require('orgmode.config')
     paths = config.org_agenda_files,
   })
+  profiler.mark('OrgFiles:new()')
+
+  profiler.mark(string.format('org_async_loading = %s', tostring(config.org_async_loading)))
 
   -- Load files: async (non-blocking) or sync (blocking) based on config
   if config.org_async_loading then
     -- Defer progressive loading to next event loop to allow buffer display first
     vim.schedule(function()
-      self:load_files({ current_buffer_first = true })
+      local load_profiler = create_profiler('progressive_loading')
+      load_profiler.mark('START')
+      self:load_files({
+        current_buffer_first = true,
+        on_file_loaded = function(file, index, total)
+          local timing = file._load_timing or {}
+          local gap = timing.since_last_ms or 0
+          -- Show gap between callbacks - if all ~0ms, callbacks are batching without yielding
+          load_profiler.mark(
+            string.format('file %d/%d: %s (gap: %.1fms)', index, total, vim.fn.fnamemodify(file.filename, ':t'), gap)
+          )
+        end,
+        on_complete = function()
+          load_profiler.mark('COMPLETE')
+          load_profiler.finish()
+        end,
+      })
     end)
+    profiler.mark('scheduled load_files (deferred)')
   else
     self.files:load_sync(true, 20000)
+    profiler.mark('load_sync COMPLETED (blocking)')
   end
 
   self.links = require('orgmode.org.links'):new({ files = self.files })
+  profiler.mark('links:new()')
+
   self.agenda = require('orgmode.agenda'):new({
     files = self.files,
     highlighter = self.highlighter,
     links = self.links,
   })
+  profiler.mark('agenda:new()')
+
   self.capture = require('orgmode.capture'):new({
     files = self.files,
   })
+  profiler.mark('capture:new()')
+
   self.completion = require('orgmode.org.autocompletion'):new({ files = self.files, links = self.links })
+  profiler.mark('completion:new()')
+
   self.org_mappings = require('orgmode.org.mappings'):new({
     capture = self.capture,
     agenda = self.agenda,
@@ -92,13 +240,21 @@ function Org:init()
     links = self.links,
     completion = self.completion,
   })
+  profiler.mark('org_mappings:new()')
+
   self.clock = require('orgmode.clock'):new({
     files = self.files,
   })
+  profiler.mark('clock:new()')
+
   self.statusline_debounced = require('orgmode.utils').debounce('statusline', function()
     return self.clock:get_statusline()
   end, 300)
+  profiler.mark('statusline setup')
+
   self.initialized = true
+  profiler.mark('COMPLETE')
+  profiler.finish()
 end
 
 ---@param file? string
@@ -132,7 +288,11 @@ function Org:setup_autocmds()
       -- Defer to let buffer display first, then initialize
       local file = vim.fn.expand('<afile>:p')
       vim.schedule(function()
+        local profiler = create_profiler('filetype_reload')
+        profiler.mark('START')
         self:reload(file)
+        profiler.mark('reload() complete')
+        profiler.finish()
       end)
     end,
   })
