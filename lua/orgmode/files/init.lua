@@ -19,6 +19,13 @@ local Listitem = require('orgmode.files.elements.listitem')
 ---@field files table<string, OrgFile> table with files that are part of paths
 ---@field all_files table<string, OrgFile> all loaded files, no matter if they are part of paths
 ---@field load_state 'loading' | 'loaded' | nil
+
+---@class OrgFileScanResult
+---@field filename string Absolute path to the org file
+---@field mtime_sec number File modification time in seconds (stat.mtime.sec)
+---@field mtime_nsec number File modification time nanoseconds (stat.mtime.nsec)
+---@field size number File size in bytes
+
 local OrgFiles = {
   cached_instances = {},
 }
@@ -382,6 +389,26 @@ function OrgFiles:_files(skip_resolve)
     local stat = vim.uv.fs_stat(file)
     return stat and stat.type == 'file' or false
   end, all_files)
+end
+
+---Scan all org files and return metadata without loading/parsing content.
+---This is a fast operation that only reads file system metadata.
+---Useful for change detection and ordering files by modification time.
+---@return OrgFileScanResult[]
+function OrgFiles:scan()
+  local metadata = {}
+  for _, filepath in ipairs(self:_files()) do
+    local stat = vim.uv.fs_stat(filepath)
+    if stat and stat.type == 'file' then
+      table.insert(metadata, {
+        filename = filepath,
+        mtime_sec = stat.mtime.sec,
+        mtime_nsec = stat.mtime.nsec,
+        size = stat.size,
+      })
+    end
+  end
+  return metadata
 end
 
 return OrgFiles
