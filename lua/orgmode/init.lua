@@ -27,6 +27,8 @@ local auto_instance_keys = {
 ---@field org_mappings OrgMappings
 ---@field notifications OrgNotifications
 ---@field links OrgLinks
+---@field private _file_loaded_callbacks fun(file: OrgFile, index: number, total: number)[]
+---@field private _files_loaded_callbacks fun(files: OrgFile[])[]
 local Org = {}
 setmetatable(Org, {
   __index = function(tbl, key)
@@ -41,6 +43,8 @@ function Org:new()
   require('orgmode.org.global')(self)
   self.initialized = false
   self.setup_called = false
+  self._file_loaded_callbacks = {}
+  self._files_loaded_callbacks = {}
   self:setup_autocmds()
   require('orgmode.config'):setup_ts_predicates()
   return self
@@ -252,6 +256,85 @@ function Org.destroy()
     instance = nil
     collectgarbage()
   end
+end
+
+--- Scan all org files and return metadata without full parsing.
+--- This is a fast operation that only reads file system metadata (mtime, size).
+---@return OrgFileScanResult[]
+function Org:scan_files()
+  self:init()
+  return self.files:scan()
+end
+
+--- Load files progressively with callbacks for incremental updates.
+--- Files are sorted by mtime (newest first) by default.
+---@param opts? OrgLoadProgressiveOpts
+---@return OrgPromise<OrgFile[]>
+function Org:load_files(opts)
+  self:init()
+  opts = opts or {}
+
+  -- Wrap callbacks to also fire registered event callbacks
+  local original_on_file_loaded = opts.on_file_loaded
+  local original_on_complete = opts.on_complete
+
+  opts.on_file_loaded = function(file, index, total)
+    -- Fire registered callbacks
+    for _, callback in ipairs(self._file_loaded_callbacks) do
+      callback(file, index, total)
+    end
+    -- Fire original callback if provided
+    if original_on_file_loaded then
+      original_on_file_loaded(file, index, total)
+    end
+  end
+
+  opts.on_complete = function(files)
+    -- Fire registered callbacks
+    for _, callback in ipairs(self._files_loaded_callbacks) do
+      callback(files)
+    end
+    -- Fire original callback if provided
+    if original_on_complete then
+      original_on_complete(files)
+    end
+  end
+
+  return self.files:load_progressive(opts)
+end
+
+--- Check if files have been loaded.
+---@return boolean
+function Org:is_files_loaded()
+  if not self.initialized then
+    return false
+  end
+  local progress = self.files:get_load_progress()
+  if not progress then
+    return false
+  end
+  return not progress.loading and progress.loaded == progress.total
+end
+
+--- Get current file loading progress.
+---@return { loaded: number, total: number, loading: boolean }?
+function Org:get_files_progress()
+  if not self.initialized then
+    return nil
+  end
+  return self.files:get_load_progress()
+end
+
+--- Register a callback to be called when each file is loaded.
+---@param callback fun(file: OrgFile, index: number, total: number)
+function Org:on_file_loaded(callback)
+  table.insert(self._file_loaded_callbacks, callback)
+end
+
+--- Register a callback to be called when all files are loaded.
+---@param callback fun(files: OrgFile[])
+function Org:on_files_loaded(callback)
+  table.insert(self._files_loaded_callbacks, callback)
 end
 
 function Org.is_setup_called()
