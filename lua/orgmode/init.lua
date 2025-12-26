@@ -336,6 +336,11 @@ function Org:init()
   else
     self.files:load_sync(true, 20000)
     profiler.mark('load_sync COMPLETED (blocking)')
+    -- Fire registered callbacks for sync loading path
+    local files = self.files:all()
+    for _, callback in ipairs(self._files_loaded_callbacks) do
+      callback(files)
+    end
   end
 
   self.links = require('orgmode.org.links'):new({ files = self.files })
@@ -458,18 +463,26 @@ function Org.setup(opts)
   config:install_grammar()
   instance = Org:new()
   instance.setup_called = true
-  vim.defer_fn(function()
-    if config.notifications.enabled and #vim.api.nvim_list_uis() > 0 then
-      Org.files:load():next(vim.schedule_wrap(function()
+
+  -- Register notifications via callback - no separate load() call!
+  -- Notifications will start after files are loaded by Org:init()
+  if config.notifications.enabled and #vim.api.nvim_list_uis() > 0 then
+    instance:on_files_loaded(function()
+      -- Defer to let the UI settle after file loading completes
+      vim.defer_fn(function()
         instance.notifications = require('orgmode.notifications')
           :new({
             files = Org.files,
           })
           :start_timer()
-      end))
-    end
+      end, 1000)
+    end)
+  end
+
+  vim.defer_fn(function()
     config:setup_mappings('global')
   end, 1)
+
   return instance
 end
 
