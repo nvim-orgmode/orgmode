@@ -164,6 +164,7 @@ describe('Clock', function()
 
     -- Establish baseline: Test 1 is clocked in
     local clock = orgmode.clock
+    assert.is_true(clock:has_clocked_headline()) -- Triggers lazy init
     assert.are.same('Test 1', clock.clocked_headline:get_title())
     assert.is_true(clock.clocked_headline:is_clocked_in())
 
@@ -210,5 +211,100 @@ describe('Clock', function()
       '  :END:',
       '* TODO Test 3',
     }, vim.api.nvim_buf_get_lines(0, 0, -1, false))
+  end)
+
+  describe('async preload', function()
+    it('should preload clocked headline after files are loaded', function()
+      local file = helpers.create_agenda_file({
+        '* TODO Test headline',
+        '  :LOGBOOK:',
+        '  CLOCK: [2024-05-22 Wed 05:15]',
+        '  :END:',
+      })
+      vim.cmd('edit ' .. file.filename)
+
+      local clock = orgmode.clock
+      -- Async preload runs in background - wait for it to complete
+      vim.wait(1000, function()
+        return clock.clocked_headline ~= nil
+      end, 10)
+
+      assert.is_true(clock._clocked_headline_searched)
+      assert.is_not_nil(clock.clocked_headline)
+
+      -- Multiple calls are idempotent
+      local result1 = clock:has_clocked_headline()
+      local result2 = clock:has_clocked_headline()
+      assert.is_true(clock._clocked_headline_searched)
+      assert.is_true(result1)
+      assert.is_true(result2)
+    end)
+
+    it('should return consistent results after async preload', function()
+      local file = helpers.create_agenda_file({
+        '* TODO Clocked task',
+        '  :LOGBOOK:',
+        '  CLOCK: [2024-05-22 Wed 05:15]',
+        '  :END:',
+      })
+      vim.cmd('edit ' .. file.filename)
+
+      local clock = orgmode.clock
+      -- Trigger lazy init via has_clocked_headline
+      local first_result = clock:has_clocked_headline()
+      local first_headline = clock.clocked_headline
+
+      -- Call again - should get same result
+      local second_result = clock:has_clocked_headline()
+      local second_headline = clock.clocked_headline
+
+      assert.are.equal(first_result, second_result)
+      assert.are.same(first_headline:get_title(), second_headline:get_title())
+    end)
+
+    it('should not search before files are loaded', function()
+      local Clock = require('orgmode.clock')
+      -- Create a mock files object that isn't loaded
+      local mock_files = {
+        load_state = 'loading', -- Not 'loaded'
+        get_clocked_headline = function()
+          error('Should not be called when files not loaded')
+        end,
+      }
+
+      local clock = Clock:new({ files = mock_files })
+      assert.is_false(clock._clocked_headline_searched)
+
+      -- Call _ensure_clocked_headline_searched directly
+      clock:_ensure_clocked_headline_searched()
+
+      -- Should still be false - didn't search because files not loaded
+      assert.is_false(clock._clocked_headline_searched)
+      assert.is_nil(clock.clocked_headline)
+    end)
+
+    it('should search when files are loaded', function()
+      local Clock = require('orgmode.clock')
+      local search_called = false
+      -- Create a mock files object that is loaded
+      local mock_files = {
+        load_state = 'loaded',
+        get_clocked_headline = function()
+          search_called = true
+          return nil
+        end,
+      }
+
+      local clock = Clock:new({ files = mock_files })
+      assert.is_false(clock._clocked_headline_searched)
+      assert.is_false(search_called)
+
+      -- Call _ensure_clocked_headline_searched directly
+      clock:_ensure_clocked_headline_searched()
+
+      -- Should be true now - searched because files are loaded
+      assert.is_true(clock._clocked_headline_searched)
+      assert.is_true(search_called)
+    end)
   end)
 end)

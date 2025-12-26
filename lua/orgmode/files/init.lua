@@ -173,6 +173,92 @@ function OrgFiles:get_clocked_headline()
   return nil
 end
 
+---@param file OrgFile
+---@return OrgHeadline|nil
+local function find_clocked_headline_in_file(file)
+  for _, headline in ipairs(file:get_headlines()) do
+    if headline:is_clocked_in() then
+      return headline
+    end
+  end
+  return nil
+end
+
+---@class ClockSearchState
+---@field files OrgFile[]
+---@field index number
+---@field batch_num number
+---@field time_budget_ms number
+---@field emit table
+
+---@param state ClockSearchState
+local function emit_batch_mark(state, batch_start, elapsed_ms)
+  state.emit.profile(
+    'mark',
+    'clock',
+    string.format('batch %d: files %d-%d (%.1fms)', state.batch_num, batch_start, state.index, elapsed_ms)
+  )
+end
+
+---@param state ClockSearchState
+---@param resolve fun(headline: OrgHeadline|nil)
+local function process_clock_search_batch(state, resolve)
+  state.batch_num = state.batch_num + 1
+  local batch_start = state.index + 1
+  local batch_start_time = vim.uv.hrtime()
+  local total = #state.files
+
+  while state.index < total do
+    state.index = state.index + 1
+    local headline = find_clocked_headline_in_file(state.files[state.index])
+    if headline then
+      state.emit.profile('complete', 'clock', 'FOUND clocked headline', {
+        file_index = state.index,
+        batch = state.batch_num,
+      })
+      return resolve(headline)
+    end
+
+    local elapsed_ms = (vim.uv.hrtime() - batch_start_time) / 1e6
+    if elapsed_ms >= state.time_budget_ms then
+      emit_batch_mark(state, batch_start, elapsed_ms)
+      return vim.defer_fn(function()
+        process_clock_search_batch(state, resolve)
+      end, 1)
+    end
+  end
+
+  local elapsed_ms = (vim.uv.hrtime() - batch_start_time) / 1e6
+  emit_batch_mark(state, batch_start, elapsed_ms)
+  state.emit.profile('complete', 'clock', 'NO clocked headline found')
+  resolve(nil)
+end
+
+---Search for clocked headline asynchronously (non-blocking)
+---Uses time-boxed batches to ensure UI stays responsive regardless of file sizes
+---@return OrgPromise<OrgHeadline|nil>
+function OrgFiles:get_clocked_headline_async()
+  local emit = require('orgmode.utils.emit')
+  ---@type ClockSearchState
+  local state = {
+    files = self:all(),
+    index = 0,
+    batch_num = 0,
+    time_budget_ms = 50, -- ~20fps, imperceptible during normal navigation
+    emit = emit,
+  }
+
+  return Promise.new(function(resolve)
+    emit.profile('start', 'clock', 'get_clocked_headline_async START', {
+      total = #state.files,
+      time_budget_ms = state.time_budget_ms,
+    })
+    vim.defer_fn(function()
+      process_clock_search_batch(state, resolve)
+    end, 1)
+  end)
+end
+
 function OrgFiles:get_current_file()
   local filename = utils.current_file_path()
   local orgfile = self:load_file_sync(filename)
