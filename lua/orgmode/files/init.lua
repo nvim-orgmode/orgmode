@@ -467,12 +467,27 @@ function OrgFiles:_sort_metadata(metadata, opts)
 end
 
 ---Load files from queue with callbacks
+---@class OrgBatchTiming
+---@field batch_num number Batch number (1-indexed)
+---@field files_start number First file index in batch
+---@field files_end number Last file index in batch
+---@field wall_start_ms number Wall-clock time when batch started (ms since epoch)
+---@field wall_end_ms number Wall-clock time when batch ended (ms since epoch)
+---@field duration_ms number How long the batch took to process
+---@field gap_from_prev_ms number Time gap from previous batch end to this batch start
+---@field total_bytes number Total size of files in this batch
+---@field mem_before_kb number Lua memory before batch (KB)
+---@field mem_after_kb number Lua memory after batch (KB)
+
 ---@class OrgLoadQueueState
 ---@field total number Total number of files to load
 ---@field loaded_count number Number of files loaded so far
 ---@field loaded_files OrgFile[] Files that have been loaded
 ---@field batch_start_time number High-resolution timestamp when loading started
 ---@field last_callback_time number High-resolution timestamp of last callback
+---@field batch_timings OrgBatchTiming[] Timing data for each batch
+---@field current_batch_num number Current batch being processed
+---@field last_batch_end_time number|nil hrtime when previous batch completed
 
 ---@private
 ---Handle a single loaded file: update state, track timing, fire callback
@@ -516,6 +531,8 @@ end
 ---@return OrgFiles
 function OrgFiles:_handle_all_loaded(state, opts)
   self.progressive_state.loading = false
+  self.progressive_state.batch_timings = state.batch_timings
+  self.progressive_state.total_duration_ms = (vim.uv.hrtime() - state.batch_start_time) / 1e6
   self.load_state = 'loaded'
 
   if opts.on_complete then
@@ -523,6 +540,83 @@ function OrgFiles:_handle_all_loaded(state, opts)
   end
 
   return self
+end
+
+---@private
+---Process a batch of files, then yield and continue with next batch
+---@param queue OrgFileScanResult[]
+---@param start_idx number
+---@param batch_size number
+---@param state OrgLoadQueueState
+---@param opts OrgLoadProgressiveOpts
+---@param resolve function
+---@param reject function
+function OrgFiles:_process_batch(queue, start_idx, batch_size, state, opts, resolve, reject)
+  local mem_before = collectgarbage('count')
+  local batch_start_hrtime = vim.uv.hrtime()
+  -- Use first_batch_size for batch 1, then regular batch_size
+  local effective_batch_size = (start_idx == 1 and opts.first_batch_size) and opts.first_batch_size or batch_size
+  local batch_end = math.min(start_idx + effective_batch_size - 1, #queue)
+  local promises = {}
+
+  -- Calculate gap from previous batch
+  local gap_ms = 0
+  if state.last_batch_end_time then
+    gap_ms = (batch_start_hrtime - state.last_batch_end_time) / 1e6
+  end
+
+  state.current_batch_num = state.current_batch_num + 1
+  local batch_num = state.current_batch_num
+
+  -- Calculate total bytes for this batch
+  local total_bytes = 0
+  for i = start_idx, batch_end do
+    total_bytes = total_bytes + (queue[i].size or 0)
+  end
+
+  -- Load all files in this batch in parallel
+  for i = start_idx, batch_end do
+    local promise = self:load_file(queue[i].filename):next(function(orgfile)
+      return self:_handle_loaded_file(orgfile, i, state, opts)
+    end)
+    table.insert(promises, promise)
+  end
+
+  -- When batch completes...
+  Promise.all(promises)
+    :next(function()
+      local batch_end_hrtime = vim.uv.hrtime()
+      local mem_after = collectgarbage('count')
+      local duration_ms = (batch_end_hrtime - batch_start_hrtime) / 1e6
+
+      -- Record batch timing
+      table.insert(state.batch_timings, {
+        batch_num = batch_num,
+        files_start = start_idx,
+        files_end = batch_end,
+        wall_start_ms = batch_start_hrtime / 1e6,
+        wall_end_ms = batch_end_hrtime / 1e6,
+        duration_ms = duration_ms,
+        gap_from_prev_ms = gap_ms,
+        total_bytes = total_bytes,
+        mem_before_kb = mem_before,
+        mem_after_kb = mem_after,
+      })
+
+      state.last_batch_end_time = batch_end_hrtime
+
+      if batch_end >= #queue then
+        resolve(self:_handle_all_loaded(state, opts))
+      else
+        -- Yield to event loop between batches. Uses 1ms because defer_fn(fn, 0)
+        -- can execute immediately without yielding. 1ms ensures Neovim processes
+        -- pending keyboard/UI events, keeping the editor responsive during loading.
+        vim.defer_fn(function()
+          self:_process_batch(queue, batch_end + 1, batch_size, state, opts, resolve, reject)
+        end, opts.yield_ms or 1)
+      end
+    end)
+    :catch(reject)
 end
 
 ---@private
@@ -536,6 +630,9 @@ function OrgFiles:_load_queue(queue, opts)
     loaded_count = 0,
     loaded_files = {},
     batch_start_time = vim.uv.hrtime(),
+    batch_timings = {},
+    current_batch_num = 0,
+    last_batch_end_time = nil,
   }
   state.last_callback_time = state.batch_start_time
 
@@ -543,6 +640,8 @@ function OrgFiles:_load_queue(queue, opts)
     loaded = 0,
     total = state.total,
     loading = true,
+    batch_size = opts.batch_size or 50,
+    first_batch_size = opts.first_batch_size,
   }
 
   -- Handle empty queue
@@ -550,17 +649,10 @@ function OrgFiles:_load_queue(queue, opts)
     return Promise.resolve(self:_handle_all_loaded(state, opts))
   end
 
-  local concurrency = opts.concurrency or 50
-  local filenames = vim.tbl_map(function(m)
-    return m.filename
-  end, queue)
+  local batch_size = opts.batch_size or 50
 
-  return Promise.map(function(filename, index)
-    return self:load_file(filename):next(function(orgfile)
-      return self:_handle_loaded_file(orgfile, index, state, opts)
-    end)
-  end, filenames, concurrency):next(function()
-    return self:_handle_all_loaded(state, opts)
+  return Promise.new(function(resolve, reject)
+    self:_process_batch(queue, 1, batch_size, state, opts, resolve, reject)
   end)
 end
 
@@ -573,7 +665,7 @@ function OrgFiles:load_progressive(opts)
     order_by = 'mtime',
     direction = 'desc',
     current_buffer_first = true,
-    concurrency = 50,
+    batch_size = 50,
   }, opts or {})
 
   local metadata = self:scan()

@@ -98,10 +98,10 @@ function Org.profiling()
 
     for _, entry in ipairs(entries) do
       local delta_indicator = ''
-      if entry.delta_ms > 100 then
-        delta_indicator = ' ⚠️'
-      elseif entry.delta_ms > 1000 then
+      if entry.delta_ms > 1000 then
         delta_indicator = ' 🔴'
+      elseif entry.delta_ms > 100 then
+        delta_indicator = ' ⚠️'
       end
       table.insert(
         lines,
@@ -111,10 +111,92 @@ function Org.profiling()
     table.insert(lines, '')
   end
 
+  ---Format bytes as human-readable (KB/MB)
+  local function format_bytes(bytes)
+    if not bytes or bytes == 0 then
+      return ''
+    end
+    if bytes >= 1024 * 1024 then
+      return string.format('%.1f MB', bytes / (1024 * 1024))
+    end
+    return string.format('%.0f KB', bytes / 1024)
+  end
+
+  ---Format memory delta as human-readable
+  local function format_mem_delta(delta_kb)
+    if not delta_kb then
+      return ''
+    end
+    local sign = delta_kb >= 0 and '+' or ''
+    if math.abs(delta_kb) >= 1024 then
+      return string.format('%s%.1f MB', sign, delta_kb / 1024)
+    end
+    return string.format('%s%.0f KB', sign, delta_kb)
+  end
+
+  ---Add batch-level section with gap column (for progressive loading)
+  local function add_batch_section(title, entries)
+    if #entries == 0 then
+      return
+    end
+    table.insert(lines, '## ' .. title)
+    table.insert(lines, '')
+    table.insert(
+      lines,
+      string.format('  %-40s %10s %10s %10s %10s %10s', 'Step', 'Wall Time', 'Duration', 'Yield Gap', 'Size', 'Mem Δ')
+    )
+    table.insert(
+      lines,
+      string.format(
+        '  %-40s %10s %10s %10s %10s %10s',
+        string.rep('-', 40),
+        '----------',
+        '----------',
+        '----------',
+        '----------',
+        '----------'
+      )
+    )
+
+    for _, entry in ipairs(entries) do
+      local gap_str = ''
+      local size_str = format_bytes(entry.total_bytes)
+      local mem_str = format_mem_delta(entry.mem_delta_kb)
+      local indicator = ''
+      if entry.gap_ms then
+        gap_str = string.format('%8.1f ms', entry.gap_ms)
+        if entry.gap_ms > 100 then
+          indicator = ' ⚠️'
+        end
+        if entry.gap_ms > 300 then
+          indicator = ' 🔴'
+        end
+      end
+      -- Also flag large negative memory delta (GC ran)
+      if entry.mem_delta_kb and entry.mem_delta_kb < -1000 then
+        indicator = indicator .. ' 🗑️'
+      end
+      table.insert(
+        lines,
+        string.format(
+          '  %-40s %8.1f ms %8.1f ms %10s %10s %10s%s',
+          entry.label,
+          entry.total_ms,
+          entry.delta_ms,
+          gap_str,
+          size_str,
+          mem_str,
+          indicator
+        )
+      )
+    end
+    table.insert(lines, '')
+  end
+
   add_section('Org:init()', profiling_data.init)
   add_section('Org.setup()', profiling_data.setup)
   add_section('FileType reload (deferred)', profiling_data.filetype_reload)
-  add_section('Progressive loading (deferred)', profiling_data.progressive_loading)
+  add_batch_section('Progressive loading (deferred)', profiling_data.progressive_loading)
   add_section('Clock:init (deferred)', profiling_data.clock_init)
 
   local has_data = #profiling_data.init > 0
@@ -191,21 +273,62 @@ function Org:init()
   if config.org_async_loading then
     -- Defer progressive loading to next event loop to allow buffer display first
     vim.schedule(function()
-      local load_profiler = create_profiler('progressive_loading')
-      load_profiler.mark('START')
+      local load_start = vim.uv.hrtime()
       self:load_files({
         current_buffer_first = true,
-        on_file_loaded = function(file, index, total)
-          local timing = file._load_timing or {}
-          local gap = timing.since_last_ms or 0
-          -- Show gap between callbacks - if all ~0ms, callbacks are batching without yielding
-          load_profiler.mark(
-            string.format('file %d/%d: %s (gap: %.1fms)', index, total, vim.fn.fnamemodify(file.filename, ':t'), gap)
-          )
-        end,
         on_complete = function()
-          load_profiler.mark('COMPLETE')
-          load_profiler.finish()
+          -- Store batch-level profiling data
+          local progress = self.files:get_load_progress()
+          if progress and progress.batch_timings then
+            local entries = {}
+            local last_batch = progress.batch_timings[#progress.batch_timings]
+            local final_wall_ms = last_batch and last_batch.wall_end_ms or 0
+            local start_wall_ms = load_start / 1e6
+
+            local batch_label = progress.first_batch_size
+                and string.format(
+                  'START (%d files, first=%d, then=%d)',
+                  progress.total,
+                  progress.first_batch_size,
+                  progress.batch_size or 50
+                )
+              or string.format('START (%d files, batch_size=%d)', progress.total, progress.batch_size or 200)
+            table.insert(entries, {
+              label = batch_label,
+              total_ms = 0,
+              delta_ms = 0,
+            })
+
+            for _, batch in ipairs(progress.batch_timings) do
+              local file_count = batch.files_end - batch.files_start + 1
+              local mem_delta = batch.mem_after_kb
+                  and batch.mem_before_kb
+                  and (batch.mem_after_kb - batch.mem_before_kb)
+                or nil
+              table.insert(entries, {
+                label = string.format(
+                  'batch %d: files %d-%d (%d files)',
+                  batch.batch_num,
+                  batch.files_start,
+                  batch.files_end,
+                  file_count
+                ),
+                total_ms = batch.wall_end_ms - start_wall_ms,
+                delta_ms = batch.duration_ms,
+                gap_ms = batch.gap_from_prev_ms,
+                total_bytes = batch.total_bytes,
+                mem_delta_kb = mem_delta,
+              })
+            end
+
+            table.insert(entries, {
+              label = 'COMPLETE',
+              total_ms = final_wall_ms - start_wall_ms,
+              delta_ms = 0,
+            })
+
+            profiling_data.progressive_loading = entries
+          end
         end,
       })
     end)
