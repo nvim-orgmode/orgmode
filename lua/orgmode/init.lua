@@ -269,78 +269,89 @@ function Org:init()
 
   profiler.mark(string.format('org_async_loading = %s', tostring(config.org_async_loading)))
 
-  -- Load files: async (non-blocking) or sync (blocking) based on config
-  if config.org_async_loading then
-    -- Defer progressive loading to next event loop to allow buffer display first
-    vim.schedule(function()
-      local load_start = vim.uv.hrtime()
-      self:load_files({
-        current_buffer_first = true,
-        on_complete = function()
-          -- Store batch-level profiling data
-          local progress = self.files:get_load_progress()
-          if progress and progress.batch_timings then
-            local entries = {}
-            local last_batch = progress.batch_timings[#progress.batch_timings]
-            local final_wall_ms = last_batch and last_batch.wall_end_ms or 0
-            local start_wall_ms = load_start / 1e6
+  -- Unified loading via request_load() - handles both async and sync
+  local load_start = vim.uv.hrtime()
 
-            local batch_label = progress.first_batch_size
-                and string.format(
-                  'START (%d files, first=%d, then=%d)',
-                  progress.total,
-                  progress.first_batch_size,
-                  progress.batch_size or 50
-                )
-              or string.format('START (%d files, batch_size=%d)', progress.total, progress.batch_size or 200)
-            table.insert(entries, {
-              label = batch_label,
-              total_ms = 0,
-              delta_ms = 0,
-            })
+  -- Callback wrappers to fire registered callbacks
+  local function on_file_loaded(file, index, total)
+    for _, callback in ipairs(self._file_loaded_callbacks) do
+      callback(file, index, total)
+    end
+  end
 
-            for _, batch in ipairs(progress.batch_timings) do
-              local file_count = batch.files_end - batch.files_start + 1
-              local mem_delta = batch.mem_after_kb
-                  and batch.mem_before_kb
-                  and (batch.mem_after_kb - batch.mem_before_kb)
-                or nil
-              table.insert(entries, {
-                label = string.format(
-                  'batch %d: files %d-%d (%d files)',
-                  batch.batch_num,
-                  batch.files_start,
-                  batch.files_end,
-                  file_count
-                ),
-                total_ms = batch.wall_end_ms - start_wall_ms,
-                delta_ms = batch.duration_ms,
-                gap_ms = batch.gap_from_prev_ms,
-                total_bytes = batch.total_bytes,
-                mem_delta_kb = mem_delta,
-              })
-            end
+  local function on_complete(files)
+    -- Store batch-level profiling data
+    local progress = self.files:get_load_progress()
+    if progress and progress.batch_timings then
+      local entries = {}
+      local last_batch = progress.batch_timings[#progress.batch_timings]
+      local final_wall_ms = last_batch and last_batch.wall_end_ms or 0
+      local start_wall_ms = load_start / 1e6
 
-            table.insert(entries, {
-              label = 'COMPLETE',
-              total_ms = final_wall_ms - start_wall_ms,
-              delta_ms = 0,
-            })
-
-            profiling_data.progressive_loading = entries
-          end
-        end,
+      local batch_label = progress.first_batch_size
+          and string.format(
+            'START (%d files, first=%d, then=%d)',
+            progress.total,
+            progress.first_batch_size,
+            progress.batch_size
+          )
+        or string.format('START (%d files, batch_size=%d)', progress.total, progress.batch_size)
+      table.insert(entries, {
+        label = batch_label,
+        total_ms = 0,
+        delta_ms = 0,
       })
-    end)
-    profiler.mark('scheduled load_files (deferred)')
-  else
-    self.files:load_sync(true, 20000)
-    profiler.mark('load_sync COMPLETED (blocking)')
-    -- Fire registered callbacks for sync loading path
-    local files = self.files:all()
+
+      for _, batch in ipairs(progress.batch_timings) do
+        local file_count = batch.files_end - batch.files_start + 1
+        local mem_delta = batch.mem_after_kb and batch.mem_before_kb and (batch.mem_after_kb - batch.mem_before_kb)
+          or nil
+        table.insert(entries, {
+          label = string.format(
+            'batch %d: files %d-%d (%d files)',
+            batch.batch_num,
+            batch.files_start,
+            batch.files_end,
+            file_count
+          ),
+          total_ms = batch.wall_end_ms - start_wall_ms,
+          delta_ms = batch.duration_ms,
+          gap_ms = batch.gap_from_prev_ms,
+          total_bytes = batch.total_bytes,
+          mem_delta_kb = mem_delta,
+        })
+      end
+
+      table.insert(entries, {
+        label = 'COMPLETE',
+        total_ms = final_wall_ms - start_wall_ms,
+        delta_ms = 0,
+      })
+
+      profiling_data.progressive_loading = entries
+    end
+
+    -- Fire registered callbacks
     for _, callback in ipairs(self._files_loaded_callbacks) do
       callback(files)
     end
+  end
+
+  if config.org_async_loading then
+    -- Defer to next event loop to allow buffer display first
+    vim.schedule(function()
+      self.files:request_load({
+        async = true,
+        current_buffer_first = true,
+        on_file_loaded = on_file_loaded,
+        on_complete = on_complete,
+      })
+    end)
+    profiler.mark('scheduled request_load (async)')
+  else
+    self.files:request_load_sync()
+    profiler.mark('request_load_sync COMPLETE')
+    on_complete(self.files:all())
   end
 
   self.links = require('orgmode.org.links'):new({ files = self.files })

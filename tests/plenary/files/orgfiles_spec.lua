@@ -332,4 +332,121 @@ describe('OrgFiles', function()
       vim.fn.delete(empty_dir, 'rf')
     end)
   end)
+
+  describe('request_load', function()
+    it('should be idempotent - multiple calls load files only once', function()
+      create_test_file('test1.org', { '* Headline 1' })
+      create_test_file('test2.org', { '* Headline 2' })
+
+      local files = OrgFiles:new({ paths = { temp_dir .. '/*.org' } })
+      local load_count = 0
+
+      -- Call request_load twice before either completes
+      local promise1 = files:request_load({
+        on_complete = function()
+          load_count = load_count + 1
+        end,
+      })
+      local promise2 = files:request_load({
+        on_complete = function()
+          load_count = load_count + 1
+        end,
+      })
+
+      -- Wait for both
+      promise1:wait()
+      promise2:wait()
+
+      -- Files should be loaded exactly once, both callbacks called
+      assert.are.equal('loaded', files.load_state)
+      assert.are.equal(2, #files:all())
+      assert.are.equal(2, load_count) -- Both callbacks called
+    end)
+
+    it('should chain onto existing promise when already loading', function()
+      create_test_file('test1.org', { '* Headline 1' })
+
+      local files = OrgFiles:new({ paths = { temp_dir .. '/*.org' } })
+      local callback_order = {}
+
+      -- Start first load
+      local promise1 = files:request_load({
+        on_complete = function()
+          table.insert(callback_order, 'first')
+        end,
+      })
+
+      -- Chain second load while first is in progress
+      local promise2 = files:request_load({
+        on_complete = function()
+          table.insert(callback_order, 'second')
+        end,
+      })
+
+      -- Wait for both
+      promise1:wait()
+      promise2:wait()
+
+      -- Both callbacks should have been called
+      assert.are.equal(2, #callback_order)
+      assert.is_true(vim.tbl_contains(callback_order, 'first'))
+      assert.is_true(vim.tbl_contains(callback_order, 'second'))
+    end)
+
+    it('should return resolved promise when already loaded', function()
+      create_test_file('test1.org', { '* Headline 1' })
+
+      local files = OrgFiles:new({ paths = { temp_dir .. '/*.org' } })
+
+      -- First load
+      files:request_load():wait()
+      assert.are.equal('loaded', files.load_state)
+
+      -- Second call should return immediately
+      local callback_called = false
+      local promise = files:request_load({
+        on_complete = function()
+          callback_called = true
+        end,
+      })
+
+      -- Should resolve immediately (already loaded)
+      promise:wait()
+      assert.is_true(callback_called)
+    end)
+  end)
+
+  describe('request_load_sync', function()
+    it('should block until files are loaded', function()
+      create_test_file('test1.org', { '* Headline 1' })
+      create_test_file('test2.org', { '* Headline 2' })
+
+      local files = OrgFiles:new({ paths = { temp_dir .. '/*.org' } })
+
+      -- Should block and return loaded files
+      local result = files:request_load_sync(5000)
+
+      assert.are.equal('loaded', files.load_state)
+      assert.are.equal(files, result)
+      assert.are.equal(2, #files:all())
+    end)
+
+    it('should work when already loaded', function()
+      create_test_file('test1.org', { '* Headline 1' })
+
+      local files = OrgFiles:new({ paths = { temp_dir .. '/*.org' } })
+
+      -- First load
+      files:request_load_sync(5000)
+
+      -- Second call should return immediately
+      local start = vim.uv.hrtime()
+      local result = files:request_load_sync(5000)
+      local elapsed_ms = (vim.uv.hrtime() - start) / 1e6
+
+      assert.are.equal(files, result)
+      -- Should be nearly instant (< 10ms) since already loaded
+      assert.is_true(elapsed_ms < 10, 'request_load_sync took ' .. elapsed_ms .. 'ms when already loaded')
+    end)
+  end)
 end)

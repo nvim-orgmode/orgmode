@@ -5,6 +5,8 @@ local config = require('orgmode.config')
 local ts_utils = require('orgmode.utils.treesitter')
 local Listitem = require('orgmode.files.elements.listitem')
 
+local DEFAULT_BATCH_SIZE = 50
+
 ---@class OrgFilesOpts
 ---@field paths string | string[]
 ---@field cache? boolean Store the instances to cache and retrieve it later if paths are the same
@@ -20,6 +22,7 @@ local Listitem = require('orgmode.files.elements.listitem')
 ---@field all_files table<string, OrgFile> all loaded files, no matter if they are part of paths
 ---@field load_state 'loading' | 'loaded' | nil
 ---@field progressive_state? { loaded: number, total: number, loading: boolean } Progressive loading state
+---@field private _load_promise? OrgPromise<OrgFiles> Shared promise for idempotent loading
 
 ---@class OrgFileScanResult
 ---@field filename string Absolute path to the org file
@@ -51,6 +54,7 @@ function OrgFiles:new(opts)
     all_files = {},
     load_state = nil,
     cache = opts.cache or false,
+    _load_promise = nil,
   }
   setmetatable(data, self)
   data.paths = self:_setup_paths(opts.paths)
@@ -484,7 +488,7 @@ end
 ---@field loaded_count number Number of files loaded so far
 ---@field loaded_files OrgFile[] Files that have been loaded
 ---@field batch_start_time number High-resolution timestamp when loading started
----@field last_callback_time number High-resolution timestamp of last callback
+---@field last_callback_time number|nil High-resolution timestamp of last callback (nil initially, set after first file)
 ---@field batch_timings OrgBatchTiming[] Timing data for each batch
 ---@field current_batch_num number Current batch being processed
 ---@field last_batch_end_time number|nil hrtime when previous batch completed
@@ -546,12 +550,13 @@ end
 ---Process a batch of files, then yield and continue with next batch
 ---@param queue OrgFileScanResult[]
 ---@param start_idx number
----@param batch_size number
+---@param batch_size number? Batch size (defaults to remaining files if nil)
 ---@param state OrgLoadQueueState
 ---@param opts OrgLoadProgressiveOpts
 ---@param resolve function
 ---@param reject function
 function OrgFiles:_process_batch(queue, start_idx, batch_size, state, opts, resolve, reject)
+  batch_size = batch_size or #queue
   local mem_before = collectgarbage('count')
   local batch_start_hrtime = vim.uv.hrtime()
   -- Use first_batch_size for batch 1, then regular batch_size
@@ -640,7 +645,7 @@ function OrgFiles:_load_queue(queue, opts)
     loaded = 0,
     total = state.total,
     loading = true,
-    batch_size = opts.batch_size or 50,
+    batch_size = opts.batch_size,
     first_batch_size = opts.first_batch_size,
   }
 
@@ -649,7 +654,7 @@ function OrgFiles:_load_queue(queue, opts)
     return Promise.resolve(self:_handle_all_loaded(state, opts))
   end
 
-  local batch_size = opts.batch_size or 50
+  local batch_size = opts.batch_size
 
   return Promise.new(function(resolve, reject)
     self:_process_batch(queue, 1, batch_size, state, opts, resolve, reject)
@@ -665,7 +670,7 @@ function OrgFiles:load_progressive(opts)
     order_by = 'mtime',
     direction = 'desc',
     current_buffer_first = true,
-    batch_size = 50,
+    batch_size = DEFAULT_BATCH_SIZE,
   }, opts or {})
 
   local metadata = self:scan()
@@ -704,6 +709,66 @@ end
 ---@return { loaded: number, total: number, loading: boolean }?
 function OrgFiles:get_load_progress()
   return self.progressive_state
+end
+
+---@class OrgRequestLoadOpts
+---@field async? boolean Use async progressive loading (default: true)
+---@field on_file_loaded? fun(file: OrgFile, index: number, total: number) Callback per file loaded
+---@field on_complete? fun(files: OrgFile[]) Callback when all files loaded
+---@field order_by? 'mtime'|'name'|OrgLoadProgressiveSortFn Sort order for loading files
+---@field direction? 'asc'|'desc' Sort direction
+---@field current_buffer_first? boolean Prioritize current buffer file
+---@field batch_size? number Max concurrent file loads per batch
+---@field first_batch_size? number Size of first batch (for faster initial response)
+---@field yield_ms? number Milliseconds to yield between batches
+
+---Request files to be loaded. Idempotent - multiple calls share the same promise.
+---This is the unified entry point for file loading.
+---@param opts? OrgRequestLoadOpts
+---@return OrgPromise<OrgFiles>
+function OrgFiles:request_load(opts)
+  opts = opts or {}
+  local async = opts.async ~= false -- default to async
+
+  -- Already loaded - return immediately
+  if self.load_state == 'loaded' then
+    if opts.on_complete then
+      opts.on_complete(self:all())
+    end
+    return Promise.resolve(self)
+  end
+
+  -- Already loading - chain onto existing promise
+  if self.load_state == 'loading' and self._load_promise then
+    return self._load_promise:next(function()
+      if opts.on_complete then
+        opts.on_complete(self:all())
+      end
+      return self
+    end)
+  end
+
+  -- Start loading - note: load_state is set by load()/load_progressive()
+  if async then
+    self._load_promise = self:load_progressive(opts --[[@as OrgLoadProgressiveOpts]])
+  else
+    -- Use force=true to ensure loading happens even if load_state was previously set
+    self._load_promise = self:load(true):next(function()
+      if opts.on_complete then
+        opts.on_complete(self:all())
+      end
+      return self
+    end)
+  end
+
+  return self._load_promise
+end
+
+---Synchronous version of request_load for blocking contexts.
+---@param timeout? number Timeout in milliseconds (default: 20000)
+---@return OrgFiles
+function OrgFiles:request_load_sync(timeout)
+  return self:request_load({ async = false }):wait(timeout or 20000)
 end
 
 return OrgFiles
