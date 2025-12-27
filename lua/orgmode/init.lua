@@ -89,9 +89,6 @@ function Org:init()
 
   emit.profile('mark', 'init', string.format('org_async_loading = %s', tostring(config.org_async_loading)))
 
-  -- Unified loading via request_load() - handles both async and sync
-  local load_start = vim.uv.hrtime()
-
   -- Callback wrappers to fire registered callbacks
   local function on_file_loaded(file, index, total)
     for _, callback in ipairs(self._file_loaded_callbacks) do
@@ -103,33 +100,18 @@ function Org:init()
     -- Emit batch-level profiling events
     local progress = self.files:get_load_progress()
     if progress and progress.batch_timings then
-      local batch_label = progress.first_batch_size
-          and string.format(
-            'START (%d files, first=%d, then=%d)',
-            progress.total,
-            progress.first_batch_size,
-            progress.batch_size
-          )
-        or string.format('START (%d files, batch_size=%d)', progress.total, progress.batch_size)
-      emit.profile('start', 'files', batch_label, { total = progress.total })
+      emit.profile('start', 'files', string.format('START (%d files)', progress.total), { total = progress.total })
 
-      local start_wall_ms = load_start / 1e6
       for _, batch in ipairs(progress.batch_timings) do
-        local file_count = batch.files_end - batch.files_start + 1
         local mem_delta = batch.mem_after_kb and batch.mem_before_kb and (batch.mem_after_kb - batch.mem_before_kb)
           or nil
+        local batch_name = batch.batch_num == 1 and 'open buffers' or 'remaining'
         emit.profile(
           'mark',
           'files',
-          string.format(
-            'batch %d: files %d-%d (%d files)',
-            batch.batch_num,
-            batch.files_start,
-            batch.files_end,
-            file_count
-          ),
+          string.format('batch %d (%s): %d files', batch.batch_num, batch_name, batch.files_count),
           {
-            total_ms = batch.wall_end_ms - start_wall_ms,
+            total_ms = batch.cumulative_ms,
             duration_ms = batch.duration_ms,
             yield_gap_ms = batch.gap_from_prev_ms,
             total_bytes = batch.total_bytes,
@@ -140,7 +122,7 @@ function Org:init()
 
       -- Calculate final wall time from the last batch
       local last_batch = progress.batch_timings[#progress.batch_timings]
-      local final_wall_ms = last_batch and (last_batch.wall_end_ms - start_wall_ms) or 0
+      local final_wall_ms = last_batch and last_batch.cumulative_ms or 0
 
       emit.profile('complete', 'files', 'COMPLETE', {
         total = progress.total,

@@ -34,8 +34,15 @@ end
 ---@field files table<string, OrgFile> table with files that are part of paths
 ---@field all_files table<string, OrgFile> all loaded files, no matter if they are part of paths
 ---@field load_state 'loading' | 'loaded' | nil
----@field progressive_state? { loaded: number, total: number, loading: boolean } Progressive loading state
+---@field progressive_state? OrgLoadProgress Progressive loading state
 ---@field private _load_promise? OrgPromise<OrgFiles> Shared promise for idempotent loading
+
+---@class OrgLoadProgress
+---@field loaded number Number of files loaded so far
+---@field total number Total number of files to load
+---@field loading boolean Whether loading is in progress
+---@field batch_timings? OrgBatchTiming[] Timing data for each batch (set on completion)
+---@field total_duration_ms? number Total wall-clock time for loading (set on completion)
 
 ---@class OrgFileScanResult
 ---@field filename string Absolute path to the org file
@@ -46,10 +53,6 @@ end
 ---@alias OrgLoadProgressiveSortFn fun(a: OrgFileScanResult, b: OrgFileScanResult): boolean
 
 ---@class OrgLoadProgressiveOpts
----@field order_by? 'mtime'|'name'|OrgLoadProgressiveSortFn Sort order for loading files
----@field direction? 'asc'|'desc' Sort direction (default: 'desc' for mtime, 'asc' for name)
----@field batch_size? number Max files per batch (default: all remaining files in one batch)
----@field first_batch_size? number Size of first batch (auto-set to open buffer count)
 ---@field on_file_loaded? fun(file: OrgFile, index: number, total: number) Callback per file loaded
 ---@field on_complete? fun(files: OrgFile[]) Callback when all files loaded
 ---@field filter? fun(metadata: OrgFileScanResult): boolean Pre-load filter
@@ -569,14 +572,11 @@ function OrgFiles:_sort_metadata(metadata, opts)
   return metadata
 end
 
----Load files from queue with callbacks
 ---@class OrgBatchTiming
----@field batch_num number Batch number (1-indexed)
----@field files_start number First file index in batch
----@field files_end number Last file index in batch
----@field wall_start_ms number Wall-clock time when batch started (ms since epoch)
----@field wall_end_ms number Wall-clock time when batch ended (ms since epoch)
+---@field batch_num number Batch number (1 = open buffers, 2 = remaining files)
+---@field files_count number Number of files in this batch
 ---@field duration_ms number How long the batch took to process
+---@field cumulative_ms number Wall-clock time since load started
 ---@field gap_from_prev_ms number Time gap from previous batch end to this batch start
 ---@field total_bytes number Total size of files in this batch
 ---@field mem_before_kb number Lua memory before batch (KB)
@@ -587,9 +587,8 @@ end
 ---@field loaded_count number Number of files loaded so far
 ---@field loaded_files OrgFile[] Files that have been loaded
 ---@field batch_start_time number High-resolution timestamp when loading started
----@field last_callback_time number|nil High-resolution timestamp of last callback (nil initially, set after first file)
+---@field last_callback_time number High-resolution timestamp of last callback
 ---@field batch_timings OrgBatchTiming[] Timing data for each batch
----@field current_batch_num number Current batch being processed
 ---@field last_batch_end_time number|nil hrtime when previous batch completed
 
 ---@private
@@ -646,22 +645,19 @@ function OrgFiles:_handle_all_loaded(state, opts)
 end
 
 ---@private
----Process a batch of files, then yield and continue with next batch
----@param queue OrgFileScanResult[]
----@param start_idx number
----@param batch_size number? Batch size (defaults to remaining files if nil)
----@param state OrgLoadQueueState
----@param opts OrgLoadProgressiveOpts
----@param resolve function
----@param reject function
-function OrgFiles:_process_batch(queue, start_idx, batch_size, state, opts, resolve, reject)
-  batch_size = batch_size or #queue
+---Load a batch of files and record timing
+---@param files OrgFileScanResult[] Files to load in this batch
+---@param batch_num number Batch number for profiling
+---@param state OrgLoadQueueState Mutable state for the load operation
+---@param opts OrgLoadProgressiveOpts Options including callbacks
+---@return OrgPromise<nil>
+function OrgFiles:_load_batch(files, batch_num, state, opts)
+  if #files == 0 then
+    return Promise.resolve()
+  end
+
   local mem_before = collectgarbage('count')
   local batch_start_hrtime = vim.uv.hrtime()
-  -- Use first_batch_size for batch 1, then regular batch_size
-  local effective_batch_size = (start_idx == 1 and opts.first_batch_size) and opts.first_batch_size or batch_size
-  local batch_end = math.min(start_idx + effective_batch_size - 1, #queue)
-  local promises = {}
 
   -- Calculate gap from previous batch
   local gap_ms = 0
@@ -669,107 +665,47 @@ function OrgFiles:_process_batch(queue, start_idx, batch_size, state, opts, reso
     gap_ms = (batch_start_hrtime - state.last_batch_end_time) / 1e6
   end
 
-  state.current_batch_num = state.current_batch_num + 1
-  local batch_num = state.current_batch_num
-
   -- Calculate total bytes for this batch
   local total_bytes = 0
-  for i = start_idx, batch_end do
-    total_bytes = total_bytes + (queue[i].size or 0)
+  for _, m in ipairs(files) do
+    total_bytes = total_bytes + (m.size or 0)
   end
 
   -- Load all files in this batch in parallel
-  for i = start_idx, batch_end do
-    local promise = self:load_file(queue[i].filename):next(function(orgfile)
-      return self:_handle_loaded_file(orgfile, i, state, opts)
+  local promises = {}
+  for i, m in ipairs(files) do
+    local file_index = state.loaded_count + i
+    local promise = self:load_file(m.filename):next(function(orgfile)
+      return self:_handle_loaded_file(orgfile, file_index, state, opts)
     end)
     table.insert(promises, promise)
   end
 
-  -- When batch completes...
-  Promise.all(promises)
-    :next(function()
-      local batch_end_hrtime = vim.uv.hrtime()
-      local mem_after = collectgarbage('count')
-      local duration_ms = (batch_end_hrtime - batch_start_hrtime) / 1e6
+  return Promise.all(promises):next(function()
+    local batch_end_hrtime = vim.uv.hrtime()
+    local mem_after = collectgarbage('count')
 
-      -- Record batch timing
-      table.insert(state.batch_timings, {
-        batch_num = batch_num,
-        files_start = start_idx,
-        files_end = batch_end,
-        wall_start_ms = batch_start_hrtime / 1e6,
-        wall_end_ms = batch_end_hrtime / 1e6,
-        duration_ms = duration_ms,
-        gap_from_prev_ms = gap_ms,
-        total_bytes = total_bytes,
-        mem_before_kb = mem_before,
-        mem_after_kb = mem_after,
-      })
+    -- Record batch timing
+    table.insert(state.batch_timings, {
+      batch_num = batch_num,
+      files_count = #files,
+      duration_ms = (batch_end_hrtime - batch_start_hrtime) / 1e6,
+      cumulative_ms = (batch_end_hrtime - state.batch_start_time) / 1e6,
+      gap_from_prev_ms = gap_ms,
+      total_bytes = total_bytes,
+      mem_before_kb = mem_before,
+      mem_after_kb = mem_after,
+    })
 
-      state.last_batch_end_time = batch_end_hrtime
-
-      if batch_end >= #queue then
-        resolve(self:_handle_all_loaded(state, opts))
-      else
-        -- Yield to event loop between batches. Uses 1ms because defer_fn(fn, 0)
-        -- can execute immediately without yielding. 1ms ensures Neovim processes
-        -- pending keyboard/UI events, keeping the editor responsive during loading.
-        vim.defer_fn(function()
-          self:_process_batch(queue, batch_end + 1, batch_size, state, opts, resolve, reject)
-        end, 1)
-      end
-    end)
-    :catch(reject)
-end
-
----@private
----@param queue OrgFileScanResult[]
----@param opts OrgLoadProgressiveOpts
----@return OrgPromise<OrgFiles>
-function OrgFiles:_load_queue(queue, opts)
-  ---@type OrgLoadQueueState
-  local state = {
-    total = #queue,
-    loaded_count = 0,
-    loaded_files = {},
-    batch_start_time = vim.uv.hrtime(),
-    batch_timings = {},
-    current_batch_num = 0,
-    last_batch_end_time = nil,
-  }
-  state.last_callback_time = state.batch_start_time
-
-  self.progressive_state = {
-    loaded = 0,
-    total = state.total,
-    loading = true,
-    batch_size = opts.batch_size,
-    first_batch_size = opts.first_batch_size,
-  }
-
-  -- Handle empty queue
-  if state.total == 0 then
-    return Promise.resolve(self:_handle_all_loaded(state, opts))
-  end
-
-  local batch_size = opts.batch_size
-
-  return Promise.new(function(resolve, reject)
-    self:_process_batch(queue, 1, batch_size, state, opts, resolve, reject)
+    state.last_batch_end_time = batch_end_hrtime
   end)
 end
 
----Load files progressively with configurable ordering and callbacks.
----Files are loaded in order (e.g., by mtime) with per-file callbacks for incremental updates.
+---Load files progressively: open buffers first, then remaining files.
 ---@param opts? OrgLoadProgressiveOpts
 ---@return OrgPromise<OrgFiles>
 function OrgFiles:load_progressive(opts)
-  opts = vim.tbl_extend('force', {
-    order_by = 'mtime',
-    direction = 'desc',
-  }, opts or {})
-
+  opts = opts or {}
   local metadata = self:scan()
 
   -- Apply filter if provided
@@ -777,10 +713,7 @@ function OrgFiles:load_progressive(opts)
     metadata = vim.tbl_filter(opts.filter, metadata)
   end
 
-  -- Sort metadata
-  self:_sort_metadata(metadata, opts)
-
-  -- Partition: open org buffers first, then rest by sort order
+  -- Partition: open org buffers first, then rest
   local open_bufs = get_open_org_buffers()
   local open_files, rest_files = {}, {}
   for _, m in ipairs(metadata) do
@@ -791,32 +724,54 @@ function OrgFiles:load_progressive(opts)
     end
   end
 
-  -- Concatenate: open buffers first, then rest
-  local ordered = {}
-  for _, m in ipairs(open_files) do
-    table.insert(ordered, m)
-  end
-  for _, m in ipairs(rest_files) do
-    table.insert(ordered, m)
-  end
+  -- Initialize state
+  ---@type OrgLoadQueueState
+  local state = {
+    total = #metadata,
+    loaded_count = 0,
+    loaded_files = {},
+    batch_start_time = vim.uv.hrtime(),
+    batch_timings = {},
+    last_batch_end_time = nil,
+  }
+  state.last_callback_time = state.batch_start_time
 
-  -- Set first_batch_size to load all open buffers in first batch
-  -- If batch_size not provided, load all remaining files in one batch
-  if #open_files > 0 then
-    opts.first_batch_size = #open_files
-  end
-  if not opts.batch_size then
-    opts.batch_size = #rest_files > 0 and #rest_files or #ordered
-  else
-    opts.batch_size = math.max(opts.batch_size, #rest_files)
-  end
+  self.progressive_state = {
+    loaded = 0,
+    total = state.total,
+    loading = true,
+  }
 
   self.load_state = 'loading'
-  return self:_load_queue(ordered, opts)
+
+  -- Handle empty file list
+  if state.total == 0 then
+    return Promise.resolve(self:_handle_all_loaded(state, opts))
+  end
+
+  -- Load in two batches: open buffers first, then rest
+  return self
+    :_load_batch(open_files, 1, state, opts)
+    :next(function()
+      if #rest_files == 0 then
+        return
+      end
+      -- Yield to event loop between batches. Uses 1ms because defer_fn(fn, 0)
+      -- can execute immediately without yielding. 1ms ensures Neovim processes
+      -- pending keyboard/UI events, keeping the editor responsive during loading.
+      return Promise.new(function(resolve)
+        vim.defer_fn(function()
+          self:_load_batch(rest_files, 2, state, opts):next(resolve)
+        end, 1)
+      end)
+    end)
+    :next(function()
+      return self:_handle_all_loaded(state, opts)
+    end)
 end
 
 ---Get the current progressive loading state
----@return { loaded: number, total: number, loading: boolean }?
+---@return OrgLoadProgress?
 function OrgFiles:get_load_progress()
   return self.progressive_state
 end
