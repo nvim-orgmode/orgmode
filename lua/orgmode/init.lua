@@ -342,7 +342,6 @@ function Org:init()
     vim.schedule(function()
       self.files:request_load({
         async = true,
-        current_buffer_first = true,
         on_file_loaded = on_file_loaded,
         on_complete = on_complete,
       })

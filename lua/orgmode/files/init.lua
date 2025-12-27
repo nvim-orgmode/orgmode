@@ -5,7 +5,20 @@ local config = require('orgmode.config')
 local ts_utils = require('orgmode.utils.treesitter')
 local Listitem = require('orgmode.files.elements.listitem')
 
-local DEFAULT_BATCH_SIZE = 50
+---Get filenames of all currently open org buffers
+---@return table<string, boolean> Set of open org file paths
+local function get_open_org_buffers()
+  local open_bufs = {}
+  for _, buf in ipairs(vim.api.nvim_list_bufs()) do
+    if vim.api.nvim_buf_is_loaded(buf) then
+      local name = vim.api.nvim_buf_get_name(buf)
+      if name:match('%.org$') then
+        open_bufs[vim.fn.resolve(name)] = true
+      end
+    end
+  end
+  return open_bufs
+end
 
 ---@class OrgFilesOpts
 ---@field paths string | string[]
@@ -35,8 +48,8 @@ local DEFAULT_BATCH_SIZE = 50
 ---@class OrgLoadProgressiveOpts
 ---@field order_by? 'mtime'|'name'|OrgLoadProgressiveSortFn Sort order for loading files
 ---@field direction? 'asc'|'desc' Sort direction (default: 'desc' for mtime, 'asc' for name)
----@field current_buffer_first? boolean Prioritize current buffer file (default: true)
----@field concurrency? number Max concurrent file loads (default: 50)
+---@field batch_size? number Max files per batch (default: all remaining files in one batch)
+---@field first_batch_size? number Size of first batch (auto-set to open buffer count)
 ---@field on_file_loaded? fun(file: OrgFile, index: number, total: number) Callback per file loaded
 ---@field on_complete? fun(files: OrgFile[]) Callback when all files loaded
 ---@field filter? fun(metadata: OrgFileScanResult): boolean Pre-load filter
@@ -618,7 +631,7 @@ function OrgFiles:_process_batch(queue, start_idx, batch_size, state, opts, reso
         -- pending keyboard/UI events, keeping the editor responsive during loading.
         vim.defer_fn(function()
           self:_process_batch(queue, batch_end + 1, batch_size, state, opts, resolve, reject)
-        end, opts.yield_ms or 1)
+        end, 1)
       end
     end)
     :catch(reject)
@@ -669,8 +682,6 @@ function OrgFiles:load_progressive(opts)
   opts = vim.tbl_extend('force', {
     order_by = 'mtime',
     direction = 'desc',
-    current_buffer_first = true,
-    batch_size = DEFAULT_BATCH_SIZE,
   }, opts or {})
 
   local metadata = self:scan()
@@ -683,26 +694,39 @@ function OrgFiles:load_progressive(opts)
   -- Sort metadata
   self:_sort_metadata(metadata, opts)
 
-  -- Move current buffer to front if requested
-  if opts.current_buffer_first then
-    local current_file = vim.fn.resolve(vim.fn.expand('%:p'))
-    if current_file and current_file ~= '' then
-      local current_idx = nil
-      for i, m in ipairs(metadata) do
-        if m.filename == current_file then
-          current_idx = i
-          break
-        end
-      end
-      if current_idx and current_idx > 1 then
-        local current = table.remove(metadata, current_idx)
-        table.insert(metadata, 1, current)
-      end
+  -- Partition: open org buffers first, then rest by sort order
+  local open_bufs = get_open_org_buffers()
+  local open_files, rest_files = {}, {}
+  for _, m in ipairs(metadata) do
+    if open_bufs[vim.fn.resolve(m.filename)] then
+      table.insert(open_files, m)
+    else
+      table.insert(rest_files, m)
     end
   end
 
+  -- Concatenate: open buffers first, then rest
+  local ordered = {}
+  for _, m in ipairs(open_files) do
+    table.insert(ordered, m)
+  end
+  for _, m in ipairs(rest_files) do
+    table.insert(ordered, m)
+  end
+
+  -- Set first_batch_size to load all open buffers in first batch
+  -- If batch_size not provided, load all remaining files in one batch
+  if #open_files > 0 then
+    opts.first_batch_size = #open_files
+  end
+  if not opts.batch_size then
+    opts.batch_size = #rest_files > 0 and #rest_files or #ordered
+  else
+    opts.batch_size = math.max(opts.batch_size, #rest_files)
+  end
+
   self.load_state = 'loading'
-  return self:_load_queue(metadata, opts)
+  return self:_load_queue(ordered, opts)
 end
 
 ---Get the current progressive loading state
@@ -717,10 +741,7 @@ end
 ---@field on_complete? fun(files: OrgFile[]) Callback when all files loaded
 ---@field order_by? 'mtime'|'name'|OrgLoadProgressiveSortFn Sort order for loading files
 ---@field direction? 'asc'|'desc' Sort direction
----@field current_buffer_first? boolean Prioritize current buffer file
----@field batch_size? number Max concurrent file loads per batch
----@field first_batch_size? number Size of first batch (for faster initial response)
----@field yield_ms? number Milliseconds to yield between batches
+---@field batch_size? number Max files per batch (default: all in one batch)
 
 ---Request files to be loaded. Idempotent - multiple calls share the same promise.
 ---This is the unified entry point for file loading.
