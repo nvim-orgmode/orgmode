@@ -3,6 +3,8 @@ _G.Org = _G.Org or {}
 ---@type Org | nil
 local instance = nil
 
+local emit = require('orgmode.utils.emit')
+
 local auto_instance_keys = {
   files = true,
   agenda = true,
@@ -50,193 +52,9 @@ function Org:new()
   return self
 end
 
--- Profiling data storage
-local profiling_data = {
-  init = {},
-  setup = {},
-  filetype_reload = {},
-  progressive_loading = {},
-  clock_init = {},
-}
-
-local function create_profiler(category)
-  local entries = {}
-  local start = vim.uv.hrtime()
-  local last = start
-
-  return {
-    mark = function(label)
-      local now = vim.uv.hrtime()
-      table.insert(entries, {
-        label = label,
-        total_ms = (now - start) / 1e6,
-        delta_ms = (now - last) / 1e6,
-      })
-      last = now
-    end,
-    finish = function()
-      profiling_data[category] = entries
-    end,
-  }
-end
-
--- Expose create_profiler for use by other modules (clock, files, etc.)
-Org.create_profiler = create_profiler
-
----Show profiling results in a floating window
+---Show profiling results (delegates to Profiler module)
 function Org.profiling()
-  local lines = { '# Orgmode Profiling Results', '' }
-
-  local function add_section(title, entries)
-    if #entries == 0 then
-      return
-    end
-    table.insert(lines, '## ' .. title)
-    table.insert(lines, '')
-    table.insert(lines, string.format('  %-40s %10s %10s', 'Step', 'Total', 'Delta'))
-    table.insert(lines, string.format('  %-40s %10s %10s', string.rep('-', 40), '----------', '----------'))
-
-    for _, entry in ipairs(entries) do
-      local delta_indicator = ''
-      if entry.delta_ms > 1000 then
-        delta_indicator = ' 🔴'
-      elseif entry.delta_ms > 100 then
-        delta_indicator = ' ⚠️'
-      end
-      table.insert(
-        lines,
-        string.format('  %-40s %8.1f ms %8.1f ms%s', entry.label, entry.total_ms, entry.delta_ms, delta_indicator)
-      )
-    end
-    table.insert(lines, '')
-  end
-
-  ---Format bytes as human-readable (KB/MB)
-  local function format_bytes(bytes)
-    if not bytes or bytes == 0 then
-      return ''
-    end
-    if bytes >= 1024 * 1024 then
-      return string.format('%.1f MB', bytes / (1024 * 1024))
-    end
-    return string.format('%.0f KB', bytes / 1024)
-  end
-
-  ---Format memory delta as human-readable
-  local function format_mem_delta(delta_kb)
-    if not delta_kb then
-      return ''
-    end
-    local sign = delta_kb >= 0 and '+' or ''
-    if math.abs(delta_kb) >= 1024 then
-      return string.format('%s%.1f MB', sign, delta_kb / 1024)
-    end
-    return string.format('%s%.0f KB', sign, delta_kb)
-  end
-
-  ---Add batch-level section with gap column (for progressive loading)
-  local function add_batch_section(title, entries)
-    if #entries == 0 then
-      return
-    end
-    table.insert(lines, '## ' .. title)
-    table.insert(lines, '')
-    table.insert(
-      lines,
-      string.format('  %-40s %10s %10s %10s %10s %10s', 'Step', 'Wall Time', 'Duration', 'Yield Gap', 'Size', 'Mem Δ')
-    )
-    table.insert(
-      lines,
-      string.format(
-        '  %-40s %10s %10s %10s %10s %10s',
-        string.rep('-', 40),
-        '----------',
-        '----------',
-        '----------',
-        '----------',
-        '----------'
-      )
-    )
-
-    for _, entry in ipairs(entries) do
-      local gap_str = ''
-      local size_str = format_bytes(entry.total_bytes)
-      local mem_str = format_mem_delta(entry.mem_delta_kb)
-      local indicator = ''
-      if entry.gap_ms then
-        gap_str = string.format('%8.1f ms', entry.gap_ms)
-        if entry.gap_ms > 100 then
-          indicator = ' ⚠️'
-        end
-        if entry.gap_ms > 300 then
-          indicator = ' 🔴'
-        end
-      end
-      -- Also flag large negative memory delta (GC ran)
-      if entry.mem_delta_kb and entry.mem_delta_kb < -1000 then
-        indicator = indicator .. ' 🗑️'
-      end
-      table.insert(
-        lines,
-        string.format(
-          '  %-40s %8.1f ms %8.1f ms %10s %10s %10s%s',
-          entry.label,
-          entry.total_ms,
-          entry.delta_ms,
-          gap_str,
-          size_str,
-          mem_str,
-          indicator
-        )
-      )
-    end
-    table.insert(lines, '')
-  end
-
-  add_section('Org:init()', profiling_data.init)
-  add_section('Org.setup()', profiling_data.setup)
-  add_section('FileType reload (deferred)', profiling_data.filetype_reload)
-  add_batch_section('Progressive loading (deferred)', profiling_data.progressive_loading)
-  add_section('Clock:init (deferred)', profiling_data.clock_init)
-
-  local has_data = #profiling_data.init > 0
-    or #profiling_data.setup > 0
-    or #profiling_data.filetype_reload > 0
-    or #profiling_data.progressive_loading > 0
-    or #profiling_data.clock_init > 0
-
-  if not has_data then
-    table.insert(lines, 'No profiling data available yet.')
-    table.insert(lines, 'Open an org file first to collect timing data.')
-  end
-
-  -- Create floating window
-  local buf = vim.api.nvim_create_buf(false, true)
-  vim.api.nvim_buf_set_lines(buf, 0, -1, false, lines)
-  vim.bo[buf].filetype = 'markdown'
-  vim.bo[buf].modifiable = false
-
-  local width = math.floor(vim.o.columns * 0.8)
-  local height = math.min(#lines + 2, vim.o.lines - 4)
-  local win = vim.api.nvim_open_win(buf, true, {
-    relative = 'editor',
-    width = width,
-    height = height,
-    row = math.floor((vim.o.lines - height) / 2),
-    col = math.floor((vim.o.columns - width) / 2),
-    style = 'minimal',
-    border = 'rounded',
-    title = ' Org Profiling ',
-    title_pos = 'center',
-  })
-
-  -- Close on q or <Esc>
-  vim.keymap.set('n', 'q', function()
-    vim.api.nvim_win_close(win, true)
-  end, { buffer = buf })
-  vim.keymap.set('n', '<Esc>', function()
-    vim.api.nvim_win_close(win, true)
-  end, { buffer = buf })
+  require('orgmode.utils.profiler').show()
 end
 
 function Org:init()
@@ -249,25 +67,27 @@ function Org:init()
   local profiler = create_profiler('init')
   profiler.mark('START')
 
+  emit.profile('start', 'init', 'START')
+
   local config = require('orgmode.config')
-  profiler.mark('require config')
+  emit.profile('mark', 'init', 'require config')
 
   require('orgmode.events').init()
-  profiler.mark('events.init()')
+  emit.profile('mark', 'init', 'events.init()')
 
   self.highlighter = require('orgmode.colors.highlighter'):new()
-  profiler.mark('highlighter:new()')
+  emit.profile('mark', 'init', 'highlighter:new()')
 
   require('orgmode.colors.highlights').define_highlights()
-  profiler.mark('define_highlights()')
+  emit.profile('mark', 'init', 'define_highlights()')
 
   self.files = require('orgmode.files'):new({
     local config = require('orgmode.config')
     paths = config.org_agenda_files,
   })
-  profiler.mark('OrgFiles:new()')
+  emit.profile('mark', 'init', 'OrgFiles:new()')
 
-  profiler.mark(string.format('org_async_loading = %s', tostring(config.org_async_loading)))
+  emit.profile('mark', 'init', string.format('org_async_loading = %s', tostring(config.org_async_loading)))
 
   -- Unified loading via request_load() - handles both async and sync
   local load_start = vim.uv.hrtime()
@@ -280,14 +100,9 @@ function Org:init()
   end
 
   local function on_complete(files)
-    -- Store batch-level profiling data
+    -- Emit batch-level profiling events
     local progress = self.files:get_load_progress()
     if progress and progress.batch_timings then
-      local entries = {}
-      local last_batch = progress.batch_timings[#progress.batch_timings]
-      local final_wall_ms = last_batch and last_batch.wall_end_ms or 0
-      local start_wall_ms = load_start / 1e6
-
       local batch_label = progress.first_batch_size
           and string.format(
             'START (%d files, first=%d, then=%d)',
@@ -296,39 +111,42 @@ function Org:init()
             progress.batch_size
           )
         or string.format('START (%d files, batch_size=%d)', progress.total, progress.batch_size)
-      table.insert(entries, {
-        label = batch_label,
-        total_ms = 0,
-        delta_ms = 0,
-      })
+      emit.profile('start', 'files', batch_label, { total = progress.total })
 
+      local start_wall_ms = load_start / 1e6
       for _, batch in ipairs(progress.batch_timings) do
         local file_count = batch.files_end - batch.files_start + 1
         local mem_delta = batch.mem_after_kb and batch.mem_before_kb and (batch.mem_after_kb - batch.mem_before_kb)
           or nil
-        table.insert(entries, {
-          label = string.format(
+        emit.profile(
+          'mark',
+          'files',
+          string.format(
             'batch %d: files %d-%d (%d files)',
             batch.batch_num,
             batch.files_start,
             batch.files_end,
             file_count
           ),
-          total_ms = batch.wall_end_ms - start_wall_ms,
-          delta_ms = batch.duration_ms,
-          gap_ms = batch.gap_from_prev_ms,
-          total_bytes = batch.total_bytes,
-          mem_delta_kb = mem_delta,
-        })
+          {
+            total_ms = batch.wall_end_ms - start_wall_ms,
+            duration_ms = batch.duration_ms,
+            yield_gap_ms = batch.gap_from_prev_ms,
+            total_bytes = batch.total_bytes,
+            mem_delta_kb = mem_delta,
+          }
+        )
       end
 
-      table.insert(entries, {
-        label = 'COMPLETE',
-        total_ms = final_wall_ms - start_wall_ms,
-        delta_ms = 0,
-      })
+      -- Calculate final wall time from the last batch
+      local last_batch = progress.batch_timings[#progress.batch_timings]
+      local final_wall_ms = last_batch and (last_batch.wall_end_ms - start_wall_ms) or 0
 
-      profiling_data.progressive_loading = entries
+      emit.profile('complete', 'files', 'COMPLETE', {
+        total = progress.total,
+        total_ms = final_wall_ms,
+        duration_ms = 0, -- COMPLETE is just a marker, no additional duration
+      })
     end
 
     -- Fire registered callbacks
@@ -346,30 +164,30 @@ function Org:init()
         on_complete = on_complete,
       })
     end)
-    profiler.mark('scheduled request_load (async)')
+    emit.profile('mark', 'init', 'scheduled request_load (async)')
   else
     self.files:request_load_sync()
-    profiler.mark('request_load_sync COMPLETE')
+    emit.profile('mark', 'init', 'request_load_sync COMPLETE')
     on_complete(self.files:all())
   end
 
   self.links = require('orgmode.org.links'):new({ files = self.files })
-  profiler.mark('links:new()')
+  emit.profile('mark', 'init', 'links:new()')
 
   self.agenda = require('orgmode.agenda'):new({
     files = self.files,
     highlighter = self.highlighter,
     links = self.links,
   })
-  profiler.mark('agenda:new()')
+  emit.profile('mark', 'init', 'agenda:new()')
 
   self.capture = require('orgmode.capture'):new({
     files = self.files,
   })
-  profiler.mark('capture:new()')
+  emit.profile('mark', 'init', 'capture:new()')
 
   self.completion = require('orgmode.org.autocompletion'):new({ files = self.files, links = self.links })
-  profiler.mark('completion:new()')
+  emit.profile('mark', 'init', 'completion:new()')
 
   self.org_mappings = require('orgmode.org.mappings'):new({
     capture = self.capture,
@@ -378,21 +196,20 @@ function Org:init()
     links = self.links,
     completion = self.completion,
   })
-  profiler.mark('org_mappings:new()')
+  emit.profile('mark', 'init', 'org_mappings:new()')
 
   self.clock = require('orgmode.clock'):new({
     files = self.files,
   })
-  profiler.mark('clock:new()')
+  emit.profile('mark', 'init', 'clock:new()')
 
   self.statusline_debounced = require('orgmode.utils').debounce('statusline', function()
     return self.clock:get_statusline()
   end, 300)
-  profiler.mark('statusline setup')
+  emit.profile('mark', 'init', 'statusline setup')
 
   self.initialized = true
-  profiler.mark('COMPLETE')
-  profiler.finish()
+  emit.profile('complete', 'init', 'COMPLETE')
 end
 
 ---@param file? string
@@ -426,11 +243,10 @@ function Org:setup_autocmds()
       -- Defer to let buffer display first, then initialize
       local file = vim.fn.expand('<afile>:p')
       vim.schedule(function()
-        local profiler = create_profiler('filetype_reload')
-        profiler.mark('START')
-        self:reload(file)
-        profiler.mark('reload() complete')
-        profiler.finish()
+        emit.profile('start', 'filetype', 'START')
+        self:reload(file):next(function()
+          emit.profile('complete', 'filetype', 'reload() complete')
+        end)
       end)
     end,
   })
@@ -471,6 +287,12 @@ function Org.setup(opts)
   opts = opts or {}
   local config = require('orgmode.config'):extend(opts)
   config:install_grammar()
+
+  -- Initialize profiler based on config
+  require('orgmode.utils.profiler').setup({
+    enabled = config.profiling and config.profiling.enabled or false,
+  })
+
   instance = Org:new()
   instance.setup_called = true
 

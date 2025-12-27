@@ -241,6 +241,9 @@ local DefaultConfig = {
       },
     },
   },
+  profiling = {
+    enabled = false, -- Enable profiling (default: false for zero overhead)
+  },
 }
 
 return DefaultConfig
