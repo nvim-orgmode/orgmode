@@ -158,6 +158,39 @@ function OrgFiles:all()
   return valid_files
 end
 
+--- Prepare all files for batch processing (e.g., agenda render)
+--- This pre-parses files and caches bufnr to avoid repeated lookups during iteration
+--- Call end_batch() when done to clean up cached state
+function OrgFiles:start_batch()
+  -- Build lookup table of buffered org files ONCE by scanning all loaded buffers
+  -- This replaces N expensive vim.fn.bufnr() calls with one scan + N hash lookups
+  local buffered_files = {}
+  for _, bufnr in ipairs(vim.api.nvim_list_bufs()) do
+    if vim.api.nvim_buf_is_loaded(bufnr) then
+      local name = vim.api.nvim_buf_get_name(bufnr)
+      if name ~= '' and name:match('%.org$') then
+        buffered_files[name] = bufnr
+      end
+    end
+  end
+
+  for _, orgfile in ipairs(self:all()) do
+    -- Parse if not already parsed
+    if not orgfile.root then
+      orgfile:parse()
+    end
+    -- Set bufnr from lookup table (O(1)) instead of vim.fn.bufnr() (expensive regex)
+    orgfile._frame_bufnr = buffered_files[orgfile.filename] or -1
+  end
+end
+
+--- Clean up after batch processing
+function OrgFiles:end_batch()
+  for _, orgfile in ipairs(self:all()) do
+    orgfile:clear_bufnr_cache()
+  end
+end
+
 ---@return string[]
 function OrgFiles:filenames()
   return vim.tbl_map(function(file)

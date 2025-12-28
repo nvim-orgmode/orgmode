@@ -99,6 +99,10 @@ end
 ---@param time OrgDate
 function Notifications:get_tasks(time)
   local tasks = {}
+
+  -- Pre-parse files and cache bufnr to avoid repeated lookups during iteration
+  self.files:start_batch()
+
   for _, orgfile in ipairs(self.files:all()) do
     for _, headline in ipairs(orgfile:get_opened_unfinished_headlines()) do
       for _, date in ipairs(headline:get_deadline_and_scheduled_dates()) do
@@ -124,6 +128,9 @@ function Notifications:get_tasks(time)
       end
     end
   end
+
+  -- Clean up batch state
+  self.files:end_batch()
 
   return tasks
 end

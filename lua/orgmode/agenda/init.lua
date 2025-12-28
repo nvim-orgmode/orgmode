@@ -76,12 +76,21 @@ end
 function Agenda:render()
   local line = vim.fn.line('.')
   local bufnr = self:_open_window()
+
+  -- Pre-parse files and cache bufnr once for all views
+  -- This avoids redundant setup when rendering combined agendas
+  self.files:start_batch()
+
   for i, view in ipairs(self.views) do
     view:render(bufnr, line)
     if #self.views > 1 and i < #self.views and #view:get_lines() > 0 then
       colors.add_hr(bufnr, vim.api.nvim_buf_line_count(bufnr), config.org_agenda_block_separator)
     end
   end
+
+  -- Clean up batch state
+  self.files:end_batch()
+
   vim.bo[bufnr].modifiable = false
 
   if vim.w.org_window_split_mode == 'horizontal' then
