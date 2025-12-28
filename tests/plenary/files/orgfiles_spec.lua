@@ -5,7 +5,8 @@ describe('OrgFiles', function()
   local test_files = {}
 
   before_each(function()
-    temp_dir = vim.fn.tempname()
+    -- Use resolve() to get canonical path (handles macOS /var -> /private/var symlink)
+    temp_dir = vim.fn.resolve(vim.fn.tempname())
     vim.fn.mkdir(temp_dir, 'p')
     test_files = {}
   end)
