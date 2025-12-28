@@ -2,6 +2,7 @@
 local DefaultConfig = {
   org_agenda_files = '',
   org_default_notes_file = '',
+  org_async_loading = false, -- When true, use progressive async loading for files
   org_todo_keywords = { 'TODO', '|', 'DONE' },
   org_todo_repeat_to_state = nil,
   org_todo_keyword_faces = {},
@@ -239,6 +240,9 @@ local DefaultConfig = {
         wrap = false,
       },
     },
+  },
+  profiling = {
+    enabled = false, -- Enable profiling (default: false for zero overhead)
   },
 }
 
