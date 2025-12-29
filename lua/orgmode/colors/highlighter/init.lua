@@ -81,25 +81,25 @@ function OrgHighlighter:_on_win(_, win, bufnr, topline, botline)
     self:_parse_tree(bufnr, win, { topline, botline + 1 })
     if self.parsing[win] then
       for line = topline, botline do
-        self:_on_line_impl(bufnr, line, true)
+        self:_on_line_impl(bufnr, line, true, win)
       end
       return false
     end
   end
 end
 
-function OrgHighlighter:_on_line(_, _, bufnr, line)
-  self:_on_line_impl(bufnr, line)
+function OrgHighlighter:_on_line(_, winid, bufnr, line)
+  self:_on_line_impl(bufnr, line, false, winid)
 end
 
 ---@param bufnr number
 ---@param line number
 ---@param use_cache? boolean
-function OrgHighlighter:_on_line_impl(bufnr, line, use_cache)
+function OrgHighlighter:_on_line_impl(bufnr, line, use_cache, winid)
   if self.buffers[bufnr].tree then
     self.markup:on_line(bufnr, line, self.buffers[bufnr].tree, use_cache)
     self.stars:on_line(bufnr, line)
-    self.foldtext:on_line(bufnr, line)
+    self.foldtext:on_line(bufnr, line, winid)
   end
 end
 
