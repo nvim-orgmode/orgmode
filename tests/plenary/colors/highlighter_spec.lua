@@ -9,6 +9,8 @@ describe('highlighter', function()
   local get_extmarks = function(content)
     ---@diagnostic disable-next-line: inject-field
     config.ts_hl_enabled = true
+    -- Disable colored folds to prevent foldtext extmarks from being included
+    config.ui.folds.colored = false
     helpers.create_file(content)
     ---@diagnostic disable-next-line: invisible
     org.highlighter._ephemeral = false
