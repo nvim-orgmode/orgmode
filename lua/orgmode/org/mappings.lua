@@ -415,6 +415,22 @@ function OrgMappings:_get_note(template, indent, title)
   end)
 end
 
+--- Recompute fold boundaries and restore current fold state.
+--- When lines are inserted/removed (e.g., CLOSED timestamp, notes), Neovim's
+--- fold boundaries become stale. This recomputes them via zx and restores
+--- the fold state of the current line.
+--- Note: zx resets all folds to foldlevel, so manually opened/closed folds
+--- elsewhere in the document will be reset.
+---@param was_fold_closed boolean whether the current line's fold was closed before content change
+local function recompute_folds(was_fold_closed)
+  vim.schedule(function()
+    vim.cmd('silent! normal! zx')
+    if was_fold_closed then
+      vim.cmd('silent! normal! zc')
+    end
+  end)
+end
+
 function OrgMappings:_todo_change_state(direction)
   local headline = self.files:get_closest_headline()
   local old_state = headline:get_todo()
@@ -431,9 +447,15 @@ function OrgMappings:_todo_change_state(direction)
   local is_done = item:is_done() and not was_done
   local is_undone = not item:is_done() and was_done
 
+  -- Capture fold state before any modifications
+  -- Treesitter re-parses on text change, which can affect fold boundaries
+  local line = vim.fn.line('.')
+  local was_fold_closed = vim.fn.foldclosed(line) ~= -1
+
   -- State was changed in the same group (TODO NEXT | DONE)
   -- For example: Changed from TODO to NEXT
   if not is_done and not is_undone then
+    recompute_folds(was_fold_closed)
     return item
   end
 
@@ -459,12 +481,18 @@ function OrgMappings:_todo_change_state(direction)
     end
 
     if is_undone or not prompt_done_note then
+      recompute_folds(was_fold_closed)
       return item
     end
 
-    return self:_get_note(closing_note_text, indent, closed_title):next(function(closing_note)
-      return item:add_note(closing_note)
-    end)
+    return self
+      :_get_note(closing_note_text, indent, closed_title)
+      :next(function(closing_note)
+        return item:add_note(closing_note)
+      end)
+      :finally(function()
+        recompute_folds(was_fold_closed)
+      end)
   end
 
   for _, date in ipairs(repeater_dates) do
@@ -502,21 +530,34 @@ function OrgMappings:_todo_change_state(direction)
   if not prompt_repeat_note and not prompt_done_note then
     -- If user is not prompted for a note, use a default repeat note
     if log_repeat_enabled then
-      return item:add_note({ repeat_note_template })
+      return item:add_note({ repeat_note_template }):finally(function()
+        recompute_folds(was_fold_closed)
+      end)
     end
+    recompute_folds(was_fold_closed)
     return item
   end
 
   -- Done note has precedence over repeat note
   if prompt_done_note then
-    return self:_get_note(closing_note_text, indent, closed_title):next(function(closing_note)
-      return item:add_note(closing_note)
-    end)
+    return self
+      :_get_note(closing_note_text, indent, closed_title)
+      :next(function(closing_note)
+        return item:add_note(closing_note)
+      end)
+      :finally(function()
+        recompute_folds(was_fold_closed)
+      end)
   end
 
-  return self:_get_note(repeat_note_template .. ' \\\\', indent, repeat_note_title):next(function(closing_note)
-    return item:add_note(closing_note)
-  end)
+  return self
+    :_get_note(repeat_note_template .. ' \\\\', indent, repeat_note_title)
+    :next(function(closing_note)
+      return item:add_note(closing_note)
+    end)
+    :finally(function()
+      recompute_folds(was_fold_closed)
+    end)
 end
 
 function OrgMappings:do_promote(whole_subtree)
