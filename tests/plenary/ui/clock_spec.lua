@@ -112,6 +112,9 @@ describe('Clock', function()
   end)
 
   it('should cancel the active clock and remove the clock entry from logbook', function()
+    -- Cancel any active clock from previous tests to ensure clean state
+    orgmode.clock:org_clock_cancel()
+
     vim.cmd.edit(files[1])
     local old_clock_line = vim.fn.getline(6)
     vim.fn.cursor(3, 1)
