@@ -30,6 +30,7 @@ local is_nightly = vim.fn.has('nvim-0.12') > 0
 ---@field metadata OrgFileMetadata
 ---@field parser vim.treesitter.LanguageTree
 ---@field root TSNode
+---@field _parse_tick? number Buffer changedtick at last parse (for staleness detection)
 local OrgFile = {}
 
 local memoize = Memoize:new(OrgFile, function(self)
@@ -193,6 +194,13 @@ function OrgFile:parse(skip_if_not_modified)
   self.parser = self:_get_parser()
   local trees = self.parser:parse()
   self.root = trees[1]:root()
+
+  -- Track changedtick for staleness detection
+  local bufnr = self:bufnr()
+  if bufnr > -1 then
+    self._parse_tick = vim.api.nvim_buf_get_changedtick(bufnr)
+  end
+
   return self.root
 end
 
@@ -487,6 +495,8 @@ function OrgFile:get_node_at_cursor(cursor)
   return self.root:named_descendant_for_range(row, col, row, col)
 end
 
+---Get text for a treesitter node
+---Uses pcall to gracefully handle stale nodes (when buffer changed after parse)
 ---@param node? TSNode
 ---@param range? number[]
 ---@return string
@@ -494,14 +504,27 @@ function OrgFile:get_node_text(node, range)
   if not node then
     return ''
   end
+
+  local source = self:get_source()
+  local ok, result
+
   if range then
-    return ts.get_node_text(node, self:get_source(), {
+    ok, result = pcall(ts.get_node_text, node, source, {
       metadata = {
         range = range,
       },
     })
+  else
+    ok, result = pcall(ts.get_node_text, node, source)
   end
-  return ts.get_node_text(node, self:get_source())
+
+  if not ok then
+    -- Node positions are stale (buffer changed since parse)
+    -- Return empty string for graceful degradation
+    return ''
+  end
+
+  return result
 end
 
 ---@param node? TSNode
