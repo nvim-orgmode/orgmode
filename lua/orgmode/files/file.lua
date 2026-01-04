@@ -563,6 +563,11 @@ end
 
 ---@return number
 function OrgFile:bufnr()
+  -- Check frame-scoped cache first (set during batch operations like agenda render)
+  if self._frame_bufnr ~= nil then
+    return self._frame_bufnr
+  end
+
   local bufnr = utils.get_buffer_by_filename(self.filename)
   -- Do not consider unloaded buffers as valid
   -- Treesitter is not working in them
@@ -570,6 +575,11 @@ function OrgFile:bufnr()
     return bufnr
   end
   return -1
+end
+
+--- Clear the frame-scoped bufnr cache
+function OrgFile:clear_bufnr_cache()
+  self._frame_bufnr = nil
 end
 
 ---@private
