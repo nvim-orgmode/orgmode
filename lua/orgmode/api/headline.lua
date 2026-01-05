@@ -4,8 +4,8 @@ local PriorityState = require('orgmode.objects.priority_state')
 local Date = require('orgmode.objects.date')
 local Calendar = require('orgmode.objects.calendar')
 local Promise = require('orgmode.utils.promise')
-local utils = require('orgmode.utils')
 local org = require('orgmode')
+local Buffers = require('orgmode.state.buffers')
 
 ---@class OrgApiHeadline
 ---@field title string headline title without todo keyword, tags and priority. Ex. `* TODO I am a headline  :SOMETAG:` returns `I am a headline`
@@ -277,7 +277,7 @@ end
 --- @return string
 function OrgHeadline:get_link()
   local filename = self.file.filename
-  local bufnr = utils.get_buffer_by_filename(filename)
+  local bufnr = Buffers.get_buffer_by_filename(filename)
 
   if bufnr == -1 or not vim.api.nvim_buf_is_loaded(bufnr) then
     -- do remote edit

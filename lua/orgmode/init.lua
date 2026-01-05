@@ -19,6 +19,7 @@ local auto_instance_keys = {
 ---@field setup_called boolean
 ---@field files OrgFiles
 ---@field highlighter OrgHighlighter
+---@field buffers OrgBuffers
 ---@field agenda OrgAgenda
 ---@field capture OrgCapture
 ---@field clock OrgClock
@@ -49,6 +50,7 @@ function Org:init()
   if self.initialized then
     return
   end
+  self.buffers = require('orgmode.state.buffers').init()
   require('orgmode.events').init()
   self.highlighter = require('orgmode.colors.highlighter'):new()
   require('orgmode.colors.highlights').define_highlights()
@@ -120,6 +122,26 @@ function Org:setup_autocmds()
     callback = function()
       if self.initialized then
         require('orgmode.colors.highlights').define_highlights()
+      end
+    end,
+  })
+
+  vim.api.nvim_create_autocmd({ 'BufNew' }, {
+    pattern = { '*.org', '*.org_archive' },
+    group = org_augroup,
+    callback = function(event)
+      if self.buffers then
+        self.buffers.add(event.buf)
+      end
+    end,
+  })
+
+  vim.api.nvim_create_autocmd('BufWipeout', {
+    pattern = { '*.org', '*.org_archive' },
+    group = org_augroup,
+    callback = function(event)
+      if self.buffers then
+        self.buffers.remove(event.buf)
       end
     end,
   })

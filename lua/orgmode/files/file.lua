@@ -9,7 +9,7 @@ local Hyperlink = require('orgmode.org.links.hyperlink')
 local Range = require('orgmode.files.elements.range')
 local Footnote = require('orgmode.objects.footnote')
 local Memoize = require('orgmode.utils.memoize')
-local is_nightly = vim.fn.has('nvim-0.12') > 0
+local Buffers = require('orgmode.state.buffers')
 
 ---@class OrgFileMetadata
 ---@field mtime number File modified time in nanoseconds
@@ -66,7 +66,7 @@ end
 ---Load the file
 ---@return OrgPromise<OrgFile | false>
 function OrgFile.load(filename)
-  local bufnr = utils.get_buffer_by_filename(filename)
+  local bufnr = Buffers.get_buffer_by_filename(filename)
 
   if bufnr > -1 and vim.api.nvim_buf_is_loaded(bufnr) and vim.bo[bufnr].filetype == 'org' then
     return Promise.resolve(OrgFile:new({
@@ -563,7 +563,7 @@ end
 
 ---@return number
 function OrgFile:bufnr()
-  local bufnr = utils.get_buffer_by_filename(self.filename)
+  local bufnr = Buffers.get_buffer_by_filename(self.filename)
   -- Do not consider unloaded buffers as valid
   -- Treesitter is not working in them
   if bufnr > -1 and vim.api.nvim_buf_is_loaded(bufnr) then
