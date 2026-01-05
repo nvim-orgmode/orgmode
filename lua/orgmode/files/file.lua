@@ -9,7 +9,6 @@ local Hyperlink = require('orgmode.org.links.hyperlink')
 local Range = require('orgmode.files.elements.range')
 local Footnote = require('orgmode.objects.footnote')
 local Memoize = require('orgmode.utils.memoize')
-local is_nightly = vim.fn.has('nvim-0.12') > 0
 
 ---@class OrgFileMetadata
 ---@field mtime number File modified time in nanoseconds
@@ -30,6 +29,7 @@ local is_nightly = vim.fn.has('nvim-0.12') > 0
 ---@field metadata OrgFileMetadata
 ---@field parser vim.treesitter.LanguageTree
 ---@field root TSNode
+---@field _load_timing? { since_last_ms: number, since_start_ms: number } Progressive loading timing data
 local OrgFile = {}
 
 local memoize = Memoize:new(OrgFile, function(self)
