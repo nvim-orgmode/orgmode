@@ -59,7 +59,7 @@ end
 ---Get valid buffer name if the buffer is an org file
 ---@param bufnr number
 function OrgBuffers.get_valid_buffer_name(bufnr)
-  local name = vim.fn.bufname(bufnr)
+  local name = vim.fn.resolve(vim.fn.bufname(bufnr))
   if OrgBuffers._is_valid_file_name(name) then
     return name
   end
