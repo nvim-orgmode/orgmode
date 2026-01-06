@@ -23,13 +23,15 @@ end
 ---If filename does not have org extension, it will try to find the buffer number and return
 ---@param filename string absolute path to file
 function OrgBuffers.get_buffer_by_filename(filename)
-  if OrgBuffers._bufs[filename] then
-    return OrgBuffers._bufs[filename]
+  local resolved_filename = vim.fn.resolve(filename)
+
+  if OrgBuffers._bufs[resolved_filename] then
+    return OrgBuffers._bufs[resolved_filename]
   end
 
   -- If filename does not have an org extension, try to find the buf number and return it if filetype is org
-  if not OrgBuffers._is_valid_file_name(filename) then
-    local bufnr = vim.fn.bufnr(filename)
+  if not OrgBuffers._is_valid_file_name(resolved_filename) then
+    local bufnr = vim.fn.bufnr(resolved_filename)
     if bufnr > -1 and vim.bo[bufnr].filetype == 'org' then
       return bufnr
     end
@@ -42,6 +44,7 @@ end
 ---@param bufnr number
 function OrgBuffers.add(bufnr)
   local name = OrgBuffers.get_valid_buffer_name(bufnr)
+
   if name then
     OrgBuffers._bufs[name] = bufnr
   end
@@ -50,7 +53,8 @@ end
 ---Remove the buffer from the list
 ---@param bufnr number
 function OrgBuffers.remove(bufnr)
-  local name = vim.api.nvim_buf_get_name(bufnr)
+  local name = vim.fn.resolve(vim.api.nvim_buf_get_name(bufnr))
+
   if OrgBuffers._bufs[name] then
     OrgBuffers._bufs[name] = nil
   end
@@ -60,6 +64,7 @@ end
 ---@param bufnr number
 function OrgBuffers.get_valid_buffer_name(bufnr)
   local name = vim.fn.resolve(vim.fn.bufname(bufnr))
+
   if OrgBuffers._is_valid_file_name(name) then
     return name
   end
@@ -72,7 +77,7 @@ end
 ---@param filename string
 function OrgBuffers._is_valid_file_name(filename)
   filename = filename or ''
-  return vim.endswith(filename, '.org') or vim.endswith(filename, '.org_archive')
+  return filename:sub(-4) == '.org' or filename:sub(-12) == '.org_archive'
 end
 
 return OrgBuffers
