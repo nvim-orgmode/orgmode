@@ -1,7 +1,7 @@
 ---@diagnostic disable: invisible
 local OrgHeadline = require('orgmode.api.headline')
-local utils = require('orgmode.utils')
 local org = require('orgmode')
+local Buffers = require('orgmode.state.buffers')
 
 ---@class OrgApiFile
 ---@field category string current file category name. By default it's only filename without extension unless defined differently via #+CATEGORY directive
@@ -114,7 +114,7 @@ end
 --- @return string
 function OrgFile:get_link()
   local filename = self.filename
-  local bufnr = utils.get_buffer_by_filename(filename)
+  local bufnr = Buffers.get_buffer_by_filename(filename)
 
   if bufnr == -1 or not vim.api.nvim_buf_is_loaded(bufnr) then
     -- do remote edit
