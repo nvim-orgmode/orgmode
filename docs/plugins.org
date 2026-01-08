@@ -10,6 +10,7 @@ Orgmode supports various plugins to extend its functionality or make it more pre
   - [[#org-roamnvim][org-roam.nvim]]
   - [[#sniprun][sniprun]]
   - [[#telescope-orgmodenvim][telescope-orgmode.nvim]]
+  - [[#org-cycle-litenvim][org-cycle-lite.nvim]]
 - [[#completion-plugins][Completion plugins]]
   - [[#blinkcmp][blink.cmp]]
   - [[#nvim-cmp][nvim-cmp]]
@@ -52,6 +53,13 @@ Plugin for code block evaluation.
 :END:
 Link: [[https://github.com/nvim-orgmode/telescope-orgmode.nvim][telescope-orgmode.nvim]]
 [[https://github.com/nvim-telescope/telescope.nvim][Telescope]] extension for orgmode that adds fuzzy finding of orgmode files, headlines, etc.
+
+Plugin for doom-emacs style simple cycling ([[https://github.com/doomemacs/doomemacs/blob/master/modules/lang/org/autoload/org.el#L497][org-cycle-only-current-subtree-h]])
+*** org-cycle-lite.nvim
+:PROPERTIES:
+:CUSTOM_ID: org-cycle-litenvim
+:END:
+Link: [[https://github.com/aaratha/org-cycle-lite.nvim][org-cycle-lite.nvim]]
 
 ** Completion plugins
 :PROPERTIES:
