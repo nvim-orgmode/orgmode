@@ -3,7 +3,7 @@ local OrgFile = require('orgmode.api.file')
 local OrgHeadline = require('orgmode.api.headline')
 local orgmode = require('orgmode')
 local Promise = require('orgmode.utils.promise')
-local utils = require('orgmode.utils')
+local Buffers = require('orgmode.state.buffers')
 
 ---@class OrgApiRefileOpts
 ---@field source OrgApiHeadline
@@ -81,7 +81,7 @@ function OrgApi.refile(opts)
     refile_opts.destination_headline = opts.destination._section
   end
 
-  local source_bufnr = utils.get_buffer_by_filename(opts.source.file.filename)
+  local source_bufnr = Buffers.get_buffer_by_filename(opts.source.file.filename)
   local is_capture = source_bufnr > -1 and vim.b[source_bufnr].org_capture
   if is_capture then
     local capture_window = orgmode.capture._windows[vim.b[source_bufnr].org_capture_window_id]

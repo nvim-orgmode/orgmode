@@ -1,4 +1,3 @@
-local OrgFile = require('orgmode.files.file')
 local orgmode = require('orgmode')
 
 local M = {}
@@ -29,7 +28,7 @@ end
 
 ---@param path string
 function M.load_file(path)
-  vim.cmd.edit(path)
+  vim.cmd.edit(vim.fn.fnameescape(path))
   return orgmode.files:get(path)
 end
 
