@@ -23,7 +23,7 @@ end
 ---If filename does not have org extension, it will try to find the buffer number and return
 ---@param filename string absolute path to file
 function OrgBuffers.get_buffer_by_filename(filename)
-  local resolved_filename = vim.fn.resolve(filename)
+  local resolved_filename = OrgBuffers._resolve_filename(filename)
 
   if OrgBuffers._bufs[resolved_filename] then
     return OrgBuffers._bufs[resolved_filename]
@@ -53,9 +53,9 @@ end
 ---Remove the buffer from the list
 ---@param bufnr number
 function OrgBuffers.remove(bufnr)
-  local name = vim.fn.resolve(vim.api.nvim_buf_get_name(bufnr))
+  local name = OrgBuffers.get_valid_buffer_name(bufnr)
 
-  if OrgBuffers._bufs[name] then
+  if name and OrgBuffers._bufs[name] then
     OrgBuffers._bufs[name] = nil
   end
 end
@@ -63,13 +63,20 @@ end
 ---Get valid buffer name if the buffer is an org file
 ---@param bufnr number
 function OrgBuffers.get_valid_buffer_name(bufnr)
-  local name = vim.fn.resolve(vim.fn.bufname(bufnr))
+  local name = OrgBuffers._resolve_filename(vim.fn.bufname(bufnr))
 
   if OrgBuffers._is_valid_file_name(name) then
     return name
   end
 
   return nil
+end
+
+---Resolve and normalize the filename
+---@param filename string
+---@return string
+function OrgBuffers._resolve_filename(filename)
+  return vim.fs.normalize(vim.fn.resolve(filename))
 end
 
 ---Check if given filename has valid org extension
