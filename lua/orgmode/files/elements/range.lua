@@ -83,4 +83,11 @@ function Range:clone()
   })
 end
 
+function Range:to_lsp()
+  return {
+    start = { line = self.start_line - 1, character = 0 },
+    ['end'] = { line = self.end_line, character = 0 },
+  }
+end
+
 return Range
