@@ -9,6 +9,7 @@ Table of Contents                                  *orgmode-table-of-contents*
   - Calendar settings                |orgmode-configuration-calendar-settings|
   - Tags settings                        |orgmode-configuration-tags-settings|
   - Mappings                                  |orgmode-configuration-mappings|
+  - Lsp                                            |orgmode-configuration-lsp|
   - Features                                  |orgmode-configuration-features|
   - User interface                      |orgmode-configuration-user-interface|
 2. Troubleshooting                                   |orgmode-troubleshooting|
@@ -31,6 +32,7 @@ the plugin.
 - |orgmode-calendar-settings|
 - |orgmode-tags-settings|
 - |orgmode-mappings|
+- |orgmode-lsp|
 - |orgmode-features|
 - |orgmode-user-interface|
 
@@ -2307,6 +2309,28 @@ Dot repeat                                                *orgmode-Dot-repeat*
 
 To make all mappings dot repeatable, install vim-repeat
 <https://github.com/tpope/vim-repeat> plugin.
+
+
+LSP                                                *orgmode-configuration-lsp*
+
+📝 NOTE: Experimental
+
+There is basic LSP support available in org files. Available methods:
+
+- `textDocument/documentSymbol` - Shows list of headlines in current file,
+    correctly nested
+- `workspace/symbol` - List and filter all headlines that are part of
+    |orgmode-org_agenda_files|
+- `textDocument/completion` - Autocompletion results. More details in
+    |orgmode-autocompletion|. NOTE: If you are using any completion plugins
+    <./plugins.org::#completion-plugins>, make sure to remove the custom source
+    settings for orgmode. It's no longer needed. IF you are using `omnifunc`, it's
+    best to not set it to builtin LSP omnifunc (`v:lua.vim.lsp.omnifunc`) in
+    orgmode files, due to some edge cases.
+    To enable the orgmode lsp, make sure to call `vim.lsp.enable`:
+    >lua
+        vim.lsp.enable('org')
+    <
 
 
 FEATURES                                      *orgmode-configuration-features*
