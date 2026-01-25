@@ -98,6 +98,9 @@ local build = function(orgmode)
     indent_mode = function()
       require('orgmode.ui.virtual_indent').toggle_buffer_indent_mode()
     end,
+    profiling = function()
+      require('orgmode').profiling()
+    end,
   }
 
   _G.Org = OrgGlobal
