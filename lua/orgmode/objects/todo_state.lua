@@ -153,14 +153,20 @@ function TodoState:_navigate_within_sequence(direction)
 end
 
 ---@param headline OrgHeadline|nil
----@return OrgTodoKeyword
-function TodoState:get_reset_todo(headline)
+---@param initial_todo_keyword string | nil The initial TODO keyword of the headline
+---@return OrgTodoKeyword | ''
+function TodoState:get_reset_todo(headline, initial_todo_keyword)
   local repeat_to_state = (headline and headline:get_property('REPEAT_TO_STATE'))
     or config.opts.org_todo_repeat_to_state
   local todo_keyword = self.todos:find(repeat_to_state)
 
   if todo_keyword then
     return todo_keyword
+  end
+
+  -- If there was no TODO at the beginning, make sure we don't set one
+  if not initial_todo_keyword then
+    return TodoKeyword:empty()
   end
 
   -- For repeating tasks, reset to first TODO of the same sequence

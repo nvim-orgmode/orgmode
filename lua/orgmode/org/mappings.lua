@@ -476,14 +476,9 @@ function OrgMappings:_todo_change_state(direction)
   -- Reset to first TODO of the same sequence for repeating tasks
   local todos = item.file:get_todo_keywords()
   local todo_state = TodoState:new({ current_state = new_todo, todos = todos })
-  local reset_keyword = todo_state:get_reset_todo(item)
+  local reset_keyword = todo_state:get_reset_todo(item, old_state)
 
-  if reset_keyword then
-    item:set_todo(reset_keyword.value)
-  else
-    self:_change_todo_state('reset')
-    new_todo = item:get_todo()
-  end
+  item:set_todo(reset_keyword.value)
 
   local prompt_repeat_note = config.org_log_repeat == 'note'
   local log_repeat_enabled = config.org_log_repeat ~= false
@@ -1066,14 +1061,6 @@ function OrgMappings:_change_todo_state(direction, use_fast_access)
 
   local todos = headline.file:get_todo_keywords()
 
-  -- Store the sequence index of the original keyword, if any
-  local original_sequence_index = nil
-  local current_keyword_obj = todos:find(current_keyword)
-
-  if current_keyword_obj then
-    original_sequence_index = current_keyword_obj.sequence_index
-  end
-
   local todo_state = TodoState:new({ current_state = current_keyword, todos = todos })
   local next_state = nil
 
@@ -1084,8 +1071,6 @@ function OrgMappings:_change_todo_state(direction, use_fast_access)
       next_state = todo_state:get_next()
     elseif direction == 'prev' then
       next_state = todo_state:get_prev()
-    elseif direction == 'reset' then
-      next_state = todo_state:get_reset_todo(headline)
     end
   end
 
