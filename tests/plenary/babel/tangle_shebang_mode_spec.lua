@@ -26,7 +26,7 @@ describe('Tangle (shebang & mode)', function()
       'echo "hi"',
     }, vim.fn.readfile(tangled_file))
 
-    assert.are.equal(tonumber("0755", 8), stat_mode(tangled_file))
+    assert.are.equal(tonumber('0755', 8), stat_mode(tangled_file))
   end)
 
   it('should apply :tangle-mode octal form (o644) when provided', function()
@@ -42,7 +42,7 @@ describe('Tangle (shebang & mode)', function()
 
     local tangled_file = vim.fn.fnamemodify(file.filename, ':r') .. '.lua'
     assert.is.Not.Nil(vim.uv.fs_stat(tangled_file))
-    assert.are.equal(tonumber("0644", 8), stat_mode(tangled_file))
+    assert.are.equal(tonumber('0644', 8), stat_mode(tangled_file))
   end)
 
   it('should apply :tangle-mode chmod style (u=rw,go=r) when provided', function()
@@ -58,7 +58,7 @@ describe('Tangle (shebang & mode)', function()
 
     local tangled_file = vim.fn.fnamemodify(file.filename, ':r') .. '.lua'
     assert.is.Not.Nil(vim.uv.fs_stat(tangled_file))
-    assert.are.equal(tonumber("0644", 8), stat_mode(tangled_file))
+    assert.are.equal(tonumber('0644', 8), stat_mode(tangled_file))
   end)
 
   it('should apply :tangle-mode ls style (rwxr-x---) when provided', function()
@@ -74,29 +74,32 @@ describe('Tangle (shebang & mode)', function()
 
     local tangled_file = vim.fn.fnamemodify(file.filename, ':r') .. '.lua'
     assert.is.Not.Nil(vim.uv.fs_stat(tangled_file))
-    assert.are.equal(tonumber("0750", 8), stat_mode(tangled_file))
+    assert.are.equal(tonumber('0750', 8), stat_mode(tangled_file))
   end)
 
-  it('should keep 0755 when :shebang is set even if :tangle-mode is also set (mode is overridden if :tangle-mode present)', function()
-    local file = helpers.create_file({
-      '#+property: header-args :tangle yes',
-      '* Headline',
-      "#+begin_src sh :shebang '#!/usr/bin/env bash' :tangle-mode 'o700'",
-      'echo "hi"',
-      '#+end_src',
-    })
+  it(
+    'should keep 0755 when :shebang is set even if :tangle-mode is also set (mode is overridden if :tangle-mode present)',
+    function()
+      local file = helpers.create_file({
+        '#+property: header-args :tangle yes',
+        '* Headline',
+        "#+begin_src sh :shebang '#!/usr/bin/env bash' :tangle-mode 'o700'",
+        'echo "hi"',
+        '#+end_src',
+      })
 
-    vim.cmd('norm ,obt')
+      vim.cmd('norm ,obt')
 
-    local tangled_file = vim.fn.fnamemodify(file.filename, ':r') .. '.sh'
-    assert.is.Not.Nil(vim.uv.fs_stat(tangled_file))
+      local tangled_file = vim.fn.fnamemodify(file.filename, ':r') .. '.sh'
+      assert.is.Not.Nil(vim.uv.fs_stat(tangled_file))
 
-    assert.are.same({
-      '#!/usr/bin/env bash',
-      'echo "hi"',
-    }, vim.fn.readfile(tangled_file))
+      assert.are.same({
+        '#!/usr/bin/env bash',
+        'echo "hi"',
+      }, vim.fn.readfile(tangled_file))
 
-    -- :tangle-mode should override the shebang default
-    assert.are.equal(tonumber("0700", 8), stat_mode(tangled_file))
-  end)
+      -- :tangle-mode should override the shebang default
+      assert.are.equal(tonumber('0700', 8), stat_mode(tangled_file))
+    end
+  )
 end)
