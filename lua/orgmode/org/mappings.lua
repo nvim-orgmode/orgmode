@@ -1052,6 +1052,49 @@ function OrgMappings:org_toggle_timestamp_type()
   self:_replace_date(date)
 end
 
+-- Inserts a new drawer after the cursor position with custom name
+function OrgMappings:insert_drawer()
+  local indent = vim.fn.matchstr(vim.fn.getline('.'), '^%s*')
+
+  return Input.open('Drawer name: '):next(function(drawer_name)
+    if not drawer_name or vim.trim(drawer_name) == '' then
+      return utils.echo_warning('Drawer name cannot be empty')
+    end
+    local insert_line = vim.fn.line('.')
+    local drawer_lines = {
+      string.format('%s:%s:', indent, drawer_name),
+      indent,
+      string.format('%s:END:', indent),
+    }
+    vim.fn.append(insert_line, drawer_lines)
+    vim.fn.cursor(insert_line + 2, #indent + 1)
+    return vim.cmd([[startinsert!]])
+  end)
+end
+
+-- Inserts a PROPERTIES drawer under the current headline
+function OrgMappings:insert_properties_drawer()
+  local headline = self.files:get_closest_headline_or_nil()
+  if not headline then
+    return utils.echo_warning('No headline found to insert a drawer under')
+  end
+
+  local indent = headline:get_indent()
+  local existing = headline:get_drawer('PROPERTIES')
+
+  if existing then
+    local start_row = existing:start() + 1 -- 1-based
+    vim.fn.cursor(start_row + 1, #indent + 1)
+    return vim.cmd([[startinsert!]])
+  end
+
+  local drawer_lines = headline:_apply_indent({ ':PROPERTIES:', '', ':END:' }) --[[ @as string[] ]]
+  local insert_line = headline:get_range().start_line
+  vim.fn.append(insert_line, drawer_lines)
+  vim.fn.cursor(insert_line + 2, #indent + 1)
+  return vim.cmd([[startinsert!]])
+end
+
 ---@param direction string
 ---@param use_fast_access? boolean
 ---@return boolean
