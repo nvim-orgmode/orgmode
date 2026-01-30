@@ -368,12 +368,14 @@ end
 
 ---@param name string
 ---@param height number
----@param split_mode string|function|table
+---@param split_mode 'horizontal'|'vertical'|'auto'|'float'|'edit'|'tabnew'|string|function|{string,number}
 ---@param border string|table
 function utils.open_window(name, height, split_mode, border)
   local cmd_by_split_mode = {
     horizontal = string.format('%dsplit %s', height, name),
     vertical = string.format('vsplit %s', name),
+    edit = string.format('edit %s', name),
+    tabnew = string.format('tabnew %s', name),
   }
 
   if cmd_by_split_mode[split_mode] then
