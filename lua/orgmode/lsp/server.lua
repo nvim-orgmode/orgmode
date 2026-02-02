@@ -13,6 +13,7 @@ return function(dispatchers)
           completionProvider = {
             triggerCharacters = { '#', '+', ':', '*', '.', '/' },
           },
+          referencesProvider = true
         },
       })
     elseif method == 'shutdown' then
