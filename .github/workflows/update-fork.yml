@@ -34,7 +34,7 @@ jobs:
         run: |
           # Check which branch we're on
           CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
-          
+
           # Remove tests.yml before merging to avoid the specific conflict we don't care about
           if [ -f .github/workflows/tests.yml ]; then
             git rm .github/workflows/tests.yml
@@ -69,7 +69,7 @@ jobs:
               echo "Resolving tests.yml conflict by keeping it deleted"
               git rm .github/workflows/tests.yml || true
             fi
-            
             # Complete the merge
             git commit --no-edit
           fi
+          git push
