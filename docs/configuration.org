@@ -2282,6 +2282,7 @@ To make all mappings dot repeatable, install [[https://github.com/tpope/vim-repe
 There is basic LSP support available in org files. Available methods:
 - =textDocument/documentSymbol= - Shows list of headlines in current file, correctly nested
 - =workspace/symbol= - List and filter all headlines that are part of [[#org_agenda_files][org_agenda_files]]
+- =textDocument/references= - Show all links to the headline under cursor
 - =textDocument/completion= - Autocompletion results. More details in [[#autocompletion][autocompletion]].
   NOTE: If you are using any [[file:./plugins.org::#completion-plugins][completion plugins]],
   make sure to remove the custom source settings for orgmode. It's no longer needed.
