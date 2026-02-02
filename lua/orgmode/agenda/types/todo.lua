@@ -108,6 +108,13 @@ function OrgAgendaTodosType:render(bufnr)
   local headlines, category_length = self:_get_headlines()
   local agendaView = AgendaView:new({ bufnr = self.bufnr, highlighter = self.highlighter })
 
+  -- If custom view and no headlines, return empty view
+  -- Works only for custom agenda views (has id)
+  if self.id and config.org_agenda_hide_empty_blocks and #headlines == 0 then
+    self.view = agendaView:render()
+    return self.view
+  end
+
   agendaView:add_line(AgendaLine:single_token({
     content = self:_get_header(),
     hl_group = '@org.agenda.header',
@@ -123,9 +130,8 @@ function OrgAgendaTodosType:render(bufnr)
     agendaView:add_line(self:_build_line(headline, { category_length = category_length }))
   end
 
-  local result = agendaView:render()
-  self.view = result
-  return result
+  self.view = agendaView:render()
+  return self.view
 end
 
 ---@private

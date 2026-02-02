@@ -1,5 +1,4 @@
 local config = require('orgmode.config')
-local utils = require('orgmode.utils')
 
 ---@alias OrgFoldtextLineValue false | { col: number, hl_group: string }
 
@@ -32,26 +31,56 @@ function OrgFoldtext:_highlight(bufnr, line, value)
     hl_mode = 'combine',
     virt_text = { { config.org_ellipsis, value.hl_group } },
     virt_text_pos = 'overlay',
-    ephemeral = true,
+    ephemeral = self.highlighter._ephemeral,
   })
 end
 
-function OrgFoldtext:on_line(bufnr, line)
-  local is_current_buf = bufnr == vim.api.nvim_get_current_buf()
-
-  if not is_current_buf then
-    return self:_highlight(bufnr, line, self.cache[bufnr] and self.cache[bufnr][line])
-  end
-
-  self.cache[bufnr] = self.cache[bufnr] or {}
-  local is_fold_closed = vim.fn.foldclosed(line + 1) > -1
-
-  if not is_fold_closed then
-    self.cache[bufnr][line] = false
+function OrgFoldtext:on_line(bufnr, line, winid)
+  if not config.ui.folds.colored then
     return
   end
 
-  local col = vim.fn.col({ line + 1, '$' }) or 0
+  -- Use provided winid for correct window context (foldclosed and col are window-local)
+  local lnum = line + 1
+  local is_fold_open, line_end
+
+  if winid and winid ~= vim.api.nvim_get_current_win() then
+    -- foldclosed() and col() are window-local, so execute in the correct window
+    vim.api.nvim_win_call(winid, function()
+      is_fold_open = vim.fn.foldclosed(lnum) == -1
+      line_end = vim.fn.col({ lnum, '$' }) or 0
+    end)
+  else
+    is_fold_open = vim.fn.foldclosed(lnum) == -1
+    line_end = vim.fn.col({ lnum, '$' }) or 0
+  end
+
+  local cache_entry = self.cache[bufnr] and self.cache[bufnr][line]
+
+  -- Cache: nil = unprocessed, false = open, {col, hl_group} = closed
+  if cache_entry ~= nil then
+    local was_open = cache_entry == false
+    if was_open == is_fold_open then
+      if cache_entry and cache_entry.col then
+        if cache_entry.col == line_end - 1 then
+          return self:_highlight(bufnr, line, cache_entry)
+        end
+        -- Line length changed, need full update
+      else
+        return self:_highlight(bufnr, line, cache_entry)
+      end
+    end
+  end
+
+  -- Full update: query treesitter
+  self.cache[bufnr] = self.cache[bufnr] or {}
+
+  if is_fold_open then
+    self.cache[bufnr][line] = false
+    return -- No ellipsis to highlight
+  end
+
+  local col = line_end
 
   local hl_group = 'Comment'
   local captures_at_pos = vim.treesitter.get_captures_at_pos(bufnr, line, col - 2)

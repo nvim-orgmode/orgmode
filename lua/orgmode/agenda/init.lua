@@ -78,7 +78,7 @@ function Agenda:render()
   local bufnr = self:_open_window()
   for i, view in ipairs(self.views) do
     view:render(bufnr, line)
-    if #self.views > 1 and i < #self.views then
+    if #self.views > 1 and i < #self.views and #view:get_lines() > 0 then
       colors.add_hr(bufnr, vim.api.nvim_buf_line_count(bufnr), config.org_agenda_block_separator)
     end
   end
@@ -578,14 +578,14 @@ function Agenda:_remote_edit(opts)
   if not headline then
     return
   end
+  local old_range = headline:get_range()
+
   local update = headline.file:update(function(_)
     vim.fn.cursor({ headline:get_range().start_line, 1 })
     return Promise.resolve(require('orgmode').action(action)):next(function()
       return self.files:get_closest_headline_or_nil()
     end)
   end)
-
-  local old_range = headline:get_range()
 
   update:next(function(updated_headline)
     ---@cast updated_headline OrgHeadline

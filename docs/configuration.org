@@ -8,6 +8,7 @@ This page contains information about all configuration that can be provided to t
 - [[#calendar-settings][Calendar settings]]
 - [[#tags-settings][Tags settings]]
 - [[#mappings][Mappings]]
+- [[#lsp][Lsp]]
 - [[#features][Features]]
 - [[#user-interface][User interface]]
 
@@ -741,6 +742,14 @@ These arguments are shared between all of the agenda types:
   - =far= - Do not show deadlines that are too far in future (over [[#org_deadline_warning_days][org_deadline_warning_days]])
   - =near= - Do not show deadlines that are too near in future (under [[#org_deadline_warning_days][org_deadline_warning_days]])
 
+*** org_agenda_hide_empty_blocks
+:PROPERTIES:
+:CUSTOM_ID: org_agenda_hide_empty_blocks
+:END:
+- Type: =boolean=
+- Default: =false=
+Should custom agenda commands be hidden if they have no entries to show. Does not work for =agenda= type since it shows days.
+
 *** org_agenda_sorting_strategy
 :PROPERTIES:
 :CUSTOM_ID: org_agenda_sorting_strategy
@@ -833,6 +842,19 @@ Show time grid in agenda. See [[#org_agenda_time_grid][org_agenda_time_grid]] fo
 - Default: =<- now -----------------------------------------------=
 Label value for the current time in the agenda time grid.
 See [[#org_agenda_time_grid][org_agenda_time_grid]] for time grid configuration or [[#org_agenda_use_time_grid][org_agenda_use_time_grid]] to disable the grid.
+
+*** org_agenda_show_future_repeats
+:PROPERTIES:
+:CUSTOM_ID: org_agenda_show_future_repeats
+:END:
+- Type: =boolean | number | 'next'=
+- Default: =true=
+How many future repeated tasks to show in agenda.
+Possible values:
+- =true= - Show all future repeats (default)
+- =false= - Do not show future repeats
+- =number= - Show only given number of future repeats
+- ='next'= - Show only the next repeat
 
 
 *** org_capture_templates
@@ -2250,6 +2272,25 @@ supported: =*=, =_=, =/=, =+=, =~=, === These cannot be changed.
 :CUSTOM_ID: dot-repeat
 :END:
 To make all mappings dot repeatable, install [[https://github.com/tpope/vim-repeat][vim-repeat]] plugin.
+
+** Lsp
+:PROPERTIES:
+:CUSTOM_ID: lsp
+:END:
+📝 NOTE: Experimental
+
+There is basic LSP support available in org files. Available methods:
+- =textDocument/documentSymbol= - Shows list of headlines in current file, correctly nested
+- =workspace/symbol= - List and filter all headlines that are part of [[#org_agenda_files][org_agenda_files]]
+- =textDocument/completion= - Autocompletion results. More details in [[#autocompletion][autocompletion]].
+  NOTE: If you are using any [[file:./plugins.org::#completion-plugins][completion plugins]],
+  make sure to remove the custom source settings for orgmode. It's no longer needed.
+  IF you are using =omnifunc=, it's best to not set it to builtin LSP omnifunc (=v:lua.vim.lsp.omnifunc=) in orgmode files, due to some edge cases.
+
+  To enable the orgmode lsp, make sure to call =vim.lsp.enable=:
+  #+begin_src lua
+  vim.lsp.enable('org')
+  #+end_src
 
 ** Features
 :PROPERTIES:

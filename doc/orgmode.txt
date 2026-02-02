@@ -9,6 +9,7 @@ Table of Contents                                  *orgmode-table-of-contents*
   - Calendar settings                |orgmode-configuration-calendar-settings|
   - Tags settings                        |orgmode-configuration-tags-settings|
   - Mappings                                  |orgmode-configuration-mappings|
+  - Lsp                                            |orgmode-configuration-lsp|
   - Features                                  |orgmode-configuration-features|
   - User interface                      |orgmode-configuration-user-interface|
 2. Troubleshooting                                   |orgmode-troubleshooting|
@@ -31,6 +32,7 @@ the plugin.
 - |orgmode-calendar-settings|
 - |orgmode-tags-settings|
 - |orgmode-mappings|
+- |orgmode-lsp|
 - |orgmode-features|
 - |orgmode-user-interface|
 
@@ -794,6 +796,15 @@ These arguments are shared between all of the agenda types:
     - `near` - Do not show deadlines that are too near in future (under |orgmode-org_deadline_warning_days|)
 
 
+org_agenda_hide_empty_blocks            *orgmode-org_agenda_hide_empty_blocks*
+
+- Type: `boolean`
+- Default: `false`
+
+Should custom agenda commands be hidden if they have no entries to show. Does
+not work for `agenda` type since it shows days.
+
+
 org_agenda_sorting_strategy              *orgmode-org_agenda_sorting_strategy*
 
 - Type:
@@ -892,6 +903,19 @@ org_agenda_current_time_string        *orgmode-org_agenda_current_time_string*
 Label value for the current time in the agenda time grid. See
 |orgmode-org_agenda_time_grid| for time grid configuration or
 |orgmode-org_agenda_use_time_grid| to disable the grid.
+
+
+org_agenda_show_future_repeats        *orgmode-org_agenda_show_future_repeats*
+
+- Type: `boolean | number | 'next'`
+- Default: `true`
+
+How many future repeated tasks to show in agenda. Possible values:
+
+- `true` - Show all future repeats (default)
+- `false` - Do not show future repeats
+- `number` - Show only given number of future repeats
+- `'next'` - Show only the next repeat
 
 
 org_capture_templates                          *orgmode-org_capture_templates*
@@ -2285,6 +2309,28 @@ Dot repeat                                                *orgmode-Dot-repeat*
 
 To make all mappings dot repeatable, install vim-repeat
 <https://github.com/tpope/vim-repeat> plugin.
+
+
+LSP                                                *orgmode-configuration-lsp*
+
+📝 NOTE: Experimental
+
+There is basic LSP support available in org files. Available methods:
+
+- `textDocument/documentSymbol` - Shows list of headlines in current file,
+    correctly nested
+- `workspace/symbol` - List and filter all headlines that are part of
+    |orgmode-org_agenda_files|
+- `textDocument/completion` - Autocompletion results. More details in
+    |orgmode-autocompletion|. NOTE: If you are using any completion plugins
+    <./plugins.org::#completion-plugins>, make sure to remove the custom source
+    settings for orgmode. It's no longer needed. IF you are using `omnifunc`, it's
+    best to not set it to builtin LSP omnifunc (`v:lua.vim.lsp.omnifunc`) in
+    orgmode files, due to some edge cases.
+    To enable the orgmode lsp, make sure to call `vim.lsp.enable`:
+    >lua
+        vim.lsp.enable('org')
+    <
 
 
 FEATURES                                      *orgmode-configuration-features*

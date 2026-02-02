@@ -1,5 +1,37 @@
 #+OPTIONS: H:9 ^:nil
 * Changelog
+** [[https://github.com/nvim-orgmode/orgmode/compare/0.7.1...0.7.2][0.7.2]] (2025-12-03)
+*** Breaking changes
+- *agenda*: Add time grid (#1038) ([[https://github.com/nvim-orgmode/orgmode/commit/d59c7b2][d59c7b2]])
+
+*** Features
+- *latex*: Add support for inline math (#1059) ([[https://github.com/nvim-orgmode/orgmode/commit/e4e48b5][e4e48b5]])
+- *treesitter*: Compile parser using tree-sitter if available (#1062) ([[https://github.com/nvim-orgmode/orgmode/commit/c1005a0][c1005a0]])
+- *files*: Use TS string parser for non-nightly versions (#1060) ([[https://github.com/nvim-orgmode/orgmode/commit/b525c77][b525c77]])
+- *agenda*: Add `org-agenda-show-future-repeats` ([[https://github.com/nvim-orgmode/orgmode/commit/1f41121][1f41121]])
+- *agenda*: use todo hl group for range grid ([[https://github.com/nvim-orgmode/orgmode/commit/b7bcb90][b7bcb90]])
+- *agenda*: Add option to hide custom agenda views that are empty ([[https://github.com/nvim-orgmode/orgmode/commit/090965e][090965e]])
+- *agenda*: Show grid without times for remove-range-match ([[https://github.com/nvim-orgmode/orgmode/commit/9bfba3d][9bfba3d]])
+- allow to define multiple todo keyword sequences (#974) ([[https://github.com/nvim-orgmode/orgmode/commit/1531650][1531650]])
+- *agenda*: Add remove-range-match option for time grid ([[https://github.com/nvim-orgmode/orgmode/commit/a3ce79c][a3ce79c]])
+- *agenda*: Highlight links and dates using extmarks ([[https://github.com/nvim-orgmode/orgmode/commit/f4dde88][f4dde88]])
+- *agenda*: Allow opening links from agenda headlines ([[https://github.com/nvim-orgmode/orgmode/commit/de701e8][de701e8]])
+
+*** Bug fixes
+- *notifications*: ignore repeater dates that are same as original date ([[https://github.com/nvim-orgmode/orgmode/commit/03863e9][03863e9]])
+- *files*: Disable swapfile for buffers loaded in background ([[https://github.com/nvim-orgmode/orgmode/commit/638b2b4][638b2b4]])
+- *highlighter*: return early if buffer is detached during async parse ([[https://github.com/nvim-orgmode/orgmode/commit/f37b31b][f37b31b]])
+- *agenda*: Do not exclude grid end time in agenda ([[https://github.com/nvim-orgmode/orgmode/commit/0bde64c][0bde64c]])
+- *files*: Disable modeline when loading buffers ([[https://github.com/nvim-orgmode/orgmode/commit/5f6eb90][5f6eb90]])
+- *agenda*: Reload agenda when headline range is updated ([[https://github.com/nvim-orgmode/orgmode/commit/46cd1df][46cd1df]])
+- *files*: Add default value for file lines ([[https://github.com/nvim-orgmode/orgmode/commit/266888a][266888a]])
+- *files*: remove string tree-sitter parser (#1041) ([[https://github.com/nvim-orgmode/orgmode/commit/63ace3c][63ace3c]])
+- *windows*: handle Windows file paths correctly in refile (#1042) ([[https://github.com/nvim-orgmode/orgmode/commit/03777ca][03777ca]])
+- *stars*: Ignore stars node that end on column 0 ([[https://github.com/nvim-orgmode/orgmode/commit/4775d1a][4775d1a]])
+- *formatting*: Prevent infinite loop on formatting closed folds ([[https://github.com/nvim-orgmode/orgmode/commit/b6907d5][b6907d5]])
+- *datetree*: Use current date and time as default value for datetree ([[https://github.com/nvim-orgmode/orgmode/commit/ad5d652][ad5d652]])
+- *autocompletion*: Fix insert link autocompletion ([[https://github.com/nvim-orgmode/orgmode/commit/a49d5d4][a49d5d4]])
+
 ** [[https://github.com/nvim-orgmode/orgmode/compare/0.7.0...0.7.1][0.7.1]] (2025-09-06)
 *** Breaking changes
 - *version*: Drop support for Neovim < 0.11.0 ([[https://github.com/nvim-orgmode/orgmode/commit/7987478][7987478]])

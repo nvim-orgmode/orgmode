@@ -188,7 +188,7 @@ describe('Todo state', function()
         current_state = headline1:get_todo(),
         todos = file:get_todo_keywords(),
       })
-      local reset_state1 = todo_state1:get_reset_todo(headline1)
+      local reset_state1 = todo_state1:get_reset_todo(headline1, 'TODO')
 
       -- It should reset to TODO, which is the first state in the first sequence
       assert.are.equal('TODO', reset_state1.value)
@@ -199,7 +199,7 @@ describe('Todo state', function()
         current_state = headline2:get_todo(),
         todos = file:get_todo_keywords(),
       })
-      local reset_state2 = todo_state2:get_reset_todo(headline2)
+      local reset_state2 = todo_state2:get_reset_todo(headline2, 'MEETING')
 
       -- It should reset to MEETING, which is the first state in the second sequence
       assert.are.equal('MEETING', reset_state2.value)

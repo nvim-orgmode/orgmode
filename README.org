@@ -47,12 +47,8 @@ Use your favourite package manager. We recommend [[https://github.com/folke/lazy
       org_default_notes_file = '~/orgfiles/refile.org',
     })
 
-    -- NOTE: If you are using nvim-treesitter with ~ensure_installed = "all"~ option
-    -- add ~org~ to ignore_install
-    -- require('nvim-treesitter.configs').setup({
-    --   ensure_installed = 'all',
-    --   ignore_install = { 'org' },
-    -- })
+    -- Experimental LSP support
+    vim.lsp.enable('org')
   end,
 }
 #+END_SRC

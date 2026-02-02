@@ -213,11 +213,13 @@
 ---@field org_agenda_skip_scheduled_if_done? boolean If true, scheduled entries marked as done will not be shown in the agenda. Default: false
 ---@field org_agenda_skip_deadline_if_done? boolean If true, deadline entries marked as done will not be shown in the agenda. Default: false
 ---@field org_agenda_text_search_extra_files? ('agenda-archives')[] Additional files to earch from agenda search prompt. Default: {}
+---@field org_agenda_hide_empty_blocks? boolean Hide empty custom agenda commands in agenda view. Default: false
 ---@field org_agenda_custom_commands? table<string, OrgAgendaCustomCommand> Custom commands for the agenda view. Default: {}
 ---@field org_agenda_block_separator? string Separator for blocks in the agenda view. Default: '-'
 ---@field org_agenda_sorting_strategy? table<'agenda' | 'todo' | 'tags', OrgAgendaSortingStrategy[]> Sorting strategy for the agenda view. See docs for default value
 ---@field org_agenda_remove_tags? boolean If true, tags will be removed from the all agenda views. Default: false
 ---@field org_agenda_use_time_grid? boolean If true, Render time grid in agenda as set by org_agenda_time_grid. Default: true
+---@field org_agenda_show_future_repeats? boolean | 'next' If true, show all future repeats. If `next`, show only next repeat. If false, do hnot show any repeats. Default: true
 ---@field org_agenda_time_grid? OrgAgendaTimeGridOpts Agenda time grid configuration. Default: { type = { 'daily', 'today', 'require-timed' }, times = { 800, 1000, 1200, 1400, 1600, 1800, 2000 }, time_separator = '┄┄┄┄┄', time_label = '┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄' }
 ---@field org_agenda_current_time_string? string String to indicate current time on the time grid. Default: '<- now -----------------------------------------------'
 ---@field org_priority_highest? string | number Highest priority level. Default: 'A'

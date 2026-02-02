@@ -54,7 +54,12 @@ function OrgAgendaTagsType:prepare()
 end
 
 function OrgAgendaTagsType:get_file_headlines(file)
-  local headlines = file:apply_search(Search:new(self.match_query), self.todo_only)
+  -- Cache search object to avoid re-parsing same query for every file
+  -- Re-create if query changed (e.g., user refreshed with new search)
+  if not self._cached_search or self._cached_search.term ~= self.match_query then
+    self._cached_search = Search:new(self.match_query)
+  end
+  local headlines = file:apply_search(self._cached_search, self.todo_only)
   if self.todo_ignore_deadlines then
     headlines = vim.tbl_filter(function(headline) ---@cast headline OrgHeadline
       local deadline_date = headline:get_deadline_date()

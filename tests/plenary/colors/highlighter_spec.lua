@@ -9,6 +9,8 @@ describe('highlighter', function()
   local get_extmarks = function(content)
     ---@diagnostic disable-next-line: inject-field
     config.ts_hl_enabled = true
+    -- Disable colored folds to prevent foldtext extmarks from being included
+    config.ui.folds.colored = false
     helpers.create_file(content)
     ---@diagnostic disable-next-line: invisible
     org.highlighter._ephemeral = false
@@ -260,10 +262,8 @@ describe('highlighter', function()
         [[this is \[1 + 1\] math]],
         [[this is \{1 + 1\} math]],
       })
-      assert.are.same(3, #extmarks)
-      assert_extmark(extmarks[1], { line = 0, start_col = 8, end_col = 17, hl_group = '@org.latex' })
-      assert_extmark(extmarks[2], { line = 1, start_col = 8, end_col = 17, hl_group = '@org.latex' })
-      assert_extmark(extmarks[3], { line = 2, start_col = 8, end_col = 17, hl_group = '@org.latex' })
+      assert.are.same(1, #extmarks)
+      assert_extmark(extmarks[1], { line = 2, start_col = 8, end_col = 17, hl_group = '@org.latex' })
     end)
   end)
 end)
