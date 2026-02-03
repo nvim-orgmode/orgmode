@@ -75,4 +75,61 @@ OrgLspHandlers[methods.textDocument_completion] = function(params)
   }
 end
 
+OrgLspHandlers[methods.textDocument_references] = function(params)
+  local org = require('orgmode')
+  local headline =
+    org.files:get(vim.uri_to_fname(params.textDocument.uri)):get_closest_headline({ params.position.line + 1, 0 })
+  local custom_id = headline:get_property('CUSTOM_ID', false)
+  local title = headline:get_title()
+
+  if not headline then
+    return {}
+  end
+
+  local function is_valid_target(target)
+    if target == '*' .. title or target == title then
+      return true
+    end
+
+    if custom_id and target == '#' .. custom_id then
+      return true
+    end
+
+    return false
+  end
+
+  ---@type lsp.Location[]
+  local locations = {}
+
+  for _, orgfile in ipairs(org.files:all()) do
+    for _, link in ipairs(orgfile:get_links()) do
+      local file_path = link.url:get_file_path()
+      local target_or_path = link.url:get_target() or link.url:get_path()
+      local target = link.url:get_target()
+
+      local location = {
+        uri = vim.uri_from_fname(orgfile.filename),
+        range = link.range:to_lsp(),
+      }
+
+      -- is a file headline link
+      if file_path and vim.fs.normalize(file_path) == vim.fs.normalize(headline.file.filename) then
+        if not target or is_valid_target(target) then
+          table.insert(locations, location)
+        end
+        goto continue
+      end
+
+      -- is local link
+      if orgfile.filename == headline.file.filename and is_valid_target(target_or_path) then
+        table.insert(locations, location)
+      end
+
+      ::continue::
+    end
+  end
+
+  return locations
+end
+
 return OrgLspHandlers
