@@ -4,8 +4,20 @@ return function(dispatchers)
   local closing = false
   local srv = {}
 
+  local function send_progress(kind, title, percentage)
+    dispatchers.notification('$/progress', {
+      token = 'orgmode-progress',
+      value = {
+        kind = kind,
+        title = title,
+        percentage = percentage,
+      },
+    })
+  end
+
   function srv.request(method, params, callback)
     if method == 'initialize' then
+      send_progress('begin', 'Initializing orgmode LSP server...', 0)
       callback(nil, {
         capabilities = {
           documentSymbolProvider = true,
@@ -13,9 +25,10 @@ return function(dispatchers)
           completionProvider = {
             triggerCharacters = { '#', '+', ':', '*', '.', '/' },
           },
-          referencesProvider = true
+          referencesProvider = true,
         },
       })
+      send_progress('end', 'Orgmode LSP server loaded.', 100)
     elseif method == 'shutdown' then
       callback(nil, nil)
     elseif handlers[method] then
