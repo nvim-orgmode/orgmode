@@ -113,6 +113,19 @@ describe('Api', function()
     assert.is.True(vim.fn.getline(5):match(':PERSONAL:HEALTH:TAG1:TAG2:MY_HYPHEN_TAG:$') ~= nil)
   end)
 
+  it('should handle edge cases in tag input', function()
+    helpers.create_file({ '* TODO Test orgmode tags :TAG1:' })
+
+    assert.is.True(#api.load() > 1)
+    local current_file = cur_file()
+    assert.are.same({ 'TAG1' }, current_file.headlines[1].all_tags)
+
+    current_file.headlines[1]:set_tags({ ':  -tag1- : tag2:::tag3    tag_4 : @tag5 :' }):wait()
+
+    assert.are.same({ '_tag1_', 'tag2', 'tag3', 'tag_4', '@tag5' }, cur_file().headlines[1].all_tags)
+    assert.is.True(vim.fn.getline(1):match(':_tag1_:tag2:tag3:tag_4:@tag5:') ~= nil)
+  end)
+
   it('should cycle upwards through priorities, starting with default', function()
     helpers.create_file({
       '#TITLE: First file',
