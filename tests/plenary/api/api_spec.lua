@@ -103,11 +103,14 @@ describe('Api', function()
     assert.are.same('Second level', current_file.headlines[2].title)
     assert.are.same({ 'WORK', 'OFFICE', 'NESTEDTAG' }, current_file.headlines[2].all_tags)
 
-    current_file.headlines[2]:set_tags({ 'PERSONAL', 'HEALTH' }):wait()
+    current_file.headlines[2]:set_tags({ 'PERSONAL', 'HEALTH', 'TAG1 TAG2', 'MY-HYPHEN-TAG' }):wait()
 
-    assert.are.same({ 'PERSONAL', 'HEALTH' }, cur_file().headlines[2].tags)
-    assert.are.same({ 'WORK', 'OFFICE', 'PERSONAL', 'HEALTH' }, cur_file().headlines[2].all_tags)
-    assert.is.True(vim.fn.getline(5):match(':PERSONAL:HEALTH:$') ~= nil)
+    assert.are.same({ 'PERSONAL', 'HEALTH', 'TAG1', 'TAG2', 'MY_HYPHEN_TAG' }, cur_file().headlines[2].tags)
+    assert.are.same(
+      { 'WORK', 'OFFICE', 'PERSONAL', 'HEALTH', 'TAG1', 'TAG2', 'MY_HYPHEN_TAG' },
+      cur_file().headlines[2].all_tags
+    )
+    assert.is.True(vim.fn.getline(5):match(':PERSONAL:HEALTH:TAG1:TAG2:MY_HYPHEN_TAG:$') ~= nil)
   end)
 
   it('should cycle upwards through priorities, starting with default', function()

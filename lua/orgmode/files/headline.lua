@@ -268,7 +268,12 @@ function Headline:set_tags(tags)
   local end_col = line:len()
 
   local text = ''
-  tags = vim.trim(tags):gsub('^:', ''):gsub(':$', '')
+  tags = vim.trim(tags)
+    :gsub('-', '_')      -- Replace hyphens with underscores
+    :gsub('[%s:]+', ':') -- Convert all whitespace and existing colons into a single colon
+    :gsub('^:', '')
+    :gsub(':$', '')
+
   if tags ~= '' then
     tags = ':' .. tags .. ':'
 
