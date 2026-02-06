@@ -270,8 +270,7 @@ function Headline:set_tags(tags)
   local text = ''
   tags = vim
     .trim(tags)
-    :gsub('-', '_') -- Replace hyphens with underscores
-    :gsub('[%s:]+', ':') -- Convert all whitespace and existing colons into a single colon
+    :gsub('[%s:-]+', ':') -- Convert all whitespace, existing colons and hyphens into a single colon
     :gsub('^:', '')
     :gsub(':$', '')
 
