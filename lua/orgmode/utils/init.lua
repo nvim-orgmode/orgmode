@@ -524,12 +524,13 @@ function utils.edit_file(filename)
       vim.api.nvim_open_win(bufnr, true, {
         relative = 'editor',
         width = 1,
-        -- TODO: Revert to 1 once the https://github.com/neovim/neovim/issues/19464 is fixed
-        height = 2,
+        height = 1,
         row = 99999,
         col = 99999,
         zindex = 1,
         style = 'minimal',
+        focusable = false,
+        hide = true,
       })
       vim.api.nvim_set_option_value('swapfile', false, { buf = bufnr })
     end,
