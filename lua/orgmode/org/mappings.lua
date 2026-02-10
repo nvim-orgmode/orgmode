@@ -611,7 +611,7 @@ function OrgMappings:org_return()
   end
 
   -- If mapping contains `\r`, it means it's already escaped and evaluated
-  if global_cr_keymap.expr > 0 and not rhs:lower():find('\r') then
+  if global_cr_keymap.expr > 0 and not rhs:lower():find('\r') and global_cr_keymap.replace_keycodes > 0 then
     rhs = vim.api.nvim_replace_termcodes(rhs, true, true, true)
     rhs = vim.api.nvim_eval(rhs)
   end
