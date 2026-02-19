@@ -2321,6 +2321,7 @@ There is basic LSP support available in org files. Available methods:
     correctly nested
 - `workspace/symbol` - List and filter all headlines that are part of
     |orgmode-org_agenda_files|
+- `textDocument/references` - Show all links to the headline under cursor
 - `textDocument/completion` - Autocompletion results. More details in
     |orgmode-autocompletion|. NOTE: If you are using any completion plugins
     <./plugins.org::#completion-plugins>, make sure to remove the custom source
