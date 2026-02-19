@@ -3014,7 +3014,7 @@ highlight group:
     })
 <
 
-For adding/changing TODO keyword colors see |orgmode-org-todo-keyword-faces|
+For adding/changing TODO keyword colors see |orgmode-org_todo_keyword_faces|
 
 
 Menu                                                            *orgmode-Menu*
