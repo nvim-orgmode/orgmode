@@ -6,4 +6,5 @@ return {
   HeadlinePromoted = require('orgmode.events.types.headline_promoted_event'),
   HeadlineDemoted = require('orgmode.events.types.headline_demoted_event'),
   HeadingToggled = require('orgmode.events.types.heading_toggled'),
+  Profiling = require('orgmode.events.types.profiling_event'),
 }

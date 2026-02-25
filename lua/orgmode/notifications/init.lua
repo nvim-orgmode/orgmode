@@ -24,7 +24,8 @@ end
 function Notifications:start_timer()
   self:stop_timer()
   self.timer = vim.uv.new_timer()
-  self:notify(Date.now())
+  -- No immediate notify() - timer fires at next minute boundary
+  -- Files are already loaded when start_timer() is called (via on_files_loaded callback)
   self.timer:start(
     (60 - os.date('%S')) * 1000,
     60000,

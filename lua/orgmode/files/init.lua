@@ -5,6 +5,21 @@ local config = require('orgmode.config')
 local ts_utils = require('orgmode.utils.treesitter')
 local Listitem = require('orgmode.files.elements.listitem')
 
+---Get filenames of all currently open org buffers
+---@return table<string, boolean> Set of open org file paths
+local function get_open_org_buffers()
+  local open_bufs = {}
+  for _, buf in ipairs(vim.api.nvim_list_bufs()) do
+    if vim.api.nvim_buf_is_loaded(buf) then
+      local name = vim.api.nvim_buf_get_name(buf)
+      if name:match('%.org$') then
+        open_bufs[vim.fn.resolve(name)] = true
+      end
+    end
+  end
+  return open_bufs
+end
+
 ---@class OrgFilesOpts
 ---@field paths string | string[]
 ---@field cache? boolean Store the instances to cache and retrieve it later if paths are the same
@@ -19,6 +34,29 @@ local Listitem = require('orgmode.files.elements.listitem')
 ---@field files table<string, OrgFile> table with files that are part of paths
 ---@field all_files table<string, OrgFile> all loaded files, no matter if they are part of paths
 ---@field load_state 'loading' | 'loaded' | nil
+---@field progressive_state? OrgLoadProgress Progressive loading state
+---@field private _load_promise? OrgPromise<OrgFiles> Shared promise for idempotent loading
+
+---@class OrgLoadProgress
+---@field loaded number Number of files loaded so far
+---@field total number Total number of files to load
+---@field loading boolean Whether loading is in progress
+---@field batch_timings? OrgBatchTiming[] Timing data for each batch (set on completion)
+---@field total_duration_ms? number Total wall-clock time for loading (set on completion)
+
+---@class OrgFileScanResult
+---@field filename string Absolute path to the org file
+---@field mtime_sec number File modification time in seconds (stat.mtime.sec)
+---@field mtime_nsec number File modification time nanoseconds (stat.mtime.nsec)
+---@field size number File size in bytes
+
+---@alias OrgLoadProgressiveSortFn fun(a: OrgFileScanResult, b: OrgFileScanResult): boolean
+
+---@class OrgLoadProgressiveOpts
+---@field on_file_loaded? fun(file: OrgFile, index: number, total: number) Callback per file loaded
+---@field on_complete? fun(files: OrgFile[]) Callback when all files loaded
+---@field filter? fun(metadata: OrgFileScanResult): boolean Pre-load filter
+
 local OrgFiles = {
   cached_instances = {},
 }
@@ -32,6 +70,7 @@ function OrgFiles:new(opts)
     all_files = {},
     load_state = nil,
     cache = opts.cache or false,
+    _load_promise = nil,
   }
   setmetatable(data, self)
   data.paths = self:_setup_paths(opts.paths)
@@ -135,6 +174,92 @@ function OrgFiles:get_clocked_headline()
     end
   end
   return nil
+end
+
+---@param file OrgFile
+---@return OrgHeadline|nil
+local function find_clocked_headline_in_file(file)
+  for _, headline in ipairs(file:get_headlines()) do
+    if headline:is_clocked_in() then
+      return headline
+    end
+  end
+  return nil
+end
+
+---@class ClockSearchState
+---@field files OrgFile[]
+---@field index number
+---@field batch_num number
+---@field time_budget_ms number
+---@field emit table
+
+---@param state ClockSearchState
+local function emit_batch_mark(state, batch_start, elapsed_ms)
+  state.emit.profile(
+    'mark',
+    'clock',
+    string.format('batch %d: files %d-%d (%.1fms)', state.batch_num, batch_start, state.index, elapsed_ms)
+  )
+end
+
+---@param state ClockSearchState
+---@param resolve fun(headline: OrgHeadline|nil)
+local function process_clock_search_batch(state, resolve)
+  state.batch_num = state.batch_num + 1
+  local batch_start = state.index + 1
+  local batch_start_time = vim.uv.hrtime()
+  local total = #state.files
+
+  while state.index < total do
+    state.index = state.index + 1
+    local headline = find_clocked_headline_in_file(state.files[state.index])
+    if headline then
+      state.emit.profile('complete', 'clock', 'FOUND clocked headline', {
+        file_index = state.index,
+        batch = state.batch_num,
+      })
+      return resolve(headline)
+    end
+
+    local elapsed_ms = (vim.uv.hrtime() - batch_start_time) / 1e6
+    if elapsed_ms >= state.time_budget_ms then
+      emit_batch_mark(state, batch_start, elapsed_ms)
+      return vim.defer_fn(function()
+        process_clock_search_batch(state, resolve)
+      end, 1)
+    end
+  end
+
+  local elapsed_ms = (vim.uv.hrtime() - batch_start_time) / 1e6
+  emit_batch_mark(state, batch_start, elapsed_ms)
+  state.emit.profile('complete', 'clock', 'NO clocked headline found')
+  resolve(nil)
+end
+
+---Search for clocked headline asynchronously (non-blocking)
+---Uses time-boxed batches to ensure UI stays responsive regardless of file sizes
+---@return OrgPromise<OrgHeadline|nil>
+function OrgFiles:get_clocked_headline_async()
+  local emit = require('orgmode.utils.emit')
+  ---@type ClockSearchState
+  local state = {
+    files = self:all(),
+    index = 0,
+    batch_num = 0,
+    time_budget_ms = 50, -- ~20fps, imperceptible during normal navigation
+    emit = emit,
+  }
+
+  return Promise.new(function(resolve)
+    emit.profile('start', 'clock', 'get_clocked_headline_async START', {
+      total = #state.files,
+      time_budget_ms = state.time_budget_ms,
+    })
+    vim.defer_fn(function()
+      process_clock_search_batch(state, resolve)
+    end, 1)
+  end)
 end
 
 function OrgFiles:get_current_file()
@@ -382,6 +507,330 @@ function OrgFiles:_files(skip_resolve)
     local stat = vim.uv.fs_stat(file)
     return stat and stat.type == 'file' or false
   end, all_files)
+end
+
+---Scan all org files and return metadata without loading/parsing content.
+---This is a fast operation that only reads file system metadata.
+---Useful for change detection and ordering files by modification time.
+---@return OrgFileScanResult[]
+function OrgFiles:scan()
+  local metadata = {}
+  for _, filepath in ipairs(self:_files()) do
+    local stat = vim.uv.fs_stat(filepath)
+    if stat and stat.type == 'file' then
+      table.insert(metadata, {
+        filename = filepath,
+        mtime_sec = stat.mtime.sec,
+        mtime_nsec = stat.mtime.nsec,
+        size = stat.size,
+      })
+    end
+  end
+  return metadata
+end
+
+---Sort metadata according to options
+---@private
+---@param metadata OrgFileScanResult[]
+---@param opts OrgLoadProgressiveOpts
+---@return OrgFileScanResult[]
+function OrgFiles:_sort_metadata(metadata, opts)
+  if type(opts.order_by) == 'function' then
+    ---@cast opts {order_by: OrgLoadProgressiveSortFn}
+    table.sort(metadata, opts.order_by)
+    return metadata
+  end
+
+  local order_by = opts.order_by or 'mtime'
+  local direction = opts.direction
+
+  ---@param attr string
+  ---@param desc boolean
+  ---@return fun(a: OrgFileScanResult, b: OrgFileScanResult): boolean
+  local function by(attr, desc)
+    return desc and function(a, b)
+      return a[attr] > b[attr]
+    end or function(a, b)
+      return a[attr] < b[attr]
+    end
+  end
+
+  if order_by == 'mtime' then
+    direction = direction or 'desc'
+    local desc = direction == 'desc'
+    table.sort(metadata, function(a, b)
+      if a.mtime_sec ~= b.mtime_sec then
+        return by('mtime_sec', desc)(a, b)
+      end
+      return by('mtime_nsec', desc)(a, b)
+    end)
+  elseif order_by == 'name' then
+    direction = direction or 'asc'
+    table.sort(metadata, by('filename', direction == 'desc'))
+  end
+
+  return metadata
+end
+
+---@class OrgBatchTiming
+---@field batch_num number Batch number (1 = open buffers, 2 = remaining files)
+---@field files_count number Number of files in this batch
+---@field duration_ms number How long the batch took to process
+---@field cumulative_ms number Wall-clock time since load started
+---@field gap_from_prev_ms number Time gap from previous batch end to this batch start
+---@field total_bytes number Total size of files in this batch
+---@field mem_before_kb number Lua memory before batch (KB)
+---@field mem_after_kb number Lua memory after batch (KB)
+
+---@class OrgLoadQueueState
+---@field total number Total number of files to load
+---@field loaded_count number Number of files loaded so far
+---@field loaded_files OrgFile[] Files that have been loaded
+---@field batch_start_time number High-resolution timestamp when loading started
+---@field last_callback_time number High-resolution timestamp of last callback
+---@field batch_timings OrgBatchTiming[] Timing data for each batch
+---@field last_batch_end_time number|nil hrtime when previous batch completed
+
+---@private
+---Handle a single loaded file: update state, track timing, fire callback
+---@param orgfile OrgFile|nil The loaded file (nil if loading failed)
+---@param index number The index of this file in the load queue
+---@param state OrgLoadQueueState Mutable state for the load operation
+---@param opts OrgLoadProgressiveOpts Options including callbacks
+---@return OrgFile|nil
+function OrgFiles:_handle_loaded_file(orgfile, index, state, opts)
+  if not orgfile then
+    return orgfile
+  end
+
+  -- Capture timing to detect if callbacks batch without yielding
+  local now = vim.uv.hrtime()
+  orgfile._load_timing = {
+    since_last_ms = (now - state.last_callback_time) / 1e6,
+    since_start_ms = (now - state.batch_start_time) / 1e6,
+  }
+  state.last_callback_time = now
+
+  -- Update file and state
+  orgfile.index = index
+  self.files[orgfile.filename] = orgfile
+  state.loaded_count = state.loaded_count + 1
+  table.insert(state.loaded_files, orgfile)
+  self.progressive_state.loaded = state.loaded_count
+
+  -- Fire per-file callback
+  if opts.on_file_loaded then
+    opts.on_file_loaded(orgfile, state.loaded_count, state.total)
+  end
+
+  return orgfile
+end
+
+---@private
+---Handle completion of all file loading
+---@param state OrgLoadQueueState Mutable state for the load operation
+---@param opts OrgLoadProgressiveOpts Options including callbacks
+---@return OrgFiles
+function OrgFiles:_handle_all_loaded(state, opts)
+  self.progressive_state.loading = false
+  self.progressive_state.batch_timings = state.batch_timings
+  self.progressive_state.total_duration_ms = (vim.uv.hrtime() - state.batch_start_time) / 1e6
+  self.load_state = 'loaded'
+
+  if opts.on_complete then
+    opts.on_complete(state.loaded_files)
+  end
+
+  return self
+end
+
+---@private
+---Load a batch of files and record timing
+---@param files OrgFileScanResult[] Files to load in this batch
+---@param batch_num number Batch number for profiling
+---@param state OrgLoadQueueState Mutable state for the load operation
+---@param opts OrgLoadProgressiveOpts Options including callbacks
+---@return OrgPromise<nil>
+function OrgFiles:_load_batch(files, batch_num, state, opts)
+  if #files == 0 then
+    return Promise.resolve()
+  end
+
+  local mem_before = collectgarbage('count')
+  local batch_start_hrtime = vim.uv.hrtime()
+
+  -- Calculate gap from previous batch
+  local gap_ms = 0
+  if state.last_batch_end_time then
+    gap_ms = (batch_start_hrtime - state.last_batch_end_time) / 1e6
+  end
+
+  -- Calculate total bytes for this batch
+  local total_bytes = 0
+  for _, m in ipairs(files) do
+    total_bytes = total_bytes + (m.size or 0)
+  end
+
+  -- Load all files in this batch in parallel
+  local promises = {}
+  for i, m in ipairs(files) do
+    local file_index = state.loaded_count + i
+    local promise = self:load_file(m.filename):next(function(orgfile)
+      return self:_handle_loaded_file(orgfile, file_index, state, opts)
+    end)
+    table.insert(promises, promise)
+  end
+
+  return Promise.all(promises):next(function()
+    local batch_end_hrtime = vim.uv.hrtime()
+    local mem_after = collectgarbage('count')
+
+    -- Record batch timing
+    table.insert(state.batch_timings, {
+      batch_num = batch_num,
+      files_count = #files,
+      duration_ms = (batch_end_hrtime - batch_start_hrtime) / 1e6,
+      cumulative_ms = (batch_end_hrtime - state.batch_start_time) / 1e6,
+      gap_from_prev_ms = gap_ms,
+      total_bytes = total_bytes,
+      mem_before_kb = mem_before,
+      mem_after_kb = mem_after,
+    })
+
+    state.last_batch_end_time = batch_end_hrtime
+  end)
+end
+
+---Load files progressively: open buffers first, then remaining files.
+---@param opts? OrgLoadProgressiveOpts
+---@return OrgPromise<OrgFiles>
+function OrgFiles:load_progressive(opts)
+  opts = opts or {}
+  local metadata = self:scan()
+
+  -- Apply filter if provided
+  if opts.filter then
+    metadata = vim.tbl_filter(opts.filter, metadata)
+  end
+
+  -- Partition: open org buffers first, then rest
+  local open_bufs = get_open_org_buffers()
+  local open_files, rest_files = {}, {}
+  for _, m in ipairs(metadata) do
+    if open_bufs[vim.fn.resolve(m.filename)] then
+      table.insert(open_files, m)
+    else
+      table.insert(rest_files, m)
+    end
+  end
+
+  -- Initialize state
+  ---@type OrgLoadQueueState
+  local state = {
+    total = #metadata,
+    loaded_count = 0,
+    loaded_files = {},
+    batch_start_time = vim.uv.hrtime(),
+    batch_timings = {},
+    last_batch_end_time = nil,
+  }
+  state.last_callback_time = state.batch_start_time
+
+  self.progressive_state = {
+    loaded = 0,
+    total = state.total,
+    loading = true,
+  }
+
+  self.load_state = 'loading'
+
+  -- Handle empty file list
+  if state.total == 0 then
+    return Promise.resolve(self:_handle_all_loaded(state, opts))
+  end
+
+  -- Load in two batches: open buffers first, then rest
+  return self
+    :_load_batch(open_files, 1, state, opts)
+    :next(function()
+      if #rest_files == 0 then
+        return
+      end
+      -- Yield to event loop between batches. Uses 1ms because defer_fn(fn, 0)
+      -- can execute immediately without yielding. 1ms ensures Neovim processes
+      -- pending keyboard/UI events, keeping the editor responsive during loading.
+      return Promise.new(function(resolve)
+        vim.defer_fn(function()
+          self:_load_batch(rest_files, 2, state, opts):next(resolve)
+        end, 1)
+      end)
+    end)
+    :next(function()
+      return self:_handle_all_loaded(state, opts)
+    end)
+end
+
+---Get the current progressive loading state
+---@return OrgLoadProgress?
+function OrgFiles:get_load_progress()
+  return self.progressive_state
+end
+
+---@class OrgRequestLoadOpts
+---@field async? boolean Use async progressive loading (default: true)
+---@field on_file_loaded? fun(file: OrgFile, index: number, total: number) Callback per file loaded
+---@field on_complete? fun(files: OrgFile[]) Callback when all files loaded
+---@field order_by? 'mtime'|'name'|OrgLoadProgressiveSortFn Sort order for loading files
+---@field direction? 'asc'|'desc' Sort direction
+---@field batch_size? number Max files per batch (default: all in one batch)
+
+---Request files to be loaded. Idempotent - multiple calls share the same promise.
+---This is the unified entry point for file loading.
+---@param opts? OrgRequestLoadOpts
+---@return OrgPromise<OrgFiles>
+function OrgFiles:request_load(opts)
+  opts = opts or {}
+  local async = opts.async ~= false -- default to async
+
+  -- Already loaded - return immediately
+  if self.load_state == 'loaded' then
+    if opts.on_complete then
+      opts.on_complete(self:all())
+    end
+    return Promise.resolve(self)
+  end
+
+  -- Already loading - chain onto existing promise
+  if self.load_state == 'loading' and self._load_promise then
+    return self._load_promise:next(function()
+      if opts.on_complete then
+        opts.on_complete(self:all())
+      end
+      return self
+    end)
+  end
+
+  -- Start loading - note: load_state is set by load()/load_progressive()
+  if async then
+    self._load_promise = self:load_progressive(opts --[[@as OrgLoadProgressiveOpts]])
+  else
+    -- Use force=true to ensure loading happens even if load_state was previously set
+    self._load_promise = self:load(true):next(function()
+      if opts.on_complete then
+        opts.on_complete(self:all())
+      end
+      return self
+    end)
+  end
+
+  return self._load_promise
+end
+
+---Synchronous version of request_load for blocking contexts.
+---@param timeout? number Timeout in milliseconds (default: 20000)
+---@return OrgFiles
+function OrgFiles:request_load_sync(timeout)
+  return self:request_load({ async = false }):wait(timeout or 20000)
 end
 
 return OrgFiles
