@@ -5,6 +5,7 @@ local DefaultConfig = {
   org_todo_keywords = { 'TODO', '|', 'DONE' },
   org_todo_repeat_to_state = nil,
   org_todo_keyword_faces = {},
+  org_enforce_todo_dependencies = false,
   org_deadline_warning_days = 14,
   org_agenda_min_height = 16,
   org_agenda_span = 'week', -- day/week/month/year/number of days

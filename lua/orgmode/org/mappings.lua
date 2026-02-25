@@ -415,12 +415,35 @@ function OrgMappings:_get_note(template, indent, title)
   end)
 end
 
+---@param headline OrgHeadline
+function OrgMappings:_has_unfinished_children(headline)
+  for _, h in ipairs(headline:get_child_headlines()) do
+    local was_done = h:is_done()
+    if not was_done then
+      return true
+    end
+    if OrgMappings:_has_unfinished_children(h) then
+      return true
+    end
+  end
+  return false
+end
+
 function OrgMappings:_todo_change_state(direction)
   local headline = self.files:get_closest_headline()
   local old_state = headline:get_todo()
   local was_done = headline:is_done()
-  local changed = self:_change_todo_state(direction, true)
+  local force_dependent = config.org_enforce_todo_dependencies or false
 
+  if force_dependent then
+    local has_unfinished_children = OrgMappings:_has_unfinished_children(headline)
+    if has_unfinished_children then
+      utils.echo_warning(tostring(old_state) .. ' is blocked by unfinished sub-tasks.')
+      return
+    end
+  end
+
+  local changed = self:_change_todo_state(direction, true)
   if not changed then
     return
   end
