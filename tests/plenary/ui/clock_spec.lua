@@ -1,6 +1,8 @@
 local helpers = require('tests.plenary.helpers')
 local Date = require('orgmode.objects.date')
 local orgmode = require('orgmode')
+local EventManager = require('orgmode.events')
+local events = EventManager.event
 
 describe('Clock', function()
   local files = {}
@@ -210,5 +212,95 @@ describe('Clock', function()
       '  :END:',
       '* TODO Test 3',
     }, vim.api.nvim_buf_get_lines(0, 0, -1, false))
+  end)
+
+  it('should dispatch ClockedIn event when clocking in', function()
+    local file = helpers.create_agenda_file({
+      '* TODO Clock event test',
+    })
+
+    local received_event = nil
+    local listener = function(event)
+      received_event = event
+    end
+    EventManager.listen(events.ClockedIn, listener)
+
+    vim.cmd('edit ' .. file.filename)
+    vim.fn.cursor({ 1, 1 })
+    vim.cmd([[norm ,oxi]])
+    vim.wait(100)
+
+    assert.is_not_nil(received_event)
+    assert.are.same('orgmode.clocked_in', received_event.type)
+    assert.are.same('Clock event test', received_event.headline:get_title())
+
+    -- cleanup listener
+    local listeners = EventManager._listeners[events.ClockedIn.type]
+    for i, l in ipairs(listeners) do
+      if l == listener then
+        table.remove(listeners, i)
+        break
+      end
+    end
+  end)
+
+  it('should dispatch ClockedOut event when clocking out', function()
+    local file = helpers.create_agenda_file({
+      '* TODO Clock out event test',
+    })
+
+    vim.cmd('edit ' .. file.filename)
+    vim.fn.cursor({ 1, 1 })
+    vim.cmd([[norm ,oxi]])
+    vim.wait(100)
+
+    local received_event = nil
+    local listener = function(event)
+      received_event = event
+    end
+    EventManager.listen(events.ClockedOut, listener)
+
+    vim.fn.cursor({ 1, 1 })
+    vim.cmd([[norm ,oxo]])
+
+    assert.is_not_nil(received_event)
+    assert.are.same('orgmode.clocked_out', received_event.type)
+    assert.are.same('Clock out event test', received_event.headline:get_title())
+
+    -- cleanup listener
+    local listeners = EventManager._listeners[events.ClockedOut.type]
+    for i, l in ipairs(listeners) do
+      if l == listener then
+        table.remove(listeners, i)
+        break
+      end
+    end
+  end)
+
+  it('should not dispatch ClockedOut event when headline has no logbook', function()
+    local file = helpers.create_agenda_file({
+      '* TODO No logbook headline',
+    })
+
+    local received_event = nil
+    local listener = function(event)
+      received_event = event
+    end
+    EventManager.listen(events.ClockedOut, listener)
+
+    vim.cmd('edit ' .. file.filename)
+    local headline = file:get_headlines()[1]
+    headline:clock_out()
+
+    assert.is_nil(received_event)
+
+    -- cleanup listener
+    local listeners = EventManager._listeners[events.ClockedOut.type]
+    for i, l in ipairs(listeners) do
+      if l == listener then
+        table.remove(listeners, i)
+        break
+      end
+    end
   end)
 end)
