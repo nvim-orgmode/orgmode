@@ -156,6 +156,7 @@ function Headline:clock_in()
     logbook = Logbook.new_from_headline(self)
   end
   logbook:add_clock_in()
+  EventManager.dispatch(events.ClockedIn:new(self))
   return self:refresh()
 end
 
@@ -163,6 +164,7 @@ function Headline:clock_out()
   local logbook = self:get_logbook()
   if logbook then
     logbook:clock_out()
+    EventManager.dispatch(events.ClockedOut:new(self))
   end
   return self:refresh()
 end
