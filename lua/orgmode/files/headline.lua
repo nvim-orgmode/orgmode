@@ -8,6 +8,8 @@ local indent = require('orgmode.org.indent')
 local Logbook = require('orgmode.files.elements.logbook')
 local OrgId = require('orgmode.org.id')
 local Memoize = require('orgmode.utils.memoize')
+local EventManager = require('orgmode.events')
+local events = EventManager.event
 
 ---@alias OrgPlanDateTypes 'DEADLINE' | 'SCHEDULED' | 'CLOSED'
 
@@ -154,6 +156,7 @@ function Headline:clock_in()
     logbook = Logbook.new_from_headline(self)
   end
   logbook:add_clock_in()
+  EventManager.dispatch(events.ClockedIn:new(self))
   return self:refresh()
 end
 
@@ -161,6 +164,7 @@ function Headline:clock_out()
   local logbook = self:get_logbook()
   if logbook then
     logbook:clock_out()
+    EventManager.dispatch(events.ClockedOut:new(self))
   end
   return self:refresh()
 end
