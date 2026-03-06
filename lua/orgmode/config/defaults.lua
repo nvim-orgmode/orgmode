@@ -96,6 +96,10 @@ local DefaultConfig = {
   hyperlinks = {
     sources = {},
   },
+  citations = {
+    sources = {},
+    org_cite_global_bibliography = {},
+  },
   mappings = {
     disable_all = false,
     org_return_uses_meta_return = false,

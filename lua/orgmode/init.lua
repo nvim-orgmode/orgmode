@@ -12,6 +12,7 @@ local auto_instance_keys = {
   notifications = true,
   completion = true,
   links = true,
+  citations = true,
 }
 
 ---@class Org
@@ -27,6 +28,7 @@ local auto_instance_keys = {
 ---@field org_mappings OrgMappings
 ---@field notifications OrgNotifications
 ---@field links OrgLinks
+---@field citations OrgCitations
 local Org = {}
 setmetatable(Org, {
   __index = function(tbl, key)
@@ -60,6 +62,7 @@ function Org:init()
     })
     :load_sync(true, 20000)
   self.links = require('orgmode.org.links'):new({ files = self.files })
+  self.citations = require('orgmode.org.citations'):new({ files = self.files })
   self.agenda = require('orgmode.agenda'):new({
     files = self.files,
     highlighter = self.highlighter,
@@ -68,12 +71,14 @@ function Org:init()
   self.capture = require('orgmode.capture'):new({
     files = self.files,
   })
-  self.completion = require('orgmode.org.autocompletion'):new({ files = self.files, links = self.links })
+  self.completion =
+    require('orgmode.org.autocompletion'):new({ files = self.files, links = self.links, citations = self.citations })
   self.org_mappings = require('orgmode.org.mappings'):new({
     capture = self.capture,
     agenda = self.agenda,
     files = self.files,
     links = self.links,
+    citations = self.citations,
     completion = self.completion,
   })
   self.clock = require('orgmode.clock'):new({
