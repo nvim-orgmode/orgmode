@@ -22,6 +22,7 @@ local Footnote = require('orgmode.objects.footnote')
 ---@field agenda OrgAgenda
 ---@field files OrgFiles
 ---@field links OrgLinks
+---@field citations OrgCitations
 ---@field completion OrgCompletion
 local OrgMappings = {}
 
@@ -33,6 +34,7 @@ function OrgMappings:new(data)
   opts.agenda = data.agenda
   opts.files = data.files
   opts.links = data.links
+  opts.citations = data.citations
   opts.completion = data.completion
   setmetatable(opts, self)
   self.__index = self
@@ -887,6 +889,13 @@ function OrgMappings:open_at_point()
   local footnote = Footnote.at_cursor()
   if footnote then
     return self:_jump_to_footnote(footnote)
+  end
+
+  if self.citations then
+    local citation_key = self.citations:at_cursor()
+    if citation_key then
+      return self.citations:follow(citation_key)
+    end
   end
 end
 
