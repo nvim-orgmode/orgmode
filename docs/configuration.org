@@ -2992,7 +2992,7 @@ vim.api.nvim_create_autocmd('ColorScheme', {
 })
 #+end_src
 
-For adding/changing TODO keyword colors see [[#org_todo_keyword_faces][org-todo-keyword-faces]]
+For adding/changing TODO keyword colors see [[#org_todo_keyword_faces][org_todo_keyword_faces]]
 *** Menu
 :PROPERTIES:
 :CUSTOM_ID: menu

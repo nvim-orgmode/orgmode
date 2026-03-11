@@ -8,6 +8,8 @@ local indent = require('orgmode.org.indent')
 local Logbook = require('orgmode.files.elements.logbook')
 local OrgId = require('orgmode.org.id')
 local Memoize = require('orgmode.utils.memoize')
+local EventManager = require('orgmode.events')
+local events = EventManager.event
 
 ---@alias OrgPlanDateTypes 'DEADLINE' | 'SCHEDULED' | 'CLOSED'
 
@@ -268,7 +270,12 @@ function Headline:set_tags(tags)
   local end_col = line:len()
 
   local text = ''
-  tags = vim.trim(tags):gsub('^:', ''):gsub(':$', '')
+  tags = vim
+    .trim(tags)
+    :gsub('[%s:-]+', ':') -- Convert all whitespace, existing colons and hyphens into a single colon
+    :gsub('^:', '')
+    :gsub(':$', '')
+
   if tags ~= '' then
     tags = ':' .. tags .. ':'
 
@@ -527,6 +534,7 @@ function Headline:add_note(note)
     append_line = self:get_append_line()
   end
   vim.api.nvim_buf_set_lines(self.file:get_valid_bufnr(), append_line, append_line, false, note)
+  EventManager.dispatch(events.NoteAdded:new(self, note))
   return self:refresh()
 end
 

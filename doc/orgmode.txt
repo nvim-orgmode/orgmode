@@ -2321,6 +2321,7 @@ There is basic LSP support available in org files. Available methods:
     correctly nested
 - `workspace/symbol` - List and filter all headlines that are part of
     |orgmode-org_agenda_files|
+- `textDocument/references` - Show all links to the headline under cursor
 - `textDocument/completion` - Autocompletion results. More details in
     |orgmode-autocompletion|. NOTE: If you are using any completion plugins
     <./plugins.org::#completion-plugins>, make sure to remove the custom source
@@ -3014,7 +3015,7 @@ highlight group:
     })
 <
 
-For adding/changing TODO keyword colors see |orgmode-org-todo-keyword-faces|
+For adding/changing TODO keyword colors see |orgmode-org_todo_keyword_faces|
 
 
 Menu                                                            *orgmode-Menu*
