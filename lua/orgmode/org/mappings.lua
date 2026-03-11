@@ -862,12 +862,14 @@ function OrgMappings:add_note()
   local headline = self.files:get_closest_headline()
   local indent = headline:get_indent()
   local text = ('%s- Note taken on %s \\\\'):format(indent, Date.now():to_wrapped_string(false))
-  return self:_get_note(text, indent, 'Insert note for entry.'):next(function(note)
-    if not note then
-      return false
-    end
-    return headline:add_note(note)
-  end)
+  return self
+    :_get_note(text, indent, string.format('Insert note for %s.', headline:get_title() or 'entry'))
+    :next(function(note)
+      if not note then
+        return false
+      end
+      return headline:add_note(note)
+    end)
 end
 
 function OrgMappings:open_at_point()
