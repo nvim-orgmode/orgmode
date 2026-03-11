@@ -490,7 +490,8 @@ function Agenda:_get_visual_selection_lines()
   return lines
 end
 
-function Agenda:archive_visual()
+function Agenda:_bulk_action(action, opts)
+  opts = opts or {}
   local lines = self:_get_visual_selection_lines()
   if #lines == 0 then
     return utils.echo_warning('No headlines in visual selection')
@@ -504,45 +505,35 @@ function Agenda:archive_visual()
         result = result:next(function()
           return headline.file:update(function(_)
             vim.fn.cursor({ headline:get_range().start_line, 1 })
-            return Promise.resolve(require('orgmode').action('org_mappings.archive'))
-          end)
-        end)
-      end
-      return result:next(function()
-        return self:redo('agenda', true)
-      end)
-    end)
-    :next(function()
-      utils.echo_info(('Archived %d headlines'):format(#lines))
-    end)
-end
-
-function Agenda:toggle_archive_tag_visual()
-  local lines = self:_get_visual_selection_lines()
-  if #lines == 0 then
-    return utils.echo_warning('No headlines in visual selection')
-  end
-
-  return Promise.resolve()
-    :next(function()
-      local result = Promise.resolve()
-      for _, line in ipairs(lines) do
-        local headline = line.headline
-        result = result:next(function()
-          return headline.file:update(function(_)
-            vim.fn.cursor({ headline:get_range().start_line, 1 })
-            return Promise.resolve(require('orgmode').action('org_mappings.toggle_archive_tag'))
+            return Promise.resolve(require('orgmode').action(action))
           end)
         end)
       end
       return result
     end)
     :next(function()
-      return self:redo('agenda', true)
+      if opts.redo ~= false then
+        return self:redo('agenda', true)
+      end
     end)
     :next(function()
-      utils.echo_info(('Toggled ARCHIVE tag on %d headlines'):format(#lines))
+      if opts.message then
+        utils.echo_info(opts.message:format(#lines))
+      end
     end)
+end
+
+function Agenda:archive_visual()
+  return self:_bulk_action('org_mappings.archive', {
+    redo = true,
+    message = 'Archived %d headlines',
+  })
+end
+
+function Agenda:toggle_archive_tag_visual()
+  return self:_bulk_action('org_mappings.toggle_archive_tag', {
+    message = 'Toggled ARCHIVE tag on %d headlines',
+  })
 end
 
 function Agenda:set_tags()
