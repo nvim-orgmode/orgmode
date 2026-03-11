@@ -2663,27 +2663,30 @@ function ZoteroSource:get_name()
 end
 
 function ZoteroSource:get_items()
-  -- Replace 0 with your numeric Zotero user ID if needed.
-  local url = 'http://localhost:23119/api/users/0/items?format=json'
-  local ok, result = pcall(vim.fn.system, { 'curl', '-s', url })
-  if not ok or vim.v.shell_error ~= 0 then
+  local curl = require('plenary.curl')
+  local res = curl.get {
+    url = 'http://localhost:23119/api/users/0/items?format=json',
+    accept = 'application/json',
+  }
+  if res.status == 200 then
+    local data = vim.json.decode(res.body or '') or {}
+    local items = {}
+    for _, entry in ipairs(data) do
+      local d = entry.data or {}
+      if d.citationKey then
+        local creators = d.creators or {}
+        local author = (creators[1] or {}).lastName or ''
+        local year = (d.date or ''):match('%d%d%d%d') or ''
+        table.insert(items, {
+          key = d.citationKey,
+          description = author .. year .. ' ' .. (d.title or ''),
+        })
+      end
+    end
+    return items
+  else
     return {}
   end
-  local data = vim.json.decode(result or '') or {}
-  local items = {}
-  for _, entry in ipairs(data) do
-    local d = entry.data or {}
-    if d.citationKey then
-      local creators = d.creators or {}
-      local author = (creators[1] or {}).lastName or ''
-      local year = (d.date or ''):match('%d%d%d%d') or ''
-      table.insert(items, {
-        key = d.citationKey,
-        description = author .. year .. ' ' .. (d.title or ''),
-      })
-    end
-  end
-  return items
 end
 
 require('orgmode').setup({
