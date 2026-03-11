@@ -65,6 +65,9 @@ Link: [[https://github.com/aaratha/org-cycle-lite.nvim][org-cycle-lite.nvim]]
 :PROPERTIES:
 :CUSTOM_ID: completion-plugins
 :END:
+
+📝 NOTE: There is experimental LSP support that provides the autocompletion. See [[file:./configuration.org::#lsp][Lsp section]] for more details.
+
 *** blink.cmp
 :PROPERTIES:
 :CUSTOM_ID: blinkcmp
@@ -205,26 +208,10 @@ Example configuration with few of these plugins using [[https://github.com/folke
       org_default_notes_file = '~/orgfiles/refile.org',
     })
     require('org-bullets').setup()
-    require('blink.cmp').setup({
-      sources = {
-        per_filetype = {
-          org = {'orgmode'}
-        },
-        providers = {
-          orgmode = {
-            name = 'Orgmode',
-            module = 'orgmode.org.autocompletion.blink',
-            fallbacks = { 'buffer' },
-          },
-        },
-      },
-    })
+    require('blink.cmp').setup({})
 
-    require('telescope').setup()
-    require('telescope').load_extension('orgmode')
-    vim.keymap.set('n', '<leader>r', require('telescope').extensions.orgmode.refile_heading)
-    vim.keymap.set('n', '<leader>fh', require('telescope').extensions.orgmode.search_headings)
-    vim.keymap.set('n', '<leader>li', require('telescope').extensions.orgmode.insert_link)
+    -- Experimental LSP support
+    vim.lsp.enable('org')
   end,
 }
 #+end_src

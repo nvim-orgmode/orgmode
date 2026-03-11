@@ -8,6 +8,7 @@ This page contains information about all configuration that can be provided to t
 - [[#calendar-settings][Calendar settings]]
 - [[#tags-settings][Tags settings]]
 - [[#mappings][Mappings]]
+- [[#lsp][Lsp]]
 - [[#features][Features]]
 - [[#user-interface][User interface]]
 
@@ -2272,6 +2273,26 @@ supported: =*=, =_=, =/=, =+=, =~=, === These cannot be changed.
 :END:
 To make all mappings dot repeatable, install [[https://github.com/tpope/vim-repeat][vim-repeat]] plugin.
 
+** Lsp
+:PROPERTIES:
+:CUSTOM_ID: lsp
+:END:
+📝 NOTE: Experimental
+
+There is basic LSP support available in org files. Available methods:
+- =textDocument/documentSymbol= - Shows list of headlines in current file, correctly nested
+- =workspace/symbol= - List and filter all headlines that are part of [[#org_agenda_files][org_agenda_files]]
+- =textDocument/references= - Show all links to the headline under cursor
+- =textDocument/completion= - Autocompletion results. More details in [[#autocompletion][autocompletion]].
+  NOTE: If you are using any [[file:./plugins.org::#completion-plugins][completion plugins]],
+  make sure to remove the custom source settings for orgmode. It's no longer needed.
+  IF you are using =omnifunc=, it's best to not set it to builtin LSP omnifunc (=v:lua.vim.lsp.omnifunc=) in orgmode files, due to some edge cases.
+
+  To enable the orgmode lsp, make sure to call =vim.lsp.enable=:
+  #+begin_src lua
+  vim.lsp.enable('org')
+  #+end_src
+
 ** Features
 :PROPERTIES:
 :CUSTOM_ID: features
@@ -2971,7 +2992,7 @@ vim.api.nvim_create_autocmd('ColorScheme', {
 })
 #+end_src
 
-For adding/changing TODO keyword colors see [[#org_todo_keyword_faces][org-todo-keyword-faces]]
+For adding/changing TODO keyword colors see [[#org_todo_keyword_faces][org_todo_keyword_faces]]
 *** Menu
 :PROPERTIES:
 :CUSTOM_ID: menu
