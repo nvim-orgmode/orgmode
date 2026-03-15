@@ -130,6 +130,8 @@
 ---@field org_demote_subtree? OrgMappingValue Default: '>s'
 ---@field org_meta_return? OrgMappingValue Add heading, item or row (context-dependent) Default: '<Leader><CR>'
 ---@field org_return? OrgMappingValue Default: '<CR>'
+---@field org_insert_mode_promote? OrgMappingValue Promote heading or decrease indent in insert mode. Default: '<C-d>'
+---@field org_insert_mode_demote? OrgMappingValue Demote heading or increase indent in insert mode. Default: '<C-t>'
 ---@field org_insert_heading_respect_content? OrgMappingValue Add new heading after current heading block (same level) Default: '<prefix>ih'
 ---@field org_insert_todo_heading? OrgMappingValue Add new todo heading right after current heading (same level) Default: '<prefix>iT'
 ---@field org_insert_todo_heading_respect_content? OrgMappingValue Add new todo heading after current heading block (same level). Default: '<prefix>it'
