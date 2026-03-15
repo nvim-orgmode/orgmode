@@ -17,6 +17,25 @@ local Promise = require('orgmode.utils.promise')
 local Input = require('orgmode.ui.input')
 local Footnote = require('orgmode.objects.footnote')
 
+---Schedule a fold update for the given range. Call after buffer edits.
+---OrgRange is 1-indexed; vim._foldupdate expects 0-indexed lines.
+---@param range OrgRange
+local function schedule_fold_update(range)
+  local bufnr = vim.api.nvim_get_current_buf()
+  vim.schedule(function()
+    if not vim.api.nvim_buf_is_valid(bufnr) then
+      return
+    end
+    local start_line = range.start_line - 1
+    local end_line = math.min(range.end_line, vim.api.nvim_buf_line_count(bufnr))
+    for _, win in ipairs(vim.fn.win_findbuf(bufnr)) do
+      if vim.wo[win].foldmethod == 'expr' then
+        vim._foldupdate(win, start_line, end_line)
+      end
+    end
+  end)
+end
+
 ---@class OrgMappings
 ---@field capture OrgCapture
 ---@field agenda OrgAgenda
@@ -50,6 +69,8 @@ function OrgMappings:set_tags(tags)
   local headline = self.files:get_closest_headline()
   local headline_tags = headline:get_own_tags()
   local current_tags = utils.tags_to_string(headline_tags)
+  -- Capture range before promise chain — TS nodes become stale after edits
+  local range = headline:get_range()
 
   return Promise.resolve()
     :next(function()
@@ -69,14 +90,17 @@ function OrgMappings:set_tags(tags)
         return
       end
 
-      return headline:set_tags(new_tags)
+      headline:set_tags(new_tags)
+      schedule_fold_update(range)
     end)
 end
 
 ---@return nil
 function OrgMappings:toggle_archive_tag()
   local headline = self.files:get_closest_headline()
+  local range = headline:get_range()
   headline:toggle_tag('ARCHIVE')
+  schedule_fold_update(range)
 end
 
 function OrgMappings:cycle()
@@ -344,7 +368,9 @@ function OrgMappings:set_priority(direction)
     end
   end
 
+  local range = headline:get_range()
   headline:set_priority(new_priority)
+  schedule_fold_update(range)
 end
 
 function OrgMappings:todo_next_state()
@@ -419,6 +445,9 @@ function OrgMappings:_todo_change_state(direction)
   local headline = self.files:get_closest_headline()
   local old_state = headline:get_todo()
   local was_done = headline:is_done()
+
+  local range = headline:get_range()
+
   local changed = self:_change_todo_state(direction, true)
 
   if not changed then
@@ -427,6 +456,8 @@ function OrgMappings:_todo_change_state(direction)
 
   local item = self.files:get_closest_headline()
   EventManager.dispatch(events.TodoChanged:new(item, old_state, was_done))
+
+  schedule_fold_update(range)
 
   local is_done = item:is_done() and not was_done
   local is_undone = not item:is_done() and was_done
