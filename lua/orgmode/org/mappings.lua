@@ -591,7 +591,40 @@ local function _for_each_line_in_visual_selection(fn)
   end
 end
 
+local function _visual_selection_has_headline()
+  local mode = vim.api.nvim_get_mode().mode
+  if mode ~= 'v' and mode ~= 'V' then
+    return false
+  end
+
+  local start_line = vim.fn.line('v')
+  local end_line = vim.fn.line('.')
+
+  if start_line > end_line then
+    start_line, end_line = end_line, start_line
+  end
+
+  if start_line == 0 or end_line == 0 then
+    return false
+  end
+
+  for line_nr = start_line, end_line do
+    local line = vim.fn.getline(line_nr)
+    if line:match('^%*+%s') then
+      return true
+    end
+  end
+
+  return false
+end
+
 function OrgMappings:do_promote_visual()
+  if not _visual_selection_has_headline() then
+    vim.cmd('normal! <g< ')
+    vim.cmd('normal! gv')
+    return
+  end
+
   _for_each_line_in_visual_selection(function(line_nr)
     local line = vim.fn.getline(line_nr)
     if line:match('^%*+%s') then
@@ -611,6 +644,12 @@ function OrgMappings:do_promote_visual()
 end
 
 function OrgMappings:do_demote_visual()
+  if not _visual_selection_has_headline() then
+    vim.cmd('normal! >g> ')
+    vim.cmd('normal! gv')
+    return
+  end
+
   _for_each_line_in_visual_selection(function(line_nr)
     local line = vim.fn.getline(line_nr)
     if line:match('^%*+') then

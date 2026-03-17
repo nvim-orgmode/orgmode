@@ -114,4 +114,48 @@ describe('Visual promote/demote', function()
       '** Level 3 heading',
     }, lines)
   end)
+
+  it('should fallback to default behavior when selection has no headline on promote', function()
+    helpers.create_file({
+      'plain text line 1',
+      'plain text line 2',
+      'plain text line 3',
+    })
+
+    vim.fn.cursor(1, 1)
+    vim.cmd('normal! V')
+    vim.cmd('normal! jj')
+
+    local org = require('orgmode')
+    org.action('org_mappings.do_promote_visual')
+
+    local lines = vim.api.nvim_buf_get_lines(0, 0, -1, false)
+    assert.are.same({
+      'plain text line 1',
+      'plain text line 2',
+      'plain text line 3',
+    }, lines)
+  end)
+
+  it('should fallback to default behavior when selection has no headline on demote', function()
+    helpers.create_file({
+      'plain text line 1',
+      'plain text line 2',
+      'plain text line 3',
+    })
+
+    vim.fn.cursor(1, 1)
+    vim.cmd('normal! V')
+    vim.cmd('normal! jj')
+
+    local org = require('orgmode')
+    org.action('org_mappings.do_demote_visual')
+
+    local lines = vim.api.nvim_buf_get_lines(0, 0, -1, false)
+    assert.are.same({
+      '        plain text line 1',
+      '        plain text line 2',
+      '        plain text line 3',
+    }, lines)
+  end)
 end)
