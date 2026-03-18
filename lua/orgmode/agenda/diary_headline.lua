@@ -2,7 +2,16 @@
 ---@field file OrgFile
 ---@field _title string
 local DiaryHeadline = {}
-DiaryHeadline.__index = DiaryHeadline
+DiaryHeadline.__index = function(self, key)
+  local method = rawget(DiaryHeadline, key)
+  if method ~= nil then
+    return method
+  end
+  -- Return a no-op for any unimplemented headline interface methods
+  return function()
+    return nil
+  end
+end
 
 ---@param opts { file: OrgFile, title: string }
 function DiaryHeadline:new(opts)

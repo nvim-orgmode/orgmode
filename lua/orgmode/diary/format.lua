@@ -22,7 +22,7 @@ end
 ---@param date OrgDate
 ---@return string
 function M.interpolate(text, expr, date)
-  if (not text:find('%%d')) and (not text:find('%%s')) then
+  if not text:find('%', 1, true) then
     return text
   end
   local year
@@ -50,8 +50,7 @@ function M.interpolate(text, expr, date)
   end
   local age = (date.year or 0) - year
   local suff = ordinal_suffix(age)
-  local out = text
-  out = out:gsub('%%d', tostring(age))
+  local out = text:gsub('%%d', tostring(age))
   out = out:gsub('%%s', suff)
   return out
 end

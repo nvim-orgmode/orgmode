@@ -1,5 +1,3 @@
-local utils = require('orgmode.utils')
-
 ---@class OrgDiarySexp
 ---@field _eval fun(self: OrgDiarySexp, date: OrgDate): boolean
 local OrgDiarySexp = {}
@@ -103,14 +101,7 @@ local function parse_expr(tokens, idx)
   end
 end
 
----@param sexp string
----@return any|nil
-local function normalize_sexp(sexp)
-  return sexp
-end
-
 local function parse(sexp)
-  sexp = normalize_sexp(sexp)
   local tokens = tokenize(sexp)
   local expr, next_idx = parse_expr(tokens, 1)
   if not expr or next_idx <= 1 then
@@ -301,23 +292,24 @@ local function eval(ast, date)
     -- Fast path for supported anniversary/date forms
     local inner_op = inner[1]
     if inner_op == 'org-anniversary' or inner_op == 'diary-anniversary' or inner_op == 'diary-date' then
+      local vars = build_variables(date)
       local month, day_of_month
       if inner_op == 'org-anniversary' then
-        month = tonumber(resolve(inner[3], build_variables(date)))
-        day_of_month = tonumber(resolve(inner[4], build_variables(date)))
+        month = tonumber(resolve(inner[3], vars))
+        day_of_month = tonumber(resolve(inner[4], vars))
       elseif inner_op == 'diary-anniversary' then
         -- (year month day) or (month day year)
-        local a1 = tonumber(resolve(inner[2], build_variables(date)))
-        local a2 = tonumber(resolve(inner[3], build_variables(date)))
-        local a3 = tonumber(resolve(inner[4], build_variables(date)))
+        local a1 = tonumber(resolve(inner[2], vars))
+        local a2 = tonumber(resolve(inner[3], vars))
+        local a3 = tonumber(resolve(inner[4], vars))
         if a1 and a1 >= 1000 then
           month, day_of_month = a2, a3
         else
           month, day_of_month = a1, a2
         end
       else -- diary-date month day [year]
-        month = tonumber(resolve(inner[2], build_variables(date)))
-        day_of_month = tonumber(resolve(inner[3], build_variables(date)))
+        month = tonumber(resolve(inner[2], vars))
+        day_of_month = tonumber(resolve(inner[3], vars))
       end
       if not month or not day_of_month then
         return false
@@ -361,8 +353,22 @@ local function eval(ast, date)
     else
       first_target_day = 1 + (7 - (first_wday - dow))
     end
-    local candidate_day = first_target_day + (nth - 1) * 7
-    return date.day == candidate_day
+    if nth > 0 then
+      local candidate_day = first_target_day + (nth - 1) * 7
+      return date.day == candidate_day
+    else
+      -- Negative nth: count from end of month
+      local last_day = date:last_day_of_month().day
+      local last_target_day = first_target_day
+      while last_target_day + 7 <= last_day do
+        last_target_day = last_target_day + 7
+      end
+      local candidate_day = last_target_day + (nth + 1) * 7
+      if candidate_day < 1 then
+        return false
+      end
+      return date.day == candidate_day
+    end
   end
 
   -- Unknown operator: don't match
@@ -394,6 +400,51 @@ local function compile(expr)
   return OrgDiarySexp:new(matcher, expr)
 end
 
+---Extract event date (month, day) and reminder window from a diary-remind AST.
+---@param ast any
+---@return number|nil month
+---@return number|nil day_of_month
+---@return number|nil remind_days
+local function extract_remind_info(ast)
+  if type(ast) ~= 'table' or ast[1] ~= 'diary-remind' then
+    return nil, nil, nil
+  end
+  local inner = ast[2]
+  if type(inner) == 'table' and inner[1] == 'quote' then
+    inner = inner[2]
+  end
+  if type(inner) ~= 'table' then
+    return nil, nil, nil
+  end
+  local days_arg = ast[3]
+  local days = type(days_arg) == 'number' and days_arg or tonumber(days_arg)
+  if not days then
+    return nil, nil, nil
+  end
+  local inner_op = inner[1]
+  local month, day_of_month
+  if inner_op == 'org-anniversary' then
+    month = tonumber(inner[3])
+    day_of_month = tonumber(inner[4])
+  elseif inner_op == 'diary-anniversary' then
+    local a1 = tonumber(inner[2])
+    local a2 = tonumber(inner[3])
+    local a3 = tonumber(inner[4])
+    if a1 and a1 >= 1000 then
+      month, day_of_month = a2, a3
+    else
+      month, day_of_month = a1, a2
+    end
+  elseif inner_op == 'diary-date' then
+    month = tonumber(inner[2])
+    day_of_month = tonumber(inner[3])
+  end
+  if not month or not day_of_month then
+    return nil, nil, nil
+  end
+  return month, day_of_month, days
+end
+
 local M = {}
 
 ---@param expr string
@@ -407,6 +458,26 @@ function M.parse(expr)
     trimmed = '(' .. trimmed .. ')'
   end
   return compile(trimmed)
+end
+
+---Extract event month/day and reminder days from a diary-remind expression string.
+---@param expr string
+---@return number|nil month
+---@return number|nil day_of_month
+---@return number|nil remind_days
+function M.extract_remind_info(expr)
+  if type(expr) ~= 'string' then
+    return nil, nil, nil
+  end
+  local trimmed = vim.trim(expr)
+  if not trimmed:match('^%(') then
+    trimmed = '(' .. trimmed .. ')'
+  end
+  local ok, ast = pcall(parse, trimmed)
+  if not ok or not ast then
+    return nil, nil, nil
+  end
+  return extract_remind_info(ast)
 end
 
 return M

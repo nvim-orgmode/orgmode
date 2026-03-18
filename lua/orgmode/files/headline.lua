@@ -824,12 +824,19 @@ function Headline:get_diary_sexps()
     local start_row, start_col = node:start()
     local idx = 1
     while true do
-      local s, opener = text:find('([<%[]?)%%%(', idx)
+      local s = text:find('%%%(', idx)
       if not s then
         break
       end
-      local open_char = opener ~= '' and opener:sub(1, 1) or nil
-      local expr_start = s + (open_char and 3 or 2)
+      -- Check if preceded by < or [
+      local open_char = nil
+      if s > 1 then
+        local prev = text:sub(s - 1, s - 1)
+        if prev == '<' or prev == '[' then
+          open_char = prev
+        end
+      end
+      local expr_start = s + 3 -- after "%%("
       local depth = 1
       local j = expr_start
       local close_idx

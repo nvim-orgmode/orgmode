@@ -838,13 +838,20 @@ function OrgFile:get_diary_sexps()
   self:parse(true)
   local entries = {}
   for i, line in ipairs(self.lines) do
-    -- Avoid timestamps like <%%(...)> or [%%(...)]
-    if line:find('%%(', 1, true) and not line:find('<%%(', 1, true) and not line:find('[%%(', 1, true) then
+    if line:find('%%(', 1, true) then
       local search_from = 1
       while true do
         local start_idx = line:find('%%(', search_from, true)
         if not start_idx then
           break
+        end
+        -- Skip timestamp-wrapped sexps like <%%(...)> or [%%(...)]
+        if start_idx > 1 then
+          local prev = line:sub(start_idx - 1, start_idx - 1)
+          if prev == '<' or prev == '[' then
+            search_from = start_idx + 3
+            goto continue
+          end
         end
         local expr_start = start_idx + 3 -- after "%%("
         local depth = 1
@@ -874,6 +881,7 @@ function OrgFile:get_diary_sexps()
           range = Range.from_line(i),
         })
         search_from = close_idx + 1
+        ::continue::
       end
     end
   end

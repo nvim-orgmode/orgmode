@@ -14,35 +14,16 @@ local DiaryHeadline = require('orgmode.agenda.diary_headline')
 local DiaryFormat = require('orgmode.diary.format')
 local DiarySexp = require('orgmode.diary.sexp')
 
-local function _parse_remind_event_date(expr, day)
-  if type(expr) ~= 'string' then
-    return nil
+---@param expr string
+---@param day OrgDate
+---@return OrgDate|nil event_date
+---@return number|nil remind_days
+local function _get_remind_event_date(expr, day)
+  local month, day_of_month, remind_days = DiarySexp.extract_remind_info(expr)
+  if not month or not day_of_month or not remind_days then
+    return nil, nil
   end
-  local y, m, d, n
-  -- org-anniversary YEAR MONTH DAY
-  y, m, d, n = expr:match("diary%-remind%s+%'%s*%(%s*org%-anniversary%s+(%d+)%s+(%d+)%s+(%d+)%s*%)%s+(%d+)")
-  if y and m and d then
-    return day:set({ month = tonumber(m), day = tonumber(d) }), tonumber(n)
-  end
-  -- diary-anniversary YEAR MONTH DAY or MONTH DAY YEAR
-  local a1, a2, a3
-  a1, a2, a3, n = expr:match("diary%-remind%s+%'%s*%(%s*diary%-anniversary%s+(%d+)%s+(%d+)%s+(%d+)%s*%)%s+(%d+)")
-  if a1 and a2 and a3 then
-    a1, a2, a3 = tonumber(a1), tonumber(a2), tonumber(a3)
-    local month, day_of_month
-    if a1 >= 1000 then
-      month, day_of_month = a2, a3
-    else
-      month, day_of_month = a1, a2
-    end
-    return day:set({ month = month, day = day_of_month }), tonumber(n)
-  end
-  -- diary-date MONTH DAY [YEAR]
-  m, d, n = expr:match("diary%-remind%s+%'%s*%(%s*diary%-date%s+(%d+)%s+(%d+)[%s%d]*%)%s+(%d+)")
-  if m and d then
-    return day:set({ month = tonumber(m), day = tonumber(d) }), tonumber(n)
-  end
-  return nil
+  return day:set({ month = month, day = day_of_month }), remind_days
 end
 
 ---@alias OrgAgendaDay { day: OrgDate, agenda_items: OrgAgendaItem[], category_length: number, label_length: 0 }
@@ -606,44 +587,30 @@ function OrgAgendaType:_get_agenda_days()
         })
       end
       -- Include diary sexp entries
-      local ok_h, diary_headline_entries = pcall(function()
-        return headline:get_diary_sexps()
-      end)
-      if ok_h and diary_headline_entries then
-        for _, entry in ipairs(diary_headline_entries) do
-          local ok_p, matcher = pcall(function()
-            return entry.expr and DiarySexp.parse(entry.expr) or nil
-          end)
-          if ok_p and matcher then
-            table.insert(headline_dates, {
-              headline_date = self.from:clone({ active = true, type = 'NONE' }),
-              headline = headline,
-              _diary_matcher = matcher,
-            })
-          end
+      for _, entry in ipairs(headline:get_diary_sexps()) do
+        local matcher = entry.expr and DiarySexp.parse(entry.expr) or nil
+        if matcher then
+          table.insert(headline_dates, {
+            headline_date = self.from:clone({ active = true, type = 'NONE' }),
+            headline = headline,
+            _diary_matcher = matcher,
+          })
         end
       end
     end
     -- Also include file-level diary sexp entries (outside headlines)
-    local ok_f, diary_file_entries = pcall(function()
-      return orgfile:get_diary_sexps()
-    end)
-    if ok_f and diary_file_entries then
-      for _, entry in ipairs(diary_file_entries) do
-        local ok_p, matcher = pcall(function()
-          return entry.expr and DiarySexp.parse(entry.expr) or nil
-        end)
-        if ok_p and matcher then
-          table.insert(headline_dates, {
-            headline_date = self.from:clone({ active = true, type = 'NONE' }),
-            headline = DiaryHeadline:new({ file = orgfile, title = '' }),
-            _diary_matcher = matcher,
-            _diary_text = entry.text,
-            _diary_file_level = true,
-            _diary_file = orgfile,
-            _diary_expr = entry.expr,
-          })
-        end
+    for _, entry in ipairs(orgfile:get_diary_sexps()) do
+      local matcher = entry.expr and DiarySexp.parse(entry.expr) or nil
+      if matcher then
+        table.insert(headline_dates, {
+          headline_date = self.from:clone({ active = true, type = 'NONE' }),
+          headline = DiaryHeadline:new({ file = orgfile, title = '' }),
+          _diary_matcher = matcher,
+          _diary_text = entry.text,
+          _diary_file_level = true,
+          _diary_file = orgfile,
+          _diary_expr = entry.expr,
+        })
       end
     end
   end
@@ -658,13 +625,10 @@ function OrgAgendaType:_get_agenda_days()
       local headline = item.headline
       local agenda_item = AgendaItem:new(item.headline_date, headline, day, index)
       if item._diary_matcher then
-        local ok_m, matches = pcall(function()
-          return item._diary_matcher:matches(day)
-        end)
-        matches = ok_m and matches or false
+        local matches = item._diary_matcher:matches(day)
         -- Compress diary-remind to a single pre-reminder per visible span + the event day
         if matches and item._diary_expr then
-          local event_date, remind_n = _parse_remind_event_date(item._diary_expr, day)
+          local event_date, remind_n = _get_remind_event_date(item._diary_expr, day)
           if event_date and remind_n then
             local delta = event_date:diff(day)
             if delta == 0 then
@@ -689,7 +653,7 @@ function OrgAgendaType:_get_agenda_days()
         agenda_item.is_same_day = matches
         if matches and item._diary_file_level and item._diary_text and item._diary_text ~= '' then
           local interpolated = DiaryFormat.interpolate(item._diary_text, item._diary_expr or '', day)
-          local event_date, remind_n = _parse_remind_event_date(item._diary_expr or '', day)
+          local event_date, remind_n = _get_remind_event_date(item._diary_expr or '', day)
           if event_date and remind_n then
             local delta = event_date:diff(day)
             if delta > 0 and delta <= remind_n then
@@ -708,20 +672,6 @@ function OrgAgendaType:_get_agenda_days()
     end
 
     vim.list_extend(date.agenda_items, self:_prepare_grid_lines(dates, date))
-
-    -- After collecting items for this day, hide duplicate diary-remind entries across days within the reminder window
-    date.agenda_items = vim.tbl_filter(function(ai)
-      if not ai.headline or type(ai.headline.get_title) ~= 'function' then
-        return true
-      end
-      local title = (ai.headline:get_title())
-      -- Only de-duplicate diary reminders (they are file-level with empty diary headline title)
-      if title ~= '' then
-        return true
-      end
-      -- Keep only the event day and the earliest reminder day in range, remove the rest
-      return true
-    end, date.agenda_items)
 
     date.agenda_items = self:_sort(date.agenda_items)
     date.category_length = math.max(11, date.category_length + 1)
