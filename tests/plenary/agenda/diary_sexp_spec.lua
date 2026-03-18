@@ -3,7 +3,7 @@ local AgendaType = require('orgmode.agenda.types.agenda')
 local Date = require('orgmode.objects.date')
 
 describe('Diary Sexp in org files', function()
-  it("includes anniversary entry on the correct day", function()
+  it('includes anniversary entry on the correct day', function()
     local files = helpers.create_agenda_files({
       {
         filename = 'a.org',

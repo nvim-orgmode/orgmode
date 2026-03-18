@@ -865,7 +865,12 @@ function Headline:get_diary_sexps()
         start_col = start_col + s - 1,
         end_col = start_col + e - 1,
       })
-      table.insert(results, { expr = content, range = range, active = open_char == '<', marker = (open_char or '') .. '%%(' .. content .. ')' .. (close_char or '') })
+      table.insert(results, {
+        expr = content,
+        range = range,
+        active = open_char == '<',
+        marker = (open_char or '') .. '%%(' .. content .. ')' .. (close_char or ''),
+      })
       idx = e + 1
     end
   end

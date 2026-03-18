@@ -60,5 +60,3 @@ function DiaryHeadline:is_clocked_in()
 end
 
 return DiaryHeadline
-
-

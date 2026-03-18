@@ -338,7 +338,8 @@ local function eval(ast, date)
     if month and date.month ~= month then
       return false
     end
-    if not month and tostring(month_arg):lower() ~= 't' then
+    -- month_arg of t is parsed as boolean true (any month)
+    if not month and month_arg ~= true then
       return false
     end
     if dow == nil or nth == nil then
@@ -454,6 +455,9 @@ function M.parse(expr)
     return nil
   end
   local trimmed = vim.trim(expr)
+  if trimmed == '' then
+    return nil
+  end
   if not trimmed:match('^%(') then
     trimmed = '(' .. trimmed .. ')'
   end
@@ -481,5 +485,3 @@ function M.extract_remind_info(expr)
 end
 
 return M
-
-

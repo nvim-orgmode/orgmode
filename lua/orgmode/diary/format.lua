@@ -56,5 +56,3 @@ function M.interpolate(text, expr, date)
 end
 
 return M
-
-

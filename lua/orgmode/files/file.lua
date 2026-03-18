@@ -846,42 +846,43 @@ function OrgFile:get_diary_sexps()
           break
         end
         -- Skip timestamp-wrapped sexps like <%%(...)> or [%%(...)]
+        local is_wrapped = false
         if start_idx > 1 then
           local prev = line:sub(start_idx - 1, start_idx - 1)
-          if prev == '<' or prev == '[' then
-            search_from = start_idx + 3
-            goto continue
-          end
+          is_wrapped = prev == '<' or prev == '['
         end
-        local expr_start = start_idx + 3 -- after "%%("
-        local depth = 1
-        local j = expr_start
-        local close_idx = nil
-        while j <= #line do
-          local ch = line:sub(j, j)
-          if ch == '(' then
-            depth = depth + 1
-          elseif ch == ')' then
-            depth = depth - 1
-            if depth == 0 then
-              close_idx = j
-              break
+        if is_wrapped then
+          search_from = start_idx + 3
+        else
+          local expr_start = start_idx + 3 -- after "%%("
+          local depth = 1
+          local j = expr_start
+          local close_idx = nil
+          while j <= #line do
+            local ch = line:sub(j, j)
+            if ch == '(' then
+              depth = depth + 1
+            elseif ch == ')' then
+              depth = depth - 1
+              if depth == 0 then
+                close_idx = j
+                break
+              end
             end
+            j = j + 1
           end
-          j = j + 1
+          if not close_idx then
+            break
+          end
+          local expr = line:sub(expr_start, close_idx - 1)
+          local after_text = vim.trim(line:sub(close_idx + 1))
+          table.insert(entries, {
+            expr = expr,
+            text = after_text,
+            range = Range.from_line(i),
+          })
+          search_from = close_idx + 1
         end
-        if not close_idx then
-          break
-        end
-        local expr = line:sub(expr_start, close_idx - 1)
-        local after_text = vim.trim(line:sub(close_idx + 1))
-        table.insert(entries, {
-          expr = expr,
-          text = after_text,
-          range = Range.from_line(i),
-        })
-        search_from = close_idx + 1
-        ::continue::
       end
     end
   end
