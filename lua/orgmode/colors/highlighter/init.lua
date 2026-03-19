@@ -78,6 +78,7 @@ function OrgHighlighter:_on_win(_, win, bufnr, topline, botline)
       end,
     })
   else
+    self.foldtext:check_cache(bufnr)
     self:_parse_tree(bufnr, win, { topline, botline + 1 })
     if self.parsing[win] then
       for line = topline, botline do
