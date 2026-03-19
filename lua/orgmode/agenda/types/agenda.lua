@@ -10,6 +10,21 @@ local ClockReport = require('orgmode.clock.report')
 local utils = require('orgmode.utils')
 local SortingStrategy = require('orgmode.agenda.sorting_strategy')
 local Promise = require('orgmode.utils.promise')
+local DiaryHeadline = require('orgmode.agenda.diary_headline')
+local DiaryFormat = require('orgmode.diary.format')
+local DiarySexp = require('orgmode.diary.sexp')
+
+---@param expr string
+---@param day OrgDate
+---@return OrgDate|nil event_date
+---@return number|nil remind_days
+local function _get_remind_event_date(expr, day)
+  local month, day_of_month, remind_days = DiarySexp.extract_remind_info(expr)
+  if not month or not day_of_month or not remind_days then
+    return nil, nil
+  end
+  return day:set({ month = month, day = day_of_month }), remind_days
+end
 
 ---@alias OrgAgendaDay { day: OrgDate, agenda_items: OrgAgendaItem[], category_length: number, label_length: 0 }
 
@@ -532,9 +547,10 @@ function OrgAgendaType:_build_line(agenda_item, metadata)
       hl_group = priority_hl_group,
     }))
   end
+  local add_markup = type(headline.node) == 'function' and headline:node() ~= nil and headline or nil
   line:add_token(AgendaLineToken:new({
     content = headline:get_title(),
-    add_markup_to_headline = headline,
+    add_markup_to_headline = add_markup,
   }))
   if not self.remove_tags and #headline:get_tags() > 0 then
     local tags_string = headline:tags_to_string()
@@ -570,16 +586,83 @@ function OrgAgendaType:_get_agenda_days()
           headline = headline,
         })
       end
+      -- Include diary sexp entries
+      for _, entry in ipairs(headline:get_diary_sexps()) do
+        local matcher = entry.expr and DiarySexp.parse(entry.expr) or nil
+        if matcher then
+          table.insert(headline_dates, {
+            headline_date = self.from:clone({ active = true, type = 'NONE' }),
+            headline = headline,
+            _diary_matcher = matcher,
+          })
+        end
+      end
+    end
+    -- Also include file-level diary sexp entries (outside headlines)
+    for _, entry in ipairs(orgfile:get_diary_sexps()) do
+      local matcher = entry.expr and DiarySexp.parse(entry.expr) or nil
+      if matcher then
+        table.insert(headline_dates, {
+          headline_date = self.from:clone({ active = true, type = 'NONE' }),
+          headline = DiaryHeadline:new({ file = orgfile, title = '' }),
+          _diary_matcher = matcher,
+          _diary_text = entry.text,
+          _diary_file_level = true,
+          _diary_file = orgfile,
+          _diary_expr = entry.expr,
+        })
+      end
     end
   end
 
   local headlines = {}
   for _, day in ipairs(dates) do
     local date = { day = day, agenda_items = {}, category_length = 0, label_length = 0 }
+    local today = Date.today()
+    local today_in_span = today:is_between(self.from, self.to, 'day')
 
     for index, item in ipairs(headline_dates) do
       local headline = item.headline
       local agenda_item = AgendaItem:new(item.headline_date, headline, day, index)
+      if item._diary_matcher then
+        local matches = item._diary_matcher:matches(day)
+        -- Compress diary-remind to a single pre-reminder per visible span + the event day
+        if matches and item._diary_expr then
+          local event_date, remind_n = _get_remind_event_date(item._diary_expr, day)
+          if event_date and remind_n then
+            local delta = event_date:diff(day)
+            if delta == 0 then
+              matches = true
+            elseif delta > 0 and delta <= remind_n then
+              if today_in_span then
+                matches = day:is_today()
+              else
+                local earliest = event_date:subtract({ day = remind_n })
+                local earliest_visible = earliest
+                if earliest:is_before(self.from, 'day') then
+                  earliest_visible = self.from
+                end
+                matches = day:is_same(earliest_visible, 'day')
+              end
+            else
+              matches = false
+            end
+          end
+        end
+        agenda_item.is_valid = matches
+        agenda_item.is_same_day = matches
+        if matches and item._diary_file_level and item._diary_text and item._diary_text ~= '' then
+          local interpolated = DiaryFormat.interpolate(item._diary_text, item._diary_expr or '', day)
+          local event_date, remind_n = _get_remind_event_date(item._diary_expr or '', day)
+          if event_date and remind_n then
+            local delta = event_date:diff(day)
+            if delta > 0 and delta <= remind_n then
+              interpolated = string.format('In %d d.: %s', delta, interpolated)
+            end
+          end
+          agenda_item.label = interpolated
+        end
+      end
       if agenda_item.is_valid and self:_matches_filters(headline) then
         table.insert(headlines, headline)
         table.insert(date.agenda_items, agenda_item)
@@ -589,6 +672,7 @@ function OrgAgendaType:_get_agenda_days()
     end
 
     vim.list_extend(date.agenda_items, self:_prepare_grid_lines(dates, date))
+
     date.agenda_items = self:_sort(date.agenda_items)
     date.category_length = math.max(11, date.category_length + 1)
     date.label_length = math.min(11, date.label_length)
