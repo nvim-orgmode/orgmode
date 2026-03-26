@@ -29,12 +29,10 @@ function OrgBuffers.get_buffer_by_filename(filename)
     return OrgBuffers._bufs[resolved_filename]
   end
 
-  -- If filename does not have an org extension, try to find the buf number and return it if filetype is org
-  if not OrgBuffers._is_valid_file_name(resolved_filename) then
-    local bufnr = vim.fn.bufnr(resolved_filename)
-    if bufnr > -1 and vim.bo[bufnr].filetype == 'org' then
-      return bufnr
-    end
+  -- Fall back to buffer lookup in case the cache missed an existing org buffer.
+  local bufnr = vim.fn.bufnr(resolved_filename)
+  if bufnr > -1 and vim.bo[bufnr].filetype == 'org' then
+    return bufnr
   end
 
   return -1
