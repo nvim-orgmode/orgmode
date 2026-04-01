@@ -500,7 +500,8 @@ function Agenda:_bulk_action(action, opts)
   return Promise.resolve()
     :next(function()
       local result = Promise.resolve()
-      for _, line in ipairs(lines) do
+      for i = #lines, 1, -1 do
+        local line = lines[i]
         local headline = line.headline
         result = result:next(function()
           return headline.file:update(function(_)

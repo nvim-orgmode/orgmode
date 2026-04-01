@@ -20,9 +20,9 @@ describe('Agenda visual archive', function()
       return vim.api.nvim_buf_get_name(0):match('agenda')
     end)
 
-    vim.fn.cursor(3, 1)
+    vim.fn.cursor(5, 1)
     vim.cmd('normal! V')
-    vim.cmd('normal! jjj')
+    vim.cmd('normal! jj')
 
     vim.wait(50)
 
@@ -55,9 +55,9 @@ describe('Agenda visual archive', function()
       return vim.api.nvim_buf_get_name(0):match('agenda')
     end)
 
-    vim.fn.cursor(3, 1)
+    vim.fn.cursor(5, 1)
     vim.cmd('normal! V')
-    vim.cmd('normal! jjj')
+    vim.cmd('normal! jj')
 
     vim.wait(50)
 
