@@ -30,6 +30,7 @@ local DefaultConfig = {
     agenda = '  %-12:c%?t% s',
     todo = '  %-12:c',
     tags = '  %-12:c',
+    tags_todo = '  %-12:c',
     search = '  %-12:c',
   },
   org_agenda_hide_empty_blocks = false,
