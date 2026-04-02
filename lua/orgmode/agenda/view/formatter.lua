@@ -45,7 +45,20 @@ function Formatter.format(format_string, agenda_item, metadata, headline)
   local result_content = ''
 
   while pos <= #format_string do
-    local start_pos, end_pos, optional, alignment, width, spaces, var = format_string:find('%%(%??)(%-?)(%d*)(%s*)([:%a]+)', pos)
+    local start_pos, end_pos, prefix, var = format_string:find('%%([%?%-?%d%s]*)([:%a]+)', pos)
+    local is_expr = false
+    if not start_pos then
+      start_pos, end_pos, prefix, var = format_string:find('%%([%?%-?%d%s]*)(%b())', pos)
+      is_expr = true
+    else
+      -- Check if there is an expression before the found variable
+      local s2, e2, p2, v2 = format_string:find('%%([%?%-?%d%s]*)(%b())', pos)
+      if s2 and s2 < start_pos then
+        start_pos, end_pos, prefix, var = s2, e2, p2, v2
+        is_expr = true
+      end
+    end
+
     if not start_pos then
       result_content = result_content .. format_string:sub(pos)
       break
@@ -53,19 +66,35 @@ function Formatter.format(format_string, agenda_item, metadata, headline)
 
     result_content = result_content .. format_string:sub(pos, start_pos - 1)
 
-    local var_key = var
-    if not vars[var_key] and #var_key > 1 then
-      -- Try to match only the first part if it's a known var (e.g. :c is handled, but others might be single char)
-      if vars[var_key:sub(1, 1)] then
-        var_key = var_key:sub(1, 1)
-        -- adjust end_pos back
-        end_pos = start_pos + #optional + #alignment + #width + #spaces + #var_key
-      end
-    end
+    local optional = prefix:match('%?') or ''
+    local alignment = prefix:match('%-') or ''
+    local width = prefix:match('%d+') or ''
+    local spaces = prefix:match('^%s+') or prefix:match('%s+$') or ''
 
     local value = ''
-    if vars[var_key] then
-      value = vars[var_key]()
+    if is_expr then
+      local expr = var:sub(2, -2)
+      local env = {
+        headline = headline,
+        item = agenda_item,
+        metadata = metadata,
+      }
+      setmetatable(env, { __index = _G })
+      local f, err = (loadstring or load)('return ' .. expr)
+      if f then
+        if setfenv then
+          setfenv(f, env)
+        end
+        local ok, res = pcall(f, env)
+        if ok then
+          value = tostring(res or '')
+        end
+      end
+    elseif vars[var] then
+      value = vars[var]()
+    elseif #var > 1 and vars[var:sub(1, 1)] then
+      -- Handle cases like :c if needed, but our vars table already has :c
+      value = vars[var]()
     end
 
     if (optional == '?' or spaces ~= '') and value == '' then
@@ -73,7 +102,7 @@ function Formatter.format(format_string, agenda_item, metadata, headline)
     else
       local w = tonumber(width)
       if not w then
-        if var_key == 'c' or var_key == ':c' then
+        if var == 'c' or var == ':c' then
           w = metadata.category_length
         end
       end
