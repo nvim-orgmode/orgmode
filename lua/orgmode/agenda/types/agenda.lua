@@ -53,6 +53,7 @@ local Promise = require('orgmode.utils.promise')
 ---@field sorting_strategy? OrgAgendaSortingStrategy[]
 ---@field remove_tags? boolean
 ---@field valid_filters? OrgAgendaFilter[]
+---@field org_agenda_prefix_format? table
 ---@field id? string
 ---@field private _grid_times { hour: number, min: number }[]
 local OrgAgendaType = {}
@@ -80,6 +81,7 @@ function OrgAgendaType:new(opts)
     sorting_strategy = opts.sorting_strategy or vim.tbl_get(config.org_agenda_sorting_strategy, 'agenda') or {},
     id = opts.id,
     remove_tags = utils.if_nil(opts.remove_tags, config.org_agenda_remove_tags),
+    org_agenda_prefix_format = opts.org_agenda_prefix_format,
   }
   data.valid_filters = vim.tbl_filter(function(filter)
     return filter and true or false
@@ -512,7 +514,8 @@ function OrgAgendaType:_build_line(agenda_item, metadata)
     },
   })
 
-  local prefix_format = config.org_agenda_prefix_format.agenda
+  local prefix_formats = self.org_agenda_prefix_format or config.org_agenda_prefix_format
+  local prefix_format = prefix_formats.agenda
   local prefix = Formatter.format(prefix_format, agenda_item, metadata)
 
   line:add_token(AgendaLineToken:new({

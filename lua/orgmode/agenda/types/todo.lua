@@ -43,6 +43,7 @@ local Promise = require('orgmode.utils.promise')
 ---@field valid_filters OrgAgendaFilter[]
 ---@field id? string
 ---@field prefix_key string
+---@field org_agenda_prefix_format? table
 local OrgAgendaTodosType = {}
 OrgAgendaTodosType.__index = OrgAgendaTodosType
 
@@ -64,6 +65,7 @@ function OrgAgendaTodosType:new(opts)
     id = opts.id,
     remove_tags = type(opts.remove_tags) == 'boolean' and opts.remove_tags or config.org_agenda_remove_tags,
     prefix_key = opts.prefix_key or 'todo',
+    org_agenda_prefix_format = opts.org_agenda_prefix_format,
   }, OrgAgendaTodosType)
   this.valid_filters = vim.tbl_filter(function(filter)
     return filter and true or false
@@ -148,7 +150,8 @@ function OrgAgendaTodosType:_build_line(headline, metadata)
     metadata = metadata,
   })
 
-  local prefix_format = config.org_agenda_prefix_format[self.prefix_key] or config.org_agenda_prefix_format.todo
+  local prefix_formats = self.org_agenda_prefix_format or config.org_agenda_prefix_format
+  local prefix_format = prefix_formats[self.prefix_key] or prefix_formats.todo
   local prefix = Formatter.format(prefix_format, nil, metadata, headline)
 
   line:add_token(AgendaLineToken:new({
