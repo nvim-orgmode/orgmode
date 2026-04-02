@@ -4,6 +4,7 @@ local Files = require('orgmode.files')
 local AgendaLine = require('orgmode.agenda.view.line')
 local AgendaFilter = require('orgmode.agenda.filter')
 local AgendaLineToken = require('orgmode.agenda.view.token')
+local Formatter = require('orgmode.agenda.view.formatter')
 local utils = require('orgmode.utils')
 local agenda_highlights = require('orgmode.colors.highlights')
 local hl_map = agenda_highlights.get_agenda_hl_map()
@@ -41,6 +42,7 @@ local Promise = require('orgmode.utils.promise')
 ---@field remove_tags? boolean
 ---@field valid_filters OrgAgendaFilter[]
 ---@field id? string
+---@field prefix_key string
 local OrgAgendaTodosType = {}
 OrgAgendaTodosType.__index = OrgAgendaTodosType
 
@@ -61,6 +63,7 @@ function OrgAgendaTodosType:new(opts)
     sorting_strategy = opts.sorting_strategy or vim.tbl_get(config.org_agenda_sorting_strategy, 'todo') or {},
     id = opts.id,
     remove_tags = type(opts.remove_tags) == 'boolean' and opts.remove_tags or config.org_agenda_remove_tags,
+    prefix_key = opts.prefix_key or 'todo',
   }, OrgAgendaTodosType)
   this.valid_filters = vim.tbl_filter(function(filter)
     return filter and true or false
@@ -144,8 +147,12 @@ function OrgAgendaTodosType:_build_line(headline, metadata)
     line_hl_group = headline:is_clocked_in() and 'Visual' or nil,
     metadata = metadata,
   })
+
+  local prefix_format = config.org_agenda_prefix_format[self.prefix_key] or config.org_agenda_prefix_format.todo
+  local prefix = Formatter.format(prefix_format, nil, metadata, headline)
+
   line:add_token(AgendaLineToken:new({
-    content = '  ' .. utils.pad_right(('%s:'):format(headline:get_category()), metadata.category_length),
+    content = prefix,
   }))
 
   local todo, _, todo_type = headline:get_todo()

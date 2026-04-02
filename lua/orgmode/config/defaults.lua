@@ -26,6 +26,12 @@ local DefaultConfig = {
   org_agenda_skip_deadline_if_done = false,
   org_agenda_text_search_extra_files = {},
   org_agenda_custom_commands = {},
+  org_agenda_prefix_format = {
+    agenda = '  %-12:c%?t% s',
+    todo = '  %-12:c',
+    tags = '  %-12:c',
+    search = '  %-12:c',
+  },
   org_agenda_hide_empty_blocks = false,
   org_agenda_block_separator = '-',
   org_agenda_sorting_strategy = {

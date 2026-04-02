@@ -6,6 +6,7 @@ local AgendaItem = require('orgmode.agenda.agenda_item')
 local AgendaView = require('orgmode.agenda.view.init')
 local AgendaLine = require('orgmode.agenda.view.line')
 local AgendaLineToken = require('orgmode.agenda.view.token')
+local Formatter = require('orgmode.agenda.view.formatter')
 local ClockReport = require('orgmode.clock.report')
 local utils = require('orgmode.utils')
 local SortingStrategy = require('orgmode.agenda.sorting_strategy')
@@ -510,11 +511,12 @@ function OrgAgendaType:_build_line(agenda_item, metadata)
       label_length = metadata.label_length,
     },
   })
+
+  local prefix_format = config.org_agenda_prefix_format.agenda
+  local prefix = Formatter.format(prefix_format, agenda_item, metadata)
+
   line:add_token(AgendaLineToken:new({
-    content = '  ' .. utils.pad_right(('%s:'):format(headline:get_category()), metadata.category_length),
-  }))
-  line:add_token(AgendaLineToken:new({
-    content = utils.pad_right(agenda_item.label, metadata.label_length),
+    content = prefix,
   }))
   local todo = headline:get_todo()
   if todo then
