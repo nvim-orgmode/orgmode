@@ -249,6 +249,10 @@ function OrgAgendaType:render(bufnr, current_line)
   end
   local agenda_days = self:_get_agenda_days()
 
+  local prefix_formats = self.org_agenda_prefix_format or config.org_agenda_prefix_format
+  local prefix_format = prefix_formats.agenda
+  local compiled_prefix = Formatter.compile(prefix_format)
+
   local agendaView = AgendaView:new({ bufnr = self.bufnr, highlighter = self.highlighter })
   agendaView:add_line(AgendaLine:single_token({
     content = self:_get_title(),
@@ -272,7 +276,7 @@ function OrgAgendaType:render(bufnr, current_line)
     for _, agenda_item in ipairs(agenda_day.agenda_items) do
       -- If there is an index value, this is an AgendaItem instance
       if agenda_item.index then
-        agendaView:add_line(self:_build_line(agenda_item, agenda_day))
+        agendaView:add_line(self:_build_line(agenda_item, agenda_day, compiled_prefix))
       else
         agendaView:add_line(self:_build_time_grid_line(agenda_item, agenda_day))
       end
@@ -499,8 +503,9 @@ end
 ---@private
 ---@param agenda_item OrgAgendaItem
 ---@param metadata table<string, any>
+---@param compiled_prefix? OrgAgendaFormatterSegment[]
 ---@return OrgAgendaLine
-function OrgAgendaType:_build_line(agenda_item, metadata)
+function OrgAgendaType:_build_line(agenda_item, metadata, compiled_prefix)
   local headline = agenda_item.headline
   local item_hl_group = agenda_item:get_hlgroup()
   local line = AgendaLine:new({
@@ -515,7 +520,7 @@ function OrgAgendaType:_build_line(agenda_item, metadata)
   })
 
   local prefix_formats = self.org_agenda_prefix_format or config.org_agenda_prefix_format
-  local prefix_format = prefix_formats.agenda
+  local prefix_format = compiled_prefix or Formatter.compile(prefix_formats.agenda)
   local prefix = Formatter.format(prefix_format, agenda_item, metadata)
 
   line:add_token(AgendaLineToken:new({

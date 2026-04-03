@@ -111,6 +111,11 @@ end
 function OrgAgendaTodosType:render(bufnr)
   self.bufnr = bufnr or 0
   local headlines, category_length = self:_get_headlines()
+
+  local prefix_formats = self.org_agenda_prefix_format or config.org_agenda_prefix_format
+  local prefix_format = prefix_formats[self.prefix_key] or prefix_formats.todo
+  local compiled_prefix = Formatter.compile(prefix_format)
+
   local agendaView = AgendaView:new({ bufnr = self.bufnr, highlighter = self.highlighter })
 
   -- If custom view and no headlines, return empty view
@@ -132,7 +137,7 @@ function OrgAgendaTodosType:render(bufnr)
   end
 
   for _, headline in ipairs(headlines) do
-    agendaView:add_line(self:_build_line(headline, { category_length = category_length }))
+    agendaView:add_line(self:_build_line(headline, { category_length = category_length }, compiled_prefix))
   end
 
   self.view = agendaView:render()
@@ -142,8 +147,9 @@ end
 ---@private
 ---@param headline OrgHeadline
 ---@param metadata table<string, any>
+---@param compiled_prefix? OrgAgendaFormatterSegment[]
 ---@return OrgAgendaLine
-function OrgAgendaTodosType:_build_line(headline, metadata)
+function OrgAgendaTodosType:_build_line(headline, metadata, compiled_prefix)
   local line = AgendaLine:new({
     headline = headline,
     line_hl_group = headline:is_clocked_in() and 'Visual' or nil,
@@ -151,7 +157,7 @@ function OrgAgendaTodosType:_build_line(headline, metadata)
   })
 
   local prefix_formats = self.org_agenda_prefix_format or config.org_agenda_prefix_format
-  local prefix_format = prefix_formats[self.prefix_key] or prefix_formats.todo
+  local prefix_format = compiled_prefix or Formatter.compile(prefix_formats[self.prefix_key] or prefix_formats.todo)
   local prefix = Formatter.format(prefix_format, nil, metadata, headline)
 
   line:add_token(AgendaLineToken:new({

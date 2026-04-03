@@ -21,7 +21,7 @@ end
 ---@field date_range_days number
 ---@field label string
 ---@field time string
----@field extra string
+---@field marker string
 ---@field index number
 local AgendaItem = {}
 
@@ -80,7 +80,7 @@ end
 
 function AgendaItem:_generate_data()
   self.time = self.headline_date:has_time() and self:_format_time(self.headline_date) or ''
-  self.extra = self:_generate_extra()
+  self.marker = self:_generate_marker()
   self.label = self:_generate_label()
 end
 
@@ -156,8 +156,8 @@ function AgendaItem:_is_valid_for_date()
 
   return false
 end
-
-function AgendaItem:_generate_extra()
+---@private
+function AgendaItem:_generate_marker()
   if self.headline_date:is_deadline() then
     if self.is_same_day then
       return 'Deadline:'
@@ -189,6 +189,7 @@ function AgendaItem:_generate_extra()
   return ''
 end
 
+
 function AgendaItem:_generate_label()
   local include_time = self.time ~= ''
   if (self.headline_date:is_deadline() or self.headline_date:is_scheduled()) and not self.is_same_day then
@@ -200,7 +201,7 @@ function AgendaItem:_generate_label()
   end
 
   local time = include_time and add_padding(self.time) or ''
-  return time .. self.extra
+  return time .. self.marker
 end
 
 ---@private

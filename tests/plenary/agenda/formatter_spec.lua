@@ -106,6 +106,13 @@ describe('Agenda formatter', function()
     result = Formatter.format(format, agenda_item, metadata)
     assert.are.same('agenda_test', result)
 
+    -- Test access to item marker
+    format = '%(item.marker)'
+    headline = generate_headline(string.format('DEADLINE: <%s>', today:to_string()))
+    agenda_item = AgendaItem:new(headline:get_all_dates()[1], headline, today)
+    result = Formatter.format(format, agenda_item, metadata)
+    assert.are.same('Deadline:', result)
+
     _G.test_prefix = nil
   end)
 
