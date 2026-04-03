@@ -6,6 +6,7 @@ local AgendaItem = require('orgmode.agenda.agenda_item')
 local AgendaView = require('orgmode.agenda.view.init')
 local AgendaLine = require('orgmode.agenda.view.line')
 local AgendaLineToken = require('orgmode.agenda.view.token')
+local Formatter = require('orgmode.agenda.view.formatter')
 local ClockReport = require('orgmode.clock.report')
 local utils = require('orgmode.utils')
 local SortingStrategy = require('orgmode.agenda.sorting_strategy')
@@ -52,6 +53,7 @@ local Promise = require('orgmode.utils.promise')
 ---@field sorting_strategy? OrgAgendaSortingStrategy[]
 ---@field remove_tags? boolean
 ---@field valid_filters? OrgAgendaFilter[]
+---@field org_agenda_prefix_format? table
 ---@field id? string
 ---@field private _grid_times { hour: number, min: number }[]
 local OrgAgendaType = {}
@@ -79,6 +81,7 @@ function OrgAgendaType:new(opts)
     sorting_strategy = opts.sorting_strategy or vim.tbl_get(config.org_agenda_sorting_strategy, 'agenda') or {},
     id = opts.id,
     remove_tags = utils.if_nil(opts.remove_tags, config.org_agenda_remove_tags),
+    org_agenda_prefix_format = opts.org_agenda_prefix_format,
   }
   data.valid_filters = vim.tbl_filter(function(filter)
     return filter and true or false
@@ -246,6 +249,10 @@ function OrgAgendaType:render(bufnr, current_line)
   end
   local agenda_days = self:_get_agenda_days()
 
+  local prefix_formats = self.org_agenda_prefix_format or config.org_agenda_prefix_format
+  local prefix_format = prefix_formats.agenda
+  local compiled_prefix = Formatter.compile(prefix_format)
+
   local agendaView = AgendaView:new({ bufnr = self.bufnr, highlighter = self.highlighter })
   agendaView:add_line(AgendaLine:single_token({
     content = self:_get_title(),
@@ -269,7 +276,7 @@ function OrgAgendaType:render(bufnr, current_line)
     for _, agenda_item in ipairs(agenda_day.agenda_items) do
       -- If there is an index value, this is an AgendaItem instance
       if agenda_item.index then
-        agendaView:add_line(self:_build_line(agenda_item, agenda_day))
+        agendaView:add_line(self:_build_line(agenda_item, agenda_day, compiled_prefix))
       else
         agendaView:add_line(self:_build_time_grid_line(agenda_item, agenda_day))
       end
@@ -496,8 +503,9 @@ end
 ---@private
 ---@param agenda_item OrgAgendaItem
 ---@param metadata table<string, any>
+---@param compiled_prefix? OrgAgendaFormatterSegment[]
 ---@return OrgAgendaLine
-function OrgAgendaType:_build_line(agenda_item, metadata)
+function OrgAgendaType:_build_line(agenda_item, metadata, compiled_prefix)
   local headline = agenda_item.headline
   local item_hl_group = agenda_item:get_hlgroup()
   local line = AgendaLine:new({
@@ -510,11 +518,13 @@ function OrgAgendaType:_build_line(agenda_item, metadata)
       label_length = metadata.label_length,
     },
   })
+
+  local prefix_formats = self.org_agenda_prefix_format or config.org_agenda_prefix_format
+  local prefix_format = compiled_prefix or Formatter.compile(prefix_formats.agenda)
+  local prefix = Formatter.format(prefix_format, agenda_item, metadata)
+
   line:add_token(AgendaLineToken:new({
-    content = '  ' .. utils.pad_right(('%s:'):format(headline:get_category()), metadata.category_length),
-  }))
-  line:add_token(AgendaLineToken:new({
-    content = utils.pad_right(agenda_item.label, metadata.label_length),
+    content = prefix,
   }))
   local todo = headline:get_todo()
   if todo then
