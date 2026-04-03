@@ -261,6 +261,14 @@ return {
       'org_mappings.do_demote',
       { opts = { desc = 'org demote headline', help_desc = 'Demote headline' } }
     ),
+    org_do_promote_visual = m.action('org_mappings.do_promote_visual', {
+      modes = { 'x' },
+      opts = { desc = 'org promote visual', help_desc = 'Promote selected headlines' },
+    }),
+    org_do_demote_visual = m.action('org_mappings.do_demote_visual', {
+      modes = { 'x' },
+      opts = { desc = 'org demote visual', help_desc = 'Demote selected headlines' },
+    }),
     org_promote_subtree = m.action(
       'org_mappings.do_promote',
       { args = { true }, opts = { desc = 'org promote subtree', help_desc = 'Promote whole subtree' } }
