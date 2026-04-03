@@ -2310,6 +2310,7 @@ these types:
 - Planning keywords (=DEADLINE=, =SCHEDULED=, =CLOSED=)
 - Orgfile special keywords (=#+TITLE=, =#+BEGIN_SRC=, =#+ARCHIVE=, etc.)
 - Hyperlinks (=* - headlines=, =# - headlines with CUSTOM_ID property=, =headlines matching title=)
+- Citation keys (inside =[cite:...]= blocks after =@=)
 
 Autocompletion is context aware, which means that for example
 tags autocompletion will kick in only when cursor is at the end of
@@ -2536,6 +2537,162 @@ require('orgmode').setup({
       }
     }
   }
+})
+#+end_src
+
+*** Citations
+:PROPERTIES:
+:CUSTOM_ID: citations
+:END:
+Orgmode supports [[https://orgmode.org/manual/Citation-handling.html][Org 9.5 citations]] using the =[cite:@key]= syntax.
+For example:
+
+#+begin_src org
+See [cite:@smith2020] for details, or [cite/t:@jones2021;@doe2022] for a
+textual citation.
+#+end_src
+
+The citation key under the cursor can be followed to its bibliography entry
+using the same =org_open_at_point= mapping (=<Leader>oo= by default) that is
+used for hyperlinks.
+
+Citation key autocompletion is provided via the standard =omnifunc= (triggered
+by =<C-x><C-o>= in insert mode). Completion is active inside any =[cite:...]=
+or =[cite/style:...]=, after the =@= character.
+
+**** Bibliography files
+:PROPERTIES:
+:CUSTOM_ID: citations-bibliography-files
+:END:
+The built-in BibTeX source reads citation keys from =.bib= files.  Two
+discovery mechanisms are available (both can be used simultaneously):
+
+***** Global bibliography
+:PROPERTIES:
+:CUSTOM_ID: org_cite_global_bibliography
+:END:
+Set =citations.org_cite_global_bibliography= to a path or list of paths that
+are always searched, regardless of which file is open:
+
+#+begin_src lua
+require('orgmode').setup({
+  citations = {
+    org_cite_global_bibliography = {
+      '~/references/global.bib',
+      '~/references/books.bib',
+    },
+  },
+})
+#+end_src
+
+A single string is also accepted:
+
+#+begin_src lua
+require('orgmode').setup({
+  citations = {
+    org_cite_global_bibliography = '~/references/global.bib',
+  },
+})
+#+end_src
+
+***** File-local bibliography
+:PROPERTIES:
+:CUSTOM_ID: citations-file-local-bibliography
+:END:
+Any =.org= file can declare its own bibliography with one or more
+=#+bibliography:= directives.  Paths are resolved relative to the org file:
+
+#+begin_src org
+#+bibliography: refs.bib
+#+bibliography: /absolute/path/to/extra.bib
+
+* Introduction
+See [cite:@smith2020] for background.
+#+end_src
+
+**** Custom citation sources
+:PROPERTIES:
+:CUSTOM_ID: citations-custom-sources
+:END:
+Additional citation sources can be registered via =citations.sources=.  Each
+source is a table (or object) that implements the =OrgCitationSource=
+interface:
+
+- =get_name()= (required) — return a unique name string for the source.
+- =get_items()= (required) — return a list of =OrgCitationItem= tables.
+  Each item must have a =key= field, and may optionally have =label= and
+  =description= fields used in completion menus.
+- =follow(key)= (optional) — navigate to the entry for =key=; return =true=
+  if handled, =false= to fall through to the next source.
+
+#+begin_src lua
+require('orgmode').setup({
+  citations = {
+    sources = {
+      {
+        get_name = function() return 'my_source' end,
+        get_items = function()
+          return {
+            { key = 'smith2020', description = 'Smith et al. 2020' },
+            { key = 'jones2021' },
+          }
+        end,
+        follow = function(self, key)
+          vim.notify('Citation: ' .. key)
+          return true
+        end,
+      },
+    },
+  },
+})
+#+end_src
+
+***** Example: Zotero Local API
+:PROPERTIES:
+:CUSTOM_ID: citations-zotero-local-api
+:END:
+[[https://www.zotero.org][Zotero]] exposes a local HTTP API on =http://localhost:23119= (requires the
+Zotero desktop application to be running).  The example below defines a
+custom source that queries the local API for all library items and exposes
+their citation keys for completion.
+#+begin_src lua
+local ZoteroSource = {}
+
+function ZoteroSource:get_name()
+  return 'zotero'
+end
+
+function ZoteroSource:get_items()
+  local curl = require('plenary.curl')
+  local res = curl.get {
+    url = 'http://localhost:23119/api/users/0/items?format=json',
+    accept = 'application/json',
+  }
+  if res.status == 200 then
+    local data = vim.json.decode(res.body or '') or {}
+    local items = {}
+    for _, entry in ipairs(data) do
+      local d = entry.data or {}
+      if d.citationKey then
+        local creators = d.creators or {}
+        local author = (creators[1] or {}).lastName or ''
+        local year = (d.date or ''):match('%d%d%d%d') or ''
+        table.insert(items, {
+          key = d.citationKey,
+          description = author .. year .. ' ' .. (d.title or ''),
+        })
+      end
+    end
+    return items
+  else
+    return {}
+  end
+end
+
+require('orgmode').setup({
+  citations = {
+    sources = { ZoteroSource },
+  },
 })
 #+end_src
 

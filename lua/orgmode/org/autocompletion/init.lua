@@ -1,6 +1,7 @@
 ---@class OrgCompletion
 ---@field files OrgFiles
 ---@field links OrgLinks
+---@field citations OrgCitations
 ---@field private sources OrgCompletionSource[]
 ---@field private sources_by_name table<string, OrgCompletionSource>
 ---@field private fuzzy_match? boolean does completeopt has fuzzy option
@@ -10,11 +11,12 @@ local OrgCompletion = {
 }
 OrgCompletion.__index = OrgCompletion
 
----@param opts { files: OrgFiles, links: OrgLinks }
+---@param opts { files: OrgFiles, links: OrgLinks, citations: OrgCitations }
 function OrgCompletion:new(opts)
   local this = setmetatable({
     files = opts.files,
     links = opts.links,
+    citations = opts.citations,
     sources = {},
     sources_by_name = {},
     fuzzy_match = vim.tbl_contains(vim.opt_local.completeopt:get(), 'fuzzy'),
@@ -31,6 +33,7 @@ function OrgCompletion:setup_builtin_sources()
   self:add_source(require('orgmode.org.autocompletion.sources.directives'):new())
   self:add_source(require('orgmode.org.autocompletion.sources.properties'):new({ completion = self }))
   self:add_source(require('orgmode.org.autocompletion.sources.hyperlinks'):new({ completion = self }))
+  self:add_source(require('orgmode.org.autocompletion.sources.citations'):new({ completion = self }))
 end
 
 ---@param source OrgCompletionSource
