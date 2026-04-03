@@ -159,8 +159,12 @@ function OrgAgendaTodosType:_jump_to_item(line)
   if not agenda_line or not agenda_line.headline then
     return
   end
+  local target_headline = agenda_line.headline
+  local target_file = target_headline.file.filename
+  local target_id = target_headline.headline:id()
+
   for _, l in ipairs(self.view.lines) do
-    if l.headline and l.headline:id_get_or_create() == agenda_line.headline:id_get_or_create() then
+    if l.headline and l.headline.file.filename == target_file and l.headline.headline:id() == target_id then
       return vim.fn.cursor({ l.line_nr, 0 })
     end
   end
