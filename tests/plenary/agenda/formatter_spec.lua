@@ -18,7 +18,7 @@ describe('Agenda formatter', function()
     local headline = generate_headline(string.format('<%s>', today:to_string()))
     local agenda_item = AgendaItem:new(headline:get_all_dates()[1], headline, today)
     local metadata = { category_length = 10 }
-    
+
     local format = '%c'
     local result = Formatter.format(format, agenda_item, metadata)
     assert.are.same('agenda_test', result)
@@ -86,16 +86,16 @@ describe('Agenda formatter', function()
     local headline = generate_headline(string.format('<%s>', today:to_string()))
     local agenda_item = AgendaItem:new(headline:get_all_dates()[1], headline, today)
     local metadata = { category_length = 10 }
-    
+
     -- Define a global function for testing
     _G.test_prefix = function()
-      return "SHORT"
+      return 'SHORT'
     end
 
     local format = '%(test_prefix())'
     local result = Formatter.format(format, agenda_item, metadata)
     assert.are.same('SHORT', result)
-    
+
     -- Test with width and alignment
     format = '%10(test_prefix())'
     result = Formatter.format(format, agenda_item, metadata)

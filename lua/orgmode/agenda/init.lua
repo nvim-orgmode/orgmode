@@ -156,7 +156,8 @@ function Agenda:_build_custom_commands()
     opts_by_type[opts.type].category_filter = opts.org_agenda_category_filter_preset
     opts_by_type[opts.type].highlighter = self.highlighter
     opts_by_type[opts.type].remove_tags = utils.if_nil(opts.org_agenda_remove_tags, parent_opts.org_agenda_remove_tags)
-    opts_by_type[opts.type].org_agenda_prefix_format = utils.if_nil(opts.org_agenda_prefix_format, parent_opts.org_agenda_prefix_format)
+    opts_by_type[opts.type].org_agenda_prefix_format =
+      utils.if_nil(opts.org_agenda_prefix_format, parent_opts.org_agenda_prefix_format)
     opts_by_type[opts.type].id = id
 
     return opts_by_type[opts.type]

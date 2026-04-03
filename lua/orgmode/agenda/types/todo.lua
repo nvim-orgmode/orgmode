@@ -108,8 +108,14 @@ function OrgAgendaTodosType:_get_header()
 end
 
 ---@param bufnr? number
-function OrgAgendaTodosType:render(bufnr)
+---@param current_line? number
+function OrgAgendaTodosType:render(bufnr, current_line)
   self.bufnr = bufnr or 0
+  local was_line_in_view = true
+  if self.view then
+    was_line_in_view = self.view:is_in_range(current_line)
+  end
+
   local headlines, category_length = self:_get_headlines()
 
   local prefix_formats = self.org_agenda_prefix_format or config.org_agenda_prefix_format
@@ -141,7 +147,23 @@ function OrgAgendaTodosType:render(bufnr)
   end
 
   self.view = agendaView:render()
+  if was_line_in_view then
+    self:_jump_to_item(current_line)
+  end
   return self.view
+end
+
+---@private
+function OrgAgendaTodosType:_jump_to_item(line)
+  local agenda_line = self:get_line(line)
+  if not agenda_line or not agenda_line.headline then
+    return
+  end
+  for _, l in ipairs(self.view.lines) do
+    if l.headline and l.headline:id_get_or_create() == agenda_line.headline:id_get_or_create() then
+      return vim.fn.cursor({ l.line_nr, 0 })
+    end
+  end
 end
 
 ---@private

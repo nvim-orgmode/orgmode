@@ -189,7 +189,6 @@ function AgendaItem:_generate_marker()
   return ''
 end
 
-
 function AgendaItem:_generate_label()
   local include_time = self.time ~= ''
   if (self.headline_date:is_deadline() or self.headline_date:is_scheduled()) and not self.is_same_day then
