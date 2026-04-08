@@ -126,7 +126,7 @@ function Org:setup_autocmds()
     end,
   })
 
-  vim.api.nvim_create_autocmd({ 'BufNew' }, {
+  vim.api.nvim_create_autocmd({ 'BufNew', 'BufRead' }, {
     pattern = { '*.org', '*.org_archive' },
     group = org_augroup,
     callback = function(event)
