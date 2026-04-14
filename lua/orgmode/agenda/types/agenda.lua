@@ -9,7 +9,6 @@ local AgendaLineToken = require('orgmode.agenda.view.token')
 local ClockReport = require('orgmode.clock.report')
 local utils = require('orgmode.utils')
 local SortingStrategy = require('orgmode.agenda.sorting_strategy')
-local Promise = require('orgmode.utils.promise')
 
 ---@alias OrgAgendaDay { day: OrgDate, agenda_items: OrgAgendaItem[], category_length: number, label_length: 0 }
 
@@ -95,7 +94,7 @@ function OrgAgendaType:new(opts)
 end
 
 function OrgAgendaType:prepare()
-  return Promise.resolve(self)
+  return self
 end
 
 function OrgAgendaType:redo()

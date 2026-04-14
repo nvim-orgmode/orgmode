@@ -1,52 +1,78 @@
-local Promise = require('orgmode.utils.promise')
+local Async = require('orgmode.utils.async')
 local uv = vim.uv
 local utils = {}
 local debounce_timers = {}
+
+local function ensure_dir(path)
+  if not path or path == '' then
+    return
+  end
+
+  local err, stat = Async.await(2, uv.fs_stat, path)
+  if stat then
+    return
+  end
+  if err and not tostring(err):match('ENOENT:') then
+    error(err)
+  end
+
+  local parent = vim.fs.dirname(path)
+  if parent and parent ~= path then
+    ensure_dir(parent)
+  end
+
+  local mkdir_err = Async.await(3, uv.fs_mkdir, path, 493)
+  if mkdir_err and not tostring(mkdir_err):match('EEXIST:') then
+    error(mkdir_err)
+  end
+end
 
 ---@param file string full path to filename
 ---@param opts? { raw: boolean, schedule: boolean } raw: Return raw results, schedule: wrap results in vim.schedule
 function utils.readfile(file, opts)
   opts = opts or {}
-  return Promise.new(function(resolve, reject)
-    uv.fs_open(file, 'r', 438, function(err1, fd)
-      if err1 then
-        return reject(err1)
+  return Async.run(function()
+    local err1, fd = Async.await(4, uv.fs_open, file, 'r', 438)
+    if err1 then
+      error(err1)
+    end
+    assert(fd)
+
+    local err2, stat = Async.await(2, uv.fs_fstat, fd)
+    if err2 then
+      error(err2)
+    end
+    assert(stat)
+
+    local err3, data = Async.await(4, uv.fs_read, fd, stat.size, 0)
+    if err3 then
+      error(err3)
+    end
+
+    local err4 = Async.await(2, uv.fs_close, fd)
+    if err4 then
+      error(err4)
+    end
+
+    assert(data)
+    local result = nil
+    if opts.raw then
+      result = data
+    else
+      local lines = vim.split(data, '[\r\n]')
+      if lines[#lines] == '' then
+        table.remove(lines, #lines)
       end
-      assert(fd)
-      uv.fs_fstat(fd, function(err2, stat)
-        if err2 then
-          return reject(err2)
-        end
-        assert(stat)
-        uv.fs_read(fd, stat.size, 0, function(err3, data)
-          if err3 then
-            return reject(err3)
-          end
-          uv.fs_close(fd, function(err4)
-            if err4 then
-              return reject(err4)
-            end
-            assert(data)
-            local result = nil
-            if opts.raw then
-              result = data
-            else
-              local lines = vim.split(data, '[\r\n]')
-              if lines[#lines] == '' then
-                table.remove(lines, #lines)
-              end
-              result = lines
-            end
+      result = lines
+    end
 
-            if not opts.schedule then
-              return resolve(result)
-            end
+    if not opts.schedule then
+      return result
+    end
 
-            vim.schedule(function()
-              return resolve(result)
-            end)
-          end)
-        end)
+    return Async.await(1, function(callback)
+      vim.schedule(function()
+        callback(result)
       end)
     end)
   end)
@@ -55,33 +81,35 @@ end
 ---@param file string
 ---@param data string|string[]
 ---@param opts? {excl?: boolean}
----@return OrgPromise<integer> bytes
+---@return OrgTask
 function utils.writefile(file, data, opts)
-  return Promise.new(function(resolve, reject)
+  return Async.run(function()
     local flags = opts and opts.excl and 'wx' or 'w'
-    uv.fs_open(file, flags, 438, function(err1, fd)
-      if err1 then
-        return reject(err1)
-      end
-      assert(fd)
-      uv.fs_fstat(fd, function(err2, stat)
-        if err2 then
-          return reject(err2)
-        end
-        assert(stat)
-        uv.fs_write(fd, data, nil, function(err3, bytes)
-          if err3 then
-            return reject(err3)
-          end
-          uv.fs_close(fd, function(err4)
-            if err4 then
-              return reject(err4)
-            end
-            return resolve(bytes)
-          end)
-        end)
-      end)
-    end)
+    local dir = vim.fs.dirname(file)
+    ensure_dir(dir)
+
+    local err1, fd = Async.await(4, uv.fs_open, file, flags, 438)
+    if err1 then
+      error(err1)
+    end
+    assert(fd)
+
+    local err2 = Async.await(2, uv.fs_fstat, fd)
+    if err2 then
+      error(err2)
+    end
+
+    local err3, bytes = Async.await(4, uv.fs_write, fd, data, nil)
+    if err3 then
+      error(err3)
+    end
+
+    local err4 = Async.await(2, uv.fs_close, fd)
+    if err4 then
+      error(err4)
+    end
+
+    return bytes
   end)
 end
 

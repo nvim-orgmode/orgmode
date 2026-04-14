@@ -8,7 +8,6 @@ local utils = require('orgmode.utils')
 local agenda_highlights = require('orgmode.colors.highlights')
 local hl_map = agenda_highlights.get_agenda_hl_map()
 local SortingStrategy = require('orgmode.agenda.sorting_strategy')
-local Promise = require('orgmode.utils.promise')
 
 ---@class OrgAgendaTodosTypeOpts
 ---@field files OrgFiles
@@ -76,7 +75,7 @@ function OrgAgendaTodosType:new(opts)
 end
 
 function OrgAgendaTodosType:prepare()
-  return Promise.resolve(self)
+  return self
 end
 
 function OrgAgendaTodosType:_setup_agenda_files()

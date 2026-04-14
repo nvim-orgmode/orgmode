@@ -4,7 +4,6 @@ local PriorityState = require('orgmode.objects.priority_state')
 local Date = require('orgmode.objects.date')
 local Calendar = require('orgmode.objects.calendar')
 local Async = require('orgmode.utils.async')
-local Promise = require('orgmode.utils.promise')
 local org = require('orgmode')
 local Buffers = require('orgmode.state.buffers')
 
@@ -146,23 +145,21 @@ end
 
 --- Set deadline date
 ---@param date? OrgDate|string|nil If ommited, opens the datepicker. Empty string removes the date. String must follow org date convention (YYYY-MM-DD HH:mm...)
----@return OrgPromise
+---@return OrgTask
 function OrgHeadline:set_deadline(date)
   return self:_do_action(function()
     local headline = org.files:get_closest_headline()
     local deadline_date = headline:get_deadline_date()
     if not date then
-      return Calendar.new({ date = deadline_date or Date.today(), clearable = true, title = 'Set deadline' })
-        :open()
-        :next(function(new_date, cleared)
-          if cleared then
-            return headline:remove_deadline_date()
-          end
-          if not new_date then
-            return
-          end
-          return headline:set_deadline_date(new_date)
-        end)
+      local new_date, cleared =
+        Calendar.new({ date = deadline_date or Date.today(), clearable = true, title = 'Set deadline' }):open():await()
+      if cleared then
+        return headline:remove_deadline_date()
+      end
+      if not new_date then
+        return
+      end
+      return headline:set_deadline_date(new_date)
     end
 
     if type(date) == 'string' then
@@ -186,23 +183,21 @@ end
 
 --- Set scheduled date
 ---@param date? OrgDate|string|nil If ommited, opens the datepicker. Empty string removes the date. String must follow org date convention (YYYY-MM-DD HH:mm...)
----@return OrgPromise
+---@return OrgTask
 function OrgHeadline:set_scheduled(date)
   return self:_do_action(function()
     local headline = org.files:get_closest_headline()
     local scheduled_date = headline:get_scheduled_date()
     if not date then
-      return Calendar.new({ date = scheduled_date or Date.today(), clearable = true, title = 'Set schedule' })
-        :open()
-        :next(function(new_date, cleared)
-          if cleared then
-            return headline:remove_scheduled_date()
-          end
-          if not new_date then
-            return
-          end
-          return headline:set_scheduled_date(new_date)
-        end)
+      local new_date, cleared =
+        Calendar.new({ date = scheduled_date or Date.today(), clearable = true, title = 'Set schedule' }):open():await()
+      if cleared then
+        return headline:remove_scheduled_date()
+      end
+      if not new_date then
+        return
+      end
+      return headline:set_scheduled_date(new_date)
     end
 
     if type(date) == 'string' then
@@ -260,7 +255,9 @@ function OrgHeadline:_do_action(action)
     local view = vim.fn.winsaveview() or {}
     vim.fn.cursor({ self.position.start_line, 1 })
 
-    Async.awaitable(action())
+    Async.run(function()
+      return action()
+    end):await()
     vim.fn.winrestview(view)
     return self:reload()
   end)

@@ -151,19 +151,23 @@ end
 ---@return Org
 function Org.setup(opts)
   opts = opts or {}
+  local Async = require('orgmode.utils.async')
   local config = require('orgmode.config'):extend(opts)
   config:install_grammar()
   instance = Org:new()
   instance.setup_called = true
   vim.defer_fn(function()
     if config.notifications.enabled and #vim.api.nvim_list_uis() > 0 then
-      Org.files:load():next(vim.schedule_wrap(function()
-        instance.notifications = require('orgmode.notifications')
-          :new({
-            files = Org.files,
-          })
-          :start_timer()
-      end))
+      Async.run(function()
+        Org.files:load():await()
+        vim.schedule(function()
+          instance.notifications = require('orgmode.notifications')
+            :new({
+              files = Org.files,
+            })
+            :start_timer()
+        end)
+      end)
     end
     config:setup_mappings('global')
   end, 1)
@@ -221,7 +225,7 @@ function Org.action(cmd, opts)
   if item and item[parts[#parts]] then
     local method = item[parts[#parts]]
     return Async.run(function()
-      local result = Async.awaitable(method(item, opts))
+      local result = method(item, opts)
       Org._set_dot_repeat(cmd, opts)
       return result
     end, function(err)

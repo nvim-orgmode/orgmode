@@ -1,5 +1,5 @@
 local utils = require('orgmode.utils')
-local Promise = require('orgmode.utils.promise')
+local Async = require('orgmode.utils.async')
 
 ---@class OrgBabelTangle
 ---@field file OrgFile
@@ -66,11 +66,11 @@ function Tangle:tangle()
     vim.list_extend(tangle_info[info.filename], parsed_content)
   end
 
-  local promises = {}
+  local tasks = {}
   for filename, content in pairs(tangle_info) do
-    table.insert(promises, utils.writefile(filename, table.concat(self:_remove_obsolete_indent(content), '\n')))
+    table.insert(tasks, utils.writefile(filename, table.concat(self:_remove_obsolete_indent(content), '\n')))
   end
-  Promise.all(promises):wait()
+  Async.all(tasks):wait()
   utils.echo_info(('Tangled %d blocks from %s'):format(#valid_blocks, vim.fn.fnamemodify(self.file.filename, ':t')))
 end
 

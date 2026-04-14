@@ -1,4 +1,4 @@
-local Promise = require('orgmode.utils.promise')
+local Async = require('orgmode.utils.async')
 local utils = require('orgmode.utils')
 local uv = vim.uv
 local M = {
@@ -205,13 +205,15 @@ function M.select_compiler_args(compiler)
 end
 
 function M.exe(cmd, opts)
-  return Promise.new(function(resolve)
-    local stdin = uv.new_pipe()
-    local stdout = uv.new_pipe()
-    local stderr = uv.new_pipe()
-    opts.stdio = { stdin, stdout, stderr }
-    uv.spawn(cmd, opts, function(code)
-      resolve(code)
+  return Async.run(function()
+    return Async.await(function(resolve)
+      local stdin = uv.new_pipe()
+      local stdout = uv.new_pipe()
+      local stderr = uv.new_pipe()
+      opts.stdio = { stdin, stdout, stderr }
+      uv.spawn(cmd, opts, function(code)
+        resolve(code)
+      end)
     end)
   end)
 end
@@ -257,7 +259,7 @@ function M.get_path(url, type)
 
   if is_local_path then
     utils.notify('Using local version of tree-sitter grammar...', { id = 'orgmode-treesitter-install' })
-    return Promise.resolve(local_path)
+    return Async.done(local_path)
   end
 
   local path = vim.fs.joinpath(vim.fn.stdpath('cache'), 'tree-sitter-org')
@@ -270,9 +272,10 @@ function M.get_path(url, type)
   }
 
   utils.notify(('%s tree-sitter grammar...'):format(msg[type]), { id = 'orgmode-treesitter-install' })
-  return M.exe('git', {
-    args = { 'clone', '--filter=blob:none', '--depth=1', '--branch=' .. required_version, url, path },
-  }):next(function(code)
+  return Async.run(function()
+    local code = M.exe('git', {
+      args = { 'clone', '--filter=blob:none', '--depth=1', '--branch=' .. required_version, url, path },
+    }):await()
     if code ~= 0 then
       error('[orgmode] Failed to clone tree-sitter-org', 0)
     end
@@ -281,7 +284,7 @@ function M.get_path(url, type)
 end
 
 ---@param type? 'install' | 'update' | 'reinstall''
----@return OrgPromise<boolean>
+---@return boolean
 function M.run(type)
   local url = 'https://github.com/nvim-orgmode/tree-sitter-org'
   local compiler = vim.tbl_filter(function(exe)
@@ -297,28 +300,27 @@ function M.run(type)
   local is_win = vim.fn.has('win32') == 1
   local shellslash = is_win and vim.opt.shellslash:get() or false
 
-  return M.get_path(url, type)
-    :next(function(directory)
-      ts_grammar_dir = directory
-      return M.exe(compiler, {
-        args = compiler_args,
-        cwd = directory,
-      })
-    end)
-    :next(function(code)
-      if code ~= 0 then
-        error('[orgmode] Failed to compile parser', 0)
-      end
-      local move_cmd = M.select_mv_cmd('parser.so', M.get_parser_path(), ts_grammar_dir or '', is_win, shellslash)
-      return M.exe(move_cmd.cmd, move_cmd.opts)
-    end)
-    :next(function(code)
-      if code ~= 0 then
-        error('[orgmode] Failed to move generated tree-sitter parser to runtime folder', 0)
-      end
-      return M._write_lock_file({ version = required_version })
-    end)
-    :next(vim.schedule_wrap(function()
+  return Async.run(function()
+    local directory = M.get_path(url, type):await()
+    ts_grammar_dir = directory
+
+    local code = M.exe(compiler, {
+      args = compiler_args,
+      cwd = directory,
+    }):await()
+    if code ~= 0 then
+      error('[orgmode] Failed to compile parser', 0)
+    end
+
+    local move_cmd = M.select_mv_cmd('parser.so', M.get_parser_path(), ts_grammar_dir or '', is_win, shellslash)
+    code = M.exe(move_cmd.cmd, move_cmd.opts):await()
+    if code ~= 0 then
+      error('[orgmode] Failed to move generated tree-sitter parser to runtime folder', 0)
+    end
+
+    M._write_lock_file({ version = required_version }):await()
+
+    vim.schedule(function()
       local msg = { 'Tree-sitter grammar installed!' }
 
       if type == 'update' then
@@ -331,9 +333,9 @@ function M.run(type)
         id = 'orgmode-treesitter-install',
       })
       vim.treesitter.language.add('org')
-      return true
-    end))
-    :wait(60000)
+    end)
+    return true
+  end):wait(60000)
 end
 
 return M

@@ -2,6 +2,7 @@ local config = require('orgmode.config')
 local utils = require('orgmode.utils')
 local OrgLinkUrl = require('orgmode.org.links.url')
 local OrgHyperlink = require('orgmode.org.links.hyperlink')
+local Async = require('orgmode.utils.async')
 local Input = require('orgmode.ui.input')
 
 ---@class OrgLinks:OrgLinkType
@@ -124,7 +125,8 @@ function OrgLinks:insert_link(link_location, desc)
     desc = utils.get_visual_selection()
   end
 
-  return Input.open('Description: ', desc or ''):next(function(link_description)
+  return Async.run(function()
+    local link_description = Input.open('Description: ', desc or ''):await()
     if not link_description then
       return false
     end

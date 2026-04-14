@@ -73,9 +73,9 @@ function OrgMappings:set_tags(tags)
   local new_tags = tags
 
   if not new_tags then
-    new_tags = Async.awaitable(Input.open('Tags: ', current_tags, function(arg_lead)
+    new_tags = Input.open('Tags: ', current_tags, function(arg_lead)
       return utils.prompt_autocomplete(arg_lead, self.files:get_tags())
-    end))
+    end):await()
   elseif type(new_tags) == 'table' then
     new_tags = utils.tags_to_string(new_tags)
   end
@@ -329,7 +329,7 @@ function OrgMappings:change_date()
     return
   end
 
-  local new_date = Async.awaitable(Calendar.new({ date = date, title = 'Change date' }):open())
+  local new_date = Calendar.new({ date = date, title = 'Change date' }):open():await()
   if new_date then
     self:_replace_date(new_date)
   end
@@ -421,7 +421,7 @@ end
 ---@param title string
 ---@return string[] | nil
 function OrgMappings:_get_note(template, indent, title)
-  local closing_note = Async.awaitable(self.capture:build_note_capture(title):open())
+  local closing_note = self.capture:build_note_capture(title):open():await()
   if closing_note == nil then
     return
   end
@@ -809,9 +809,9 @@ end
 function OrgMappings:insert_link()
   local link = OrgHyperlink.at_cursor()
 
-  local link_location = Async.awaitable(Input.open('Links: ', link and link.url:to_string() or '', function(arg_lead)
+  local link_location = Input.open('Links: ', link and link.url:to_string() or '', function(arg_lead)
     return self.completion:complete_links_from_input(arg_lead)
-  end))
+  end):await()
   if not link_location then
     return false
   end
@@ -821,7 +821,7 @@ function OrgMappings:insert_link()
     return false
   end
 
-  return Async.awaitable(self.links:insert_link(link_location, link and link.desc))
+  return self.links:insert_link(link_location, link and link.desc):await()
 end
 
 function OrgMappings:store_link()
@@ -1002,9 +1002,8 @@ end
 function OrgMappings:org_deadline()
   local headline = self.files:get_closest_headline()
   local deadline_date = headline:get_deadline_date()
-  local new_date, cleared = Async.awaitable(
-    Calendar.new({ date = deadline_date or Date.today(), clearable = true, title = 'Set deadline' }):open()
-  )
+  local new_date, cleared =
+    Calendar.new({ date = deadline_date or Date.today(), clearable = true, title = 'Set deadline' }):open():await()
 
   if cleared then
     return headline:remove_deadline_date()
@@ -1019,9 +1018,8 @@ end
 function OrgMappings:org_schedule()
   local headline = self.files:get_closest_headline()
   local scheduled_date = headline:get_scheduled_date()
-  local new_date, cleared = Async.awaitable(
-    Calendar.new({ date = scheduled_date or Date.today(), clearable = true, title = 'Set schedule' }):open()
-  )
+  local new_date, cleared =
+    Calendar.new({ date = scheduled_date or Date.today(), clearable = true, title = 'Set schedule' }):open():await()
 
   if cleared then
     return headline:remove_scheduled_date()
@@ -1038,7 +1036,7 @@ function OrgMappings:org_time_stamp(inactive)
   local date = self:_get_date_under_cursor()
 
   if date then
-    local new_date = Async.awaitable(Calendar.new({ date = date, title = 'Replace date' }):open())
+    local new_date = Calendar.new({ date = date, title = 'Replace date' }):open():await()
     if not new_date then
       return
     end
@@ -1048,7 +1046,7 @@ function OrgMappings:org_time_stamp(inactive)
 
   local date_start = self:_get_date_under_cursor(-1)
 
-  local new_date = Async.awaitable(Calendar.new({ date = Date.today() }):open())
+  local new_date = Calendar.new({ date = Date.today() }):open():await()
   if not new_date then
     return nil
   end

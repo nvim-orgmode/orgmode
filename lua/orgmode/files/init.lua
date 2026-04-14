@@ -1,4 +1,4 @@
-local Promise = require('orgmode.utils.promise')
+local Async = require('orgmode.utils.async')
 local OrgFile = require('orgmode.files.file')
 local utils = require('orgmode.utils')
 local config = require('orgmode.config')
@@ -52,25 +52,25 @@ function OrgFiles:cache_and_return()
 end
 
 ---@param force? boolean Force reload all files
----@return OrgPromise<OrgFiles>
+---@return OrgTask
 function OrgFiles:load(force)
   if not force and self.load_state then
     if self.load_state == 'loading' then
       self:ensure_loaded()
     end
-    return Promise.resolve(self)
+    return Async.done(self)
   end
 
   self.load_state = 'loading'
-  return Promise.map(function(filename, index)
-    return self:load_file(filename):next(function(orgfile)
+  return Async.run(function()
+    Async.map(function(filename, index)
+      local orgfile = self:load_file(filename):await()
       if orgfile then
         orgfile.index = index
         self.files[orgfile.filename] = orgfile
       end
       return orgfile
-    end)
-  end, self:_files(true), 50):next(function()
+    end, self:_files(true), 50):await()
     self.load_state = 'loaded'
     return self
   end)
@@ -167,7 +167,7 @@ end
 
 ---@param filename string
 ---@param opts? OrgLoadFileOpts
----@return OrgPromise<OrgFile | false>
+---@return OrgTask
 function OrgFiles:load_file(filename, opts)
   opts = opts or {}
   filename = vim.fn.resolve(vim.fn.fnamemodify(filename, ':p'))
@@ -189,7 +189,8 @@ function OrgFiles:load_file(filename, opts)
     return file:reload()
   end
 
-  return OrgFile.load(filename):next(function(orgfile)
+  return Async.run(function()
+    local orgfile = OrgFile.load(filename):await()
     if orgfile then
       persist_if_required(orgfile)
       self.all_files[filename] = orgfile
@@ -331,7 +332,7 @@ end
 function OrgFiles:update_file(filename, action)
   local file = self:load_file_sync(filename)
   if not file then
-    return Promise.resolve()
+    return Async.done()
   end
   return file:update(action)
 end

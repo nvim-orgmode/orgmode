@@ -1,6 +1,6 @@
 local helpers = require('tests.plenary.helpers')
 local orgmode = require('orgmode')
-local Promise = require('orgmode.utils.promise')
+local Async = require('orgmode.utils.async')
 
 describe('Add Note', function()
   after_each(function()
@@ -23,7 +23,7 @@ describe('Add Note', function()
       -- Return a stub with an open() that resolves immediately
       return {
         open = function()
-          return Promise.resolve({ 'Test note content' })
+          return Async.done({ 'Test note content' })
         end,
       }
     end, function()

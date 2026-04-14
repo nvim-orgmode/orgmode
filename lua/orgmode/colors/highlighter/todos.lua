@@ -1,6 +1,6 @@
 local highlights = require('orgmode.colors.highlights')
 local utils = require('orgmode.utils')
-local Promise = require('orgmode.utils.promise')
+local Async = require('orgmode.utils.async')
 local tree_utils = require('orgmode.utils.treesitter')
 
 ---@class OrgTodosHighlighter
@@ -24,27 +24,16 @@ function OrgTodos:_add_highlights()
     return
   end
 
-  local actions = {}
-  for i, _ in pairs(query_files) do
-    if i ~= #query_files then
-      table.insert(actions, utils.readfile(query_files[i]))
-    else
-      table.insert(
-        actions,
-        utils.readfile(query_files[i]):next(function(lines)
-          for face_name, face_hl in pairs(faces) do
-            table.insert(
-              lines,
-              string.format([[(item . (expr) %s @nospell (#eq? %s %s))]], face_hl, face_hl, face_name)
-            )
-          end
-          return lines
-        end)
-      )
-    end
-  end
-
-  return Promise.all(actions):next(function(line_parts)
+  return Async.run(function()
+    local line_parts = Async.map(function(query_file, index)
+      local lines = utils.readfile(query_file):await()
+      if index == #query_files then
+        for face_name, face_hl in pairs(faces) do
+          table.insert(lines, string.format([[(item . (expr) %s @nospell (#eq? %s %s))]], face_hl, face_hl, face_name))
+        end
+      end
+      return lines
+    end, query_files):await()
     local all_lines = {}
     for _, line_part in ipairs(line_parts) do
       utils.concat(all_lines, line_part)

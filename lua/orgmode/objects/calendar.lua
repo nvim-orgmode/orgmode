@@ -1,6 +1,5 @@
 local Date = require('orgmode.objects.date')
 local utils = require('orgmode.utils')
-local Promise = require('orgmode.utils.promise')
 local config = require('orgmode.config')
 local namespace = vim.api.nvim_create_namespace('org_calendar')
 local colors = require('orgmode.colors')
@@ -174,8 +173,10 @@ function Calendar:open()
     self:set_day()
   end, map_opts)
   self:jump_day()
-  return Promise.new(function(resolve)
-    self.callback = resolve
+  return Async.run(function()
+    return Async.task(function(resolve)
+      self.callback = resolve
+    end)
   end)
 end
 
@@ -645,20 +646,22 @@ function Calendar:clear_date()
 end
 
 function Calendar:read_date()
-  self:_ensure_day()
-  local current_date = self:get_selected_date() or Date.today()
-  local result = Async.awaitable(Input.open('Enter date: ', current_date:to_string()))
-  if result then
-    local date = current_date:set_from_string(result)
-    if not date then
-      date = current_date:adjust(result)
-    end
+  return Async.run(function()
+    self:_ensure_day()
+    local current_date = self:get_selected_date() or Date.today()
+    local result = Input.open('Enter date: ', current_date:to_string()):await()
+    if result then
+      local date = current_date:set_from_string(result)
+      if not date then
+        date = current_date:adjust(result)
+      end
 
-    self.date = date
-    self:render()
-    vim.fn.cursor(2, 1)
-    vim.fn.search(date:format('%d'), 'W')
-  end
+      self.date = date
+      self:render()
+      vim.fn.cursor(2, 1)
+      vim.fn.search(date:format('%d'), 'W')
+    end
+  end)
 end
 
 function Calendar:set_time()

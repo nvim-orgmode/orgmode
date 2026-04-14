@@ -1,6 +1,7 @@
 ---@diagnostic disable: inject-field
 local Date = require('orgmode.objects.date')
 local config = require('orgmode.config')
+local Async = require('orgmode.utils.async')
 local utils = require('orgmode.utils')
 local Search = require('orgmode.files.elements.search')
 local OrgAgendaTodosType = require('orgmode.agenda.types.todo')
@@ -108,9 +109,10 @@ function OrgAgendaTagsType:get_file_headlines(file)
 end
 
 function OrgAgendaTagsType:get_tags()
-  return Input.open('Match: ', self.match_query or '', function(arg_lead)
-    return utils.prompt_autocomplete(arg_lead, self.files:get_tags())
-  end):next(function(tags)
+  return Async.run(function()
+    local tags = Input.open('Match: ', self.match_query or '', function(arg_lead)
+      return utils.prompt_autocomplete(arg_lead, self.files:get_tags())
+    end):await()
     if not tags then
       return false
     end

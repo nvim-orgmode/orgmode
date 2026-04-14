@@ -1,6 +1,6 @@
 local Duration = require('orgmode.objects.duration')
 local utils = require('orgmode.utils')
-local Promise = require('orgmode.utils.promise')
+local Async = require('orgmode.utils.async')
 local Input = require('orgmode.ui.input')
 
 ---@class OrgClock
@@ -46,17 +46,18 @@ function Clock:org_clock_in()
     return utils.echo_info(string.format('Clock continues in "%s"', item:get_title()))
   end
 
-  local promise = Promise.resolve()
+  local task = Async.done()
 
   if self.clocked_headline and self.clocked_headline:is_clocked_in() then
     local file = self.clocked_headline.file
-    promise = file:update(function()
+    task = file:update(function()
       local clocked_item = file:reload_sync():get_closest_headline({ self.clocked_headline:get_range().start_line, 0 })
       clocked_item:clock_out()
     end)
   end
 
-  return promise:next(function()
+  return Async.run(function()
+    task:await()
     item:clock_in()
     self.clocked_headline = item
   end)
@@ -100,7 +101,8 @@ function Clock:org_set_effort()
   local item = self.files:get_closest_headline()
   -- TODO: Add Effort_ALL property as autocompletion
   local current_effort = item:get_property('Effort')
-  return Input.open('Effort: ', current_effort or ''):next(function(effort)
+  return Async.run(function()
+    local effort = Input.open('Effort: ', current_effort or ''):await()
     if not effort then
       return false
     end

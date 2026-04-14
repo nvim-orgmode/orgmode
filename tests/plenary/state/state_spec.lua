@@ -1,4 +1,5 @@
 local utils = require('orgmode.utils')
+local Async = require('orgmode.utils.async')
 ---@type OrgState
 local state = nil
 local spy = require('luassert.spy')
@@ -34,26 +35,10 @@ describe('State', function()
   end)
 
   it('should save the cache file as valid json', function()
-    local data = nil
-    local read_f_err = nil
-    state:save():next(function()
-      utils
-        .readfile(cache_path, { raw = true })
-        :next(function(state_data)
-          data = state_data
-        end)
-        :catch(function(err)
-          read_f_err = err
-        end)
-    end)
-
-    -- wait until the newly saved state file has been read
-    vim.wait(50, function()
-      return data ~= nil or read_f_err ~= nil
-    end, 10)
-    if read_f_err then
-      error(read_f_err)
-    end
+    local data = Async.run(function()
+      state:save():await()
+      return utils.readfile(cache_path, { raw = true }):await()
+    end):wait()
 
     local success, decoded = pcall(vim.json.decode, data, {
       luanil = { object = true, array = true },
@@ -121,26 +106,11 @@ describe('State', function()
     vim.wait(100)
 
     -- Now attempt to read the file and check that it is, in fact, "healed"
-    local cache_data = nil
-    local read_f_err = nil
-    utils
-      .readfile(cache_path, { raw = true })
-      :next(function(state_data)
-        cache_data = state_data
-      end)
-      :catch(function(reject)
-        read_f_err = reject
-      end)
-      :finally(function()
-        read_file = true
-      end)
-
-    vim.wait(500, function()
-      return cache_data ~= nil or read_f_err ~= nil
-    end, 20)
-
-    if read_f_err then
-      error('Unable to read the healed state cache! Error: ' .. vim.inspect(read_f_err))
+    local ok, cache_data = pcall(function()
+      return utils.readfile(cache_path, { raw = true }):wait()
+    end)
+    if not ok then
+      error('Unable to read the healed state cache! Error: ' .. vim.inspect(cache_data))
     end
 
     local success, decoded = pcall(vim.json.decode, cache_data, {

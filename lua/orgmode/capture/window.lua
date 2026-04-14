@@ -1,6 +1,6 @@
 local config = require('orgmode.config')
 local utils = require('orgmode.utils')
-local Promise = require('orgmode.utils.promise')
+local Async = require('orgmode.utils.async')
 local id_counter = 0
 
 ---@class OrgCaptureWindowOpts
@@ -34,9 +34,12 @@ function CaptureWindow:open()
     return self:focus()
   end
   self._resolve_fn = nil
-  return self.template:compile():next(function(content)
+
+  return Async.run(function()
+    local content = self.template:compile():await()
     if not content then
-      return utils.echo_info('Canceled.')
+      utils.echo_info('Canceled.')
+      return nil
     end
     self._window = utils.open_tmp_org_window(16, config.win_split_mode, config.win_border, self:_on_close())
     vim.api.nvim_buf_set_lines(0, 0, -1, true, content)
@@ -49,7 +52,7 @@ function CaptureWindow:open()
       self.on_open(self)
     end
 
-    return Promise.new(function(resolve)
+    return Async.task(function(resolve)
       self._resolve_fn = resolve
     end)
   end)

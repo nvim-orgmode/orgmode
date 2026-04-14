@@ -6,7 +6,6 @@ local Calendar = require('orgmode.objects.calendar')
 local AgendaFilter = require('orgmode.agenda.filter')
 local Menu = require('orgmode.ui.menu')
 local Async = require('orgmode.utils.async')
-local Promise = require('orgmode.utils.promise')
 local AgendaTypes = require('orgmode.agenda.types')
 local Input = require('orgmode.ui.input')
 local OrgHyperlink = require('orgmode.org.links.hyperlink')
@@ -57,9 +56,10 @@ function Agenda:open_view(type, opts)
 end
 
 function Agenda:prepare_and_render()
-  return Promise.map(function(view)
-    return view:prepare()
-  end, self.views):next(function(views)
+  return Async.run(function()
+    local views = Async.map(function(view)
+      return view:prepare()
+    end, self.views):await()
     local valid_views = vim.tbl_filter(function(view)
       return view ~= false
     end, views)
@@ -174,7 +174,8 @@ function Agenda:_build_custom_commands()
           table.insert(views, AgendaTypes[agenda_type.type]:new(opts))
         end
         self.views = views
-        return self:prepare_and_render():next(function()
+        return Async.run(function()
+          self:prepare_and_render():await()
           if #self.views > 1 then
             vim.fn.cursor({ 1, 0 })
           end
@@ -296,9 +297,9 @@ function Agenda:redo(source, preserve_cursor_pos)
   self:_call_all_views('redo')
   local save_view = preserve_cursor_pos and vim.fn.winsaveview()
 
-  Async.awaitable(self.files:load(true))
+  self.files:load(true):await()
   if source == 'mapping' then
-    Async.awaitable(self:_call_view_async('redraw'))
+    self:_call_view_async('redraw'):await()
   end
 
   self:render()
@@ -335,7 +336,7 @@ function Agenda:goto_date()
     return utils.echo_error('No available views to jump to date.')
   end
 
-  local date = Async.awaitable(Calendar.new({ date = Date.now(), title = 'Go to agenda date' }):open())
+  local date = Calendar.new({ date = Date.now(), title = 'Go to agenda date' }):open():await()
   if not date then
     return nil
   end
@@ -546,9 +547,9 @@ end
 function Agenda:filter()
   local this = self
   self.filters:parse_available_filters(self.views)
-  local value = Async.awaitable(Input.open('Filter [+cat-tag/regexp/]: ', self.filters.value, function(arg_lead)
+  local value = Input.open('Filter [+cat-tag/regexp/]: ', self.filters.value, function(arg_lead)
     return utils.prompt_autocomplete(arg_lead, this.filters:get_completion_list(), { '+', '-' })
-  end))
+  end):await()
   if not value or value == self.filters.value then
     return false
   end
@@ -577,11 +578,13 @@ function Agenda:_remote_edit(opts)
   end
   local old_range = headline:get_range()
 
-  local updated_headline = Async.awaitable(headline.file:update(function(_)
-    vim.fn.cursor({ headline:get_range().start_line, 1 })
-    Async.awaitable(require('orgmode').action(action))
-    return self.files:get_closest_headline_or_nil()
-  end))
+  local updated_headline = headline.file
+    :update(function(_)
+      vim.fn.cursor({ headline:get_range().start_line, 1 })
+      require('orgmode').action(action):await()
+      return self.files:get_closest_headline_or_nil()
+    end)
+    :await()
 
   ---@cast updated_headline OrgHeadline
   if opts.redo then
@@ -646,11 +649,12 @@ end
 
 function Agenda:_call_view_async(method, ...)
   local args = { ... }
-  return Promise.map(function(view)
-    if view[method] and view.view:is_in_range() then
-      return view[method](view, unpack(args))
-    end
-  end, self.views):next(function(views)
+  return Async.run(function()
+    local views = Async.map(function(view)
+      if view[method] and view.view:is_in_range() then
+        return view[method](view, unpack(args))
+      end
+    end, self.views):await()
     for _, view in ipairs(views) do
       if view then
         return true

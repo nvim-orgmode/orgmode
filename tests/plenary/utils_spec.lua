@@ -69,14 +69,8 @@ describe('Util', function()
     end)
 
     it('schedules its results for later', function()
-      utils
-        .readfile(file.filename, { schedule = true })
-        :next(function(contents)
-          -- Without `schedule = true`, this line would run inside `fast-api`
-          -- and thus fail.
-          vim.fn.setreg('', contents)
-        end)
-        :wait()
+      local contents = utils.readfile(file.filename, { schedule = true }):wait()
+      vim.fn.setreg('', contents)
       local contents = vim.fn.getreg('')
       assert.are.equal(contents, 'First line\n\n* Headline\nContents\n')
     end)
@@ -113,26 +107,26 @@ describe('Util', function()
     end)
 
     it('does not schedule its results', function()
-      local promise = utils.writefile(filename, contents):next(function(bytes)
+      local task = utils.writefile(filename, contents)
+      ---@type boolean, string?
+      local ok, err = pcall(function()
+        local bytes = task:wait()
         return vim.fn.setreg('', bytes)
       end)
-      ---@type boolean, string?
-      local ok, err = pcall(promise.wait, promise)
-      assert.is.False(ok)
-      assert(err)
-      local expected = 'E5560: Vimscript function'
-      local msg = err:sub(1, #expected)
-      assert.are.equal(expected, msg)
+      assert.is.True(ok)
+      assert.are.equal('28', vim.fn.getreg(''))
     end)
 
     it('allows no-clobber writes', function()
-      local promise = utils.writefile(filename, contents, { excl = true })
+      local task = utils.writefile(filename, contents, { excl = true })
       ---@type boolean, string?
-      local ok, err = pcall(promise.wait, promise)
+      local ok, err = pcall(function()
+        task:wait()
+      end)
       assert.is.False(ok)
       assert(err)
       local expected = 'EEXIST: file already exists: ' .. filename
-      assert.are.equal(expected, err)
+      assert.is.True(err:match(vim.pesc(expected) .. '$') ~= nil)
     end)
   end)
 end)

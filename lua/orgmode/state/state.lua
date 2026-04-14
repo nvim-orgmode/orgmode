@@ -1,5 +1,5 @@
 local utils = require('orgmode.utils')
-local Promise = require('orgmode.utils.promise')
+local Async = require('orgmode.utils.async')
 
 ---@class OrgState
 local OrgState = { data = {}, _ctx = { loaded = false, saved = false, curr_loader = nil, savers = 0, dirty = false } }
@@ -29,44 +29,44 @@ function OrgState.new()
 end
 
 ---Save the current state to cache
----@return OrgPromise
+---@return OrgTask
 function OrgState:save()
   if not OrgState._ctx.dirty then
-    return Promise.resolve(self)
+    return Async.done(self)
   end
-  OrgState._ctx.saved = false
-  --- We want to ensure the state was loaded before saving.
-  self:load()
-  self._ctx.savers = self._ctx.savers + 1
-  return utils
-    .writefile(cache_path, vim.json.encode(OrgState.data))
-    :next(function()
-      self._ctx.savers = self._ctx.savers - 1
-      if self._ctx.savers == 0 then
-        OrgState._ctx.saved = true
-        OrgState._ctx.dirty = false
-      end
+
+  return Async.run(function()
+    OrgState._ctx.saved = false
+    self._ctx.savers = self._ctx.savers + 1
+    self:load():await()
+
+    local ok, err = pcall(function()
+      utils.writefile(cache_path, vim.json.encode(OrgState.data)):await()
     end)
-    :catch(function(err_msg)
-      self._ctx.savers = self._ctx.savers - 1
-      vim.schedule_wrap(function()
-        utils.echo_warning('Failed to save current state! Error: ' .. err_msg)
+
+    self._ctx.savers = self._ctx.savers - 1
+    if not ok then
+      vim.schedule(function()
+        utils.echo_warning('Failed to save current state! Error: ' .. tostring(err))
       end)
-    end)
+      return
+    end
+
+    if self._ctx.savers == 0 then
+      OrgState._ctx.saved = true
+      OrgState._ctx.dirty = false
+    end
+  end)
 end
 
 ---Synchronously save the state into cache
 ---@param timeout? number How long to wait for the save operation
 function OrgState:save_sync(timeout)
-  OrgState._ctx.saved = false
-  self:save()
-  vim.wait(timeout or 500, function()
-    return OrgState._ctx.saved
-  end, 20)
+  self:save():wait(timeout)
 end
 
 ---Load the state cache into the current state
----@return OrgPromise
+---@return OrgTask
 function OrgState:load()
   --- If we currently have a loading operation already running, return that
   --- promise. This avoids a race condition of sorts as without this there's
@@ -78,12 +78,12 @@ function OrgState:load()
 
   --- If we've already loaded the state from cache we don't need to do so again
   if self._ctx.loaded then
-    return Promise.resolve(self)
+    return Async.done(self)
   end
 
-  self._ctx.curr_loader = utils
-    .readfile(cache_path, { raw = true })
-    :next(function(data)
+  self._ctx.curr_loader = Async.run(function()
+    local ok, result = pcall(function()
+      local data = utils.readfile(cache_path, { raw = true }):await()
       local success, decoded = pcall(vim.json.decode, data, {
         luanil = { object = true, array = true },
       })
@@ -108,25 +108,31 @@ function OrgState:load()
       -- the state and still get whatever values may not have been set in the
       -- interim of the load operation.
       self.data = vim.tbl_deep_extend('force', decoded, self.data)
-      self._ctx.curr_loader = nil
       return self
     end)
-    :catch(function(err)
-      -- If the file didn't exist then go ahead and save
-      -- our current cache and as a side effect create the file
-      if type(err) == 'string' and err:match([[^ENOENT.*]]) then
-        self._ctx.dirty = true
-        self:save()
+
+    if not ok then
+      if type(result) == 'string' and result:match('ENOENT:') then
+        if self._ctx.savers == 0 then
+          vim.schedule(function()
+            self._ctx.dirty = true
+            self:save()
+          end)
+        else
+          self._ctx.dirty = true
+        end
         return self
       end
-      -- If the file did exist, something is wrong. Kick this to the top
-      error(err)
-    end)
-    :finally(function()
-      self._ctx.loaded = true
-      self._ctx.curr_loader = nil
-      self._ctx.dirty = false
-    end)
+
+      error(result)
+    end
+
+    return result
+  end, function()
+    self._ctx.loaded = true
+    self._ctx.curr_loader = nil
+    self._ctx.dirty = false
+  end)
 
   return self._ctx.curr_loader
 end
@@ -135,30 +141,7 @@ end
 ---@param timeout? number How long to wait for the cache load before erroring
 ---@return OrgState
 function OrgState:load_sync(timeout)
-  local state
-  local err
-  self
-    :load()
-    :next(function(loaded_state)
-      state = loaded_state
-    end)
-    :catch(function(reject)
-      err = reject
-    end)
-
-  vim.wait(timeout or 500, function()
-    return state ~= nil or err ~= nil
-  end, 20)
-
-  if err then
-    error(err)
-  end
-
-  if err == nil and state == nil then
-    error('Did not load OrgState in time')
-  end
-
-  return state
+  return self:load():wait(timeout)
 end
 
 ---Reset the current state to empty

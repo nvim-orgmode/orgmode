@@ -2,7 +2,7 @@
 local OrgFile = require('orgmode.api.file')
 local OrgHeadline = require('orgmode.api.headline')
 local orgmode = require('orgmode')
-local Promise = require('orgmode.utils.promise')
+local Async = require('orgmode.utils.async')
 local Buffers = require('orgmode.state.buffers')
 
 ---@class OrgApiRefileOpts
@@ -53,7 +53,7 @@ end
 ---Refile headline to another file or headline
 ---If executed from capture buffer, it will close the capture buffer
 ---@param opts OrgApiRefileOpts
----@return OrgPromise<boolean>
+---@return OrgTask
 function OrgApi.refile(opts)
   vim.validate('source', opts.source, 'table')
   vim.validate('destination', opts.destination, 'table')
@@ -91,16 +91,14 @@ function OrgApi.refile(opts)
     end
   end
 
-  return Promise.resolve()
-    :next(function()
-      if is_capture then
-        return orgmode.capture:_refile_from_capture_buffer(refile_opts)
-      end
-      return orgmode.capture:_refile_from_org_file(refile_opts)
-    end)
-    :next(function()
-      return true
-    end)
+  return Async.run(function()
+    if is_capture then
+      orgmode.capture:_refile_from_capture_buffer(refile_opts)
+    else
+      orgmode.capture:_refile_from_org_file(refile_opts):await()
+    end
+    return true
+  end)
 end
 
 --- Insert a link to a given location at the current cursor position
@@ -111,7 +109,7 @@ end
 --- If <in_file_location> is *<headline>, <headline> is used as prefilled description for the link.
 --- If <protocol> is id, this format can also be used to pass a prefilled description.
 --- @param link_location string
---- @return OrgPromise<boolean>
+--- @return OrgTask
 function OrgApi.insert_link(link_location)
   return orgmode.links:insert_link(link_location)
 end

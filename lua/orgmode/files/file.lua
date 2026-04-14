@@ -1,4 +1,4 @@
-local Promise = require('orgmode.utils.promise')
+local Async = require('orgmode.utils.async')
 local utils = require('orgmode.utils')
 local ts_utils = require('orgmode.utils.treesitter')
 local Headline = require('orgmode.files.headline')
@@ -64,22 +64,23 @@ function OrgFile:new(opts)
 end
 
 ---Load the file
----@return OrgPromise<OrgFile | false>
+---@return OrgTask
 function OrgFile.load(filename)
   local bufnr = Buffers.get_buffer_by_filename(filename)
 
   if bufnr > -1 and vim.api.nvim_buf_is_loaded(bufnr) and vim.bo[bufnr].filetype == 'org' then
-    return Promise.resolve(OrgFile:new({
+    return Async.done(OrgFile:new({
       filename = filename,
       buf = bufnr,
     }))
   end
 
   if not vim.uv.fs_stat(filename) or not utils.is_org_file(filename) then
-    return Promise.resolve(false)
+    return Async.done(false)
   end
 
-  return utils.readfile(filename, { schedule = true }):next(function(lines)
+  return Async.run(function()
+    local lines = utils.readfile(filename, { schedule = true }):await()
     return OrgFile:new({
       filename = filename,
       lines = lines,
@@ -88,10 +89,10 @@ function OrgFile.load(filename)
 end
 
 ---Reload the file if it has been modified
----@return OrgPromise<OrgFile>
+---@return OrgTask
 function OrgFile:reload()
   if not self:is_modified() then
-    return Promise.resolve(self)
+    return Async.done(self)
   end
 
   local bufnr = self:bufnr()
@@ -115,7 +116,8 @@ function OrgFile:reload()
   end
 
   if file_changed and not buf_changed then
-    return utils.readfile(self.filename, { schedule = true }):next(function(lines)
+    return Async.run(function()
+      local lines = utils.readfile(self.filename, { schedule = true }):await()
       self:_update_lines(lines)
       if stat then
         self.metadata.mtime = stat.mtime.nsec
@@ -124,7 +126,7 @@ function OrgFile:reload()
       return self
     end)
   end
-  return Promise.resolve(self)
+  return Async.done(self)
 end
 
 ---sync reload the file if it has been modified
@@ -138,7 +140,10 @@ end
 function OrgFile:update(action)
   local is_same_file = self.filename == utils.current_file_path()
   if is_same_file then
-    return Promise.resolve(action(self)):next(function(result)
+    return Async.run(function()
+      local result = Async.run(function()
+        return action(self)
+      end):await()
       vim.cmd(':silent! w')
       return result
     end)
@@ -147,11 +152,13 @@ function OrgFile:update(action)
   local edit_file = utils.edit_file(self.filename)
   edit_file.open()
 
-  return Promise.resolve(action(self)):next(function(result)
+  return Async.run(function()
+    local result = Async.run(function()
+      return action(self)
+    end):await()
     edit_file.close()
-    return self:reload():next(function()
-      return result
-    end)
+    self:reload():await()
+    return result
   end)
 end
 
