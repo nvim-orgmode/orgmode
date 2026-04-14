@@ -291,4 +291,76 @@ function OrgHeadline:get_link()
   return org.links:get_link_to_headline(self._section)
 end
 
+---Set todo keyword
+function OrgHeadline:set_todo(keyword)
+  self:_do_action(function()
+    local headline = org.files:get_closest_headline()
+    headline:set_todo(keyword)
+  end)
+end
+
+---Clock-in the headline
+---@param opts? OrgHeadlineClockInOpts Clock in options
+function OrgHeadline:clock_in(opts)
+  return self:_do_action(function()
+    local headline = org.files:get_closest_headline()
+
+    if headline:is_clocked_in() then
+      return
+    end
+
+    headline:clock_in(opts)
+  end)
+end
+
+---Clock-out in the headline
+---@param opts? OrgHeadlineClockOutOpts Clock out options
+function OrgHeadline:clock_out(opts)
+  ---@diagnostic disable-next-line: invisible
+  return self:_do_action(function()
+    local headline = org.files:get_closest_headline()
+
+    if not headline:is_clocked_in() then
+      return
+    end
+
+    headline:clock_out(opts)
+  end)
+end
+
+---Check if the headline is currently clocked in or not
+function OrgHeadline:is_clocked_in()
+  local clock_in
+
+  return self
+    :_do_action(function()
+      local headline = org.files:get_closest_headline()
+      clock_in = headline:is_clocked_in()
+    end)
+    :next(function()
+      return clock_in
+    end)
+end
+
+---Toggle clock the headline (Clock in if currently not, clock out otherwise)
+---@param opts? OrgHeadlineClockOpts Clock out options
+function OrgHeadline:toggle_clock(opts)
+  return self:_do_action(function()
+    local headline = org.files:get_closest_headline()
+    return headline:is_clocked_in()
+        ---@cast opts OrgHeadlineClockOutOpts
+        and headline:clock_out(opts)
+      ---@cast opts OrgHeadlineClockInOpts
+      or headline:clock_in(opts)
+  end)
+end
+
+---Cancel active clock on the headline (if any)
+function OrgHeadline:cancel_active_clock()
+  self:_do_action(function()
+    local headline = org.files:get_closest_headline()
+    return headline:is_clocked_in() and headline:cancel_active_clock()
+  end)
+end
+
 return OrgHeadline

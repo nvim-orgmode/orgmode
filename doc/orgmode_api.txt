@@ -211,6 +211,39 @@ OrgHeadline:get_link()                                    *OrgHeadline:get_link*
      @return string
 
 
+OrgHeadline:set_todo()                                    *OrgHeadline:set_todo*
+    Set todo keyword
+
+
+OrgHeadline:clock_in({opts?})                             *OrgHeadline:clock_in*
+    Clock-in the headline
+
+    Parameters: ~
+        {opts?}  (OrgHeadlineClockInOpts)  Clock in options
+
+
+OrgHeadline:clock_out({opts?})                           *OrgHeadline:clock_out*
+    Clock-out in the headline
+
+    Parameters: ~
+        {opts?}  (OrgHeadlineClockOutOpts)  Clock out options
+
+
+OrgHeadline:is_clocked_in()                          *OrgHeadline:is_clocked_in*
+    Check if the headline is currently clocked in or not
+
+
+OrgHeadline:toggle_clock({opts?})                     *OrgHeadline:toggle_clock*
+    Toggle clock the headline (Clock in if currently not, clock out otherwise)
+
+    Parameters: ~
+        {opts?}  (OrgHeadlineClockOpts)  Clock out options
+
+
+OrgHeadline:cancel_active_clock()              *OrgHeadline:cancel_active_clock*
+    Cancel active clock on the headline (if any)
+
+
 OrgApiAgenda                                                      *OrgApiAgenda*
 
 

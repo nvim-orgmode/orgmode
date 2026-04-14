@@ -150,21 +150,32 @@ function Headline:is_clocked_in()
   return logbook and logbook:is_active() or false
 end
 
-function Headline:clock_in()
+---@class OrgHeadlineClockOpts
+---@field silent? boolean Omit clock-in notification, by setting to truthy value
+---@class OrgHeadlineClockInOpts:OrgHeadlineClockOpts
+---@class OrgHeadlineClockOutOpts:OrgHeadlineClockOpts
+
+---@param opts? OrgHeadlineClockInOpts clock-in options
+function Headline:clock_in(opts)
   local logbook = self:get_logbook()
   if not logbook then
     logbook = Logbook.new_from_headline(self)
   end
   logbook:add_clock_in()
-  EventManager.dispatch(events.ClockedIn:new(self))
+  if not opts or not opts.silent then
+    EventManager.dispatch(events.ClockedIn:new(self))
+  end
   return self:refresh()
 end
 
-function Headline:clock_out()
+---@param opts? OrgHeadlineClockOutOpts clock-out options
+function Headline:clock_out(opts)
   local logbook = self:get_logbook()
   if logbook then
     logbook:clock_out()
-    EventManager.dispatch(events.ClockedOut:new(self))
+    if not opts or not opts.silent then
+      EventManager.dispatch(events.ClockedOut:new(self))
+    end
   end
   return self:refresh()
 end

@@ -244,6 +244,33 @@ describe('Clock', function()
     end
   end)
 
+  it('should not dispatch ClockedIn event when silent option is true', function()
+    local file = helpers.create_agenda_file({
+      '* TODO Silent clock in test',
+    })
+
+    local received_event = nil
+    local listener = function(event)
+      received_event = event
+    end
+    EventManager.listen(events.ClockedIn, listener)
+
+    vim.cmd('edit ' .. file.filename)
+    local headline = file:get_headlines()[1]
+    headline:clock_in({ silent = true })
+
+    assert.is_nil(received_event)
+
+    -- cleanup listener
+    local listeners = EventManager._listeners[events.ClockedIn.type]
+    for i, l in ipairs(listeners) do
+      if l == listener then
+        table.remove(listeners, i)
+        break
+      end
+    end
+  end)
+
   it('should dispatch ClockedOut event when clocking out', function()
     local file = helpers.create_agenda_file({
       '* TODO Clock out event test',
@@ -266,6 +293,36 @@ describe('Clock', function()
     assert.is_not_nil(received_event)
     assert.are.same('orgmode.clocked_out', received_event.type)
     assert.are.same('Clock out event test', received_event.headline:get_title())
+
+    -- cleanup listener
+    local listeners = EventManager._listeners[events.ClockedOut.type]
+    for i, l in ipairs(listeners) do
+      if l == listener then
+        table.remove(listeners, i)
+        break
+      end
+    end
+  end)
+
+  it('should not dispatch ClockedOut event when silent option is true', function()
+    local file = helpers.create_agenda_file({
+      '* TODO Silent clock out test',
+    })
+
+    vim.cmd('edit ' .. file.filename)
+    local headline = file:get_headlines()[1]
+    headline:clock_in()
+    vim.wait(100)
+
+    local received_event = nil
+    local listener = function(event)
+      received_event = event
+    end
+    EventManager.listen(events.ClockedOut, listener)
+
+    headline:clock_out({ silent = true })
+
+    assert.is_nil(received_event)
 
     -- cleanup listener
     local listeners = EventManager._listeners[events.ClockedOut.type]
