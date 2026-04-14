@@ -45,3 +45,19 @@ doc/tags
 
 # Lock file
 .org-ts-lock.json
+
+# Nvim files (for project scoped sessions / scratches etc --- used by `np`)
+.nvim/
+
+# Personal orgfiles (for project scoped tasks etc --- used by `np`)
+orgfiles/ 
+
+# Devenv
+.devenv*
+devenv.local.nix
+devenv.local.yaml
+.pre-commit-config.yaml
+
+# direnv
+.direnv
+.envrc*

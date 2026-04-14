@@ -1,0 +1,15 @@
+inputs:
+  nixpkgs:
+    url: github:NixOS/nixpkgs/nixos-25.11
+  nixpkgs-unstable:
+    url: github:NixOS/nixpkgs
+  nixvim:
+    url: github:nix-community/nixvim/nixos-25.11
+    inputs:
+      nixpkgs:
+        follows: nixpkgs
+  np:
+    url: github:ar-at-localhost/np/nixos-25.11
+    inputs:
+      nixpkgs:
+        follows: nixpkgs
