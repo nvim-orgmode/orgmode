@@ -13,7 +13,7 @@ local Table = require('orgmode.files.elements.table')
 local EventManager = require('orgmode.events')
 local events = EventManager.event
 local Babel = require('orgmode.babel')
-local Promise = require('orgmode.utils.promise')
+local Async = require('orgmode.utils.async')
 local Input = require('orgmode.ui.input')
 local Footnote = require('orgmode.objects.footnote')
 
@@ -69,30 +69,23 @@ function OrgMappings:set_tags(tags)
   local headline = self.files:get_closest_headline()
   local headline_tags = headline:get_own_tags()
   local current_tags = utils.tags_to_string(headline_tags)
-  -- Capture range before promise chain — TS nodes become stale after edits
   local range = headline:get_range()
+  local new_tags = tags
 
-  return Promise.resolve()
-    :next(function()
-      if not tags then
-        return Input.open('Tags: ', current_tags, function(arg_lead)
-          return utils.prompt_autocomplete(arg_lead, self.files:get_tags())
-        end)
-      end
-      if type(tags) == 'table' then
-        tags = utils.tags_to_string(tags)
-      end
+  if not new_tags then
+    new_tags = Async.awaitable(Input.open('Tags: ', current_tags, function(arg_lead)
+      return utils.prompt_autocomplete(arg_lead, self.files:get_tags())
+    end))
+  elseif type(new_tags) == 'table' then
+    new_tags = utils.tags_to_string(new_tags)
+  end
 
-      return tags
-    end)
-    :next(function(new_tags)
-      if not new_tags then
-        return
-      end
+  if not new_tags then
+    return
+  end
 
-      headline:set_tags(new_tags)
-      schedule_fold_update(range)
-    end)
+  headline:set_tags(new_tags)
+  schedule_fold_update(range)
 end
 
 ---@return nil
@@ -335,11 +328,11 @@ function OrgMappings:change_date()
   if not date then
     return
   end
-  return Calendar.new({ date = date, title = 'Change date' }):open():next(function(new_date)
-    if new_date then
-      self:_replace_date(new_date)
-    end
-  end)
+
+  local new_date = Async.awaitable(Calendar.new({ date = date, title = 'Change date' }):open())
+  if new_date then
+    self:_replace_date(new_date)
+  end
 end
 
 function OrgMappings:priority_up()
@@ -426,19 +419,18 @@ end
 ---@param template string
 ---@param indent string
 ---@param title string
----@return OrgPromise<string[]>
+---@return string[] | nil
 function OrgMappings:_get_note(template, indent, title)
-  return self.capture:build_note_capture(title):open():next(function(closing_note)
-    if closing_note == nil then
-      return
-    end
+  local closing_note = Async.awaitable(self.capture:build_note_capture(title):open())
+  if closing_note == nil then
+    return
+  end
 
-    for i, line in ipairs(closing_note) do
-      closing_note[i] = indent .. '  ' .. line
-    end
+  for i, line in ipairs(closing_note) do
+    closing_note[i] = indent .. '  ' .. line
+  end
 
-    return vim.list_extend({ template }, closing_note)
-  end)
+  return vim.list_extend({ template }, closing_note)
 end
 
 function OrgMappings:_todo_change_state(direction)
@@ -493,9 +485,8 @@ function OrgMappings:_todo_change_state(direction)
       return item
     end
 
-    return self:_get_note(closing_note_text, indent, closed_title):next(function(closing_note)
-      return item:add_note(closing_note)
-    end)
+    local closing_note = self:_get_note(closing_note_text, indent, closed_title)
+    return item:add_note(closing_note)
   end
 
   for _, date in ipairs(repeater_dates) do
@@ -535,14 +526,12 @@ function OrgMappings:_todo_change_state(direction)
 
   -- Done note has precedence over repeat note
   if prompt_done_note then
-    return self:_get_note(closing_note_text, indent, closed_title):next(function(closing_note)
-      return item:add_note(closing_note)
-    end)
+    local closing_note = self:_get_note(closing_note_text, indent, closed_title)
+    return item:add_note(closing_note)
   end
 
-  return self:_get_note(repeat_note_template .. ' \\\\', indent, repeat_note_title):next(function(closing_note)
-    return item:add_note(closing_note)
-  end)
+  local closing_note = self:_get_note(repeat_note_template .. ' \\\\', indent, repeat_note_title)
+  return item:add_note(closing_note)
 end
 
 function OrgMappings:do_promote(whole_subtree)
@@ -819,20 +808,20 @@ end
 -- currently on
 function OrgMappings:insert_link()
   local link = OrgHyperlink.at_cursor()
-  return Input.open('Links: ', link and link.url:to_string() or '', function(arg_lead)
+
+  local link_location = Async.awaitable(Input.open('Links: ', link and link.url:to_string() or '', function(arg_lead)
     return self.completion:complete_links_from_input(arg_lead)
-  end):next(function(link_location)
-    if not link_location then
-      return false
-    end
+  end))
+  if not link_location then
+    return false
+  end
 
-    if vim.trim(link_location) == '' then
-      utils.echo_warning('No Link selected')
-      return false
-    end
+  if vim.trim(link_location) == '' then
+    utils.echo_warning('No Link selected')
+    return false
+  end
 
-    return self.links:insert_link(link_location, link and link.desc)
-  end)
+  return Async.awaitable(self.links:insert_link(link_location, link and link.desc))
 end
 
 function OrgMappings:store_link()
@@ -893,14 +882,11 @@ function OrgMappings:add_note()
   local headline = self.files:get_closest_headline()
   local indent = headline:get_indent()
   local text = ('%s- Note taken on %s \\\\'):format(indent, Date.now():to_wrapped_string(false))
-  return self
-    :_get_note(text, indent, string.format('Insert note for %s.', headline:get_title() or 'entry'))
-    :next(function(note)
-      if not note then
-        return false
-      end
-      return headline:add_note(note)
-    end)
+  local note = self:_get_note(text, indent, string.format('Insert note for %s.', headline:get_title() or 'entry'))
+  if not note then
+    return false
+  end
+  return headline:add_note(note)
 end
 
 function OrgMappings:open_at_point()
@@ -1016,35 +1002,35 @@ end
 function OrgMappings:org_deadline()
   local headline = self.files:get_closest_headline()
   local deadline_date = headline:get_deadline_date()
-  return Calendar.new({ date = deadline_date or Date.today(), clearable = true, title = 'Set deadline' })
-    :open()
-    :next(function(new_date, cleared)
-      if cleared then
-        return headline:remove_deadline_date()
-      end
-      if not new_date then
-        return nil
-      end
-      headline:remove_closed_date()
-      headline:set_deadline_date(new_date)
-    end)
+  local new_date, cleared = Async.awaitable(
+    Calendar.new({ date = deadline_date or Date.today(), clearable = true, title = 'Set deadline' }):open()
+  )
+
+  if cleared then
+    return headline:remove_deadline_date()
+  end
+  if not new_date then
+    return nil
+  end
+  headline:remove_closed_date()
+  headline:set_deadline_date(new_date)
 end
 
 function OrgMappings:org_schedule()
   local headline = self.files:get_closest_headline()
   local scheduled_date = headline:get_scheduled_date()
-  return Calendar.new({ date = scheduled_date or Date.today(), clearable = true, title = 'Set schedule' })
-    :open()
-    :next(function(new_date, cleared)
-      if cleared then
-        return headline:remove_scheduled_date()
-      end
-      if not new_date then
-        return nil
-      end
-      headline:remove_closed_date()
-      headline:set_scheduled_date(new_date)
-    end)
+  local new_date, cleared = Async.awaitable(
+    Calendar.new({ date = scheduled_date or Date.today(), clearable = true, title = 'Set schedule' }):open()
+  )
+
+  if cleared then
+    return headline:remove_scheduled_date()
+  end
+  if not new_date then
+    return nil
+  end
+  headline:remove_closed_date()
+  headline:set_scheduled_date(new_date)
 end
 
 ---@param inactive boolean
@@ -1052,27 +1038,26 @@ function OrgMappings:org_time_stamp(inactive)
   local date = self:_get_date_under_cursor()
 
   if date then
-    return Calendar.new({ date = date, title = 'Replace date' }):open():next(function(new_date)
-      if not new_date then
-        return
-      end
-      self:_replace_date(new_date)
-    end)
+    local new_date = Async.awaitable(Calendar.new({ date = date, title = 'Replace date' }):open())
+    if not new_date then
+      return
+    end
+    self:_replace_date(new_date)
+    return
   end
 
   local date_start = self:_get_date_under_cursor(-1)
 
-  return Calendar.new({ date = Date.today() }):open():next(function(new_date)
-    if not new_date then
-      return nil
-    end
-    local date_string = new_date:to_wrapped_string(not inactive)
-    if date_start then
-      date_string = '--' .. date_string
-      vim.cmd('norm!x')
-    end
-    vim.cmd(string.format('norm!a%s', date_string))
-  end)
+  local new_date = Async.awaitable(Calendar.new({ date = Date.today() }):open())
+  if not new_date then
+    return nil
+  end
+  local date_string = new_date:to_wrapped_string(not inactive)
+  if date_start then
+    date_string = '--' .. date_string
+    vim.cmd('norm!x')
+  end
+  vim.cmd(string.format('norm!a%s', date_string))
 end
 
 function OrgMappings:org_toggle_timestamp_type()

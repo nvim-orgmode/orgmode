@@ -27,7 +27,7 @@ describe('Add Note', function()
         end,
       }
     end, function()
-      orgmode.action('org_mappings.add_note')
+      orgmode.action('org_mappings.add_note'):wait()
     end)
 
     assert.are.same('Insert note for Example Title.', captured_title)

@@ -8,6 +8,7 @@ local Range = require('orgmode.files.elements.range')
 local CaptureWindow = require('orgmode.capture.window')
 local Date = require('orgmode.objects.date')
 local Datetree = require('orgmode.capture.template.datetree')
+local Async = require('orgmode.utils.async')
 local Input = require('orgmode.ui.input')
 local Promise = require('orgmode.utils.promise')
 
@@ -135,19 +136,18 @@ function Capture:refile_to_destination()
   local source_file = self.files:get_current_file()
   local source_headline = source_file:get_headlines()[1]
   local capture_window = self._windows[vim.b.org_capture_window_id]
-  return self:get_destination():next(function(destination)
-    if not destination then
-      return false
-    end
-    return self:_refile_from_capture_buffer({
-      template = capture_window.template,
-      capture_window = capture_window,
-      source_file = source_file,
-      source_headline = source_headline,
-      destination_file = destination.file,
-      destination_headline = destination.headline,
-    })
-  end)
+  local destination = Async.awaitable(self:get_destination())
+  if not destination then
+    return false
+  end
+  return self:_refile_from_capture_buffer({
+    template = capture_window.template,
+    capture_window = capture_window,
+    source_file = source_file,
+    source_headline = source_headline,
+    destination_file = destination.file,
+    destination_headline = destination.headline,
+  })
 end
 
 ---Triggered from org file when we want to refile headline
@@ -221,61 +221,53 @@ function Capture:_refile_from_org_file(opts)
   local destination_file = opts.destination_file
   local destination_headline = opts.destination_headline
 
-  return Promise.resolve()
-    :next(function()
-      if not opts.destination_file then
-        return self:get_destination():next(function(destination)
-          if not destination then
-            return false
-          end
-          destination_file = destination.file
-          destination_headline = destination.headline
-          return destination
-        end)
-      end
-    end)
-    :next(function()
-      if not destination_file then
-        return false
-      end
+  if not opts.destination_file then
+    local destination = Async.awaitable(self:get_destination())
+    if not destination then
+      return false
+    end
+    destination_file = destination.file
+    destination_headline = destination.headline
+  end
 
-      local is_same_file = source_file.filename == destination_file.filename
+  if not destination_file then
+    return false
+  end
 
-      local target_level = 0
-      local target_line = -1
+  local is_same_file = source_file.filename == destination_file.filename
 
-      if destination_headline then
-        target_level = destination_headline:get_level()
-        target_line = destination_headline:get_range().end_line
-      end
+  local target_level = 0
+  local target_line = -1
 
-      local lines = source_headline:get_lines()
+  if destination_headline then
+    target_level = destination_headline:get_level()
+    target_line = destination_headline:get_range().end_line
+  end
 
-      if destination_headline or source_headline:get_level() > 1 then
-        lines = self:_adapt_headline_level(source_headline, target_level, is_same_file)
-      end
+  local lines = source_headline:get_lines()
 
-      destination_file:update_sync(function()
-        if is_same_file then
-          local item_range = source_headline:get_range()
-          return vim.cmd(
-            string.format('silent! %d,%d move %s', item_range.start_line, item_range.end_line, target_line)
-          )
-        end
+  if destination_headline or source_headline:get_level() > 1 then
+    lines = self:_adapt_headline_level(source_headline, target_level, is_same_file)
+  end
 
-        local range = self:_get_destination_range_without_empty_lines(Range.from_line(target_line))
-        target_line = range.start_line
-        vim.api.nvim_buf_set_lines(0, range.start_line, range.end_line, false, lines)
-      end)
+  destination_file:update_sync(function()
+    if is_same_file then
+      local item_range = source_headline:get_range()
+      return vim.cmd(string.format('silent! %d,%d move %s', item_range.start_line, item_range.end_line, target_line))
+    end
 
-      if not is_same_file and source_file.filename == utils.current_file_path() then
-        local item_range = source_headline:get_range()
-        vim.api.nvim_buf_set_lines(0, item_range.start_line - 1, item_range.end_line, false, {})
-      end
+    local range = self:_get_destination_range_without_empty_lines(Range.from_line(target_line))
+    target_line = range.start_line
+    vim.api.nvim_buf_set_lines(0, range.start_line, range.end_line, false, lines)
+  end)
 
-      utils.echo_info(opts.message or ('Wrote %s'):format(destination_file.filename))
-      return target_line + 1
-    end)
+  if not is_same_file and source_file.filename == utils.current_file_path() then
+    local item_range = source_headline:get_range()
+    vim.api.nvim_buf_set_lines(0, item_range.start_line - 1, item_range.end_line, false, {})
+  end
+
+  utils.echo_info(opts.message or ('Wrote %s'):format(destination_file.filename))
+  return target_line + 1
 end
 
 ---@param headline OrgHeadline
@@ -304,25 +296,23 @@ function Capture:refile_file_headline_to_archive(headline)
   local headline_category = headline:get_category()
   local outline_path = headline:get_outline_path()
 
-  return self
-    :_refile_from_org_file({
-      source_headline = headline,
-      destination_file = destination_file,
-      message = ('Archived to %s'):format(destination_file.filename),
-    })
-    :next(function(target_line)
-      destination_file = self.files:get(archive_location)
-      return destination_file:update(function(archive_file)
-        local archived_headline = archive_file:get_closest_headline({ target_line, 0 })
-        archived_headline:set_property('ARCHIVE_TIME', Date.now():to_string())
-        archived_headline:set_property('ARCHIVE_FILE', file.filename)
-        if outline_path ~= '' then
-          archived_headline:set_property('ARCHIVE_OLPATH', outline_path)
-        end
-        archived_headline:set_property('ARCHIVE_CATEGORY', headline_category)
-        archived_headline:set_property('ARCHIVE_TODO', todo_state or '')
-      end)
-    end)
+  local target_line = self:_refile_from_org_file({
+    source_headline = headline,
+    destination_file = destination_file,
+    message = ('Archived to %s'):format(destination_file.filename),
+  })
+
+  destination_file = self.files:get(archive_location)
+  return destination_file:update(function(archive_file)
+    local archived_headline = archive_file:get_closest_headline({ target_line, 0 })
+    archived_headline:set_property('ARCHIVE_TIME', Date.now():to_string())
+    archived_headline:set_property('ARCHIVE_FILE', file.filename)
+    if outline_path ~= '' then
+      archived_headline:set_property('ARCHIVE_OLPATH', outline_path)
+    end
+    archived_headline:set_property('ARCHIVE_CATEGORY', headline_category)
+    archived_headline:set_property('ARCHIVE_TODO', todo_state or '')
+  end)
 end
 
 ---@param item OrgHeadline
@@ -389,54 +379,52 @@ end
 --- @return OrgPromise<{ file: OrgFile, headline?: OrgHeadline}>
 function Capture:get_destination()
   local valid_destinations = self:_get_autocompletion_files()
-
-  return Input.open('Enter destination: ', '', function(arg_lead)
+  local destination = Async.awaitable(Input.open('Enter destination: ', '', function(arg_lead)
     return self:autocomplete_refile(arg_lead, valid_destinations)
-  end):next(function(destination)
-    if not destination then
-      return false
-    end
+  end))
+  if not destination then
+    return false
+  end
 
-    local path = destination:match('^.*%.org/?')
-    local headline_title = path and destination:sub(#path + 1) or ''
+  local path = destination:match('^.*%.org/?')
+  local headline_title = path and destination:sub(#path + 1) or ''
 
-    if not vim.endswith(path, '/') then
-      path = path .. '/'
-    end
+  if not vim.endswith(path, '/') then
+    path = path .. '/'
+  end
 
-    if not valid_destinations[path] then
-      utils.echo_error(
-        ('"%s" is not a is not a file specified in the "org_agenda_files" setting. Refiling cancelled.'):format(path)
-      )
-      return false
-    end
+  if not valid_destinations[path] then
+    utils.echo_error(
+      ('"%s" is not a is not a file specified in the "org_agenda_files" setting. Refiling cancelled.'):format(path)
+    )
+    return false
+  end
 
-    local destination_file = valid_destinations[path]
-    local result = {
-      file = destination_file,
-    }
+  local destination_file = valid_destinations[path]
+  local result = {
+    file = destination_file,
+  }
 
-    if not headline_title or vim.trim(headline_title) == '' then
-      return result
-    end
+  if not headline_title or vim.trim(headline_title) == '' then
+    return result
+  end
 
-    local headlines = vim.tbl_filter(function(item)
-      local pattern = '^' .. vim.pesc(headline_title:lower()) .. '$'
-      return item:get_title():lower():match(pattern)
-    end, destination_file:get_opened_unfinished_headlines())
+  local headlines = vim.tbl_filter(function(item)
+    local pattern = '^' .. vim.pesc(headline_title:lower()) .. '$'
+    return item:get_title():lower():match(pattern)
+  end, destination_file:get_opened_unfinished_headlines())
 
-    if not headlines[1] then
-      utils.echo_error(
-        ("'%s' is not a valid headline in '%s'. Refiling cancelled."):format(headline_title, destination_file.filename)
-      )
-      return {}
-    end
+  if not headlines[1] then
+    utils.echo_error(
+      ("'%s' is not a valid headline in '%s'. Refiling cancelled."):format(headline_title, destination_file.filename)
+    )
+    return {}
+  end
 
-    return {
-      file = destination_file,
-      headline = headlines[1],
-    }
-  end)
+  return {
+    file = destination_file,
+    headline = headlines[1],
+  }
 end
 
 ---@param arg_lead string

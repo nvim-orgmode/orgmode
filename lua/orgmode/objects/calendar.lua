@@ -5,6 +5,7 @@ local config = require('orgmode.config')
 local namespace = vim.api.nvim_create_namespace('org_calendar')
 local colors = require('orgmode.colors')
 local Range = require('orgmode.files.elements.range')
+local Async = require('orgmode.utils.async')
 local Input = require('orgmode.ui.input')
 
 ---@alias OrgCalendarOnRenderDayOpts { line: number, from: number, to: number, buf: number, namespace: number }
@@ -152,7 +153,9 @@ function Calendar:open()
     return self:reset()
   end, map_opts)
   vim.keymap.set('n', 'i', function()
-    return self:read_date()
+    return Async.run(function()
+      self:read_date()
+    end)
   end, map_opts)
   vim.keymap.set('n', 'q', ':call nvim_win_close(win_getid(), v:true)<CR>', map_opts)
   vim.keymap.set('n', '<Esc>', ':call nvim_win_close(win_getid(), v:true)<CR>', map_opts)
@@ -644,19 +647,18 @@ end
 function Calendar:read_date()
   self:_ensure_day()
   local current_date = self:get_selected_date() or Date.today()
-  Input.open('Enter date: ', current_date:to_string()):next(function(result)
-    if result then
-      local date = current_date:set_from_string(result)
-      if not date then
-        date = current_date:adjust(result)
-      end
-
-      self.date = date
-      self:render()
-      vim.fn.cursor(2, 1)
-      vim.fn.search(date:format('%d'), 'W')
+  local result = Async.awaitable(Input.open('Enter date: ', current_date:to_string()))
+  if result then
+    local date = current_date:set_from_string(result)
+    if not date then
+      date = current_date:adjust(result)
     end
-  end)
+
+    self.date = date
+    self:render()
+    vim.fn.cursor(2, 1)
+    vim.fn.search(date:format('%d'), 'W')
+  end
 end
 
 function Calendar:set_time()

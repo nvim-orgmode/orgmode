@@ -3,6 +3,7 @@ local config = require('orgmode.config')
 local PriorityState = require('orgmode.objects.priority_state')
 local Date = require('orgmode.objects.date')
 local Calendar = require('orgmode.objects.calendar')
+local Async = require('orgmode.utils.async')
 local Promise = require('orgmode.utils.promise')
 local org = require('orgmode')
 local Buffers = require('orgmode.state.buffers')
@@ -258,10 +259,10 @@ function OrgHeadline:_do_action(action)
   return org.files:update_file(self.file.filename, function()
     local view = vim.fn.winsaveview() or {}
     vim.fn.cursor({ self.position.start_line, 1 })
-    return Promise.resolve(action()):next(function()
-      vim.fn.winrestview(view)
-      return self:reload()
-    end)
+
+    Async.awaitable(action())
+    vim.fn.winrestview(view)
+    return self:reload()
   end)
 end
 

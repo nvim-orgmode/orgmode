@@ -5,6 +5,7 @@ local colors = require('orgmode.colors')
 local Calendar = require('orgmode.objects.calendar')
 local AgendaFilter = require('orgmode.agenda.filter')
 local Menu = require('orgmode.ui.menu')
+local Async = require('orgmode.utils.async')
 local Promise = require('orgmode.utils.promise')
 local AgendaTypes = require('orgmode.agenda.types')
 local Input = require('orgmode.ui.input')
@@ -294,20 +295,16 @@ end
 function Agenda:redo(source, preserve_cursor_pos)
   self:_call_all_views('redo')
   local save_view = preserve_cursor_pos and vim.fn.winsaveview()
-  return self.files
-    :load(true)
-    :next(function()
-      if source == 'mapping' then
-        return self:_call_view_async('redraw')
-      end
-      return true
-    end)
-    :next(function()
-      self:render()
-      if save_view then
-        vim.fn.winrestview(save_view)
-      end
-    end)
+
+  Async.awaitable(self.files:load(true))
+  if source == 'mapping' then
+    Async.awaitable(self:_call_view_async('redraw'))
+  end
+
+  self:render()
+  if save_view then
+    vim.fn.winrestview(save_view)
+  end
 end
 
 function Agenda:advance_span(direction)
@@ -338,15 +335,16 @@ function Agenda:goto_date()
     return utils.echo_error('No available views to jump to date.')
   end
 
-  return Calendar.new({ date = Date.now(), title = 'Go to agenda date' }):open():next(function(date)
-    if not date then
-      return nil
-    end
-    for _, view in ipairs(views) do
-      view:goto_date(date)
-    end
-    return self:render()
-  end)
+  local date = Async.awaitable(Calendar.new({ date = Date.now(), title = 'Go to agenda date' }):open())
+  if not date then
+    return nil
+  end
+
+  for _, view in ipairs(views) do
+    view:goto_date(date)
+  end
+
+  return self:render()
 end
 
 function Agenda:switch_to_item()
@@ -548,15 +546,14 @@ end
 function Agenda:filter()
   local this = self
   self.filters:parse_available_filters(self.views)
-  return Input.open('Filter [+cat-tag/regexp/]: ', self.filters.value, function(arg_lead)
+  local value = Async.awaitable(Input.open('Filter [+cat-tag/regexp/]: ', self.filters.value, function(arg_lead)
     return utils.prompt_autocomplete(arg_lead, this.filters:get_completion_list(), { '+', '-' })
-  end):next(function(value)
-    if not value or value == self.filters.value then
-      return false
-    end
-    self.filters:parse(value)
-    return self:redo('filter', true)
-  end)
+  end))
+  if not value or value == self.filters.value then
+    return false
+  end
+  self.filters:parse(value)
+  return self:redo('filter', true)
 end
 
 ---@param opts table
@@ -580,36 +577,33 @@ function Agenda:_remote_edit(opts)
   end
   local old_range = headline:get_range()
 
-  local update = headline.file:update(function(_)
+  local updated_headline = Async.awaitable(headline.file:update(function(_)
     vim.fn.cursor({ headline:get_range().start_line, 1 })
-    return Promise.resolve(require('orgmode').action(action)):next(function()
-      return self.files:get_closest_headline_or_nil()
-    end)
-  end)
+    Async.awaitable(require('orgmode').action(action))
+    return self.files:get_closest_headline_or_nil()
+  end))
 
-  update:next(function(updated_headline)
-    ---@cast updated_headline OrgHeadline
-    if opts.redo then
-      return self:redo('remote_edit', true)
-    end
-    if not opts.update_in_place or not updated_headline then
+  ---@cast updated_headline OrgHeadline
+  if opts.redo then
+    return self:redo('remote_edit', true)
+  end
+  if not opts.update_in_place or not updated_headline then
+    return
+  end
+  local line_range_same = updated_headline:get_range():is_same_line_range(old_range)
+
+  local update_item_inline = function()
+    if not agenda_line or not view then
       return
     end
-    local line_range_same = updated_headline:get_range():is_same_line_range(old_range)
+    return view:rerender_agenda_line(agenda_line, updated_headline)
+  end
 
-    local update_item_inline = function()
-      if not agenda_line or not view then
-        return
-      end
-      return view:rerender_agenda_line(agenda_line, updated_headline)
-    end
+  if line_range_same then
+    return update_item_inline()
+  end
 
-    if line_range_same then
-      return update_item_inline()
-    end
-
-    return self:redo('remote_edit', true)
-  end)
+  return self:redo('remote_edit', true)
 end
 
 ---@return OrgHeadline | nil

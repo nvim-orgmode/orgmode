@@ -186,9 +186,24 @@ function Org._set_dot_repeat(cmd, opts)
   )
 end
 
+---@private
+---@param err any
+function Org._handle_action_error(err)
+  if type(err) == 'table' and err.message then
+    return require('orgmode.utils').echo_error(err.message)
+  end
+
+  if type(err) == 'string' then
+    return require('orgmode.utils').echo_error(err)
+  end
+
+  return require('orgmode.utils').echo_error(tostring(err))
+end
+
 ---@param cmd string
 ---@param opts? any
 function Org.action(cmd, opts)
+  local Async = require('orgmode.utils.async')
   local parts = vim.split(cmd, '.', { plain = true })
   if #parts < 2 then
     return
@@ -205,17 +220,15 @@ function Org.action(cmd, opts)
   end
   if item and item[parts[#parts]] then
     local method = item[parts[#parts]]
-    local success, result = pcall(method, item, opts)
-    if not success then
-      if result.message then
-        return require('orgmode.utils').echo_error(result.message)
+    return Async.run(function()
+      local result = Async.awaitable(method(item, opts))
+      Org._set_dot_repeat(cmd, opts)
+      return result
+    end, function(err)
+      if err then
+        Org._handle_action_error(err)
       end
-      if type(result) == 'string' then
-        return require('orgmode.utils').echo_error(result)
-      end
-    end
-    Org._set_dot_repeat(cmd, opts)
-    return result
+    end)
   end
 end
 
