@@ -61,3 +61,4 @@ devenv.local.yaml
 # direnv
 .direnv
 .envrc*
+!.envrc.example
