@@ -90,6 +90,12 @@ OrgFile:get_link()                                            *OrgFile:get_link*
      @return string
 
 
+OrgFile:insert_headline()                              *OrgFile:insert_headline*
+     Insert a headline to the file
+     @param headline OrgApiHeadline | OrgHeadline | { level: integer, keyword?: string, text: string } Headline to be inserted
+     @param after? OrgApiHeadline | OrgHeadline Optional headline to put after
+
+
 OrgApiHeadline                                                  *OrgApiHeadline*
 
     Fields: ~

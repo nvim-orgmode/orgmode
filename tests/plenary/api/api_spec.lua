@@ -439,6 +439,84 @@ describe('Api', function()
     assert.is.Nil(closest_headline)
   end)
 
+  describe('insert_headline', function()
+    it('should insert headline from plain object', function()
+      local file = helpers.create_agenda_file({
+        '* TODO Existing headline',
+      })
+
+      local inserted = api.load(file.filename):insert_headline({
+        level = 1,
+        keyword = 'TODO',
+        text = 'New inserted task',
+      })
+
+      assert.is_not_nil(inserted)
+      assert.are.same('New inserted task', inserted.title)
+      assert.are.same('TODO', inserted.todo_value)
+
+      local reloaded = api.load(file.filename)
+      assert.are.same(2, #reloaded.headlines)
+      assert.are.same('New inserted task', reloaded.headlines[2].title)
+    end)
+
+    it('should insert headline with level and text only', function()
+      local file = helpers.create_agenda_file({
+        '* TODO Existing headline',
+      })
+
+      local inserted = api.load(file.filename):insert_headline({
+        level = 2,
+        text = 'Level 2 task',
+      })
+
+      assert.is_not_nil(inserted)
+      assert.are.same(2, inserted.level)
+      assert.is_nil(inserted.todo_value)
+
+      local reloaded = api.load(file.filename)
+      assert.are.same('** Level 2 task', reloaded.headlines[2].line)
+    end)
+
+    it('should insert headline after another headline', function()
+      local file = helpers.create_agenda_file({
+        '* TODO First headline',
+        '* TODO Third headline',
+      })
+
+      local reloaded = api.load(file.filename)
+      local inserted = api.load(file.filename):insert_headline({
+        level = 1,
+        text = 'Second headline',
+      }, reloaded.headlines[1])
+
+      assert.is_not_nil(inserted)
+      assert.are.same('Second headline', inserted.title)
+
+      local final = api.load(file.filename)
+      assert.are.same(3, #final.headlines)
+      assert.are.same('First headline', final.headlines[1].title)
+      assert.are.same('Second headline', final.headlines[2].title)
+      assert.are.same('Third headline', final.headlines[3].title)
+    end)
+
+    it('should insert at end when no after param', function()
+      local file = helpers.create_agenda_file({
+        '* TODO First headline',
+        '* TODO Second headline',
+      })
+
+      api.load(file.filename):insert_headline({
+        level = 1,
+        text = 'Appended headline',
+      })
+
+      local reloaded = api.load(file.filename)
+      assert.are.same(3, #reloaded.headlines)
+      assert.are.same('Appended headline', reloaded.headlines[3].title)
+    end)
+  end)
+
   describe('Refile', function()
     describe('from org file', function()
       it('should refile a headline to another file', function()
