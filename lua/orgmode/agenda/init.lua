@@ -173,7 +173,8 @@ function Agenda:_build_custom_commands()
           table.insert(views, AgendaTypes[agenda_type.type]:new(opts))
         end
         self.views = views
-        return self:prepare_and_render():next(function()
+        return Promise.async(function()
+          self:prepare_and_render():await()
           if #self.views > 1 then
             vim.fn.cursor({ 1, 0 })
           end
@@ -291,23 +292,18 @@ function Agenda:reset()
 end
 
 ---@param source? string
+---@async
 function Agenda:redo(source, preserve_cursor_pos)
   self:_call_all_views('redo')
   local save_view = preserve_cursor_pos and vim.fn.winsaveview()
-  return self.files
-    :load(true)
-    :next(function()
-      if source == 'mapping' then
-        return self:_call_view_async('redraw')
-      end
-      return true
-    end)
-    :next(function()
-      self:render()
-      if save_view then
-        vim.fn.winrestview(save_view)
-      end
-    end)
+  self.files:load(true):await()
+  if source == 'mapping' then
+    self:_call_view_async('redraw'):await()
+  end
+  self:render()
+  if save_view then
+    vim.fn.winrestview(save_view)
+  end
 end
 
 function Agenda:advance_span(direction)
@@ -325,6 +321,7 @@ function Agenda:open_day(day)
   })
 end
 
+---@async
 function Agenda:goto_date()
   local views = {}
   for _, view in ipairs(self.views) do
@@ -338,15 +335,14 @@ function Agenda:goto_date()
     return utils.echo_error('No available views to jump to date.')
   end
 
-  return Calendar.new({ date = Date.now(), title = 'Go to agenda date' }):open():next(function(date)
-    if not date then
-      return nil
-    end
-    for _, view in ipairs(views) do
-      view:goto_date(date)
-    end
-    return self:render()
-  end)
+  local date = Calendar.new({ date = Date.now(), title = 'Go to agenda date' }):open():await()
+  if not date then
+    return nil
+  end
+  for _, view in ipairs(views) do
+    view:goto_date(date)
+  end
+  return self:render()
 end
 
 function Agenda:switch_to_item()
@@ -357,6 +353,7 @@ function Agenda:switch_to_item()
   utils.goto_headline(item)
 end
 
+---@async
 function Agenda:change_todo_state()
   return self:_remote_edit({
     action = 'org_mappings.todo_next_state',
@@ -364,6 +361,7 @@ function Agenda:change_todo_state()
   })
 end
 
+---@async
 function Agenda:clock_in()
   return self:_remote_edit({
     action = 'clock.org_clock_in',
@@ -371,6 +369,7 @@ function Agenda:clock_in()
   })
 end
 
+---@async
 function Agenda:add_note()
   return self:_remote_edit({
     action = 'org_mappings.add_note',
@@ -378,6 +377,7 @@ function Agenda:add_note()
   })
 end
 
+---@async
 function Agenda:refile()
   return self:_remote_edit({
     action = 'capture.refile_headline_to_destination',
@@ -407,6 +407,7 @@ function Agenda:preview_item()
   vim.api.nvim_set_option_value('filetype', 'org', { buf = buf })
 end
 
+---@async
 function Agenda:clock_out()
   return self:_remote_edit({
     action = 'clock.org_clock_out',
@@ -420,6 +421,7 @@ function Agenda:clock_out()
   })
 end
 
+---@async
 function Agenda:clock_cancel()
   return self:_remote_edit({
     action = 'clock.org_clock_cancel',
@@ -433,10 +435,12 @@ function Agenda:clock_cancel()
   })
 end
 
+---@async
 function Agenda:set_effort()
   return self:_remote_edit({ action = 'clock.org_set_effort' })
 end
 
+---@async
 function Agenda:set_priority()
   return self:_remote_edit({
     action = 'org_mappings.set_priority',
@@ -444,6 +448,7 @@ function Agenda:set_priority()
   })
 end
 
+---@async
 function Agenda:priority_up()
   return self:_remote_edit({
     action = 'org_mappings.priority_up',
@@ -451,6 +456,7 @@ function Agenda:priority_up()
   })
 end
 
+---@async
 function Agenda:priority_down()
   return self:_remote_edit({
     action = 'org_mappings.priority_down',
@@ -458,6 +464,7 @@ function Agenda:priority_down()
   })
 end
 
+---@async
 function Agenda:archive()
   return self:_remote_edit({
     action = 'org_mappings.archive',
@@ -465,6 +472,7 @@ function Agenda:archive()
   })
 end
 
+---@async
 function Agenda:toggle_archive_tag()
   return self:_remote_edit({
     action = 'org_mappings.toggle_archive_tag',
@@ -472,6 +480,7 @@ function Agenda:toggle_archive_tag()
   })
 end
 
+---@async
 function Agenda:set_tags()
   return self:_remote_edit({
     action = 'org_mappings.set_tags',
@@ -479,6 +488,7 @@ function Agenda:set_tags()
   })
 end
 
+---@async
 function Agenda:set_deadline()
   return self:_remote_edit({
     action = 'org_mappings.org_deadline',
@@ -486,6 +496,7 @@ function Agenda:set_deadline()
   })
 end
 
+---@async
 function Agenda:set_schedule()
   return self:_remote_edit({
     action = 'org_mappings.org_schedule',
@@ -493,6 +504,7 @@ function Agenda:set_schedule()
   })
 end
 
+---@async
 function Agenda:toggle_clock_report()
   self:_call_view('toggle_clock_report')
   return self:redo('agenda', true)
@@ -545,21 +557,22 @@ function Agenda:goto_item()
   utils.goto_headline(item)
 end
 
+---@async
 function Agenda:filter()
   local this = self
   self.filters:parse_available_filters(self.views)
-  return Input.open('Filter [+cat-tag/regexp/]: ', self.filters.value, function(arg_lead)
+  local value = Input.open('Filter [+cat-tag/regexp/]: ', self.filters.value, function(arg_lead)
     return utils.prompt_autocomplete(arg_lead, this.filters:get_completion_list(), { '+', '-' })
-  end):next(function(value)
-    if not value or value == self.filters.value then
-      return false
-    end
-    self.filters:parse(value)
-    return self:redo('filter', true)
-  end)
+  end):await()
+  if not value or value == self.filters.value then
+    return false
+  end
+  self.filters:parse(value)
+  return self:redo('filter', true)
 end
 
 ---@param opts table
+---@async
 function Agenda:_remote_edit(opts)
   opts = opts or {}
   local action = opts.action
@@ -580,36 +593,37 @@ function Agenda:_remote_edit(opts)
   end
   local old_range = headline:get_range()
 
-  local update = headline.file:update(function(_)
-    vim.fn.cursor({ headline:get_range().start_line, 1 })
-    return Promise.resolve(require('orgmode').action(action)):next(function()
-      return self.files:get_closest_headline_or_nil()
+  local updated_headline = headline.file
+    :update(function(_)
+      return Promise.async(function()
+        vim.fn.cursor({ headline:get_range().start_line, 1 })
+        Promise.resolve(require('orgmode').action(action)):await()
+        return self.files:get_closest_headline_or_nil()
+      end)
     end)
-  end)
+    :await()
 
-  update:next(function(updated_headline)
-    ---@cast updated_headline OrgHeadline
-    if opts.redo then
-      return self:redo('remote_edit', true)
-    end
-    if not opts.update_in_place or not updated_headline then
+  ---@cast updated_headline OrgHeadline
+  if opts.redo then
+    return self:redo('remote_edit', true)
+  end
+  if not opts.update_in_place or not updated_headline then
+    return
+  end
+  local line_range_same = updated_headline:get_range():is_same_line_range(old_range)
+
+  local update_item_inline = function()
+    if not agenda_line or not view then
       return
     end
-    local line_range_same = updated_headline:get_range():is_same_line_range(old_range)
+    return view:rerender_agenda_line(agenda_line, updated_headline)
+  end
 
-    local update_item_inline = function()
-      if not agenda_line or not view then
-        return
-      end
-      return view:rerender_agenda_line(agenda_line, updated_headline)
-    end
+  if line_range_same then
+    return update_item_inline()
+  end
 
-    if line_range_same then
-      return update_item_inline()
-    end
-
-    return self:redo('remote_edit', true)
-  end)
+  return self:redo('remote_edit', true)
 end
 
 ---@return OrgHeadline | nil

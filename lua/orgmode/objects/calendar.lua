@@ -641,10 +641,12 @@ function Calendar:clear_date()
   cb(nil, true)
 end
 
+---@async
 function Calendar:read_date()
-  self:_ensure_day()
-  local current_date = self:get_selected_date() or Date.today()
-  Input.open('Enter date: ', current_date:to_string()):next(function(result)
+  return Promise.async(function()
+    self:_ensure_day()
+    local current_date = self:get_selected_date() or Date.today()
+    local result = Input.open('Enter date: ', current_date:to_string()):await()
     if result then
       local date = current_date:set_from_string(result)
       if not date then

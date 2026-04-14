@@ -14,6 +14,8 @@ local auto_instance_keys = {
   links = true,
 }
 
+local Promise = require('orgmode.utils.promise')
+
 ---@class Org
 ---@field initialized boolean
 ---@field setup_called boolean
@@ -188,6 +190,15 @@ end
 
 ---@param cmd string
 ---@param opts? any
+local function handle_action_error(result)
+  if result.message then
+    return require('orgmode.utils').echo_error(result.message)
+  end
+  if type(result) == 'string' then
+    return require('orgmode.utils').echo_error(result)
+  end
+end
+
 function Org.action(cmd, opts)
   local parts = vim.split(cmd, '.', { plain = true })
   if #parts < 2 then
@@ -205,17 +216,16 @@ function Org.action(cmd, opts)
   end
   if item and item[parts[#parts]] then
     local method = item[parts[#parts]]
-    local success, result = pcall(method, item, opts)
-    if not success then
-      if result.message then
-        return require('orgmode.utils').echo_error(result.message)
+    return Promise.async(function()
+      local success, result = pcall(method, item, opts)
+      if not success then
+        return handle_action_error(result)
       end
-      if type(result) == 'string' then
-        return require('orgmode.utils').echo_error(result)
-      end
-    end
-    Org._set_dot_repeat(cmd, opts)
-    return result
+      Org._set_dot_repeat(cmd, opts)
+      return Promise.resolve(result):await()
+    end):catch(function(err)
+      return handle_action_error(err)
+    end)
   end
 end
 

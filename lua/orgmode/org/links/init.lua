@@ -3,6 +3,7 @@ local utils = require('orgmode.utils')
 local OrgLinkUrl = require('orgmode.org.links.url')
 local OrgHyperlink = require('orgmode.org.links.hyperlink')
 local Input = require('orgmode.ui.input')
+local Promise = require('orgmode.utils.promise')
 
 ---@class OrgLinks:OrgLinkType
 ---@field private files OrgFiles
@@ -109,22 +110,24 @@ function OrgLinks:get_link_to_file(file)
 end
 
 ---@param link_location string
+---@async
 function OrgLinks:insert_link(link_location, desc)
-  local selected_link = OrgHyperlink:new(link_location)
-  desc = desc or selected_link.url:get_target()
-  if desc and (desc:match('^%*') or desc:match('^#')) then
-    desc = desc:sub(2)
-  end
+  return Promise.async(function()
+    local selected_link = OrgHyperlink:new(link_location)
+    desc = desc or selected_link.url:get_target()
+    if desc and (desc:match('^%*') or desc:match('^#')) then
+      desc = desc:sub(2)
+    end
 
-  if selected_link.url:get_protocol() == 'id' then
-    link_location = ('id:%s'):format(selected_link.url:get_path())
-  end
+    if selected_link.url:get_protocol() == 'id' then
+      link_location = ('id:%s'):format(selected_link.url:get_path())
+    end
 
-  if not desc and vim.fn.mode() == 'v' then
-    desc = utils.get_visual_selection()
-  end
+    if not desc and vim.fn.mode() == 'v' then
+      desc = utils.get_visual_selection()
+    end
 
-  return Input.open('Description: ', desc or ''):next(function(link_description)
+    local link_description = Input.open('Description: ', desc or ''):await()
     if not link_description then
       return false
     end

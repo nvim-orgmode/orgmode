@@ -63,13 +63,12 @@ function OrgFiles:load(force)
 
   self.load_state = 'loading'
   return Promise.map(function(filename, index)
-    return self:load_file(filename):next(function(orgfile)
-      if orgfile then
-        orgfile.index = index
-        self.files[orgfile.filename] = orgfile
-      end
-      return orgfile
-    end)
+    local orgfile = self:load_file(filename):await()
+    if orgfile then
+      orgfile.index = index
+      self.files[orgfile.filename] = orgfile
+    end
+    return orgfile
   end, self:_files(true), 50):next(function()
     self.load_state = 'loaded'
     return self

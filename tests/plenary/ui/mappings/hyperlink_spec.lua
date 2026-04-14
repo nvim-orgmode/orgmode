@@ -1,5 +1,8 @@
 local helpers = require('tests.plenary.helpers')
 local OrgId = require('orgmode.org.id')
+local Input = require('orgmode.ui.input')
+local Promise = require('orgmode.utils.promise')
+local orgmode = require('orgmode')
 
 describe('Hyperlink mappings', function()
   after_each(function()
@@ -209,5 +212,51 @@ describe('Hyperlink mappings', function()
     vim.fn.cursor(1, 10)
     vim.cmd([[norm ,oo]])
     assert.is.same(' --> eleven <--', vim.api.nvim_get_current_line())
+  end)
+
+  it('should pass selected link to links insertion flow', function()
+    helpers.create_agenda_file({
+      '* Example',
+    })
+    vim.fn.cursor(1, 1)
+
+    local captured_link
+    local captured_desc
+
+    helpers.with_var(Input, 'open', function(prompt)
+      if prompt == 'Links: ' then
+        return Promise.resolve('https://example.com')
+      end
+      return Promise.resolve('Example description')
+    end, function()
+      helpers.with_var(orgmode.links, 'insert_link', function(_, link_location, desc)
+        captured_link = link_location
+        captured_desc = desc
+        return Promise.resolve(true)
+      end, function()
+        orgmode.action('org_mappings.insert_link'):wait()
+      end)
+    end)
+
+    assert.are.same('https://example.com', captured_link)
+    assert.is.Nil(captured_desc)
+  end)
+
+  it('should insert selected link with awaited description prompt', function()
+    helpers.create_agenda_file({
+      '* Example',
+    })
+    vim.fn.cursor(1, #vim.api.nvim_get_current_line())
+
+    helpers.with_var(Input, 'open', function(prompt)
+      if prompt == 'Description: ' then
+        return Promise.resolve('Example description')
+      end
+      error('Unexpected prompt: ' .. prompt)
+    end, function()
+      orgmode.links:insert_link('https://example.com'):wait()
+    end)
+
+    assert.are.same('* Example[[https://example.com][Example description]]', vim.api.nvim_get_current_line())
   end)
 end)

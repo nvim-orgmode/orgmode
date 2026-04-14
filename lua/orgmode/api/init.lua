@@ -91,16 +91,14 @@ function OrgApi.refile(opts)
     end
   end
 
-  return Promise.resolve()
-    :next(function()
-      if is_capture then
-        return orgmode.capture:_refile_from_capture_buffer(refile_opts)
-      end
-      return orgmode.capture:_refile_from_org_file(refile_opts)
-    end)
-    :next(function()
-      return true
-    end)
+  return Promise.async(function()
+    if is_capture then
+      orgmode.capture:_refile_from_capture_buffer(refile_opts)
+    else
+      orgmode.capture:_refile_from_org_file(refile_opts)
+    end
+    return true
+  end)
 end
 
 --- Insert a link to a given location at the current cursor position

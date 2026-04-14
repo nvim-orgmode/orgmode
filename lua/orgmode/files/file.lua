@@ -79,7 +79,8 @@ function OrgFile.load(filename)
     return Promise.resolve(false)
   end
 
-  return utils.readfile(filename, { schedule = true }):next(function(lines)
+  return Promise.async(function()
+    local lines = utils.readfile(filename, { schedule = true }):await()
     return OrgFile:new({
       filename = filename,
       lines = lines,
@@ -115,7 +116,8 @@ function OrgFile:reload()
   end
 
   if file_changed and not buf_changed then
-    return utils.readfile(self.filename, { schedule = true }):next(function(lines)
+    return Promise.async(function()
+      local lines = utils.readfile(self.filename, { schedule = true }):await()
       self:_update_lines(lines)
       if stat then
         self.metadata.mtime = stat.mtime.nsec
@@ -138,7 +140,8 @@ end
 function OrgFile:update(action)
   local is_same_file = self.filename == utils.current_file_path()
   if is_same_file then
-    return Promise.resolve(action(self)):next(function(result)
+    return Promise.async(function()
+      local result = Promise.resolve(action(self)):await()
       vim.cmd(':silent! w')
       return result
     end)
@@ -147,11 +150,16 @@ function OrgFile:update(action)
   local edit_file = utils.edit_file(self.filename)
   edit_file.open()
 
-  return Promise.resolve(action(self)):next(function(result)
-    edit_file.close()
-    return self:reload():next(function()
-      return result
+  return Promise.async(function()
+    local ok, result = pcall(function()
+      return Promise.resolve(action(self)):await()
     end)
+    edit_file.close()
+    if not ok then
+      error(result)
+    end
+    self:reload():await()
+    return result
   end)
 end
 

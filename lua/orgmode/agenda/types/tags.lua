@@ -5,6 +5,7 @@ local utils = require('orgmode.utils')
 local Search = require('orgmode.files.elements.search')
 local OrgAgendaTodosType = require('orgmode.agenda.types.todo')
 local Input = require('orgmode.ui.input')
+local Promise = require('orgmode.utils.promise')
 
 ---@alias OrgAgendaTodoIgnoreDeadlinesTypes 'all' | 'near' | 'far' | 'past' | 'future'
 ---@alias OrgAgendaTodoIgnoreScheduledTypes 'all' | 'past' | 'future'
@@ -107,10 +108,12 @@ function OrgAgendaTagsType:get_file_headlines(file)
   return headlines
 end
 
+---@async
 function OrgAgendaTagsType:get_tags()
-  return Input.open('Match: ', self.match_query or '', function(arg_lead)
-    return utils.prompt_autocomplete(arg_lead, self.files:get_tags())
-  end):next(function(tags)
+  return Promise.async(function()
+    local tags = Input.open('Match: ', self.match_query or '', function(arg_lead)
+      return utils.prompt_autocomplete(arg_lead, self.files:get_tags())
+    end):await()
     if not tags then
       return false
     end

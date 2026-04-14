@@ -29,12 +29,14 @@ function CaptureWindow:new(opts)
   return setmetatable(data, CaptureWindow)
 end
 
+---@async
 function CaptureWindow:open()
-  if self._window then
-    return self:focus()
-  end
-  self._resolve_fn = nil
-  return self.template:compile():next(function(content)
+  return Promise.async(function()
+    if self._window then
+      return self:focus()
+    end
+    self._resolve_fn = nil
+    local content = self.template:compile():await()
     if not content then
       return utils.echo_info('Canceled.')
     end

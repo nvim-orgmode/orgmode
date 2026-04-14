@@ -5,6 +5,13 @@ local Calendar = require('orgmode.objects.calendar')
 local Promise = require('orgmode.utils.promise')
 local Input = require('orgmode.ui.input')
 
+local function open_calendar(date, title, active)
+  return Promise.async(function()
+    local selected = Calendar.new({ date = date, title = title }):open():await()
+    return selected and selected:to_wrapped_string(active) or nil
+  end)
+end
+
 local expansions = {
   ['%%f'] = function()
     return vim.fn.expand('%')
@@ -25,53 +32,37 @@ local expansions = {
     return string.format('<%s>', Date.today():to_string())
   end,
   ['%%%^t'] = function()
-    return Calendar.new({ date = Date.today() }):open():next(function(date)
-      return date and date:to_wrapped_string(true) or nil
-    end)
+    return open_calendar(Date.today(), nil, true)
   end,
   ['%%%^%{([^%}]*)%}t'] = function(title)
-    return Calendar.new({ date = Date.today(), title = title }):open():next(function(date)
-      return date and date:to_wrapped_string(true) or nil
-    end)
+    return open_calendar(Date.today(), title, true)
   end,
   ['%%T'] = function()
     return Date.now():to_wrapped_string(true)
   end,
   ['%%%^T'] = function()
-    return Calendar.new({ date = Date.now() }):open():next(function(date)
-      return date and date:to_wrapped_string(true) or nil
-    end)
+    return open_calendar(Date.now(), nil, true)
   end,
   ['%%%^%{([^%}]*)%}T'] = function(title)
-    return Calendar.new({ date = Date.now(), title = title }):open():next(function(date)
-      return date and date:to_wrapped_string(true) or nil
-    end)
+    return open_calendar(Date.now(), title, true)
   end,
   ['%%u'] = function()
     return Date.today():to_wrapped_string(false)
   end,
   ['%%%^u'] = function()
-    return Calendar.new({ date = Date.today() }):open():next(function(date)
-      return date and date:to_wrapped_string(false) or nil
-    end)
+    return open_calendar(Date.today(), nil, false)
   end,
   ['%%%^%{([^%}]*)%}u'] = function(title)
-    return Calendar.new({ date = Date.today(), title = title }):open():next(function(date)
-      return date and date:to_wrapped_string(false) or nil
-    end)
+    return open_calendar(Date.today(), title, false)
   end,
   ['%%U'] = function()
     return Date.now():to_wrapped_string(false)
   end,
   ['%%%^U'] = function()
-    return Calendar.new({ date = Date.now() }):open():next(function(date)
-      return date and date:to_wrapped_string(false) or nil
-    end)
+    return open_calendar(Date.now(), nil, false)
   end,
   ['%%%^%{([^%}]*)%}U'] = function(title)
-    return Calendar.new({ date = Date.now(), title = title }):open():next(function(date)
-      return date and date:to_wrapped_string(false) or nil
-    end)
+    return open_calendar(Date.now(), title, false)
   end,
   ['%%a'] = function()
     return string.format('[[file:%s::%s]]', utils.current_file_path(), vim.api.nvim_win_get_cursor(0)[1])
@@ -192,27 +183,25 @@ function Template:_validate_datetree()
   end
 end
 
+---@async
 function Template:compile()
-  self:validate_options()
-  local content = self.template
-  if type(content) == 'table' then
-    content = table.concat(content, '\n')
-  end
-  return self
-    :_compile(self.target, 'target')
-    :next(function(target)
-      if not target then
-        return nil
-      end
-      self.target = target
-      return self:_compile(content or '', 'content')
-    end)
-    :next(function(compiled_content)
-      if not compiled_content then
-        return nil
-      end
-      return vim.split(compiled_content, '\n', { plain = true })
-    end)
+  return Promise.async(function()
+    self:validate_options()
+    local content = self.template
+    if type(content) == 'table' then
+      content = table.concat(content, '\n')
+    end
+    local target = self:_compile(self.target, 'target')
+    if not target then
+      return nil
+    end
+    self.target = target
+    local compiled_content = self:_compile(content or '', 'content')
+    if not compiled_content then
+      return nil
+    end
+    return vim.split(compiled_content, '\n', { plain = true })
+  end)
 end
 
 ---@return OrgCaptureTemplateDatetreeOpts
@@ -249,34 +238,34 @@ end
 ---@private
 ---@param content string
 ---@param content_type 'target' | 'content'
----@return OrgPromise<string | nil>
+---@async
+---@return string | nil
 function Template:_compile(content, content_type)
   content = self:_compile_dates(content)
   if self._compile_hooks then
     for _, hook in ipairs(self._compile_hooks) do
       content = hook(content, content_type) --[[@as string]]
       if not content then
-        return Promise.resolve(nil)
+        return nil
       end
     end
   end
-  return self:_compile_datetree(content, content_type):next(function(compiled_content)
-    if not compiled_content then
-      return nil
-    end
-    return self:_compile_expansions(compiled_content):next(function(cnt)
-      if not cnt then
-        return nil
-      end
-      cnt = self:_compile_expressions(cnt)
-      return self:_compile_prompts(cnt)
-    end)
-  end)
+  local compiled_content = self:_compile_datetree(content, content_type)
+  if not compiled_content then
+    return nil
+  end
+  local cnt = self:_compile_expansions(compiled_content)
+  if not cnt then
+    return nil
+  end
+  cnt = self:_compile_expressions(cnt)
+  return self:_compile_prompts(cnt)
 end
 
 ---@param content string
 ---@param content_type 'target' | 'content'
----@return OrgPromise<string | nil>
+---@async
+---@return string | nil
 function Template:_compile_datetree(content, content_type)
   if
     not self.datetree
@@ -284,64 +273,50 @@ function Template:_compile_datetree(content, content_type)
     or not self.datetree.time_prompt
     or content_type ~= 'target'
   then
-    return Promise.resolve(content)
+    return content
   end
 
-  return Calendar.new({ date = Date.now(), title = 'Select datetree date' }):open():next(function(date)
-    if date then
-      self.datetree.date = date
-      return content
-    end
-    return nil
-  end)
+  local date = Calendar.new({ date = Date.now(), title = 'Select datetree date' }):open():await()
+  if date then
+    self.datetree.date = date
+    return content
+  end
+  return nil
 end
 
 ---@param content string
----@return OrgPromise<string | nil>
+---@async
+---@return string | nil
 function Template:_compile_expansions(content)
   local compiled_expansions = {}
-  local proceed = true
   for exp in content:gmatch('%%([^%%]*)') do
     for expansion, compiler in pairs(expansions) do
       local match = ('%' .. exp):match(expansion)
       if match then
         table.insert(compiled_expansions, function()
-          return Promise.resolve(compiler(match)):next(function(replacement)
-            if not proceed or not replacement then
-              return Promise.reject('canceled')
-            end
-            content = content:gsub(expansion, vim.pesc(replacement))
-            return content
-          end)
+          local replacement = Promise.resolve(compiler(match)):await()
+          if not replacement then
+            return nil
+          end
+          content = content:gsub(expansion, vim.pesc(replacement))
+          return content
         end)
       end
     end
   end
 
   if #compiled_expansions == 0 then
-    return Promise.resolve(content)
+    return content
   end
 
-  local result = Promise.resolve()
   for _, value in ipairs(compiled_expansions) do
-    result = result:next(function()
-      return value()
-    end)
+    local updated_content = value()
+    if not updated_content then
+      return nil
+    end
   end
 
-  return result
-    :next(function()
-      if not proceed then
-        return nil
-      end
-      return content
-    end)
-    :catch(function(err)
-      if err == 'canceled' then
-        return
-      end
-      error(err)
-    end)
+  return content
 end
 
 ---@param content string
@@ -354,7 +329,8 @@ function Template:_compile_dates(content)
 end
 
 ---@param content string
----@return OrgPromise<string>
+---@async
+---@return string
 function Template:_compile_prompts(content)
   local prepared_inputs = {}
   for exp in content:gmatch('%%%^%b{}') do
@@ -382,20 +358,19 @@ function Template:_compile_prompts(content)
   end
 
   if #prepared_inputs == 0 then
-    return Promise.resolve(content)
+    return content
   end
 
-  return Promise.mapSeries(function(prepared_input)
-    return Input.open(prepared_input.prompt, '', prepared_input.completion and prepared_input.completion() or nil)
-      :next(function(response)
-        if not response or #response == 0 then
-          response = prepared_input.fallback_value
-        end
-        content = content:gsub(vim.pesc(prepared_input.exp), response)
-      end)
-  end, prepared_inputs):next(function()
-    return content
-  end)
+  for _, prepared_input in ipairs(prepared_inputs) do
+    local response =
+      Input.open(prepared_input.prompt, '', prepared_input.completion and prepared_input.completion() or nil):await()
+    if not response or #response == 0 then
+      response = prepared_input.fallback_value
+    end
+    content = content:gsub(vim.pesc(prepared_input.exp), response)
+  end
+
+  return content
 end
 
 function Template:_compile_expressions(content)

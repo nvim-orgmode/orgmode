@@ -39,24 +39,26 @@ function Clock:has_clocked_headline()
   return self.clocked_headline ~= nil
 end
 
+---@async
 function Clock:org_clock_in()
-  self:update_clocked_headline()
-  local item = self.files:get_closest_headline()
-  if item:is_clocked_in() then
-    return utils.echo_info(string.format('Clock continues in "%s"', item:get_title()))
-  end
+  return Promise.async(function()
+    self:update_clocked_headline()
+    local item = self.files:get_closest_headline()
+    if item:is_clocked_in() then
+      return utils.echo_info(string.format('Clock continues in "%s"', item:get_title()))
+    end
 
-  local promise = Promise.resolve()
+    if self.clocked_headline and self.clocked_headline:is_clocked_in() then
+      local file = self.clocked_headline.file
+      file
+        :update(function()
+          local clocked_item =
+            file:reload_sync():get_closest_headline({ self.clocked_headline:get_range().start_line, 0 })
+          clocked_item:clock_out()
+        end)
+        :await()
+    end
 
-  if self.clocked_headline and self.clocked_headline:is_clocked_in() then
-    local file = self.clocked_headline.file
-    promise = file:update(function()
-      local clocked_item = file:reload_sync():get_closest_headline({ self.clocked_headline:get_range().start_line, 0 })
-      clocked_item:clock_out()
-    end)
-  end
-
-  return promise:next(function()
     item:clock_in()
     self.clocked_headline = item
   end)
@@ -96,21 +98,21 @@ function Clock:org_clock_goto()
   utils.goto_headline(self.clocked_headline)
 end
 
+---@async
 function Clock:org_set_effort()
   local item = self.files:get_closest_headline()
   -- TODO: Add Effort_ALL property as autocompletion
   local current_effort = item:get_property('Effort')
-  return Input.open('Effort: ', current_effort or ''):next(function(effort)
-    if not effort then
-      return false
-    end
-    local duration = Duration.parse(effort)
-    if duration == nil then
-      return utils.echo_error('Invalid duration format: ' .. effort)
-    end
-    item:set_property('Effort', effort)
-    return item
-  end)
+  local effort = Input.open('Effort: ', current_effort or ''):await()
+  if not effort then
+    return false
+  end
+  local duration = Duration.parse(effort)
+  if duration == nil then
+    return utils.echo_error('Invalid duration format: ' .. effort)
+  end
+  item:set_property('Effort', effort)
+  return item
 end
 
 function Clock:get_statusline()

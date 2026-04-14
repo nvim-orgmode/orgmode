@@ -151,17 +151,15 @@ function OrgHeadline:set_deadline(date)
     local headline = org.files:get_closest_headline()
     local deadline_date = headline:get_deadline_date()
     if not date then
-      return Calendar.new({ date = deadline_date or Date.today(), clearable = true, title = 'Set deadline' })
-        :open()
-        :next(function(new_date, cleared)
-          if cleared then
-            return headline:remove_deadline_date()
-          end
-          if not new_date then
-            return
-          end
-          return headline:set_deadline_date(new_date)
-        end)
+      local new_date, cleared =
+        Calendar.new({ date = deadline_date or Date.today(), clearable = true, title = 'Set deadline' }):open():await()
+      if cleared then
+        return headline:remove_deadline_date()
+      end
+      if not new_date then
+        return
+      end
+      return headline:set_deadline_date(new_date)
     end
 
     if type(date) == 'string' then
@@ -191,17 +189,15 @@ function OrgHeadline:set_scheduled(date)
     local headline = org.files:get_closest_headline()
     local scheduled_date = headline:get_scheduled_date()
     if not date then
-      return Calendar.new({ date = scheduled_date or Date.today(), clearable = true, title = 'Set schedule' })
-        :open()
-        :next(function(new_date, cleared)
-          if cleared then
-            return headline:remove_scheduled_date()
-          end
-          if not new_date then
-            return
-          end
-          return headline:set_scheduled_date(new_date)
-        end)
+      local new_date, cleared =
+        Calendar.new({ date = scheduled_date or Date.today(), clearable = true, title = 'Set schedule' }):open():await()
+      if cleared then
+        return headline:remove_scheduled_date()
+      end
+      if not new_date then
+        return
+      end
+      return headline:set_scheduled_date(new_date)
     end
 
     if type(date) == 'string' then
@@ -256,9 +252,10 @@ end
 ---@private
 function OrgHeadline:_do_action(action)
   return org.files:update_file(self.file.filename, function()
-    local view = vim.fn.winsaveview() or {}
-    vim.fn.cursor({ self.position.start_line, 1 })
-    return Promise.resolve(action()):next(function()
+    return Promise.async(function()
+      local view = vim.fn.winsaveview() or {}
+      vim.fn.cursor({ self.position.start_line, 1 })
+      Promise.resolve(action()):await()
       vim.fn.winrestview(view)
       return self:reload()
     end)
