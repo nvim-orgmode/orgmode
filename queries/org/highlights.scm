@@ -9,6 +9,7 @@
 (headline (stars) @stars (#org-is-headline-level? @stars "6")) @org.headline.level6
 (headline (stars) @stars (#org-is-headline-level? @stars "7")) @org.headline.level7
 (headline (stars) @stars (#org-is-headline-level? @stars "8")) @org.headline.level8
+(headline (stars) @org.leading_stars (#org-hide-leading-stars? @org.leading_stars) (#offset! @org.leading_stars 0 0 0 -1))
 (item . (expr) @org.keyword.todo @nospell (#org-is-todo-keyword? @org.keyword.todo "TODO"))
 (item . (expr) @org.keyword.done @nospell (#org-is-todo-keyword? @org.keyword.done "DONE"))
 (item priority: (priority) @org.priority.highest (#org-is-valid-priority? @org.priority.highest "highest"))
@@ -45,6 +46,7 @@
 (table . (row (cell (contents) @org.table.heading)))
 (table (hr) @org.table.delimiter)
 (fndef label: (expr) @org.footnote (#offset! @org.footnote 0 -4 0 1))
+(fnref) @org.footnote.reference
 (link url: (expr) @org.hyperlink.url @nospell) @org.hyperlink
 (link_desc url: (expr) @org.hyperlink.url @nospell desc: (expr) @org.hyperlink.desc) @org.hyperlink
 (link "[[" @_link_open "]]" @_link_close (#set! conceal ""))

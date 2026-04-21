@@ -1,7 +1,6 @@
 ---@class OrgHighlighter
 ---@field namespace number
 ---@field markup OrgMarkupHighlighter
----@field private stars OrgStarsHighlighter
 ---@field private todos OrgTodosHighlighter
 ---@field private foldtext OrgFoldtextHighlighter
 ---@field private _ephemeral boolean
@@ -25,7 +24,6 @@ end
 
 ---@private
 function OrgHighlighter:_setup()
-  self.stars = require('orgmode.colors.highlighter.stars'):new({ highlighter = self })
   self.markup = require('orgmode.colors.highlighter.markup'):new({ highlighter = self })
   self.todos = require('orgmode.colors.highlighter.todos'):new()
   self.foldtext = require('orgmode.colors.highlighter.foldtext'):new({ highlighter = self })
@@ -99,7 +97,6 @@ end
 function OrgHighlighter:_on_line_impl(bufnr, line, use_cache, winid)
   if self.buffers[bufnr].tree then
     self.markup:on_line(bufnr, line, self.buffers[bufnr].tree, use_cache)
-    self.stars:on_line(bufnr, line)
     self.foldtext:on_line(bufnr, line, winid)
   end
 end

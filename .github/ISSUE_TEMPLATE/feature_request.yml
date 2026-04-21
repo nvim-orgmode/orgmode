@@ -17,6 +17,14 @@ body:
         - 'Yes'
         - 'No'
         - 'N/A'
+  - type: dropdown
+    validations:
+      required: true
+    attributes:
+      label: Is code AI assisted/generated?
+      options:
+        - 'No'
+        - 'Yes'
   - type: textarea
     attributes:
       label: Orgmode link

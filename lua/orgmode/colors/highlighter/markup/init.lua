@@ -22,7 +22,6 @@ end
 function OrgMarkup:_init_highlighters()
   self.parsers = {
     emphasis = require('orgmode.colors.highlighter.markup.emphasis'):new({ markup = self }),
-    footnote = require('orgmode.colors.highlighter.markup.footnotes'):new({ markup = self }),
     latex = require('orgmode.colors.highlighter.markup.latex'):new({ markup = self }),
   }
 end
@@ -77,7 +76,6 @@ function OrgMarkup:get_node_highlights(root_node, source, line)
   local result = {
     emphasis = {},
     latex = {},
-    footnote = {},
   }
   ---@type OrgMarkupNode[]
   local entries = {}

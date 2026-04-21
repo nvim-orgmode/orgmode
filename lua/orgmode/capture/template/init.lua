@@ -5,6 +5,56 @@ local Calendar = require('orgmode.objects.calendar')
 local Promise = require('orgmode.utils.promise')
 local Input = require('orgmode.ui.input')
 
+---@description For `%^g` expansion in capture templates: gets all tags in the targeted file.
+---@param template? table
+---@return string[]
+local function get_target_tags(template)
+  local files = template and template.files
+  if not files or not template or template.target == '' then
+    return {}
+  end
+
+  local ok, file = pcall(function()
+    return files:get(template:get_target())
+  end)
+
+  if not ok or not file then
+    return {}
+  end
+
+  return file:get_tags()
+end
+
+---@description For `%^G` expansion in capture templates: gets all tags in all agenda files.
+---@param template? table
+---@return string[]
+local function get_all_tags(template)
+  local files = template and template.files
+  if not files then
+    return {}
+  end
+  return files:get_tags()
+end
+
+---@param tags_source string[]
+---@return OrgPromise<string>
+local function prompt_tags(tags_source)
+  local completion = function(arg_lead)
+    return utils.prompt_autocomplete(arg_lead, tags_source, { ':' })
+  end
+  return Input.open('Tags: ', '', completion):next(function(input)
+    if input == nil then
+      return nil
+    end
+    if input == '' then
+      return ''
+    end
+
+    local tags = utils.parse_tags_string(input)
+    return utils.tags_to_string(tags)
+  end)
+end
+
 local expansions = {
   ['%%f'] = function()
     return vim.fn.expand('%')
@@ -73,6 +123,12 @@ local expansions = {
       return date and date:to_wrapped_string(false) or nil
     end)
   end,
+  ['%%%^g'] = function(_, template)
+    return prompt_tags(get_target_tags(template))
+  end,
+  ['%%%^G'] = function(_, template)
+    return prompt_tags(get_all_tags(template))
+  end,
   ['%%a'] = function()
     return string.format('[[file:%s::%s]]', utils.current_file_path(), vim.api.nvim_win_get_cursor(0)[1])
   end,
@@ -83,14 +139,15 @@ local expansions = {
 ---@field template? string|string[]
 ---@field target? string
 ---@field datetree? OrgCaptureTemplateDatetree
----@field headline? string
+---@field headline? string|fun():string
 ---@field regexp? string
 ---@field properties? OrgCaptureTemplateProperties
 ---@field subtemplates? table<string, OrgCaptureTemplate>
 ---@field whole_file? boolean
 
 ---@class OrgCaptureTemplate:OrgCaptureTemplateOpts
----@field private _compile_hooks (fun(content:string, content_type: 'target' | 'content'):string | nil)[]
+---@field files? OrgFiles
+---@field private _compile_hooks? (fun(content:string, content_type: 'target' | 'content'):string | nil)[]
 local Template = {}
 
 ---@param opts OrgCaptureTemplateOpts
@@ -102,7 +159,7 @@ function Template:new(opts)
   vim.validate('template', opts.template, { 'string', 'table' }, true)
   vim.validate('target', opts.target, 'string', true)
   vim.validate('regexp', opts.regexp, 'string', true)
-  vim.validate('headline', opts.headline, 'string', true)
+  vim.validate('headline', opts.headline, { 'string', 'function' }, true)
   vim.validate('properties', opts.properties, 'table', true)
   vim.validate('subtemplates', opts.subtemplates, 'table', true)
   vim.validate('datetree', opts.datetree, { 'boolean', 'table' }, true)
@@ -306,7 +363,7 @@ function Template:_compile_expansions(content)
       local match = ('%' .. exp):match(expansion)
       if match then
         table.insert(compiled_expansions, function()
-          return Promise.resolve(compiler(match)):next(function(replacement)
+          return Promise.resolve(compiler(match, self)):next(function(replacement)
             if not proceed or not replacement then
               return Promise.reject('canceled')
             end
@@ -357,14 +414,28 @@ end
 ---@return OrgPromise<string>
 function Template:_compile_prompts(content)
   local prepared_inputs = {}
-  for exp in content:gmatch('%%%^%b{}') do
+  -- Match %^{...} with optional g/G suffix for tag prompts
+  for exp in content:gmatch('%%%^%b{}[gG]?') do
     local details = exp:match('%{(.*)%}')
     local parts = vim.split(details, '|')
     local title, default = parts[1], parts[2]
+
+    -- Check if this is a tag prompt (ends with g or G)
+    local is_tag_prompt = exp:sub(-1, -1) == 'g' or exp:sub(-1, -1) == 'G'
+
+    local original_exp = exp
+    -- If it's a tag prompt, remove the g/G from the expression for replacement
+    if is_tag_prompt then
+      exp = exp:sub(1, -2) -- Remove just the g/G, keep the closing brace
+    end
+
     local input = {
       fallback_value = default,
       exp = exp,
+      original_exp = original_exp, -- Keep the original (with g/G) for replacement
+      is_tag_prompt = is_tag_prompt,
     }
+
     if #parts > 2 then
       input.prompt = string.format('%s [%s]: ', title, default)
       input.completion = function()
@@ -391,7 +462,21 @@ function Template:_compile_prompts(content)
         if not response or #response == 0 then
           response = prepared_input.fallback_value
         end
-        content = content:gsub(vim.pesc(prepared_input.exp), response)
+
+        -- Handle tag prompts specially - format with colons
+        if prepared_input.is_tag_prompt and response and response ~= '' then
+          response = utils.tags_to_string(utils.parse_tags_string(response))
+        end
+
+        -- For tag prompts, we need to search for the original expression (with g/G)
+        -- but use the response which is already formatted (with :tags:)
+        -- Don't escape for tag prompts since we need the % to match literally
+        if prepared_input.is_tag_prompt then
+          -- Manually escape % for tag prompts (other chars dont need escaping for literal match)
+          content = content:gsub(prepared_input.original_exp:gsub('%%', '%%%%'), response)
+        else
+          content = content:gsub(vim.pesc(prepared_input.original_exp), response)
+        end
       end)
   end, prepared_inputs):next(function()
     return content

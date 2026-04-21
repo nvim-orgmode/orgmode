@@ -223,7 +223,7 @@ function AgendaItem:get_hlgroup()
     if self.is_today and self.headline_date:is_after(self.date, 'day') then
       local diff = math.abs(self.date:diff(self.headline_date))
       if diff <= FUTURE_DEADLINE_AS_WARNING_DAYS then
-        return hl_map.warning
+        return hl_map.upcoming_deadline
       end
       return nil
     end
