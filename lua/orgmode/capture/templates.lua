@@ -15,15 +15,19 @@ function Templates:new(templates)
   vim.validate('templates', templates, 'table', true)
 
   opts.templates = {}
-  for key, template in pairs(templates or config.org_capture_templates) do
-    if type(template) == 'table' then
-      local tpl = vim.deepcopy(template)
-      if not tpl.target then
-        tpl.target = config.org_default_notes_file
+
+  local maybe_templates = (templates or config.org_capture_templates)
+  if maybe_templates ~= nil then
+    for key, template in pairs(maybe_templates) do
+      if type(template) == 'table' then
+        local tpl = vim.deepcopy(template)
+        if not tpl.target then
+          tpl.target = config.org_default_notes_file
+        end
+        opts.templates[key] = Template:new(tpl)
+      else
+        opts.templates[key] = template
       end
-      opts.templates[key] = Template:new(tpl)
-    else
-      opts.templates[key] = template
     end
   end
 

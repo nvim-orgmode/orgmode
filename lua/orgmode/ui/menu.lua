@@ -17,6 +17,8 @@ local config = require('orgmode.config')
 ---@field prompt string Prompt text used to prompt a keystroke
 ---@field separator OrgMenuSeparator? Default separator
 
+---@alias OrgMenuHandler fun(data: OrgMenuData)
+
 --- Menu for selecting an action by pressing a key by the user
 ---@class OrgMenu:OrgMenuOpts
 local Menu = {}
@@ -146,6 +148,7 @@ function Menu:open()
     items = self.items,
     prompt = self.prompt,
   }
+  ---@type OrgMenuHandler
   local custom_handler = config.ui.menu.handler
   if custom_handler then
     return custom_handler(menu_data)
