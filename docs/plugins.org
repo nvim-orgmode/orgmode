@@ -20,6 +20,7 @@ Orgmode supports various plugins to extend its functionality or make it more pre
   - [[#org-bulletsnvim][org-bullets.nvim]]
   - [[#headlinesnvim][headlines.nvim]]
   - [[#org-modernnvim][org-modern.nvim]]
+  - [[#org-linksnvim][org-links.nvim]]
 - [[#other][Other]]
 - [[#example-configuration][Example configuration]]
 
@@ -186,6 +187,22 @@ require("orgmode").setup({
   },
 })
 #+end_src
+
+*** org-links.nvim
+:PROPERTIES:
+:CUSTOM_ID: org-linksnvim
+:END:
+Link: [[https://github.com/tangledhelix/org-links.nvim][org-links.nvim]]
+Prettify links: display only label (or undecorated link, if no label)
+
+Run after the orgmode setup.
+#+BEGIN_SRC lua
+-- Your orgmode setup
+require('orgmode').setup()
+
+--Setup org-links
+require('org-links').setup()
+#+END_SRC
 
 ** Other
 :PROPERTIES:
