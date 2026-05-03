@@ -455,6 +455,21 @@ function Config:setup_ts_predicates()
     local _, _, _, node_end_col = node:range()
     return ((node_end_col - 1) % 8) + 1 == level
   end, { force = true, all = true })
+
+  local valid_pre_marker_chars = { ' ', '(', '-', "'", '"', '{', '*', '/', '_', '+' }
+  vim.treesitter.query.add_predicate('org-is-valid-markup?', function(match, _, source, predicate)
+    local node = match[predicate[2]]
+    node = node and node[#node]
+    if not node or type(source) ~= 'number' then
+      return false
+    end
+    local row, col = node:range()
+    if col == 0 then
+      return true
+    end
+    local pre_char = vim.api.nvim_buf_get_text(source, row, col - 1, row, col, {})[1]
+    return vim.tbl_contains(valid_pre_marker_chars, pre_char)
+  end, { force = true, all = true })
 end
 
 ---@param content table

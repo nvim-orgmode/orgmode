@@ -4,7 +4,6 @@ local OrgAgendaLineToken = require('orgmode.agenda.view.token')
 local utils = require('orgmode.utils')
 ---@class OrgAgendaLineOpts
 ---@field headline? OrgHeadline
----@field highlighter? OrgHighlighter
 ---@field hl_group? string Highlight group for the whole line content
 ---@field line_hl_group? string Highlight group for the whole line (including white space)
 ---@field metadata? table<string, any>
@@ -12,7 +11,6 @@ local utils = require('orgmode.utils')
 
 ---@class OrgAgendaLine:OrgAgendaLineOpts
 ---@field view OrgAgendaView
----@field highlighter OrgHighlighter
 ---@field line_nr number
 ---@field col_counter number
 ---@field headline? OrgHeadline
@@ -28,7 +26,6 @@ function OrgAgendaLine:new(opts)
     tokens = {},
     col_counter = 1,
     headline = opts.headline,
-    highlighter = opts.highlighter,
     hl_group = opts.hl_group,
     line_hl_group = opts.line_hl_group,
     separator = opts.separator or ' ',
@@ -48,7 +45,6 @@ end
 ---@param token OrgAgendaLineToken
 function OrgAgendaLine:add_token(token)
   -- Add offset because of the concatenation later
-  token.highlighter = self.highlighter
   local concat_offset = #self.tokens > 0 and #self.separator or 0
   local length = #token.content
   local start_col = self.col_counter + concat_offset
@@ -91,7 +87,6 @@ function OrgAgendaLine:compile()
   for _, token in ipairs(self.tokens) do
     token.range.start_line = self.line_nr
     token.range.end_line = self.line_nr
-    token.highlighter = self.highlighter
     if token.virt_text_pos then
       local hl_groups = { token.hl_group }
       if self.hl_group then

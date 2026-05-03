@@ -15,11 +15,10 @@ local OrgHyperlink = require('orgmode.org.links.hyperlink')
 ---@field views OrgAgendaViewType[]
 ---@field filters OrgAgendaFilter
 ---@field files OrgFiles
----@field highlighter OrgHighlighter
 ---@field links OrgLinks
 local Agenda = {}
 
----@param opts? { highlighter: OrgHighlighter, files: OrgFiles, links: OrgLinks }
+---@param opts? { files: OrgFiles, links: OrgLinks }
 ---@return OrgAgenda
 function Agenda:new(opts)
   opts = opts or {}
@@ -29,7 +28,6 @@ function Agenda:new(opts)
     content = {},
     highlights = {},
     files = opts.files,
-    highlighter = opts.highlighter,
     links = opts.links,
   }
   setmetatable(data, self)
@@ -44,7 +42,6 @@ function Agenda:open_view(type, opts)
   local view_opts = vim.tbl_extend('force', opts or {}, {
     files = self.files,
     agenda_filter = self.filters,
-    highlighter = self.highlighter,
   })
 
   local view = AgendaTypes[type]:new(view_opts)
@@ -152,7 +149,6 @@ function Agenda:_build_custom_commands()
     opts_by_type[opts.type].agenda_files = opts.org_agenda_files
     opts_by_type[opts.type].tag_filter = opts.org_agenda_tag_filter_preset
     opts_by_type[opts.type].category_filter = opts.org_agenda_category_filter_preset
-    opts_by_type[opts.type].highlighter = self.highlighter
     opts_by_type[opts.type].remove_tags = opts.org_agenda_remove_tags
     opts_by_type[opts.type].id = id
 

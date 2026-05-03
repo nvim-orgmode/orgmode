@@ -34,6 +34,7 @@
 (latex_env) @org.latex_env
 (inline_math_block) @org.latex
 (display_math_block) @org.latex
+(inline_latex) @org.latex
 (drawer) @org.drawer
 (tag_list) @org.tag
 (directive name: (expr) @_directive_name value: (value) @org.tag (#match? @_directive_name "\\c^filetags$"))
@@ -44,9 +45,16 @@
 (cell "|" @org.table.delimiter)
 (table . (row (cell (contents) @org.table.heading)))
 (table (hr) @org.table.delimiter)
+(footnote_reference) @org.footnote
 (fndef label: (expr) @org.footnote (#offset! @org.footnote 0 -4 0 1))
 (link url: (expr) @org.hyperlink.url @nospell) @org.hyperlink
 (link_desc url: (expr) @org.hyperlink.url @nospell desc: (expr) @org.hyperlink.desc) @org.hyperlink
 (link "[[" @_link_open "]]" @_link_close (#set! conceal ""))
 (link_desc "[[" @_link_open "][" @_link_separator "]]" @_link_close (#set! conceal ""))
 ((link_desc url: (expr)+ @_link_url (#set! @_link_url conceal "")) @_link (#set! @_link url @_link_url))
+((bold) @_bold (#org-is-valid-markup? @_bold)) @org.bold
+((italic) @_italic (#org-is-valid-markup? @_italic)) @org.italic
+((underline) @_underline (#org-is-valid-markup? @_underline)) @org.underline
+((strikethrough) @_strikethrough (#org-is-valid-markup? @_strikethrough)) @org.strikethrough
+((code) @_code (#org-is-valid-markup? @_code)) @org.code
+((verbatim) @_verbatim (#org-is-valid-markup? @_verbatim)) @org.verbatim
