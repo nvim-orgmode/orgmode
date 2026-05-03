@@ -28,13 +28,13 @@ end
 ---@param source? number | string
 ---@return OrgFootnote | nil
 function OrgFootnote.from_node(node, source)
-  local fnode = ts_utils.closest_node(ts_utils.get_node(), { 'fnref', 'fndef' })
+  local fnode = ts_utils.closest_node(ts_utils.get_node(), { 'footnote_reference', 'fndef' })
   if not fnode then
     return nil
   end
 
   local text = vim.treesitter.get_node_text(fnode:field('label')[1], source or 0)
-  return OrgFootnote:new(text, Range.from_node(node), fnode:type() == 'fnref')
+  return OrgFootnote:new(text, Range.from_node(node), fnode:type() == 'footnote_reference')
 end
 
 ---@return OrgFootnote | nil

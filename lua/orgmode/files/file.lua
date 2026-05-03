@@ -950,12 +950,12 @@ end
 function OrgFile:find_footnote_reference(footnote_definition)
   self:parse(true)
   local ts_query = ts_utils.get_query(([[
-      (fnref label: (expr) @_label (#eq? @_label "%s")) @footnotes
+      (footnote_reference label: (expr) @_label (#eq? @_label "%s")) @footnotes
   ]]):format(footnote_definition.label))
 
   local matches = {}
   for _, match in ts_query:iter_captures(self.root, self:get_source()) do
-    if match:type() == 'fnref' then
+    if match:type() == 'footnote_reference' then
       table.insert(matches, match)
     end
   end
