@@ -87,6 +87,7 @@ function M.define_agenda_colors()
   local keyword_colors = colors.get_todo_keywords_colors()
   local c = {
     deadline = '@org.agenda.deadline',
+    upcoming_deadline = '@org.agenda.deadline.upcoming',
     ok = '@org.agenda.scheduled',
     warning = '@org.agenda.scheduled_past',
   }
@@ -205,6 +206,7 @@ function M.get_agenda_hl_map()
     TODO = '@org.keyword.todo',
     DONE = '@org.keyword.done',
     deadline = '@org.agenda.deadline',
+    upcoming_deadline = '@org.agenda.deadline.upcoming',
     ok = '@org.agenda.scheduled',
     warning = '@org.agenda.scheduled_past',
     priority = config:get_priorities(),
