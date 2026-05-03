@@ -259,7 +259,9 @@ function OrgAgendaType:render(bufnr, current_line)
 
     agendaView:add_line(AgendaLine:single_token({
       content = self:_format_day(agenda_day.day),
-      hl_group = add_highlight and (is_today and '@org.agenda.today' or '@org.agenda.weekend') or nil,
+      hl_group = add_highlight
+          and ((is_today and is_weekend) and '@org.agenda.weekend.today' or (is_today and '@org.agenda.today') or '@org.agenda.weekend')
+        or nil,
     }, {
       metadata = {
         agenda_day = agenda_day.day,

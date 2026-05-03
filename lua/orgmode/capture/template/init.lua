@@ -83,7 +83,7 @@ local expansions = {
 ---@field template? string|string[]
 ---@field target? string
 ---@field datetree? OrgCaptureTemplateDatetree
----@field headline? string
+---@field headline? string|fun():string
 ---@field regexp? string
 ---@field properties? OrgCaptureTemplateProperties
 ---@field subtemplates? table<string, OrgCaptureTemplate>
@@ -102,7 +102,7 @@ function Template:new(opts)
   vim.validate('template', opts.template, { 'string', 'table' }, true)
   vim.validate('target', opts.target, 'string', true)
   vim.validate('regexp', opts.regexp, 'string', true)
-  vim.validate('headline', opts.headline, 'string', true)
+  vim.validate('headline', opts.headline, { 'string', 'function' }, true)
   vim.validate('properties', opts.properties, 'table', true)
   vim.validate('subtemplates', opts.subtemplates, 'table', true)
   vim.validate('datetree', opts.datetree, { 'boolean', 'table' }, true)

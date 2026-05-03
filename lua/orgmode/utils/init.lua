@@ -524,7 +524,8 @@ function utils.edit_file(filename)
       vim.api.nvim_open_win(bufnr, true, {
         relative = 'editor',
         width = 1,
-        height = 1,
+        -- Use height of 2 to resolve winbar issues
+        height = 2,
         row = 99999,
         col = 99999,
         zindex = 1,

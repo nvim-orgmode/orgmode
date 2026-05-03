@@ -59,6 +59,9 @@ function OrgAgendaView:replace_line(old_line, new_line)
 end
 
 function OrgAgendaView:render()
+  if #self.lines == 0 then
+    return self
+  end
   local lines = {}
   local highlights = {}
   local virt_texts = {}

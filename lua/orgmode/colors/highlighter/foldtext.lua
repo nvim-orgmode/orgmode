@@ -6,6 +6,7 @@ local config = require('orgmode.config')
 ---@field highlighter OrgHighlighter
 ---@field namespace number
 ---@field cache table<number, table<number, OrgFoldtextLineValue>>
+---@field cache_tick table<number, number>
 local OrgFoldtext = {}
 
 ---@param opts { highlighter: OrgHighlighter }
@@ -13,10 +14,22 @@ function OrgFoldtext:new(opts)
   local data = {
     highlighter = opts.highlighter,
     cache = setmetatable({}, { __mode = 'k' }),
+    cache_tick = {},
   }
   setmetatable(data, self)
   self.__index = self
   return data
+end
+
+---Invalidate cache for a buffer if its content has changed since the last render.
+---Call this once per redraw from on_win, not per line.
+---@param bufnr number
+function OrgFoldtext:check_cache(bufnr)
+  local tick = vim.api.nvim_buf_get_changedtick(bufnr)
+  if self.cache_tick[bufnr] ~= tick then
+    self.cache[bufnr] = nil
+    self.cache_tick[bufnr] = tick
+  end
 end
 
 ---@param bufnr number
@@ -101,6 +114,7 @@ end
 
 function OrgFoldtext:on_detach(bufnr)
   self.cache[bufnr] = nil
+  self.cache_tick[bufnr] = nil
 end
 
 return OrgFoldtext

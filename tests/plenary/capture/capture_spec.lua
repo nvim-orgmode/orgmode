@@ -380,4 +380,44 @@ describe('Capture', function()
       '* barbar',
     }, vim.api.nvim_buf_get_lines(0, 0, -1, false))
   end)
+
+  it('resolves function headline in template', function()
+    local destination_file = helpers.create_file({
+      '* dynamic title',
+      '* barbar',
+    })
+
+    local capture_file = helpers.create_file({ '* baz' })
+    local item = capture_file:get_headlines()[1]
+    local template = Template:new({
+      target = destination_file.filename,
+      headline = function()
+        return 'dynamic title'
+      end,
+    })
+    local capture_window = CaptureWindow:new({ template = template })
+    ---@diagnostic disable-next-line: invisible
+    capture_window._bufnr = capture_file:bufnr()
+
+    ---@diagnostic disable-next-line: invisible
+    local opts = org.capture:_get_refile_vars(capture_window)
+    assert.are.same(destination_file.filename, opts.destination_file.filename)
+    assert.are.same('dynamic title', opts.destination_headline:get_title())
+
+    ---@diagnostic disable-next-line: invisible
+    org.capture:_refile_from_capture_buffer({
+      destination_file = destination_file,
+      source_file = capture_file,
+      source_headline = item,
+      destination_headline = opts.destination_headline,
+      template = template,
+      capture_window = capture_window,
+    })
+    vim.cmd('edit ' .. vim.fn.fnameescape(destination_file.filename))
+    assert.are.same({
+      '* dynamic title',
+      '** baz',
+      '* barbar',
+    }, vim.api.nvim_buf_get_lines(0, 0, -1, false))
+  end)
 end)

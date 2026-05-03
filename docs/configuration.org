@@ -916,9 +916,10 @@ Templates have the following fields:
 - =target= (=string?=) --- name of the file to which the capture content
   will be added. If the target is not specified, the content will be
   added to the [[#org_default_notes_file][org_default_notes_file]] file
-- =headline= (=string?=) --- title of the headline after which the
-  capture content will be added. If no headline is specified, the
-  content will be appended to the end of the file
+- =headline= (=string|fun():string?=) --- title of the headline after which the
+  capture content will be added. If a function is provided, it will be called during
+  refile and must return the headline title as string. If no headline is specified,
+  the content will be appended to the end of the file
 - =datetree (boolean | { time_prompt?: boolean, reversed?: boolean, tree_type: 'day' | 'month' | 'week' | 'custom' })=
   Create a [[https://orgmode.org/manual/Template-elements.html#FOOT84][date tree]] with current day in the target file and put the capture content there.
   - =true= - Create ascending datetree (newer dates go to end) with the current date
@@ -3123,6 +3124,7 @@ The following highlight groups are used:
 - =@org.agenda.day=: Highlight for all days in Agenda view - linked to =Statement=
 - =@org.agenda.today=: Highlight for today in Agenda view - linked to =@org.bold=
 - =@org.agenda.weekend=: Highlight for weekend days in Agenda view - linked to =@org.bold=
+- =@org.agenda.weekend.today=: Highlight for today when it is a weekend day in Agenda view - linked to =@org.bold=
 
 📝 NOTE:
 Colors used for todo keywords and agenda states (deadline, schedule ok,
