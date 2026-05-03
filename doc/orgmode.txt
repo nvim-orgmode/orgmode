@@ -2986,6 +2986,7 @@ The following highlight groups are used:
 - `@org.table.heading` - Table headings - linked to `@markup.heading`,
 - `@org.edit_src` - The highlight for the source content in an _Org_ buffer while it is being edited in an edit special buffer - linked to `Visual`,
 - `@org.agenda.deadline`: A item deadline in the agenda view - Parsed from `Error` (see note below)
+- `@org.agenda.deadline.upcoming`: A item upcoming deadline in the agenda view - Parsed from `WarningMsg` (see note below)
 - `@org.agenda.scheduled`: A scheduled item in the agenda view - Parsed from `DiffAdd` (see note below)
 - `@org.agenda.scheduled_past`: A item past its scheduled date in the agenda view - Parsed from `WarningMsg` (see note below)
 - `@org.agenda.time_grid`: Time grid line - Parsed from `WarningMsg` (see note below)
