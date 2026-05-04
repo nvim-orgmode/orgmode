@@ -202,6 +202,7 @@ describe('Autocompletion', function()
         { menu = '[Org]', word = '#+begin_example' },
         { menu = '[Org]', word = '#+end_src' },
         { menu = '[Org]', word = '#+end_example' },
+        { menu = '[Org]', word = '#+bibliography' },
       }
       assert.are.same(directives, result)
 
@@ -212,6 +213,7 @@ describe('Autocompletion', function()
       assert.are.same({
         { menu = '[Org]', word = '#+begin_src' },
         { menu = '[Org]', word = '#+begin_example' },
+        { menu = '[Org]', word = '#+bibliography' },
       }, result)
     end)
 

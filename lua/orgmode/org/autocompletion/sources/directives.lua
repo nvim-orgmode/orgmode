@@ -34,6 +34,7 @@ function OrgCompletionDirectives:get_results(_)
     '#+begin_example',
     '#+end_src',
     '#+end_example',
+    '#+bibliography',
   }
 end
 
