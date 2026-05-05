@@ -45,6 +45,7 @@
 (table . (row (cell (contents) @org.table.heading)))
 (table (hr) @org.table.delimiter)
 (fndef label: (expr) @org.footnote (#offset! @org.footnote 0 -4 0 1))
+(fnref) @org.footnote.reference
 (link url: (expr) @org.hyperlink.url @nospell) @org.hyperlink
 (link_desc url: (expr) @org.hyperlink.url @nospell desc: (expr) @org.hyperlink.desc) @org.hyperlink
 (link "[[" @_link_open "]]" @_link_close (#set! conceal ""))
