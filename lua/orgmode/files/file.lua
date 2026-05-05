@@ -11,6 +11,8 @@ local Footnote = require('orgmode.objects.footnote')
 local Memoize = require('orgmode.utils.memoize')
 local Buffers = require('orgmode.state.buffers')
 
+local is_nightly = vim.fn.has('nvim-0.13') == 1
+
 ---@class OrgFileMetadata
 ---@field mtime number File modified time in nanoseconds
 ---@field mtime_sec number File modified time in seconds
@@ -494,14 +496,17 @@ function OrgFile:get_node_text(node, range)
   if not node then
     return ''
   end
+  local opts = {}
   if range then
-    return ts.get_node_text(node, self:get_source(), {
-      metadata = {
-        range = range,
-      },
-    })
+    opts = { metadata = { range = range } }
   end
-  return ts.get_node_text(node, self:get_source())
+
+  local _, _, _, end_col = node:range()
+  local text = ts.get_node_text(node, self:get_source(), opts)
+  if is_nightly and end_col == 0 and text:sub(-1) == '\n' then
+    return text:sub(1, -2)
+  end
+  return text
 end
 
 ---@param node? TSNode
