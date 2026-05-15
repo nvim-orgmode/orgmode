@@ -11,8 +11,8 @@ local config = require('orgmode.config')
 ---@field highlighter OrgHighlighter
 ---@field namespace number
 ---@field cache table<number, table<number, OrgFoldtextLineValue>>
----@field cache_tick table<number, number>
 ---@field win_state table<number, OrgFoldtextWinState>
+---@field attached table<number, boolean>
 local OrgFoldtext = {}
 
 ---@param opts { highlighter: OrgHighlighter }
@@ -20,22 +20,68 @@ function OrgFoldtext:new(opts)
   local data = {
     highlighter = opts.highlighter,
     cache = setmetatable({}, { __mode = 'k' }),
-    cache_tick = {},
     win_state = {},
+    attached = {},
   }
   setmetatable(data, self)
   self.__index = self
   return data
 end
 
----Invalidate hl_group cache for a buffer if its content has changed since the last render.
----Call this once per redraw from on_win, not per line.
+---Apply an `on_bytes` change to the cache: drop entries inside the changed
+---range and shift entries after it by the row delta. Replaces the previous
+---wholesale `changedtick`-based invalidation, so unaffected lines retain
+---their cached hl_group across edits.
 ---@param bufnr number
-function OrgFoldtext:check_cache(bufnr)
-  local tick = vim.api.nvim_buf_get_changedtick(bufnr)
-  if self.cache_tick[bufnr] ~= tick then
-    self.cache[bufnr] = nil
-    self.cache_tick[bufnr] = tick
+---@param start_row number 0-based
+---@param old_end_row number rows in old range (relative to start_row)
+---@param new_end_row number rows in new range (relative to start_row)
+function OrgFoldtext:_apply_change(bufnr, start_row, old_end_row, new_end_row)
+  local cache = self.cache[bufnr]
+  if not cache then
+    return
+  end
+
+  if old_end_row == new_end_row then
+    for line = start_row, start_row + old_end_row do
+      cache[line] = nil
+    end
+    return
+  end
+
+  local delta = new_end_row - old_end_row
+  local boundary = start_row + old_end_row
+  local shifted = {}
+  for k, v in pairs(cache) do
+    if k < start_row then
+      shifted[k] = v
+    elseif k > boundary then
+      shifted[k + delta] = v
+    end
+  end
+  self.cache[bufnr] = shifted
+end
+
+---Attach a buffer listener that keeps the hl_group cache consistent with
+---buffer edits. Idempotent — only attaches once per buffer.
+---@param bufnr number
+function OrgFoldtext:_attach(bufnr)
+  if self.attached[bufnr] then
+    return
+  end
+  local ok = vim.api.nvim_buf_attach(bufnr, false, {
+    on_bytes = function(_, b, _tick, start_row, _, _, old_end_row, _, _, new_end_row)
+      self:_apply_change(b, start_row, old_end_row, new_end_row)
+    end,
+    on_reload = function(_, b)
+      self.cache[b] = nil
+    end,
+    on_detach = function(_, b)
+      self:on_detach(b)
+    end,
+  })
+  if ok then
+    self.attached[bufnr] = true
   end
 end
 
@@ -50,6 +96,8 @@ function OrgFoldtext:on_win(bufnr, winid, topline, botline)
     self.win_state[winid] = nil
     return
   end
+
+  self:_attach(bufnr)
 
   local lines = vim.api.nvim_buf_get_lines(bufnr, topline, botline + 1, false)
   local line_ends = {}
@@ -139,7 +187,7 @@ end
 
 function OrgFoldtext:on_detach(bufnr)
   self.cache[bufnr] = nil
-  self.cache_tick[bufnr] = nil
+  self.attached[bufnr] = nil
 end
 
 return OrgFoldtext
