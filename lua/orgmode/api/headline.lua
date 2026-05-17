@@ -314,7 +314,7 @@ function OrgHeadline:clock_in(opts)
   end)
 end
 
----Clock-out in the headline
+---Clock-out the headline
 ---@param opts? OrgHeadlineClockOutOpts Clock out options
 function OrgHeadline:clock_out(opts)
   ---@diagnostic disable-next-line: invisible
