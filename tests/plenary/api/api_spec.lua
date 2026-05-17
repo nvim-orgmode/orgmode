@@ -598,6 +598,108 @@ describe('Api', function()
     end)
   end)
 
+  describe('promote', function()
+    it('should promote a level 2 headline to level 1', function()
+      helpers.create_agenda_file({
+        '** TODO Level 2 task',
+      })
+
+      cur_file().headlines[1]:promote():wait()
+
+      assert.are.same(1, cur_file().headlines[1].level)
+      assert.is.True(vim.fn.getline(1):match('^%* Level 2') ~= nil)
+    end)
+
+    it('should not promote a level 1 headline', function()
+      helpers.create_agenda_file({
+        '* TODO Level 1 task',
+      })
+
+      cur_file().headlines[1]:promote():wait()
+
+      assert.are.same(1, cur_file().headlines[1].level)
+    end)
+
+    it('should promote by specified amount', function()
+      helpers.create_agenda_file({
+        '*** TODO Deep task',
+      })
+
+      cur_file().headlines[1]:promote(2):wait()
+
+      assert.are.same(1, cur_file().headlines[1].level)
+    end)
+  end)
+
+  describe('demote', function()
+    it('should demote a level 1 headline to level 2', function()
+      helpers.create_agenda_file({
+        '* TODO Level 1 task',
+      })
+
+      cur_file().headlines[1]:demote():wait()
+
+      assert.are.same(2, cur_file().headlines[1].level)
+      assert.is.True(vim.fn.getline(1):match('^%*%* Level 1') ~= nil)
+    end)
+
+    it('should demote by specified amount', function()
+      helpers.create_agenda_file({
+        '* TODO Level 1 task',
+      })
+
+      cur_file().headlines[1]:demote(2):wait()
+
+      assert.are.same(3, cur_file().headlines[1].level)
+    end)
+  end)
+
+  describe('get_closest_headline', function()
+    it('should return the internal OrgHeadline for the api headline', function()
+      helpers.create_agenda_file({
+        '* TODO Test',
+        'Some content',
+      })
+
+      local hl = cur_file().headlines[1]:get_closest_headline():wait()
+
+      assert.is_not_nil(hl)
+      assert.is_not_nil(hl:get_lines())
+    end)
+  end)
+
+  describe('get_lines', function()
+    it('should return lines of the headline', function()
+      helpers.create_agenda_file({
+        '* TODO Test headline',
+        'Some content line 1',
+        'Some content line 2',
+      })
+
+      local lines = cur_file().headlines[1]:get_lines():wait()
+
+      assert.are.same({
+        '* TODO Test headline',
+        'Some content line 1',
+        'Some content line 2',
+      }, lines)
+    end)
+  end)
+
+  describe('get_content', function()
+    it('should return content as a single string', function()
+      helpers.create_agenda_file({
+        '* TODO Test headline',
+        'Some content line 1',
+        'Some content line 2',
+      })
+
+      local content = cur_file().headlines[1]:get_content():wait()
+
+      assert.are.same('* TODO Test headline\nSome content line 1\nSome content line 2', content)
+    end)
+  end)
+
   describe('Refile', function()
     describe('from org file', function()
       it('should refile a headline to another file', function()
