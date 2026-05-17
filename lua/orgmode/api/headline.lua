@@ -331,16 +331,8 @@ end
 
 ---Check if the headline is currently clocked in or not
 function OrgHeadline:is_clocked_in()
-  local clock_in
-
-  return self
-    :_do_action(function()
-      local headline = org.files:get_closest_headline()
-      clock_in = headline:is_clocked_in()
-    end)
-    :next(function()
-      return clock_in
-    end)
+  local headline = org.files:get_closest_headline()
+  return headline:is_clocked_in()
 end
 
 ---Toggle clock the headline (Clock in if currently not, clock out otherwise)
