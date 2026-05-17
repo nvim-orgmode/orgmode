@@ -517,6 +517,87 @@ describe('Api', function()
     end)
   end)
 
+  describe('set_todo', function()
+    it('should set todo keyword on headline', function()
+      local file = helpers.create_agenda_file({
+        '* TODO Test task',
+      })
+
+      cur_file().headlines[1]:set_todo('DONE'):wait()
+
+      assert.are.same('DONE', cur_file().headlines[1].todo_value)
+      assert.are.same('DONE', cur_file().headlines[1].todo_type)
+    end)
+
+    it('should remove todo keyword when set to empty string', function()
+      local file = helpers.create_agenda_file({
+        '* TODO Test task',
+      })
+
+      cur_file().headlines[1]:set_todo(''):wait()
+
+      assert.is_nil(cur_file().headlines[1].todo_value)
+    end)
+  end)
+
+  describe('clock', function()
+    it('should clock in headline', function()
+      local file = helpers.create_agenda_file({
+        '* TODO Test clock in',
+      })
+
+      cur_file().headlines[1]:clock_in():wait()
+
+      assert.is_true(cur_file().headlines[1]:is_clocked_in():wait())
+    end)
+
+    it('should not double clock in if already clocked in', function()
+      local file = helpers.create_agenda_file({
+        '* TODO Test clock in',
+      })
+
+      cur_file().headlines[1]:clock_in():wait()
+      cur_file().headlines[1]:clock_in():wait()
+
+      local logbook = cur_file().headlines[1]._section:get_logbook()
+      assert.is_true(logbook:is_active())
+    end)
+
+    it('should clock out headline', function()
+      local file = helpers.create_agenda_file({
+        '* TODO Test clock out',
+      })
+
+      cur_file().headlines[1]:clock_in():wait()
+      cur_file().headlines[1]:clock_out():wait()
+
+      assert.is_false(cur_file().headlines[1]:is_clocked_in():wait())
+    end)
+
+    it('should toggle clock state', function()
+      local file = helpers.create_agenda_file({
+        '* TODO Test toggle',
+      })
+
+      cur_file().headlines[1]:toggle_clock():wait()
+      assert.is_true(cur_file().headlines[1]:is_clocked_in():wait())
+
+      cur_file().headlines[1]:toggle_clock():wait()
+      assert.is_false(cur_file().headlines[1]:is_clocked_in():wait())
+    end)
+
+    it('should cancel active clock', function()
+      local file = helpers.create_agenda_file({
+        '* TODO Test cancel',
+      })
+
+      cur_file().headlines[1]:clock_in():wait()
+      cur_file().headlines[1]:cancel_active_clock():wait()
+
+      assert.is_false(cur_file().headlines[1]:is_clocked_in():wait())
+    end)
+  end)
+
   describe('Refile', function()
     describe('from org file', function()
       it('should refile a headline to another file', function()
