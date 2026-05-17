@@ -9,6 +9,7 @@
 (headline (stars) @stars (#org-is-headline-level? @stars "6")) @org.headline.level6
 (headline (stars) @stars (#org-is-headline-level? @stars "7")) @org.headline.level7
 (headline (stars) @stars (#org-is-headline-level? @stars "8")) @org.headline.level8
+(headline (stars) @org.leading_stars (#org-hide-leading-stars? @org.leading_stars) (#offset! @org.leading_stars 0 0 0 -1))
 (item . (expr) @org.keyword.todo @nospell (#org-is-todo-keyword? @org.keyword.todo "TODO"))
 (item . (expr) @org.keyword.done @nospell (#org-is-todo-keyword? @org.keyword.done "DONE"))
 (item priority: (priority) @org.priority.highest (#org-is-valid-priority? @org.priority.highest "highest"))
