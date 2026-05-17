@@ -600,14 +600,15 @@ describe('Api', function()
 
   describe('promote', function()
     it('should promote a level 2 headline to level 1', function()
-      helpers.create_agenda_file({
+      local file = helpers.create_agenda_file({
         '** TODO Level 2 task',
       })
 
-      cur_file().headlines[1]:promote():wait()
+      local promoted = cur_file().headlines[1]:promote():wait()
 
-      assert.are.same(1, cur_file().headlines[1].level)
-      assert.is.True(vim.fn.getline(1):match('^%* Level 2') ~= nil)
+      assert.are.same(1, promoted.level)
+      local content = promoted:get_content():wait()
+      assert.is.True(content:match('^%* TODO Level 2') ~= nil)
     end)
 
     it('should not promote a level 1 headline', function()
@@ -633,14 +634,15 @@ describe('Api', function()
 
   describe('demote', function()
     it('should demote a level 1 headline to level 2', function()
-      helpers.create_agenda_file({
+      local file = helpers.create_agenda_file({
         '* TODO Level 1 task',
       })
 
-      cur_file().headlines[1]:demote():wait()
+      local demoted = cur_file().headlines[1]:demote():wait()
 
-      assert.are.same(2, cur_file().headlines[1].level)
-      assert.is.True(vim.fn.getline(1):match('^%*%* Level 1') ~= nil)
+      assert.are.same(2, demoted.level)
+      local content = demoted:get_content():wait()
+      assert.is.True(content:match('^%*%* TODO Level 1') ~= nil)
     end)
 
     it('should demote by specified amount', function()

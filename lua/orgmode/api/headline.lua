@@ -292,8 +292,9 @@ function OrgHeadline:get_link()
 end
 
 ---Set todo keyword
+---@return OrgPromise
 function OrgHeadline:set_todo(keyword)
-  self:_do_action(function()
+  return self:_do_action(function()
     local headline = org.files:get_closest_headline()
     headline:set_todo(keyword)
   end)
@@ -356,8 +357,9 @@ function OrgHeadline:toggle_clock(opts)
 end
 
 ---Cancel active clock on the headline (if any)
+---@return OrgPromise
 function OrgHeadline:cancel_active_clock()
-  self:_do_action(function()
+  return self:_do_action(function()
     local headline = org.files:get_closest_headline()
     return headline:is_clocked_in() and headline:cancel_active_clock()
   end)
