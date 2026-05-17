@@ -10,16 +10,6 @@
       url = "github:cachix/git-hooks.nix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-
-    nixvim = {
-      url = "github:nix-community/nixvim/nixos-25.11";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
-
-    np = {
-      url = "github:ar-at-localhost/np/nixos-25.11";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
   };
 
   outputs = {
@@ -27,17 +17,11 @@
     nixpkgs,
     flake-utils,
     git-hooks,
-    nixvim,
-    np,
     ...
   }:
     flake-utils.lib.eachDefaultSystem (
       system: let
         pkgs = import nixpkgs {inherit system;};
-
-        _nixvim = import ./nix/nixvim.nix {
-          inherit system pkgs nixvim np;
-        };
       in {
         checks = {
           pre-commit-check = git-hooks.lib.${system}.run {
@@ -58,8 +42,6 @@
         in
           pkgs.writeShellScriptBin "pre-commit-run" script;
 
-        packages._nixvim = _nixvim;
-
         devShells.default = let
           inherit (self.checks.${system}.pre-commit-check) shellHook;
         in
@@ -67,7 +49,6 @@
             packages = with pkgs; [
               gnumake
               neovim
-              _nixvim
               stylua
               alejandra
             ];
@@ -78,10 +59,5 @@
             '';
           };
       }
-    )
-    // {
-      nixvimModules = {
-        # Expose nixvim modules for consumers
-      };
-    };
+    );
 }
