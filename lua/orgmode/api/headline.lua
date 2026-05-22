@@ -291,4 +291,123 @@ function OrgHeadline:get_link()
   return org.links:get_link_to_headline(self._section)
 end
 
+---Set todo keyword
+---@return OrgPromise
+function OrgHeadline:set_todo(keyword)
+  return self:_do_action(function()
+    local headline = org.files:get_closest_headline()
+    headline:set_todo(keyword)
+  end)
+end
+
+---Clock-in the headline
+---@param opts? OrgHeadlineClockInOpts Clock in options
+function OrgHeadline:clock_in(opts)
+  return self:_do_action(function()
+    local headline = org.files:get_closest_headline()
+
+    if headline:is_clocked_in() then
+      return
+    end
+
+    headline:clock_in(opts)
+  end)
+end
+
+---Clock-out the headline
+---@param opts? OrgHeadlineClockOutOpts Clock out options
+function OrgHeadline:clock_out(opts)
+  ---@diagnostic disable-next-line: invisible
+  return self:_do_action(function()
+    local headline = org.files:get_closest_headline()
+
+    if not headline:is_clocked_in() then
+      return
+    end
+
+    headline:clock_out(opts)
+  end)
+end
+
+---Check if the headline is currently clocked in or not
+function OrgHeadline:is_clocked_in()
+  local headline = org.files:get_closest_headline()
+  return headline:is_clocked_in()
+end
+
+---Toggle clock the headline (Clock in if currently not, clock out otherwise)
+---@param opts? OrgHeadlineClockOpts Clock out options
+function OrgHeadline:toggle_clock(opts)
+  return self:_do_action(function()
+    local headline = org.files:get_closest_headline()
+    return headline:is_clocked_in()
+        ---@cast opts OrgHeadlineClockOutOpts
+        and headline:clock_out(opts)
+      ---@cast opts OrgHeadlineClockInOpts
+      or headline:clock_in(opts)
+  end)
+end
+
+---Cancel active clock on the headline (if any)
+---@return OrgPromise
+function OrgHeadline:cancel_active_clock()
+  return self:_do_action(function()
+    local headline = org.files:get_closest_headline()
+    return headline:is_clocked_in() and headline:cancel_active_clock()
+  end)
+end
+
+---Promote headline (decrease indent level)
+---@param amount? number
+---@param recursive? boolean
+---@return OrgPromise
+function OrgHeadline:promote(amount, recursive)
+  return self:_do_action(function()
+    local headline = org.files:get_closest_headline()
+    headline:promote(amount, recursive, false)
+  end)
+end
+
+---Demote headline (increase indent level)
+---@param amount? number
+---@param recursive? boolean
+---@return OrgPromise
+function OrgHeadline:demote(amount, recursive)
+  return self:_do_action(function()
+    local headline = org.files:get_closest_headline()
+    headline:demote(amount, recursive, false)
+  end)
+end
+
+---Get closest internal OrgHeadline for the headline
+---@return OrgPromise<OrgHeadline>
+function OrgHeadline:get_closest_headline()
+  local closest
+
+  return self
+    :_do_action(function()
+      local headline = org.files:get_closest_headline()
+      closest = headline
+    end)
+    :next(function()
+      return closest
+    end)
+end
+
+---Get headline content as list of lines
+---@return OrgPromise<string[]>
+function OrgHeadline:get_lines()
+  return self:get_closest_headline():next(function(headline)
+    return headline:get_lines() or {}
+  end)
+end
+
+---Get headline content as a single string
+---@return OrgPromise<string>
+function OrgHeadline:get_content()
+  return self:get_lines():next(function(lines)
+    return table.concat(lines, '\n')
+  end)
+end
+
 return OrgHeadline

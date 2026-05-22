@@ -287,4 +287,86 @@ describe('Headline', function()
       end)
     end)
   end)
+
+  describe('clock', function()
+    it('should cancel active clock and remove the clock entry from logbook', function()
+      local file = helpers.create_file({
+        '* TODO Test clock cancel',
+        '  :LOGBOOK:',
+        '  CLOCK: [2024-05-22 Wed 05:15]',
+        '  :END:',
+      }, 'clock_cancel.org')
+
+      local headline = file:get_headlines()[1]
+      assert.is_true(headline:is_clocked_in())
+
+      headline:cancel_active_clock()
+
+      local lines = file:reload_sync().lines
+      assert.are.same({
+        '* TODO Test clock cancel',
+      }, lines)
+    end)
+
+    it('should clock in with silent option and not dispatch event', function()
+      local file = helpers.create_file({
+        '* TODO Test silent clock in',
+      }, 'silent_clock_in.org')
+
+      local EventManager = require('orgmode.events')
+      local events = EventManager.event
+
+      local received_event = nil
+      local listener = function(event)
+        received_event = event
+      end
+      EventManager.listen(events.ClockedIn, listener)
+
+      local headline = file:get_headlines()[1]
+      headline:clock_in({ silent = true })
+
+      assert.is_nil(received_event)
+
+      -- cleanup listener
+      local listeners = EventManager._listeners[events.ClockedIn.type]
+      for i, l in ipairs(listeners) do
+        if l == listener then
+          table.remove(listeners, i)
+          break
+        end
+      end
+    end)
+
+    it('should clock out with silent option and not dispatch event', function()
+      local file = helpers.create_file({
+        '* TODO Test silent clock out',
+        '  :LOGBOOK:',
+        '  CLOCK: [2024-05-22 Wed 05:15]',
+        '  :END:',
+      }, 'silent_clock_out.org')
+
+      local EventManager = require('orgmode.events')
+      local events = EventManager.event
+
+      local received_event = nil
+      local listener = function(event)
+        received_event = event
+      end
+      EventManager.listen(events.ClockedOut, listener)
+
+      local headline = file:get_headlines()[1]
+      headline:clock_out({ silent = true })
+
+      assert.is_nil(received_event)
+
+      -- cleanup listener
+      local listeners = EventManager._listeners[events.ClockedOut.type]
+      for i, l in ipairs(listeners) do
+        if l == listener then
+          table.remove(listeners, i)
+          break
+        end
+      end
+    end)
+  end)
 end)

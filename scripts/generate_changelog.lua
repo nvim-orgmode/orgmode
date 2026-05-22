@@ -61,7 +61,12 @@ local function generate_changelog()
   local new_tag = arg[1]
 
   local new_content = {
-    ('** [[https://github.com/nvim-orgmode/orgmode/compare/%s...%s][%s]] (%s)'):format(latest_tag, new_tag, new_tag, os.date('%Y-%m-%d')),
+    ('** [[https://github.com/nvim-orgmode/orgmode/compare/%s...%s][%s]] (%s)'):format(
+      latest_tag,
+      new_tag,
+      new_tag,
+      os.date('%Y-%m-%d')
+    ),
   }
 
   local changes = get_changes('org', latest_tag)

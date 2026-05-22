@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+
+export DIRENV_WARN_TIMEOUT=20s
+use flake
