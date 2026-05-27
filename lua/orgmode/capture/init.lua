@@ -589,7 +589,7 @@ function Capture:_get_refile_vars(capture_window)
   if opts.template.headline then
     local template_headline = opts.template.headline
     if type(template_headline) == 'function' then
-      local ok, resolved_headline = pcall(template_headline)
+      local ok, resolved_headline = pcall(template_headline, opts.destination_file)
       if not ok then
         utils.echo_error('Failed to resolve capture template headline')
         return false
