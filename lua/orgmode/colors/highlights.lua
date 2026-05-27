@@ -67,6 +67,7 @@ function M.link_highlights()
     ['@org.latex'] = '@markup.math',
     ['@org.latex_env'] = '@markup.environment',
     ['@org.footnote'] = '@markup.link.url',
+    ['@org.footnote.reference'] = '@markup.link.url',
     -- Other
     ['@org.table.delimiter'] = '@punctuation.special',
     ['@org.table.heading'] = '@markup.heading',

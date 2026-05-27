@@ -76,6 +76,24 @@ OrgDate.__index = OrgDate
 ---@param format? string
 ---@return osdate
 local function os_date(timestamp, format)
+  if format and vim.fn.has('win32') == 1 then
+    local locale = os.setlocale(nil, 'time')
+    local utf8_locale
+    if locale then
+      if vim.endswith(locale, 'UTF-8') then
+        utf8_locale = locale
+      else
+        utf8_locale = locale:gsub('%.[^.]+$', '') .. '.UTF-8'
+      end
+    end
+    local changed_locale = utf8_locale and os.setlocale(utf8_locale, 'time')
+    if changed_locale then
+      local date = os.date(format, timestamp)
+      os.setlocale(locale, 'time')
+      return date --[[@as osdate]]
+    end
+  end
+
   return os.date(format or '*t', timestamp) --[[@as osdate]]
 end
 
@@ -409,7 +427,7 @@ function OrgDate:to_string()
     format = format .. ' %a'
   end
 
-  local date = tostring(os.date(format, self.timestamp))
+  local date = tostring(os_date(self.timestamp, format))
 
   if self:has_time() then
     date = date .. ' ' .. self:format_time()
@@ -446,7 +464,7 @@ end
 ---@param format string
 ---@return string
 function OrgDate:format(format)
-  return tostring(os.date(format, self.timestamp))
+  return tostring(os_date(self.timestamp, format))
 end
 
 ---@return string
@@ -456,7 +474,7 @@ function OrgDate:format_time()
   end
   local t = self:format(time_format)
   if self.timestamp_end then
-    t = t .. '-' .. os.date(time_format, self.timestamp_end)
+    t = t .. '-' .. os_date(self.timestamp_end, time_format)
   end
   return t
 end

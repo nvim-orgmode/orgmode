@@ -434,7 +434,7 @@ function utils.open_tmp_org_window(height, split_mode, border, on_close)
     if vim.api.nvim_get_current_buf() ~= bufnr then
       return
     end
-    if #vim.api.nvim_list_wins() == 1 then
+    if utils.is_single_win() then
       return vim.cmd('q!')
     end
     return pcall(vim.api.nvim_win_close, 0, true)
@@ -621,6 +621,33 @@ function utils.if_nil(...)
     end
   end
   return nil
+end
+
+---Check if there is only a single window open
+---Ignore windows created by ui2
+---@return boolean
+function utils.is_single_win()
+  local wins = vim.api.nvim_list_wins()
+  if #wins == 1 then
+    return true
+  end
+  local ok, ui2 = pcall(require, 'vim._core.ui2')
+  if not ok then
+    return false
+  end
+  local ui2_win_ids = vim.tbl_filter(function(win)
+    return win > -1
+  end, ui2.wins)
+
+  if #ui2_win_ids == 0 then
+    return false
+  end
+
+  wins = vim.tbl_filter(function(win)
+    return not vim.tbl_contains(ui2_win_ids, win)
+  end, wins)
+
+  return #wins == 1
 end
 
 return utils

@@ -2994,6 +2994,8 @@ The following highlight groups are used:
 - `@org.agenda.today`: Highlight for today in Agenda view - linked to `@org.bold`
 - `@org.agenda.weekend`: Highlight for weekend days in Agenda view - linked to `@org.bold`
 - `@org.agenda.weekend.today`: Highlight for today when it is a weekend day in Agenda view - linked to `@org.bold`
+- `@org.footnote`: Highlight for footnote definition - linked to `@markup.link.url`
+- `@org.footnote.reference`: Highlight for footnote reference - linked to `@markup.link.url`
 
 📝 NOTE: Colors used for todo keywords and agenda states (deadline, schedule
 ok, schedule warning) are parsed from the current colorscheme from several

@@ -4,8 +4,6 @@
  (expr "_" @underline)
  (expr "=" @verbatim)
  (expr "+" @strikethrough)
- (expr "[" @footnote.start "str" @_fn ":" (#eq? @_fn "fn"))
- (expr "]" @footnote.end)
  (expr "\\" "str" @latex.plain)
  (expr "\\" "(" @latex.bracket.start)
  (expr "\\" ")" @latex.bracket.end)
