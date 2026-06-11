@@ -11,6 +11,7 @@ Orgmode supports various plugins to extend its functionality or make it more pre
   - [[#sniprun][sniprun]]
   - [[#org-notebooknvim][org-notebook.nvim]]
   - [[#telescope-orgmodenvim][telescope-orgmode.nvim]]
+  - [[#org-linknvim][org-link.nvim]]
   - [[#org-cycle-litenvim][org-cycle-lite.nvim]]
 - [[#completion-plugins][Completion plugins]]
   - [[#blinkcmp][blink.cmp]]
@@ -60,14 +61,24 @@ Jupyter notebooks for org-babel.
 :CUSTOM_ID: telescope-orgmodenvim
 :END:
 Link: [[https://github.com/nvim-orgmode/telescope-orgmode.nvim][telescope-orgmode.nvim]]
+
 [[https://github.com/nvim-telescope/telescope.nvim][Telescope]] extension for orgmode that adds fuzzy finding of orgmode files, headlines, etc.
 
-Plugin for doom-emacs style simple cycling ([[https://github.com/doomemacs/doomemacs/blob/master/modules/lang/org/autoload/org.el#L497][org-cycle-only-current-subtree-h]])
+*** org-link.nvim
+:PROPERTIES:
+:CUSTOM_ID: org-linknvim
+:END:
+Link: [[https://github.com/seflue/org-link.nvim][org-link.nvim]]
+
+Extends orgmode's capabilities to insert and follow links.
+
 *** org-cycle-lite.nvim
 :PROPERTIES:
 :CUSTOM_ID: org-cycle-litenvim
 :END:
 Link: [[https://github.com/aaratha/org-cycle-lite.nvim][org-cycle-lite.nvim]]
+
+Plugin for doom-emacs style simple cycling ([[https://github.com/doomemacs/doomemacs/blob/master/modules/lang/org/autoload/org.el#L497][org-cycle-only-current-subtree-h]])
 
 ** Completion plugins
 :PROPERTIES:
