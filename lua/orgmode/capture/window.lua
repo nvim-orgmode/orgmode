@@ -1,6 +1,8 @@
 local config = require('orgmode.config')
 local utils = require('orgmode.utils')
 local Promise = require('orgmode.utils.promise')
+local events = require('orgmode.events')
+local event = events.event
 local id_counter = 0
 
 ---@class OrgCaptureWindowOpts
@@ -40,7 +42,6 @@ function CaptureWindow:open()
     end
     self._window = utils.open_tmp_org_window(16, config.win_split_mode, config.win_border, self:_on_close())
     vim.api.nvim_buf_set_lines(0, 0, -1, true, content)
-    self.template:setup()
     vim.b.org_capture = true
     vim.b.org_capture_window_id = self.id
     self._bufnr = vim.api.nvim_get_current_buf()
@@ -48,6 +49,11 @@ function CaptureWindow:open()
     if self.on_open then
       self.on_open(self)
     end
+
+    events.dispatch(event.CaptureOpened:new({ window = self, content = content }))
+    vim.schedule(function()
+      self.template:setup()
+    end)
 
     return Promise.new(function(resolve)
       self._resolve_fn = resolve
@@ -69,6 +75,7 @@ function CaptureWindow:finish()
   if self.on_finish then
     result = self.on_finish(result)
   end
+  events.dispatch(event.CaptureFinished:new({ window = self, content = result or {} }))
   local fn = self._resolve_fn
   self._resolve_fn = nil
   self:kill()

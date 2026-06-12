@@ -9,4 +9,6 @@ return {
   NoteAdded = require('orgmode.events.types.note_added_event'),
   ClockedIn = require('orgmode.events.types.clocked_in'),
   ClockedOut = require('orgmode.events.types.clocked_out'),
+  CaptureOpened = require('orgmode.events.types.capture_opened'),
+  CaptureFinished = require('orgmode.events.types.capture_finished'),
 }
