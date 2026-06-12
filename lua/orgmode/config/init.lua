@@ -455,6 +455,10 @@ function Config:setup_ts_predicates()
     local _, _, _, node_end_col = node:range()
     return ((node_end_col - 1) % 8) + 1 == level
   end, { force = true, all = true })
+
+  vim.treesitter.query.add_predicate('org-hide-leading-stars?', function(_, _, source)
+    return self:hide_leading_stars(source --[[@as number]])
+  end, { force = true })
 end
 
 ---@param content table

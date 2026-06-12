@@ -587,9 +587,23 @@ function Capture:_get_refile_vars(capture_window)
 
   opts.destination_file = self.files:get(file)
   if opts.template.headline then
-    opts.destination_headline = opts.destination_file:find_headline_by_title(opts.template.headline)
+    local template_headline = opts.template.headline
+    if type(template_headline) == 'function' then
+      local ok, resolved_headline = pcall(template_headline)
+      if not ok then
+        utils.echo_error('Failed to resolve capture template headline')
+        return false
+      end
+      template_headline = resolved_headline
+    end
+    if type(template_headline) ~= 'string' then
+      utils.echo_error('Capture template headline function must return a string')
+      return false
+    end
+
+    opts.destination_headline = opts.destination_file:find_headline_by_title(template_headline)
     if not opts.destination_headline then
-      utils.echo_error(('Refile headline "%s" does not exist in "%s"'):format(opts.template.headline, file))
+      utils.echo_error(('Refile headline "%s" does not exist in "%s"'):format(template_headline, file))
       return false
     end
   end

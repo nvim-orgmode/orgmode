@@ -5,7 +5,7 @@ local M = {
   compilers = { 'tree-sitter', vim.fn.getenv('CC'), 'cc', 'gcc', 'clang', 'cl', 'zig' },
 }
 
-local required_version = '2.0.2'
+local required_version = '2.0.4'
 
 function M.install()
   local version_info = M.get_version_info()
@@ -206,12 +206,10 @@ end
 
 function M.exe(cmd, opts)
   return Promise.new(function(resolve)
-    local stdin = uv.new_pipe()
-    local stdout = uv.new_pipe()
-    local stderr = uv.new_pipe()
-    opts.stdio = { stdin, stdout, stderr }
-    uv.spawn(cmd, opts, function(code)
-      resolve(code)
+    vim.system(utils.concat({ cmd }, opts.args or {}), {
+      cwd = opts.cwd,
+    }, function(result)
+      resolve(result.code, result.stderr)
     end)
   end)
 end
@@ -272,9 +270,9 @@ function M.get_path(url, type)
   utils.notify(('%s tree-sitter grammar...'):format(msg[type]), { id = 'orgmode-treesitter-install' })
   return M.exe('git', {
     args = { 'clone', '--filter=blob:none', '--depth=1', '--branch=' .. required_version, url, path },
-  }):next(function(code)
+  }):next(function(code, err)
     if code ~= 0 then
-      error('[orgmode] Failed to clone tree-sitter-org', 0)
+      error('[orgmode] Failed to clone tree-sitter-org: ' .. (tostring(err) or 'Unknown error'), 0)
     end
     return path
   end)
@@ -305,16 +303,20 @@ function M.run(type)
         cwd = directory,
       })
     end)
-    :next(function(code)
+    :next(function(code, err)
       if code ~= 0 then
-        error('[orgmode] Failed to compile parser', 0)
+        error('[orgmode] Failed to compile parser: ' .. (tostring(err) or 'Unknown error'), 0)
       end
       local move_cmd = M.select_mv_cmd('parser.so', M.get_parser_path(), ts_grammar_dir or '', is_win, shellslash)
       return M.exe(move_cmd.cmd, move_cmd.opts)
     end)
-    :next(function(code)
+    :next(function(code, err)
       if code ~= 0 then
-        error('[orgmode] Failed to move generated tree-sitter parser to runtime folder', 0)
+        error(
+          '[orgmode] Failed to move generated tree-sitter parser to runtime folder: '
+            .. (tostring(err) or 'Unknown error'),
+          0
+        )
       end
       return M._write_lock_file({ version = required_version })
     end)

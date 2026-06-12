@@ -917,14 +917,28 @@ function OrgMappings:open_at_point()
 
   local footnote = Footnote.at_cursor()
   if footnote then
-    return self:_jump_to_footnote(footnote)
+    if footnote.is_reference then
+      return self:_jump_to_footnote_definition(footnote)
+    end
+    return self:_jump_to_footnote_reference(footnote)
   end
 end
 
----@param footnote_reference OrgFootnote
-function OrgMappings:_jump_to_footnote(footnote_reference)
+function OrgMappings:_jump_to_footnote_reference(footnote_definition)
   local file = self.files:get_current_file()
-  local footnote = file:find_footnote(footnote_reference)
+  local reference = file:find_footnote_reference(footnote_definition)
+
+  if not reference then
+    return utils.echo_info(('Cannot find reference for footnote "%s"'):format(footnote_definition:get_name()))
+  end
+
+  return vim.fn.cursor({ reference.range.start_line, reference.range.start_col })
+end
+
+---@param footnote_reference OrgFootnote
+function OrgMappings:_jump_to_footnote_definition(footnote_reference)
+  local file = self.files:get_current_file()
+  local footnote = file:find_footnote_definition(footnote_reference)
 
   if not footnote then
     local choice = vim.fn.confirm('No footnote found. Create one?', '&Yes\n&No')
@@ -933,31 +947,20 @@ function OrgMappings:_jump_to_footnote(footnote_reference)
     end
 
     local footnotes_headline = file:find_headline_by_title('footnotes')
+    local fndef = ('[fn:%s] '):format(footnote_reference.label)
     if footnotes_headline then
       local append_line = footnotes_headline:get_append_line()
-      vim.api.nvim_buf_set_lines(0, append_line, append_line, false, { footnote_reference.value .. ' ' })
-      vim.fn.cursor({ append_line + 1, #footnote_reference.value + 1 })
+      vim.api.nvim_buf_set_lines(0, append_line, append_line, false, { fndef })
+      vim.fn.cursor({ append_line + 1, #fndef })
       return vim.cmd('startinsert!')
     end
     local last_line = vim.api.nvim_buf_line_count(0)
-    vim.api.nvim_buf_set_lines(0, last_line, last_line, false, { '', '* Footnotes', footnote_reference.value .. ' ' })
-    vim.fn.cursor({ last_line + 3, #footnote_reference.value + 1 })
+    vim.api.nvim_buf_set_lines(0, last_line, last_line, false, { '', '* Footnotes', fndef })
+    vim.fn.cursor({ last_line + 3, #fndef })
     return vim.cmd('startinsert!')
   end
 
-  local is_footnote_marker = footnote.range:is_same(footnote_reference.range)
-
-  if not is_footnote_marker then
-    return vim.fn.cursor({ footnote.range.start_line, footnote.range.start_col })
-  end
-
-  local reference = file:find_footnote_reference(footnote)
-
-  if reference then
-    return vim.fn.cursor({ reference.range.start_line, reference.range.start_col })
-  end
-
-  utils.echo_info(('Cannot find reference for footnote "%s"'):format(footnote_reference:get_name()))
+  return vim.fn.cursor({ footnote.range.start_line, footnote.range.start_col })
 end
 
 function OrgMappings:export()

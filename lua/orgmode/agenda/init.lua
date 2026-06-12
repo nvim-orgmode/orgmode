@@ -520,7 +520,7 @@ function Agenda:goto_item()
     return
   end
   local target_window = nil
-  for _, win in ipairs(vim.api.nvim_list_wins()) do
+  for _, win in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
     local ft = vim.api.nvim_get_option_value('filetype', {
       buf = vim.api.nvim_win_get_buf(win),
     })
@@ -530,7 +530,7 @@ function Agenda:goto_item()
   end
 
   if not target_window then
-    for _, win in ipairs(vim.api.nvim_list_wins()) do
+    for _, win in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
       local buf = vim.api.nvim_win_get_buf(win)
       local ft = vim.api.nvim_get_option_value('filetype', { buf = buf })
       local modifiable = vim.api.nvim_get_option_value('modifiable', { buf = buf })

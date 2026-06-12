@@ -11,6 +11,8 @@ local Footnote = require('orgmode.objects.footnote')
 local Memoize = require('orgmode.utils.memoize')
 local Buffers = require('orgmode.state.buffers')
 
+local is_nightly = vim.fn.has('nvim-0.13') == 1
+
 ---@class OrgFileMetadata
 ---@field mtime number File modified time in nanoseconds
 ---@field mtime_sec number File modified time in seconds
@@ -494,14 +496,17 @@ function OrgFile:get_node_text(node, range)
   if not node then
     return ''
   end
+  local opts = {}
   if range then
-    return ts.get_node_text(node, self:get_source(), {
-      metadata = {
-        range = range,
-      },
-    })
+    opts = { metadata = { range = range } }
   end
-  return ts.get_node_text(node, self:get_source())
+
+  local _, _, _, end_col = node:range()
+  local text = ts.get_node_text(node, self:get_source(), opts)
+  if is_nightly and end_col == 0 and text:sub(-1) == '\n' then
+    return text:sub(1, -2)
+  end
+  return text
 end
 
 ---@param node? TSNode
@@ -831,58 +836,37 @@ function OrgFile:get_links()
   return links
 end
 
-memoize('get_footnote_references')
----@return OrgFootnote[]
-function OrgFile:get_footnote_references()
-  self:parse(true)
-  local ts_query = ts_utils.get_query([[
-      (paragraph (expr) @footnotes)
-      (drawer (contents (expr) @footnotes))
-      (headline (item (expr)) @footnotes)
-      (fndef) @footnotes
-  ]])
-
-  local footnotes = {}
-  local processed_lines = {}
-  for _, match in ts_query:iter_captures(self.root, self:get_source()) do
-    local line_start, _, line_end = match:range()
-    if not processed_lines[line_start] then
-      if line_start == line_end then
-        vim.list_extend(footnotes, Footnote.all_from_line(self.lines[line_start + 1], line_start + 1))
-        processed_lines[line_start] = true
-      else
-        for line = line_start, line_end - 1 do
-          vim.list_extend(footnotes, Footnote.all_from_line(self.lines[line + 1], line + 1))
-          processed_lines[line] = true
-        end
-      end
-    end
-  end
-  return footnotes
-end
-
 ---@param footnote_reference OrgFootnote
 ---@return OrgFootnote | nil
-function OrgFile:find_footnote(footnote_reference)
-  local footnotes = self:get_footnote_references()
-  for i = #footnotes, 1, -1 do
-    if footnotes[i].value:lower() == footnote_reference.value:lower() and footnotes[i].range.start_col == 1 then
-      return footnotes[i]
+function OrgFile:find_footnote_definition(footnote_reference)
+  self:parse(true)
+  local ts_query = ts_utils.get_query(([[
+      (fndef label: (expr) @_label (#eq? @_label "%s")) @footnotes
+  ]]):format(footnote_reference.label))
+
+  for _, match in ts_query:iter_captures(self.root, self:get_source()) do
+    if match and match:type() == 'fndef' then
+      return Footnote.from_node(match, self:get_source())
     end
   end
 end
 
----@param footnote OrgFootnote
+---@param footnote_definition OrgFootnote
 ---@return OrgFootnote | nil
-function OrgFile:find_footnote_reference(footnote)
-  local footnotes = self:get_footnote_references()
-  for i = #footnotes, 1, -1 do
-    if
-      footnotes[i].value:lower() == footnote.value:lower()
-      and footnotes[i].range.start_line < footnote.range.start_line
-    then
-      return footnotes[i]
+function OrgFile:find_footnote_reference(footnote_definition)
+  self:parse(true)
+  local ts_query = ts_utils.get_query(([[
+      (fnref label: (expr) @_label (#eq? @_label "%s")) @footnotes
+  ]]):format(footnote_definition.label))
+
+  local matches = {}
+  for _, match in ts_query:iter_captures(self.root, self:get_source()) do
+    if match:type() == 'fnref' then
+      table.insert(matches, match)
     end
+  end
+  if #matches > 0 then
+    return Footnote.from_node(matches[#matches], self:get_source())
   end
 end
 

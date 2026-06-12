@@ -1,5 +1,31 @@
 #+OPTIONS: H:9 ^:nil
 * Changelog
+** [[https://github.com/nvim-orgmode/orgmode/compare/0.7.2...0.7.3][0.7.3]] (2026-05-05)
+*** Features
+- *agenda*: highlight upcoming deadlines as `@org.agenda.deadline.upcoming` (#1138) ([[https://github.com/nvim-orgmode/orgmode/commit/260a366][260a366]])
+- *capture*: have `headline` in templates take a string or a function that returns a string. (#1133) ([[https://github.com/nvim-orgmode/orgmode/commit/0f821b2][0f821b2]])
+- *agenda*: add `@org.agenda.weekend.today` highlight (#1135) ([[https://github.com/nvim-orgmode/orgmode/commit/2ed4742][2ed4742]])
+- ClockedIn and ClockedOut events (#1111) ([[https://github.com/nvim-orgmode/orgmode/commit/9deee54][9deee54]])
+- *add_note*: include heading title on add_note editor (#1100) ([[https://github.com/nvim-orgmode/orgmode/commit/95cb541][95cb541]])
+- NoteAdded event (#1112) ([[https://github.com/nvim-orgmode/orgmode/commit/72c6d0c][72c6d0c]])
+- *lsp*: Show basic loading progress ([[https://github.com/nvim-orgmode/orgmode/commit/0e8cba3][0e8cba3]])
+- *lsp*: Add references support ([[https://github.com/nvim-orgmode/orgmode/commit/4610182][4610182]])
+- Add support for basic LSP (#1088) ([[https://github.com/nvim-orgmode/orgmode/commit/95fd9b3][95fd9b3]])
+
+*** Bug fixes
+- *links*: creating link from visual mode (#1139) ([[https://github.com/nvim-orgmode/orgmode/commit/1a9d7bc][1a9d7bc]])
+- *treesitter*: Ignore empty line from nodes ending on col 0 ([[https://github.com/nvim-orgmode/orgmode/commit/6446ad3][6446ad3]])
+- *agenda*: Increase height of tmp window to avoid winbar issues ([[https://github.com/nvim-orgmode/orgmode/commit/b3b58f7][b3b58f7]])
+- *buffers*: Fix fallback for finding a buffer by filename (#1126) ([[https://github.com/nvim-orgmode/orgmode/commit/a214db3][a214db3]])
+- *agenda*: Do not attempt to set text for view that is empty ([[https://github.com/nvim-orgmode/orgmode/commit/1ab7b45][1ab7b45]])
+- *folds*: update fold boundaries after headline edits (#1078) ([[https://github.com/nvim-orgmode/orgmode/commit/2fc30d3][2fc30d3]])
+- *set_tags*: better tag parsing for hyphens and whitespaces (#1098) ([[https://github.com/nvim-orgmode/orgmode/commit/2b2f327][2b2f327]])
+- *mappings*: Do not replace keycodes for <CR> fallback if not required ([[https://github.com/nvim-orgmode/orgmode/commit/5e90dc5][5e90dc5]])
+- *todo_keywords*: Do not set todo keyword on repeater if there was not any before ([[https://github.com/nvim-orgmode/orgmode/commit/b681e55][b681e55]])
+- *buffers*: Get full path to buffer name by bufnr ([[https://github.com/nvim-orgmode/orgmode/commit/eff6b77][eff6b77]])
+- *buffers*: normalize buffer name ([[https://github.com/nvim-orgmode/orgmode/commit/89b684e][89b684e]])
+- *agenda*: correctly re-render agenda on repeated todo state changed ([[https://github.com/nvim-orgmode/orgmode/commit/c480161][c480161]])
+
 ** [[https://github.com/nvim-orgmode/orgmode/compare/0.7.1...0.7.2][0.7.2]] (2025-12-03)
 *** Breaking changes
 - *agenda*: Add time grid (#1038) ([[https://github.com/nvim-orgmode/orgmode/commit/d59c7b2][d59c7b2]])

@@ -145,11 +145,10 @@ function OrgLinks:insert_link(link_location, desc)
       insert_to = link.range.end_col + 1
       target_col = target_col + link.range.start_col
     elseif vim.fn.mode() == 'v' then
-      local start_pos = vim.fn.getpos('v')
-      local end_pos = vim.fn.getpos('.')
-      insert_from = start_pos[3] - 1
-      insert_to = end_pos[3] + 1
-      target_col = target_col + start_pos[3]
+      local region = vim.fn.getregionpos(vim.fn.getpos('v'), vim.fn.getpos('.'))
+      insert_from = region[1][1][3] - 1
+      insert_to = region[1][2][3] + 1
+      target_col = target_col + region[1][1][3]
     else
       local colnr = vim.fn.col('.')
       insert_from = colnr

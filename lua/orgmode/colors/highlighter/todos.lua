@@ -44,7 +44,7 @@ function OrgTodos:_add_highlights()
     end
   end
 
-  return Promise.all(actions):next(function(line_parts)
+  return Promise.all(actions):next(vim.schedule_wrap(function(line_parts)
     local all_lines = {}
     for _, line_part in ipairs(line_parts) do
       utils.concat(all_lines, line_part)
@@ -53,7 +53,7 @@ function OrgTodos:_add_highlights()
     if vim.bo.filetype == 'org' then
       tree_utils.restart_highlights()
     end
-  end)
+  end))
 end
 
 return OrgTodos
