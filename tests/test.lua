@@ -23,7 +23,7 @@ else
   print('Individual Test File/Directory provided: ' .. test_file)
 end
 
-require('plenary.test_harness').test_directory(test_file, {
+require('plenary-busted.test_harness').test(test_file, {
   minimal_init = 'tests/minimal_init.lua',
   sequential = true,
 })

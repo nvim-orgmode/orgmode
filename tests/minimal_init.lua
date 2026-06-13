@@ -1,3 +1,4 @@
+vim.g.loaded_netrwPlugin = 1
 local M = {}
 ---
 ---@class OrgMinPlugin A plugin to download and register on the package path
@@ -81,7 +82,7 @@ function M.setup(plugins)
 end
 
 M.setup({
-  plenary = 'https://github.com/nvim-lua/plenary.nvim.git',
+  plenary = 'https://github.com/monkoose/plenary-busted',
 })
 -- WARN: Do all plugin setup, test runs, reproductions, etc. AFTER calling setup with a list of plugins!
 -- Basically, do all that stuff AFTER this line.
