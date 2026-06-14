@@ -31,6 +31,8 @@ jobs:
         version:
           - v0.11.3
           - v0.11.4
+          - v0.12.0
+          - v0.12.3
           - nightly
     runs-on: ${{ matrix.os }}
     steps:
