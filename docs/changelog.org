@@ -1,5 +1,22 @@
 #+OPTIONS: H:9 ^:nil
 * Changelog
+** [[https://github.com/nvim-orgmode/orgmode/compare/0.7.3...0.7.4][0.7.4]] (2026-06-18)
+*** Features
+- *luarocks*: Return dependency on tree-sitter-orgmode ([[https://github.com/nvim-orgmode/orgmode/commit/2fa42fe][2fa42fe]])
+- *treesitter*: Use vim.system for installation and print errors ([[https://github.com/nvim-orgmode/orgmode/commit/b1952f7][b1952f7]])
+- *promises*: Switch to coroutine based Promise (#1131) ([[https://github.com/nvim-orgmode/orgmode/commit/b6be301][b6be301]])
+- *treesitter*: nvim-treesitter-context support (#1123) ([[https://github.com/nvim-orgmode/orgmode/commit/98b3a2b][98b3a2b]])
+- *highlights*: Use tree-sitter to hide leading stars ([[https://github.com/nvim-orgmode/orgmode/commit/5ea6251][5ea6251]])
+- *footnotes*: Use footnotes from tree-sitter grammar (#1140) ([[https://github.com/nvim-orgmode/orgmode/commit/58b33f4][58b33f4]])
+
+*** Bug fixes
+- *files*: Handle empty line on Neovim 0.12.3 in set_text ([[https://github.com/nvim-orgmode/orgmode/commit/c8e3d6c][c8e3d6c]])
+- *highlighter*: Schedule callback for todos (#1156) ([[https://github.com/nvim-orgmode/orgmode/commit/5f7fbf7][5f7fbf7]])
+- *agenda*: goto item with multiple tabpages (#1149) ([[https://github.com/nvim-orgmode/orgmode/commit/4f02f19][4f02f19]])
+- OrgConfigOpts mandatory arguments (#1151) ([[https://github.com/nvim-orgmode/orgmode/commit/cef81ff][cef81ff]])
+- correct Windows localized date encoding (#1142) ([[https://github.com/nvim-orgmode/orgmode/commit/19209e6][19209e6]])
+- *capture*: ignore ui2 windows when checking for window count ([[https://github.com/nvim-orgmode/orgmode/commit/6909d18][6909d18]])
+
 ** [[https://github.com/nvim-orgmode/orgmode/compare/0.7.2...0.7.3][0.7.3]] (2026-05-05)
 *** Features
 - *agenda*: highlight upcoming deadlines as `@org.agenda.deadline.upcoming` (#1138) ([[https://github.com/nvim-orgmode/orgmode/commit/260a366][260a366]])
