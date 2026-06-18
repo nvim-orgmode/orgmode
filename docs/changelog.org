@@ -1,5 +1,9 @@
 #+OPTIONS: H:9 ^:nil
 * Changelog
+** [[https://github.com/nvim-orgmode/orgmode/compare/0.7.4...0.7.5][0.7.5]] (2026-06-18)
+*** Features
+- *luarocks*: Fix missing dependencies for luarocks (#1161) ([[https://github.com/nvim-orgmode/orgmode/commit/f93d9d2][f93d9d2]])
+
 ** [[https://github.com/nvim-orgmode/orgmode/compare/0.7.3...0.7.4][0.7.4]] (2026-06-18)
 *** Features
 - *luarocks*: Return dependency on tree-sitter-orgmode ([[https://github.com/nvim-orgmode/orgmode/commit/2fa42fe][2fa42fe]])
