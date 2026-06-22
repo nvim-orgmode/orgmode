@@ -66,6 +66,13 @@ OrgLspHandlers[methods.textDocument_completion] = function(params)
     return {
       label = item.word,
       labelDetails = item.menu and { description = item.menu } or nil,
+      textEdit = {
+        newText = item.word,
+        range = {
+          start = { line = params.position.line, character = offset - 1 },
+          ['end'] = { line = params.position.line, character = params.position.character },
+        },
+      },
     }
   end, completion)
 
