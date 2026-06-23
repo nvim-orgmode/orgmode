@@ -82,6 +82,105 @@ describe('Priority mappings', function()
     assert.are.same('* [#A] Test orgmode', vim.fn.getline(1))
   end)
 
+  it('should add a numeric priority if the item does not already have one', function()
+    numeric_config()
+    helpers.create_file({
+      '* Test orgmode',
+    })
+    vim.fn.cursor(1, 1)
+    assert.are.same('* Test orgmode', vim.fn.getline(1))
+    vim.cmd('norm ,o,5\r')
+    assert.are.same('* [#5] Test orgmode', vim.fn.getline(1))
+  end)
+
+  it('should increase the numeric priority based on the input key', function()
+    numeric_config()
+    helpers.create_file({
+      '* [#3] Test orgmode',
+    })
+    vim.fn.cursor(1, 1)
+    assert.are.same('* [#3] Test orgmode', vim.fn.getline(1))
+    vim.cmd('norm ,o,2\r')
+    assert.are.same('* [#2] Test orgmode', vim.fn.getline(1))
+  end)
+
+  it('should decrease the numeric priority based on the input key', function()
+    numeric_config()
+    helpers.create_file({
+      '* [#2] Test orgmode',
+    })
+    vim.fn.cursor(1, 1)
+    assert.are.same('* [#2] Test orgmode', vim.fn.getline(1))
+    vim.cmd('norm ,o,3\r')
+    assert.are.same('* [#3] Test orgmode', vim.fn.getline(1))
+  end)
+
+  it('should increase the numeric priority from single-digit to highest based on the input key', function()
+    numeric_config()
+    helpers.create_file({
+      '* [#3] Test orgmode',
+    })
+    vim.fn.cursor(1, 1)
+    assert.are.same('* [#3] Test orgmode', vim.fn.getline(1))
+    vim.cmd('norm ,o,1\r')
+    assert.are.same('* [#1] Test orgmode', vim.fn.getline(1))
+  end)
+
+  it('should increase the numeric priority from multi-digit to highest based on the input key', function()
+    numeric_config()
+    helpers.create_file({
+      '* [#13] Test orgmode',
+    })
+    vim.fn.cursor(1, 1)
+    assert.are.same('* [#13] Test orgmode', vim.fn.getline(1))
+    vim.cmd('norm ,o,1\r')
+    assert.are.same('* [#1] Test orgmode', vim.fn.getline(1))
+  end)
+
+  it('should decrease the numeric priority from highest to single-digit based on the input key', function()
+    numeric_config()
+    helpers.create_file({
+      '* [#1] Test orgmode',
+    })
+    vim.fn.cursor(1, 1)
+    assert.are.same('* [#1] Test orgmode', vim.fn.getline(1))
+    vim.cmd('norm ,o,3\r')
+    assert.are.same('* [#3] Test orgmode', vim.fn.getline(1))
+  end)
+
+  it('should decrease the numeric priority from highest to multi-digit based on the input key', function()
+    numeric_config()
+    helpers.create_file({
+      '* [#1] Test orgmode',
+    })
+    vim.fn.cursor(1, 1)
+    assert.are.same('* [#1] Test orgmode', vim.fn.getline(1))
+    vim.cmd('norm ,o,13\r')
+    assert.are.same('* [#13] Test orgmode', vim.fn.getline(1))
+  end)
+
+  it('should increase the numeric priority from lowest', function()
+    numeric_config()
+    helpers.create_file({
+      '* [#14] Test orgmode',
+    })
+    vim.fn.cursor(1, 1)
+    assert.are.same('* [#14] Test orgmode', vim.fn.getline(1))
+    vim.cmd('norm ciR')
+    assert.are.same('* [#13] Test orgmode', vim.fn.getline(1))
+  end)
+
+  it('should decrease the numeric priority from highest', function()
+    numeric_config()
+    helpers.create_file({
+      '* [#1] Test orgmode',
+    })
+    vim.fn.cursor(1, 1)
+    assert.are.same('* [#1] Test orgmode', vim.fn.getline(1))
+    vim.cmd('norm cir')
+    assert.are.same('* [#2] Test orgmode', vim.fn.getline(1))
+  end)
+
   it('should increase the default character priority, when it is explicitly defined', function()
     alpha_config()
     helpers.create_file({
@@ -115,7 +214,18 @@ describe('Priority mappings', function()
     assert.are.same('* [#C] Test orgmode', vim.fn.getline(1))
   end)
 
-  it('should increase a numeric priority, which is not explicitly defined', function()
+  it('should decrease a numeric priority, which is not explicitly defined', function()
+    numeric_config()
+    helpers.create_file({
+      '* [#5] Test orgmode',
+    })
+    vim.fn.cursor(1, 1)
+    assert.are.same('* [#5] Test orgmode', vim.fn.getline(1))
+    vim.cmd('norm cir')
+    assert.are.same('* [#6] Test orgmode', vim.fn.getline(1))
+  end)
+
+  it('should increase the numeric priority across the digit boundary', function()
     numeric_config()
     helpers.create_file({
       '* [#10] Test orgmode',
@@ -124,5 +234,38 @@ describe('Priority mappings', function()
     assert.are.same('* [#10] Test orgmode', vim.fn.getline(1))
     vim.cmd('norm ciR')
     assert.are.same('* [#9] Test orgmode', vim.fn.getline(1))
+  end)
+
+  it('should decrease the numeric priority across the digit boundary', function()
+    numeric_config()
+    helpers.create_file({
+      '* [#9] Test orgmode',
+    })
+    vim.fn.cursor(1, 1)
+    assert.are.same('* [#9] Test orgmode', vim.fn.getline(1))
+    vim.cmd('norm cir')
+    assert.are.same('* [#10] Test orgmode', vim.fn.getline(1))
+  end)
+
+  it('should wrap from highest to lowest numeric priority', function()
+    numeric_config()
+    helpers.create_file({
+      '* [#1] Test orgmode',
+    })
+    vim.fn.cursor(1, 1)
+    assert.are.same('* [#1] Test orgmode', vim.fn.getline(1))
+    vim.cmd('norm ciR')
+    assert.are.same('* [#15] Test orgmode', vim.fn.getline(1))
+  end)
+
+  it('should wrap from lowest to highest numeric priority', function()
+    numeric_config()
+    helpers.create_file({
+      '* [#15] Test orgmode',
+    })
+    vim.fn.cursor(1, 1)
+    assert.are.same('* [#15] Test orgmode', vim.fn.getline(1))
+    vim.cmd('norm cir')
+    assert.are.same('* [#1] Test orgmode', vim.fn.getline(1))
   end)
 end)
