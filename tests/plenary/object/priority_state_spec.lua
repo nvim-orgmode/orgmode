@@ -88,10 +88,16 @@ describe('Priority state', function()
     assert.are.same(-65, priority:get_sort_value())
   end)
 
-  it('should return the string representation of the value to use for sorting for numeric strings', function()
+  it('should return the numeric value for sorting single-digit numeric priorities', function()
     numeric_config()
     local priority = create_priority(1)
-    assert.are.same(-49, priority:get_sort_value())
+    assert.are.same(-1, priority:get_sort_value())
+  end)
+
+  it('should return the numeric value for sorting multi-digit numeric priorities', function()
+    numeric_config()
+    local priority = create_priority(10)
+    assert.are.same(-10, priority:get_sort_value())
   end)
 
   it('should return default priority value if empty when sorting', function()
