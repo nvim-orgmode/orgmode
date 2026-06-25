@@ -18,6 +18,14 @@ describe('Priority mappings', function()
     })
   end
 
+  local lowercase_config = function()
+    config:extend({
+      org_priority_highest = 'a',
+      org_priority_default = 'b',
+      org_priority_lowest = 'c',
+    })
+  end
+
   after_each(function()
     vim.cmd([[silent! %bw!]])
   end)
@@ -124,5 +132,16 @@ describe('Priority mappings', function()
     assert.are.same('* [#10] Test orgmode', vim.fn.getline(1))
     vim.cmd('norm ciR')
     assert.are.same('* [#9] Test orgmode', vim.fn.getline(1))
+  end)
+
+  it('should set the priority based on the input key when using lowercase priorities', function()
+    lowercase_config()
+    helpers.create_file({
+      '* TODO [#b] Test orgmode',
+    })
+    vim.fn.cursor(1, 1)
+    assert.are.same('* TODO [#b] Test orgmode', vim.fn.getline(1))
+    vim.cmd('norm ,o,a\r')
+    assert.are.same('* TODO [#a] Test orgmode', vim.fn.getline(1))
   end)
 end)
