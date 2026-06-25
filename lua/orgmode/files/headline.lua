@@ -347,9 +347,17 @@ end
 ---@param priority string
 function Headline:set_priority(priority)
   local _, priority_node = self:get_priority()
+  priority = vim.trim(priority)
+
+  if priority == '' then
+    if priority_node then
+      return self:_set_node_text(priority_node, '')
+    end
+    return
+  end
+
   if priority_node then
-    local text = (vim.trim(priority) == '') and '' or ('[#%s]'):format(priority)
-    return self:_set_node_text(priority_node, text)
+    return self:_set_node_text(priority_node, ('[#%s]'):format(priority))
   end
 
   local todo, todo_node = self:get_todo()
