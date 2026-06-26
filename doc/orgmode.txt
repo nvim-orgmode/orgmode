@@ -13,13 +13,13 @@ Table of Contents                                  *orgmode-table-of-contents*
   - Features                                  |orgmode-configuration-features|
   - User interface                      |orgmode-configuration-user-interface|
 2. Troubleshooting                                   |orgmode-troubleshooting|
-  - Indentation is not working|orgmode-troubleshooting-indentation-is-not-working|
-  - I get treesitter/query.lua errors when opening agenda/capture prompt or org files|orgmode-troubleshooting-i-get-treesitter/query.lua-errors-when-opening-agenda/capture-prompt-or-org-files|
-  - I get .../orgmode/parser/org.so is not a valid Win32 application on Windows|orgmode-troubleshooting-i-get-.../orgmode/parser/org.so-is-not-a-valid-win32-application-on-windows|
-  - Dates are not in English|orgmode-troubleshooting-dates-are-not-in-english|
-  - Chinese characters are not displayed correctly in agenda|orgmode-troubleshooting-chinese-characters-are-not-displayed-correctly-in-agenda|
+  - Indentation is not working |orgmode-troubleshooting-indentation-is-not-working|
+  - I get treesitter/query.lua errors when opening agenda/capture prompt or org files |orgmode-troubleshooting-i-get-treesitter/query.lua-errors-when-opening-agenda/capture-prompt-or-org-files|
+  - I get .../orgmode/parser/org.so is not a valid Win32 application on Windows |orgmode-troubleshooting-i-get-.../orgmode/parser/org.so-is-not-a-valid-win32-application-on-windows|
+  - Dates are not in English |orgmode-troubleshooting-dates-are-not-in-english|
+  - Chinese characters are not displayed correctly in agenda |orgmode-troubleshooting-chinese-characters-are-not-displayed-correctly-in-agenda|
   - Links are not concealed  |orgmode-troubleshooting-links-are-not-concealed|
-  - Jumping to file path is not working for paths with forward slash|orgmode-troubleshooting-jumping-to-file-path-is-not-working-for-paths-with-forward-slash|
+  - Jumping to file path is not working for paths with forward slash |orgmode-troubleshooting-jumping-to-file-path-is-not-working-for-paths-with-forward-slash|
 
 ==============================================================================
 1. Configuration                                       *orgmode-configuration*
