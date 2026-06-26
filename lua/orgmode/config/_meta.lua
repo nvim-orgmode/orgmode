@@ -126,6 +126,8 @@
 ---@field org_toggle_archive_tag? OrgMappingValue Default: '<prefix>A'
 ---@field org_do_promote? OrgMappingValue Default: '<<'
 ---@field org_do_demote? OrgMappingValue Default: '>>'
+---@field org_do_promote_visual? OrgMappingValue Promote selected headlines in visual mode. Default: '<'
+---@field org_do_demote_visual? OrgMappingValue Demote selected headlines in visual mode. Default: '>'
 ---@field org_promote_subtree? OrgMappingValue Default: '<s'
 ---@field org_demote_subtree? OrgMappingValue Default: '>s'
 ---@field org_meta_return? OrgMappingValue Add heading, item or row (context-dependent) Default: '<Leader><CR>'
