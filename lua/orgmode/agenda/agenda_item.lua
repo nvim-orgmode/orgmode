@@ -157,19 +157,24 @@ function AgendaItem:_generate_label()
   local time = self.headline_date:has_time() and add_padding(self:_format_time(self.headline_date)) or ''
   if self.headline_date:is_deadline() then
     if self.is_same_day then
-      return time .. 'Deadline:'
+      return time .. config.org_agenda_deadline_leaders[1]
     end
-    return self.headline_date:humanize(self.date) .. ':'
+    local diff = self.date:diff(self.headline_date)
+    if diff < 0 then
+      return config.org_agenda_deadline_leaders[2]:gsub('%%d', math.abs(diff))
+    else
+      return config.org_agenda_deadline_leaders[3]:gsub('%%d', math.abs(diff))
+    end
   end
 
   if self.headline_date:is_scheduled() then
     if self.is_same_day then
-      return time .. 'Scheduled:'
+      return time .. config.org_agenda_scheduled_leaders[1]
     end
 
     local diff = math.abs(self.date:diff(self.headline_date))
 
-    return 'Sched. ' .. diff .. 'x:'
+    return config.org_agenda_scheduled_leaders[2]:gsub('%%d', diff)
   end
 
   if self.headline_date.is_date_range_start then

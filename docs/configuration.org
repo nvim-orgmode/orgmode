@@ -1121,6 +1121,31 @@ Additional files to search from agenda search prompt.
 Currently it accepts only a single value: =agenda-archives=.
 Example value: ={'agenda-archives'}=
 
+*** org_agenda_scheduled_leaders
+:PROPERTIES:
+:CUSTOM_ID: org_agenda_scheduled_leaders
+:END:
+- Type: =string[]=
+- Default: ={'Scheduled:', 'Sched. %dx:'}=
+Text preceding scheduled items in the agenda view. This is a list with two
+strings. The first applies when the item is scheduled on the current day. The
+second applies when it has been scheduled previously, it may contain a %d
+indicating that this is the nth time that this item is scheduled, due to
+automatic rescheduling of unfinished items for the following day. So this
+number is one larger than the number of days that passed since this item was
+scheduled first.
+
+*** org_agenda_deadline_leaders
+:PROPERTIES:
+:CUSTOM_ID: org_agenda_deadline_leaders
+:END:
+- Type: =string[]=
+- Default: ={'Deadline:', 'In %d d.:', "%d d. ago"},=
+Text preceding deadline items in the agenda view. This is a list with three
+strings. The first applies when the item has its deadline on the current day.
+The second applies when the deadline is in the future, the third one when it is
+in the past. The strings may contain %d to capture the number of days.
+
 ** Calendar settings
 :PROPERTIES:
 :CUSTOM_ID: calendar-settings
