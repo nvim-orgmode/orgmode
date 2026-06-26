@@ -147,10 +147,10 @@ local function renderToc()
     for _, elem in pairs(toc) do
       local level, item, link = elem[1], elem[2], elem[3]
       if level == 1 then
-        local padding = string.rep(" ", 78 - #item - #link)
+        local padding = string.rep(" ", math.max(78 - #item - #link, 1))
         add(item .. padding .. link)
       elseif level == 2 then
-        local padding = string.rep(" ", 74 - #item - #link)
+        local padding = string.rep(" ", math.max(74 - #item - #link, 1))
         add("  - " .. item .. padding .. link)
       end
     end
