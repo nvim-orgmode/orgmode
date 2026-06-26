@@ -99,6 +99,17 @@ return {
       'agenda.toggle_archive_tag',
       { opts = { desc = 'org toggle archive tag', help_desc = 'Toggle "ARCHIVE" tag on current headline' } }
     ),
+    org_agenda_archive_visual = m.action(
+      'agenda.archive_visual',
+      { modes = { 'x' }, opts = { desc = 'org archive visual', help_desc = 'Archive selected headlines' } }
+    ),
+    org_agenda_toggle_archive_tag_visual = m.action('agenda.toggle_archive_tag_visual', {
+      modes = { 'x' },
+      opts = {
+        desc = 'org toggle archive tag visual',
+        help_desc = 'Toggle "ARCHIVE" tag on selected headlines',
+      },
+    }),
     org_agenda_set_tags = m.action(
       'agenda.set_tags',
       { opts = { desc = 'org set tags', help_desc = 'Change tags of current headline' } }
