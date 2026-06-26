@@ -14,6 +14,64 @@ function Tangle:new(opts)
   }, self)
 end
 
+function ls_style_to_octal(rwx_string)
+  local result = 0
+  local value = 0
+
+  for i = 1, #rwx_string, 3 do
+    local chunk = rwx_string:sub(i, i + 2)
+    value = 0
+
+    if chunk:sub(1, 1) == 'r' then
+      value = value + 4
+    end
+    if chunk:sub(2, 2) == 'w' then
+      value = value + 2
+    end
+    if chunk:sub(3, 3) == 'x' then
+      value = value + 1
+    end
+
+    result = result * 8 + value
+  end
+
+  return result
+end
+
+function chmod_style_to_octal(chmod_string)
+  local owner, group, other = 0, 0, 0
+
+  for part in chmod_string:gmatch('[^,]+') do
+    local who, what = part:match('(%a+)[=+](.+)')
+    if not who or not what then
+      return nil
+    end
+
+    local perm = 0
+    if what:find('r') then
+      perm = perm + 4
+    end
+    if what:find('w') then
+      perm = perm + 2
+    end
+    if what:find('x') then
+      perm = perm + 1
+    end
+
+    if who:find('u') or who:find('a') then
+      owner = bit.bor(owner, perm)
+    end
+    if who:find('g') or who:find('a') then
+      group = bit.bor(group, perm)
+    end
+    if who:find('o') or who:find('a') then
+      other = bit.bor(other, perm)
+    end
+  end
+
+  return owner * 64 + group * 8 + other
+end
+
 function Tangle:tangle()
   local block_content_by_name = {}
   ---@type OrgBlockTangleInfo[]
@@ -35,11 +93,12 @@ function Tangle:tangle()
 
   for _, info in ipairs(valid_blocks) do
     if tangle_info[info.filename] then
-      table.insert(tangle_info[info.filename], '')
+      table.insert(tangle_info[info.filename]['content'], '')
     else
-      tangle_info[info.filename] = {}
+      tangle_info[info.filename] = { content = {} }
     end
 
+    local filemode = tangle_info[info.filename]['mode']
     local do_noweb = info.header_args[':noweb'] == 'yes' or info.header_args[':noweb'] == 'tangle'
     local parsed_content = info.content
 
@@ -60,15 +119,57 @@ function Tangle:tangle()
       vim.fn.mkdir(path, 'p')
     end
 
+    local shebang = info.header_args[':shebang']
+    if shebang then
+      shebang = shebang:gsub('[\'"]', '')
+      table.insert(parsed_content, 1, shebang)
+      if filemode == nil then
+        filemode = 'o755'
+      end
+    end
+
+    local tangle_mode = info.header_args[':tangle-mode']
+    if tangle_mode then
+      filemode = tangle_mode:gsub('[\'"]', '')
+    end
+
+    if info.header_args[':mkdirp'] == 'yes' then
+      local path = vim.fn.fnamemodify(info.filename, ':h')
+      vim.fn.mkdir(path, 'p')
+    end
+
     if info.name then
       block_content_by_name[info.name] = parsed_content
     end
-    vim.list_extend(tangle_info[info.filename], parsed_content)
+    vim.list_extend(tangle_info[info.filename]['content'], parsed_content)
+    tangle_info[info.filename]['mode'] = filemode
   end
 
   local promises = {}
-  for filename, content in pairs(tangle_info) do
-    table.insert(promises, utils.writefile(filename, table.concat(self:_remove_obsolete_indent(content), '\n')))
+  for filename, block in pairs(tangle_info) do
+    table.insert(
+      promises,
+      utils.writefile(filename, table.concat(self:_remove_obsolete_indent(block['content']), '\n'))
+    )
+
+    local mode_str = block['mode']
+    local mode = nil
+
+    if mode_str then
+      if mode_str:sub(1, 1) == 'o' then
+        mode = tonumber(mode_str:sub(2), 8)
+      else
+        mode = chmod_style_to_octal(mode_str)
+        if mode == nil then
+          mode = ls_style_to_octal(mode_str)
+        end
+      end
+    end
+
+    if mode then
+      utils.echo_info(('change mode %s mode %o'):format(filename, mode))
+      vim.loop.fs_chmod(filename, mode)
+    end
   end
   Promise.all(promises):wait()
   utils.echo_info(('Tangled %d blocks from %s'):format(#valid_blocks, vim.fn.fnamemodify(self.file.filename, ':t')))
