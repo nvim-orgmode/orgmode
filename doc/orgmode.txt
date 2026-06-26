@@ -119,6 +119,8 @@ Available `string` values:
 - `vertical` - Always split vertically
 - `auto` - Determine between horizontal and vertical split depending on the current window size
 - `float` - Open in float window that has width of 70% of the screen centered
+- `edit` - Open in the current window
+- `tabnew` - Open in a new tab
 - `{'float', 0.9}` - Open in float window and provide custom scale (in this case it's 90% of screen size), must be value between `0` and `1`
 
 If none of the options above suit your needs, there are 2 other ways to
