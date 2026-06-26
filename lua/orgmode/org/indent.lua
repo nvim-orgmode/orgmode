@@ -279,21 +279,46 @@ local function indentexpr(linenr, bufnr)
         local block_ft = vim.treesitter.get_node_text(block_parameters[1], bufnr)
 
         if block_ft and block_ft ~= vim.bo.filetype then
-          local curr_indentexpr = vim.filetype.get_option(block_ft, 'indentexpr') --[[@as string]]
+          local block_header_indent = vim.fn.indent(match.line_nr)
+          local got_indent = false
 
-          if curr_indentexpr and curr_indentexpr ~= '' then
-            curr_indentexpr = curr_indentexpr:gsub('%(%)$', '')
-
-            local buf_shiftwidth = vim.bo.shiftwidth
-            vim.bo.shiftwidth = vim.filetype.get_option(block_ft, 'shiftwidth')
-            local ok, block_ft_indent = pcall(function()
-              return vim.fn[curr_indentexpr]()
-            end)
-            if ok then
-              new_indent = math.max(block_ft_indent, vim.fn.indent(match.line_nr))
+          -- Try treesitter indent via the injected parser first
+          local ts_ok, ts_indent_mod = pcall(require, 'nvim-treesitter.indent')
+          if ts_ok then
+            local parser_ok, parser = pcall(vim.treesitter.get_parser, bufnr)
+            if parser_ok and parser then
+              local lang = parser:language_for_range({ linenr - 1, 0, linenr - 1, 0 })
+              if lang and lang ~= 'org' then
+                local buf_shiftwidth = vim.bo.shiftwidth
+                vim.bo.shiftwidth = vim.filetype.get_option(block_ft, 'shiftwidth') or buf_shiftwidth
+                local indent_ok, ts_indent = pcall(ts_indent_mod.get_indent, linenr)
+                vim.bo.shiftwidth = buf_shiftwidth
+                if indent_ok and ts_indent and ts_indent >= 0 then
+                  new_indent = math.max(ts_indent, block_header_indent)
+                  got_indent = true
+                end
+              end
             end
+          end
 
-            vim.bo.shiftwidth = buf_shiftwidth
+          -- Fall back to the filetype's indentexpr
+          if not got_indent then
+            local curr_indentexpr = vim.filetype.get_option(block_ft, 'indentexpr') --[[@as string]]
+
+            if curr_indentexpr and curr_indentexpr ~= '' then
+              curr_indentexpr = curr_indentexpr:gsub('%(%)$', '')
+
+              local buf_shiftwidth = vim.bo.shiftwidth
+              vim.bo.shiftwidth = vim.filetype.get_option(block_ft, 'shiftwidth')
+              local ok, block_ft_indent = pcall(function()
+                return vim.fn[curr_indentexpr]()
+              end)
+              if ok then
+                new_indent = math.max(block_ft_indent, block_header_indent)
+              end
+
+              vim.bo.shiftwidth = buf_shiftwidth
+            end
           end
         end
       end
