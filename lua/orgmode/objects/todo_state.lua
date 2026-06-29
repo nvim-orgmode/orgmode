@@ -25,6 +25,58 @@ end
 
 ---@return OrgTodoKeyword | nil
 function TodoState:open_fast_access()
+  if config.ui.menu.handler then
+    return self:_open_fast_access_menu()
+  end
+  return self:_open_fast_access_echo()
+end
+
+--- Delegates to the configurable menu handler so UI plugins can render the
+--- prompt in a window instead of the message area.
+---@private
+---@return OrgTodoKeyword | nil
+function TodoState:_open_fast_access_menu()
+  local Menu = require('orgmode.ui.menu')
+  local menu = Menu:new({
+    title = 'Select a TODO keyword',
+    prompt = 'Press key',
+    kind = 'todo_fast_access',
+  })
+
+  -- One group per keyword sequence, so a handler can keep the cycle grouping.
+  for _, sequence in ipairs(self.todos.sequences) do
+    local group = {}
+    for _, todo in ipairs(sequence) do
+      table.insert(group, {
+        label = todo.value,
+        key = todo.shortcut,
+        hl = todo.hl,
+        action = function()
+          return todo
+        end,
+      })
+    end
+    if #group > 0 then
+      menu:add_group(group)
+    end
+  end
+
+  menu:add_group({
+    {
+      label = 'Clear keyword',
+      key = ' ',
+      action = function()
+        return TodoKeyword:empty()
+      end,
+    },
+  })
+
+  return menu:open()
+end
+
+---@private
+---@return OrgTodoKeyword | nil
+function TodoState:_open_fast_access_echo()
   local output = {}
 
   -- Group keywords by sequence
