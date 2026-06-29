@@ -979,6 +979,9 @@ Templates have the following fields:
     capture content will be added. If a function is provided, it will be called during
     refile and must return the headline title as string. If no headline is specified,
     the content will be appended to the end of the file
+- `prepend` (`boolean`) - captured items are by default added as the last item at
+    the specfied target, setting this field places captured items as the first item
+    at the target
 - `datetree (boolean | { time_prompt?: boolean, reversed?: boolean, tree_type: 'day' | 'month' | 'week' | 'custom' })`
     Create a date tree <https://orgmode.org/manual/Template-elements.html#FOOT84> with current day in the target file and put the capture content there.
     - `true` - Create ascending datetree (newer dates go to end) with the current date

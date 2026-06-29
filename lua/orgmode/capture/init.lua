@@ -167,9 +167,14 @@ function Capture:_refile_from_capture_buffer(opts)
   local target_line = -1
   local destination_file = opts.destination_file
   local destination_headline = opts.destination_headline
+  local prepend = opts.template.prepend
 
   if destination_headline then
-    target_line = destination_headline:get_range().end_line
+    if prepend then
+      target_line = destination_headline:get_range().start_line
+    else
+      target_line = destination_headline:get_range().end_line
+    end
   end
 
   if opts.template.datetree then

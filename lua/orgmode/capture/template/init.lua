@@ -84,6 +84,7 @@ local expansions = {
 ---@field target? string
 ---@field datetree? OrgCaptureTemplateDatetree
 ---@field headline? string|fun():string
+---@field prepend? boolean
 ---@field regexp? string
 ---@field properties? OrgCaptureTemplateProperties
 ---@field subtemplates? table<string, OrgCaptureTemplate>
@@ -103,6 +104,7 @@ function Template:new(opts)
   vim.validate('target', opts.target, 'string', true)
   vim.validate('regexp', opts.regexp, 'string', true)
   vim.validate('headline', opts.headline, { 'string', 'function' }, true)
+  vim.validate('prepend', opts.prepend, 'boolean', true)
   vim.validate('properties', opts.properties, 'table', true)
   vim.validate('subtemplates', opts.subtemplates, 'table', true)
   vim.validate('datetree', opts.datetree, { 'boolean', 'table' }, true)
@@ -113,6 +115,7 @@ function Template:new(opts)
   this.template = opts.template or ''
   this.target = opts.target or ''
   this.headline = opts.headline
+  this.prepend = opts.prepend
   this.properties = TemplateProperties:new(opts.properties)
   this.datetree = opts.datetree
   this.regexp = opts.regexp
