@@ -630,24 +630,35 @@ function OrgMappings:org_return()
     mode = 'i',
     lhs = '<CR>',
   })
-  -- No other mapping for <CR>, just reproduce it.
+
   if not global_cr_keymap or vim.tbl_isempty(global_cr_keymap) then
     return vim.api.nvim_feedkeys(utils.esc('<CR>'), 'n', true)
   end
 
-  local rhs = global_cr_keymap.rhs
+  local function get_rhs()
+    if global_cr_keymap.callback then
+      local result = global_cr_keymap.callback()
+      if global_cr_keymap.expr == 0 or not result then
+        return
+      end
+      return vim.api.nvim_replace_termcodes(result, true, true, true)
+    end
 
-  if global_cr_keymap.callback then
-    rhs = global_cr_keymap.callback()
+    if global_cr_keymap.expr > 0 then
+      -- expr rhs: the string is a Vimscript expression, eval it first
+      local ok, result = pcall(vim.api.nvim_eval, global_cr_keymap.rhs)
+      if ok then
+        return vim.api.nvim_replace_termcodes(result, true, true, true)
+      end
+    end
+
+    return vim.api.nvim_replace_termcodes(global_cr_keymap.rhs, true, true, true)
   end
 
-  -- If mapping contains `\r`, it means it's already escaped and evaluated
-  if global_cr_keymap.expr > 0 and not rhs:lower():find('\r') then
-    rhs = vim.api.nvim_replace_termcodes(rhs, true, true, true)
-    rhs = vim.api.nvim_eval(rhs)
+  local rhs = get_rhs()
+  if rhs then
+    return vim.api.nvim_feedkeys(rhs, 'n', true)
   end
-
-  return vim.api.nvim_feedkeys(rhs, 'n', true)
 end
 
 function OrgMappings:handle_return(suffix)
