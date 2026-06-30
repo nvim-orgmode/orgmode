@@ -73,6 +73,7 @@ end
 ---@param template OrgCaptureTemplate
 ---@return OrgPromise<OrgCaptureWindow>
 function Capture:open_template(template)
+  template.files = self.files
   local window = CaptureWindow:new({
     template = template,
     on_open = function(capture_window)

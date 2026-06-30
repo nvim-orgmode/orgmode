@@ -612,6 +612,30 @@ function OrgFile:get_filetags()
   return utils.parse_tags_string(self:_get_directive('filetags'))
 end
 
+memoize('get_tags')
+--- Get all unique tags from the file (file-level tags + headline tags)
+--- @return string[]
+function OrgFile:get_tags()
+  local tags = {}
+  local file_tags = self:get_filetags()
+  if file_tags and #file_tags > 0 then
+    for _, tag in ipairs(file_tags) do
+      tags[tag] = 1
+    end
+  end
+  for _, headline in ipairs(self:get_headlines()) do
+    local htags = headline:get_tags()
+    if htags and #htags > 0 then
+      for _, tag in ipairs(htags) do
+        tags[tag] = 1
+      end
+    end
+  end
+  local taglist = vim.tbl_keys(tags)
+  table.sort(taglist)
+  return taglist
+end
+
 memoize('get_blocks')
 --- @return OrgBlock[]
 function OrgFile:get_blocks()
