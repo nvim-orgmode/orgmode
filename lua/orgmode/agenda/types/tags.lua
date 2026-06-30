@@ -24,6 +24,7 @@ OrgAgendaTagsType.__index = OrgAgendaTagsType
 ---@param opts OrgAgendaTagsTypeOpts
 function OrgAgendaTagsType:new(opts)
   opts.todo_only = opts.todo_only or false
+  opts.prefix_key = 'tags'
   opts.sorting_strategy = opts.sorting_strategy or vim.tbl_get(config.org_agenda_sorting_strategy, 'tags') or {}
   if not opts.id then
     opts.subheader = 'Press "r" to update search'

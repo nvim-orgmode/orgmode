@@ -122,7 +122,9 @@ function Agenda:_build_custom_commands()
   end
   local custom_commands = {}
   ---@param opts OrgAgendaCustomCommandType
-  local get_type_opts = function(opts, id)
+  ---@param parent_opts? table
+  local get_type_opts = function(opts, id, parent_opts)
+    parent_opts = parent_opts or {}
     local opts_by_type = {
       agenda = {
         span = opts.org_agenda_span,
@@ -153,7 +155,9 @@ function Agenda:_build_custom_commands()
     opts_by_type[opts.type].tag_filter = opts.org_agenda_tag_filter_preset
     opts_by_type[opts.type].category_filter = opts.org_agenda_category_filter_preset
     opts_by_type[opts.type].highlighter = self.highlighter
-    opts_by_type[opts.type].remove_tags = opts.org_agenda_remove_tags
+    opts_by_type[opts.type].remove_tags = utils.if_nil(opts.org_agenda_remove_tags, parent_opts.org_agenda_remove_tags)
+    opts_by_type[opts.type].org_agenda_prefix_format =
+      utils.if_nil(opts.org_agenda_prefix_format, parent_opts.org_agenda_prefix_format)
     opts_by_type[opts.type].id = id
 
     return opts_by_type[opts.type]
@@ -165,7 +169,7 @@ function Agenda:_build_custom_commands()
       action = function()
         local views = {}
         for i, agenda_type in ipairs(command.types) do
-          local opts = get_type_opts(agenda_type, ('%s_%s_%d'):format(shortcut, agenda_type.type, i))
+          local opts = get_type_opts(agenda_type, ('%s_%s_%d'):format(shortcut, agenda_type.type, i), command)
           if not opts then
             utils.echo_error('Invalid custom agenda command type ' .. agenda_type.type)
             break

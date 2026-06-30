@@ -485,6 +485,16 @@ function utils.pad_right(str, amount)
   return string.format('%s%s', str, string.rep(' ', spaces))
 end
 
+---@param str string
+---@param amount number
+function utils.pad_left(str, amount)
+  local spaces = math.max(0, amount - vim.api.nvim_strwidth(str))
+  if spaces == 0 then
+    return str
+  end
+  return string.format('%s%s', string.rep(' ', spaces), str)
+end
+
 function utils.is_list(value)
   if vim.islist then
     return vim.islist(value)
