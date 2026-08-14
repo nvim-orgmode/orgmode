@@ -210,7 +210,7 @@ org_capture_templates = {
 #+end_src
 
 After restarting Vim you should be able to select the =Repo= capture-template
-with =r= when you initiate a capture. If you have the link to the repo in you
+with =r= when you initiate a capture. If you have the link to the repo in your
 clipboard, it will be inserted into the link correctly. See the docs about the
 possible ways to [[file:./configuration.org::#org_capture_templates][configure your templates]].
 
