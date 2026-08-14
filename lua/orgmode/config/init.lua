@@ -218,8 +218,13 @@ function Config:get_mappings(category, buffer)
     opts.buffer = buffer
   end
 
-  if self.opts.mappings.prefix then
-    opts.prefix = self.opts.mappings.prefix
+  local prefix = self.opts.mappings.prefix
+  if category == 'global' and self.opts.mappings.global_prefix then
+    prefix = self.opts.mappings.global_prefix
+  end
+
+  if prefix then
+    opts.prefix = prefix
   end
 
   local result = {}

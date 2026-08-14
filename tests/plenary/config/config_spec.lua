@@ -24,6 +24,16 @@ local get_normal_mode_mapping_in_org_buffer = function(lhs)
   return nil
 end
 
+local get_global_normal_mode_mapping = function(lhs)
+  for _, keymap in ipairs(vim.api.nvim_get_keymap('n')) do
+    if keymap['lhs'] == lhs then
+      return keymap
+    end
+  end
+
+  return nil
+end
+
 describe('Config', function()
   local refile_file = vim.fn.getcwd() .. '/tests/plenary/fixtures/refile.org'
 
@@ -100,6 +110,39 @@ describe('Config', function()
     local mapping = get_normal_mode_mapping_in_org_buffer('gouh')
     assert.are.same('<Cmd>lua require("orgmode").action("org_mappings.outline_up_heading")<CR>', mapping['rhs'])
     assert.are.same('Go To Parent Headline', mapping['desc'])
+  end)
+
+  it('should use the prefix for global mappings when global_prefix is not provided', function()
+    local org = orgmode.setup({
+      mappings = {
+        prefix = 'gx',
+      },
+    })
+    config:setup_mappings('global')
+
+    local mapping = get_global_normal_mode_mapping('gxa')
+    assert.are.same('<Cmd>lua require("orgmode").action("agenda.prompt")<CR>', mapping['rhs'])
+    vim.keymap.del('n', 'gxa')
+    vim.keymap.del('n', 'gxc')
+  end)
+
+  it('should use global_prefix for global mappings and keep prefix for buffer local ones', function()
+    local org = orgmode.setup({
+      mappings = {
+        prefix = 'gx',
+        global_prefix = 'gy',
+      },
+    })
+    config:setup_mappings('global')
+
+    local mapping = get_global_normal_mode_mapping('gya')
+    assert.are.same('<Cmd>lua require("orgmode").action("agenda.prompt")<CR>', mapping['rhs'])
+    assert.is_nil(get_global_normal_mode_mapping('gxa'))
+
+    local buffer_mapping = get_normal_mode_mapping_in_org_buffer('gx*')
+    assert.are.same('<Cmd>lua require("orgmode").action("org_mappings.toggle_heading")<CR>', buffer_mapping['rhs'])
+    vim.keymap.del('n', 'gya')
+    vim.keymap.del('n', 'gyc')
   end)
   ---@diagnostic enable: need-check-nil
 end)
