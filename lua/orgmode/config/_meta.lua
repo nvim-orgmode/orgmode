@@ -189,6 +189,7 @@
 ---@field disable_all? boolean Disable all mappings. Default: false
 ---@field org_return_uses_meta_return? boolean When true, `<CR>` will act as `<Leader><CR>` when applicable. Default: false
 ---@field prefix? string Default prefix for mappings. Default: '<Leader>o'
+---@field global_prefix? string Prefix for the `global` mappings. Falls back to `prefix` when not set. Default: nil
 ---@field global? OrgMappingsGlobal
 ---@field agenda? OrgMappingsAgenda
 ---@field capture? OrgMappingsCapture

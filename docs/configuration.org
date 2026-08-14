@@ -1219,6 +1219,25 @@ different route. When possible, instead of =CTRL + C=, prefix
 =<Leader>o= is used. This is customizable via the =mappings.prefix=
 setting.
 
+=mappings.prefix= applies to every mapping category. All categories
+except =global= are registered buffer local (in org files, the agenda
+buffer, capture buffers and special edit buffers), while =global=
+(=org_agenda= and =org_capture=) is registered globally. If you want a
+buffer local prefix like =<LocalLeader>= for the org mappings, the two
+global ones would end up on that prefix as well and shadow mappings of
+other filetypes. Use =mappings.global_prefix= to give the =global=
+category its own prefix. It defaults to =nil=, which falls back to
+=mappings.prefix=:
+
+#+begin_src lua
+require('orgmode').setup({
+  mappings = {
+    prefix = '<LocalLeader>',
+    global_prefix = '<Leader>o',
+  }
+})
+#+end_src
+
 To disable all mappings, just pass ~disable_all = true~ to mappings
 settings:
 
