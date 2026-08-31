@@ -109,19 +109,21 @@ function OrgLinks:get_link_to_file(file)
 end
 
 ---@param link_location string
-function OrgLinks:insert_link(link_location, desc)
+---@param desc? string
+---@param visual? OrgVisualRegion Selection captured before the input prompt opened
+function OrgLinks:insert_link(link_location, desc, visual)
   local selected_link = OrgHyperlink:new(link_location)
-  desc = desc or selected_link.url:get_target()
-  if desc and (desc:match('^%*') or desc:match('^#')) then
-    desc = desc:sub(2)
+  if not desc and visual then
+    desc = visual.text
+  else
+    desc = desc or selected_link.url:get_target()
+    if desc and (desc:match('^%*') or desc:match('^#')) then
+      desc = desc:sub(2)
+    end
   end
 
   if selected_link.url:get_protocol() == 'id' then
     link_location = ('id:%s'):format(selected_link.url:get_path())
-  end
-
-  if not desc and vim.fn.mode() == 'v' then
-    desc = utils.get_visual_selection()
   end
 
   return Input.open('Description: ', desc or ''):next(function(link_description)
@@ -136,6 +138,7 @@ function OrgLinks:insert_link(link_location, desc)
 
     local insert_from
     local insert_to
+    local linenr = vim.fn.line('.') or 0
     local target_col = #link_location + #link_description + 2
 
     -- check if currently on link
@@ -144,11 +147,11 @@ function OrgLinks:insert_link(link_location, desc)
       insert_from = link.range.start_col - 1
       insert_to = link.range.end_col + 1
       target_col = target_col + link.range.start_col
-    elseif vim.fn.mode() == 'v' then
-      local region = vim.fn.getregionpos(vim.fn.getpos('v'), vim.fn.getpos('.'))
-      insert_from = region[1][1][3] - 1
-      insert_to = region[1][2][3] + 1
-      target_col = target_col + region[1][1][3]
+    elseif visual then
+      linenr = visual.line
+      insert_from = visual.start_col - 1
+      insert_to = visual.end_col + 1
+      target_col = target_col + visual.start_col
     else
       local colnr = vim.fn.col('.')
       insert_from = colnr
@@ -156,7 +159,6 @@ function OrgLinks:insert_link(link_location, desc)
       target_col = target_col + colnr
     end
 
-    local linenr = vim.fn.line('.') or 0
     local curr_line = vim.fn.getline(linenr)
     local new_line = string.sub(curr_line, 0, insert_from)
       .. '['

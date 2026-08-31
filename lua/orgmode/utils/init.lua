@@ -592,9 +592,37 @@ function utils.goto_headline(headline)
   vim.cmd([[normal! zv]])
 end
 
----@return string
-function utils.get_visual_selection()
-  return table.concat(vim.fn.getregion(vim.fn.getpos('v'), vim.fn.getpos('.')), '\n')
+---@class OrgVisualRegion
+---@field line number
+---@field start_col number
+---@field end_col number
+---@field text string
+
+---Capture the current visual selection. Must be called while visual mode is
+---still active: an input prompt that opens a window of its own (see
+---`ui.input.use_vim_ui`) ends visual mode before the prompt is answered.
+---Selections spanning multiple lines return nil, since callers splice into a
+---single line.
+---@return OrgVisualRegion | nil
+function utils.get_visual_region()
+  local mode = vim.fn.mode()
+  if mode ~= 'v' and mode ~= 'V' and mode ~= '\22' then
+    return nil
+  end
+
+  local start_pos = vim.fn.getpos('v')
+  local end_pos = vim.fn.getpos('.')
+  local region = vim.fn.getregionpos(start_pos, end_pos, { type = mode })
+  if #region ~= 1 then
+    return nil
+  end
+
+  return {
+    line = region[1][1][2],
+    start_col = region[1][1][3],
+    end_col = region[1][2][3],
+    text = table.concat(vim.fn.getregion(start_pos, end_pos, { type = mode }), '\n'),
+  }
 end
 
 ---@param msg string|string[]
