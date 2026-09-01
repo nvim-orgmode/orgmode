@@ -23,7 +23,7 @@ Here are few examples:
 2. vim.pack (Available only in Neovim 0.12+)
    #+begin_src lua
    vim.pack.add({
-     { src = 'https://github.com/nvim-orgmode/orgmode '}
+     { src = 'https://github.com/nvim-orgmode/orgmode'}
    })
    require('orgmode').setup({
      org_agenda_files = '~/orgfiles/**/*',

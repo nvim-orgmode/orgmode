@@ -4,6 +4,7 @@ local config = require('orgmode.config')
 ---@field label string Description of the action
 ---@field key string Key that will be processed when the keys are pressed in the menu
 ---@field action? function Handler that will be called when the `key` is pressed in the menu.
+---@field hl? string Highlight group for the label, for handlers that render it
 
 ---@class OrgMenuSeparator
 ---@field icon string? Character used as separator. The default character is `-`
@@ -11,14 +12,18 @@ local config = require('orgmode.config')
 
 ---@alias OrgMenuItem OrgMenuOption | OrgMenuSeparator
 
+---@alias OrgMenuGroup OrgMenuOption[]
+
 ---@class OrgMenuOpts
 ---@field title string Menu title
 ---@field items OrgMenuItem[]? Menu items, may include options and separators
 ---@field prompt string Prompt text used to prompt a keystroke
 ---@field separator OrgMenuSeparator? Default separator
+---@field kind string? Stable identifier of the menu type, for handlers that branch on it
 
 --- Menu for selecting an action by pressing a key by the user
 ---@class OrgMenu:OrgMenuOpts
+---@field groups OrgMenuGroup[]
 local Menu = {}
 
 ---@param data OrgMenuOpts
@@ -30,6 +35,8 @@ function Menu:new(data)
   opts.title = data.title
   opts.prompt = data.prompt
   opts.items = data.items or {}
+  opts.groups = {}
+  opts.kind = data.kind
   opts.separator = vim.tbl_deep_extend('force', { icon = '-', length = 80 }, data.separator or {})
 
   setmetatable(opts, self)
@@ -42,6 +49,7 @@ function Menu:_validate_option(option)
   vim.validate('label', option.label, 'string')
   vim.validate('key', option.key, 'string')
   vim.validate('action', option.action, 'function', true)
+  vim.validate('hl', option.hl, 'string', true)
 end
 
 ---@param items OrgMenuItem[]?
@@ -75,6 +83,7 @@ end
 function Menu:_validate_data(data)
   vim.validate('title', data.title, 'string')
   vim.validate('prompt', data.prompt, 'string')
+  vim.validate('kind', data.kind, 'string', true)
   self:_validate_items(data.items)
   self:_validate_separator(data.separator)
 end
@@ -91,10 +100,27 @@ function Menu:add_separator(separator)
   table.insert(self.items, vim.tbl_deep_extend('force', self.separator, separator or {}))
 end
 
+--- Adds a group of options. Groups carry structure (e.g. one todo sequence per
+--- group) for handlers that lay them out; the options are also appended to the
+--- flat `items` list so handlers that ignore groups keep working.
+---@param options OrgMenuGroup
+function Menu:add_group(options)
+  vim.validate('options', options, 'table')
+  for _, option in ipairs(options) do
+    self:_validate_option(option)
+  end
+  table.insert(self.groups, options)
+  for _, option in ipairs(options) do
+    table.insert(self.items, option)
+  end
+end
+
 ---@class OrgMenuData
 ---@field title string Menu title
 ---@field items OrgMenuItem[] Menu items, may include options and separators
 ---@field prompt string Prompt text used to prompt a keystroke
+---@field groups? OrgMenuGroup[] Options grouped by structure; `items` is the flat view
+---@field kind? string Stable identifier of the menu type
 
 ---@param data OrgMenuData
 function Menu._default_menu(data)
@@ -145,7 +171,11 @@ function Menu:open()
     title = self.title,
     items = self.items,
     prompt = self.prompt,
+    kind = self.kind,
   }
+  if #self.groups > 0 then
+    menu_data.groups = self.groups
+  end
   local custom_handler = config.ui.menu.handler
   if custom_handler then
     return custom_handler(menu_data)

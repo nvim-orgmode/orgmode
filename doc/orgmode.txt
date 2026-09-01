@@ -13,13 +13,13 @@ Table of Contents                                  *orgmode-table-of-contents*
   - Features                                  |orgmode-configuration-features|
   - User interface                      |orgmode-configuration-user-interface|
 2. Troubleshooting                                   |orgmode-troubleshooting|
-  - Indentation is not working|orgmode-troubleshooting-indentation-is-not-working|
-  - I get treesitter/query.lua errors when opening agenda/capture prompt or org files|orgmode-troubleshooting-i-get-treesitter/query.lua-errors-when-opening-agenda/capture-prompt-or-org-files|
-  - I get .../orgmode/parser/org.so is not a valid Win32 application on Windows|orgmode-troubleshooting-i-get-.../orgmode/parser/org.so-is-not-a-valid-win32-application-on-windows|
-  - Dates are not in English|orgmode-troubleshooting-dates-are-not-in-english|
-  - Chinese characters are not displayed correctly in agenda|orgmode-troubleshooting-chinese-characters-are-not-displayed-correctly-in-agenda|
+  - Indentation is not working |orgmode-troubleshooting-indentation-is-not-working|
+  - I get treesitter/query.lua errors when opening agenda/capture prompt or org files |orgmode-troubleshooting-i-get-treesitter/query.lua-errors-when-opening-agenda/capture-prompt-or-org-files|
+  - I get .../orgmode/parser/org.so is not a valid Win32 application on Windows |orgmode-troubleshooting-i-get-.../orgmode/parser/org.so-is-not-a-valid-win32-application-on-windows|
+  - Dates are not in English |orgmode-troubleshooting-dates-are-not-in-english|
+  - Chinese characters are not displayed correctly in agenda |orgmode-troubleshooting-chinese-characters-are-not-displayed-correctly-in-agenda|
   - Links are not concealed  |orgmode-troubleshooting-links-are-not-concealed|
-  - Jumping to file path is not working for paths with forward slash|orgmode-troubleshooting-jumping-to-file-path-is-not-working-for-paths-with-forward-slash|
+  - Jumping to file path is not working for paths with forward slash |orgmode-troubleshooting-jumping-to-file-path-is-not-working-for-paths-with-forward-slash|
 
 ==============================================================================
 1. Configuration                                       *orgmode-configuration*
@@ -119,6 +119,8 @@ Available `string` values:
 - `vertical` - Always split vertically
 - `auto` - Determine between horizontal and vertical split depending on the current window size
 - `float` - Open in float window that has width of 70% of the screen centered
+- `edit` - Open in the current window
+- `tabnew` - Open in a new tab
 - `{'float', 0.9}` - Open in float window and provide custom scale (in this case it's 90% of screen size), must be value between `0` and `1`
 
 If none of the options above suit your needs, there are 2 other ways to
@@ -1028,9 +1030,9 @@ Templates have the following fields:
 - `target` (`string?`) — name of the file to which the capture content
     will be added. If the target is not specified, the content will be
     added to the |orgmode-org_default_notes_file| file
-- `headline` (`string|fun():string?`) — title of the headline after which the
+- `headline` (`string|fun(OrgFile?):string?`) — title of the headline after which the
     capture content will be added. If a function is provided, it will be called during
-    refile and must return the headline title as string. If no headline is specified,
+    refile with the destination file as its argument and must return the headline title as string. If no headline is specified,
     the content will be appended to the end of the file
 - `datetree (boolean | { time_prompt?: boolean, reversed?: boolean, tree_type: 'day' | 'month' | 'week' | 'custom' })`
     Create a date tree <https://orgmode.org/manual/Template-elements.html#FOOT84> with current day in the target file and put the capture content there.

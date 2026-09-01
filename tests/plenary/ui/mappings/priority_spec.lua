@@ -62,6 +62,17 @@ describe('Priority mappings', function()
     assert.are.same('* TODO Test orgmode', vim.fn.getline(1))
   end)
 
+  it('should do nothing if <Space> is pressed on a line without a priority', function()
+    alpha_config()
+    helpers.create_file({
+      '* TODO Test orgmode',
+    })
+    vim.fn.cursor(1, 1)
+    assert.are.same('* TODO Test orgmode', vim.fn.getline(1))
+    vim.cmd('norm ,o, \r')
+    assert.are.same('* TODO Test orgmode', vim.fn.getline(1))
+  end)
+
   it('should add a priority if the item does not already have one', function()
     helpers.create_file({
       '* TODO Test orgmode',
