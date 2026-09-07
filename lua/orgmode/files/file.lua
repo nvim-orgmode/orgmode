@@ -32,6 +32,7 @@ local clean_empty_line = vim.fn.has('nvim-0.13') == 1 or vim.fn.has('nvim-0.12.3
 ---@field metadata OrgFileMetadata
 ---@field parser vim.treesitter.LanguageTree
 ---@field root TSNode
+---@field memoize_cache? table Memoized method results, released with the file
 local OrgFile = {}
 
 -- The root node id only changes on a re-parse, so a buffer edited since the
