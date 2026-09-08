@@ -19,6 +19,7 @@ local Listitem = require('orgmode.files.elements.listitem')
 ---@field files table<string, OrgFile> table with files that are part of paths
 ---@field all_files table<string, OrgFile> all loaded files, no matter if they are part of paths
 ---@field load_state 'loading' | 'loaded' | nil
+---@field _path_cache? string[] Result of the last path discovery, valid until the next load or unload
 local OrgFiles = {
   cached_instances = {},
 }
@@ -122,6 +123,7 @@ function OrgFiles:unload()
   self.all_files = {}
   self.paths = {}
   self.load_state = nil
+  self._path_cache = nil
   return self
 end
 
@@ -177,7 +179,10 @@ function OrgFiles:load_file(filename, opts)
     if self.files[filename] or not opts.persist then
       return
     end
-    local all_paths = self:_files()
+    -- Whether a file that was just created belongs to the configured paths is
+    -- the one question the cache cannot answer, because the cache predates the
+    -- file. Runs once per newly persisted file, not per lookup.
+    local all_paths = self:_files(true)
     if vim.tbl_contains(all_paths, filename) then
       self.files[filename] = file
     end
@@ -361,9 +366,13 @@ function OrgFiles:_setup_paths(paths)
 end
 
 ---@private
----@param skip_resolve? boolean
+---@param refresh? boolean Run path discovery again instead of reusing the cached result
 ---@return string[]
-function OrgFiles:_files(skip_resolve)
+function OrgFiles:_files(refresh)
+  if not refresh and self._path_cache then
+    return self._path_cache
+  end
+
   local all_files = vim.tbl_map(function(file)
     return vim.fn.glob(vim.fn.fnamemodify(file, ':p'), false, true)
   end, self.paths)
@@ -382,13 +391,11 @@ function OrgFiles:_files(skip_resolve)
     return stat and stat.type == 'file' or false
   end, utils.flatten(all_files))
 
-  if skip_resolve then
-    return org_files
-  end
-
-  return vim.tbl_map(function(file)
+  self._path_cache = vim.tbl_map(function(file)
     return vim.fn.resolve(file)
   end, org_files)
+
+  return self._path_cache
 end
 
 return OrgFiles
