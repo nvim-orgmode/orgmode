@@ -133,11 +133,12 @@ function OrgFiles:unload()
 end
 
 function OrgFiles:get_clocked_headline()
-  -- TODO: Optimize
   for _, file in ipairs(self:all()) do
-    for _, headline in ipairs(file:get_headlines()) do
-      if headline:is_clocked_in() then
-        return headline
+    if not file:is_archive_file() and file:has_running_clock_candidate() then
+      for _, headline in ipairs(file:get_headlines()) do
+        if headline:is_clocked_in() then
+          return headline
+        end
       end
     end
   end
