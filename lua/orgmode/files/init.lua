@@ -362,26 +362,33 @@ end
 
 ---@private
 ---@param skip_resolve? boolean
+---@return string[]
 function OrgFiles:_files(skip_resolve)
   local all_files = vim.tbl_map(function(file)
-    return vim.tbl_map(function(path)
-      if skip_resolve then
-        return path
-      end
-      return vim.fn.resolve(path)
-    end, vim.fn.glob(vim.fn.fnamemodify(file, ':p'), false, true))
+    return vim.fn.glob(vim.fn.fnamemodify(file, ':p'), false, true)
   end, self.paths)
 
-  all_files = utils.flatten(all_files)
-
-  return vim.tbl_filter(function(file)
+  -- Filter before resolving. A recursive path like `~/org/**/*` matches every
+  -- file in the tree, and resolving the ones that are not org files is wasted
+  -- work. The extension is taken from the globbed name, same as the filetype
+  -- detection in `orgmode/init.lua`, so a symlink is an org file when its own
+  -- name says so.
+  local org_files = vim.tbl_filter(function(file)
     if not utils.is_org_file(file) then
       return false
     end
 
     local stat = vim.uv.fs_stat(file)
     return stat and stat.type == 'file' or false
-  end, all_files)
+  end, utils.flatten(all_files))
+
+  if skip_resolve then
+    return org_files
+  end
+
+  return vim.tbl_map(function(file)
+    return vim.fn.resolve(file)
+  end, org_files)
 end
 
 return OrgFiles
