@@ -204,7 +204,7 @@
 ---@field org_deadline_warning_days? number Number of days during which deadline becomes visible in today's agenda. Default: 14
 ---@field org_agenda_min_height? number Minimum height of the agenda window. Default: 16
 ---@field org_agenda_span? OrgAgendaSpan Default time span for the agenda view. Default: 'week'
----@field org_agenda_start_on_weekday? number | false From which day in week (ISO weekday, 1 is Monday) to show the agenda. Applies only to `week` span. Default: 1
+---@field org_agenda_start_on_weekday? number | false From which day in week (ISO weekday, 1 is Monday) to show the agenda. Applies only to spans covering whole weeks (`week`, 7, 14, 21, ...); other spans start from today. Default: 1
 ---@field org_agenda_start_day? string | nil Offset applied to the `org_agenda_start_on_weekday` in format `+1d`, `+2w`, etc. Default: nil
 ---@field calendar_week_start_day? 0 | 1 From which day to start the week in the Calendar. 0 is Sunday, 1 is Monday. Default: 1
 ---@field calendar? OrgCalendarSettings Calendar settings
