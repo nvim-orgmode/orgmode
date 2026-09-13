@@ -34,10 +34,18 @@ local clean_empty_line = vim.fn.has('nvim-0.13') == 1 or vim.fn.has('nvim-0.12.3
 ---@field root TSNode
 local OrgFile = {}
 
+-- The root node id only changes on a re-parse, so a buffer edited since the
+-- last parse would still hit results built for the old tree. The changedtick
+-- in the key turns that into a miss, and the method re-parses when it runs.
 local memoize = Memoize:new(OrgFile, function(self)
+  local tick = 0
+  local bufnr = self:bufnr()
+  if bufnr > -1 then
+    tick = vim.api.nvim_buf_get_changedtick(bufnr)
+  end
   return {
     file = self,
-    id = table.concat({ 'file', self.root and self.root:id() or '' }, '_'),
+    id = table.concat({ 'file', self.root and self.root:id() or '', tick }, '_'),
   }
 end)
 
