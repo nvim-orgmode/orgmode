@@ -1,5 +1,8 @@
 local Template = require('orgmode.capture.template')
 local Date = require('orgmode.objects.date')
+local helpers = require('tests.plenary.helpers')
+local Input = require('orgmode.ui.input')
+local Promise = require('orgmode.utils.promise')
 
 describe('Capture template', function()
   it('should compile expression', function()
@@ -86,5 +89,107 @@ describe('Capture template', function()
       return nil
     end)
     assert.is.Nil(template:compile():wait())
+  end)
+
+  it('should prompt for single tag with %^g', function()
+    helpers.with_var(Input, 'open', function(_prompt, _default, _completion)
+      return Promise.resolve('mytag')
+    end, function()
+      local template = Template:new({
+        template = '* TODO %^g',
+      })
+      assert.are.same({ '* TODO :mytag:' }, template:compile():wait())
+    end)
+  end)
+
+  it('should prompt for multiple tags with %^G', function()
+    helpers.with_var(Input, 'open', function(_prompt, _default, _completion)
+      return Promise.resolve('tag1:tag2')
+    end, function()
+      local template = Template:new({
+        template = '* TODO %^G',
+      })
+      assert.are.same({ '* TODO :tag1:tag2:' }, template:compile():wait())
+    end)
+  end)
+
+  it('should prompt for restricted tags with %^{tag1|tag2}G', function()
+    helpers.with_var(Input, 'open', function(_prompt, _default, _completion)
+      return Promise.resolve('tag1')
+    end, function()
+      local template = Template:new({
+        template = '* TODO %^{tag1|tag2}G',
+      })
+      assert.are.same({ '* TODO :tag1:' }, template:compile():wait())
+    end)
+  end)
+
+  it('should not cancel capture when %^g input is empty', function()
+    helpers.with_var(Input, 'open', function(_prompt, _default, _completion)
+      return Promise.resolve('')
+    end, function()
+      local template = Template:new({
+        template = '* TODO %^g',
+      })
+      assert.are.same({ '* TODO ' }, template:compile():wait())
+    end)
+  end)
+  it('should complete %^g from target file tags only', function()
+    local fixtures, org_files = helpers.create_agenda_files({
+      {
+        filename = 'target.org',
+        content = {
+          '#+FILETAGS: :target_file:',
+          '* TODO target item :target_headline:',
+        },
+      },
+      {
+        filename = 'other.org',
+        content = {
+          '* TODO other item :other_headline:',
+        },
+      },
+    })
+
+    helpers.with_var(Input, 'open', function(_prompt, _default, completion)
+      assert.are.same({ 'target_file', 'target_headline' }, completion(''))
+      return Promise.resolve('target_headline')
+    end, function()
+      local template = Template:new({
+        template = '* TODO %^g',
+        target = fixtures['target.org'],
+      })
+      template.files = org_files
+      assert.are.same({ '* TODO :target_headline:' }, template:compile():wait())
+    end)
+  end)
+
+  it('should complete %^G from all loaded agenda file tags', function()
+    local _, org_files = helpers.create_agenda_files({
+      {
+        filename = 'target.org',
+        content = {
+          '#+FILETAGS: :target_file:',
+          '* TODO target item :target_headline:',
+        },
+      },
+      {
+        filename = 'other.org',
+        content = {
+          '* TODO other item :other_headline:',
+        },
+      },
+    })
+
+    helpers.with_var(Input, 'open', function(_prompt, _default, completion)
+      assert.are.same({ 'other_headline', 'target_file', 'target_headline' }, completion(''))
+      return Promise.resolve('target_headline:other_headline')
+    end, function()
+      local template = Template:new({
+        template = '* TODO %^G',
+      })
+      template.files = org_files
+      assert.are.same({ '* TODO :target_headline:other_headline:' }, template:compile():wait())
+    end)
   end)
 end)
