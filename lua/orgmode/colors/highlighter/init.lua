@@ -67,6 +67,7 @@ function OrgHighlighter:_on_win(_, win, bufnr, topline, botline)
   if not is_org_buffer then
     return false
   end
+  self.foldtext:on_win(bufnr, win, topline, botline)
   if not self.buffers[bufnr] then
     self.buffers[bufnr] = { language_tree = vim.treesitter.get_parser(bufnr, 'org') }
     self:_parse_tree(bufnr, win, false)
@@ -76,7 +77,6 @@ function OrgHighlighter:_on_win(_, win, bufnr, topline, botline)
       end,
     })
   else
-    self.foldtext:check_cache(bufnr)
     self:_parse_tree(bufnr, win, { topline, botline + 1 })
     if self.parsing[win] then
       for line = topline, botline do
