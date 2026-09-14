@@ -626,17 +626,20 @@ Example: If Today is =2021-06-10=, and we have these tasks:
 - Type: =string|number=
 - Default: ='week'=
 /possible string values/: =day=, =week=, =month=, =year=
+/possible number values/: number of days to show (example: =14= for a two week agenda)
 Default time span shown when agenda is opened.
 
 *** org_agenda_start_on_weekday
 :PROPERTIES:
 :CUSTOM_ID: org_agenda_start_on_weekday
 :END:
-- Type: =number=
+- Type: =number|false=
 - Default: =1=
 From which day in week (ISO weekday, 1 is Monday) to show the agenda.
-Applies only to =week= and number span.
-If set to =false=, starts from today
+Applies only to spans that cover whole weeks: the =week= span, and
+numeric spans that are a multiple of 7 (=7=, =14=, =21=, ...).
+All other spans start from today.
+If set to =false=, starts from today.
 
 *** org_agenda_start_day
 :PROPERTIES:
@@ -733,7 +736,7 @@ These arguments are shared between all of the agenda types:
 
 =agenda= type arguments:
 - =org_agenda_span= =string|number= - Set custom span for the view. In same format as [[#org_agenda_span][org_agenda_span]]
-- =org_agenda_start_on_weekday= =number= - Set custom start day for the view. In same format as [[#org_agenda_start_on_weekday][org_agenda_start_on_weekday]]
+- =org_agenda_start_on_weekday= =number|false= - Set custom start day for the view. In same format as [[#org_agenda_start_on_weekday][org_agenda_start_on_weekday]]
 - =org_agenda_start_day= =string= - Set custom start day offset for the view. In same format as [[#org_agenda_start_day][org_agenda_start_day]]
 
 =tags= and =tags_todo= type arguments:

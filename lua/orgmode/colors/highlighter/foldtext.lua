@@ -1,12 +1,17 @@
 local config = require('orgmode.config')
 
----@alias OrgFoldtextLineValue false | { col: number, hl_group: string }
+---@alias OrgFoldtextLineValue { col: number, hl_group: string, line_content: string }
+
+---@class OrgFoldtextWinState
+---@field topline number 0-based, first line of the visible range
+---@field lines table<number, string> 0-based line → line content
+---@field is_closed table<number, true> 0-based line → true if this line is the start of a closed fold
 
 ---@class OrgFoldtextHighlighter
 ---@field highlighter OrgHighlighter
 ---@field namespace number
 ---@field cache table<number, table<number, OrgFoldtextLineValue>>
----@field cache_tick table<number, number>
+---@field win_state table<number, OrgFoldtextWinState>
 local OrgFoldtext = {}
 
 ---@param opts { highlighter: OrgHighlighter }
@@ -14,32 +19,63 @@ function OrgFoldtext:new(opts)
   local data = {
     highlighter = opts.highlighter,
     cache = setmetatable({}, { __mode = 'k' }),
-    cache_tick = {},
+    win_state = {},
   }
   setmetatable(data, self)
   self.__index = self
   return data
 end
 
----Invalidate cache for a buffer if its content has changed since the last render.
----Call this once per redraw from on_win, not per line.
+---Build per-window fold-state map for the visible range, replacing per-line
+---`vim.fn.foldclosed` and `vim.fn.col` calls in `on_line` with O(1) lookups.
 ---@param bufnr number
-function OrgFoldtext:check_cache(bufnr)
-  local tick = vim.api.nvim_buf_get_changedtick(bufnr)
-  if self.cache_tick[bufnr] ~= tick then
-    self.cache[bufnr] = nil
-    self.cache_tick[bufnr] = tick
+---@param winid number
+---@param topline number 0-based
+---@param botline number 0-based, inclusive
+function OrgFoldtext:on_win(bufnr, winid, topline, botline)
+  if not config.ui.folds.colored then
+    self.win_state[winid] = nil
+    return
   end
+
+  local lines = {}
+  for i, content in ipairs(vim.api.nvim_buf_get_lines(bufnr, topline, botline + 1, false)) do
+    lines[topline + i - 1] = content
+  end
+
+  local is_closed = {}
+  local scan = function()
+    local lnum = topline + 1
+    local last = botline + 1
+    while lnum <= last do
+      local fc = vim.fn.foldclosed(lnum)
+      if fc == -1 then
+        lnum = lnum + 1
+      else
+        is_closed[fc - 1] = true
+        local fend = vim.fn.foldclosedend(lnum)
+        lnum = (fend or lnum) + 1
+      end
+    end
+  end
+
+  if winid == vim.api.nvim_get_current_win() then
+    scan()
+  else
+    vim.api.nvim_win_call(winid, scan)
+  end
+
+  self.win_state[winid] = {
+    topline = topline,
+    lines = lines,
+    is_closed = is_closed,
+  }
 end
 
 ---@param bufnr number
 ---@param line number
 ---@param value OrgFoldtextLineValue
 function OrgFoldtext:_highlight(bufnr, line, value)
-  if not value then
-    return
-  end
-
   vim.api.nvim_buf_set_extmark(bufnr, self.highlighter.namespace, line, value.col, {
     hl_mode = 'combine',
     virt_text = { { config.org_ellipsis, value.hl_group } },
@@ -53,50 +89,24 @@ function OrgFoldtext:on_line(bufnr, line, winid)
     return
   end
 
-  -- Use provided winid for correct window context (foldclosed and col are window-local)
-  local lnum = line + 1
-  local is_fold_open, line_end
-
-  if winid and winid ~= vim.api.nvim_get_current_win() then
-    -- foldclosed() and col() are window-local, so execute in the correct window
-    vim.api.nvim_win_call(winid, function()
-      is_fold_open = vim.fn.foldclosed(lnum) == -1
-      line_end = vim.fn.col({ lnum, '$' }) or 0
-    end)
-  else
-    is_fold_open = vim.fn.foldclosed(lnum) == -1
-    line_end = vim.fn.col({ lnum, '$' }) or 0
+  local state = self.win_state[winid]
+  if not state or not state.is_closed[line] then
+    return
   end
 
+  local line_content = state.lines[line]
+  if not line_content or #line_content == 0 then
+    return
+  end
+
+  local col = #line_content
   local cache_entry = self.cache[bufnr] and self.cache[bufnr][line]
-
-  -- Cache: nil = unprocessed, false = open, {col, hl_group} = closed
-  if cache_entry ~= nil then
-    local was_open = cache_entry == false
-    if was_open == is_fold_open then
-      if cache_entry and cache_entry.col then
-        if cache_entry.col == line_end - 1 then
-          return self:_highlight(bufnr, line, cache_entry)
-        end
-        -- Line length changed, need full update
-      else
-        return self:_highlight(bufnr, line, cache_entry)
-      end
-    end
+  if cache_entry and cache_entry.line_content == line_content then
+    return self:_highlight(bufnr, line, cache_entry)
   end
-
-  -- Full update: query treesitter
-  self.cache[bufnr] = self.cache[bufnr] or {}
-
-  if is_fold_open then
-    self.cache[bufnr][line] = false
-    return -- No ellipsis to highlight
-  end
-
-  local col = line_end
 
   local hl_group = 'Comment'
-  local captures_at_pos = vim.treesitter.get_captures_at_pos(bufnr, line, col - 2)
+  local captures_at_pos = vim.treesitter.get_captures_at_pos(bufnr, line, col - 1)
 
   if #captures_at_pos > 0 then
     for i = #captures_at_pos, 1, -1 do
@@ -108,13 +118,13 @@ function OrgFoldtext:on_line(bufnr, line, winid)
     end
   end
 
-  self.cache[bufnr][line] = { col = col - 1, hl_group = hl_group }
+  self.cache[bufnr] = self.cache[bufnr] or {}
+  self.cache[bufnr][line] = { col = col, hl_group = hl_group, line_content = line_content }
   return self:_highlight(bufnr, line, self.cache[bufnr][line])
 end
 
 function OrgFoldtext:on_detach(bufnr)
   self.cache[bufnr] = nil
-  self.cache_tick[bufnr] = nil
 end
 
 return OrgFoldtext
