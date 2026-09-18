@@ -86,9 +86,13 @@ function Agenda:render()
 
   if vim.w.org_window_split_mode == 'horizontal' then
     local win_height = math.max(math.min(34, vim.api.nvim_buf_line_count(bufnr)), config.org_agenda_min_height)
-    if vim.w.org_window_pos and vim.deep_equal(vim.fn.win_screenpos(0), vim.w.org_window_pos) then
+    local untouched = vim.w.org_window_pos
+      and vim.deep_equal(vim.fn.win_screenpos(0), vim.w.org_window_pos)
+      and vim.fn.winheight(0) == vim.w.org_window_height
+    if untouched then
       vim.cmd(string.format('resize %d', win_height))
       vim.w.org_window_pos = vim.fn.win_screenpos(0)
+      vim.w.org_window_height = vim.fn.winheight(0)
     else
       vim.w.org_window_pos = nil
     end
@@ -277,6 +281,7 @@ function Agenda:_open_window()
   vim.cmd([[setf orgagenda]])
   vim.cmd([[setlocal buftype=nofile bufhidden=wipe nobuflisted nolist noswapfile nowrap nospell]])
   vim.w.org_window_pos = vim.fn.win_screenpos(0)
+  vim.w.org_window_height = vim.fn.winheight(0)
   config:setup_mappings('agenda', vim.api.nvim_get_current_buf())
   return vim.fn.bufnr()
 end
