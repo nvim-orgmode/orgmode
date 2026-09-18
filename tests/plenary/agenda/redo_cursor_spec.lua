@@ -193,6 +193,59 @@ describe('Agenda redo cursor', function()
   end)
 end)
 
+describe('Agenda in-place update after a redo from a write hook', function()
+  local group
+
+  before_each(function()
+    vim.o.lines = 24
+    vim.o.columns = 120
+    open_agenda('vertical')
+    group = vim.api.nvim_create_augroup('redo_on_write_spec', { clear = true })
+    vim.api.nvim_create_autocmd('BufWritePost', {
+      group = group,
+      pattern = '*.org',
+      callback = function()
+        orgmode.agenda:redo('remote_edit', true)
+      end,
+    })
+  end)
+
+  after_each(function()
+    vim.api.nvim_del_augroup_by_id(group)
+    vim.cmd('silent! %bwipeout!')
+  end)
+
+  ---@param bufnr number
+  ---@param nr number
+  ---@return number
+  local function count_item(bufnr, nr)
+    local pattern = ('item %d%%f[^%%d]'):format(nr)
+    local count = 0
+    for _, line in ipairs(vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)) do
+      if line:find(pattern) then
+        count = count + 1
+      end
+    end
+    return count
+  end
+
+  it('shows the item once after changing its state from the agenda', function()
+    local win = agenda_win()
+    local bufnr = vim.api.nvim_win_get_buf(win)
+    local target = assert(find_item(bufnr, 3))
+    set_view(win, target, 1)
+
+    orgmode.agenda:change_todo_state()
+    vim.wait(500, function()
+      return count_item(bufnr, 3) == 1 and find_item(bufnr, 3) > target
+    end)
+
+    assert.are.same(1, count_item(bufnr, 3))
+    assert.are.same(1, count_item(bufnr, 4))
+    assert.is_true(assert(find_item(bufnr, 3)) > target, 'item should have moved into the NEXT block')
+  end)
+end)
+
 describe('Agenda window height', function()
   before_each(function()
     vim.o.lines = 50
