@@ -36,6 +36,7 @@ describe('Memoize', function()
     -- strong reference chain into the file object even though memoization does
     -- not. Clear the parser so the test only verifies memoize behavior.
     file.parser = nil
+    file.root = nil
 
     assert.is_not_nil(weak.file)
     return weak
@@ -44,7 +45,13 @@ describe('Memoize', function()
   it('does not keep a file alive once nothing else references it', function()
     local weak = create_weak_file()
 
-    collect()
+    -- Neovim can keep parser-related objects around for a few GC rounds.
+    for _ = 1, 10 do
+      if weak.file == nil then
+        break
+      end
+      collect()
+    end
 
     assert.is_nil(weak.file)
   end)
