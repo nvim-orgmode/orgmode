@@ -246,20 +246,30 @@ function Agenda:_build_menu()
 end
 
 ---@private
----@return number buffer number
-function Agenda:_open_window()
-  -- if an agenda window is already open, return it
+---@return number | nil window id of the open agenda window
+function Agenda:_get_window()
   for _, win in ipairs(vim.api.nvim_list_wins()) do
     local buf = vim.api.nvim_win_get_buf(win)
     local ft = vim.api.nvim_get_option_value('filetype', {
       buf = buf,
     })
     if ft == 'orgagenda' then
-      vim.bo[buf].modifiable = true
-      colors.apply_highlights({}, true, buf)
-      vim.api.nvim_buf_set_lines(buf, 0, -1, true, {})
-      return buf
+      return win
     end
+  end
+end
+
+---@private
+---@return number buffer number
+function Agenda:_open_window()
+  -- if an agenda window is already open, return it
+  local win = self:_get_window()
+  if win then
+    local buf = vim.api.nvim_win_get_buf(win)
+    vim.bo[buf].modifiable = true
+    colors.apply_highlights({}, true, buf)
+    vim.api.nvim_buf_set_lines(buf, 0, -1, true, {})
+    return buf
   end
 
   utils.open_window('orgagenda', math.max(34, config.org_agenda_min_height), config.win_split_mode, config.win_border)
@@ -291,9 +301,10 @@ function Agenda:reset()
 end
 
 ---@param source? string
+---@param preserve_cursor_pos? boolean
 function Agenda:redo(source, preserve_cursor_pos)
   self:_call_all_views('redo')
-  local save_view = preserve_cursor_pos and vim.fn.winsaveview()
+  local restore_view = preserve_cursor_pos and self:_save_view()
   return self.files
     :load(true)
     :next(function()
@@ -304,10 +315,78 @@ function Agenda:redo(source, preserve_cursor_pos)
     end)
     :next(function()
       self:render()
-      if save_view then
-        vim.fn.winrestview(save_view)
+      if restore_view then
+        restore_view()
       end
     end)
+end
+
+---@param headline OrgHeadline
+---@return fun(other: OrgHeadline): boolean
+local function headline_matcher(headline)
+  local filename = headline.file.filename
+  local id = headline:get_property('id')
+  local title = headline:get_title()
+  return function(other)
+    if other.file.filename ~= filename then
+      return false
+    end
+    if id then
+      return other:get_property('id') == id
+    end
+    return other:get_title() == title
+  end
+end
+
+---Capture the agenda window view and the headline under its cursor.
+---The returned function restores the view after a redo: the cursor follows
+---the headline if it is still in the agenda, otherwise it stays on the
+---same line. Works from any window, since redo can be triggered while an
+---org buffer is current (remote edits, user autocommands on write).
+---@private
+---@return fun() | nil
+function Agenda:_save_view()
+  local win = self:_get_window()
+  if not win then
+    return nil
+  end
+  local view = vim.api.nvim_win_call(win, vim.fn.winsaveview)
+  local headline = vim.api.nvim_win_call(win, function()
+    return (self:_get_headline())
+  end)
+  local matches = headline and headline_matcher(headline)
+  local row = view.lnum - view.topline
+
+  return function()
+    win = self:_get_window()
+    if not win then
+      return
+    end
+    local line_nr = matches and self:_find_line_nr(matches)
+    if line_nr then
+      view.lnum = line_nr
+      local height = vim.api.nvim_win_get_height(win)
+      if line_nr < view.topline or line_nr >= view.topline + height then
+        view.topline = math.max(1, line_nr - row)
+      end
+    end
+    vim.api.nvim_win_call(win, function()
+      vim.fn.winrestview(view)
+    end)
+  end
+end
+
+---@private
+---@param matches fun(headline: OrgHeadline): boolean
+---@return number | nil
+function Agenda:_find_line_nr(matches)
+  for _, view in ipairs(self.views) do
+    for _, line in ipairs(view:get_lines()) do
+      if line.headline and matches(line.headline) then
+        return line.line_nr
+      end
+    end
+  end
 end
 
 function Agenda:advance_span(direction)
