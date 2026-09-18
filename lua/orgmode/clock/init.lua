@@ -19,12 +19,13 @@ function Clock:new(opts)
   return data
 end
 
--- When first loading, check if there are active clocks
+-- When first loading, check if there are active clocks.
+-- Scanning every file requires all of them to be parsed, so wait until they
+-- are loaded instead of blocking the caller.
 function Clock:init()
-  local last_clocked_headline = self.files:get_clocked_headline()
-  if last_clocked_headline and last_clocked_headline:is_clocked_in() then
-    self.clocked_headline = last_clocked_headline
-  end
+  self.files:load():next(function()
+    self:update_clocked_headline()
+  end)
 end
 
 function Clock:update_clocked_headline()

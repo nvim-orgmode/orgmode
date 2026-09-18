@@ -54,11 +54,12 @@ function Org:init()
   require('orgmode.events').init()
   self.highlighter = require('orgmode.colors.highlighter'):new()
   require('orgmode.colors.highlights').define_highlights()
-  self.files = require('orgmode.files')
-    :new({
-      paths = require('orgmode.config').org_agenda_files,
-    })
-    :load_sync(true, 20000)
+  self.files = require('orgmode.files'):new({
+    paths = require('orgmode.config').org_agenda_files,
+  })
+  -- Load the agenda files in the background, so that opening a single org file
+  -- is not blocked by it. Anything that needs all files waits via `ensure_loaded`.
+  self.files:load()
   self.links = require('orgmode.org.links'):new({ files = self.files })
   self.agenda = require('orgmode.agenda'):new({
     files = self.files,
