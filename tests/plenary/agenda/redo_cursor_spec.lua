@@ -1,6 +1,7 @@
 local helpers = require('tests.plenary.helpers')
 local orgmode = require('orgmode')
 local config = require('orgmode.config')
+local Date = require('orgmode.objects.date')
 
 local function block(state)
   return {
@@ -157,6 +158,24 @@ describe('Agenda redo cursor', function()
     assert.are.same(new_line, view_of(win).lnum)
   end)
 
+  it('follows the item when lines were inserted above it before redo', function()
+    local win = agenda_win()
+    local bufnr = vim.api.nvim_win_get_buf(win)
+    local target = assert(find_item(bufnr, 3))
+    set_view(win, target, target - 1)
+
+    file
+      :update(function()
+        local headline = assert(file:find_headline_by_title('item 3'))
+        headline:set_todo('NEXT')
+        vim.api.nvim_buf_set_lines(0, 2, 2, false, { '* TODO inserted', '  :PROPERTIES:', '  :ID: new', '  :END:' })
+      end)
+      :wait()
+    orgmode.agenda:redo('remote_edit', true):wait()
+
+    assert.are.same(find_item(bufnr, 3), view_of(win).lnum)
+  end)
+
   it('stays on the neighbouring line when the item left the view', function()
     local win = agenda_win()
     local bufnr = vim.api.nvim_win_get_buf(win)
@@ -201,5 +220,40 @@ describe('Agenda window height', function()
     orgmode.agenda:redo('remote_edit', true):wait()
 
     assert.are.same(20, vim.api.nvim_win_get_height(win))
+  end)
+end)
+
+describe('Agenda redo cursor on repeated lines', function()
+  before_each(function()
+    vim.o.lines = 24
+    vim.o.columns = 120
+    local today = Date.today():to_string()
+    helpers.create_agenda_file({
+      '* TODO twice',
+      ('  SCHEDULED: <%s> DEADLINE: <%s>'):format(today, today),
+    }, { win_split_mode = 'vertical' })
+    orgmode.agenda:agenda({ span = 'day' }):wait()
+    assert.are.same('orgagenda', vim.bo.filetype)
+  end)
+
+  after_each(function()
+    vim.cmd('silent! %bwipeout!')
+  end)
+
+  it('stays on the occurrence under the cursor', function()
+    local win = agenda_win()
+    local bufnr = vim.api.nvim_win_get_buf(win)
+    local occurrences = {}
+    for lnum, line in ipairs(vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)) do
+      if line:find('twice', 1, true) then
+        table.insert(occurrences, lnum)
+      end
+    end
+    assert.are.same(2, #occurrences)
+    set_view(win, occurrences[2], 1)
+
+    orgmode.agenda:redo('remote_edit', true):wait()
+
+    assert.are.same(occurrences[2], view_of(win).lnum)
   end)
 end)
