@@ -63,6 +63,23 @@ local function set_view(win, lnum, topline)
   end)
 end
 
+---@param split_mode string
+---@return OrgFile
+local function open_agenda(split_mode)
+  local file = helpers.create_agenda_file(build_lines(), {
+    win_split_mode = split_mode,
+    org_agenda_custom_commands = {
+      b = { description = 'backlog', types = { block('TODO'), block('NEXT') } },
+    },
+  })
+  for _, t in ipairs(config.org_agenda_custom_commands.b.types) do
+    t.org_agenda_files = { file.filename }
+  end
+  orgmode.agenda:open_by_key('b'):wait()
+  assert.are.same('orgagenda', vim.bo.filetype)
+  return file
+end
+
 describe('Agenda redo cursor', function()
   ---@type OrgFile
   local file
@@ -70,17 +87,7 @@ describe('Agenda redo cursor', function()
   before_each(function()
     vim.o.lines = 24
     vim.o.columns = 120
-    file = helpers.create_agenda_file(build_lines(), {
-      win_split_mode = 'vertical',
-      org_agenda_custom_commands = {
-        b = { description = 'backlog', types = { block('TODO'), block('NEXT') } },
-      },
-    })
-    for _, t in ipairs(config.org_agenda_custom_commands.b.types) do
-      t.org_agenda_files = { file.filename }
-    end
-    orgmode.agenda:open_by_key('b'):wait()
-    assert.are.same('orgagenda', vim.bo.filetype)
+    file = open_agenda('vertical')
   end)
 
   after_each(function()
@@ -164,5 +171,35 @@ describe('Agenda redo cursor', function()
     assert.are.same(target, view.lnum)
     assert.are.same(target - 3, view.topline)
     assert.are.same(target, find_item(bufnr, 8))
+  end)
+end)
+
+describe('Agenda window height', function()
+  before_each(function()
+    vim.o.lines = 50
+    vim.o.columns = 120
+    open_agenda('horizontal')
+  end)
+
+  after_each(function()
+    vim.cmd('silent! %bwipeout!')
+  end)
+
+  it('fits the content again after redo when not resized by hand', function()
+    local win = agenda_win()
+    assert.are.same(34, vim.api.nvim_win_get_height(win))
+
+    orgmode.agenda:redo('remote_edit', true):wait()
+
+    assert.are.same(34, vim.api.nvim_win_get_height(win))
+  end)
+
+  it('keeps a height set by hand across redo', function()
+    local win = agenda_win()
+    vim.api.nvim_win_set_height(win, 20)
+
+    orgmode.agenda:redo('remote_edit', true):wait()
+
+    assert.are.same(20, vim.api.nvim_win_get_height(win))
   end)
 end)
