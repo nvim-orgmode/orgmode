@@ -326,28 +326,22 @@ function Agenda:redo(source, preserve_cursor_pos)
     end)
 end
 
----@param headline OrgHeadline
----@return fun(other: OrgHeadline): boolean
-local function headline_matcher(headline)
-  local filename = headline.file.filename
-  local id = headline:get_property('id')
-  local title = headline:get_title()
-  return function(other)
-    if other.file.filename ~= filename then
-      return false
-    end
-    if id then
-      return other:get_property('id') == id
-    end
-    return other:get_title() == title
+---@param a OrgAgendaLineHeadlineRef
+---@param b OrgAgendaLineHeadlineRef
+---@return boolean
+local function same_headline(a, b)
+  if a.filename ~= b.filename then
+    return false
   end
+  if a.id then
+    return a.id == b.id
+  end
+  return a.title == b.title
 end
 
----Capture the agenda window view and the headline under its cursor.
----The returned function restores the view after a redo: the cursor follows
----the headline if it is still in the agenda, otherwise it stays on the
----same line. Works from any window, since redo can be triggered while an
----org buffer is current (remote edits, user autocommands on write).
+---Redo can run while an org buffer is current (remote edits, user
+---autocommands on write), so the view is taken from the agenda window,
+---not from the current one.
 ---@private
 ---@return fun() | nil
 function Agenda:_save_view()
@@ -356,42 +350,49 @@ function Agenda:_save_view()
     return nil
   end
   local view = vim.api.nvim_win_call(win, vim.fn.winsaveview)
-  local headline = vim.api.nvim_win_call(win, function()
-    return (self:_get_headline())
+  local agenda_line = vim.api.nvim_win_call(win, function()
+    return select(2, self:_get_headline())
   end)
-  local matches = headline and headline_matcher(headline)
+  local ref = agenda_line and agenda_line.headline_ref
   local row = view.lnum - view.topline
 
   return function()
-    win = self:_get_window()
-    if not win then
+    local target_win = self:_get_window()
+    if not target_win then
       return
     end
-    local line_nr = matches and self:_find_line_nr(matches)
+    local line_nr = ref and self:_find_line_nr(ref, view.lnum)
     if line_nr then
       view.lnum = line_nr
-      local height = vim.api.nvim_win_get_height(win)
+      local height = vim.api.nvim_win_get_height(target_win)
       if line_nr < view.topline or line_nr >= view.topline + height then
         view.topline = math.max(1, line_nr - row)
       end
     end
-    vim.api.nvim_win_call(win, function()
+    vim.api.nvim_win_call(target_win, function()
       vim.fn.winrestview(view)
     end)
   end
 end
 
+---A headline can occupy several agenda lines (scheduled and deadline,
+---repeats), so the one nearest the previous cursor line wins.
 ---@private
----@param matches fun(headline: OrgHeadline): boolean
+---@param ref OrgAgendaLineHeadlineRef
+---@param lnum number
 ---@return number | nil
-function Agenda:_find_line_nr(matches)
+function Agenda:_find_line_nr(ref, lnum)
+  local nearest = nil
   for _, view in ipairs(self.views) do
     for _, line in ipairs(view:get_lines()) do
-      if line.headline and matches(line.headline) then
-        return line.line_nr
+      if line.headline_ref and same_headline(ref, line.headline_ref) then
+        if not nearest or math.abs(line.line_nr - lnum) < math.abs(nearest - lnum) then
+          nearest = line.line_nr
+        end
       end
     end
   end
+  return nearest
 end
 
 function Agenda:advance_span(direction)
