@@ -296,6 +296,52 @@ describe('Capture', function()
       '',
     }, vim.api.nvim_buf_get_lines(0, 0, -1, false))
   end)
+  it('to beginning', function()
+    local destination_file = helpers.create_file({
+      '* foobar',
+      '        ',
+      '',
+      '\t\t\t\t',
+      '',
+    })
+
+    local capture_lines = { '** baz' }
+    local capture_file = helpers.create_file(capture_lines)
+
+    local template = Template:new({
+      prepend = true,
+      properties = {
+        empty_lines = {
+          before = 2,
+          after = 1,
+        },
+      },
+    })
+    local capture_window = CaptureWindow:new({ template = template })
+    assert(capture_file)
+    local item = capture_file:get_headlines()[1]
+
+    ---@diagnostic disable-next-line: invisible
+    org.capture:_refile_from_capture_buffer({
+      destination_file = destination_file,
+      source_file = capture_file,
+      source_headline = item,
+      template = template,
+      capture_window = capture_window,
+    })
+    vim.cmd('edit ' .. vim.fn.fnameescape(destination_file.filename))
+    assert.are.same({
+      '',
+      '',
+      '* baz',
+      '',
+      '* foobar',
+      '        ',
+      '',
+      '\t\t\t\t',
+      '',
+    }, vim.api.nvim_buf_get_lines(0, 0, -1, false))
+  end)
   it('to headline', function()
     local destination_file = helpers.create_file({
       '* foobar',
