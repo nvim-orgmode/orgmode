@@ -857,7 +857,7 @@ function OrgFile:get_links()
   local links = {}
   local matches = self:get_ts_captures([[
     (link) @link
-    (link_desc) @link
+    (link_desc url: (expr)+) @link
   ]])
 
   local source = self:get_source()
