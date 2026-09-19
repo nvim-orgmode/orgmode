@@ -26,32 +26,17 @@ describe('Memoize', function()
     collectgarbage('collect')
   end
 
-  local function create_weak_file()
+  it('does not keep a file alive once nothing else references it', function()
     local weak = setmetatable({}, { __mode = 'v' })
 
-    local file = new_file({ '* Headline 1', '  body' })
-    weak.file = file
-    file:get_headlines()
-    -- On older Neovim versions the parser can survive long enough to keep a
-    -- strong reference chain into the file object even though memoization does
-    -- not. Clear the parser so the test only verifies memoize behavior.
-    file.parser = nil
-    file.root = nil
-
-    assert.is_not_nil(weak.file)
-    return weak
-  end
-
-  it('does not keep a file alive once nothing else references it', function()
-    local weak = create_weak_file()
-
-    -- Neovim can keep parser-related objects around for a few GC rounds.
-    for _ = 1, 10 do
-      if weak.file == nil then
-        break
-      end
-      collect()
+    do
+      local file = new_file({ '* Headline 1', '  body' })
+      weak.file = file
+      file:get_headlines()
+      assert.is_not_nil(weak.file)
     end
+
+    collect()
 
     assert.is_nil(weak.file)
   end)
