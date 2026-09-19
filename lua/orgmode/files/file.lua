@@ -862,7 +862,10 @@ function OrgFile:get_links()
 
   local source = self:get_source()
   for _, node in ipairs(matches) do
-    table.insert(links, Hyperlink.from_node(node, source))
+    local link = Hyperlink.from_node(node, source)
+    if link then
+      table.insert(links, link)
+    end
   end
 
   return links

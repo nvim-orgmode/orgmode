@@ -879,6 +879,17 @@ describe('OrgFile', function()
       )
     end)
 
+    it('should skip links without a url', function()
+      local file = load_file_sync({
+        'Empty link [[]] and [[][only desc]]',
+        'Valid link [[https://google.com]]',
+      })
+      local links = file:get_links()
+
+      assert.are.same(1, #links)
+      assert.are.same('https://google.com', links[1].url:to_string())
+    end)
+
     it('should get file level property', function()
       local file = load_file_sync({
         ':PROPERTIES:',

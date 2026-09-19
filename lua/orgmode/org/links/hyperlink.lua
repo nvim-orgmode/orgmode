@@ -45,9 +45,12 @@ end
 
 ---@param node TSNode
 ---@param source number | string
----@return OrgHyperlink
+---@return OrgHyperlink | nil
 function OrgHyperlink.from_node(node, source)
   local url = node:field('url')[1]
+  if not url then
+    return nil
+  end
   local desc = node:field('desc')[1]
   local this = setmetatable({}, { __index = OrgHyperlink })
   this.url = OrgLinkUrl:new(vim.treesitter.get_node_text(url, source))
