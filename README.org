@@ -18,30 +18,25 @@ Orgmode clone written in Lua for Neovim
 
 *** Requirements
 
-- Neovim 0.11.0 or later
+- Neovim 0.12.0 or later
 
 *** Installation
 :PROPERTIES:
 :CUSTOM_ID: installation
 :END:
 
-Use your favourite package manager. We recommend [[https://github.com/folke/lazy.nvim][lazy.nvim]]:
+Use the built-in package manager
 #+BEGIN_SRC lua
-{
-  'nvim-orgmode/orgmode',
-  event = 'VeryLazy',
-  ft = { 'org' },
-  config = function()
-    -- Setup orgmode
-    require('orgmode').setup({
-      org_agenda_files = '~/orgfiles/**/*',
-      org_default_notes_file = '~/orgfiles/refile.org',
-    })
+vim.pack.add({ 'https://github.com/nvim-orgmode/orgmode' })
 
-    -- Experimental LSP support
-    vim.lsp.enable('org')
-  end,
-}
+-- Setup orgmode
+require('orgmode').setup({
+  org_agenda_files = '~/orgfiles/**/*',
+  org_default_notes_file = '~/orgfiles/refile.org',
+})
+
+-- Experimental LSP support
+vim.lsp.enable('org')
 #+END_SRC
 
 For more installation options see [[file:./docs/installation.org][Installation]] page.

@@ -19,6 +19,8 @@ local Listitem = require('orgmode.files.elements.listitem')
 ---@field files table<string, OrgFile> table with files that are part of paths
 ---@field all_files table<string, OrgFile> all loaded files, no matter if they are part of paths
 ---@field load_state 'loading' | 'loaded' | nil
+---@field _path_cache? string[] Result of the last path discovery, valid until the next load or unload
+---@field load_promise? OrgPromise<OrgFiles> Promise of the load that is currently in progress
 local OrgFiles = {
   cached_instances = {},
 }
@@ -55,14 +57,14 @@ end
 ---@return OrgPromise<OrgFiles>
 function OrgFiles:load(force)
   if not force and self.load_state then
-    if self.load_state == 'loading' then
-      self:ensure_loaded()
+    if self.load_state == 'loading' and self.load_promise then
+      return self.load_promise
     end
     return Promise.resolve(self)
   end
 
   self.load_state = 'loading'
-  return Promise.map(function(filename, index)
+  self.load_promise = Promise.map(function(filename, index)
     return self:load_file(filename):next(function(orgfile)
       if orgfile then
         orgfile.index = index
@@ -72,8 +74,11 @@ function OrgFiles:load(force)
     end)
   end, self:_files(true), 50):next(function()
     self.load_state = 'loaded'
+    self.load_promise = nil
     return self
   end)
+
+  return self.load_promise
 end
 
 ---@deprecated Use `load_file` with `persist` option instead
@@ -122,15 +127,18 @@ function OrgFiles:unload()
   self.all_files = {}
   self.paths = {}
   self.load_state = nil
+  self._path_cache = nil
+  self.load_promise = nil
   return self
 end
 
 function OrgFiles:get_clocked_headline()
-  -- TODO: Optimize
   for _, file in ipairs(self:all()) do
-    for _, headline in ipairs(file:get_headlines()) do
-      if headline:is_clocked_in() then
-        return headline
+    if not file:is_archive_file() and file:has_running_clock_candidate() then
+      for _, headline in ipairs(file:get_headlines()) do
+        if headline:is_clocked_in() then
+          return headline
+        end
       end
     end
   end
@@ -177,7 +185,10 @@ function OrgFiles:load_file(filename, opts)
     if self.files[filename] or not opts.persist then
       return
     end
-    local all_paths = self:_files()
+    -- Whether a file that was just created belongs to the configured paths is
+    -- the one question the cache cannot answer, because the cache predates the
+    -- file. Runs once per newly persisted file, not per lookup.
+    local all_paths = self:_files(true)
     if vim.tbl_contains(all_paths, filename) then
       self.files[filename] = file
     end
@@ -340,7 +351,7 @@ function OrgFiles:ensure_loaded()
   if self.load_state == 'loaded' then
     return true
   end
-  vim.wait(5000, function()
+  vim.wait(20000, function()
     return self.load_state == 'loaded'
   end, 5)
 end
@@ -361,27 +372,36 @@ function OrgFiles:_setup_paths(paths)
 end
 
 ---@private
----@param skip_resolve? boolean
-function OrgFiles:_files(skip_resolve)
+---@param refresh? boolean Run path discovery again instead of reusing the cached result
+---@return string[]
+function OrgFiles:_files(refresh)
+  if not refresh and self._path_cache then
+    return self._path_cache
+  end
+
   local all_files = vim.tbl_map(function(file)
-    return vim.tbl_map(function(path)
-      if skip_resolve then
-        return path
-      end
-      return vim.fn.resolve(path)
-    end, vim.fn.glob(vim.fn.fnamemodify(file, ':p'), false, true))
+    return vim.fn.glob(vim.fn.fnamemodify(file, ':p'), false, true)
   end, self.paths)
 
-  all_files = utils.flatten(all_files)
-
-  return vim.tbl_filter(function(file)
+  -- Filter before resolving. A recursive path like `~/org/**/*` matches every
+  -- file in the tree, and resolving the ones that are not org files is wasted
+  -- work. The extension is taken from the globbed name, same as the filetype
+  -- detection in `orgmode/init.lua`, so a symlink is an org file when its own
+  -- name says so.
+  local org_files = vim.tbl_filter(function(file)
     if not utils.is_org_file(file) then
       return false
     end
 
     local stat = vim.uv.fs_stat(file)
     return stat and stat.type == 'file' or false
-  end, all_files)
+  end, utils.flatten(all_files))
+
+  self._path_cache = vim.tbl_map(function(file)
+    return vim.fn.resolve(file)
+  end, org_files)
+
+  return self._path_cache
 end
 
 return OrgFiles

@@ -210,27 +210,23 @@ To view all plugins that are tagged for =nvim-orgmode=, visit [[https://github.c
 :PROPERTIES:
 :CUSTOM_ID: example-configuration
 :END:
-Example configuration with few of these plugins using [[https://github.com/folke/lazy.nvim][lazy.nvim]]:
+Example configuration with few of these plugins using built-in package manager:
 #+begin_src lua
-{
-  'nvim-orgmode/orgmode',
-  dependencies = {
-    'nvim-telescope/telescope.nvim',
-    'nvim-orgmode/telescope-orgmode.nvim',
-    'nvim-orgmode/org-bullets.nvim',
-    'Saghen/blink.cmp'
-  },
-  event = 'VeryLazy',
-  config = function()
-    require('orgmode').setup({
-      org_agenda_files = '~/orgfiles/**/*',
-      org_default_notes_file = '~/orgfiles/refile.org',
-    })
-    require('org-bullets').setup()
-    require('blink.cmp').setup({})
+vim.pack.add({
+  'https://github.com/nvim-orgmode/orgmode',
+  'https://github.com/nvim-telescope/telescope.nvim',
+  'https://github.com/nvim-orgmode/telescope-orgmode.nvim',
+  'https://github.com/nvim-orgmode/org-bullets.nvim',
+  'https://github.com/Saghen/blink.cmp'
+})
 
-    -- Experimental LSP support
-    vim.lsp.enable('org')
-  end,
-}
+require('orgmode').setup({
+  org_agenda_files = '~/orgfiles/**/*',
+  org_default_notes_file = '~/orgfiles/refile.org',
+})
+require('org-bullets').setup()
+require('blink.cmp').setup({})
+
+-- Experimental LSP support
+vim.lsp.enable('org')
 #+end_src

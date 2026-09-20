@@ -166,6 +166,9 @@ describe('Clock', function()
 
     -- Establish baseline: Test 1 is clocked in
     local clock = orgmode.clock
+    vim.wait(5000, function()
+      return clock.clocked_headline ~= nil
+    end, 10)
     assert.are.same('Test 1', clock.clocked_headline:get_title())
     assert.is_true(clock.clocked_headline:is_clocked_in())
 

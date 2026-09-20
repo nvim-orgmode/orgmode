@@ -5,7 +5,21 @@
 Orgmode can be installed with any package manager.
 Here are few examples:
 
-1. [[https://github.com/folke/lazy.nvim][lazy.nvim]] (Recommended)
+1. Built-in package manager (Recommended)
+   #+BEGIN_SRC lua
+   vim.pack.add({ 'https://github.com/nvim-orgmode/orgmode' })
+
+   -- Setup orgmode
+   require('orgmode').setup({
+     org_agenda_files = '~/orgfiles/**/*',
+     org_default_notes_file = '~/orgfiles/refile.org',
+   })
+
+   -- Experimental LSP support
+   vim.lsp.enable('org')
+   #+END_SRC
+
+2. [[https://github.com/folke/lazy.nvim][lazy.nvim]]
    #+begin_src lua
    return {
      'nvim-orgmode/orgmode',
@@ -19,18 +33,6 @@ Here are few examples:
       vim.lsp.enable('org')
      end,
    }
-   #+end_src
-2. vim.pack (Available only in Neovim 0.12+)
-   #+begin_src lua
-   vim.pack.add({
-     { src = 'https://github.com/nvim-orgmode/orgmode'}
-   })
-   require('orgmode').setup({
-     org_agenda_files = '~/orgfiles/**/*',
-     org_default_notes_file = '~/orgfiles/refile.org',
-   })
-   -- Experimental LSP support
-   vim.lsp.enable('org')
    #+end_src
 3. [[https://github.com/lewis6991/pckr.nvim][pckr.nvim]]
    #+begin_src lua

@@ -1,10 +1,13 @@
 <div align="center">
+
 <img alt="A blend of the Neovim (shape) and Org-mode (colours) logos" src="assets/nvim-orgmode.svg" width="250" /><br/>
 
 # nvim-orgmode
 
 <a href="/LICENSE"><img alt="License" src="https://img.shields.io/badge/license-MIT-brightgreen?style=flat-square"></a>
+
 <a href="https://ko-fi.com/kristijanhusak"><img alt="Kofi" src="https://img.shields.io/badge/support-kofi-00b9fe?style=flat-square&logo=kofi"></a>
+
 <a href="https://matrix.to/#/#neovim-orgmode:matrix.org"><img alt="Chat" src="https://img.shields.io/matrix/neovim-orgmode:matrix.org?logo=matrix&server_fqdn=matrix.org&style=flat-square"></a>
 
 Orgmode clone written in Lua for Neovim
@@ -19,29 +22,23 @@ Orgmode clone written in Lua for Neovim
 
 ### Requirements
 
-- Neovim 0.11.0 or later
+- Neovim 0.12.0 or later
 
 ### Installation
 
-Use your favourite package manager. We recommend
-[lazy.nvim](https://github.com/folke/lazy.nvim):
+Use the built-in package manager
 
 ``` lua
-{
-  'nvim-orgmode/orgmode',
-  event = 'VeryLazy',
-  ft = { 'org' },
-  config = function()
-    -- Setup orgmode
-    require('orgmode').setup({
-      org_agenda_files = '~/orgfiles/**/*',
-      org_default_notes_file = '~/orgfiles/refile.org',
-    })
+vim.pack.add({ 'https://github.com/nvim-orgmode/orgmode' })
 
-    -- Experimental LSP support
-    vim.lsp.enable('org')
-  end,
-}
+-- Setup orgmode
+require('orgmode').setup({
+  org_agenda_files = '~/orgfiles/**/*',
+  org_default_notes_file = '~/orgfiles/refile.org',
+})
+
+-- Experimental LSP support
+vim.lsp.enable('org')
 ```
 
 For more installation options see
