@@ -41,7 +41,7 @@ return {
     ),
     org_agenda_goto = m.action(
       'agenda.goto_item',
-      { opts = { desc = 'org open agenda item (split buffer)', help_desc = 'Open in another window' } }
+      { opts = { desc = 'org open agenda item (split buffer)', help_desc = 'Open in another window / fold block' } }
     ),
     org_agenda_goto_date = m.action(
       'agenda.goto_date',

@@ -75,6 +75,7 @@ end
 
 function Agenda:render()
   local line = vim.fn.line('.')
+  local fold_state = self:_get_fold_state()
   local bufnr = self:_open_window()
   for i, view in ipairs(self.views) do
     view:render(bufnr, line)
@@ -83,6 +84,7 @@ function Agenda:render()
     end
   end
   vim.bo[bufnr].modifiable = false
+  self:_restore_fold_state(bufnr, fold_state)
 
   if vim.w.org_window_split_mode == 'horizontal' then
     local win_height = math.max(math.min(34, vim.api.nvim_buf_line_count(bufnr)), config.org_agenda_min_height)
@@ -278,6 +280,8 @@ function Agenda:_open_window()
 
   utils.open_window('orgagenda', math.max(34, config.org_agenda_min_height), config.win_split_mode, config.win_border)
 
+  -- Set before the filetype so FileType autocommands can override them
+  vim.cmd([[setlocal foldmethod=expr foldexpr=v:lua.orgmode.agenda_foldexpr(v:lnum) foldlevel=1]])
   vim.cmd([[setf orgagenda]])
   vim.cmd([[setlocal buftype=nofile bufhidden=wipe nobuflisted nolist noswapfile nowrap nospell]])
   vim.w.org_window_pos = vim.fn.win_screenpos(0)
@@ -613,6 +617,9 @@ function Agenda:_get_headline()
 end
 
 function Agenda:goto_item()
+  if self:_is_block_header(vim.fn.line('.')) then
+    return vim.cmd([[normal! za]])
+  end
   local item = self:_get_headline()
   if not item then
     return
@@ -785,6 +792,92 @@ function Agenda:_call_view_and_render(method, ...)
   if executed then
     return self:render()
   end
+end
+
+--- Blocks exist only in custom agenda commands with more than one view.
+--- A block spans the rendered lines of its view plus the separator line after it.
+---@private
+---@param lnum number
+---@return OrgAgendaViewType | nil
+function Agenda:_get_block_at(lnum)
+  if #self.views < 2 then
+    return nil
+  end
+  for _, view in ipairs(self.views) do
+    if view.view and #view.view.lines > 0 and view.view:is_in_range(lnum) then
+      return view
+    end
+  end
+  return nil
+end
+
+---@private
+---@param lnum number
+---@return boolean
+function Agenda:_is_block_header(lnum)
+  local block = self:_get_block_at(lnum)
+  return block ~= nil and block.view.start_line == lnum
+end
+
+---@param lnum number
+---@return string | number
+function Agenda:foldexpr(lnum)
+  local block = self:_get_block_at(lnum)
+  if not block then
+    return 0
+  end
+  if block.view.start_line == lnum then
+    return '>1'
+  end
+  return 1
+end
+
+--- Closed state of each rendered block, keyed by view index.
+--- Folds are lost when the buffer is rewritten, so this is taken before render and applied after.
+---@private
+---@return table<number, boolean>
+function Agenda:_get_fold_state()
+  local state = {}
+  if #self.views < 2 then
+    return state
+  end
+  for i, view in ipairs(self.views) do
+    local rendered = view.view
+    if rendered and #rendered.lines > 0 and vim.api.nvim_buf_is_valid(rendered.bufnr) then
+      local winid = vim.fn.bufwinid(rendered.bufnr)
+      if winid ~= -1 then
+        state[i] = vim.api.nvim_win_call(winid, function()
+          return vim.fn.foldclosed(rendered.start_line) ~= -1
+        end)
+      end
+    end
+  end
+  return state
+end
+
+--- Vim evaluates the foldexpr while the views are still being written, so the
+--- levels it cached are stale. zX recomputes them from the final layout.
+---@private
+---@param bufnr number
+---@param state table<number, boolean>
+function Agenda:_restore_fold_state(bufnr, state)
+  local winid = vim.fn.bufwinid(bufnr)
+  if winid == -1 then
+    return
+  end
+  vim.api.nvim_win_call(winid, function()
+    vim.cmd([[normal! zX]])
+    for i, closed in pairs(state) do
+      local rendered = self.views[i] and self.views[i].view
+      if rendered and #rendered.lines > 0 then
+        vim.cmd(('%d%s'):format(rendered.start_line, closed and 'foldclose' or 'foldopen'))
+      end
+    end
+  end)
+end
+
+function _G.orgmode.agenda_foldexpr(lnum)
+  return require('orgmode').agenda:foldexpr(lnum)
 end
 
 return Agenda

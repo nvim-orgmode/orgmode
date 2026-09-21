@@ -663,8 +663,11 @@ agenda will always show current week from today - 2 days
 
 Define custom agenda views that are available through the
 [[#org_agenda][org_agenda]] mapping. It is possible to combine multiple
-agenda types into single view. Available options for each agenda
-type are explained down below the example:
+agenda types into single view. Each type in such a view is a foldable
+block: the usual fold commands (=zc=, =zo=, =za=, =zM=, =zR=) work on it, and
+[[#org_agenda_goto][org_agenda_goto]] toggles the block when pressed on its
+header. Available options for each agenda type are explained down below the
+example:
 
 #+begin_src lua
 require('orgmode').setup({
@@ -1454,6 +1457,8 @@ Open selected agenda item in the same buffer.
 :END:
 - Mapped to: ={'<TAB>'}=
 Open selected agenda item in split window.
+On the header of a block in a [[#org_agenda_custom_commands][custom agenda command]]
+with multiple types, toggle the fold of that block instead.
 
 **** org_agenda_goto_date
 :PROPERTIES:
