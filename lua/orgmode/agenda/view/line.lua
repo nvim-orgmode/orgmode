@@ -10,15 +10,33 @@ local utils = require('orgmode.utils')
 ---@field metadata? table<string, any>
 ---@field separator? string
 
+---@class OrgAgendaLineHeadlineRef
+---@field filename string
+---@field id? string
+---@field title string
+
 ---@class OrgAgendaLine:OrgAgendaLineOpts
 ---@field view OrgAgendaView
 ---@field highlighter OrgHighlighter
 ---@field line_nr number
 ---@field col_counter number
 ---@field headline? OrgHeadline
+---@field headline_ref? OrgAgendaLineHeadlineRef
 ---@field tokens? OrgAgendaLineToken[]
 local OrgAgendaLine = {}
 OrgAgendaLine.__index = OrgAgendaLine
+
+---Captured at build time: after the file is reparsed, the headline's
+---tree-sitter nodes no longer describe it.
+---@param headline OrgHeadline
+---@return OrgAgendaLineHeadlineRef
+local function headline_ref(headline)
+  return {
+    filename = headline.file.filename,
+    id = headline:get_property('id', false),
+    title = headline:get_title(),
+  }
+end
 
 ---@param opts? OrgAgendaLineOpts
 ---@return OrgAgendaLine
@@ -28,6 +46,7 @@ function OrgAgendaLine:new(opts)
     tokens = {},
     col_counter = 1,
     headline = opts.headline,
+    headline_ref = opts.headline and headline_ref(opts.headline),
     highlighter = opts.highlighter,
     hl_group = opts.hl_group,
     line_hl_group = opts.line_hl_group,

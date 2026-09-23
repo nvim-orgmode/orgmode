@@ -43,6 +43,8 @@ function OrgAgendaView:is_in_range(line_nr)
   return line_nr >= self.start_line and line_nr <= self.end_line
 end
 
+---Does nothing when old_line belongs to an earlier render of this view,
+---because the buffer already shows the current state at that line number.
 ---@param old_line OrgAgendaLine
 ---@param new_line OrgAgendaLine
 function OrgAgendaView:replace_line(old_line, new_line)
@@ -50,7 +52,7 @@ function OrgAgendaView:replace_line(old_line, new_line)
   new_line.view = self
   new_line.highlighter = self.highlighter
   for i, line in ipairs(self.lines) do
-    if line.line_nr == old_line.line_nr then
+    if line == old_line then
       self.lines[i] = new_line
       new_line:render()
       return
