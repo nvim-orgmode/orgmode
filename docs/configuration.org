@@ -672,7 +672,7 @@ require('orgmode').setup({
   org_agenda_custom_commands = {
     -- "c" is the shortcut that will be used in the prompt
     c = {
-      description = 'Combined view', -- Description shown in the prompt for the shortcut
+      description = 'Combined view', -- Description shown in the prompt for the shortcut. Defaults to the block types, e.g. 'tags_todo + agenda'
       types = {
         {
           type = 'tags_todo', -- Type can be agenda | tags | tags_todo
@@ -1378,6 +1378,51 @@ require('orgmode').setup({
   }
 })
 #+end_src
+
+**** global_menus_as_keymaps
+:PROPERTIES:
+:CUSTOM_ID: global_menus_as_keymaps
+:END:
+- Type: =boolean=
+- Default: =false=
+When enabled, =org_agenda= and =org_capture= no longer open a menu.
+Each menu entry becomes its own keymap under these keys instead:
+=<Leader>oaa= opens the agenda, =<Leader>oat= the TODO list,
+=<Leader>oct= the capture template =t=, and so on. This covers the
+built-in agenda views, [[#org_agenda_custom_commands][org_agenda_custom_commands]] and
+[[#org_capture_templates][org_capture_templates]], including nested templates (=<Leader>ocwm=
+for the subtemplate =m= of =w=). The =desc= of each keymap is the
+label from the menu.
+
+#+begin_src lua
+require('orgmode').setup({
+  mappings = {
+    global_menus_as_keymaps = true
+  }
+})
+#+end_src
+
+Enable this if you use a plugin like [[https://github.com/folke/which-key.nvim][which-key.nvim]] that shows the
+available keys after a prefix: it then shows the agenda views and capture
+templates, so the menu is not needed. With the menu, which-key has to
+decide by =timeoutlen= whether =<Leader>oa= opens the menu or waits
+for a longer mapping you defined under it (for example =<Leader>oar=).
+Keep the menu if you don't use such a plugin and want to see the
+available options.
+
+The keys =org_agenda= and =org_capture= and the keys of capture template
+groups are mapped to =<Nop>= with a =desc=, which which-key shows as the
+group name. For =org_agenda= and =org_capture= this is the =desc= you
+give the mapping, =org agenda= and =org capture= by default.
+
+A custom agenda command with the key of a built-in view replaces that
+view, as in the menu. Keys with several characters (for example =ab=)
+are mapped as well. Next to a view with the key =a=, typing =a= then
+waits for =timeoutlen= before it opens that view.
+
+The keymaps are created on =setup()=: agenda commands or capture templates
+added later are only available through the menu (=:Org agenda=,
+=:Org capture=).
 
 *** Agenda mappings
 :PROPERTIES:

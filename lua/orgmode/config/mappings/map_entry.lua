@@ -1,3 +1,8 @@
+---@class OrgMenuKeymap
+---@field key string Keys typed after the mapping's lhs
+---@field desc string
+---@field action? fun() Without an action, the keys only label a group of further keymaps
+
 ---@class OrgMapEntry
 ---@field provided_opts table
 ---@field handler string
@@ -8,6 +13,7 @@
 ---@field type table
 ---@field desc string
 ---@field help_desc? string
+---@field menu_keymaps? fun(): OrgMenuKeymap[] Entries of the menu the handler opens
 local MapEntry = {}
 
 ---@param handler string
@@ -68,6 +74,7 @@ function MapEntry:new(handler, opts)
   data.opts.help_desc = nil
   data.modes = opts.modes or { 'n' }
   data.type = opts.type or 'action'
+  data.menu_keymaps = opts.menu_keymaps
   setmetatable(data, self)
   self.__index = self
   return data
@@ -131,6 +138,28 @@ function MapEntry:attach(default_mapping, user_mapping, opts)
     vim.keymap.set(self.modes, map, self.handler, map_opts)
     if self.type == 'operator' then
       vim.keymap.set('o', map, (':normal v%s<CR>'):format(map), map_opts)
+    end
+  end
+end
+
+--- Map each menu entry under the mapping's keys. The keys themselves and
+--- the groups only get a label, which tools like which-key show for a prefix.
+---@param default_mapping string|table
+---@param user_mapping? string|table
+---@param opts? table
+function MapEntry:attach_menu_keymaps(default_mapping, user_mapping, opts)
+  local lhs_list, map_opts = self:_resolve(default_mapping, user_mapping, opts)
+  if #lhs_list == 0 then
+    return
+  end
+  -- Entries can extend each other (custom agenda keys "a" and "ab"), so none may skip waiting for the longer one
+  map_opts.nowait = false
+  local keymaps = self.menu_keymaps()
+  for _, map in ipairs(lhs_list) do
+    vim.keymap.set(self.modes, map, '<Nop>', map_opts)
+    for _, keymap in ipairs(keymaps) do
+      local keymap_opts = vim.tbl_extend('force', map_opts, { desc = keymap.desc })
+      vim.keymap.set(self.modes, map .. keymap.key, keymap.action or '<Nop>', keymap_opts)
     end
   end
 end

@@ -201,7 +201,11 @@ function Config:setup_mappings(category, buffer)
   end
 
   for _, map in pairs(maps) do
-    map.map_entry:attach(map.default_map, map.user_map, map.opts)
+    if self.opts.mappings.global_menus_as_keymaps and map.map_entry.menu_keymaps then
+      map.map_entry:attach_menu_keymaps(map.default_map, map.user_map, map.opts)
+    else
+      map.map_entry:attach(map.default_map, map.user_map, map.opts)
+    end
   end
 end
 

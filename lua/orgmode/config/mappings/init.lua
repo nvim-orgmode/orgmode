@@ -2,8 +2,18 @@ local m = require('orgmode.config.mappings.map_entry')
 
 return {
   global = {
-    org_agenda = m.action('agenda.prompt', { opts = { buffer = false, desc = 'org agenda' } }),
-    org_capture = m.action('capture.prompt', { opts = { buffer = false, desc = 'org capture' } }),
+    org_agenda = m.action('agenda.prompt', {
+      opts = { buffer = false, desc = 'org agenda' },
+      menu_keymaps = function()
+        return require('orgmode.agenda.menu_entries').keymaps()
+      end,
+    }),
+    org_capture = m.action('capture.prompt', {
+      opts = { buffer = false, desc = 'org capture' },
+      menu_keymaps = function()
+        return require('orgmode.capture.menu_entries').keymaps()
+      end,
+    }),
   },
   agenda = {
     org_agenda_later = m.action(
