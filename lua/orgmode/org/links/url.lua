@@ -20,7 +20,9 @@ end
 ---@return string | nil
 function OrgLinkUrl:get_file_path()
   if self.protocol == 'file' then
-    return self:get_real_path() or self.path
+    -- A bare path after file: is relative to the current file, like ./
+    local path = fs.substitute_path(self.path) and self.path or './' .. self.path
+    return fs.get_real_path(path) or self.path
   end
 
   local first_char = self.path:sub(1, 1)
