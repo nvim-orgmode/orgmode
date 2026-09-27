@@ -2,6 +2,7 @@ local Capture = require('orgmode.capture')
 local Templates = require('orgmode.capture.templates')
 local Template = require('orgmode.capture.template')
 local CaptureWindow = require('orgmode.capture.window')
+local MenuEntries = require('orgmode.capture.menu_entries')
 local helpers = require('tests.plenary.helpers')
 local org = require('orgmode')
 
@@ -68,8 +69,7 @@ describe('Menu Items', function()
         description = 'file bookmark',
       },
     })
-    ---@diagnostic disable-next-line: invisible
-    local sub_template_items = Capture:_get_subtemplates('k', multikey_templates:get_list())
+    local sub_template_items = MenuEntries.subtemplates('k', multikey_templates:get_list())
     local expected = Templates:new({
       b = 'multikey bookmark',
       bb = {

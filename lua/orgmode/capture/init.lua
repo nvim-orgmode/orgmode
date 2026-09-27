@@ -11,6 +11,7 @@ local Date = require('orgmode.objects.date')
 local Datetree = require('orgmode.capture.template.datetree')
 local Input = require('orgmode.ui.input')
 local Promise = require('orgmode.utils.promise')
+local MenuEntries = require('orgmode.capture.menu_entries')
 
 ---@return { mode: string, lhs: string }[] mappings of the current buffer in all modes
 local function buffer_keymaps()
@@ -785,47 +786,26 @@ function Capture:_setup_closing_note()
 end
 
 ---@private
----@param base_key string
----@param templates table<string, OrgCaptureTemplate>
-function Capture:_get_subtemplates(base_key, templates)
-  local subtemplates = {}
-  for key, template in utils.sorted_pairs(templates) do
-    if string.len(key) > 1 and string.sub(key, 1, 1) == base_key then
-      subtemplates[string.sub(key, 2, string.len(key))] = template
-    end
-  end
-  return subtemplates
-end
-
----@private
 ---@param templates table<string, OrgCaptureTemplate>
 function Capture:_create_menu_items(templates)
-  local menu_items = {}
-  for key, template in utils.sorted_pairs(templates) do
-    if string.len(key) == 1 then
-      local item = {
-        key = key,
+  return vim.tbl_map(function(entry)
+    if entry.template then
+      return {
+        key = entry.key,
+        label = entry.label,
+        action = function()
+          return self:open_template(entry.template)
+        end,
       }
-      if type(template) == 'string' then
-        item.label = template .. '...'
-        item.action = function()
-          self:_create_prompt(self:_get_subtemplates(key, templates))
-        end
-      elseif vim.tbl_count(template.subtemplates) > 0 then
-        item.label = template.description .. '...'
-        item.action = function()
-          self:_create_prompt(template.subtemplates)
-        end
-      else
-        item.label = template.description
-        item.action = function()
-          return self:open_template(template)
-        end
-      end
-      table.insert(menu_items, item)
     end
-  end
-  return menu_items
+    return {
+      key = entry.key,
+      label = entry.label .. '...',
+      action = function()
+        self:_create_prompt(entry.subtemplates)
+      end,
+    }
+  end, MenuEntries.entries(templates))
 end
 
 ---@private

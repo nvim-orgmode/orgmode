@@ -73,10 +73,12 @@ function MapEntry:new(handler, opts)
   return data
 end
 
+---@private
 ---@param default_mapping string|table
 ---@param user_mapping? string|table
 ---@param opts? table
-function MapEntry:attach(default_mapping, user_mapping, opts)
+---@return string[] lhs_list, table map_opts
+function MapEntry:_resolve(default_mapping, user_mapping, opts)
   local mapping = vim.deepcopy(default_mapping)
   if user_mapping ~= nil then
     mapping = vim.deepcopy(user_mapping)
@@ -84,7 +86,7 @@ function MapEntry:attach(default_mapping, user_mapping, opts)
 
   -- Allow disabling specific mapping
   if not mapping then
-    return
+    return {}, {}
   end
 
   if type(mapping) == 'string' then
@@ -110,10 +112,22 @@ function MapEntry:attach(default_mapping, user_mapping, opts)
     map_opts.desc = user_mapping.desc
   end
 
+  local lhs_list = {}
   for _, map in ipairs(mapping) do
     if prefix ~= '' then
       map = map:gsub('<prefix>', prefix)
     end
+    table.insert(lhs_list, map)
+  end
+  return lhs_list, map_opts
+end
+
+---@param default_mapping string|table
+---@param user_mapping? string|table
+---@param opts? table
+function MapEntry:attach(default_mapping, user_mapping, opts)
+  local lhs_list, map_opts = self:_resolve(default_mapping, user_mapping, opts)
+  for _, map in ipairs(lhs_list) do
     vim.keymap.set(self.modes, map, self.handler, map_opts)
     if self.type == 'operator' then
       vim.keymap.set('o', map, (':normal v%s<CR>'):format(map), map_opts)
