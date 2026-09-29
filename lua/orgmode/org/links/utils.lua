@@ -25,6 +25,28 @@ function link_utils.goto_file(file)
   return true
 end
 
+---@param file OrgFile
+---@param target string
+---@return boolean found
+function link_utils.goto_dedicated_target(file, target)
+  local words = vim.tbl_map(vim.pesc, vim.split(vim.trim(target):lower(), '%s+'))
+  local pattern = '%f[<]<<' .. table.concat(words, '%s+') .. '>>%f[^>]'
+  for lnum, line in ipairs(file.lines) do
+    local col = line:lower():find(pattern)
+    if col then
+      if file.filename ~= utils.current_file_path() then
+        vim.cmd(('edit %s'):format(file.filename))
+      else
+        vim.cmd([[normal! m']]) -- add link source to jumplist
+      end
+      vim.api.nvim_win_set_cursor(0, { lnum, col - 1 })
+      vim.cmd([[normal! zv]])
+      return true
+    end
+  end
+  return false
+end
+
 ---@param headlines OrgHeadline[]
 ---@param file_path string
 ---@param error_message string
