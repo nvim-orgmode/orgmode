@@ -37,12 +37,11 @@ function OrgLinkHeadlineSearch:follow(link)
       return link_utils.goto_file(file)
     end
 
-    local pattern = ('<<<?(%s[^>]*)>>>?'):format(opts.headline_text):lower()
-    local headlines = file:find_headlines_matching_search_term(pattern, true)
-    if #headlines == 0 then
-      headlines = file:find_headlines_by_title(opts.headline_text)
+    if link_utils.goto_dedicated_target(file, opts.headline_text) then
+      return true
     end
 
+    local headlines = file:find_headlines_by_title(opts.headline_text)
     return link_utils.goto_oneof_headlines(
       headlines,
       file.filename,

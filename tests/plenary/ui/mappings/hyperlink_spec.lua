@@ -162,7 +162,7 @@ describe('Hyperlink mappings', function()
     assert.is.same('** headline of target custom_id', vim.api.nvim_get_current_line(), string.format('in file %s', url))
   end)
 
-  it('should follow link to headline of given dedicated target', function()
+  it('should follow link to given dedicated target', function()
     helpers.create_file({
       '* Test hyperlink',
       '  an [[target][internal link]]',
@@ -178,7 +178,58 @@ describe('Hyperlink mappings', function()
     vim.fn.cursor(2, 30)
     assert.is.same('  an [[target][internal link]]', vim.api.nvim_get_current_line())
     vim.cmd([[norm ,oo]])
-    assert.is.same('** headline of a deticated anchor', vim.api.nvim_get_current_line())
+    assert.are.same({ 9, 11 }, vim.api.nvim_win_get_cursor(0))
+  end)
+
+  it('should follow link to dedicated target with pattern characters', function()
+    helpers.create_file({
+      '* Test hyperlink',
+      '  an [[my-target (1)]]',
+      '** headline',
+      '   text <<my-target (1)>>',
+    })
+    vim.fn.cursor(2, 10)
+    vim.cmd([[norm ,oo]])
+    assert.are.same({ 4, 8 }, vim.api.nvim_win_get_cursor(0))
+  end)
+
+  it('should follow link to dedicated target before the first headline', function()
+    helpers.create_file({
+      'Preamble <<top>>',
+      '* Test hyperlink',
+      '  an [[top]]',
+    })
+    vim.fn.cursor(3, 8)
+    vim.cmd([[norm ,oo]])
+    assert.are.same({ 1, 9 }, vim.api.nvim_win_get_cursor(0))
+  end)
+
+  it('should follow link only to dedicated target with exactly matching name', function()
+    helpers.create_file({
+      '* Test hyperlink',
+      '  an [[Foo]]',
+      '** first',
+      '   <<foobar>>',
+      '** second',
+      '   <<foo>>',
+    })
+    vim.fn.cursor(2, 8)
+    vim.cmd([[norm ,oo]])
+    assert.are.same({ 6, 3 }, vim.api.nvim_win_get_cursor(0))
+  end)
+
+  it('should follow link to dedicated target in given org file', function()
+    local target_file = helpers.create_file({
+      '* headline',
+      '  text <<my-target>>',
+    })
+    helpers.create_file({
+      string.format('This link should lead to [[file:%s::my-target]]', target_file.filename),
+    })
+    vim.fn.cursor(1, 30)
+    vim.cmd([[norm ,oo]])
+    assert.is.same(target_file.filename, vim.api.nvim_buf_get_name(0))
+    assert.are.same({ 2, 7 }, vim.api.nvim_win_get_cursor(0))
   end)
 
   it('should follow link to certain line (orgmode standard notation)', function()
