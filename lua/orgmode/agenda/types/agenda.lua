@@ -563,14 +563,28 @@ function OrgAgendaType:_get_agenda_days()
   local dates = self.from:get_range_until(self.to)
   local agenda_days = {}
 
+  ---@type { headline_date: OrgDate, headline: OrgHeadline, index: number }[]
   local headline_dates = {}
+  -- Days other than today only show dates that fall on that day, repeat on it,
+  -- or are part of a date range. Everything else is only checked against today.
+  local dates_by_day = {}
+  local dates_for_every_day = {}
   for _, orgfile in ipairs(self.files:all()) do
     for _, headline in ipairs(orgfile:get_opened_headlines()) do
       for _, headline_date in ipairs(headline:get_valid_dates_for_agenda()) do
-        table.insert(headline_dates, {
+        local item = {
           headline_date = headline_date,
           headline = headline,
-        })
+          index = #headline_dates + 1,
+        }
+        table.insert(headline_dates, item)
+        if headline_date:get_repeater() or headline_date.related_date then
+          table.insert(dates_for_every_day, item)
+        else
+          local day_key = headline_date:format('%Y-%m-%d')
+          dates_by_day[day_key] = dates_by_day[day_key] or {}
+          table.insert(dates_by_day[day_key], item)
+        end
       end
     end
   end
@@ -578,10 +592,14 @@ function OrgAgendaType:_get_agenda_days()
   local headlines = {}
   for _, day in ipairs(dates) do
     local date = { day = day, agenda_items = {}, category_length = 0, label_length = 0 }
+    local day_headline_dates = headline_dates
+    if not day:is_today() then
+      day_headline_dates = self:_merge_by_index(dates_by_day[day:format('%Y-%m-%d')] or {}, dates_for_every_day)
+    end
 
-    for index, item in ipairs(headline_dates) do
+    for _, item in ipairs(day_headline_dates) do
       local headline = item.headline
-      local agenda_item = AgendaItem:new(item.headline_date, headline, day, index)
+      local agenda_item = AgendaItem:new(item.headline_date, headline, day, item.index)
       if agenda_item.is_valid and self:_matches_filters(headline) then
         table.insert(headlines, headline)
         table.insert(date.agenda_items, agenda_item)
@@ -599,6 +617,26 @@ function OrgAgendaType:_get_agenda_days()
   end
 
   return agenda_days
+end
+
+---Merge two lists sorted by index, keeping the order of the full list
+---@private
+---@param a { index: number }[]
+---@param b { index: number }[]
+---@return { index: number }[]
+function OrgAgendaType:_merge_by_index(a, b)
+  local result = {}
+  local i, j = 1, 1
+  while i <= #a or j <= #b do
+    if j > #b or (i <= #a and a[i].index < b[j].index) then
+      table.insert(result, a[i])
+      i = i + 1
+    else
+      table.insert(result, b[j])
+      j = j + 1
+    end
+  end
+  return result
 end
 
 function OrgAgendaType:toggle_clock_report()
