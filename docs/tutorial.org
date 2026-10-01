@@ -159,7 +159,6 @@ A first customization of orgmode would look like:
 -- init.lua
 local org = require('orgmode')
 
-org.setup_ts_grammar()
 org.setup({
   org_agenda_files = {'~/path/to/agenda/file/*.org'},
   org_default_notes_file = '~/path/to/default/capture/file.org',
