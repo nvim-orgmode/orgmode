@@ -21,6 +21,48 @@ local SortingStrategy = {}
 ---@field index number Index of the entry in the fetched list
 ---@field is_day_match? boolean Is this entry a match for the given day. Available only in agenda view
 
+---Values that strategies read from the headline are computed once per entry,
+---instead of on every comparison
+---@param entry SortableEntry
+---@param key string
+---@param compute fun(headline: OrgHeadline): any
+---@return any
+local function cached(entry, key, compute)
+  local cache = entry._cache
+  if not cache then
+    cache = {}
+    entry._cache = cache
+  end
+  local value = cache[key]
+  if value == nil then
+    value = compute(entry.headline)
+    cache[key] = value
+  end
+  return value
+end
+
+local function priority_sort_value(headline)
+  return headline:get_priority_sort_value()
+end
+
+local function sorted_tags(headline)
+  return headline:tags_to_string(true)
+end
+
+local function todo_index(headline)
+  local _, _, _, index = headline:get_todo()
+  -- `false` instead of `nil`, so a headline without a todo keyword is cached too
+  return index or false
+end
+
+local function file_category(headline)
+  return headline.file:get_category()
+end
+
+local function is_clocked_in(headline)
+  return headline:is_clocked_in()
+end
+
 ---@param a SortableEntry
 ---@param b SortableEntry
 function SortingStrategy.time_up(a, b)
@@ -56,8 +98,10 @@ function SortingStrategy.priority_down(a, b)
   if not a.headline or not b.headline then
     return
   end
-  if a.headline:get_priority_sort_value() ~= b.headline:get_priority_sort_value() then
-    return a.headline:get_priority_sort_value() > b.headline:get_priority_sort_value()
+  local a_priority = cached(a, 'priority', priority_sort_value)
+  local b_priority = cached(b, 'priority', priority_sort_value)
+  if a_priority ~= b_priority then
+    return a_priority > b_priority
   end
   if a.date and b.date then
     local is_same = a.date:is_same(b.date)
@@ -83,8 +127,8 @@ function SortingStrategy.tag_up(a, b)
   if not a.headline or not b.headline then
     return
   end
-  local a_tags = a.headline:tags_to_string(true)
-  local b_tags = b.headline:tags_to_string(true)
+  local a_tags = cached(a, 'tags', sorted_tags)
+  local b_tags = cached(b, 'tags', sorted_tags)
   if a_tags == '' and b_tags == '' then
     return
   end
@@ -115,8 +159,8 @@ function SortingStrategy.todo_state_up(a, b)
   if not a.headline or not b.headline then
     return
   end
-  local _, _, _, a_index = a.headline:get_todo()
-  local _, _, _, b_index = b.headline:get_todo()
+  local a_index = cached(a, 'todo_index', todo_index)
+  local b_index = cached(b, 'todo_index', todo_index)
   if a_index and b_index then
     if a_index ~= b_index then
       return a_index < b_index
@@ -146,8 +190,10 @@ function SortingStrategy.category_up(a, b)
   if not a.headline or not b.headline then
     return
   end
-  if a.headline.file:get_category() ~= b.headline.file:get_category() then
-    return a.headline.file:get_category() < b.headline.file:get_category()
+  local a_category = cached(a, 'category', file_category)
+  local b_category = cached(b, 'category', file_category)
+  if a_category ~= b_category then
+    return a_category < b_category
   end
 end
 
@@ -174,10 +220,12 @@ end
 ---@param a SortableEntry
 ---@param b SortableEntry
 function SortingStrategy.clocked_up(a, b)
-  if a.headline:is_clocked_in() and not b.headline:is_clocked_in() then
+  local a_clocked_in = cached(a, 'clocked_in', is_clocked_in)
+  local b_clocked_in = cached(b, 'clocked_in', is_clocked_in)
+  if a_clocked_in and not b_clocked_in then
     return true
   end
-  if not a.headline:is_clocked_in() and b.headline:is_clocked_in() then
+  if not a_clocked_in and b_clocked_in then
     return false
   end
 end
@@ -209,16 +257,27 @@ end
 ---@param strategies OrgAgendaSortingStrategy[]
 ---@param make_entry fun(item: T): SortableEntry
 local function sort(items, strategies, make_entry)
-  table.sort(items, function(a, b)
-    local entry_a = make_entry(a)
-    local entry_b = make_entry(b)
+  -- Strategies after an unknown one are not applied
+  local sorting_fns = {}
+  for _, fn in ipairs(strategies) do
+    local sorting_fn = SortingStrategy[fn:gsub('-', '_')]
+    if not sorting_fn then
+      utils.echo_error('Unknown sorting strategy: ' .. fn)
+      break
+    end
+    table.insert(sorting_fns, sorting_fn)
+  end
 
-    for _, fn in ipairs(strategies) do
-      local sorting_fn = SortingStrategy[fn:gsub('-', '_')]
-      if not sorting_fn then
-        utils.echo_error('Unknown sorting strategy: ' .. fn)
-        break
-      end
+  local entries = {}
+  for _, item in ipairs(items) do
+    entries[item] = make_entry(item)
+  end
+
+  table.sort(items, function(a, b)
+    local entry_a = entries[a]
+    local entry_b = entries[b]
+
+    for _, sorting_fn in ipairs(sorting_fns) do
       local result = sorting_fn(entry_a, entry_b)
       if result ~= nil then
         return result
