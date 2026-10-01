@@ -1026,6 +1026,32 @@ function OrgDate:apply_repeater()
   return date:adjust(repeater)
 end
 
+---Stepping one repeat at a time is slow for old dates with short repeaters,
+---so skip ahead to just before the target. Only spans with a fixed length can
+---be skipped, months and years are clamped to the end of the month. Hours and
+---minutes are left as they are, stepping them over DST is not deterministic.
+---One step is kept as a margin for DST shifts, the caller steps the rest.
+---@private
+---@param repeater string normalized repeater, ex. +1w
+---@param target OrgDate
+---@param max_skip? number
+---@return OrgDate, number date after skipping and number of skipped repeats
+function OrgDate:_skip_repeats(repeater, target, max_skip)
+  local adjustment = self:_parse_adjustment(repeater)
+  local span_seconds = fixed_span_seconds[adjustment.span]
+  if not span_seconds or adjustment.amount <= 0 then
+    return self, 0
+  end
+  local skip = math.floor((target.timestamp - self.timestamp) / (span_seconds * adjustment.amount)) - 1
+  if max_skip then
+    skip = math.min(skip, max_skip)
+  end
+  if skip <= 0 then
+    return self, 0
+  end
+  return self:add({ [adjustment.span] = adjustment.amount * skip }), skip
+end
+
 ---@param date OrgDate
 ---@param repeat_count number | nil
 ---@return boolean
@@ -1038,9 +1064,8 @@ function OrgDate:repeats_on(date, repeat_count)
     return false
   end
   repeater = repeater:gsub('^%.', ''):gsub('^%+%+', '+')
-  local repeat_date = self:start_of('day')
   local date_start = date:start_of('day')
-  local counter = 0
+  local repeat_date, counter = self:start_of('day'):_skip_repeats(repeater, date_start, repeat_count)
   while repeat_date.timestamp < date_start.timestamp do
     if repeat_count and counter >= repeat_count then
       break
@@ -1059,21 +1084,7 @@ function OrgDate:apply_repeater_until(date)
   end
 
   repeater = repeater:gsub('^%.', ''):gsub('^%+%+', '+')
-  local repeat_date = self
-
-  -- Stepping one repeat at a time is slow for old dates with short repeaters,
-  -- so skip ahead to just before the target. Only spans with a fixed length can
-  -- be skipped, months and years are clamped to the end of the month. Hours and
-  -- minutes are left as they are, stepping them over DST is not deterministic.
-  -- One step is kept as a margin for DST shifts, the loop below does the rest.
-  local adjustment = self:_parse_adjustment(repeater)
-  local step = fixed_span_seconds[adjustment.span] and fixed_span_seconds[adjustment.span] * adjustment.amount
-  if step and step > 0 then
-    local skip = math.floor((date.timestamp - repeat_date.timestamp) / step) - 1
-    if skip > 0 then
-      repeat_date = repeat_date:add({ [adjustment.span] = adjustment.amount * skip })
-    end
-  end
+  local repeat_date = self:_skip_repeats(repeater, date)
 
   while repeat_date.timestamp < date.timestamp do
     repeat_date = repeat_date:adjust(repeater)

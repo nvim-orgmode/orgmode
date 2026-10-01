@@ -480,6 +480,22 @@ describe('Date object', function()
     assert.is.False(thursday:repeats_on(thursday:add({ day = 2 }), 1))
   end)
 
+  it('should handle repeater far in the future', function()
+    local wednesday = Date.from_string('2020-01-01 Wed 09:00 +3d')
+    assert.is.True(wednesday:repeats_on(Date.from_string('2024-06-17 Mon')))
+    assert.is.False(wednesday:repeats_on(Date.from_string('2024-06-18 Tue')))
+
+    local sunday = Date.from_string('2020-03-01 Sun +2w')
+    assert.is.True(sunday:repeats_on(Date.from_string('2024-06-16 Sun')))
+    assert.is.False(sunday:repeats_on(Date.from_string('2024-06-23 Sun')))
+
+    -- Skipping ahead must still respect the repeat count
+    local daily = Date.from_string('2020-01-01 Wed +1d')
+    assert.is.True(daily:repeats_on(Date.from_string('2020-01-11 Sat'), 10))
+    assert.is.False(daily:repeats_on(Date.from_string('2020-01-12 Sun'), 10))
+    assert.is.False(daily:repeats_on(Date.from_string('2024-06-17 Mon'), 10))
+  end)
+
   it('should apply different types of repeaters to the date', function()
     local sunday = Date.from_string('2021-05-16 Sun 12:30 +1w')
     local next_sunday = sunday:apply_repeater()
