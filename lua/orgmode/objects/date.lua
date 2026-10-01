@@ -101,6 +101,39 @@ local function os_date(timestamp, format)
   return os.date(format or '*t', timestamp) --[[@as osdate]]
 end
 
+---@param span? OrgDateSpan
+---@return boolean
+local function is_day_span(span)
+  return span == 'day' or span == 'd'
+end
+
+---Compare the calendar days of two dates. Same result as comparing the
+---timestamps of `start_of('day')`, without creating new dates.
+---@param a OrgDate
+---@param b OrgDate
+---@return number -1, 0 or 1
+local function compare_days(a, b)
+  if a.year ~= b.year then
+    return a.year < b.year and -1 or 1
+  end
+  if a.month ~= b.month then
+    return a.month < b.month and -1 or 1
+  end
+  if a.day ~= b.day then
+    return a.day < b.day and -1 or 1
+  end
+  return 0
+end
+
+---Timestamp and DST flag of the start of the date's day.
+---Same values as `start_of('day')`, without creating a new date.
+---@param date OrgDate
+---@return number, boolean
+local function day_start(date)
+  local timestamp = os.time({ year = date.year, month = date.month, day = date.day, hour = 0, min = 0 })
+  return timestamp, os.date('*t', timestamp).isdst
+end
+
 ---@param date string
 ---@param time string
 ---@param adjustments string[]
@@ -533,18 +566,26 @@ function OrgDate:without_adjustments()
   return self:clone({ adjustments = {} })
 end
 
+local start_of_opts = {
+  day = { hour = 0, min = 0 },
+  month = { day = 1, hour = 0, min = 0 },
+  year = { month = 1, day = 1, hour = 0, min = 0 },
+  hour = { min = 0 },
+}
+
+local end_of_opts = {
+  day = { hour = 23, min = 59 },
+  year = { month = 12, day = 31, hour = 23, min = 59 },
+  hour = { min = 59 },
+}
+
 ---@param span OrgDateSpan
 ---@return OrgDate
 function OrgDate:start_of(span)
   if #span == 1 then
     span = spans[span]
   end
-  local opts = {
-    day = { hour = 0, min = 0 },
-    month = { day = 1, hour = 0, min = 0 },
-    year = { month = 1, day = 1, hour = 0, min = 0 },
-    hour = { min = 0 },
-  }
+  local opts = start_of_opts
   if opts[span] then
     return self:set(opts[span])
   end
@@ -566,11 +607,7 @@ function OrgDate:end_of(span)
   if #span == 1 then
     span = spans[span]
   end
-  local opts = {
-    day = { hour = 23, min = 59 },
-    year = { month = 12, day = 31, hour = 23, min = 59 },
-    hour = { min = 59 },
-  }
+  local opts = end_of_opts
 
   if opts[span] then
     return self:set(opts[span])
@@ -692,7 +729,7 @@ end
 ---@return number
 function OrgDate:get_comparable_timestamp()
   if self.date_only then
-    return self:start_of('day').timestamp
+    return (day_start(self))
   end
   return self.timestamp
 end
@@ -701,6 +738,9 @@ end
 ---@param span? OrgDateSpan
 ---@return boolean
 function OrgDate:is_same(date, span)
+  if is_day_span(span) then
+    return compare_days(self, date) == 0
+  end
   if span then
     return self:start_of(span).timestamp == date:start_of(span).timestamp
   end
@@ -712,6 +752,16 @@ end
 ---@param span OrgDateSpan
 ---@return boolean
 function OrgDate:is_between(from, to, span)
+  if is_day_span(span) then
+    if compare_days(self, from) < 0 then
+      return false
+    end
+    -- `end_of` keeps a date only date as date only, so it still compares as the start of its day
+    if to.date_only and not self.date_only then
+      return self.timestamp <= (day_start(to))
+    end
+    return compare_days(self, to) <= 0
+  end
   local f = from
   local t = to
   if span then
@@ -735,6 +785,9 @@ end
 ---@param span? OrgDateSpan
 ---@return boolean
 function OrgDate:is_same_or_before(date, span)
+  if is_day_span(span) then
+    return compare_days(self, date) <= 0
+  end
   local d = date
   local s = self
   if span then
@@ -755,6 +808,9 @@ end
 ---@param span OrgDateSpan?
 ---@return boolean
 function OrgDate:is_same_or_after(date, span)
+  if is_day_span(span) then
+    return compare_days(self, date) >= 0
+  end
   local d = date
   local s = self
   if span then
@@ -842,22 +898,31 @@ function OrgDate:get_range_until(date)
   return dates
 end
 
+local diff_durations = {
+  day = 86400,
+  minute = 60,
+}
+
 ---@param from OrgDate
 ---@param span? 'day' | 'minute'
 ---@return number
 function OrgDate:diff(from, span)
   span = span or 'day'
-  local to_date = self:start_of(span)
-  local from_date = from:start_of(span)
-  local diff = to_date.timestamp - from_date.timestamp
-  if to_date.isdst ~= from_date.isdst then
-    diff = diff + (to_date.isdst and 3600 or -3600)
+  local to_timestamp, to_isdst, from_timestamp, from_isdst
+  if span == 'day' then
+    to_timestamp, to_isdst = day_start(self)
+    from_timestamp, from_isdst = day_start(from)
+  else
+    local to_date = self:start_of(span)
+    local from_date = from:start_of(span)
+    to_timestamp, to_isdst = to_date.timestamp, to_date.isdst
+    from_timestamp, from_isdst = from_date.timestamp, from_date.isdst
   end
-  local durations = {
-    day = 86400,
-    minute = 60,
-  }
-  return math.floor(diff / durations[span])
+  local diff = to_timestamp - from_timestamp
+  if to_isdst ~= from_isdst then
+    diff = diff + (to_isdst and 3600 or -3600)
+  end
+  return math.floor(diff / diff_durations[span])
 end
 
 ---@param span OrgDateSpan
