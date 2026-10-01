@@ -561,6 +561,15 @@ function Promise.map(mapper, items, concurrency)
   end)
 end
 
+---Resolve on a later event loop iteration, letting pending input and events be processed.
+---Useful inside async functions to split up long running synchronous work.
+---@return OrgPromise<nil>
+function Promise.yield()
+  return Promise.new(function(resolve)
+    vim.defer_fn(resolve, 0)
+  end)
+end
+
 ---@generic T, U
 ---@param mapper fun(item: T, index: integer, items: T[]): U|OrgPromise<U>
 ---@param items T[]

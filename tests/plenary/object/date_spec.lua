@@ -503,6 +503,19 @@ describe('Date object', function()
     assert.are.same(inTwoWeeks:to_string(), sunday:apply_repeater_until(inTwoWeeks):to_string())
   end)
 
+  it('should apply repeater date until provided date far in the future', function()
+    -- 01:30 does not exist on 2020-03-29 in Europe/London, time should not shift after it
+    local daily = Date.from_string('2020-03-01 Sun 01:30 +1d')
+    local target = Date.from_string('2024-06-15 Sat 10:00')
+    assert.are.same('2024-06-16 Sun 01:30 +1d', daily:apply_repeater_until(target):to_string())
+
+    local every_three_days = Date.from_string('2020-01-01 Wed 09:00 .+3d')
+    assert.are.same('2024-06-17 Mon 09:00 .+3d', every_three_days:apply_repeater_until(target):to_string())
+
+    local monthly = Date.from_string('2020-01-31 Fri 09:00 +1m')
+    assert.are.same('2024-06-28 Fri 09:00 +1m', monthly:apply_repeater_until(target):to_string())
+  end)
+
   it('should apply repeater to future dates', function()
     local tomorrow = Date.now({ adjustments = { '++1d' } }):add({ day = 1 })
     local day_after_tomorrow = tomorrow:add({ day = 1 })

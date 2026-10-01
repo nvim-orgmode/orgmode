@@ -1,5 +1,7 @@
 ---@type OrgDateSpan
 local spans = { d = 'day', m = 'month', y = 'year', h = 'hour', w = 'week', M = 'min' }
+-- Approximate length in seconds of the spans that can be skipped over in `apply_repeater_until`
+local fixed_span_seconds = { day = 86400, week = 604800 }
 local config = require('orgmode.config')
 local utils = require('orgmode.utils')
 local ts_utils = require('orgmode.utils.treesitter')
@@ -1058,6 +1060,20 @@ function OrgDate:apply_repeater_until(date)
 
   repeater = repeater:gsub('^%.', ''):gsub('^%+%+', '+')
   local repeat_date = self
+
+  -- Stepping one repeat at a time is slow for old dates with short repeaters,
+  -- so skip ahead to just before the target. Only spans with a fixed length can
+  -- be skipped, months and years are clamped to the end of the month. Hours and
+  -- minutes are left as they are, stepping them over DST is not deterministic.
+  -- One step is kept as a margin for DST shifts, the loop below does the rest.
+  local adjustment = self:_parse_adjustment(repeater)
+  local step = fixed_span_seconds[adjustment.span] and fixed_span_seconds[adjustment.span] * adjustment.amount
+  if step and step > 0 then
+    local skip = math.floor((date.timestamp - repeat_date.timestamp) / step) - 1
+    if skip > 0 then
+      repeat_date = repeat_date:add({ [adjustment.span] = adjustment.amount * skip })
+    end
+  end
 
   while repeat_date.timestamp < date.timestamp do
     repeat_date = repeat_date:adjust(repeater)
