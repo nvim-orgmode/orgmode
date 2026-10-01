@@ -74,11 +74,13 @@ local OrgDate = {
 }
 OrgDate.__index = OrgDate
 
+local is_windows = vim.fn.has('win32') == 1
+
 ---@param timestamp number
 ---@param format? string
 ---@return osdate
 local function os_date(timestamp, format)
-  if format and vim.fn.has('win32') == 1 then
+  if format and is_windows then
     local locale = os.setlocale(nil, 'time')
     local utf8_locale
     if locale then
