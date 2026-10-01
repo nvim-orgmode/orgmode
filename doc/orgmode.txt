@@ -982,7 +982,7 @@ Templates have the following fields:
     capture content will be added. If a function is provided, it will be called during
     refile with the destination file as its argument and must return the headline title as string. If no headline is specified,
     the content will be appended to the end of the file
-- `prepend` (`boolean`) - captured items are by default added as the last item at
+- `prepend` (`boolean`) — captured items are by default added as the last item at
     the specfied target, setting this field places captured items as the first item
     at the target
 - `datetree (boolean | { time_prompt?: boolean, reversed?: boolean, tree_type: 'day' | 'month' | 'week' | 'custom' })`
