@@ -830,6 +830,9 @@ end
 -- currently on
 function OrgMappings:insert_link()
   local link = OrgHyperlink.at_cursor()
+  -- Capture the selection now. Opening the prompt can end visual mode, so it
+  -- cannot be read back once the input promise resolves.
+  local visual = utils.get_visual_region()
   return Input.open('Links: ', link and link.url:to_string() or '', function(arg_lead)
     return self.completion:complete_links_from_input(arg_lead)
   end):next(function(link_location)
@@ -842,7 +845,7 @@ function OrgMappings:insert_link()
       return false
     end
 
-    return self.links:insert_link(link_location, link and link.desc)
+    return self.links:insert_link(link_location, link and link.desc, visual)
   end)
 end
 
