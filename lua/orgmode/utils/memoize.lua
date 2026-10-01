@@ -1,8 +1,6 @@
----@alias MemoizeKey { file: OrgFile, id: string }
-
 ---@class OrgMemoize
 ---@field class table
----@field key_getter fun(self: table): MemoizeKey
+---@field key_getter fun(self: table): OrgFile, string File that holds the cache and id of the instance
 ---@field memoized_methods table<string, fun(self: table, ...): any>
 ---@field methods_to_memoize table<string, boolean>
 local Memoize = {}
@@ -40,23 +38,19 @@ function Memoize:setup()
     end
 
     self.memoized_methods[key] = function(method_self, ...)
-      local memoize_key = self.key_getter(method_self)
-      local cache = self:_get_cache_for_key(memoize_key)
-      local arg_key = key .. '_' .. table.concat({ ... }, '_')
-
-      if not cache[arg_key] then
-        local value = vim.F.pack_len(method(method_self, ...))
-        cache[arg_key] = value
+      local cache = self:_get_cache_for_key(self.key_getter(method_self))
+      local arg_key = key
+      if select('#', ...) > 0 then
+        arg_key = key .. '_' .. table.concat({ ... }, '_')
       end
 
       local cached_value = cache[arg_key]
-
-      if cached_value then
-        local result = { pcall(vim.F.unpack_len, cached_value) }
-        if result[1] then
-          return unpack(result, 2)
-        end
+      if not cached_value then
+        cached_value = vim.F.pack_len(method(method_self, ...))
+        cache[arg_key] = cached_value
       end
+
+      return vim.F.unpack_len(cached_value)
     end
 
     return self.memoized_methods[key]
@@ -64,15 +58,14 @@ function Memoize:setup()
 end
 
 ---@private
----@param memoize_key MemoizeKey
----@return string
-function Memoize:_get_cache_for_key(memoize_key)
-  local id = memoize_key.id
+---@param file OrgFile
+---@param id string
+---@return table
+function Memoize:_get_cache_for_key(file, id)
   -- The cache is stored on the file so that it is released together with it.
   -- A module-level weak table cannot do this: LuaJIT has no ephemeron support,
   -- and cached values reference the file they were built from, so every entry
   -- stayed reachable through its own value for the whole session.
-  local file = memoize_key.file
   local version_key = file.metadata.mtime
   -- Lookups after a re-parse use the ids of the new tree, so the buckets
   -- built for the previous tree are dead. Drop them as a whole instead of

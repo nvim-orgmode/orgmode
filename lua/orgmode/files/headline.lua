@@ -21,10 +21,7 @@ local Headline = {}
 
 local memoize = Memoize:new(Headline, function(self)
   ---@cast self OrgHeadline
-  return {
-    file = self.file,
-    id = table.concat({ 'headline', self.headline:id() }, '_'),
-  }
+  return self.file, 'headline_' .. self.headline:id()
 end)
 
 ---@param headline_node TSNode tree sitter headline node
