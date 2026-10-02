@@ -37,11 +37,13 @@ function Memoize:setup()
       return self.memoized_methods[key]
     end
 
+    -- Unit separator, so it can't collide with `_` in method names or arguments
+    local key_prefix = key .. '\31'
     self.memoized_methods[key] = function(method_self, ...)
       local cache = self:_get_cache_for_key(self.key_getter(method_self))
       local arg_key = key
       if select('#', ...) > 0 then
-        arg_key = key .. '_' .. table.concat({ ... }, '_')
+        arg_key = key_prefix .. table.concat({ ... }, '\31')
       end
 
       local cached_value = cache[arg_key]
