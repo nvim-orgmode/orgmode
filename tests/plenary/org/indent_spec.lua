@@ -459,4 +459,58 @@ describe('with "indent" and "VirtualIndent" is enabled', function()
       assert.are.equal(content_virtcols[line][2], vim.fn.virtcol('.'))
     end
   end)
+
+  -- Content shared by the two tests below. Removing lines 3-6 leaves the body line
+  -- of the first headline directly above the remaining `** Gamma Two`.
+  local subtree_content = {
+    '* Project Gamma',
+    'Body line of Gamma.',
+    '** Gamma One',
+    'Body of Gamma One.',
+    '*** Gamma One Deep',
+    'Deep body.',
+    '** Gamma Two',
+    'Body of Gamma Two.',
+  }
+
+  ---@return number[] widths of the indent extmarks on the given 0-based row
+  local function indent_widths(bufnr, row)
+    local ns_id = vim.api.nvim_create_namespace('orgmode.ui.indent')
+    local marks = vim.api.nvim_buf_get_extmarks(bufnr, ns_id, { row, 0 }, { row, -1 }, { details = true })
+    local widths = {}
+    for _, mark in ipairs(marks) do
+      table.insert(widths, #mark[4].virt_text[1][1])
+    end
+    return widths
+  end
+
+  it('drops the indentation of removed lines instead of stacking it on the next line', function()
+    helpers.create_file(subtree_content)
+    assert.is.True(vim.b.org_indent_mode)
+
+    vim.api.nvim_buf_set_lines(0, 2, 6, false, {})
+
+    -- Asserted in the same tick, before the scheduled update runs: the extmarks of the
+    -- removed lines must not survive on the headline that follows them.
+    assert.are.same({}, indent_widths(0, 2))
+    assert.are.same({ '** Gamma Two' }, vim.api.nvim_buf_get_lines(0, 2, 3, false))
+  end)
+
+  it('keeps indentation correct when another buffer is current during the update', function()
+    helpers.create_file(subtree_content)
+    assert.is.True(vim.b.org_indent_mode)
+    local org_bufnr = vim.api.nvim_get_current_buf()
+
+    vim.api.nvim_buf_set_lines(org_bufnr, 2, 6, false, {})
+
+    -- Archiving and refiling leave another buffer current while the scheduled
+    -- update runs, which is when the indent sizes are computed.
+    local other_bufnr = vim.api.nvim_create_buf(false, true)
+    vim.api.nvim_set_current_buf(other_bufnr)
+    vim.wait(60)
+    vim.api.nvim_set_current_buf(org_bufnr)
+
+    assert.are.same({ 2 }, indent_widths(org_bufnr, 1))
+    assert.are.same({ 3 }, indent_widths(org_bufnr, 3))
+  end)
 end)

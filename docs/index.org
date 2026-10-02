@@ -1,7 +1,7 @@
 #+OPTIONS: H:9 ^:nil
 * Nvim Orgmode
 
-Nvim orgmode is a clone of Emacs Orgmode for Neovim 0.11.0+.
+Nvim orgmode is a clone of Emacs Orgmode for Neovim 0.12.0+.
 It aims to be a feature-complete implementation of Orgmode features in Neovim.
 
 Online version of this documentation is available at [[https://nvim-orgmode.github.io]].
@@ -12,21 +12,18 @@ To view this documentation offline in Neovim, run =:Org help=. More info in [[#g
 :PROPERTIES:
 :CUSTOM_ID: quick-start
 :END:
-- Install with [[https://github.com/folke/lazy.nvim][lazy.nvim]]:
+- Install using built-in package manager:
   #+begin_src lua
-  {
-    'nvim-orgmode/orgmode',
-    event = 'VeryLazy',
-    config = function()
-      -- Setup orgmode
-      require('orgmode').setup({
-        org_agenda_files = '~/orgfiles/**/*',
-        org_default_notes_file = '~/orgfiles/refile.org',
-      })
-      -- Experimental LSP support
-      vim.lsp.enable('org')
-    end,
-  }
+  vim.pack.add({ 'https://github.com/nvim-orgmode/orgmode' })
+
+  -- Setup orgmode
+  require('orgmode').setup({
+    org_agenda_files = '~/orgfiles/**/*',
+    org_default_notes_file = '~/orgfiles/refile.org',
+  })
+
+  -- Experimental LSP support
+  vim.lsp.enable('org')
   #+end_src
 - Capture your first note with =<leader>oc=
 - Open up the prompt for agenda with =<leader>oa=

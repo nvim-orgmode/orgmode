@@ -558,4 +558,16 @@ describe('Notifications', function()
       },
     }, tasks)
   end)
+
+  it('should return same tasks asynchronously', function()
+    helpers.create_agenda_file({
+      '* TODO Async task',
+      '  DEADLINE: <2021-07-12 Mon 12:30>',
+    })
+    local notifications = Notifications:new({ files = org.files })
+    local time = Date.from_string('2021-07-12 Mon 12:20')
+    local tasks = notifications:get_tasks_async(time):wait(5000)
+    assert.is_true(#tasks > 0)
+    assert.are.same(notifications:get_tasks(time), tasks)
+  end)
 end)

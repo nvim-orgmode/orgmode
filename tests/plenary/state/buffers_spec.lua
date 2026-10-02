@@ -36,6 +36,49 @@ describe('Buffers', function()
     end
   end)
 
+  it('should find a buffer opened after the file was looked up and missed', function()
+    local fname = vim.fn.tempname() .. '.org'
+
+    assert.are.same(-1, Buffers.get_buffer_by_filename(fname))
+
+    vim.fn.writefile({ '* Test headline' }, fname)
+    vim.cmd.edit(fname)
+
+    assert.is.True(Buffers.get_buffer_by_filename(fname) > 0)
+    vim.cmd('bwipeout')
+  end)
+
+  it('should find a non-org filename once its filetype is set to org', function()
+    local fname = vim.fn.tempname() .. '.txt'
+    vim.fn.writefile({ '* Test headline' }, fname)
+
+    assert.are.same(-1, Buffers.get_buffer_by_filename(fname))
+
+    vim.cmd.edit(fname)
+    vim.bo.filetype = 'org'
+
+    assert.is.True(Buffers.get_buffer_by_filename(fname) > 0)
+    vim.cmd('bwipeout')
+  end)
+
+  it('should not map the old name to a renamed buffer', function()
+    local file = helpers.create_file({ '* Test headline' })
+    local old_name = file.filename
+    local new_name = vim.fn.tempname() .. '.org'
+
+    local bufnr = Buffers.get_buffer_by_filename(old_name)
+    assert.is.True(bufnr > 0)
+
+    vim.cmd('file ' .. vim.fn.fnameescape(new_name))
+    vim.cmd('write')
+
+    -- `:file` leaves an unlisted buffer holding the old name, so the old name
+    -- may still resolve to something. It must not resolve to this buffer.
+    assert.are_not.same(bufnr, Buffers.get_buffer_by_filename(old_name))
+    assert.are.same(bufnr, Buffers.get_buffer_by_filename(new_name))
+    vim.cmd('bwipeout')
+  end)
+
   it('should return -1 for unloaded buffers', function()
     local file = helpers.create_file({ '* Test headline' })
     local filename = file.filename

@@ -32,6 +32,21 @@ describe('foldtext highlighter', function()
     return nil
   end
 
+  ---Get the highlight group of the foldtext ellipsis extmark on a line.
+  ---@param bufnr number
+  ---@param line number 0-indexed line number
+  ---@return string|nil
+  local function get_ellipsis_hl_group(bufnr, line)
+    local extmarks = api.nvim_buf_get_extmarks(bufnr, ns_id, { line, 0 }, { line, -1 }, { details = true })
+    for _, mark in ipairs(extmarks) do
+      local details = mark[4]
+      if details and details.virt_text then
+        return details.virt_text[1][2]
+      end
+    end
+    return nil
+  end
+
   after_each(function()
     api.nvim_buf_clear_namespace(0, ns_id, 0, -1)
     vim.cmd([[%bw!]])
@@ -393,6 +408,30 @@ describe('foldtext highlighter', function()
       if new_col ~= nil then
         assert.is_true(new_col <= #'* Short', 'Ellipsis col ' .. tostring(new_col) .. ' exceeds line length')
       end
+    end)
+  end)
+
+  describe('ellipsis highlight', function()
+    it('updates when a same-length edit changes the capture at line end', function()
+      setup_file_with_folds({
+        '* Some headline',
+        'Body text',
+      })
+      local bufnr = api.nvim_get_current_buf()
+
+      vim.cmd('1')
+      vim.cmd('normal! zc')
+      vim.cmd('redraw!')
+
+      local before = get_ellipsis_hl_group(bufnr, 0)
+      assert.is_not_nil(before, 'Expected extmark for folded line')
+      assert.are_not.same('@org.tag.org', before)
+
+      -- Same byte length as the original line, so a length-only cache check would not notice
+      api.nvim_buf_set_lines(bufnr, 0, 1, false, { '* Head :abcdef:' })
+      vim.cmd('redraw!')
+
+      assert.are.same('@org.tag.org', get_ellipsis_hl_group(bufnr, 0))
     end)
   end)
 end)

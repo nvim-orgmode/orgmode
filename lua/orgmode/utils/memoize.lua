@@ -5,9 +5,7 @@
 ---@field key_getter fun(self: table): MemoizeKey
 ---@field memoized_methods table<string, fun(self: table, ...): any>
 ---@field methods_to_memoize table<string, boolean>
-local Memoize = {
-  cache = setmetatable({}, { __mode = 'k' }),
-}
+local Memoize = {}
 Memoize.__index = Memoize
 
 ---@return fun(method: string): boolean
@@ -70,20 +68,31 @@ end
 ---@return string
 function Memoize:_get_cache_for_key(memoize_key)
   local id = memoize_key.id
-  local filename = memoize_key.file.filename
-  local version_key = memoize_key.file.metadata.mtime
+  -- The cache is stored on the file so that it is released together with it.
+  -- A module-level weak table cannot do this: LuaJIT has no ephemeron support,
+  -- and cached values reference the file they were built from, so every entry
+  -- stayed reachable through its own value for the whole session.
+  local file = memoize_key.file
+  local version_key = file.metadata.mtime
+  -- Lookups after a re-parse use the ids of the new tree, so the buckets
+  -- built for the previous tree are dead. Drop them as a whole instead of
+  -- leaving a set behind on every edit.
+  local generation = file.root and file.root:id() or ''
+  local entry = file.memoize_cache
 
-  if not self.cache[filename] or self.cache[filename].__version ~= version_key then
-    self.cache[filename] = {
+  if not entry or entry.__version ~= version_key or entry.__generation ~= generation then
+    entry = {
       __version = version_key,
+      __generation = generation,
     }
+    file.memoize_cache = entry
   end
 
-  if not self.cache[filename][id] then
-    self.cache[filename][id] = {}
+  if not entry[id] then
+    entry[id] = {}
   end
 
-  return self.cache[filename][id]
+  return entry[id]
 end
 
 return Memoize

@@ -1,6 +1,7 @@
 local Date = require('orgmode.objects.date')
 local config = require('orgmode.config')
 local utils = require('orgmode.utils')
+local Promise = require('orgmode.utils.promise')
 local NotificationPopup = require('orgmode.notifications.notification_popup')
 local current_file_path = string.sub(debug.getinfo(1, 'S').source, 2)
 local root_path = vim.fn.fnamemodify(current_file_path, ':p:h:h:h:h')
@@ -8,6 +9,7 @@ local root_path = vim.fn.fnamemodify(current_file_path, ':p:h:h:h:h')
 ---@class OrgNotifications
 ---@field timer table
 ---@field files OrgFiles
+---@field private running boolean
 local Notifications = {}
 
 ---@param opts { files: OrgFiles }
@@ -42,9 +44,27 @@ function Notifications:stop_timer()
 end
 
 ---@param time OrgDate
+---@return OrgPromise<nil>
 function Notifications:notify(time)
-  local tasks = self:get_tasks(time)
+  if self.running then
+    return Promise.resolve()
+  end
+  self.running = true
+  return self
+    :get_tasks_async(time)
+    :next(function(tasks)
+      self.running = false
+      self:_show(tasks)
+    end)
+    :catch(function(err)
+      self.running = false
+      vim.notify('Orgmode notifications failed: ' .. tostring(err), vim.log.levels.ERROR)
+    end)
+end
 
+---@private
+---@param tasks table[]
+function Notifications:_show(tasks)
   if type(config.notifications.notifier) == 'function' then
     return config.notifications.notifier(tasks)
   end
@@ -64,13 +84,18 @@ function Notifications:notify(time)
 end
 
 function Notifications:cron()
-  local tasks = self:get_tasks(Date.now())
-  if type(config.notifications.cron_notifier) == 'function' then
-    config.notifications.cron_notifier(tasks)
-  else
-    self:_cron_notifier(tasks)
-  end
-  vim.cmd([[qall!]])
+  return self
+    :get_tasks_async(Date.now())
+    :next(function(tasks)
+      if type(config.notifications.cron_notifier) == 'function' then
+        config.notifications.cron_notifier(tasks)
+      else
+        self:_cron_notifier(tasks)
+      end
+    end)
+    :finally(function()
+      vim.cmd([[qall!]])
+    end)
 end
 
 ---@param tasks table[]
@@ -96,36 +121,75 @@ function Notifications:_cron_notifier(tasks)
   end
 end
 
+---@private
+---@param orgfile OrgFile
+---@param headline OrgHeadline
 ---@param time OrgDate
+---@param tasks table[]
+function Notifications:_collect_headline_tasks(orgfile, headline, time, tasks)
+  for _, date in ipairs(headline:get_deadline_and_scheduled_dates()) do
+    for _, reminder in ipairs(self:_check_reminders(date, time)) do
+      table.insert(tasks, {
+        file = orgfile.filename,
+        todo = headline:get_todo(),
+        category = headline:get_category(),
+        priority = headline:get_priority(),
+        title = headline:get_title(),
+        level = headline:get_level(),
+        tags = headline:get_tags(),
+        original_time = date,
+        time = reminder.time,
+        reminder_type = reminder.reminder_type,
+        minutes = reminder.minutes,
+        humanized_duration = utils.humanize_minutes(reminder.minutes),
+        type = date.type,
+        range = headline:get_range(),
+      })
+    end
+  end
+end
+
+---Blocking version. Prefer `get_tasks_async`.
+---@param time OrgDate
+---@return table[]
 function Notifications:get_tasks(time)
   local tasks = {}
   for _, orgfile in ipairs(self.files:all()) do
     for _, headline in ipairs(orgfile:get_opened_unfinished_headlines()) do
-      for _, date in ipairs(headline:get_deadline_and_scheduled_dates()) do
-        local reminders = self:_check_reminders(date, time)
-        for _, reminder in ipairs(reminders) do
-          table.insert(tasks, {
-            file = orgfile.filename,
-            todo = headline:get_todo(),
-            category = headline:get_category(),
-            priority = headline:get_priority(),
-            title = headline:get_title(),
-            level = headline:get_level(),
-            tags = headline:get_tags(),
-            original_time = date,
-            time = reminder.time,
-            reminder_type = reminder.reminder_type,
-            minutes = reminder.minutes,
-            humanized_duration = utils.humanize_minutes(reminder.minutes),
-            type = date.type,
-            range = headline:get_range(),
-          })
-        end
-      end
+      self:_collect_headline_tasks(orgfile, headline, time, tasks)
     end
   end
-
   return tasks
+end
+
+-- Max time (ms) to work before yielding back to the event loop
+local WORK_BUDGET_MS = 5
+
+---Non-blocking version. Loads files without blocking and yields to the event loop
+---whenever the work budget is spent.
+---@param time OrgDate
+---@return OrgPromise<table[]>
+function Notifications:get_tasks_async(time)
+  return Promise.async(function()
+    self.files:load():await()
+    local tasks = {}
+    local started = vim.uv.hrtime()
+    local function maybe_yield()
+      if (vim.uv.hrtime() - started) / 1e6 >= WORK_BUDGET_MS then
+        Promise.yield():await()
+        started = vim.uv.hrtime()
+      end
+    end
+
+    for _, orgfile in ipairs(self.files:all()) do
+      for _, headline in ipairs(orgfile:get_opened_unfinished_headlines()) do
+        self:_collect_headline_tasks(orgfile, headline, time, tasks)
+        maybe_yield()
+      end
+      maybe_yield()
+    end
+    return tasks
+  end)
 end
 
 ---@param date OrgDate - date to check

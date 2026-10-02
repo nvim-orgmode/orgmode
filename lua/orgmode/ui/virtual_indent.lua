@@ -93,6 +93,18 @@ end
 ---@param end_line number end line number to set the indentation, 0-based inclusive
 ---@param ignore_ts? boolean whether or not to skip the treesitter start & end lookup
 function VirtualIndent:set_indent(start_line, end_line, ignore_ts)
+  -- Indent sizes are derived from the current buffer (treesitter lookups and `getline`),
+  -- while the extmarks are set on `self._bufnr`. Archiving and refiling run this while
+  -- another org buffer is current, so make our own buffer current for the lookups.
+  vim.api.nvim_buf_call(self._bufnr, function()
+    self:_set_indent(start_line, end_line, ignore_ts)
+  end)
+end
+
+---@param start_line number start line number to set the indentation, 0-based inclusive
+---@param end_line number end line number to set the indentation, 0-based inclusive
+---@param ignore_ts? boolean whether or not to skip the treesitter start & end lookup
+function VirtualIndent:_set_indent(start_line, end_line, ignore_ts)
   ignore_ts = ignore_ts or false
   local headline = tree_utils.closest_headline_node({ start_line + 1, 1 })
   if headline and not ignore_ts then
@@ -136,9 +148,15 @@ function VirtualIndent:attach()
   self:set_indent(0, vim.api.nvim_buf_line_count(self._bufnr) - 1, true)
 
   vim.api.nvim_buf_attach(self._bufnr, false, {
-    on_lines = function(_, _, _, start_line, _, end_line)
+    on_lines = function(_, _, _, start_line, old_end_line, end_line)
       if not self._attached then
         return true
+      end
+
+      -- Extmarks of removed lines collapse onto the line that follows them and stack
+      -- up there until the scheduled update runs. Drop them right away.
+      if old_end_line > end_line then
+        self:_delete_old_extmarks(start_line, end_line)
       end
 
       vim.schedule(function()

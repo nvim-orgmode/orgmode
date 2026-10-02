@@ -459,6 +459,36 @@ describe('OrgFile', function()
     end)
   end)
 
+  describe('memoized methods', function()
+    it('should reparse a buffer edited since the last parse', function()
+      local filename = vim.fn.tempname() .. '.org'
+      local file = load_file_sync({
+        '* First',
+        '* Second',
+        ':PROPERTIES:',
+        ':ID: second-id',
+        ':END:',
+        'body',
+        'body',
+        'body',
+      }, filename)
+      vim.cmd('edit ' .. filename)
+      file:reload_sync()
+
+      local headlines = file:get_headlines_including_archived()
+      assert.are.same(2, #headlines)
+      assert.are.same('second-id', headlines[2]:get_property('ID'))
+
+      -- Unsaved edit shrinks the buffer, no reload in between
+      vim.api.nvim_buf_set_lines(0, 1, -1, false, {})
+
+      headlines = file:get_headlines_including_archived()
+      assert.are.same(1, #headlines)
+      assert.are.same('First', headlines[1]:get_title())
+      vim.cmd('bwipeout!')
+    end)
+  end)
+
   describe('get_node_text_list', function()
     local file = load_file_sync({
       '* Headline 1 :TAG:',
@@ -847,6 +877,17 @@ describe('OrgFile', function()
         }),
         links[4].range
       )
+    end)
+
+    it('should skip described links without a url', function()
+      local file = load_file_sync({
+        'Description only [[][only desc]]',
+        'Valid link [[https://google.com]]',
+      })
+      local links = file:get_links()
+
+      assert.are.same(1, #links)
+      assert.are.same('https://google.com', links[1].url:to_string())
     end)
 
     it('should get file level property', function()

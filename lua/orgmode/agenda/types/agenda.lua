@@ -23,7 +23,7 @@ local Promise = require('orgmode.utils.promise')
 ---@field agenda_files string | string[] | nil
 ---@field span? OrgAgendaSpan
 ---@field from? OrgDate
----@field start_on_weekday? number
+---@field start_on_weekday? number | false
 ---@field start_day? string
 ---@field header? string
 ---@field show_clock_report? boolean
@@ -43,7 +43,7 @@ local Promise = require('orgmode.utils.promise')
 ---@field from? OrgDate
 ---@field to? OrgDate
 ---@field bufnr? number
----@field start_on_weekday? number
+---@field start_on_weekday? number | false
 ---@field start_day? string
 ---@field header? string
 ---@field show_clock_report? boolean
@@ -620,8 +620,9 @@ function OrgAgendaType:_set_date_range(from)
   from = from or self.from
 
   if self.start_on_weekday then
-    local is_week = span == 'week' or span == '7'
-    if is_week and from:is_same(Date.today(), 'week') then
+    local days = span == 'week' and 7 or tonumber(span)
+    local is_whole_weeks = days ~= nil and days >= 7 and days % 7 == 0
+    if is_whole_weeks and from:is_same(Date.today(), 'week') then
       from = from:set_isoweekday(self.start_on_weekday)
     end
   end

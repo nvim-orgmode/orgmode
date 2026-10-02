@@ -32,12 +32,21 @@ local clean_empty_line = vim.fn.has('nvim-0.13') == 1 or vim.fn.has('nvim-0.12.3
 ---@field metadata OrgFileMetadata
 ---@field parser vim.treesitter.LanguageTree
 ---@field root TSNode
+---@field memoize_cache? table Memoized method results, released with the file
 local OrgFile = {}
 
+-- The root node id only changes on a re-parse, so a buffer edited since the
+-- last parse would still hit results built for the old tree. The changedtick
+-- in the key turns that into a miss, and the method re-parses when it runs.
 local memoize = Memoize:new(OrgFile, function(self)
+  local tick = 0
+  local bufnr = self:bufnr()
+  if bufnr > -1 then
+    tick = vim.api.nvim_buf_get_changedtick(bufnr)
+  end
   return {
     file = self,
-    id = table.concat({ 'file', self.root and self.root:id() or '' }, '_'),
+    id = table.concat({ 'file', self.root and self.root:id() or '', tick }, '_'),
   }
 end)
 
@@ -478,6 +487,29 @@ function OrgFile:get_closest_headline_or_nil(cursor)
   return Headline:new(node, self)
 end
 
+---Check whether the raw text could hold a running clock, without parsing.
+---Clocking out appends `--[end] => duration` to the same line, so a running
+---clock is a CLOCK entry whose line ends after its single timestamp. Scanning
+---the raw lines avoids a treesitter parse for files that cannot hold one.
+---The same shape also occurs in example blocks and property drawers, so this
+---only decides whether a parse is worth it. The parser gives the answer.
+---For a file without a buffer this sees exactly what the parser would see:
+---`_get_parser` builds the string parser from the same content. A buffer backed
+---file is read from the buffer, which is the source the parser uses there.
+---@return boolean
+function OrgFile:has_running_clock_candidate()
+  local lines = self.lines
+  if self:bufnr() > -1 then
+    lines = self:_get_lines(self:bufnr())
+  end
+  for _, line in ipairs(lines) do
+    if line:find('^%s*:?[Cc][Ll][Oo][Cc][Kk]:%s*%[[^%]]*%]%s*$') then
+      return true
+    end
+  end
+  return false
+end
+
 function OrgFile:get_node_at_cursor(cursor)
   self:parse()
   if not cursor then
@@ -849,7 +881,7 @@ function OrgFile:get_links()
   local links = {}
   local matches = self:get_ts_captures([[
     (link) @link
-    (link_desc) @link
+    (link_desc url: (expr)+) @link
   ]])
 
   local source = self:get_source()

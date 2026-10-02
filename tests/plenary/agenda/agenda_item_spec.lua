@@ -1,4 +1,5 @@
 local AgendaItem = require('orgmode.agenda.agenda_item')
+local AgendaType = require('orgmode.agenda.types.agenda')
 local Date = require('orgmode.objects.date')
 local Highlights = require('orgmode.colors.highlights')
 local config = require('orgmode.config')
@@ -496,5 +497,25 @@ describe('Agenda item', function()
     assert.are.same('', agenda_item_deadline.label)
 
     config:extend({ org_agenda_skip_deadline_if_done = false })
+  end)
+
+  it('aligns whole-week spans to the configured start weekday', function()
+    local weekday = config.org_agenda_start_on_weekday
+    for _, span in ipairs({ 'week', 7, 14, 21, 28 }) do
+      local view = AgendaType:new({ span = span }) ---@diagnostic disable-line: missing-fields
+      assert.are.same({ span = span, weekday = weekday }, { span = span, weekday = view.from:get_isoweekday() })
+    end
+  end)
+
+  it('starts other spans from today', function()
+    for _, span in ipairs({ 'day', 'month', 'year', 3, 10, 15 }) do
+      local view = AgendaType:new({ span = span }) ---@diagnostic disable-line: missing-fields
+      assert.are.same(Date.today():to_date_string(), view.from:to_date_string())
+    end
+  end)
+
+  it('starts from today when the start weekday is disabled', function()
+    local view = AgendaType:new({ span = 14, start_on_weekday = false }) ---@diagnostic disable-line: missing-fields
+    assert.are.same(Date.today():to_date_string(), view.from:to_date_string())
   end)
 end)

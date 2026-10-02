@@ -1,7 +1,11 @@
 ---@class OrgBuffers
 ---@field private _bufs table<string, number>
+---@field private _misses table<string, boolean>
+---@field private _resolved table<string, string>
 local OrgBuffers = {
   _bufs = {},
+  _misses = {},
+  _resolved = {},
 }
 
 function OrgBuffers.init()
@@ -15,7 +19,61 @@ function OrgBuffers.init()
   end
 
   OrgBuffers._bufs = valid_buffers
+  OrgBuffers._misses = {}
+  OrgBuffers._setup_autocmds()
   return OrgBuffers
+end
+
+---Headline enumeration asks for the buffer of every agenda file thousands of
+---times, and almost none of those files have a buffer, so misses are worth
+---caching too. A miss only holds until a buffer for that name exists, and
+---these are the events that can bring one into existence.
+---@private
+function OrgBuffers._setup_autocmds()
+  local group = vim.api.nvim_create_augroup('org_buffers', { clear = true })
+
+  -- FileType matters because a file without an org extension only counts once
+  -- its filetype is set, which happens after the buffer already exists.
+  vim.api.nvim_create_autocmd({ 'BufAdd', 'BufNew', 'BufFilePost', 'FileType' }, {
+    group = group,
+    callback = function(args)
+      if not OrgBuffers.get_valid_buffer_name(args.buf) and vim.bo[args.buf].filetype ~= 'org' then
+        return
+      end
+      OrgBuffers._forget(args.buf)
+      OrgBuffers.add(args.buf)
+      OrgBuffers._misses = {}
+    end,
+  })
+
+  vim.api.nvim_create_autocmd({ 'BufDelete', 'BufWipeout' }, {
+    group = group,
+    callback = function(args)
+      OrgBuffers._forget(args.buf)
+    end,
+  })
+end
+
+---Drop every name mapped to `bufnr`. `remove` derives the name from the
+---buffer, so on a rename it would clear the new name and the old one would
+---stay reachable: a lookup for the old path would still resolve to this
+---buffer, which now holds a different file.
+---@private
+---@param bufnr number
+function OrgBuffers._forget(bufnr)
+  for name, nr in pairs(OrgBuffers._bufs) do
+    if nr == bufnr then
+      OrgBuffers._bufs[name] = nil
+    end
+  end
+end
+
+---@private
+---@param resolved_filename string
+---@return number always -1
+function OrgBuffers._miss(resolved_filename)
+  OrgBuffers._misses[resolved_filename] = true
+  return -1
 end
 
 ---Return the buffer number for a given filename
@@ -29,10 +87,14 @@ function OrgBuffers.get_buffer_by_filename(filename)
     return OrgBuffers._bufs[resolved_filename]
   end
 
+  if OrgBuffers._misses[resolved_filename] then
+    return -1
+  end
+
   local bufnr = vim.fn.bufnr(resolved_filename)
 
   if bufnr < 0 then
-    return -1
+    return OrgBuffers._miss(resolved_filename)
   end
 
   -- If filename does not have an org extension, return the buffer only if it has correct filetype
@@ -41,7 +103,7 @@ function OrgBuffers.get_buffer_by_filename(filename)
       return bufnr
     end
 
-    return -1
+    return OrgBuffers._miss(resolved_filename)
   end
 
   -- bufnr() can return wrong buffer number in cases when there are multiple files matching, for example:
@@ -64,7 +126,7 @@ function OrgBuffers.get_buffer_by_filename(filename)
     end
   end
 
-  return -1
+  return OrgBuffers._miss(resolved_filename)
 end
 
 ---Add the buffer to the list
@@ -107,7 +169,12 @@ end
 ---@param filename string
 ---@return string
 function OrgBuffers._resolve_filename(filename)
-  return vim.fs.normalize(vim.fn.resolve(filename))
+  local resolved = OrgBuffers._resolved[filename]
+  if not resolved then
+    resolved = vim.fs.normalize(vim.fn.resolve(filename))
+    OrgBuffers._resolved[filename] = resolved
+  end
+  return resolved
 end
 
 ---Check if given filename has valid org extension
