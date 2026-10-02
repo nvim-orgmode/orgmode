@@ -20,6 +20,7 @@ local SortingStrategy = {}
 ---@field headline? OrgHeadline
 ---@field index number Index of the entry in the fetched list
 ---@field is_day_match? boolean Is this entry a match for the given day. Available only in agenda view
+---@field _cache? table<string, any> Values computed once per entry by `cached()`
 
 ---Values that strategies read from the headline are computed once per entry,
 ---instead of on every comparison

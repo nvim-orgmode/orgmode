@@ -627,8 +627,8 @@ end
 function OrgAgendaType:_merge_by_index(a, b)
   local result = {}
   local i, j = 1, 1
-  while i <= #a or j <= #b do
-    if j > #b or (i <= #a and a[i].index < b[j].index) then
+  while a[i] and b[j] do
+    if a[i].index < b[j].index then
       table.insert(result, a[i])
       i = i + 1
     else
@@ -636,6 +636,8 @@ function OrgAgendaType:_merge_by_index(a, b)
       j = j + 1
     end
   end
+  vim.list_extend(result, a, i)
+  vim.list_extend(result, b, j)
   return result
 end
 
