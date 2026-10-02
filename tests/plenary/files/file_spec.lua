@@ -88,6 +88,28 @@ describe('OrgFile', function()
     end)
   end)
 
+  describe('parse_async', function()
+    it('should parse the file and reuse the tree in parse', function()
+      local file = load_file_sync({ '* Headline 1', '** Headline 2' })
+      assert.is_nil(file.root)
+      local root = file:parse_async():wait()
+      assert.are.same('document', root:type())
+      assert.are.same(root:id(), file:parse(true):id())
+      assert.are.same(2, #file:get_headlines())
+    end)
+
+    it('should parse a file loaded in a buffer', function()
+      local filename = vim.fn.tempname() .. '.org'
+      vim.fn.writefile({ '* Headline 1' }, filename)
+      vim.cmd.edit(filename)
+      local file = OrgFile.load(filename):wait()
+      local root = file:parse_async():wait()
+      assert.are.same('document', root:type())
+      assert.are.same(1, #file:get_headlines())
+      vim.cmd('bwipeout!')
+    end)
+  end)
+
   describe('get_headlines', function()
     it('should get all headlines of a file', function()
       local file = load_file_sync({

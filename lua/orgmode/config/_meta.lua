@@ -50,6 +50,8 @@
 ---@field reminder_time? boolean | number | number[] Number of minutes before the time to send the notifiaction. Default: 10
 ---@field deadline_reminder? boolean Enable notifiactions for DEADLINE dates. Default: true
 ---@field scheduled_reminder? boolean Enable notifiactions for DEADLINE dates. Default: true
+---@field notifier? fun(tasks: table[]) | nil Custom notifier function. Default: nil
+---@field cron_notifier? fun(tasks: table[]) | nil Custom notifier function. Default: nil
 
 ---@class OrgMappingsGlobal
 ---@field org_agenda? OrgMappingValue Mappings used to open agenda prompt. Default: '<prefix>a'
