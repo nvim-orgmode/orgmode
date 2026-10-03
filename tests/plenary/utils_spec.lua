@@ -80,6 +80,30 @@ describe('Util', function()
       local contents = vim.fn.getreg('')
       assert.are.equal(contents, 'First line\n\n* Headline\nContents\n')
     end)
+
+    local function read_raw(data)
+      local filename = vim.fn.tempname()
+      utils.writefile(filename, data):wait()
+      return utils.readfile(filename):wait()
+    end
+
+    it('splits CRLF line endings', function()
+      assert.are.same(read_raw('* Headline\r\nContents\r\n'), { '* Headline', 'Contents' })
+    end)
+
+    it('keeps CR when not every line ends with CRLF', function()
+      assert.are.same(read_raw('* Headline\r\nContents\n'), { '* Headline\r', 'Contents' })
+      assert.are.same(read_raw('\n* Headline\r\n'), { '', '* Headline\r' })
+    end)
+
+    it('keeps CR inside a line', function()
+      assert.are.same(read_raw('* Head\rline\nContents\n'), { '* Head\rline', 'Contents' })
+    end)
+
+    it('strips UTF-8 BOM', function()
+      assert.are.same(read_raw('\239\187\191* Headline\nContents\n'), { '* Headline', 'Contents' })
+      assert.are.same(read_raw('\239\187\191* Headline\r\nContents\r\n'), { '* Headline', 'Contents' })
+    end)
   end)
 
   describe('writefile', function()

@@ -125,13 +125,22 @@ local function compare_days(a, b)
   return 0
 end
 
+---@type table<number, { [1]: number, [2]: boolean }>
+local day_start_cache = {}
+
 ---Timestamp and DST flag of the start of the date's day.
 ---Same values as `start_of('day')`, without creating a new date.
 ---@param date OrgDate
 ---@return number, boolean
 local function day_start(date)
-  local timestamp = os.time({ year = date.year, month = date.month, day = date.day, hour = 0, min = 0 })
-  return timestamp, os.date('*t', timestamp).isdst
+  local key = (date.year * 100 + date.month) * 100 + date.day
+  local cached = day_start_cache[key]
+  if not cached then
+    local timestamp = os.time({ year = date.year, month = date.month, day = date.day, hour = 0, min = 0 })
+    cached = { timestamp, os.date('*t', timestamp).isdst }
+    day_start_cache[key] = cached
+  end
+  return cached[1], cached[2]
 end
 
 ---@param date string

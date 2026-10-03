@@ -7,10 +7,14 @@ local current_file_path = string.sub(debug.getinfo(1, 'S').source, 2)
 local root_path = vim.fn.fnamemodify(current_file_path, ':p:h:h:h:h')
 
 ---@class OrgNotifications
----@field timer table
+---@field timer uv.uv_timer_t | nil
 ---@field files OrgFiles
 ---@field private running boolean
+---@field private queued_time? OrgDate Time to check once the running check is done
 local Notifications = {}
+
+-- The first check parses every agenda file, give the editor time to finish starting up
+local FIRST_CHECK_DELAY_MS = 2000
 
 ---@param opts { files: OrgFiles }
 function Notifications:new(opts)
@@ -25,8 +29,15 @@ end
 
 function Notifications:start_timer()
   self:stop_timer()
-  self.timer = vim.uv.new_timer()
-  self:notify(Date.now())
+  local timer = vim.uv.new_timer()
+  self.timer = timer
+  -- Taken now, so the minute in which the editor started is checked even if the delay crosses into the next one
+  local start_time = Date.now()
+  vim.defer_fn(function()
+    if self.timer == timer then
+      self:notify(start_time)
+    end
+  end, FIRST_CHECK_DELAY_MS)
   self.timer:start(
     (60 - os.date('%S')) * 1000,
     60000,
@@ -47,18 +58,31 @@ end
 ---@return OrgPromise<nil>
 function Notifications:notify(time)
   if self.running then
+    -- Check this minute too once the running check is done, instead of skipping it
+    self.queued_time = time
     return Promise.resolve()
   end
   self.running = true
+
+  local run_queued = function()
+    local queued_time = self.queued_time
+    self.queued_time = nil
+    if queued_time then
+      return self:notify(queued_time)
+    end
+  end
+
   return self
     :get_tasks_async(time)
     :next(function(tasks)
       self.running = false
       self:_show(tasks)
+      return run_queued()
     end)
     :catch(function(err)
       self.running = false
       vim.notify('Orgmode notifications failed: ' .. tostring(err), vim.log.levels.ERROR)
+      return run_queued()
     end)
 end
 
@@ -182,9 +206,17 @@ function Notifications:get_tasks_async(time)
     end
 
     for _, orgfile in ipairs(self.files:all()) do
-      for _, headline in ipairs(orgfile:get_opened_unfinished_headlines()) do
-        self:_collect_headline_tasks(orgfile, headline, time, tasks)
+      if not orgfile:is_archive_file() then
+        -- Parsing a big file at once would block the editor
+        orgfile:parse_async():await()
         maybe_yield()
+        -- Same filter as `get_opened_unfinished_headlines`, done here so it can be split up
+        for _, headline in ipairs(orgfile:get_headlines()) do
+          if not headline:is_archived() and not headline:is_done() then
+            self:_collect_headline_tasks(orgfile, headline, time, tasks)
+          end
+          maybe_yield()
+        end
       end
       maybe_yield()
     end
