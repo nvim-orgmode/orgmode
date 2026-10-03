@@ -45,10 +45,7 @@ local memoize = Memoize:new(OrgFile, function(self)
   if bufnr > -1 then
     tick = vim.api.nvim_buf_get_changedtick(bufnr)
   end
-  return {
-    file = self,
-    id = table.concat({ 'file', self.root and self.root:id() or '', tick }, '_'),
-  }
+  return self, table.concat({ 'file', self.root and self.root:id() or '', tick }, '_')
 end)
 
 ---Constructor function, should not be used directly

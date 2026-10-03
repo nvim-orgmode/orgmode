@@ -21,10 +21,7 @@ local Headline = {}
 
 local memoize = Memoize:new(Headline, function(self)
   ---@cast self OrgHeadline
-  return {
-    file = self.file,
-    id = table.concat({ 'headline', self.headline:id() }, '_'),
-  }
+  return self.file, 'headline_' .. self.headline:id()
 end)
 
 ---@param headline_node TSNode tree sitter headline node
@@ -234,7 +231,7 @@ function Headline:get_outline_path()
   local inner_to_outer_parent_headlines = {}
   local parent_section = self:node():parent():parent()
 
-  while parent_section do
+  while parent_section and parent_section:type() == 'section' do
     local headline_node = parent_section:field('headline')[1]
     if headline_node then
       local headline = Headline:new(headline_node, self.file)
@@ -476,7 +473,7 @@ function Headline:get_properties()
   end
 
   local parent_section = self:node():parent():parent()
-  while parent_section do
+  while parent_section and parent_section:type() == 'section' do
     local headline_node = parent_section:field('headline')[1]
     if headline_node then
       local headline = Headline:new(headline_node, self.file)
@@ -575,7 +572,7 @@ function Headline:get_property(property_name, search_parents)
   end
 
   local parent_section = self:node():parent():parent()
-  while parent_section do
+  while parent_section and parent_section:type() == 'section' do
     local headline_node = parent_section:field('headline')[1]
     if headline_node then
       local headline = Headline:new(headline_node, self.file)
@@ -632,7 +629,7 @@ function Headline:get_tags()
 
   local parent_tags = {}
   local parent_section = self:node():parent():parent()
-  while parent_section do
+  while parent_section and parent_section:type() == 'section' do
     local headline = parent_section:field('headline')[1]
     if headline then
       local node = headline:field('tags')[1]
