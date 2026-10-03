@@ -293,6 +293,14 @@ return {
     ),
     org_export = m.action('org_mappings.export', { opts = { desc = 'org export', help_desc = 'Open export options' } }),
     org_return = m.action('org_mappings.org_return', { modes = { 'i' }, opts = { desc = 'org return' } }),
+    org_insert_mode_promote = m.action('org_mappings.insert_mode_promote', {
+      modes = { 'i' },
+      opts = { desc = 'org insert mode promote' },
+    }),
+    org_insert_mode_demote = m.action('org_mappings.insert_mode_demote', {
+      modes = { 'i' },
+      opts = { desc = 'org insert mode demote' },
+    }),
     org_next_visible_heading = m.action('org_mappings.next_visible_heading', {
       modes = { 'n', 'x' },
       opts = { desc = 'org next visible headline', help_desc = 'Go to next headline (any level)' },

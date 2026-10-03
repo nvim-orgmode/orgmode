@@ -600,6 +600,44 @@ function OrgMappings:do_demote(whole_subtree)
   vim.fn.winrestview(win_view)
 end
 
+function OrgMappings:insert_mode_promote()
+  local line_number = vim.fn.line('.')
+  local line = vim.fn.getline(line_number)
+
+  if line:match('^%*+') then
+    local cursor_col = vim.fn.col('.')
+    local new_line = line:gsub('^%*+', function(asterisks)
+      if #asterisks > 1 then
+        return string.rep('*', #asterisks - 1)
+      else
+        return ''
+      end
+    end)
+    vim.fn.setline(line_number, new_line)
+    vim.fn.cursor(line_number, math.max(1, cursor_col - 1))
+    return
+  end
+
+  return vim.api.nvim_feedkeys(utils.esc('<C-d>'), 'n', true)
+end
+
+function OrgMappings:insert_mode_demote()
+  local line_number = vim.fn.line('.')
+  local line = vim.fn.getline(line_number)
+
+  if line:match('^%*+') then
+    local cursor_col = vim.fn.col('.')
+    local new_line = line:gsub('^(%*+)', function(asterisks)
+      return asterisks .. '*'
+    end)
+    vim.fn.setline(line_number, new_line)
+    vim.fn.cursor(line_number, cursor_col + 1)
+    return
+  end
+
+  return vim.api.nvim_feedkeys(utils.esc('<C-t>'), 'n', true)
+end
+
 function OrgMappings:org_return()
   local actions = {
     function()
