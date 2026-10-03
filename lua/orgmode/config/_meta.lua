@@ -220,6 +220,8 @@
 ---@field org_agenda_remove_tags? boolean If true, tags will be removed from the all agenda views. Default: false
 ---@field org_agenda_use_time_grid? boolean If true, Render time grid in agenda as set by org_agenda_time_grid. Default: true
 ---@field org_agenda_show_future_repeats? boolean | 'next' If true, show all future repeats. If `next`, show only next repeat. If false, do hnot show any repeats. Default: true
+---@field org_agenda_scheduled_leaders? string[] Text preceding scheduled items in the agenda view. This is a list with two strings: the first applies when the item is scheduled on the current day, the second applies when it has been scheduled previously. Default: { 'Scheduled:', 'Sched. %dx:' }
+---@field org_agenda_deadline_leaders? string[] Text preceding deadline items in the agenda view. This is a list with three strings. The first applies when the item has its deadline on the current day. The second applies when the deadline is in the future, the third one when it is in the past. Default: {'Deadline:', 'In %d d.:', "%d d. ago"}
 ---@field org_agenda_time_grid? OrgAgendaTimeGridOpts Agenda time grid configuration. Default: { type = { 'daily', 'today', 'require-timed' }, times = { 800, 1000, 1200, 1400, 1600, 1800, 2000 }, time_separator = '┄┄┄┄┄', time_label = '┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄' }
 ---@field org_agenda_current_time_string? string String to indicate current time on the time grid. Default: '<- now -----------------------------------------------'
 ---@field org_priority_highest? string | number Highest priority level. Default: 'A'
