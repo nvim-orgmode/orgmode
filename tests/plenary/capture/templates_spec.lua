@@ -113,17 +113,6 @@ describe('Capture template', function()
     end)
   end)
 
-  it('should prompt for restricted tags with %^{tag1|tag2}G', function()
-    helpers.with_var(Input, 'open', function(_prompt, _default, _completion)
-      return Promise.resolve('tag1')
-    end, function()
-      local template = Template:new({
-        template = '* TODO %^{tag1|tag2}G',
-      })
-      assert.are.same({ '* TODO :tag1:' }, template:compile():wait())
-    end)
-  end)
-
   it('should not cancel capture when %^g input is empty', function()
     helpers.with_var(Input, 'open', function(_prompt, _default, _completion)
       return Promise.resolve('')

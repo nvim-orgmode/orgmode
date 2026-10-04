@@ -417,26 +417,14 @@ end
 ---@return OrgPromise<string>
 function Template:_compile_prompts(content)
   local prepared_inputs = {}
-  -- Match %^{...} with optional g/G suffix for tag prompts
-  for exp in content:gmatch('%%%^%b{}[gG]?') do
+  for exp in content:gmatch('%%%^%b{}') do
     local details = exp:match('%{(.*)%}')
     local parts = vim.split(details, '|')
     local title, default = parts[1], parts[2]
 
-    -- Check if this is a tag prompt (ends with g or G)
-    local is_tag_prompt = exp:sub(-1, -1) == 'g' or exp:sub(-1, -1) == 'G'
-
-    local original_exp = exp
-    -- If it's a tag prompt, remove the g/G from the expression for replacement
-    if is_tag_prompt then
-      exp = exp:sub(1, -2) -- Remove just the g/G, keep the closing brace
-    end
-
     local input = {
       fallback_value = default,
       exp = exp,
-      original_exp = original_exp, -- Keep the original (with g/G) for replacement
-      is_tag_prompt = is_tag_prompt,
     }
 
     if #parts > 2 then
@@ -466,20 +454,7 @@ function Template:_compile_prompts(content)
           response = prepared_input.fallback_value
         end
 
-        -- Handle tag prompts specially - format with colons
-        if prepared_input.is_tag_prompt and response and response ~= '' then
-          response = utils.tags_to_string(utils.parse_tags_string(response))
-        end
-
-        -- For tag prompts, we need to search for the original expression (with g/G)
-        -- but use the response which is already formatted (with :tags:)
-        -- Don't escape for tag prompts since we need the % to match literally
-        if prepared_input.is_tag_prompt then
-          -- Manually escape % for tag prompts (other chars dont need escaping for literal match)
-          content = content:gsub(prepared_input.original_exp:gsub('%%', '%%%%'), response)
-        else
-          content = content:gsub(vim.pesc(prepared_input.original_exp), response)
-        end
+        content = content:gsub(vim.pesc(prepared_input.exp), response)
       end)
   end, prepared_inputs):next(function()
     return content
