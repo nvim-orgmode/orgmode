@@ -4,8 +4,24 @@ local M = {}
 
 -- Max time (ms) to spend finding files before yielding back to the event loop
 local WORK_BUDGET_MS = 5
+-- `**` matches any number of directories, the walk still needs a limit
+local MAX_RECURSIVE_DEPTH = 100
+local SLASH = string.byte('/')
 
----Sort in the same order as `vim.fn.glob()`: a path separator comes before any other character
+---@param since integer `vim.uv.hrtime()` value
+---@return number
+local function ms_since(since)
+  return (vim.uv.hrtime() - since) / 1e6
+end
+
+-- '/' sorts first, so 'org/x.org' comes before 'org-old/x.org', as in `vim.fn.glob()`
+---@param byte integer
+---@return integer
+local function rank(byte)
+  return byte == SLASH and 0 or byte
+end
+
+---Same order as `vim.fn.glob()`
 ---@param a string
 ---@param b string
 ---@return boolean
@@ -16,12 +32,10 @@ local function compare_paths(a, b)
   for i = 1, math.min(#a, #b) do
     local c1, c2 = a:byte(i), b:byte(i)
     if c1 ~= c2 then
-      if c1 == 47 or c2 == 47 then
-        return c1 == 47
-      end
-      return c1 < c2
+      return rank(c1) < rank(c2)
     end
   end
+  -- One path is a prefix of the other
   return #a < #b
 end
 
@@ -57,7 +71,7 @@ end
 local function yielder()
   local started = vim.uv.hrtime()
   return function()
-    if (vim.uv.hrtime() - started) / 1e6 >= WORK_BUDGET_MS then
+    if ms_since(started) >= WORK_BUDGET_MS then
       Promise.yield():await()
       started = vim.uv.hrtime()
     end
@@ -77,8 +91,7 @@ end
 local function walk(root, rest, ctx)
   local ignore_case = vim.o.fileignorecase
   local matcher = vim.glob.to_lpeg(ignore_case and rest:lower() or rest)
-  -- `**` can match any number of directories, otherwise each segment matches one
-  local depth = rest:find('**', 1, true) and 100 or #vim.split(rest, '/')
+  local depth = rest:find('**', 1, true) and MAX_RECURSIVE_DEPTH or #vim.split(rest, '/')
   local allow_hidden = rest:find('^%.') or rest:find('/%.')
   local is_visible = function(name)
     return allow_hidden or not is_hidden(name)
