@@ -141,7 +141,14 @@ local function find_one(pattern, ctx)
     return {}
   end
   local path = vim.fn.fnamemodify(vim.fs.normalize(pattern), ':p')
-  -- Walk from the directory before the first wildcard, and match the rest of the pattern
+  -- Split before the first segment with a wildcard (* ? [ {):
+  --   '/home/me/org/**/*.org'       -> '/home/me/org', '**/*.org'
+  --   '/home/me/org/proj*/todo.org' -> '/home/me/org', 'proj*/todo.org'
+  --   '/home/me/org/day-?.org'      -> '/home/me/org', 'day-?.org'       (? one character)
+  --   '/home/me/org/day-[0-9].org'  -> '/home/me/org', 'day-[0-9].org'   ([] one of a set)
+  --   '/home/me/{work,home}/*.org'  -> '/home/me', '{work,home}/*.org' ({} one of a list)
+  --   '/*.org'                      -> '', '*.org'
+  --   '/home/me/org/notes.org'      -> nil (no wildcard)
   local root, rest = path:match('^(.-)/([^/]*[%*%?%[{].*)$')
   if root then
     return walk(root == '' and '/' or root, rest, ctx)
