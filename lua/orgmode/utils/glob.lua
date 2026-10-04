@@ -78,6 +78,14 @@ local function yielder()
   end
 end
 
+---@param path string
+---@param type string Type reported by `vim.fs.dir`
+---@return boolean
+local function is_file(path, type)
+  -- A symlink to a file counts as a file, fs_stat follows the link
+  return type == 'file' or (vim.uv.fs_stat(path) or {}).type == 'file'
+end
+
 ---@class OrgGlobContext
 ---@field filter fun(path: string): boolean
 ---@field is_ignored fun(path: string): boolean
@@ -91,6 +99,9 @@ end
 local function walk(root, rest, ctx)
   local ignore_case = vim.o.fileignorecase
   local matcher = vim.glob.to_lpeg(ignore_case and rest:lower() or rest)
+  local function matches(name)
+    return matcher:match(ignore_case and name:lower() or name) ~= nil
+  end
 
   -- Hidden entries are only candidates if the pattern has a segment starting with a dot
   local pattern_includes_hidden = rest:find('^%.') or rest:find('/%.')
@@ -107,11 +118,9 @@ local function walk(root, rest, ctx)
 
   local files = {}
   for name, type in entries do
-    if is_candidate(name) and ctx.filter(name) and matcher:match(ignore_case and name:lower() or name) then
+    if is_candidate(name) and ctx.filter(name) and matches(name) then
       local file = vim.fs.joinpath(root, name)
-      -- Symlinks are only resolved when they match
-      local is_file = type == 'file' or (vim.uv.fs_stat(file) or {}).type == 'file'
-      if is_file and not ctx.is_ignored(file) then
+      if is_file(file, type) and not ctx.is_ignored(file) then
         table.insert(files, file)
       end
     end
