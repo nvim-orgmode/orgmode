@@ -5,6 +5,56 @@ local Calendar = require('orgmode.objects.calendar')
 local Promise = require('orgmode.utils.promise')
 local Input = require('orgmode.ui.input')
 
+---@description For `%^g` expansion in capture templates: gets all tags in the targeted file.
+---@param template? table
+---@return string[]
+local function get_target_tags(template)
+  local files = template and template.files
+  if not files or not template or template.target == '' then
+    return {}
+  end
+
+  local ok, file = pcall(function()
+    return files:get(template:get_target())
+  end)
+
+  if not ok or not file then
+    return {}
+  end
+
+  return file:get_tags()
+end
+
+---@description For `%^G` expansion in capture templates: gets all tags in all agenda files.
+---@param template? table
+---@return string[]
+local function get_all_tags(template)
+  local files = template and template.files
+  if not files then
+    return {}
+  end
+  return files:get_tags()
+end
+
+---@param tags_source string[]
+---@return OrgPromise<string>
+local function prompt_tags(tags_source)
+  local completion = function(arg_lead)
+    return utils.prompt_autocomplete(arg_lead, tags_source, { ':' })
+  end
+  return Input.open('Tags: ', '', completion):next(function(input)
+    if input == nil then
+      return nil
+    end
+    if input == '' then
+      return ''
+    end
+
+    local tags = utils.parse_tags_string(input)
+    return utils.tags_to_string(tags)
+  end)
+end
+
 local expansions = {
   ['%%f'] = function()
     return vim.fn.expand('%')
@@ -73,6 +123,12 @@ local expansions = {
       return date and date:to_wrapped_string(false) or nil
     end)
   end,
+  ['%%%^g'] = function(_, template)
+    return prompt_tags(get_target_tags(template))
+  end,
+  ['%%%^G'] = function(_, template)
+    return prompt_tags(get_all_tags(template))
+  end,
   ['%%a'] = function()
     return string.format('[[file:%s::%s]]', utils.current_file_path(), vim.api.nvim_win_get_cursor(0)[1])
   end,
@@ -91,7 +147,8 @@ local expansions = {
 ---@field whole_file? boolean
 
 ---@class OrgCaptureTemplate:OrgCaptureTemplateOpts
----@field private _compile_hooks (fun(content:string, content_type: 'target' | 'content'):string | nil)[]
+---@field files? OrgFiles
+---@field private _compile_hooks? (fun(content:string, content_type: 'target' | 'content'):string | nil)[]
 local Template = {}
 
 ---@param opts OrgCaptureTemplateOpts
@@ -309,7 +366,7 @@ function Template:_compile_expansions(content)
       local match = ('%' .. exp):match(expansion)
       if match then
         table.insert(compiled_expansions, function()
-          return Promise.resolve(compiler(match)):next(function(replacement)
+          return Promise.resolve(compiler(match, self)):next(function(replacement)
             if not proceed or not replacement then
               return Promise.reject('canceled')
             end
@@ -364,10 +421,12 @@ function Template:_compile_prompts(content)
     local details = exp:match('%{(.*)%}')
     local parts = vim.split(details, '|')
     local title, default = parts[1], parts[2]
+
     local input = {
       fallback_value = default,
       exp = exp,
     }
+
     if #parts > 2 then
       input.prompt = string.format('%s [%s]: ', title, default)
       input.completion = function()
@@ -394,6 +453,7 @@ function Template:_compile_prompts(content)
         if not response or #response == 0 then
           response = prepared_input.fallback_value
         end
+
         content = content:gsub(vim.pesc(prepared_input.exp), response)
       end)
   end, prepared_inputs):next(function()
