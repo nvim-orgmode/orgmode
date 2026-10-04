@@ -91,15 +91,23 @@ end
 local function walk(root, rest, ctx)
   local ignore_case = vim.o.fileignorecase
   local matcher = vim.glob.to_lpeg(ignore_case and rest:lower() or rest)
-  local depth = rest:find('**', 1, true) and MAX_RECURSIVE_DEPTH or #vim.split(rest, '/')
-  local allow_hidden = rest:find('^%.') or rest:find('/%.')
-  local is_visible = function(name)
-    return allow_hidden or not is_hidden(name)
+
+  -- Hidden entries are only candidates if the pattern has a segment starting with a dot
+  local pattern_includes_hidden = rest:find('^%.') or rest:find('/%.')
+  local function is_candidate(name)
+    return pattern_includes_hidden or not is_hidden(name)
   end
 
+  local entries = vim.fs.dir(root, {
+    depth = rest:find('**', 1, true) and MAX_RECURSIVE_DEPTH or #vim.split(rest, '/'),
+    follow = true,
+    -- Despite the name, a directory is skipped only when this returns false
+    skip = is_candidate,
+  })
+
   local files = {}
-  for name, type in vim.fs.dir(root, { depth = depth, follow = true, skip = is_visible }) do
-    if is_visible(name) and ctx.filter(name) and matcher:match(ignore_case and name:lower() or name) then
+  for name, type in entries do
+    if is_candidate(name) and ctx.filter(name) and matcher:match(ignore_case and name:lower() or name) then
       local file = vim.fs.joinpath(root, name)
       -- Symlinks are only resolved when they match
       local is_file = type == 'file' or (vim.uv.fs_stat(file) or {}).type == 'file'
