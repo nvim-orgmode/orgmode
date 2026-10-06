@@ -472,6 +472,71 @@ function Agenda:toggle_archive_tag()
   })
 end
 
+function Agenda:_get_visual_selection_lines()
+  local start_line = vim.fn.line('v')
+  local end_line = vim.fn.line('.')
+  if start_line > end_line then
+    start_line, end_line = end_line, start_line
+  end
+
+  local lines = {}
+  for _, view in ipairs(self.views) do
+    for _, line in ipairs(view:get_lines()) do
+      if line.line_nr >= start_line and line.line_nr <= end_line and line.headline then
+        table.insert(lines, line)
+      end
+    end
+  end
+  return lines
+end
+
+function Agenda:_bulk_action(action, opts)
+  opts = opts or {}
+  local lines = self:_get_visual_selection_lines()
+  if #lines == 0 then
+    return utils.echo_warning('No headlines in visual selection')
+  end
+
+  return Promise.resolve()
+    :next(function()
+      local result = Promise.resolve()
+      for i = #lines, 1, -1 do
+        local line = lines[i]
+        local headline = line.headline
+        result = result:next(function()
+          return headline.file:update(function(_)
+            vim.fn.cursor({ headline:get_range().start_line, 1 })
+            return Promise.resolve(require('orgmode').action(action))
+          end)
+        end)
+      end
+      return result
+    end)
+    :next(function()
+      if opts.redo ~= false then
+        return self:redo('agenda', true)
+      end
+    end)
+    :next(function()
+      if opts.message then
+        utils.echo_info(opts.message:format(#lines))
+      end
+    end)
+end
+
+function Agenda:archive_visual()
+  return self:_bulk_action('org_mappings.archive', {
+    redo = true,
+    message = 'Archived %d headlines',
+  })
+end
+
+function Agenda:toggle_archive_tag_visual()
+  return self:_bulk_action('org_mappings.toggle_archive_tag', {
+    message = 'Toggled ARCHIVE tag on %d headlines',
+  })
+end
+
 function Agenda:set_tags()
   return self:_remote_edit({
     action = 'org_mappings.set_tags',
