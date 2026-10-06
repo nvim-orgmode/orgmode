@@ -1,115 +1,10 @@
 local Promise = require('orgmode.utils.promise')
+local glob = require('orgmode.utils.glob')
 local OrgFile = require('orgmode.files.file')
 local utils = require('orgmode.utils')
 local config = require('orgmode.config')
 local ts_utils = require('orgmode.utils.treesitter')
 local Listitem = require('orgmode.files.elements.listitem')
-
--- Max time (ms) to spend finding files before yielding back to the event loop
-local WORK_BUDGET_MS = 5
-
----Sort in the same order as `vim.fn.glob()`: a path separator comes before any other character
----@param a string
----@param b string
----@return boolean
-local function compare_paths(a, b)
-  if vim.o.fileignorecase then
-    a, b = a:upper(), b:upper()
-  end
-  for i = 1, math.min(#a, #b) do
-    local c1, c2 = a:byte(i), b:byte(i)
-    if c1 ~= c2 then
-      if c1 == 47 or c2 == 47 then
-        return c1 == 47
-      end
-      return c1 < c2
-    end
-  end
-  return #a < #b
-end
-
----@param path string
----@return boolean
-local function is_hidden(path)
-  return path:match('[^/]+$'):sub(1, 1) == '.'
-end
-
----Same check as `vim.fn.glob()` does with 'wildignore': against the full path and the file name
----@return fun(path: string): boolean
-local function wildignore_matcher()
-  local regexes = {}
-  local case_prefix = vim.o.fileignorecase and '\\c' or ''
-  for _, pattern in ipairs(vim.split(vim.o.wildignore, ',', { trimempty = true })) do
-    local ok, regex = pcall(vim.regex, case_prefix .. vim.fn.glob2regpat(pattern))
-    if ok then
-      table.insert(regexes, regex)
-    end
-  end
-  return function(path)
-    local name = path:match('[^/]+$')
-    for _, regex in ipairs(regexes) do
-      if regex:match_str(path) or regex:match_str(name) then
-        return true
-      end
-    end
-    return false
-  end
-end
-
----Find the org files matching a path from `org_agenda_files`.
----Works like `vim.fn.glob()`: hidden files and directories are only matched by a pattern that
----starts with a dot, symlinks are followed and 'wildignore' and 'fileignorecase' are respected.
----'suffixes' is not applied.
----`vim.fn.glob()` blocks the editor until it reads the whole directory, this yields while walking it.
----@async
----@param path string
----@return string[]
-local function find_org_files(path)
-  -- A trailing slash only matches directories
-  if vim.endswith(path, '/') then
-    return {}
-  end
-  local pattern = vim.fn.fnamemodify(vim.fs.normalize(path), ':p')
-  local is_ignored = wildignore_matcher()
-  -- Walk from the directory before the first wildcard, and match the rest of the pattern
-  local root, rest = pattern:match('^(.-)/([^/]*[%*%?%[{].*)$')
-  if not root then
-    local stat = vim.uv.fs_stat(pattern)
-    local is_org_file = stat and stat.type == 'file' and utils.is_org_file(pattern)
-    return (is_org_file and not is_ignored(pattern)) and { pattern } or {}
-  end
-
-  root = root == '' and '/' or root
-  local ignore_case = vim.o.fileignorecase
-  local matcher = vim.glob.to_lpeg(ignore_case and rest:lower() or rest)
-  -- `**` can match any number of directories, otherwise each segment matches one
-  local depth = rest:find('**', 1, true) and 100 or #vim.split(rest, '/')
-  local allow_hidden = rest:find('^%.') or rest:find('/%.')
-  local skip_hidden = function(dir)
-    return allow_hidden or not is_hidden(dir)
-  end
-
-  local files = {}
-  local started = vim.uv.hrtime()
-  for name, type in vim.fs.dir(root, { depth = depth, follow = true, skip = skip_hidden }) do
-    local matches = matcher:match(ignore_case and name:lower() or name)
-    if matches and (allow_hidden or not is_hidden(name)) and utils.is_org_file(name) then
-      local file = vim.fs.joinpath(root, name)
-      -- Symlinks are only resolved when they match
-      local is_file = type == 'file' or (vim.uv.fs_stat(file) or {}).type == 'file'
-      if is_file and not is_ignored(file) then
-        table.insert(files, file)
-      end
-    end
-    if (vim.uv.hrtime() - started) / 1e6 >= WORK_BUDGET_MS then
-      Promise.yield():await()
-      started = vim.uv.hrtime()
-    end
-  end
-
-  table.sort(files, compare_paths)
-  return files
-end
 
 ---@class OrgFilesOpts
 ---@field paths string | string[]
@@ -481,12 +376,7 @@ end
 ---@return OrgPromise<string[]>
 function OrgFiles:_discover_files()
   return Promise.async(function()
-    local files = {}
-    for _, path in ipairs(self.paths) do
-      for _, file in ipairs(find_org_files(path)) do
-        table.insert(files, vim.fn.resolve(file))
-      end
-    end
+    local files = vim.tbl_map(vim.fn.resolve, glob.find(self.paths, utils.is_org_file))
     self._path_cache = files
     return files
   end)
