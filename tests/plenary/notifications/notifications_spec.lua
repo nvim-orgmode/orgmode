@@ -2,6 +2,7 @@ local org = require('orgmode')
 local Range = require('orgmode.files.elements.range')
 local Date = require('orgmode.objects.date')
 local Notifications = require('orgmode.notifications')
+local Promise = require('orgmode.utils.promise')
 local last_filename = nil
 local helpers = require('tests.plenary.helpers')
 local config = require('orgmode.config')
@@ -569,5 +570,21 @@ describe('Notifications', function()
     local tasks = notifications:get_tasks_async(time):wait(5000)
     assert.is_true(#tasks > 0)
     assert.are.same(notifications:get_tasks(time), tasks)
+  end)
+
+  it('should check a minute that comes in while another check is running', function()
+    local notifications = Notifications:new({ files = org.files })
+    local checked = {}
+    notifications.get_tasks_async = function(_, time)
+      table.insert(checked, time:to_string())
+      return Promise.resolve({})
+    end
+    notifications._show = function() end
+    local first = notifications:notify(Date.from_string('2021-07-12 Mon 12:20'))
+    notifications:notify(Date.from_string('2021-07-12 Mon 12:21'))
+    notifications:notify(Date.from_string('2021-07-12 Mon 12:22'))
+    first:wait(5000)
+    -- Only the latest minute is kept while a check is running
+    assert.are.same({ '2021-07-12 Mon 12:20', '2021-07-12 Mon 12:22' }, checked)
   end)
 end)

@@ -3,6 +3,31 @@ local uv = vim.uv
 local utils = {}
 local debounce_timers = {}
 
+---Split file contents into lines the same way Neovim does with default 'fileformats'
+---@param data string
+---@return string[]
+local function split_lines(data)
+  if data:sub(1, 3) == '\239\187\191' then
+    data = data:sub(4)
+  end
+  local lines = nil
+  -- CRLF only if every line ends with CRLF, otherwise CR is part of the line
+  if data:find('\r\n', 1, true) then
+    lines = vim.split(data, '\r\n', { plain = true })
+    for _, line in ipairs(lines) do
+      if line:find('\n', 1, true) then
+        lines = nil
+        break
+      end
+    end
+  end
+  lines = lines or vim.split(data, '\n', { plain = true })
+  if lines[#lines] == '' then
+    table.remove(lines, #lines)
+  end
+  return lines
+end
+
 ---@param file string full path to filename
 ---@param opts? { raw: boolean, schedule: boolean } raw: Return raw results, schedule: wrap results in vim.schedule
 function utils.readfile(file, opts)
@@ -27,16 +52,7 @@ function utils.readfile(file, opts)
               return reject(err4)
             end
             assert(data)
-            local result = nil
-            if opts.raw then
-              result = data
-            else
-              local lines = vim.split(data, '[\r\n]')
-              if lines[#lines] == '' then
-                table.remove(lines, #lines)
-              end
-              result = lines
-            end
+            local result = opts.raw and data or split_lines(data)
 
             if not opts.schedule then
               return resolve(result)

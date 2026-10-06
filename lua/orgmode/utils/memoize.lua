@@ -49,6 +49,8 @@ function Memoize:setup()
       local cached_value = cache[arg_key]
       if not cached_value then
         cached_value = vim.F.pack_len(method(method_self, ...))
+        -- The method can parse the file, which starts a new cache generation
+        cache = self:_get_cache_for_key(self.key_getter(method_self))
         cache[arg_key] = cached_value
       end
 
