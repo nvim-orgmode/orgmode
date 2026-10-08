@@ -207,6 +207,12 @@ function Notifications:get_tasks_async(time)
 
     for _, orgfile in ipairs(self.files:all()) do
       if not orgfile:is_archive_file() then
+        if orgfile:bufnr() == -1 then
+          -- A file that cannot be read keeps its content, so the other files are still checked
+          pcall(function()
+            orgfile:reload():await()
+          end)
+        end
         -- Parsing a big file at once would block the editor
         orgfile:parse_async():await()
         maybe_yield()
