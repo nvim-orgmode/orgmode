@@ -59,3 +59,13 @@
 ((strikethrough) @_strikethrough (#org-is-valid-markup? @_strikethrough)) @org.strikethrough
 ((code) @_code (#org-is-valid-markup? @_code)) @org.code
 ((verbatim) @_verbatim (#org-is-valid-markup? @_verbatim)) @org.verbatim
+([(bold open: (_) @_markup_open close: (_) @_markup_close)
+  (italic open: (_) @_markup_open close: (_) @_markup_close)
+  (underline open: (_) @_markup_open close: (_) @_markup_close)
+  (strikethrough open: (_) @_markup_open close: (_) @_markup_close)
+  (code open: (_) @_markup_open close: (_) @_markup_close)
+  (verbatim open: (_) @_markup_open close: (_) @_markup_close)] @_markup
+  (#org-is-valid-markup? @_markup)
+  (#org-hide-emphasis-markers?)
+  (#set! @_markup_open conceal "")
+  (#set! @_markup_close conceal ""))
