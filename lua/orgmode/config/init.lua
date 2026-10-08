@@ -460,6 +460,10 @@ function Config:setup_ts_predicates()
     return self:hide_leading_stars(source --[[@as number]])
   end, { force = true })
 
+  vim.treesitter.query.add_predicate('org-hide-emphasis-markers?', function()
+    return self.org_hide_emphasis_markers
+  end, { force = true })
+
   local valid_pre_marker_chars = { ' ', '(', '-', "'", '"', '{', '*', '/', '_', '+' }
   vim.treesitter.query.add_predicate('org-is-valid-markup?', function(match, _, source, predicate)
     local node = match[predicate[2]]
@@ -472,7 +476,7 @@ function Config:setup_ts_predicates()
       return true
     end
     local pre_char = vim.api.nvim_buf_get_text(source, row, col - 1, row, col, {})[1]
-    return vim.tbl_contains(valid_pre_marker_chars, pre_char)
+    return pre_char:match('^%s$') ~= nil or vim.tbl_contains(valid_pre_marker_chars, pre_char)
   end, { force = true, all = true })
 end
 
