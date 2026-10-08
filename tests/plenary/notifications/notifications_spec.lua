@@ -572,6 +572,79 @@ describe('Notifications', function()
     assert.are.same(notifications:get_tasks(time), tasks)
   end)
 
+  it('should return tasks from a file changed on disk', function()
+    local files = helpers.create_agenda_files({
+      {
+        filename = 'changed.org',
+        content = {
+          '* TODO Old task',
+          '  DEADLINE: <2021-07-12 Mon 12:30>',
+        },
+      },
+    })
+    local notifications = Notifications:new({ files = org.files })
+    local time = Date.from_string('2021-07-12 Mon 12:20')
+    notifications:get_tasks_async(time):wait(5000)
+
+    vim.fn.writefile({
+      '* TODO New task',
+      '  DEADLINE: <2021-07-12 Mon 12:30>',
+    }, files['changed.org'])
+    local future_mtime = os.time() + 10
+    vim.uv.fs_utime(files['changed.org'], future_mtime, future_mtime)
+
+    local titles = vim.tbl_map(function(task)
+      return task.title
+    end, notifications:get_tasks_async(time):wait(5000))
+    assert.are.same({ 'New task' }, titles)
+  end)
+
+  it('should parse a file changed on disk only once', function()
+    local files = helpers.create_agenda_files({
+      {
+        filename = 'changed.org',
+        content = { '* TODO First', '* TODO Second', '* TODO Third' },
+      },
+    })
+    local notifications = Notifications:new({ files = org.files })
+    local time = Date.from_string('2021-07-12 Mon 12:20')
+    notifications:get_tasks_async(time):wait(5000)
+
+    vim.fn.writefile({ '* TODO First', '* TODO Second', '* TODO Fourth' }, files['changed.org'])
+    local future_mtime = os.time() + 10
+    vim.uv.fs_utime(files['changed.org'], future_mtime, future_mtime)
+
+    local get_string_parser = vim.treesitter.get_string_parser
+    local parses = 0
+    helpers.with_var(vim.treesitter, 'get_string_parser', function(...)
+      parses = parses + 1
+      return get_string_parser(...)
+    end, function()
+      notifications:get_tasks_async(time):wait(5000)
+      assert.are.same(1, parses)
+      notifications:get_tasks_async(time):wait(5000)
+      assert.are.same(1, parses)
+    end)
+  end)
+
+  it('should keep unsaved buffer content of a file changed on disk', function()
+    local orgfile = helpers.create_agenda_file({ '* TODO Saved task' })
+    local notifications = Notifications:new({ files = org.files })
+    local time = Date.from_string('2021-07-12 Mon 12:20')
+    vim.api.nvim_buf_set_lines(0, 0, -1, false, { '* TODO Unsaved task' })
+
+    vim.fn.writefile({ '* TODO Disk task' }, orgfile.filename)
+    local future_mtime = os.time() + 10
+    vim.uv.fs_utime(orgfile.filename, future_mtime, future_mtime)
+
+    notifications:get_tasks_async(time):wait(5000)
+    notifications:get_tasks_async(time):wait(5000)
+    local loaded = vim.tbl_filter(function(file)
+      return file.filename == orgfile.filename
+    end, org.files:all())[1]
+    assert.are_not.same({ '* TODO Disk task' }, loaded.lines)
+  end)
+
   it('should check a minute that comes in while another check is running', function()
     local notifications = Notifications:new({ files = org.files })
     local checked = {}

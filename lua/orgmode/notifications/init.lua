@@ -207,6 +207,9 @@ function Notifications:get_tasks_async(time)
 
     for _, orgfile in ipairs(self.files:all()) do
       if not orgfile:is_archive_file() then
+        if orgfile:bufnr() == -1 then
+          orgfile:reload():await()
+        end
         -- Parsing a big file at once would block the editor
         orgfile:parse_async():await()
         maybe_yield()
