@@ -101,5 +101,126 @@ describe('Config', function()
     assert.are.same('<Cmd>lua require("orgmode").action("org_mappings.outline_up_heading")<CR>', mapping['rhs'])
     assert.are.same('Go To Parent Headline', mapping['desc'])
   end)
+
+  it('should add no-op group mappings for multi key leader prefixes', function()
+    orgmode.setup({})
+
+    for _, group in ipairs({
+      { ',oi', 'org insert' },
+      { ',ox', 'org clock' },
+      { ',ol', 'org links' },
+      { ',on', 'org notes' },
+      { ',ob', 'org babel' },
+      { ',od', 'org timestamp' },
+    }) do
+      local mapping = get_normal_mode_mapping_in_org_buffer(group[1])
+      assert.are.same('', mapping['rhs'])
+      assert.are.same(group[2], mapping['desc'])
+      -- Group mappings must not be "nowait" so the longer mappings still win
+      assert.are.same(0, mapping['nowait'])
+    end
+  end)
+
+  it('should allow overriding a group mapping description', function()
+    orgmode.setup({
+      mappings = {
+        org = {
+          org_group_insert = { '<prefix>i', desc = 'Add' },
+        },
+      },
+    })
+
+    local mapping = get_normal_mode_mapping_in_org_buffer(',oi')
+    assert.are.same('', mapping['rhs'])
+    assert.are.same('Add', mapping['desc'])
+  end)
+
+  it('should allow disabling a group mapping', function()
+    orgmode.setup({
+      mappings = {
+        org = {
+          org_group_insert = false,
+        },
+      },
+    })
+
+    -- Use a fresh buffer so previously registered mappings don't leak in
+    require('tests.plenary.helpers').create_file({ '* Test' })
+    local mapping = nil
+    for _, keymap in ipairs(vim.api.nvim_buf_get_keymap(0, 'n')) do
+      if keymap['lhs'] == ',oi' then
+        mapping = keymap
+      end
+    end
+    assert.is_nil(mapping)
+  end)
+
+  it('should add no-op group mappings for agenda leader prefixes', function()
+    orgmode.setup({})
+    require('tests.plenary.helpers').create_file({ '* Test' })
+    config:setup_mappings('agenda', 0)
+
+    local mappings = {}
+    for _, keymap in ipairs(vim.api.nvim_buf_get_keymap(0, 'n')) do
+      mappings[keymap['lhs']] = keymap
+    end
+
+    assert.are.same('', mappings[',oi']['rhs'])
+    assert.are.same('org insert', mappings[',oi']['desc'])
+    assert.are.same('', mappings[',ox']['rhs'])
+    assert.are.same('org clock', mappings[',ox']['desc'])
+    assert.are.same('', mappings[',on']['rhs'])
+    assert.are.same('org notes', mappings[',on']['desc'])
+  end)
+
+  it('should add a global root group mapping with the org mode description', function()
+    orgmode.setup({})
+    config:setup_mappings('global')
+
+    local mapping = nil
+    for _, keymap in ipairs(vim.api.nvim_get_keymap('n')) do
+      if keymap['lhs'] == ',o' then
+        mapping = keymap
+      end
+    end
+
+    assert.are.same('', mapping['rhs'])
+    assert.are.same('org mode', mapping['desc'])
+    assert.are.same(0, mapping['nowait'])
+    assert.are.same(0, mapping['buffer'])
+  end)
+
+  it('should not overwrite an existing mapping at the root prefix', function()
+    orgmode.setup({})
+    vim.keymap.set('n', ',o', '<Cmd>lua vim.g.user_root = true<CR>', { desc = 'user root' })
+    config:setup_mappings('global')
+
+    local mapping = nil
+    for _, keymap in ipairs(vim.api.nvim_get_keymap('n')) do
+      if keymap['lhs'] == ',o' then
+        mapping = keymap
+      end
+    end
+
+    assert.are.same('user root', mapping['desc'])
+    assert.are.same('<Cmd>lua vim.g.user_root = true<CR>', mapping['rhs'])
+  end)
+
+  it('should not overwrite an existing mapping at a group prefix', function()
+    orgmode.setup({})
+    require('tests.plenary.helpers').create_file({ '* Test' })
+    vim.keymap.set('n', ',ox', '<Cmd>lua vim.g.user_clock = true<CR>', { desc = 'user clock', buffer = 0 })
+    config:setup_mappings('org', 0)
+
+    local mapping = nil
+    for _, keymap in ipairs(vim.api.nvim_buf_get_keymap(0, 'n')) do
+      if keymap['lhs'] == ',ox' then
+        mapping = keymap
+      end
+    end
+
+    assert.are.same('user clock', mapping['desc'])
+    assert.are.same('<Cmd>lua vim.g.user_clock = true<CR>', mapping['rhs'])
+  end)
   ---@diagnostic enable: need-check-nil
 end)

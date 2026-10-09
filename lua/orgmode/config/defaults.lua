@@ -101,10 +101,14 @@ local DefaultConfig = {
     org_return_uses_meta_return = false,
     prefix = '<Leader>o',
     global = {
+      org_group_prefix = '<prefix>',
       org_agenda = '<prefix>a',
       org_capture = '<prefix>c',
     },
     agenda = {
+      org_agenda_group_insert = '<prefix>i',
+      org_agenda_group_clock = '<prefix>x',
+      org_agenda_group_note = '<prefix>n',
       org_agenda_later = 'f',
       org_agenda_earlier = 'b',
       org_agenda_goto_today = '.',
@@ -150,6 +154,12 @@ local DefaultConfig = {
       org_note_kill = '<prefix>k',
     },
     org = {
+      org_group_insert = '<prefix>i',
+      org_group_clock = '<prefix>x',
+      org_group_links = '<prefix>l',
+      org_group_note = '<prefix>n',
+      org_group_babel = '<prefix>b',
+      org_group_timestamp = '<prefix>d',
       org_refile = '<prefix>r',
       org_timestamp_up_day = '<S-UP>',
       org_timestamp_down_day = '<S-DOWN>',

@@ -224,11 +224,16 @@ function Config:get_mappings(category, buffer)
 
   local result = {}
   for name, map_entry in pairs(map_entries) do
+    local default_map = default_mappings[name]
+    local configured_map = user_mappings[name]
     result[name] = {
       map_entry = map_entry,
-      default_map = default_mappings[name],
-      user_map = user_mappings[name],
-      opts = opts,
+      default_map = default_map,
+      user_map = configured_map,
+      opts = vim.tbl_extend('force', opts, {
+        -- Whether the mapping was explicitly configured (differs from the default)
+        user_defined = configured_map ~= nil and not vim.deep_equal(configured_map, default_map),
+      }),
     }
   end
   return result
