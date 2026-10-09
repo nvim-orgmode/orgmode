@@ -248,7 +248,7 @@ function OrgHeadline:id_get_or_create()
     return id
   end
   local org_id = require('orgmode.org.id').new()
-  self:set_property('ID', org_id)
+  self:set_property('ID', org_id):wait()
   return org_id
 end
 
