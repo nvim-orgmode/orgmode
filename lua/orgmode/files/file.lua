@@ -168,8 +168,13 @@ end
 function OrgFile:update(action)
   local is_same_file = self.filename == utils.current_file_path()
   if is_same_file then
+    -- Saving a buffer that already had unsaved changes would write the
+    -- user's edits too, so the change stays unsaved in that case.
+    local was_modified = vim.bo.modified
     return Promise.resolve(action(self)):next(function(result)
-      vim.cmd(':silent! w')
+      if not was_modified then
+        vim.cmd(':silent! w')
+      end
       return result
     end)
   end

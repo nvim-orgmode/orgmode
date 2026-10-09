@@ -120,6 +120,21 @@ describe('Api handles', function()
     assert.is.False(vim.tbl_contains(on_disk, 'unsaved user edit'))
   end)
 
+  it('keeps unsaved edits in a hidden buffer out of the file on an api mutation', function()
+    local target = helpers.create_agenda_file({ '* TODO Target' })
+    local target_bufnr = vim.fn.bufnr(target.filename)
+    vim.api.nvim_buf_set_lines(target_bufnr, -1, -1, false, { 'unsaved user edit' })
+    helpers.create_file({ '* TODO Other buffer' })
+
+    api.load(target.filename).headlines[1]:set_tags({ 'api' }):wait()
+
+    local on_disk = vim.fn.readfile(target.filename)
+    assert.is.False(vim.tbl_contains(on_disk, 'unsaved user edit'))
+    local in_buffer = vim.api.nvim_buf_get_lines(target_bufnr, 0, -1, false)
+    assert.is.Not.Nil(in_buffer[1]:match('^%* TODO Target%s+:api:$'))
+    assert.are.same('unsaved user edit', in_buffer[2])
+  end)
+
   it('has the id property set once id_get_or_create returns for a file not in the current buffer', function()
     local target = helpers.create_agenda_file({
       '* TODO Target',
