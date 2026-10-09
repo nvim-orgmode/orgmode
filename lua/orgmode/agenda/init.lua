@@ -86,9 +86,13 @@ function Agenda:render()
 
   if vim.w.org_window_split_mode == 'horizontal' then
     local win_height = math.max(math.min(34, vim.api.nvim_buf_line_count(bufnr)), config.org_agenda_min_height)
-    if vim.w.org_window_pos and vim.deep_equal(vim.fn.win_screenpos(0), vim.w.org_window_pos) then
+    local untouched = vim.w.org_window_pos
+      and vim.deep_equal(vim.fn.win_screenpos(0), vim.w.org_window_pos)
+      and vim.fn.winheight(0) == vim.w.org_window_height
+    if untouched then
       vim.cmd(string.format('resize %d', win_height))
       vim.w.org_window_pos = vim.fn.win_screenpos(0)
+      vim.w.org_window_height = vim.fn.winheight(0)
     else
       vim.w.org_window_pos = nil
     end
@@ -246,20 +250,30 @@ function Agenda:_build_menu()
 end
 
 ---@private
----@return number buffer number
-function Agenda:_open_window()
-  -- if an agenda window is already open, return it
+---@return number | nil window id of the open agenda window
+function Agenda:_get_window()
   for _, win in ipairs(vim.api.nvim_list_wins()) do
     local buf = vim.api.nvim_win_get_buf(win)
     local ft = vim.api.nvim_get_option_value('filetype', {
       buf = buf,
     })
     if ft == 'orgagenda' then
-      vim.bo[buf].modifiable = true
-      colors.apply_highlights({}, true, buf)
-      vim.api.nvim_buf_set_lines(buf, 0, -1, true, {})
-      return buf
+      return win
     end
+  end
+end
+
+---@private
+---@return number buffer number
+function Agenda:_open_window()
+  -- if an agenda window is already open, return it
+  local win = self:_get_window()
+  if win then
+    local buf = vim.api.nvim_win_get_buf(win)
+    vim.bo[buf].modifiable = true
+    colors.apply_highlights({}, true, buf)
+    vim.api.nvim_buf_set_lines(buf, 0, -1, true, {})
+    return buf
   end
 
   utils.open_window('orgagenda', math.max(34, config.org_agenda_min_height), config.win_split_mode, config.win_border)
@@ -267,6 +281,7 @@ function Agenda:_open_window()
   vim.cmd([[setf orgagenda]])
   vim.cmd([[setlocal buftype=nofile bufhidden=wipe nobuflisted nolist noswapfile nowrap nospell]])
   vim.w.org_window_pos = vim.fn.win_screenpos(0)
+  vim.w.org_window_height = vim.fn.winheight(0)
   config:setup_mappings('agenda', vim.api.nvim_get_current_buf())
   return vim.fn.bufnr()
 end
@@ -291,9 +306,10 @@ function Agenda:reset()
 end
 
 ---@param source? string
+---@param preserve_cursor_pos? boolean
 function Agenda:redo(source, preserve_cursor_pos)
   self:_call_all_views('redo')
-  local save_view = preserve_cursor_pos and vim.fn.winsaveview()
+  local restore_view = preserve_cursor_pos and self:_save_view()
   return self.files
     :load(true)
     :next(function()
@@ -304,10 +320,79 @@ function Agenda:redo(source, preserve_cursor_pos)
     end)
     :next(function()
       self:render()
-      if save_view then
-        vim.fn.winrestview(save_view)
+      if restore_view then
+        restore_view()
       end
     end)
+end
+
+---@param a OrgAgendaLineHeadlineRef
+---@param b OrgAgendaLineHeadlineRef
+---@return boolean
+local function same_headline(a, b)
+  if a.filename ~= b.filename then
+    return false
+  end
+  if a.id then
+    return a.id == b.id
+  end
+  return a.title == b.title
+end
+
+---Redo can run while an org buffer is current (remote edits, user
+---autocommands on write), so the view is taken from the agenda window,
+---not from the current one.
+---@private
+---@return fun() | nil
+function Agenda:_save_view()
+  local win = self:_get_window()
+  if not win then
+    return nil
+  end
+  local view = vim.api.nvim_win_call(win, vim.fn.winsaveview)
+  local agenda_line = vim.api.nvim_win_call(win, function()
+    return select(2, self:_get_headline())
+  end)
+  local ref = agenda_line and agenda_line.headline_ref
+  local row = view.lnum - view.topline
+
+  return function()
+    local target_win = self:_get_window()
+    if not target_win then
+      return
+    end
+    local line_nr = ref and self:_find_line_nr(ref, view.lnum)
+    if line_nr then
+      view.lnum = line_nr
+      local height = vim.api.nvim_win_get_height(target_win)
+      if line_nr < view.topline or line_nr >= view.topline + height then
+        view.topline = math.max(1, line_nr - row)
+      end
+    end
+    vim.api.nvim_win_call(target_win, function()
+      vim.fn.winrestview(view)
+    end)
+  end
+end
+
+---A headline can occupy several agenda lines (scheduled and deadline,
+---repeats), so the one nearest the previous cursor line wins.
+---@private
+---@param ref OrgAgendaLineHeadlineRef
+---@param lnum number
+---@return number | nil
+function Agenda:_find_line_nr(ref, lnum)
+  local nearest = nil
+  for _, view in ipairs(self.views) do
+    for _, line in ipairs(view:get_lines()) do
+      if line.headline_ref and same_headline(ref, line.headline_ref) then
+        if not nearest or math.abs(line.line_nr - lnum) < math.abs(nearest - lnum) then
+          nearest = line.line_nr
+        end
+      end
+    end
+  end
+  return nearest
 end
 
 function Agenda:advance_span(direction)
