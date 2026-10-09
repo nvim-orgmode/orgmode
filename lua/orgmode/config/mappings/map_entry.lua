@@ -36,6 +36,19 @@ function MapEntry.text_object(handler, opts)
   })
 end
 
+---Create a no-op mapping used as a group label (for example in which-key).
+---@param desc string Group description
+---@param opts? table
+function MapEntry.group(desc, opts)
+  opts = opts or {}
+  opts.opts = vim.tbl_extend('force', opts.opts or {}, {
+    desc = desc,
+    nowait = false,
+  })
+  opts.type = 'group'
+  return MapEntry:new('<Nop>', opts)
+end
+
 function MapEntry.custom(handler, opts)
   return MapEntry:new(handler, opts)
 end

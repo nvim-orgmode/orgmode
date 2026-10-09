@@ -2,10 +2,14 @@ local m = require('orgmode.config.mappings.map_entry')
 
 return {
   global = {
+    org_group_prefix = m.group('org mode', { opts = { buffer = false } }),
     org_agenda = m.action('agenda.prompt', { opts = { buffer = false, desc = 'org agenda' } }),
     org_capture = m.action('capture.prompt', { opts = { buffer = false, desc = 'org capture' } }),
   },
   agenda = {
+    org_agenda_group_insert = m.group('org insert'),
+    org_agenda_group_clock = m.group('org clock'),
+    org_agenda_group_note = m.group('org notes'),
     org_agenda_later = m.action(
       'agenda.advance_span',
       { args = { 1 }, opts = { desc = 'org next agenda span', help_desc = 'Go forward one span' } }
@@ -168,6 +172,12 @@ return {
     ),
   },
   org = {
+    org_group_insert = m.group('org insert'),
+    org_group_clock = m.group('org clock'),
+    org_group_links = m.group('org links'),
+    org_group_note = m.group('org notes'),
+    org_group_babel = m.group('org babel'),
+    org_group_timestamp = m.group('org timestamp'),
     org_refile = m.action(
       'capture.refile_headline_to_destination',
       { opts = { desc = 'org refile', help_desc = 'Refile headline to specific destination' } }
