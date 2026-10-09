@@ -6,6 +6,7 @@ local Calendar = require('orgmode.objects.calendar')
 local Promise = require('orgmode.utils.promise')
 local org = require('orgmode')
 local Buffers = require('orgmode.state.buffers')
+local utils = require('orgmode.utils')
 
 ---@class OrgApiHeadline
 ---@field title string headline title without todo keyword, tags and priority. Ex. `* TODO I am a headline  :SOMETAG:` returns `I am a headline`
@@ -27,7 +28,7 @@ local Buffers = require('orgmode.state.buffers')
 ---@field is_archived boolean headline marked with the `:ARCHIVE:` tag
 ---@field headlines OrgApiHeadline[]
 ---@field private _section OrgHeadline
----@field private _index number
+---@field private _file_version number version of the file the handle was built from
 local OrgHeadline = {}
 
 ---@private
@@ -53,7 +54,7 @@ function OrgHeadline:_new(opts)
   data.parent = opts.parent
   data.headlines = opts.headlines or {}
   data._section = opts._section
-  data._index = opts._index
+  data._file_version = opts._file_version
 
   setmetatable(data, self)
   self.__index = self
@@ -61,9 +62,8 @@ function OrgHeadline:_new(opts)
 end
 
 ---@param section OrgHeadline
----@param index number
 ---@private
-function OrgHeadline._build_from_internal_headline(section, index)
+function OrgHeadline._build_from_internal_headline(section)
   local todo, _, type = section:get_todo()
   local properties = section:get_own_properties()
   return OrgHeadline:_new({
@@ -86,7 +86,7 @@ function OrgHeadline._build_from_internal_headline(section, index)
     priority = section:get_priority(),
     is_archived = section:is_archived(),
     _section = section,
-    _index = index,
+    _file_version = section.file.version,
   })
 end
 
@@ -94,7 +94,9 @@ end
 ---@return OrgApiHeadline
 function OrgHeadline:reload()
   local file = self.file:reload()
-  return file.headlines[self._index]
+  ---@diagnostic disable-next-line: invisible
+  local section = self:_find_section(file._file)
+  return file:get_headline_on_line(section:get_range().start_line)
 end
 
 --- Set tags on the headline. This replaces all current tags with provided ones
@@ -252,15 +254,57 @@ function OrgHeadline:id_get_or_create()
   return org_id
 end
 
+--- Find this headline in the current state of the file. Raises an error instead of guessing.
+---@param file OrgFile
+---@return OrgHeadline
+---@private
+function OrgHeadline:_find_section(file)
+  local sections = file:get_headlines()
+  local id = self.properties.id
+  if id then
+    local by_id = utils.find(sections, function(section)
+      return section:get_property('id', false) == id
+    end)
+    if by_id then
+      return by_id
+    end
+  end
+
+  if file.version == self._file_version then
+    return file:get_closest_headline({ self.position.start_line, 0 })
+  end
+
+  local same_line = vim.tbl_filter(function(section)
+    return section:get_headline_line_content() == self.line
+  end, sections)
+  if #same_line == 1 then
+    return same_line[1]
+  end
+  error(string.format('Headline "%s" not found in %s', self.line, self.file.filename), 0)
+end
+
 ---@param action function
 ---@private
 function OrgHeadline:_do_action(action)
+  local section = self:_find_section(org.files:get(self.file.filename))
+  local start_line = section:get_range().start_line
   return org.files:update_file(self.file.filename, function()
     local view = vim.fn.winsaveview() or {}
-    vim.fn.cursor({ self.position.start_line, 1 })
+    vim.fn.cursor({ start_line, 1 })
     return Promise.resolve(action()):next(function()
       vim.fn.winrestview(view)
-      return self:reload()
+      local updated = self.file:reload():get_headline_on_line(start_line)
+      if not updated then
+        error(string.format('Headline "%s" is no longer on line %d', self.line, start_line), 0)
+      end
+      -- Keeps the handle usable for further actions
+      for key in pairs(self) do
+        self[key] = nil
+      end
+      for key, value in pairs(updated) do
+        self[key] = value
+      end
+      return updated
     end)
   end)
 end

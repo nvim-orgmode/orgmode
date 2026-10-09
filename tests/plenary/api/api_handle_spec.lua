@@ -53,6 +53,56 @@ describe('Api handles', function()
     assert.is.Not.Nil(lines[3]:match('^%* TODO Second%s+:moved:$'))
   end)
 
+  it('applies a second mutator through the same handle', function()
+    helpers.create_file({
+      '* TODO First',
+      '* TODO Second',
+    })
+    local headline = cur_file().headlines[2]
+
+    headline:set_tags({ 'one' }):wait()
+    headline:set_priority('A'):wait()
+    local lines = vim.api.nvim_buf_get_lines(0, 0, -1, false)
+    assert.are.same('* TODO First', lines[1])
+    assert.is.Not.Nil(lines[2]:match('^%* TODO %[#A%] Second%s+:one:$'))
+  end)
+
+  it('returns the same id when id_get_or_create is called twice on a handle', function()
+    helpers.create_file({ '* TODO First' })
+    local headline = cur_file().headlines[1]
+
+    local first_id = headline:id_get_or_create()
+    local second_id = headline:id_get_or_create()
+
+    assert.are.same(first_id, second_id)
+    assert.are.same(first_id, cur_file().headlines[1]:get_property('id'))
+  end)
+
+  it('clears a removed date on the handle', function()
+    helpers.create_file({ '* TODO First' })
+    local headline = cur_file().headlines[1]
+
+    headline:set_deadline('2026-01-01'):wait()
+    assert.is.Not.Nil(headline.deadline)
+    headline:set_deadline(''):wait()
+    assert.is.Nil(headline.deadline)
+  end)
+
+  it('raises an error instead of guessing between identical headlines after an edit', function()
+    helpers.create_file({
+      '* TODO Same',
+      '* TODO Same',
+    })
+    local headline = cur_file().headlines[2]
+
+    vim.api.nvim_buf_set_lines(0, 0, 0, false, { '* TODO Inserted' })
+
+    assert.has.error(function()
+      headline:set_tags({ 'x' })
+    end)
+    assert.are.same({ '* TODO Inserted', '* TODO Same', '* TODO Same' }, vim.api.nvim_buf_get_lines(0, 0, -1, false))
+  end)
+
   it('does not write unrelated unsaved edits to disk on an api mutation', function()
     -- Assumption: an API call may save its own change, but it must not
     -- persist edits the user has not saved yet. Here the unsaved edit is
