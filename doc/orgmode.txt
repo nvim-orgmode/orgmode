@@ -1337,11 +1337,13 @@ To change a key mapping's `lhs` and its `desc`, provide a table:
 
 Some mappings share a common leader prefix (for example all `<Leader>oi...`
 mappings). Those prefixes are registered as no-op group mappings with a
-description, so plugins like WhichKey can show the grouped name (for
-example `org insert`, `org clock`, `org links`, `org notes`, `org babel` or
-`org timestamp`). The mapping prefix itself (default `<Leader>o`) is registered
-as a group named `org mode`. Group mappings follow the same override rules as
-regular mappings, which means they can be renamed or disabled:
+description, so plugins like WhichKey can show the grouped name (for example
+`org insert`, `org clock`, `org links`, `org notes`, `org babel` or `org
+timestamp`). The mapping prefix itself (default `<Leader>o`) is registered as a
+group named `org mode`. A group label is only registered if no mapping already
+exists at that prefix, so existing (user-defined) mappings are never
+overwritten. Group mappings follow the same override rules as regular mappings,
+which means they can be renamed or disabled:
 
 >lua
     require('orgmode').setup({

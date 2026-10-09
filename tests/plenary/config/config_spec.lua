@@ -189,5 +189,38 @@ describe('Config', function()
     assert.are.same(0, mapping['nowait'])
     assert.are.same(0, mapping['buffer'])
   end)
+
+  it('should not overwrite an existing mapping at the root prefix', function()
+    orgmode.setup({})
+    vim.keymap.set('n', ',o', '<Cmd>lua vim.g.user_root = true<CR>', { desc = 'user root' })
+    config:setup_mappings('global')
+
+    local mapping = nil
+    for _, keymap in ipairs(vim.api.nvim_get_keymap('n')) do
+      if keymap['lhs'] == ',o' then
+        mapping = keymap
+      end
+    end
+
+    assert.are.same('user root', mapping['desc'])
+    assert.are.same('<Cmd>lua vim.g.user_root = true<CR>', mapping['rhs'])
+  end)
+
+  it('should not overwrite an existing mapping at a group prefix', function()
+    orgmode.setup({})
+    require('tests.plenary.helpers').create_file({ '* Test' })
+    vim.keymap.set('n', ',ox', '<Cmd>lua vim.g.user_clock = true<CR>', { desc = 'user clock', buffer = 0 })
+    config:setup_mappings('org', 0)
+
+    local mapping = nil
+    for _, keymap in ipairs(vim.api.nvim_buf_get_keymap(0, 'n')) do
+      if keymap['lhs'] == ',ox' then
+        mapping = keymap
+      end
+    end
+
+    assert.are.same('user clock', mapping['desc'])
+    assert.are.same('<Cmd>lua vim.g.user_clock = true<CR>', mapping['rhs'])
+  end)
   ---@diagnostic enable: need-check-nil
 end)
