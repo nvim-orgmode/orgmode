@@ -34,6 +34,28 @@ describe('Checkbox mappings', function()
     assert.are.same('* Test orgmode [1/2]', vim.fn.getline(1))
   end)
 
+  it('should update the checklist cookies on a headline directly after other text', function()
+    helpers.create_file({
+      '* Test orgmode foo/[/]',
+      '- [ ] checkbox item',
+      '- [ ] checkbox item',
+    })
+    vim.fn.cursor(2, 1)
+    vim.cmd([[exe "norm \<C-space>"]])
+    assert.are.same('* Test orgmode foo/[1/2]', vim.fn.getline(1))
+  end)
+
+  it('should update the checklist cookies on a headline with surrounding punctuation', function()
+    helpers.create_file({
+      '* Test orgmode ([/]):',
+      '- [ ] checkbox item',
+      '- [ ] checkbox item',
+    })
+    vim.fn.cursor(2, 1)
+    vim.cmd([[exe "norm \<C-space>"]])
+    assert.are.same('* Test orgmode ([1/2]):', vim.fn.getline(1))
+  end)
+
   it('should update the checklist cookies on a parent list', function()
     helpers.create_file({
       '- Test orgmode [/]',
@@ -43,6 +65,41 @@ describe('Checkbox mappings', function()
     vim.fn.cursor(2, 1)
     vim.cmd([[exe "norm \<C-space>"]])
     assert.are.same('- Test orgmode [1/2]', vim.fn.getline(1))
+  end)
+
+  it('should update every checklist cookie on a headline', function()
+    helpers.create_file({
+      '* Test orgmode [/] [%]',
+      '- [ ] checkbox item',
+      '- [ ] checkbox item',
+    })
+    vim.fn.cursor(2, 1)
+    vim.cmd([[exe "norm \<C-space>"]])
+    assert.are.same('* Test orgmode [1/2] [50%]', vim.fn.getline(1))
+  end)
+
+  it('should update the checklist cookies anywhere in a parent list item', function()
+    helpers.create_file({
+      '- Test orgmode [/] in the middle',
+      '  continued foo/[%]',
+      '  - [ ] checkbox item',
+      '  - [ ] checkbox item',
+    })
+    vim.fn.cursor(3, 1)
+    vim.cmd([[exe "norm \<C-space>"]])
+    assert.are.same('- Test orgmode [1/2] in the middle', vim.fn.getline(1))
+    assert.are.same('  continued foo/[50%]', vim.fn.getline(2))
+  end)
+
+  it('should update the checklist cookies on a parent list with surrounding punctuation', function()
+    helpers.create_file({
+      '- Test orgmode ([/]):',
+      '  - [ ] checkbox item',
+      '  - [ ] checkbox item',
+    })
+    vim.fn.cursor(2, 1)
+    vim.cmd([[exe "norm \<C-space>"]])
+    assert.are.same('- Test orgmode ([1/2]):', vim.fn.getline(1))
   end)
 
   it('should update the checklist cookies with a percentage within a headline', function()
