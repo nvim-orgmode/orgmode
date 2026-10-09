@@ -30,7 +30,7 @@ function OrgApi.load(name)
   if type(name) == 'table' then
     local list = {}
     for _, file in ipairs(orgmode.files:all()) do
-      if file.filename == name then
+      if vim.tbl_contains(name, file.filename) then
         table.insert(list, OrgFile._build_from_internal_file(file))
       end
     end
