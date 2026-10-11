@@ -2,6 +2,7 @@ local helpers = require('tests.plenary.helpers')
 local Date = require('orgmode.objects.date')
 local orgmode = require('orgmode')
 local EventManager = require('orgmode.events')
+local Clock = require('orgmode.clock')
 local events = EventManager.event
 
 describe('Clock', function()
@@ -335,5 +336,53 @@ describe('Clock', function()
         break
       end
     end
+  end)
+  describe('statusline for a file changed on disk', function()
+    local filename
+    after_each(function()
+      vim.fn.delete(filename)
+    end)
+
+    it('should not parse the file again on every call', function()
+      local start = os.date('%Y-%m-%d %a %H:%M', os.time() - 3600)
+      local fixtures, orgfiles = helpers.create_agenda_files({
+        {
+          filename = 'clocked.org',
+          content = {
+            '* TODO Clocked task',
+            '  :PROPERTIES:',
+            '  :EFFORT: 1:00',
+            '  :END:',
+            '  :LOGBOOK:',
+            '  CLOCK: [' .. start .. ']',
+            '  :END:',
+            '* TODO Other task',
+          },
+        },
+      })
+      filename = fixtures['clocked.org']
+      local orgfile = orgfiles:get(filename)
+      local clock = Clock:new({ files = orgfiles })
+      clock:update_clocked_headline()
+
+      local future_mtime = os.time() + 10
+      vim.uv.fs_utime(filename, future_mtime, future_mtime)
+      -- Any other read of the file parses it once
+      orgfile:parse()
+      local statusline = clock:get_statusline()
+      assert.are.same('(Org) [1:00/1:00] (Clocked task)', statusline)
+
+      local get_string_parser = vim.treesitter.get_string_parser
+      local parses = 0
+      helpers.with_var(vim.treesitter, 'get_string_parser', function(...)
+        parses = parses + 1
+        return get_string_parser(...)
+      end, function()
+        for _ = 1, 3 do
+          assert.are.same(statusline, clock:get_statusline())
+        end
+      end)
+      assert.are.same(0, parses)
+    end)
   end)
 end)
