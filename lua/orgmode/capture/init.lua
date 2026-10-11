@@ -584,10 +584,14 @@ function Capture:_get_refile_vars(capture_window)
 
   local file = opts.template:get_target()
   if vim.fn.filereadable(file) == 0 then
-    local choice = vim.fn.confirm(('Refile destination %s does not exist. Create now?'):format(file), '&Yes\n&No')
-    if choice ~= 1 then
-      utils.echo_error('Cannot proceed without a valid refile destination')
-      return false
+    -- A whole_file template captures into the target file itself, so creating
+    -- that file is the capture, not a side effect worth confirming.
+    if not opts.template.whole_file then
+      local choice = vim.fn.confirm(('Refile destination %s does not exist. Create now?'):format(file), '&Yes\n&No')
+      if choice ~= 1 then
+        utils.echo_error('Cannot proceed without a valid refile destination')
+        return false
+      end
     end
     vim.fn.mkdir(vim.fn.fnamemodify(file, ':h'), 'p')
     vim.fn.writefile({}, file)
