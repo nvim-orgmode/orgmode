@@ -44,17 +44,25 @@ end
 ---@return OrgAgendaLine
 function OrgAgendaLine:new(opts)
   opts = opts or {}
-  return setmetatable({
+  local line = setmetatable({
     tokens = {},
     col_counter = 1,
-    headline = opts.headline,
-    headline_ref = opts.headline and headline_ref(opts.headline),
     highlighter = opts.highlighter,
     hl_group = opts.hl_group,
     line_hl_group = opts.line_hl_group,
     separator = opts.separator or ' ',
     metadata = opts.metadata or {},
   }, OrgAgendaLine)
+  if opts.headline then
+    line:set_headline(opts.headline)
+  end
+  return line
+end
+
+---@param headline OrgHeadline
+function OrgAgendaLine:set_headline(headline)
+  self.headline = headline
+  self.headline_ref = headline_ref(headline)
 end
 
 ---@param token_opts OrgAgendaLineTokenOpts

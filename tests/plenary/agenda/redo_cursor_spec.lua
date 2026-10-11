@@ -365,6 +365,64 @@ describe('Agenda redo cursor with duplicate titles', function()
   end)
 end)
 
+describe('Agenda redo cursor on clock report rows', function()
+  ---@type OrgFile
+  local file
+  local today = Date.today():to_string()
+
+  ---@param title string
+  ---@return string[]
+  local function clocked(title)
+    return {
+      '* ' .. title,
+      '  :LOGBOOK:',
+      ('  CLOCK: [%s 09:00]--[%s 10:00] =>  1:00'):format(today, today),
+      '  :END:',
+    }
+  end
+
+  before_each(function()
+    vim.o.lines = 24
+    vim.o.columns = 120
+    local lines = clocked('clocked A')
+    table.insert(lines, '* clocked later')
+    vim.list_extend(lines, clocked('clocked B'))
+    file = helpers.create_agenda_file(lines, { win_split_mode = 'vertical' })
+    orgmode.agenda:agenda({ span = 'day' }):wait()
+    orgmode.agenda:toggle_clock_report():wait()
+    assert.are.same('orgagenda', vim.bo.filetype)
+  end)
+
+  after_each(function()
+    vim.cmd('silent! %bwipeout!')
+  end)
+
+  it('follows the headline when a row is added above it', function()
+    local win = agenda_win()
+    local bufnr = vim.api.nvim_win_get_buf(win)
+    local function find_row(title)
+      for lnum, line in ipairs(vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)) do
+        if line:find(title, 1, true) then
+          return lnum
+        end
+      end
+    end
+    set_view(win, assert(find_row('clocked B')), 1)
+
+    file
+      :update(function()
+        local later = assert(file:find_headline_by_title('clocked later'))
+        local row = later:get_range().start_line
+        vim.api.nvim_buf_set_lines(0, row, row, false, vim.list_slice(clocked('x'), 2))
+      end)
+      :wait()
+    orgmode.agenda:redo('remote_edit', true):wait()
+
+    assert.is_truthy(find_row('clocked later'), 'the report should list the new row')
+    assert.are.same(find_row('clocked B'), view_of(win).lnum)
+  end)
+end)
+
 describe('Agenda redo from an org window', function()
   before_each(function()
     vim.o.lines = 24
