@@ -311,6 +311,60 @@ describe('Agenda redo cursor on repeated lines', function()
   end)
 end)
 
+describe('Agenda redo cursor with duplicate titles', function()
+  ---@type OrgFile
+  local file
+
+  before_each(function()
+    vim.o.lines = 24
+    vim.o.columns = 120
+    local lines = { '#+TODO: TODO NEXT | DONE', '', '* TODO dup', '* TODO dup' }
+    for i = 1, 10 do
+      table.insert(lines, ('* TODO other %d'):format(i))
+    end
+    table.insert(lines, '* NEXT next 1')
+    file = helpers.create_agenda_file(lines, {
+      win_split_mode = 'vertical',
+      org_agenda_custom_commands = {
+        b = { description = 'backlog', types = { block('TODO'), block('NEXT') } },
+      },
+    })
+    for _, t in ipairs(config.org_agenda_custom_commands.b.types) do
+      t.org_agenda_files = { file.filename }
+    end
+    orgmode.agenda:open_by_key('b'):wait()
+    assert.are.same('orgagenda', vim.bo.filetype)
+  end)
+
+  after_each(function()
+    vim.cmd('silent! %bwipeout!')
+  end)
+
+  it('follows the moved headline, not the other one with the same title', function()
+    local win = agenda_win()
+    local bufnr = vim.api.nvim_win_get_buf(win)
+    local dups = {}
+    for lnum, line in ipairs(vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)) do
+      if line:find('dup', 1, true) then
+        table.insert(dups, lnum)
+      end
+    end
+    assert.are.same(2, #dups)
+    set_view(win, dups[2], 1)
+
+    file
+      :update(function()
+        file:get_headlines()[2]:set_todo('NEXT')
+      end)
+      :wait()
+    orgmode.agenda:redo('remote_edit', true):wait()
+
+    local lnum = view_of(win).lnum
+    assert.is_true(lnum > dups[2], 'cursor should be on the dup in the NEXT block')
+    assert.is_truthy(vim.api.nvim_buf_get_lines(bufnr, lnum - 1, lnum, false)[1]:find('dup', 1, true))
+  end)
+end)
+
 describe('Agenda redo from an org window', function()
   before_each(function()
     vim.o.lines = 24

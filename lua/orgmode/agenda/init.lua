@@ -383,23 +383,33 @@ function Agenda:_save_view()
 end
 
 ---A headline can occupy several agenda lines (scheduled and deadline,
----repeats), so the one nearest the previous cursor line wins.
+---repeats), so the one nearest the previous cursor line wins. Headlines
+---without an ID that share a title are told apart by their line in the
+---file, as long as it is unchanged.
 ---@private
 ---@param ref OrgAgendaLineHeadlineRef
 ---@param lnum number
 ---@return number | nil
 function Agenda:_find_line_nr(ref, lnum)
   local nearest = nil
+  local nearest_same_start = nil
+  local function closer(line_nr, current)
+    return not current or math.abs(line_nr - lnum) < math.abs(current - lnum)
+  end
   for _, view in ipairs(self.views) do
     for _, line in ipairs(view:get_lines()) do
-      if line.headline_ref and same_headline(ref, line.headline_ref) then
-        if not nearest or math.abs(line.line_nr - lnum) < math.abs(nearest - lnum) then
+      local line_ref = line.headline_ref
+      if line_ref and same_headline(ref, line_ref) then
+        if closer(line.line_nr, nearest) then
           nearest = line.line_nr
+        end
+        if line_ref.start_line == ref.start_line and closer(line.line_nr, nearest_same_start) then
+          nearest_same_start = line.line_nr
         end
       end
     end
   end
-  return nearest
+  return nearest_same_start or nearest
 end
 
 function Agenda:advance_span(direction)

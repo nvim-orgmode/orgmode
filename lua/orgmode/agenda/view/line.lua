@@ -14,6 +14,7 @@ local utils = require('orgmode.utils')
 ---@field filename string
 ---@field id? string
 ---@field title string
+---@field start_line number
 
 ---@class OrgAgendaLine:OrgAgendaLineOpts
 ---@field view OrgAgendaView
@@ -35,6 +36,7 @@ local function headline_ref(headline)
     filename = headline.file.filename,
     id = headline:get_property('id', false),
     title = headline:get_title(),
+    start_line = headline:get_range().start_line,
   }
 end
 
