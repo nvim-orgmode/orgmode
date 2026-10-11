@@ -10,30 +10,59 @@ local utils = require('orgmode.utils')
 ---@field metadata? table<string, any>
 ---@field separator? string
 
+---@class OrgAgendaLineHeadlineRef
+---@field filename string
+---@field id? string
+---@field title string
+---@field start_line number
+
 ---@class OrgAgendaLine:OrgAgendaLineOpts
 ---@field view OrgAgendaView
 ---@field highlighter OrgHighlighter
 ---@field line_nr number
 ---@field col_counter number
 ---@field headline? OrgHeadline
+---@field headline_ref? OrgAgendaLineHeadlineRef
 ---@field tokens? OrgAgendaLineToken[]
 local OrgAgendaLine = {}
 OrgAgendaLine.__index = OrgAgendaLine
+
+---Captured at build time: after the file is reparsed, the headline's
+---tree-sitter nodes no longer describe it.
+---@param headline OrgHeadline
+---@return OrgAgendaLineHeadlineRef
+local function headline_ref(headline)
+  return {
+    filename = headline.file.filename,
+    id = headline:get_property('id', false),
+    title = headline:get_title(),
+    start_line = headline:get_range().start_line,
+  }
+end
 
 ---@param opts? OrgAgendaLineOpts
 ---@return OrgAgendaLine
 function OrgAgendaLine:new(opts)
   opts = opts or {}
-  return setmetatable({
+  local line = setmetatable({
     tokens = {},
     col_counter = 1,
-    headline = opts.headline,
     highlighter = opts.highlighter,
     hl_group = opts.hl_group,
     line_hl_group = opts.line_hl_group,
     separator = opts.separator or ' ',
     metadata = opts.metadata or {},
   }, OrgAgendaLine)
+  if opts.headline then
+    line:set_headline(opts.headline)
+  end
+  return line
+end
+
+---@param headline OrgHeadline
+function OrgAgendaLine:set_headline(headline)
+  self.headline = headline
+  self.headline_ref = headline_ref(headline)
 end
 
 ---@param token_opts OrgAgendaLineTokenOpts

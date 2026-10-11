@@ -301,7 +301,7 @@ function OrgAgendaType:render(bufnr, current_line)
         end
         local hl_group = '@org.bold'
         if cell.reference then
-          line.headline = cell.reference
+          line:set_headline(cell.reference)
           hl_group = '@org.hyperlink'
         end
         line:add_token(AgendaLineToken:new({
