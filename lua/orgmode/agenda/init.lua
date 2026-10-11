@@ -319,7 +319,14 @@ function Agenda:redo(source, preserve_cursor_pos)
       return true
     end)
     :next(function()
-      self:render()
+      local win = self:_get_window()
+      if win then
+        vim.api.nvim_win_call(win, function()
+          self:render()
+        end)
+      else
+        self:render()
+      end
       if restore_view then
         restore_view()
       end

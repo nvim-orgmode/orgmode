@@ -310,3 +310,35 @@ describe('Agenda redo cursor on repeated lines', function()
     assert.are.same(occurrences[2], view_of(win).lnum)
   end)
 end)
+
+describe('Agenda redo from an org window', function()
+  before_each(function()
+    vim.o.lines = 24
+    vim.o.columns = 120
+    local today = Date.today():to_string()
+    local lines = {}
+    for i = 1, 6 do
+      table.insert(lines, ('* TODO task %d'):format(i))
+      table.insert(lines, ('  SCHEDULED: <%s>'):format(today))
+    end
+    helpers.create_agenda_file(lines, { win_split_mode = 'vertical' })
+    orgmode.agenda:agenda({ span = 'day' }):wait()
+    assert.are.same('orgagenda', vim.bo.filetype)
+  end)
+
+  after_each(function()
+    vim.cmd('silent! %bwipeout!')
+  end)
+
+  it('keeps the cursor of the org window', function()
+    vim.cmd('wincmd p')
+    assert.are.same('org', vim.bo.filetype)
+    -- inside the line range of the agenda view, below its day header
+    vim.fn.cursor({ 5, 3 })
+
+    orgmode.agenda:redo('remote_edit', true):wait()
+
+    assert.are.same('org', vim.bo.filetype)
+    assert.are.same({ 5, 2 }, vim.api.nvim_win_get_cursor(0))
+  end)
+end)
