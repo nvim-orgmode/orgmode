@@ -80,8 +80,8 @@ function Capture:open_template(template)
       self._windows[capture_window.id] = capture_window
       return self:setup_mappings()
     end,
-    on_close = function(capture_window)
-      return self:on_refile_close(capture_window)
+    on_close = function(capture_window, event)
+      return self:on_refile_close(capture_window, event)
     end,
   })
 
@@ -98,21 +98,29 @@ function Capture:open_template_by_shortcut(shortcut)
 end
 
 ---@param capture_window OrgCaptureWindow
-function Capture:on_refile_close(capture_window)
-  local opts = self:_get_refile_vars(capture_window)
-  if not opts then
-    return
-  end
+---@param event string the autocmd that closes the capture
+function Capture:on_refile_close(capture_window, event)
   if capture_window:is_modified() then
-    local choice =
-      vim.fn.confirm(string.format('Do you want to refile this to %s?', opts.destination_file.filename), '&Yes\n&No')
+    local choice = vim.fn.confirm(
+      string.format('Do you want to refile this to %s?', capture_window.template:get_target()),
+      '&Yes\n&No'
+    )
     vim.cmd([[redraw!]])
-    if choice ~= 1 then
+    -- Escape keeps the capture open, which is impossible while Neovim exits
+    if choice == 0 and event ~= 'VimLeavePre' then
+      return capture_window:reopen()
+    end
+    if choice == 2 then
       if self.on_cancel_refile then
         self.on_cancel_refile(self)
       end
       return utils.echo_info('Canceled.')
     end
+  end
+
+  local opts = self:_get_refile_vars(capture_window)
+  if not opts then
+    return
   end
 
   vim.schedule(function()

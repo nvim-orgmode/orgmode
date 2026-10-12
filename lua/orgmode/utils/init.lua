@@ -427,9 +427,10 @@ function utils.open_window(name, height, split_mode, border)
   return vim.cmd(string.format('%s %s', split_mode, name))
 end
 
-function utils.open_tmp_org_window(height, split_mode, border, on_close)
+---@param name? string file to open instead of a new temp file
+function utils.open_tmp_org_window(height, split_mode, border, on_close, name)
   local prev_winnr = vim.api.nvim_get_current_win()
-  utils.open_window(vim.fn.tempname() .. '.org', height or 16, split_mode, border)
+  utils.open_window(name or (vim.fn.tempname() .. '.org'), height or 16, split_mode, border)
   vim.cmd([[setlocal filetype=org bufhidden=wipe nobuflisted nolist noswapfile nofoldenable]])
   local bufnr = vim.api.nvim_get_current_buf()
   local augroup = vim.api.nvim_create_augroup('OrgTmpWindow_' .. bufnr, { clear = true })
