@@ -36,6 +36,19 @@ function MapEntry.text_object(handler, opts)
   })
 end
 
+---Create a no-op mapping used as a group label (for example in which-key).
+---@param desc string Group description
+---@param opts? table
+function MapEntry.group(desc, opts)
+  opts = opts or {}
+  opts.opts = vim.tbl_extend('force', opts.opts or {}, {
+    desc = desc,
+    nowait = false,
+  })
+  opts.type = 'group'
+  return MapEntry:new('<Nop>', opts)
+end
+
 function MapEntry.custom(handler, opts)
   return MapEntry:new(handler, opts)
 end
@@ -73,6 +86,35 @@ function MapEntry:new(handler, opts)
   return data
 end
 
+---Check whether any mapping already exists for the given modes and lhs.
+---@param modes string[]
+---@param lhs string
+---@param buffer? boolean|number
+---@return boolean
+local function has_existing_mapping(modes, lhs, buffer)
+  local bufnr
+  if type(buffer) == 'number' then
+    bufnr = buffer
+  elseif buffer == true then
+    bufnr = vim.api.nvim_get_current_buf()
+  end
+
+  local function check()
+    for _, mode in ipairs(modes) do
+      if not vim.tbl_isempty(vim.fn.maparg(lhs, mode, false, true)) then
+        return true
+      end
+    end
+    return false
+  end
+
+  if bufnr and vim.api.nvim_buf_is_valid(bufnr) then
+    return vim.api.nvim_buf_call(bufnr, check)
+  end
+
+  return check()
+end
+
 ---@param default_mapping string|table
 ---@param user_mapping? string|table
 ---@param opts? table
@@ -99,6 +141,8 @@ function MapEntry:attach(default_mapping, user_mapping, opts)
   end
 
   local map_opts = vim.tbl_extend('force', self.opts, opts or {})
+  local is_user_defined = map_opts.user_defined
+  map_opts.user_defined = nil
 
   local prefix = ''
   if map_opts.prefix then
@@ -114,9 +158,13 @@ function MapEntry:attach(default_mapping, user_mapping, opts)
     if prefix ~= '' then
       map = map:gsub('<prefix>', prefix)
     end
-    vim.keymap.set(self.modes, map, self.handler, map_opts)
-    if self.type == 'operator' then
-      vim.keymap.set('o', map, (':normal v%s<CR>'):format(map), map_opts)
+    -- Default group labels must not clobber mappings that already exist at the
+    -- same prefix. Explicitly configured group mappings are always applied.
+    if self.type ~= 'group' or is_user_defined or not has_existing_mapping(self.modes, map, map_opts.buffer) then
+      vim.keymap.set(self.modes, map, self.handler, map_opts)
+      if self.type == 'operator' then
+        vim.keymap.set('o', map, (':normal v%s<CR>'):format(map), map_opts)
+      end
     end
   end
 end
