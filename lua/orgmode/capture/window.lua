@@ -8,11 +8,16 @@ local id_counter = 0
 ---@field on_open? fun(self: OrgCaptureWindow)
 ---@field on_finish? fun(lines: string[]): string[] | nil
 ---@field on_close? fun(self: OrgCaptureWindow, event: string)
+---Path of a new file to capture into directly, instead of a temp buffer
+---@field resolve_file_target? fun(self: OrgCaptureWindow, content: string[]): string?
 
 ---@class OrgCaptureWindow :OrgCaptureWindowOpts
 ---@field id number
+---@field pre_refile_done? boolean
+---@field mappings? { mode: string, lhs: string }[] buffer mappings the capture added
 ---@field private _window fun() | nil
 ---@field private _bufnr number
+---@field private _file_target? string
 local CaptureWindow = {}
 CaptureWindow.__index = CaptureWindow
 
@@ -23,6 +28,7 @@ function CaptureWindow:new(opts)
     on_open = opts.on_open,
     on_finish = opts.on_finish,
     on_close = opts.on_close,
+    resolve_file_target = opts.resolve_file_target,
   }
   data.id = id_counter
   id_counter = id_counter + 1
@@ -38,7 +44,11 @@ function CaptureWindow:open()
     if not content then
       return utils.echo_info('Canceled.')
     end
-    self:_open_buffer(content)
+    self._file_target = self.resolve_file_target and self.resolve_file_target(self, content) or nil
+    if self._file_target then
+      vim.fn.mkdir(vim.fn.fnamemodify(self._file_target, ':h'), 'p')
+    end
+    self:_open_buffer(content, self._file_target)
     self.template:setup()
     self:_attach()
 
@@ -129,6 +139,12 @@ end
 ---@return number
 function CaptureWindow:get_bufnr()
   return self._bufnr
+end
+
+---The new file this capture edits directly, or nil for a capture in a temp buffer.
+---@return string | nil
+function CaptureWindow:get_file_target()
+  return self._file_target
 end
 
 function CaptureWindow:kill()

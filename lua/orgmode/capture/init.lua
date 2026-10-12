@@ -5,11 +5,23 @@ local Templates = require('orgmode.capture.templates')
 local Template = require('orgmode.capture.template')
 local Menu = require('orgmode.ui.menu')
 local Range = require('orgmode.files.elements.range')
+local OrgFile = require('orgmode.files.file')
 local CaptureWindow = require('orgmode.capture.window')
 local Date = require('orgmode.objects.date')
 local Datetree = require('orgmode.capture.template.datetree')
 local Input = require('orgmode.ui.input')
 local Promise = require('orgmode.utils.promise')
+
+---@return { mode: string, lhs: string }[] mappings of the current buffer in all modes
+local function buffer_keymaps()
+  local result = {}
+  for _, mode in ipairs({ 'n', 'i', 'v', 'x', 's', 'o' }) do
+    for _, map in ipairs(vim.api.nvim_buf_get_keymap(0, mode)) do
+      table.insert(result, { mode = mode, lhs = map.lhs })
+    end
+  end
+  return result
+end
 
 ---@alias OrgOnCaptureClose fun(capture:OrgCapture, opts:OrgProcessCaptureOpts)
 ---@alias OrgOnCaptureCancel fun(capture:OrgCapture)
@@ -76,9 +88,21 @@ function Capture:open_template(template)
   template.files = self.files
   local window = CaptureWindow:new({
     template = template,
+    resolve_file_target = function(capture_window, content)
+      return self:_resolve_new_file_target(capture_window, content)
+    end,
     on_open = function(capture_window)
       self._windows[capture_window.id] = capture_window
-      return self:setup_mappings()
+      local before = {}
+      for _, map in ipairs(buffer_keymaps()) do
+        before[map.mode .. map.lhs] = true
+      end
+      self:setup_mappings()
+      -- A file capture hands its buffer over to the user when it ends, and
+      -- the capture mappings must not stay behind in it.
+      capture_window.mappings = vim.tbl_filter(function(map)
+        return not before[map.mode .. map.lhs]
+      end, buffer_keymaps())
     end,
     on_close = function(capture_window, event)
       return self:on_refile_close(capture_window, event)
@@ -97,9 +121,38 @@ function Capture:open_template_by_shortcut(shortcut)
   return self:open_template(template)
 end
 
+---A whole_file capture into a file that does not exist yet edits that file
+---directly instead of a temp buffer. Resolving the target runs on_pre_refile,
+---so for whole_file captures it runs here, once, and not again on refile.
+---@private
+---@param capture_window OrgCaptureWindow
+---@param content string[]
+---@return string | nil
+function Capture:_resolve_new_file_target(capture_window, content)
+  local template = capture_window.template
+  if not template.whole_file then
+    return nil
+  end
+  local opts = {
+    source_file = OrgFile:new({ filename = template:get_target(), lines = content }),
+    template = template,
+    capture_window = capture_window,
+  }
+  if self.on_pre_refile then
+    self.on_pre_refile(self, opts)
+  end
+  capture_window.pre_refile_done = true
+  local target = template:get_target()
+  if vim.fn.filereadable(target) == 1 then
+    return nil
+  end
+  return target
+end
+
 ---@param capture_window OrgCaptureWindow
 ---@param event string the autocmd that closes the capture
 function Capture:on_refile_close(capture_window, event)
+  local file_target = capture_window:get_file_target()
   if capture_window:is_modified() then
     local choice = vim.fn.confirm(
       string.format('Do you want to refile this to %s?', capture_window.template:get_target()),
@@ -110,12 +163,22 @@ function Capture:on_refile_close(capture_window, event)
     if choice == 0 and event ~= 'VimLeavePre' then
       return capture_window:reopen()
     end
-    if choice == 2 then
+    local discard = choice == 2
+    if discard and not (file_target and vim.fn.filereadable(file_target) == 1) then
       if self.on_cancel_refile then
         self.on_cancel_refile(self)
       end
       return utils.echo_info('Canceled.')
     end
+    if not discard and file_target then
+      vim.fn.writefile(vim.api.nvim_buf_get_lines(capture_window:get_bufnr(), 0, -1, false), file_target)
+    end
+  end
+
+  if file_target then
+    return vim.schedule(function()
+      self:_finish_file_capture(capture_window)
+    end)
   end
 
   local opts = self:_get_refile_vars(capture_window)
@@ -128,9 +191,86 @@ function Capture:on_refile_close(capture_window, event)
   end)
 end
 
+---Write a capture that edits its new file directly, and hand the file over as
+---a normal buffer.
+---@private
+---@param capture_window OrgCaptureWindow
+function Capture:_finish_file_capture(capture_window)
+  local target = capture_window:get_file_target() --[[@as string]]
+  local file = self.files:get(target)
+  if self.on_post_refile then
+    self.on_post_refile(self, {
+      source_file = file,
+      destination_file = file,
+      template = capture_window.template,
+      capture_window = capture_window,
+    })
+  end
+  utils.echo_info(('Wrote %s'):format(target))
+  self:_release_file_buffer(capture_window, '')
+  self:kill(false, capture_window.id)
+end
+
+---Turn the capture buffer of a file capture into a normal buffer for its file.
+---@private
+---@param capture_window OrgCaptureWindow
+---@param bufhidden string
+function Capture:_release_file_buffer(capture_window, bufhidden)
+  local bufnr = capture_window:get_bufnr()
+  if not bufnr or not vim.api.nvim_buf_is_valid(bufnr) then
+    return
+  end
+  for _, map in ipairs(capture_window.mappings or {}) do
+    pcall(vim.keymap.del, map.mode, map.lhs, { buffer = bufnr })
+  end
+  vim.bo[bufnr].bufhidden = bufhidden
+  vim.bo[bufnr].buflisted = true
+  vim.bo[bufnr].swapfile = vim.go.swapfile
+  vim.b[bufnr].org_capture = nil
+  vim.b[bufnr].org_capture_window_id = nil
+end
+
+---Abort a capture that edits its new file directly, as org-roam does in Emacs:
+---the captured text goes without asking, and only deleting a file already on
+---disk is asked for. The buffer stays loaded, so undo brings the text back.
+---@private
+---@param capture_window OrgCaptureWindow
+function Capture:_kill_file_capture(capture_window)
+  local target = capture_window:get_file_target() --[[@as string]]
+  local bufnr = capture_window:get_bufnr()
+  local on_disk = vim.fn.filereadable(target) == 1
+
+  self:_release_file_buffer(capture_window, 'hide')
+  -- Start a new undo block, so a single undo restores exactly the removed text
+  vim.bo[bufnr].undolevels = vim.bo[bufnr].undolevels
+  vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, {})
+  if on_disk then
+    vim.api.nvim_buf_call(bufnr, function()
+      vim.cmd('silent write')
+    end)
+  end
+  if self.on_cancel_refile then
+    self.on_cancel_refile(self)
+  end
+  capture_window:kill()
+  self._windows[capture_window.id] = nil
+
+  if not on_disk then
+    vim.api.nvim_buf_delete(bufnr, { force = true })
+  elseif vim.fn.confirm('Delete file for aborted capture?', '&No\n&Yes') == 2 then
+    vim.api.nvim_buf_delete(bufnr, { force = true })
+    vim.fn.delete(target)
+  end
+  utils.echo_info('Canceled.')
+end
+
 ---Triggered when refiling from capture buffer
 function Capture:refile()
   local capture_window = self._windows[vim.b.org_capture_window_id]
+  if capture_window:get_file_target() then
+    vim.cmd('silent write')
+    return self:_finish_file_capture(capture_window)
+  end
   local opts = self:_get_refile_vars(capture_window)
   if not opts then
     return
@@ -141,9 +281,13 @@ end
 
 ---Refile to destination from capture buffer
 function Capture:refile_to_destination()
+  local capture_window = self._windows[vim.b.org_capture_window_id]
+  if capture_window:get_file_target() then
+    utils.echo_error('A capture into a new file cannot be refiled elsewhere')
+    return Promise.resolve(false)
+  end
   local source_file = self.files:get_current_file()
   local source_headline = source_file:get_headlines()[1]
-  local capture_window = self._windows[vim.b.org_capture_window_id]
   return self:get_destination():next(function(destination)
     if not destination then
       return false
@@ -558,6 +702,9 @@ end
 ---@param window_id? number
 function Capture:kill(from_mapping, window_id)
   local window = self._windows[window_id or vim.b.org_capture_window_id]
+  if window and from_mapping and window:get_file_target() then
+    return self:_kill_file_capture(window)
+  end
   if window then
     if from_mapping and self.on_cancel_refile then
       self.on_cancel_refile(self)
@@ -586,7 +733,7 @@ function Capture:_get_refile_vars(capture_window)
     capture_window = capture_window,
   }
 
-  if self.on_pre_refile then
+  if self.on_pre_refile and not capture_window.pre_refile_done then
     self.on_pre_refile(self, opts)
   end
 
