@@ -37,11 +37,16 @@ function PriorityState:prompt_user()
 
   choice = string.upper(choice)
   if #choice > 1 and tonumber(choice) == nil then
-    utils.echo_warning(string.format('Only numeric priorities can be multiple characters long'))
+    utils.echo_warning('Only numeric priorities can be multiple characters long')
     return nil
   end
-  local choicenum = string.byte(choice)
-  if choice ~= ' ' and (choicenum < string.byte(self.high_priority) or choicenum > string.byte(self.low_priority)) then
+
+  if choice == ' ' then
+    return choice
+  end
+
+  local choicenum = PriorityState._as_number(choice)
+  if choicenum < self:highest_as_num() or choicenum > self:lowest_as_num() then
     utils.echo_warning(string.format("Priority must be between '%s' and '%s'", self.high_priority, self.low_priority))
     return nil
   end
@@ -51,7 +56,7 @@ end
 
 ---@return number
 function PriorityState:get_sort_value()
-  return -1 * string.byte(self.priority == '' and self.default_priority or self.priority)
+  return -1 * PriorityState._as_number(self.priority == '' and self.default_priority or self.priority)
 end
 
 ---@return string
