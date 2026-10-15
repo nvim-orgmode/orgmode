@@ -11,6 +11,9 @@ local utils = require('orgmode.utils')
 local SortingStrategy = require('orgmode.agenda.sorting_strategy')
 local Promise = require('orgmode.utils.promise')
 
+-- Maximum time spent scanning headlines and matching dates before processing input.
+local WORK_BUDGET_MS = 5
+
 ---@alias OrgAgendaDay { day: OrgDate, agenda_items: OrgAgendaItem[], category_length: number, label_length: 0 }
 
 ---@class OrgAgendaTypeOpts
@@ -54,6 +57,7 @@ local Promise = require('orgmode.utils.promise')
 ---@field valid_filters? OrgAgendaFilter[]
 ---@field id? string
 ---@field private _grid_times { hour: number, min: number }[]
+---@field private _agenda_days? OrgAgendaDay[]
 local OrgAgendaType = {}
 OrgAgendaType.__index = OrgAgendaType
 
@@ -94,16 +98,31 @@ function OrgAgendaType:new(opts)
   return this
 end
 
+---Prepare every agenda entry, yielding between batches of work without truncating the scan.
+---@return OrgPromise<OrgAgendaType>
 function OrgAgendaType:prepare()
-  return Promise.resolve(self)
+  return Promise.async(function()
+    self.files:load():await()
+    local started = vim.uv.hrtime()
+    local function maybe_yield()
+      if (vim.uv.hrtime() - started) / 1e6 >= WORK_BUDGET_MS then
+        Promise.yield():await()
+        started = vim.uv.hrtime()
+      end
+    end
+    self._agenda_days = self:_get_agenda_days(maybe_yield)
+    return self
+  end)
 end
 
+---@return OrgPromise<OrgFiles> | nil
 function OrgAgendaType:redo()
   if self.agenda_files then
-    self.files:load_sync(true)
+    return self.files:load(true)
   end
 end
 
+---@private
 function OrgAgendaType:_setup_agenda_files()
   if not self.agenda_files then
     return
@@ -111,7 +130,8 @@ function OrgAgendaType:_setup_agenda_files()
   self.files = Files:new({
     paths = self.agenda_files,
     cache = true,
-  }):load_sync(true)
+  })
+  self.files:load(true)
 end
 
 function OrgAgendaType:advance_span(count, direction)
@@ -244,7 +264,8 @@ function OrgAgendaType:render(bufnr, current_line)
   if was_line_in_view then
     jump_to_date = self:_get_jump_to_date(current_line)
   end
-  local agenda_days = self:_get_agenda_days()
+  local agenda_days = self._agenda_days or self:_get_agenda_days()
+  self._agenda_days = nil
 
   local agendaView = AgendaView:new({ bufnr = self.bufnr, highlighter = self.highlighter })
   agendaView:add_line(AgendaLine:single_token({
@@ -558,21 +579,36 @@ function OrgAgendaType:rerender_agenda_line(agenda_line, headline)
   self.view:replace_line(agenda_line, line)
 end
 
+---@private
+---@param maybe_yield? fun() Yield callback, used only from an async context
 ---@return OrgAgendaDay[]
-function OrgAgendaType:_get_agenda_days()
+function OrgAgendaType:_get_agenda_days(maybe_yield)
+  local async = maybe_yield ~= nil
+  maybe_yield = maybe_yield or function() end
   local dates = self.from:get_range_until(self.to)
   local agenda_days = {}
 
   local headline_dates = {}
   for _, orgfile in ipairs(self.files:all()) do
-    for _, headline in ipairs(orgfile:get_opened_headlines()) do
-      for _, headline_date in ipairs(headline:get_valid_dates_for_agenda()) do
-        table.insert(headline_dates, {
-          headline_date = headline_date,
-          headline = headline,
-        })
+    if not orgfile:is_archive_file() then
+      if async then
+        -- Use the same incremental parsing path as the notification scanner.
+        orgfile:parse_async():await()
+        maybe_yield()
+      end
+      for _, headline in ipairs(orgfile:get_headlines()) do
+        if not headline:is_archived() then
+          for _, headline_date in ipairs(headline:get_valid_dates_for_agenda()) do
+            table.insert(headline_dates, {
+              headline_date = headline_date,
+              headline = headline,
+            })
+          end
+        end
+        maybe_yield()
       end
     end
+    maybe_yield()
   end
 
   local headlines = {}
@@ -588,6 +624,7 @@ function OrgAgendaType:_get_agenda_days()
         date.category_length = math.max(date.category_length, vim.api.nvim_strwidth(headline:get_category()))
         date.label_length = math.max(date.label_length, vim.api.nvim_strwidth(agenda_item.label))
       end
+      maybe_yield()
     end
 
     vim.list_extend(date.agenda_items, self:_prepare_grid_lines(dates, date))
@@ -596,6 +633,7 @@ function OrgAgendaType:_get_agenda_days()
     date.label_length = math.min(11, date.label_length)
 
     table.insert(agenda_days, date)
+    maybe_yield()
   end
 
   return agenda_days
