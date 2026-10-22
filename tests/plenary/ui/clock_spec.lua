@@ -37,6 +37,36 @@ describe('Clock', function()
     vim.cmd([[silent! write!]])
   end)
 
+  it('should clock out again after undoing a clock out', function()
+    local file = helpers.create_file({
+      '#TITLE: Undo file',
+      '',
+      '* TODO Undo clock out',
+    })
+    vim.fn.cursor(3, 1)
+    local now = Date.now({ active = false }):to_wrapped_string()
+    vim.cmd([[norm ,oxi]])
+    vim.wait(100)
+    assert.are.same(string.format('  CLOCK: %s', now), vim.fn.getline(5))
+
+    -- Start a new undo block, so that undo only reverts the clock out
+    vim.o.undolevels = vim.o.undolevels
+    vim.fn.cursor(3, 1)
+    local clock_out = Date.now({ active = false }):to_wrapped_string()
+    vim.cmd([[norm ,oxo]])
+    assert.are.same(string.format('  CLOCK: %s--%s => 0:00', now, clock_out), vim.fn.getline(5))
+
+    vim.cmd([[silent! undo]])
+    assert.are.same(string.format('  CLOCK: %s', now), vim.fn.getline(5))
+
+    vim.fn.cursor(3, 1)
+    clock_out = Date.now({ active = false }):to_wrapped_string()
+    vim.cmd([[norm ,oxo]])
+    assert.are.same(string.format('  CLOCK: %s--%s => 0:00', now, clock_out), vim.fn.getline(5))
+    -- Keep the file out of the agenda files of the next tests
+    vim.fn.delete(file.filename)
+  end)
+
   it('should clock out first entry from same file once second entry is clocked in', function()
     local second_file = helpers.create_agenda_file({
       '#TITLE: Second file',

@@ -29,10 +29,30 @@ function Clock:init()
 end
 
 function Clock:update_clocked_headline()
-  local last_clocked_headline = self.files:get_clocked_headline()
+  local last_clocked_headline = self.files:get_clocked_headline() or self:_get_clocked_headline_in_current_file()
   if last_clocked_headline and last_clocked_headline:is_clocked_in() then
     self.clocked_headline = last_clocked_headline
   end
+end
+
+-- The current file is not always one of the agenda files, but it can still
+-- have a running clock, e.g. after a clock out was undone.
+---@private
+---@return OrgHeadline|nil
+function Clock:_get_clocked_headline_in_current_file()
+  if vim.bo.filetype ~= 'org' then
+    return nil
+  end
+  local file = self.files:load_file_sync(utils.current_file_path())
+  if not file or not file:has_running_clock_candidate() then
+    return nil
+  end
+  for _, headline in ipairs(file:get_headlines()) do
+    if headline:is_clocked_in() then
+      return headline
+    end
+  end
+  return nil
 end
 
 function Clock:has_clocked_headline()
