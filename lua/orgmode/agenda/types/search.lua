@@ -25,6 +25,7 @@ function OrgAgendaSearchType:prepare()
   if not self.headline_query or self.headline_query == '' then
     return self:get_search_term()
   end
+  return self
 end
 
 function OrgAgendaSearchType:get_file_headlines(file)
