@@ -13,6 +13,7 @@ function OrgAgendaTagsTodoType:new(opts)
     return nil
   end
   setmetatable(obj, self)
+  obj.prefix_key = 'tags_todo'
   return obj
 end
 
