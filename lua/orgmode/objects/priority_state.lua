@@ -35,7 +35,11 @@ function PriorityState:prompt_user()
     return nil
   end
 
-  choice = string.upper(choice)
+  if self.high_priority:match('%u') then
+    choice = string.upper(choice)
+  elseif self.high_priority:match('%l') then
+    choice = string.lower(choice)
+  end
   if #choice > 1 and tonumber(choice) == nil then
     utils.echo_warning(string.format('Only numeric priorities can be multiple characters long'))
     return nil
