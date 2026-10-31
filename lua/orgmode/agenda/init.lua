@@ -9,6 +9,7 @@ local Promise = require('orgmode.utils.promise')
 local AgendaTypes = require('orgmode.agenda.types')
 local Input = require('orgmode.ui.input')
 local OrgHyperlink = require('orgmode.org.links.hyperlink')
+local MenuEntries = require('orgmode.agenda.menu_entries')
 
 ---@class OrgAgenda
 ---@field highlights table[]
@@ -123,9 +124,6 @@ function Agenda:tags_todo(opts)
 end
 
 function Agenda:_build_custom_commands()
-  if not config.org_agenda_custom_commands then
-    return {}
-  end
   local custom_commands = {}
   ---@param opts OrgAgendaCustomCommandType
   local get_type_opts = function(opts, id)
@@ -164,9 +162,10 @@ function Agenda:_build_custom_commands()
 
     return opts_by_type[opts.type]
   end
-  for shortcut, command in utils.sorted_pairs(config.org_agenda_custom_commands) do
+  for _, entry in ipairs(MenuEntries.custom_commands()) do
+    local shortcut, command = entry.key, entry.command --[[@as OrgAgendaCustomCommand]]
     table.insert(custom_commands, {
-      label = command.description or '',
+      label = entry.label,
       key = shortcut,
       action = function()
         local views = {}
@@ -198,41 +197,15 @@ function Agenda:_build_menu()
     prompt = 'Press key for an agenda command',
   })
 
-  menu:add_option({
-    label = 'Agenda for current week or day',
-    key = 'a',
-    action = function()
-      return self:agenda()
-    end,
-  })
-  menu:add_option({
-    label = 'List of all TODO entries',
-    key = 't',
-    action = function()
-      return self:todos()
-    end,
-  })
-  menu:add_option({
-    label = 'Match a TAGS/PROP/TODO query',
-    key = 'm',
-    action = function()
-      return self:tags()
-    end,
-  })
-  menu:add_option({
-    label = 'Like m, but only TODO entries',
-    key = 'M',
-    action = function()
-      return self:tags_todo()
-    end,
-  })
-  menu:add_option({
-    label = 'Search for keywords',
-    key = 's',
-    action = function()
-      return self:search()
-    end,
-  })
+  for _, entry in ipairs(MenuEntries.builtin) do
+    menu:add_option({
+      label = entry.label,
+      key = entry.key,
+      action = function()
+        return self[entry.method](self)
+      end,
+    })
+  end
 
   local custom_commands = self:_build_custom_commands()
   if #custom_commands > 0 then

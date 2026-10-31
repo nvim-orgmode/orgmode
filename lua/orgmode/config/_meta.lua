@@ -30,7 +30,7 @@
 ---@alias OrgAgendaCustomCommandType (OrgAgendaCustomCommandAgenda | OrgAgendaCustomCommandTags)
 
 ---@class OrgAgendaCustomCommand
----@field description string Description in prompt
+---@field description? string Description in prompt. Default: the block types, joined with ' + '
 ---@field types? OrgAgendaCustomCommandType[]
 
 ---@class OrgCustomExport
@@ -54,8 +54,8 @@
 ---@field cron_notifier? fun(tasks: table[]) | nil Custom notifier function. Default: nil
 
 ---@class OrgMappingsGlobal
----@field org_agenda? OrgMappingValue Mappings used to open agenda prompt. Default: '<prefix>a'
----@field org_capture? OrgMappingValue Mappings used to open capture prompt. Default: '<prefix>c'
+---@field org_agenda? OrgMappingValue Mappings used to open agenda prompt, or the prefix for agenda views with `global_menus_as_keymaps`. Default: '<prefix>a'
+---@field org_capture? OrgMappingValue Mappings used to open capture prompt, or the prefix for capture templates with `global_menus_as_keymaps`. Default: '<prefix>c'
 
 ---@class OrgHyperlinksConfig
 ---@field sources OrgLinkType[]
@@ -188,6 +188,7 @@
 ---@class OrgMappingsConfig
 ---@field disable_all? boolean Disable all mappings. Default: false
 ---@field org_return_uses_meta_return? boolean When true, `<CR>` will act as `<Leader><CR>` when applicable. Default: false
+---@field global_menus_as_keymaps? boolean When true, agenda views and capture templates are mapped under the `org_agenda` and `org_capture` keys instead of opening a menu. Default: false
 ---@field prefix? string Default prefix for mappings. Default: '<Leader>o'
 ---@field global? OrgMappingsGlobal
 ---@field agenda? OrgMappingsAgenda
