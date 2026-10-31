@@ -54,6 +54,7 @@
 ---@field cron_notifier? fun(tasks: table[]) | nil Custom notifier function. Default: nil
 
 ---@class OrgMappingsGlobal
+---@field org_group_prefix? OrgMappingValue Group label for the `<prefix>` root mapping. Default: '<prefix>'
 ---@field org_agenda? OrgMappingValue Mappings used to open agenda prompt. Default: '<prefix>a'
 ---@field org_capture? OrgMappingValue Mappings used to open capture prompt. Default: '<prefix>c'
 
@@ -61,6 +62,9 @@
 ---@field sources OrgLinkType[]
 
 ---@class OrgMappingsAgenda
+---@field org_agenda_group_insert? OrgMappingValue Group label for `<prefix>i` mappings. Default: '<prefix>i'
+---@field org_agenda_group_clock? OrgMappingValue Group label for `<prefix>x` mappings. Default: '<prefix>x'
+---@field org_agenda_group_note? OrgMappingValue Group label for `<prefix>n` mappings. Default: '<prefix>n'
 ---@field org_agenda_later? OrgMappingValue Default: 'f'
 ---@field org_agenda_earlier? OrgMappingValue Default: 'b'
 ---@field org_agenda_goto_today? OrgMappingValue Default: '.'
@@ -105,6 +109,12 @@
 ---@field org_note_kill? OrgMappingValue Default: '<prefix>k'
 ---
 ---@class OrgMappingsOrg
+---@field org_group_insert? OrgMappingValue Group label for `<prefix>i` mappings. Default: '<prefix>i'
+---@field org_group_clock? OrgMappingValue Group label for `<prefix>x` mappings. Default: '<prefix>x'
+---@field org_group_links? OrgMappingValue Group label for `<prefix>l` mappings. Default: '<prefix>l'
+---@field org_group_note? OrgMappingValue Group label for `<prefix>n` mappings. Default: '<prefix>n'
+---@field org_group_babel? OrgMappingValue Group label for `<prefix>b` mappings. Default: '<prefix>b'
+---@field org_group_timestamp? OrgMappingValue Group label for `<prefix>d` mappings. Default: '<prefix>d'
 ---@field org_refile? OrgMappingValue Default: '<prefix>r'
 ---@field org_timestamp_up_day? OrgMappingValue Default: '<S-UP>'
 ---@field org_timestamp_down_day? OrgMappingValue Default: '<S-DOWN>'
