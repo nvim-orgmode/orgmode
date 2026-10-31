@@ -18,7 +18,7 @@ function OrgApi.load(name)
   vim.validate('name', name, { 'string', 'table' }, true)
   if not name then
     return vim.tbl_map(function(file)
-      return OrgFile._build_from_internal_file(file)
+      return OrgFile._build_from_internal_file(file:reload_sync())
     end, orgmode.files:all())
   end
 
@@ -30,8 +30,8 @@ function OrgApi.load(name)
   if type(name) == 'table' then
     local list = {}
     for _, file in ipairs(orgmode.files:all()) do
-      if file.filename == name then
-        table.insert(list, OrgFile._build_from_internal_file(file))
+      if vim.tbl_contains(name, file.filename) then
+        table.insert(list, OrgFile._build_from_internal_file(file:reload_sync()))
       end
     end
 

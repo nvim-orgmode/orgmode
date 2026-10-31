@@ -13,10 +13,17 @@ local Buffers = require('orgmode.state.buffers')
 
 local clean_empty_line = vim.fn.has('nvim-0.13') == 1 or vim.fn.has('nvim-0.12.3') == 1
 
+local last_version = 0
+local function next_version()
+  last_version = last_version + 1
+  return last_version
+end
+
 ---@class OrgFileMetadata
 ---@field mtime number File modified time in nanoseconds
 ---@field mtime_sec number File modified time in seconds
 ---@field changedtick number
+---@field from_buffer? boolean The content was read from a loaded buffer, which may differ from the file on disk
 
 ---@class OrgFileOpts
 ---@field filename string
@@ -30,6 +37,7 @@ local clean_empty_line = vim.fn.has('nvim-0.13') == 1 or vim.fn.has('nvim-0.12.3
 ---@field index number
 ---@field lines string[]
 ---@field content string
+---@field version number Changes with every content change, never repeats across files
 ---@field metadata OrgFileMetadata
 ---@field parser vim.treesitter.LanguageTree
 ---@field root TSNode
@@ -59,6 +67,7 @@ function OrgFile:new(opts)
     buf = opts.buf or -1,
     lines = opts.lines or {},
     content = table.concat(opts.lines or {}, '\n'),
+    version = next_version(),
     metadata = {
       mtime = stat and stat.mtime.nsec or 0,
       mtime_sec = stat and stat.mtime.sec or 0,
@@ -68,6 +77,7 @@ function OrgFile:new(opts)
   local this = setmetatable(data, self)
   if this.buf > 0 then
     this:_update_lines(this:_get_lines(this.buf))
+    this.metadata.from_buffer = true
   end
   return this
 end
@@ -117,18 +127,23 @@ function OrgFile:reload()
   end
 
   local bufnr = self:bufnr()
-  local buf_changed = false
   local file_changed = false
 
+  local stat = vim.uv.fs_stat(self.filename)
+  -- A loaded buffer is what gets parsed, so its text is the content even when the file on disk differs
   if bufnr > -1 then
     local new_changedtick = vim.api.nvim_buf_get_changedtick(bufnr)
-    buf_changed = self.metadata.changedtick ~= new_changedtick
-    if buf_changed then
+    if self.metadata.changedtick ~= new_changedtick then
       self:_update_lines(self:_get_lines(bufnr))
       self.metadata.changedtick = new_changedtick
     end
+    self.metadata.from_buffer = true
+    if stat then
+      self.metadata.mtime = stat.mtime.nsec
+      self.metadata.mtime_sec = stat.mtime.sec
+    end
+    return Promise.resolve(self)
   end
-  local stat = vim.uv.fs_stat(self.filename)
   if stat then
     local new_mtime_nsec = stat.mtime.nsec
     local new_mtime_sec = stat.mtime.sec
@@ -136,9 +151,10 @@ function OrgFile:reload()
       or self.metadata.mtime_sec ~= new_mtime_sec
   end
 
-  if file_changed and not buf_changed then
+  if file_changed or (stat and self.metadata.from_buffer) then
     return utils.readfile(self.filename, { schedule = true }):next(function(lines)
       self:_update_lines(lines)
+      self.metadata.from_buffer = false
       if stat then
         self.metadata.mtime = stat.mtime.nsec
         self.metadata.mtime_sec = stat.mtime.sec
@@ -160,8 +176,13 @@ end
 function OrgFile:update(action)
   local is_same_file = self.filename == utils.current_file_path()
   if is_same_file then
+    -- Saving a buffer that already had unsaved changes would write the
+    -- user's edits too, so the change stays unsaved in that case.
+    local was_modified = vim.bo.modified
     return Promise.resolve(action(self)):next(function(result)
-      vim.cmd(':silent! w')
+      if not was_modified then
+        vim.cmd(':silent! w')
+      end
       return result
     end)
   end
@@ -193,6 +214,8 @@ function OrgFile:is_modified()
     if cur_changedtick ~= self.metadata.changedtick then
       return true
     end
+  elseif self.metadata.from_buffer then
+    return true
   end
   local stat = vim.uv.fs_stat(self.filename)
   if not stat then
@@ -1030,8 +1053,12 @@ function OrgFile:_get_directive(directive_name, all_matches)
 end
 
 function OrgFile:_update_lines(lines)
+  local content = table.concat(lines, '\n')
+  if content ~= self.content then
+    self.version = next_version()
+  end
   self.lines = lines
-  self.content = table.concat(lines, '\n')
+  self.content = content
   self:parse()
   return self
 end
