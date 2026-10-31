@@ -191,7 +191,7 @@ require("orgmode").setup({
   ui = {
     menu = {
       handler = function(data)
-        Menu:new():open(data)
+        return Menu:new():open(data)
       end,
     },
   },
