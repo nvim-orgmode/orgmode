@@ -1,3 +1,4 @@
+local helpers = require('tests.plenary.helpers')
 local OrgFile = require('orgmode.files.file')
 local config = require('orgmode.config')
 local Range = require('orgmode.files.elements.range')
@@ -508,6 +509,71 @@ describe('OrgFile', function()
       assert.are.same(1, #headlines)
       assert.are.same('First', headlines[1]:get_title())
       vim.cmd('bwipeout!')
+    end)
+  end)
+
+  describe('string parser', function()
+    local filenames = {}
+    after_each(function()
+      for _, filename in ipairs(filenames) do
+        vim.fn.delete(filename)
+      end
+      filenames = {}
+    end)
+
+    ---@return OrgFile
+    local load_changed_on_disk = function(content)
+      local file = load_file_sync(content)
+      table.insert(filenames, file.filename)
+      local future_mtime = os.time() + 10
+      vim.uv.fs_utime(file.filename, future_mtime, future_mtime)
+      return file
+    end
+
+    local count_string_parsers = function(inner)
+      local get_string_parser = vim.treesitter.get_string_parser
+      local count = 0
+      helpers.with_var(vim.treesitter, 'get_string_parser', function(...)
+        count = count + 1
+        return get_string_parser(...)
+      end, inner)
+      return count
+    end
+
+    it('should reuse the parser for a file changed on disk', function()
+      local file = load_changed_on_disk({ '* TODO First', '* Second' })
+      assert.is.True(file:is_modified())
+      local root = file:parse()
+
+      local count = count_string_parsers(function()
+        file:parse()
+        file:parse(true)
+        file:get_headlines()
+        file:parse()
+        file:parse(true)
+      end)
+
+      assert.are.same(0, count)
+      assert.are.same(root:id(), file:parse(true):id())
+    end)
+
+    it('should build a new parser when the content changes', function()
+      local file = load_changed_on_disk({ '* Old headline' })
+      vim.fn.writefile({ '* New headline' }, file.filename)
+
+      assert.are.same(
+        1,
+        count_string_parsers(function()
+          file:reload_sync()
+        end)
+      )
+      assert.are.same('New headline', file:get_headlines()[1]:get_title())
+      assert.are.same(
+        0,
+        count_string_parsers(function()
+          file:parse()
+        end)
+      )
     end)
   end)
 

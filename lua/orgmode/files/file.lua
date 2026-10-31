@@ -1057,8 +1057,9 @@ function OrgFile:_get_parser()
     return ts.get_parser(bufnr, 'org', {})
   end
 
-  -- In case the buffer got unloaded, go back to string parser
-  if not self.parser or self:is_modified() or type(self.parser:source()) == 'number' then
+  -- Rebuild only when the text changed. This also covers a buffer that got
+  -- unloaded, because the source of its parser is the buffer number.
+  if not self.parser or self.parser:source() ~= self.content then
     return ts.get_string_parser(self.content, 'org', {})
   end
 
