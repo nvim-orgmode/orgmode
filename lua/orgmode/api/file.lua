@@ -48,8 +48,8 @@ end
 function OrgFile._build_from_internal_file(file)
   local headlines = {}
   local headlines_by_id = {}
-  for i, section in ipairs(file:get_headlines()) do
-    local headline = OrgHeadline._build_from_internal_headline(section, i)
+  for _, section in ipairs(file:get_headlines()) do
+    local headline = OrgHeadline._build_from_internal_headline(section)
     table.insert(headlines, headline)
     headlines_by_id[section:get_range().start_line] = headline
   end

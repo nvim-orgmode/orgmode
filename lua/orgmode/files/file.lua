@@ -13,6 +13,12 @@ local Buffers = require('orgmode.state.buffers')
 
 local clean_empty_line = vim.fn.has('nvim-0.13') == 1 or vim.fn.has('nvim-0.12.3') == 1
 
+local last_version = 0
+local function next_version()
+  last_version = last_version + 1
+  return last_version
+end
+
 ---@class OrgFileMetadata
 ---@field mtime number File modified time in nanoseconds
 ---@field mtime_sec number File modified time in seconds
@@ -30,6 +36,7 @@ local clean_empty_line = vim.fn.has('nvim-0.13') == 1 or vim.fn.has('nvim-0.12.3
 ---@field index number
 ---@field lines string[]
 ---@field content string
+---@field version number Changes with every content change, never repeats across files
 ---@field metadata OrgFileMetadata
 ---@field parser vim.treesitter.LanguageTree
 ---@field root TSNode
@@ -59,6 +66,7 @@ function OrgFile:new(opts)
     buf = opts.buf or -1,
     lines = opts.lines or {},
     content = table.concat(opts.lines or {}, '\n'),
+    version = next_version(),
     metadata = {
       mtime = stat and stat.mtime.nsec or 0,
       mtime_sec = stat and stat.mtime.sec or 0,
@@ -160,8 +168,13 @@ end
 function OrgFile:update(action)
   local is_same_file = self.filename == utils.current_file_path()
   if is_same_file then
+    -- Saving a buffer that already had unsaved changes would write the
+    -- user's edits too, so the change stays unsaved in that case.
+    local was_modified = vim.bo.modified
     return Promise.resolve(action(self)):next(function(result)
-      vim.cmd(':silent! w')
+      if not was_modified then
+        vim.cmd(':silent! w')
+      end
       return result
     end)
   end
@@ -1032,6 +1045,7 @@ end
 function OrgFile:_update_lines(lines)
   self.lines = lines
   self.content = table.concat(lines, '\n')
+  self.version = next_version()
   self:parse()
   return self
 end
