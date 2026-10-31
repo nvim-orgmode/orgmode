@@ -531,6 +531,38 @@ function utils.flatten(t)
   return result
 end
 
+---@alias OrgStatisticsCookie { text: string, range: integer[] }
+
+---Find all statistics cookies (`[1/2]`, `[50%]`) in `text`, at any position like Emacs.
+---@param text string
+---@param row integer 0-based row where `text` starts
+---@param col integer 0-based column where `text` starts
+---@return OrgStatisticsCookie[]
+function utils.find_statistics_cookies(text, row, col)
+  local cookies = {}
+  local pos = 1
+  while true do
+    local start = text:find('[', pos, true)
+    if not start then
+      return cookies
+    end
+    local cookie = text:match('^%[%d*/%d*%]', start) or text:match('^%[%d*%%%]', start)
+    if cookie then
+      local before = text:sub(1, start - 1)
+      local _, newlines = before:gsub('\n', '')
+      local last_newline = before:match('.*()\n')
+      local start_col = last_newline and start - last_newline - 1 or col + start - 1
+      table.insert(cookies, {
+        text = cookie,
+        range = { row + newlines, start_col, row + newlines, start_col + #cookie },
+      })
+      pos = start + #cookie
+    else
+      pos = start + 1
+    end
+  end
+end
+
 ---@param filename string
 function utils.edit_file(filename)
   local buf_not_already_loaded = vim.fn.bufexists(filename) ~= 1

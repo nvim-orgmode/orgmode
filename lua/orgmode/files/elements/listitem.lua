@@ -1,4 +1,5 @@
 local ts_utils = require('orgmode.utils.treesitter')
+local utils = require('orgmode.utils')
 
 ---@class OrgListitem
 ---@field listitem TSNode
@@ -88,30 +89,33 @@ function Listitem:child_checkboxes()
   end
 end
 
-function Listitem:cookie()
-  local content = self.listitem:field('contents')[1]
-  -- The cookie should be the last thing on the line
-  local cookie_node = content:named_child(content:named_child_count() - 1)
-  if not cookie_node then
-    return nil
+---Cookies in the item's own text, not in its sub-lists
+---@return OrgStatisticsCookie[]
+function Listitem:cookies()
+  local cookies = {}
+  for _, content in ipairs(self.listitem:field('contents')) do
+    if content:type() ~= 'list' then
+      local row, col = content:range()
+      vim.list_extend(cookies, utils.find_statistics_cookies(self.file:get_node_text(content), row, col))
+    end
   end
-
-  local text = self.file:get_node_text(cookie_node)
-  if text:match('%[%d*/%d*%]') or text:match('%[%d?%d?%d?%%%]') then
-    return cookie_node
-  end
+  return cookies
 end
 
 function Listitem:update_cookie(total_child_checkboxes, checked_child_checkboxes)
-  local cookie = self:cookie()
-  if cookie then
+  local cookies = self:cookies()
+  local bufnr = self.file:get_valid_bufnr()
+  -- Backwards, so that a replaced cookie does not move the ones before it
+  for i = #cookies, 1, -1 do
+    local cookie = cookies[i]
     local new_cookie_val
-    if self.file:get_node_text(cookie):find('%%') then
+    if cookie.text:find('%%') then
       new_cookie_val = ('[%d%%]'):format((#checked_child_checkboxes / #total_child_checkboxes) * 100)
     else
       new_cookie_val = ('[%d/%d]'):format(#checked_child_checkboxes, #total_child_checkboxes)
     end
-    self.file:set_node_text(cookie, new_cookie_val)
+    local start_row, start_col, end_row, end_col = unpack(cookie.range)
+    pcall(vim.api.nvim_buf_set_text, bufnr, start_row, start_col, end_row, end_col, { new_cookie_val })
   end
 end
 

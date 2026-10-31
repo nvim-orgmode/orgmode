@@ -90,12 +90,15 @@ function Block:get_header_args()
       headline_args = config:parse_header_args(headline_prop)
     end
   end
-  local own_args_str = table.concat(
-    vim.tbl_map(function(param)
-      return self.file:get_node_text(param)
-    end, self.node:field('parameter')),
-    ' '
-  )
+  -- Read the source text of all parameters, because the grammar can split
+  -- one argument value like a path into several nodes
+  local params = self.node:field('parameter')
+  local own_args_str = ''
+  if #params > 0 then
+    local start_row, start_col = params[1]:range()
+    local _, _, end_row, end_col = params[#params]:range()
+    own_args_str = self.file:get_node_text(params[1], { start_row, start_col, end_row, end_col })
+  end
   local own_args = config:parse_header_args(own_args_str)
   return vim.tbl_extend('force', file_header_args, headline_args, own_args)
 end
