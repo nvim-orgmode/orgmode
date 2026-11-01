@@ -219,6 +219,42 @@ describe('Refile', function()
       '',
     }, vim.api.nvim_buf_get_lines(0, 0, -1, false))
   end)
+  it('saves a refile under a headline in the same file', function()
+    local file = helpers.create_file({ '* TODO Alpha', '* Target', '* TODO Gamma' })
+
+    ---@diagnostic disable-next-line: invisible
+    org.capture
+      :_refile_from_org_file({
+        source_headline = file:get_headlines()[1],
+        destination_file = file,
+        destination_headline = file:get_headlines()[2],
+      })
+      :wait()
+
+    assert.are.same({ '* Target', '** TODO Alpha', '* TODO Gamma' }, vim.fn.readfile(file.filename))
+    assert.is.False(vim.bo.modified)
+  end)
+
+  it('does not save a refile in the same file with unsaved edits', function()
+    local file = helpers.create_file({ '* TODO Alpha', '* Target', '* TODO Gamma' })
+    vim.api.nvim_buf_set_lines(0, -1, -1, false, { 'unsaved' })
+    file = org.files:get(file.filename)
+
+    ---@diagnostic disable-next-line: invisible
+    org.capture
+      :_refile_from_org_file({
+        source_headline = file:get_headlines()[1],
+        destination_file = file,
+        destination_headline = file:get_headlines()[2],
+      })
+      :wait()
+
+    assert.are.same({ '* TODO Alpha', '* Target', '* TODO Gamma' }, vim.fn.readfile(file.filename))
+    assert.are.same(
+      { '* Target', '** TODO Alpha', '* TODO Gamma', 'unsaved' },
+      vim.api.nvim_buf_get_lines(0, 0, -1, false)
+    )
+  end)
 end)
 
 describe('Capture', function()

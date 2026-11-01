@@ -410,13 +410,18 @@ function Capture:_refile_from_org_file(opts)
       end
 
       local lines = source_headline:get_lines()
+      local adapt_level = destination_headline or source_headline:get_level() > 1
 
-      if destination_headline or source_headline:get_level() > 1 then
+      if adapt_level and not is_same_file then
         lines = self:_adapt_headline_level(source_headline, target_level, is_same_file)
       end
 
       destination_file:update_sync(function()
         if is_same_file then
+          -- Changing the level in the buffer is part of the refile, so it must not count as an unsaved edit before it
+          if adapt_level then
+            self:_adapt_headline_level(source_headline, target_level, is_same_file)
+          end
           local item_range = source_headline:get_range()
           return vim.cmd(
             string.format('silent! %d,%d move %s', item_range.start_line, item_range.end_line, target_line)

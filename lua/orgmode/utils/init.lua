@@ -535,12 +535,18 @@ end
 function utils.edit_file(filename)
   local buf_not_already_loaded = vim.fn.bufexists(filename) ~= 1
   local cur_win = vim.api.nvim_get_current_win()
+  local was_modified = false
+  local was_loaded = false
+  local bufnr = -1
+  local win = -1
+  local bufhidden = ''
 
   return {
     open = function()
-      local bufnr = vim.fn.bufadd(filename) or -1
+      bufnr = vim.fn.bufadd(filename) or -1
+      was_loaded = vim.api.nvim_buf_is_loaded(bufnr)
       vim.api.nvim_buf_set_var(bufnr, 'org_tmp_edit_window', true)
-      vim.api.nvim_open_win(bufnr, true, {
+      win = vim.api.nvim_open_win(bufnr, true, {
         relative = 'editor',
         width = 1,
         -- Use height of 2 to resolve winbar issues
@@ -552,17 +558,51 @@ function utils.edit_file(filename)
         focusable = false,
         hide = true,
       })
-      vim.api.nvim_set_option_value('swapfile', false, { buf = bufnr })
-    end,
-    close = function()
-      vim.cmd('silent! w')
-      vim.b.org_tmp_edit_window = nil
-      if buf_not_already_loaded then
-        vim.cmd('silent! bw!')
+      if was_loaded then
+        -- Closing the window must not unload a buffer that was already loaded, which would discard its unsaved edits
+        bufhidden = vim.bo[bufnr].bufhidden
+        vim.bo[bufnr].bufhidden = 'hide'
       else
-        vim.cmd('silent! q!')
+        vim.api.nvim_set_option_value('swapfile', false, { buf = bufnr })
       end
-      vim.api.nvim_set_current_win(cur_win)
+      was_modified = vim.bo[bufnr].modified
+    end,
+    ---@param save boolean Write the buffer if it had no unsaved changes before
+    close = function(save)
+      if save and not was_modified then
+        vim.api.nvim_buf_call(bufnr, function()
+          vim.cmd('silent! w')
+        end)
+      end
+      pcall(vim.api.nvim_buf_del_var, bufnr, 'org_tmp_edit_window')
+      -- Autocmds that run while the window closes can raise. Their errors must not replace the result of
+      -- the change, so the window close, the unload and the return to the previous window are protected.
+      if buf_not_already_loaded then
+        -- A buffer that did not exist before holds only the change, so wiping it loses nothing else.
+        -- silent! already keeps autocmd errors from raising.
+        vim.cmd('silent! bwipeout! ' .. bufnr)
+      else
+        pcall(vim.api.nvim_win_close, win, true)
+      end
+      if vim.api.nvim_win_is_valid(win) then
+        pcall(vim.api.nvim_win_call, win, function()
+          vim.cmd('noautocmd close!')
+        end)
+      end
+      if not buf_not_already_loaded then
+        if was_loaded and vim.api.nvim_buf_is_valid(bufnr) then
+          vim.bo[bufnr].bufhidden = bufhidden
+        end
+        -- Closing the last window of a buffer can already unload or wipe it, depending on 'bufhidden'
+        if not was_loaded and vim.api.nvim_buf_is_loaded(bufnr) and not vim.bo[bufnr].modified then
+          pcall(vim.api.nvim_buf_delete, bufnr, { unload = true })
+        end
+      end
+      if vim.api.nvim_win_is_valid(cur_win) then
+        if not pcall(vim.api.nvim_set_current_win, cur_win) and vim.api.nvim_get_current_win() ~= cur_win then
+          vim.cmd('noautocmd call nvim_set_current_win(' .. cur_win .. ')')
+        end
+      end
     end,
   }
 end
