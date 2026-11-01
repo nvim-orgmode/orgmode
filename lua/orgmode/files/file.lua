@@ -25,6 +25,7 @@ end
 ---@field mtime number File modified time in nanoseconds
 ---@field mtime_sec number File modified time in seconds
 ---@field changedtick number
+---@field bufnr? number Buffer the content was read from, nil when read from disk. Its text may differ from the disk
 
 ---@class OrgFileOpts
 ---@field filename string
@@ -78,6 +79,7 @@ function OrgFile:new(opts)
   local this = setmetatable(data, self)
   if this.buf > 0 then
     this:_update_lines(this:_get_lines(this.buf))
+    this.metadata.bufnr = this.buf
   end
   return this
 end
@@ -119,6 +121,25 @@ function OrgFile.load(filename)
   end)
 end
 
+---Read a buffer without unsaved edits again if the file on disk is newer. Unlike autoread, this
+---also happens with 'noautoread' and without asking, because the buffer holds nothing the disk lacks.
+---@param bufnr number
+---@private
+function OrgFile:_reload_buffer_from_disk(bufnr)
+  -- An autocmd of the reload can call this again for the same buffer, so each call removes only its own autocmd
+  local autocmd = vim.api.nvim_create_autocmd('FileChangedShell', {
+    buffer = bufnr,
+    callback = function()
+      if vim.v.fcs_reason ~= 'deleted' then
+        vim.v.fcs_choice = 'reload'
+      end
+    end,
+  })
+  vim.cmd('silent! checktime ' .. bufnr)
+  -- Wiping the buffer during the reload also removes its autocmds
+  pcall(vim.api.nvim_del_autocmd, autocmd)
+end
+
 ---Reload the file if it has been modified
 ---@return OrgPromise<OrgFile>
 function OrgFile:reload()
@@ -127,18 +148,28 @@ function OrgFile:reload()
   end
 
   local bufnr = self:bufnr()
-  local buf_changed = false
   local file_changed = false
 
+  local stat = vim.uv.fs_stat(self.filename)
+  if bufnr > -1 and stat and not vim.bo[bufnr].modified then
+    self:_reload_buffer_from_disk(bufnr)
+    -- An autocmd of the reload can wipe or replace the buffer
+    bufnr = self:bufnr()
+  end
+  -- A loaded buffer is what gets parsed, so its text is the content even when the file on disk differs
   if bufnr > -1 then
     local new_changedtick = vim.api.nvim_buf_get_changedtick(bufnr)
-    buf_changed = self.metadata.changedtick ~= new_changedtick
-    if buf_changed then
+    if self.metadata.bufnr ~= bufnr or self.metadata.changedtick ~= new_changedtick then
       self:_update_lines(self:_get_lines(bufnr))
       self.metadata.changedtick = new_changedtick
     end
+    self.metadata.bufnr = bufnr
+    if stat then
+      self.metadata.mtime = stat.mtime.nsec
+      self.metadata.mtime_sec = stat.mtime.sec
+    end
+    return Promise.resolve(self)
   end
-  local stat = vim.uv.fs_stat(self.filename)
   if stat then
     local new_mtime_nsec = stat.mtime.nsec
     local new_mtime_sec = stat.mtime.sec
@@ -146,9 +177,10 @@ function OrgFile:reload()
       or self.metadata.mtime_sec ~= new_mtime_sec
   end
 
-  if file_changed and not buf_changed then
+  if file_changed or (stat and self.metadata.bufnr) then
     return utils.readfile(self.filename, { schedule = true }):next(function(lines)
       self:_update_lines(lines)
+      self.metadata.bufnr = nil
       if stat then
         self.metadata.mtime = stat.mtime.nsec
         self.metadata.mtime_sec = stat.mtime.sec
@@ -200,9 +232,11 @@ function OrgFile:is_modified()
   local bufnr = self:bufnr()
   if bufnr > -1 then
     local cur_changedtick = vim.api.nvim_buf_get_changedtick(bufnr)
-    if cur_changedtick ~= self.metadata.changedtick then
+    if self.metadata.bufnr ~= bufnr or cur_changedtick ~= self.metadata.changedtick then
       return true
     end
+  elseif self.metadata.bufnr then
+    return true
   end
   local stat = vim.uv.fs_stat(self.filename)
   if not stat then
