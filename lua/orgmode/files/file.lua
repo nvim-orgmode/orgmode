@@ -198,24 +198,93 @@ function OrgFile:reload_sync(timeout)
   return self:reload():wait(timeout)
 end
 
+---The undo state of the current buffer to go back to, or nil when it cannot be reached. After a buffer
+---was unloaded, changenr() still returns the number of the last change before, although the undo
+---tree is empty, and undoing to it fails.
+---@return number | nil
+local function current_undo_seq()
+  local tree = vim.fn.undotree()
+  if #tree.entries == 0 then
+    return 0
+  end
+  local function contains(entries)
+    for _, entry in ipairs(entries) do
+      if entry.seq == tree.seq_cur or (entry.alt and contains(entry.alt)) then
+        return true
+      end
+    end
+    return false
+  end
+  if tree.seq_cur == 0 or contains(tree.entries) then
+    return tree.seq_cur
+  end
+end
+
+---Run an action on the current buffer and return a function that undoes its change. The function
+---undoes nothing once anything else changed the buffer after the action returned, because an edit
+---made while the action was still pending cannot be told apart from the action's own. It also undoes
+---nothing when the state before the change is not in the undo tree.
+---@param action fun(...:OrgFile):any
+---@param file OrgFile
+---@return boolean ok, any result, fun() undo
+local function run_undoable(action, file)
+  local bufnr = vim.api.nvim_get_current_buf()
+  -- Start a new undo block, so undoing the change cannot also undo edits made before it
+  vim.bo[bufnr].undolevels = vim.bo[bufnr].undolevels
+  local undo_seq = current_undo_seq()
+  local ok, result = pcall(action, file)
+  local changedtick = vim.api.nvim_buf_get_changedtick(bufnr)
+  local undo = function()
+    if undo_seq and vim.api.nvim_buf_is_loaded(bufnr) and vim.api.nvim_buf_get_changedtick(bufnr) == changedtick then
+      vim.api.nvim_buf_call(bufnr, function()
+        vim.cmd('silent! undo ' .. undo_seq)
+      end)
+    end
+  end
+  return ok, result, undo
+end
+
 ---@param action fun(...:OrgFile):any
 function OrgFile:update(action)
   local is_same_file = self.filename == utils.current_file_path()
   if is_same_file then
-    return Promise.resolve(action(self)):next(function(result)
-      vim.cmd(':silent! w')
+    -- Saving a buffer that already had unsaved changes would write the
+    -- user's edits too, so the change stays unsaved in that case.
+    local was_modified = vim.bo.modified
+    local ok, action_result, undo = run_undoable(action, self)
+    if not ok then
+      undo()
+      error(action_result, 0)
+    end
+    return Promise.resolve(action_result):next(function(result)
+      if not was_modified then
+        vim.cmd(':silent! w')
+      end
       return result
+    end, function(err)
+      undo()
+      return Promise.reject(err)
     end)
   end
 
   local edit_file = utils.edit_file(self.filename)
   edit_file.open()
 
-  return Promise.resolve(action(self)):next(function(result)
-    edit_file.close()
+  local ok, action_result, undo = run_undoable(action, self)
+  if not ok then
+    undo()
+    edit_file.close(false)
+    error(action_result, 0)
+  end
+  return Promise.resolve(action_result):next(function(result)
+    edit_file.close(true)
     return self:reload():next(function()
       return result
     end)
+  end, function(err)
+    undo()
+    edit_file.close(false)
+    return Promise.reject(err)
   end)
 end
 
