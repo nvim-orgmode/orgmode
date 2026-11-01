@@ -225,26 +225,55 @@ function Headline:get_category()
   return self.file:get_category()
 end
 
-memoize('get_outline_path')
---- @return string
-function Headline:get_outline_path()
+---@param headline OrgHeadline
+---@return string[]
+local function get_parent_titles(headline)
   local inner_to_outer_parent_headlines = {}
-  local parent_section = self:node():parent():parent()
+  local parent_section = headline:node():parent():parent()
 
   while parent_section and parent_section:type() == 'section' do
     local headline_node = parent_section:field('headline')[1]
     if headline_node then
-      local headline = Headline:new(headline_node, self.file)
-      local headline_title = headline:get_title()
+      local parent = Headline:new(headline_node, headline.file)
+      local headline_title = parent:get_title()
       table.insert(inner_to_outer_parent_headlines, headline_title)
     end
     parent_section = parent_section:parent()
   end
 
   -- reverse headline order
-  local outer_to_inner_parent_headlines = utils.reverse(inner_to_outer_parent_headlines)
-  local outline_path = table.concat(outer_to_inner_parent_headlines, '/')
+  return utils.reverse(inner_to_outer_parent_headlines)
+end
+
+memoize('get_outline_path')
+--- @return string
+function Headline:get_outline_path()
+  local outline_path = table.concat(get_parent_titles(self), '/')
   return outline_path
+end
+
+local statistics_cookie_patterns = { '%[%d*/%d*%]', '%[%d?%d?%d?%%%]' }
+
+---@param text string
+---@return string
+local function remove_statistics_cookies(text)
+  for _, pattern in ipairs(statistics_cookie_patterns) do
+    text = text:gsub(pattern, '')
+  end
+  return text
+end
+
+memoize('get_outline_key')
+--- Outline path and headline line, joined by '/'. Unlike the line number, it survives edits elsewhere
+--- in the file. It identifies a headline only while no other headline has the same key: headlines with
+--- the same text and parents share it, and so can others through a '/' in a title.
+--- Statistics cookies are left out: checking a box or changing the TODO state of a child rewrites
+--- them without anyone editing that headline.
+--- @return string
+function Headline:get_outline_key()
+  local parts = vim.tbl_map(remove_statistics_cookies, get_parent_titles(self))
+  table.insert(parts, remove_statistics_cookies(self:get_headline_line_content()))
+  return table.concat(parts, '/')
 end
 
 ---@param tags string
@@ -900,11 +929,11 @@ function Headline:remove_scheduled_date()
 end
 
 function Headline:get_cookie()
-  local cookie = self:_parse_title_part('%[%d*/%d*%]')
+  local cookie = self:_parse_title_part(statistics_cookie_patterns[1])
   if cookie then
     return cookie
   end
-  return self:_parse_title_part('%[%d?%d?%d?%%%]')
+  return self:_parse_title_part(statistics_cookie_patterns[2])
 end
 
 function Headline:_set_cookie(cookie, num, denum)
