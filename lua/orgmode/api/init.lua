@@ -26,7 +26,7 @@ function OrgApi.load(name)
   vim.validate('name', name, { 'string', 'table' }, true)
   if not name then
     return vim.tbl_map(function(file)
-      return OrgFile._build_from_internal_file(file)
+      return OrgFile._build_from_internal_file(reload_or_keep(file))
     end, orgmode.files:all())
   end
 
