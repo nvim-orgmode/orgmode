@@ -1,6 +1,7 @@
 local OrgFile = require('orgmode.files.file')
 local config = require('orgmode.config')
 local Range = require('orgmode.files.elements.range')
+local Promise = require('orgmode.utils.promise')
 
 describe('OrgFile', function()
   ---@return OrgFile
@@ -590,6 +591,432 @@ describe('OrgFile', function()
         '* Headline 1 :TAG:',
         ' ',
       }, vim.api.nvim_buf_get_lines(0, 0, -1, false))
+    end)
+  end)
+
+  describe('update', function()
+    it('returns to the current window when the edit of a file that is not current rejects', function()
+      local file = load_file_sync({ '* TODO Target' })
+      local win = vim.api.nvim_get_current_win()
+
+      local ok = pcall(function()
+        file
+          :update(function()
+            return Promise.reject('failed')
+          end)
+          :wait()
+      end)
+
+      assert.is.False(ok)
+      assert.are.same(win, vim.api.nvim_get_current_win())
+    end)
+
+    ---@param file OrgFile
+    ---@param fail fun()
+    local fail_update = function(file, fail)
+      return pcall(function()
+        file
+          :update(function()
+            vim.api.nvim_buf_set_lines(0, 0, 1, false, { '* DONE Target' })
+            return fail()
+          end)
+          :wait()
+      end)
+    end
+    local throw = function()
+      error('failed')
+    end
+    local reject = function()
+      return Promise.reject('failed')
+    end
+
+    it('leaves no trace when the edit of a file that is not loaded throws', function()
+      local file = load_file_sync({ '* TODO Target' })
+
+      assert.is.False(fail_update(file, throw))
+
+      assert.are.same({ '* TODO Target' }, vim.fn.readfile(file.filename))
+      assert.are.same(0, vim.fn.bufexists(file.filename))
+    end)
+
+    it('leaves no trace when the edit of a file that is not loaded rejects', function()
+      local file = load_file_sync({ '* TODO Target' })
+
+      assert.is.False(fail_update(file, reject))
+
+      assert.are.same({ '* TODO Target' }, vim.fn.readfile(file.filename))
+      assert.are.same(0, vim.fn.bufexists(file.filename))
+    end)
+
+    it('saves a later change after an edit of a file that is not loaded rejected', function()
+      local file = load_file_sync({ '* TODO Target', 'old' })
+      fail_update(file, reject)
+
+      file
+        :update(function()
+          vim.api.nvim_buf_set_lines(0, 1, 2, false, { 'new' })
+        end)
+        :wait()
+
+      assert.are.same({ '* TODO Target', 'new' }, vim.fn.readfile(file.filename))
+    end)
+
+    it('restores a hidden buffer without edits when the edit of its file rejects', function()
+      local file = load_file_sync({ '* TODO Target' })
+      vim.cmd.edit(vim.fn.fnameescape(file.filename))
+      local bufnr = vim.api.nvim_get_current_buf()
+      vim.cmd.enew()
+
+      assert.is.False(fail_update(file, reject))
+
+      assert.are.same({ '* TODO Target' }, vim.fn.readfile(file.filename))
+      assert.are.same({ '* TODO Target' }, vim.api.nvim_buf_get_lines(bufnr, 0, -1, false))
+      assert.is.False(vim.bo[bufnr].modified)
+      vim.cmd('bwipeout! ' .. bufnr)
+    end)
+
+    it('keeps the unsaved edits of a hidden buffer when the edit of its file rejects', function()
+      local file = load_file_sync({ '* TODO Target', 'saved' })
+      vim.cmd.edit(vim.fn.fnameescape(file.filename))
+      local bufnr = vim.api.nvim_get_current_buf()
+      vim.api.nvim_buf_set_lines(bufnr, 1, 2, false, { 'unsaved' })
+      vim.cmd.enew()
+
+      assert.is.False(fail_update(file, reject))
+
+      assert.are.same({ '* TODO Target', 'saved' }, vim.fn.readfile(file.filename))
+      assert.are.same({ '* TODO Target', 'unsaved' }, vim.api.nvim_buf_get_lines(bufnr, 0, -1, false))
+      assert.is.True(vim.bo[bufnr].modified)
+      vim.cmd('bwipeout! ' .. bufnr)
+    end)
+
+    for _, case in ipairs({ { name = 'throws', fail = throw }, { name = 'rejects', fail = reject } }) do
+      it('undoes an edit of the current file when it ' .. case.name, function()
+        local file = load_file_sync({ '* TODO Target' })
+        vim.cmd.edit(vim.fn.fnameescape(file.filename))
+        local bufnr = vim.api.nvim_get_current_buf()
+
+        assert.is.False(fail_update(file, case.fail))
+
+        assert.are.same({ '* TODO Target' }, vim.fn.readfile(file.filename))
+        assert.are.same({ '* TODO Target' }, vim.api.nvim_buf_get_lines(bufnr, 0, -1, false))
+        assert.is.False(vim.bo[bufnr].modified)
+        vim.cmd('bwipeout! ' .. bufnr)
+      end)
+
+      it('keeps the unsaved edits of the current file when an edit of it ' .. case.name, function()
+        local file = load_file_sync({ '* TODO Target', 'saved' })
+        vim.cmd.edit(vim.fn.fnameescape(file.filename))
+        local bufnr = vim.api.nvim_get_current_buf()
+        vim.api.nvim_buf_set_lines(bufnr, 1, 2, false, { 'unsaved' })
+
+        assert.is.False(fail_update(file, case.fail))
+
+        assert.are.same({ '* TODO Target', 'saved' }, vim.fn.readfile(file.filename))
+        assert.are.same({ '* TODO Target', 'unsaved' }, vim.api.nvim_buf_get_lines(bufnr, 0, -1, false))
+        assert.is.True(vim.bo[bufnr].modified)
+        vim.cmd('bwipeout! ' .. bufnr)
+      end)
+    end
+
+    local reject_later = function()
+      return Promise.new(function(_, reject)
+        vim.defer_fn(function()
+          reject('failed')
+        end, 50)
+      end)
+    end
+
+    it('keeps an edit made while a failing edit of the current file was pending', function()
+      local file = load_file_sync({ '* TODO Target' })
+      vim.cmd.edit(vim.fn.fnameescape(file.filename))
+      local bufnr = vim.api.nvim_get_current_buf()
+
+      local promise = file:update(function()
+        vim.api.nvim_buf_set_lines(0, 0, 1, false, { '* DONE Target' })
+        return reject_later()
+      end)
+      vim.cmd('normal! Gotyped')
+
+      assert.is.False(pcall(promise.wait, promise))
+      assert.are.same({ '* TODO Target' }, vim.fn.readfile(file.filename))
+      local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
+      assert.are.same('* DONE Target', lines[1])
+      assert.is.Not.Nil(lines[2]:match('^%s*typed$'))
+      vim.cmd('bwipeout! ' .. bufnr)
+    end)
+
+    it('keeps an edit made while a failing edit of a file in another window was pending', function()
+      local file = load_file_sync({ '* TODO Target' })
+      vim.cmd.edit(vim.fn.fnameescape(file.filename))
+      local bufnr = vim.api.nvim_get_current_buf()
+      vim.cmd.new()
+
+      local promise = file:update(function()
+        vim.api.nvim_buf_set_lines(0, 0, 1, false, { '* DONE Target' })
+        return reject_later()
+      end)
+      vim.api.nvim_buf_set_lines(bufnr, -1, -1, false, { 'typed' })
+
+      assert.is.False(pcall(promise.wait, promise))
+      assert.are.same({ '* TODO Target' }, vim.fn.readfile(file.filename))
+      assert.are.same({ '* DONE Target', 'typed' }, vim.api.nvim_buf_get_lines(bufnr, 0, -1, false))
+      vim.cmd('only')
+      vim.cmd('bwipeout! ' .. bufnr)
+    end)
+
+    it('undoes only the failed edit of a hidden buffer right after an edit through Lua', function()
+      local file = load_file_sync({ '* TODO Target', 'saved' })
+      vim.cmd.edit(vim.fn.fnameescape(file.filename))
+      local bufnr = vim.api.nvim_get_current_buf()
+      vim.cmd.enew()
+      vim.api.nvim_buf_set_lines(bufnr, 1, 2, false, { 'unsaved' })
+
+      assert.is.False(fail_update(file, reject))
+
+      assert.are.same({ '* TODO Target', 'unsaved' }, vim.api.nvim_buf_get_lines(bufnr, 0, -1, false))
+      vim.cmd('bwipeout! ' .. bufnr)
+    end)
+
+    ---@param filename string
+    ---@param bufhidden string
+    ---@param fn fun()
+    local with_bufhidden = function(filename, bufhidden, fn)
+      local group = vim.api.nvim_create_augroup('test_bufhidden', { clear = true })
+      vim.api.nvim_create_autocmd('BufReadPost', {
+        group = group,
+        pattern = filename,
+        callback = function()
+          vim.bo.bufhidden = bufhidden
+        end,
+      })
+      local ok, err = pcall(fn)
+      vim.api.nvim_del_augroup_by_id(group)
+      return ok, err
+    end
+    local set_done = function()
+      vim.api.nvim_buf_set_lines(0, 0, 1, false, { '* DONE Target' })
+    end
+
+    local has_float = function()
+      for _, win in ipairs(vim.api.nvim_list_wins()) do
+        if vim.api.nvim_win_get_config(win).relative ~= '' then
+          return true
+        end
+      end
+      return false
+    end
+
+    for _, event in ipairs({ 'BufLeave', 'BufHidden', 'WinLeave' }) do
+      ---@param fn fun()
+      local with_raising_autocmd = function(fn)
+        local group = vim.api.nvim_create_augroup('test_raising_autocmd', { clear = true })
+        vim.api.nvim_create_autocmd(event, {
+          group = group,
+          pattern = '*.org',
+          callback = function()
+            error('autocmd error')
+          end,
+        })
+        local ok, err = pcall(fn)
+        vim.api.nvim_del_augroup_by_id(group)
+        return ok, err
+      end
+
+      it('saves an edit of a hidden buffer when a ' .. event .. ' autocmd raises', function()
+        local file = load_file_sync({ '* TODO Target' })
+        vim.cmd.edit(vim.fn.fnameescape(file.filename))
+        local bufnr = vim.api.nvim_get_current_buf()
+        vim.cmd.enew()
+        local win = vim.api.nvim_get_current_win()
+
+        local ok, err = with_raising_autocmd(function()
+          file:update(set_done):wait()
+        end)
+
+        assert.is.True(ok, err)
+        assert.are.same({ '* DONE Target' }, vim.fn.readfile(file.filename))
+        assert.is.False(has_float())
+        assert.are.same(win, vim.api.nvim_get_current_win())
+        vim.cmd('bwipeout! ' .. bufnr)
+      end)
+
+      it('passes on the error of a failed edit of a hidden buffer when a ' .. event .. ' autocmd raises', function()
+        local file = load_file_sync({ '* TODO Target' })
+        vim.cmd.edit(vim.fn.fnameescape(file.filename))
+        local bufnr = vim.api.nvim_get_current_buf()
+        vim.cmd.enew()
+        local win = vim.api.nvim_get_current_win()
+
+        local ok, err = with_raising_autocmd(function()
+          file
+            :update(function()
+              set_done()
+              return Promise.reject('the real error')
+            end)
+            :wait()
+        end)
+
+        assert.is.False(ok)
+        assert.is.Not.Nil(tostring(err):match('the real error'))
+        assert.are.same({ '* TODO Target' }, vim.fn.readfile(file.filename))
+        assert.is.False(has_float())
+        assert.are.same(win, vim.api.nvim_get_current_win())
+        vim.cmd('bwipeout! ' .. bufnr)
+      end)
+    end
+
+    for _, case in ipairs({ { name = 'throws', fail = throw }, { name = 'rejects', fail = reject } }) do
+      it('undoes an edit of a buffer that was unloaded once when it ' .. case.name, function()
+        local file = load_file_sync({ '* TODO Target', 'old' })
+        vim.cmd.badd(vim.fn.fnameescape(file.filename))
+        local bufnr = vim.fn.bufnr(file.filename)
+        file
+          :update(function()
+            vim.api.nvim_buf_set_lines(0, 1, 2, false, { 'new' })
+          end)
+          :wait()
+
+        assert.is.False(fail_update(file, case.fail))
+
+        assert.are.same({ '* TODO Target', 'new' }, vim.fn.readfile(file.filename))
+        assert.is.False(vim.api.nvim_buf_is_loaded(bufnr))
+        vim.cmd('bwipeout! ' .. bufnr)
+      end)
+    end
+
+    it('undoes an edit of the current buffer that was unloaded once when it rejects', function()
+      local file = load_file_sync({ '* TODO Target' })
+      vim.cmd.edit(vim.fn.fnameescape(file.filename))
+      local bufnr = vim.api.nvim_get_current_buf()
+      vim.api.nvim_buf_set_lines(bufnr, 0, 1, false, { '* TODO Target' })
+      vim.cmd.write()
+      vim.cmd.enew()
+      vim.cmd('bunload ' .. bufnr)
+      vim.cmd.edit(vim.fn.fnameescape(file.filename))
+
+      assert.is.False(fail_update(file, reject))
+
+      assert.are.same({ '* TODO Target' }, vim.api.nvim_buf_get_lines(bufnr, 0, -1, false))
+      assert.is.False(vim.bo[bufnr].modified)
+      vim.cmd('bwipeout! ' .. bufnr)
+    end)
+
+    it('keeps the unsaved edits of a hidden buffer whose bufhidden was changed while it was hidden', function()
+      local file = load_file_sync({ '* TODO Target', 'saved' })
+      vim.cmd.edit(vim.fn.fnameescape(file.filename))
+      local bufnr = vim.api.nvim_get_current_buf()
+      vim.api.nvim_buf_set_lines(bufnr, 1, 2, false, { 'unsaved' })
+      vim.cmd.enew()
+      vim.bo[bufnr].bufhidden = 'wipe'
+
+      file:update(set_done):wait()
+
+      assert.is.True(vim.api.nvim_buf_is_loaded(bufnr))
+      assert.are.same({ '* DONE Target', 'unsaved' }, vim.api.nvim_buf_get_lines(bufnr, 0, -1, false))
+      assert.are.same('wipe', vim.bo[bufnr].bufhidden)
+      assert.are.same({ '* TODO Target', 'saved' }, vim.fn.readfile(file.filename))
+      vim.cmd('bwipeout! ' .. bufnr)
+    end)
+
+    it('saves an edit of an unloaded buffer that is deleted when its window closes', function()
+      local file = load_file_sync({ '* TODO Target' })
+      vim.cmd.badd(vim.fn.fnameescape(file.filename))
+
+      local ok, err = with_bufhidden(file.filename, 'delete', function()
+        file:update(set_done):wait()
+      end)
+
+      assert.is.True(ok, err)
+      assert.are.same({ '* DONE Target' }, vim.fn.readfile(file.filename))
+    end)
+
+    it('saves an edit of an unlisted buffer that is unloaded when its window closes', function()
+      local file = load_file_sync({ '* TODO Target' })
+      vim.fn.bufadd(file.filename)
+
+      local ok, err = with_bufhidden(file.filename, 'unload', function()
+        file:update(set_done):wait()
+      end)
+
+      assert.is.True(ok, err)
+      assert.are.same({ '* DONE Target' }, vim.fn.readfile(file.filename))
+    end)
+
+    it('passes on the error of a failed edit of a buffer that is deleted when its window closes', function()
+      local file = load_file_sync({ '* TODO Target' })
+      vim.cmd.badd(vim.fn.fnameescape(file.filename))
+
+      local ok, err = with_bufhidden(file.filename, 'delete', function()
+        file
+          :update(function()
+            set_done()
+            error('the real error')
+          end)
+          :wait()
+      end)
+
+      assert.is.False(ok)
+      assert.is.Not.Nil(tostring(err):match('the real error'))
+      assert.are.same({ '* TODO Target' }, vim.fn.readfile(file.filename))
+    end)
+
+    it('leaves no buffer behind when an edit of a file that is not loaded cannot be saved', function()
+      local file = load_file_sync({ '* TODO Target' })
+      vim.uv.fs_chmod(file.filename, 292)
+
+      local ok, err = pcall(function()
+        file:update(set_done):wait()
+      end)
+      vim.uv.fs_chmod(file.filename, 420)
+
+      assert.is.True(ok, err)
+      assert.are.same({ '* TODO Target' }, vim.fn.readfile(file.filename))
+      assert.are.same(0, vim.fn.bufexists(file.filename))
+    end)
+
+    it('saves an edit of a file whose buffer is wiped when its window closes', function()
+      local file = load_file_sync({ '* TODO Target' })
+      vim.cmd.badd(vim.fn.fnameescape(file.filename))
+      local group = vim.api.nvim_create_augroup('test_bufhidden_wipe', { clear = true })
+      vim.api.nvim_create_autocmd('FileType', {
+        group = group,
+        pattern = 'org',
+        callback = function()
+          vim.bo.bufhidden = 'wipe'
+        end,
+      })
+
+      local ok, err = pcall(function()
+        file
+          :update(function()
+            vim.api.nvim_buf_set_lines(0, 0, 1, false, { '* DONE Target' })
+          end)
+          :wait()
+      end)
+      vim.api.nvim_del_augroup_by_id(group)
+
+      assert.is.True(ok, err)
+      assert.are.same({ '* DONE Target' }, vim.fn.readfile(file.filename))
+    end)
+
+    it('undoes the failed edit of a hidden buffer right after a successful edit', function()
+      local file = load_file_sync({ '* TODO Target', 'old' })
+      vim.cmd.edit(vim.fn.fnameescape(file.filename))
+      local bufnr = vim.api.nvim_get_current_buf()
+      vim.cmd.enew()
+
+      file
+        :update(function()
+          vim.api.nvim_buf_set_lines(0, 1, 2, false, { 'new' })
+        end)
+        :wait()
+      assert.is.False(fail_update(file, reject))
+
+      assert.are.same({ '* TODO Target', 'new' }, vim.fn.readfile(file.filename))
+      assert.are.same({ '* TODO Target', 'new' }, vim.api.nvim_buf_get_lines(bufnr, 0, -1, false))
+      assert.is.False(vim.bo[bufnr].modified)
+      vim.cmd('bwipeout! ' .. bufnr)
     end)
   end)
 
