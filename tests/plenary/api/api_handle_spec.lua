@@ -54,4 +54,18 @@ describe('Api handles', function()
     assert.are.same('* TODO Same', lines[2])
     assert.is.Not.Nil(lines[3]:match('^%* TODO Same%s+:x:$'))
   end)
+
+  it('has the id property set once id_get_or_create returns for a file not in the current buffer', function()
+    local target = helpers.create_agenda_file({
+      '* TODO Target',
+    })
+    local target_name = target.filename
+    helpers.create_file({ '* TODO Other buffer' })
+
+    local headline = api.load(target_name).headlines[1]
+    local id = headline:id_get_or_create()
+
+    local on_disk = vim.fn.readfile(target_name)
+    assert.is.Not.Nil(table.concat(on_disk, '\n'):find(id, 1, true))
+  end)
 end)
