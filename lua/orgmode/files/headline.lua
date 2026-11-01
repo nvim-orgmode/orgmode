@@ -247,6 +247,20 @@ function Headline:get_outline_path()
   return outline_path
 end
 
+memoize('get_outline_key')
+--- Outline path and headline line, joined by '/'. Unlike the line number, it survives edits elsewhere
+--- in the file. It identifies a headline only while no other headline has the same key: headlines with
+--- the same text and parents share it, and so can others through a '/' in a title.
+--- @return string
+function Headline:get_outline_key()
+  local outline_path = self:get_outline_path()
+  local line = self:get_headline_line_content()
+  if outline_path == '' then
+    return line
+  end
+  return outline_path .. '/' .. line
+end
+
 ---@param tags string
 function Headline:set_tags(tags)
   ---@type TSNode
