@@ -13,6 +13,9 @@ describe('Api handles', function()
   after_each(function()
     for _, group in ipairs({
       'OrgApiHandleIdRemovedHook',
+      'test_read_autocmd_inserts_headline',
+      'test_read_autocmd_removes_headline',
+      'test_enter_autocmd_edits',
       'OrgApiHandleCookieInsertHook',
       'OrgApiHandleTwinSwapHook',
       'OrgApiHandleTwinRemoveHook',
@@ -729,6 +732,19 @@ describe('Api handles', function()
       assert.are.same({ '* TODO A', '* TODO C' }, vim.fn.readfile(file.filename))
     end)
 
+    it('leaves no mark or autocmd behind when the buffer had unsaved edits and the save is skipped', function()
+      helpers.create_file({ '* TODO A', '* TODO B' })
+      local headline = cur_file().headlines[2]
+      local before = leftovers()
+      vim.api.nvim_buf_set_lines(0, -1, -1, false, { 'unsaved' })
+
+      headline:set_priority('A'):wait()
+
+      assert.is.True(vim.bo.modified)
+      assert.are.same('A', headline.priority)
+      assert.are.same(before, leftovers())
+    end)
+
     it('leaves no mark or autocmd behind when the action fails', function()
       helpers.create_file({ '* TODO A', '* TODO B' })
       local headline = cur_file().headlines[2]
@@ -885,6 +901,15 @@ describe('Api handles', function()
     assert.are.same('* TODO [#A] Same', lines[3])
   end)
 
+  it('saves a refile under a headline in the current file', function()
+    local file = helpers.create_file({ '* TODO Alpha', '* Target', '* TODO Gamma' })
+    local headlines = cur_file().headlines
+
+    api.refile({ source = headlines[1], destination = headlines[2] }):wait()
+
+    assert.are.same({ '* Target', '** TODO Alpha', '* TODO Gamma' }, vim.fn.readfile(file.filename))
+  end)
+
   it('refiles its own headline after a headline was inserted above', function()
     local destination = helpers.create_agenda_file({ '* Destination' })
     helpers.create_file({
@@ -897,6 +922,25 @@ describe('Api handles', function()
     api.refile({ source = headline, destination = api.load(destination.filename) }):wait()
 
     assert.are.same({ '* TODO Inserted', '* TODO First' }, vim.api.nvim_buf_get_lines(0, 0, -1, false))
+  end)
+
+  it('refiles under its destination headline after a headline was inserted above it', function()
+    local destination = helpers.create_agenda_file({
+      '* Destination A',
+      '* Destination B',
+    })
+    local destination_bufnr = vim.fn.bufnr(destination.filename)
+    local destination_headline = api.load(destination.filename).headlines[2]
+    helpers.create_file({ '* TODO Source' })
+    local headline = cur_file().headlines[1]
+
+    vim.api.nvim_buf_set_lines(destination_bufnr, 0, 0, false, { '* Inserted' })
+    api.refile({ source = headline, destination = destination_headline }):wait()
+
+    assert.are.same(
+      { '* Inserted', '* Destination A', '* Destination B', '** TODO Source' },
+      vim.api.nvim_buf_get_lines(destination_bufnr, 0, -1, false)
+    )
   end)
 
   it('writes a file that is not loaded once when get_link creates the link id', function()
@@ -1130,6 +1174,42 @@ describe('Api handles', function()
     assert.are.same('* TODO First', vim.api.nvim_buf_get_lines(0, 0, 1, false)[1])
   end)
 
+  it('keeps handles of identical headlines valid after the file changed on disk under unsaved edits', function()
+    local file = helpers.create_file({
+      '* TODO Same',
+      '* TODO Same',
+    })
+    vim.api.nvim_buf_set_lines(0, -1, -1, false, { 'unsaved body' })
+    vim.wait(10)
+    vim.fn.writefile({ '* TODO Same', '* TODO Same' }, file.filename)
+    local headline = cur_file().headlines[2]
+
+    headline:set_tags({ 'x' }):wait()
+
+    local lines = vim.api.nvim_buf_get_lines(0, 0, -1, false)
+    assert.are.same('* TODO Same', lines[1])
+    assert.is.Not.Nil(lines[2]:match('^%* TODO Same%s+:x:$'))
+    assert.are.same('unsaved body', lines[3])
+  end)
+
+  it('keeps a handle valid when the file changes on disk after the handle was built', function()
+    local file = helpers.create_file({
+      '* TODO Same',
+      '* TODO Same',
+    })
+    vim.api.nvim_buf_set_lines(0, -1, -1, false, { 'unsaved body' })
+    local headline = cur_file().headlines[2]
+    vim.wait(10)
+    vim.fn.writefile({ '* TODO Same', '* TODO Same' }, file.filename)
+
+    headline:set_tags({ 'x' }):wait()
+
+    local lines = vim.api.nvim_buf_get_lines(0, 0, -1, false)
+    assert.are.same('* TODO Same', lines[1])
+    assert.is.Not.Nil(lines[2]:match('^%* TODO Same%s+:x:$'))
+    assert.are.same('unsaved body', lines[3])
+  end)
+
   it('acts on its own headline after the file of a hidden buffer without edits changed on disk', function()
     local target = helpers.create_agenda_file({ '* TODO A', '* TODO B' })
     helpers.create_file({ '* TODO Other' })
@@ -1326,6 +1406,130 @@ describe('Api handles', function()
     assert.is.Not.Nil(lines[3]:match('^%* TODO Same%s+:x:$'))
   end)
 
+  it('does not write unrelated unsaved edits to disk on an api mutation', function()
+    -- Assumption: an API call may save its own change, but it must not
+    -- persist edits the user has not saved yet. Here the unsaved edit is
+    -- an extra paragraph; it must stay out of the file on disk.
+    local file = helpers.create_file({
+      '* TODO First',
+      '* TODO Second',
+    })
+    vim.api.nvim_buf_set_lines(0, -1, -1, false, { 'unsaved user edit' })
+    assert.is.True(vim.bo.modified)
+
+    cur_file().headlines[1]:set_tags({ 'api' }):wait()
+
+    local on_disk = vim.fn.readfile(file.filename)
+    assert.is.False(vim.tbl_contains(on_disk, 'unsaved user edit'))
+  end)
+
+  it('keeps unsaved edits in a hidden buffer out of the file on an api mutation', function()
+    local target = helpers.create_agenda_file({ '* TODO Target' })
+    local target_bufnr = vim.fn.bufnr(target.filename)
+    vim.api.nvim_buf_set_lines(target_bufnr, -1, -1, false, { 'unsaved user edit' })
+    helpers.create_file({ '* TODO Other buffer' })
+
+    api.load(target.filename).headlines[1]:set_tags({ 'api' }):wait()
+
+    local on_disk = vim.fn.readfile(target.filename)
+    assert.is.False(vim.tbl_contains(on_disk, 'unsaved user edit'))
+    local in_buffer = vim.api.nvim_buf_get_lines(target_bufnr, 0, -1, false)
+    assert.is.Not.Nil(in_buffer[1]:match('^%* TODO Target%s+:api:$'))
+    assert.are.same('unsaved user edit', in_buffer[2])
+  end)
+
+  it('keeps the swapfile of a hidden buffer with unsaved edits on an api mutation', function()
+    local target = helpers.create_agenda_file({ '* TODO Target' })
+    local target_bufnr = vim.fn.bufnr(target.filename)
+    vim.bo[target_bufnr].swapfile = true
+    vim.api.nvim_buf_set_lines(target_bufnr, -1, -1, false, { 'unsaved user edit' })
+    helpers.create_file({ '* TODO Other buffer' })
+
+    api.load(target.filename).headlines[1]:set_tags({ 'api' }):wait()
+
+    assert.is.True(vim.bo[target_bufnr].modified)
+    assert.is.True(vim.bo[target_bufnr].swapfile)
+  end)
+
+  it('leaves an unloaded buffer unloaded after an api mutation', function()
+    local target = helpers.create_agenda_file({ '* TODO Target' })
+    local target_bufnr = vim.fn.bufnr(target.filename)
+    helpers.create_file({ '* TODO Other buffer' })
+    vim.cmd('bunload ' .. target_bufnr)
+
+    api.load(target.filename).headlines[1]:set_tags({ 'x' }):wait()
+
+    assert.is.False(vim.api.nvim_buf_is_loaded(target_bufnr))
+    assert.is.Not.Nil(vim.fn.readfile(target.filename)[1]:match('^%* TODO Target%s+:x:$'))
+  end)
+
+  it('acts on its own headline when a read autocmd of an unloaded file inserts a headline above', function()
+    local target = helpers.create_agenda_file({ '* TODO A', '* TODO B' })
+    local target_bufnr = vim.fn.bufnr(target.filename)
+    helpers.create_file({ '* TODO Other buffer' })
+    vim.cmd('bunload ' .. target_bufnr)
+    local headline = api.load(target.filename).headlines[2]
+    local group = vim.api.nvim_create_augroup('test_read_autocmd_inserts_headline', { clear = true })
+    vim.api.nvim_create_autocmd('BufReadPost', {
+      group = group,
+      pattern = '*.org',
+      callback = function(args)
+        if args.buf == target_bufnr then
+          vim.api.nvim_buf_set_lines(args.buf, 0, 0, false, { '* TODO Inserted' })
+        end
+      end,
+    })
+
+    local ok, err = pcall(function()
+      headline:set_tags({ 'x' }):wait()
+    end)
+
+    assert.is.True(ok, err)
+    local lines = vim.fn.readfile(target.filename)
+    assert.are.same({ '* TODO Inserted', '* TODO A' }, { lines[1], lines[2] })
+    assert.is.Not.Nil(lines[3]:match('^%* TODO B%s+:x:$'))
+  end)
+
+  it('changes nothing when a read autocmd of an unloaded file removes the headline of the handle', function()
+    local target = helpers.create_agenda_file({ '* TODO A', '* TODO B' })
+    local target_bufnr = vim.fn.bufnr(target.filename)
+    helpers.create_file({ '* TODO Other buffer' })
+    vim.cmd('bunload ' .. target_bufnr)
+    local headline = api.load(target.filename).headlines[2]
+    local group = vim.api.nvim_create_augroup('test_read_autocmd_removes_headline', { clear = true })
+    vim.api.nvim_create_autocmd('BufReadPost', {
+      group = group,
+      pattern = '*.org',
+      callback = function(args)
+        if args.buf == target_bufnr then
+          vim.api.nvim_buf_set_lines(args.buf, 1, 2, false, { '* TODO C' })
+        end
+      end,
+    })
+
+    local ok, err = pcall(function()
+      headline:set_tags({ 'x' }):wait()
+    end)
+
+    assert.is.False(ok)
+    assert.is.Not.Nil(tostring(err):match('Headline "%* TODO B" not found'))
+    assert.are.same({ '* TODO A', '* TODO B' }, vim.fn.readfile(target.filename))
+  end)
+
+  it('returns to the current window when an api mutation on another file fails', function()
+    local target = helpers.create_agenda_file({ '* TODO Target' })
+    helpers.create_file({ '* TODO Other buffer' })
+    local win = vim.api.nvim_get_current_win()
+    local headline = api.load(target.filename).headlines[1]
+
+    local ok = pcall(function()
+      headline:set_deadline('garbage'):wait()
+    end)
+
+    assert.is.False(ok)
+    assert.are.same(win, vim.api.nvim_get_current_win())
+  end)
+
   it('has the id property set once id_get_or_create returns for a file not in the current buffer', function()
     local target = helpers.create_agenda_file({
       '* TODO Target',
@@ -1339,6 +1543,52 @@ describe('Api handles', function()
     local on_disk = vim.fn.readfile(target_name)
     assert.is.Not.Nil(table.concat(on_disk, '\n'):find(id, 1, true))
   end)
+
+  for _, case in ipairs({
+    {
+      name = 'a file without a buffer',
+      setup = function(bufnr)
+        vim.cmd('bwipeout ' .. bufnr)
+      end,
+    },
+    {
+      name = 'a listed unloaded buffer',
+      setup = function(bufnr)
+        vim.cmd('bunload ' .. bufnr)
+      end,
+    },
+    { name = 'a hidden buffer without unsaved edits', setup = function() end },
+  }) do
+    it('saves an api mutation on ' .. case.name .. ' when an enter autocmd edits the buffer', function()
+      local target = helpers.create_agenda_file({ '* TODO Target' })
+      helpers.create_file({ '* TODO Other buffer' })
+      case.setup(vim.fn.bufnr(target.filename))
+      local headline = api.load(target.filename).headlines[1]
+      local edited = false
+      vim.api.nvim_create_autocmd('BufEnter', {
+        group = vim.api.nvim_create_augroup('test_enter_autocmd_edits', { clear = true }),
+        pattern = '*.org',
+        callback = function(args)
+          if not edited and args.buf == vim.fn.bufnr(target.filename) then
+            edited = true
+            vim.api.nvim_buf_set_lines(args.buf, -1, -1, false, { 'hooked' })
+          end
+        end,
+      })
+
+      local ok, err = pcall(function()
+        headline:set_tags({ 'x' }):wait()
+      end)
+
+      assert.is.True(ok, err)
+      assert.is.True(edited)
+      local lines = vim.fn.readfile(target.filename)
+      assert.is.Not.Nil(lines[1]:match('^%* TODO Target%s+:x:$'))
+      assert.are.same({ 'hooked' }, { lines[2] })
+      local bufnr = vim.fn.bufnr(target.filename)
+      assert.is.False(bufnr ~= -1 and vim.api.nvim_buf_is_loaded(bufnr) and vim.bo[bufnr].modified)
+    end)
+  end
 
   for _, case in ipairs({
     { name = 'count', before = '* Project [0/2]', after = '* Project [1/2]' },
