@@ -13,6 +13,14 @@ local Buffers = require('orgmode.state.buffers')
 
 local clean_empty_line = vim.fn.has('nvim-0.13') == 1 or vim.fn.has('nvim-0.12.3') == 1
 
+-- Shared by all files, so an OrgFile created again for the same path never gets
+-- a version that a handle built from the earlier one still holds
+local last_version = 0
+local function next_version()
+  last_version = last_version + 1
+  return last_version
+end
+
 ---@class OrgFileMetadata
 ---@field mtime number File modified time in nanoseconds
 ---@field mtime_sec number File modified time in seconds
@@ -30,6 +38,7 @@ local clean_empty_line = vim.fn.has('nvim-0.13') == 1 or vim.fn.has('nvim-0.12.3
 ---@field index number
 ---@field lines string[]
 ---@field content string
+---@field version number Changes with every content change, never repeats across files
 ---@field metadata OrgFileMetadata
 ---@field parser vim.treesitter.LanguageTree
 ---@field root TSNode
@@ -59,6 +68,7 @@ function OrgFile:new(opts)
     buf = opts.buf or -1,
     lines = opts.lines or {},
     content = table.concat(opts.lines or {}, '\n'),
+    version = next_version(),
     metadata = {
       mtime = stat and stat.mtime.nsec or 0,
       mtime_sec = stat and stat.mtime.sec or 0,
@@ -346,6 +356,23 @@ function OrgFile:find_headline_by_title(title)
   return utils.find(self:get_headlines(), function(item)
     return item:get_title():lower() == title:lower()
   end)
+end
+
+---Find headlines with the given ID as their own property
+---@param id string
+---@return OrgHeadline[]
+function OrgFile:find_headlines_by_id(id)
+  return vim.tbl_filter(function(item)
+    return item:get_property('id', false) == id
+  end, self:get_headlines())
+end
+
+---@param outline_key string see OrgHeadline:get_outline_key()
+---@return OrgHeadline[]
+function OrgFile:find_headlines_by_outline_key(outline_key)
+  return vim.tbl_filter(function(item)
+    return item:get_outline_key() == outline_key
+  end, self:get_headlines())
 end
 
 memoize('get_todo_keywords')
@@ -1030,8 +1057,12 @@ function OrgFile:_get_directive(directive_name, all_matches)
 end
 
 function OrgFile:_update_lines(lines)
+  local content = table.concat(lines, '\n')
+  if content ~= self.content then
+    self.version = next_version()
+  end
   self.lines = lines
-  self.content = table.concat(lines, '\n')
+  self.content = content
   self:parse()
   return self
 end
