@@ -28,9 +28,12 @@ function OrgApi.load(name)
   end
 
   if type(name) == 'table' then
+    name = vim.tbl_map(function(filename)
+      return vim.fn.resolve(vim.fn.fnamemodify(filename, ':p'))
+    end, name)
     local list = {}
     for _, file in ipairs(orgmode.files:all()) do
-      if file.filename == name then
+      if vim.tbl_contains(name, file.filename) then
         table.insert(list, OrgFile._build_from_internal_file(file))
       end
     end
