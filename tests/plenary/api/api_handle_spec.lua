@@ -40,6 +40,567 @@ describe('Api handles', function()
     )
   end)
 
+  it('loads a file by a list of names that cannot be read again with its loaded content', function()
+    local files = helpers.create_agenda_files({
+      { filename = 'first.org', content = { '* TODO First' } },
+      { filename = 'second.org', content = { '* TODO Second' } },
+    })
+    vim.wait(10)
+    vim.fn.writefile({ '* TODO Changed' }, files['first.org'])
+    vim.uv.fs_chmod(files['first.org'], 0)
+
+    local ok, loaded = pcall(api.load, { files['first.org'], files['second.org'] })
+    vim.uv.fs_chmod(files['first.org'], 420)
+
+    assert.is.True(ok, loaded)
+    assert.are.same({ 'First', 'Second' }, {
+      loaded[1].headlines[1].title,
+      loaded[2].headlines[1].title,
+    })
+  end)
+
+  it('reloads the same headline after a headline was inserted above', function()
+    helpers.create_file({
+      '* TODO First',
+      '* TODO Second',
+    })
+    local headline = cur_file().headlines[2]
+    assert.are.same('Second', headline.title)
+
+    vim.api.nvim_buf_set_lines(0, 0, 0, false, { '* TODO Inserted' })
+
+    local reloaded = headline:reload()
+    assert.are.same('Second', reloaded.title)
+  end)
+
+  it('returns nil on reload after its headline was deleted', function()
+    helpers.create_file({
+      '* TODO First',
+      '* TODO Second',
+    })
+    local headline = cur_file().headlines[2]
+
+    vim.api.nvim_buf_set_lines(0, 1, 2, false, {})
+
+    assert.is.Nil(headline:reload())
+  end)
+
+  it('returns nil on reload after the headline with its id was deleted', function()
+    helpers.create_file({
+      '* TODO First',
+      '* TODO Second',
+      '  :PROPERTIES:',
+      '  :ID: reload-id',
+      '  :END:',
+    })
+    local headline = cur_file().headlines[2]
+
+    vim.api.nvim_buf_set_lines(0, 1, 5, false, {})
+
+    assert.is.Nil(headline:reload())
+  end)
+
+  it('applies a mutator to its own headline after lines were inserted above', function()
+    helpers.create_file({
+      '* TODO First',
+      '* TODO Second',
+    })
+    local headline = cur_file().headlines[2]
+
+    vim.api.nvim_buf_set_lines(0, 0, 0, false, { '* TODO Inserted' })
+
+    headline:set_tags({ 'moved' }):wait()
+    local lines = vim.api.nvim_buf_get_lines(0, 0, -1, false)
+    assert.are.same('* TODO Inserted', lines[1])
+    assert.are.same('* TODO First', lines[2])
+    assert.is.Not.Nil(lines[3]:match('^%* TODO Second%s+:moved:$'))
+  end)
+
+  it('applies a second mutator through the same handle', function()
+    helpers.create_file({
+      '* TODO First',
+      '* TODO Second',
+    })
+    local headline = cur_file().headlines[2]
+
+    headline:set_tags({ 'one' }):wait()
+    headline:set_priority('A'):wait()
+    local lines = vim.api.nvim_buf_get_lines(0, 0, -1, false)
+    assert.are.same('* TODO First', lines[1])
+    assert.is.Not.Nil(lines[2]:match('^%* TODO %[#A%] Second%s+:one:$'))
+  end)
+
+  it('keeps the handle usable for further mutations after lines were inserted above', function()
+    helpers.create_file({
+      '* TODO First',
+      '* TODO Second',
+    })
+    local headline = cur_file().headlines[2]
+
+    vim.api.nvim_buf_set_lines(0, 0, 0, false, { '* TODO Inserted' })
+
+    headline:set_tags({ 'one' }):wait()
+    headline:set_priority('A'):wait()
+    headline:set_tags({ 'two' }):wait()
+    assert.are.same('A', headline.priority)
+    assert.is.Not.Nil(vim.api.nvim_buf_get_lines(0, 0, -1, false)[3]:match('^%* TODO %[#A%] Second%s+:two:$'))
+  end)
+
+  it('finds its headline by id after a write hook moved it', function()
+    local group = vim.api.nvim_create_augroup('OrgApiHandleMoveHook', { clear = true })
+    vim.api.nvim_create_autocmd('BufWritePre', {
+      group = group,
+      callback = function()
+        if vim.api.nvim_buf_get_lines(0, 0, 1, false)[1] ~= '#+TITLE: Hooked' then
+          vim.api.nvim_buf_set_lines(0, 0, 0, false, { '#+TITLE: Hooked' })
+        end
+      end,
+    })
+    helpers.create_file({
+      '* TODO First',
+      ':PROPERTIES:',
+      ':ID: moved-by-hook',
+      ':END:',
+    })
+    local headline = cur_file().headlines[1]
+
+    local ok, err = pcall(function()
+      headline:set_priority('A'):wait()
+    end)
+    vim.api.nvim_del_augroup_by_id(group)
+
+    assert(ok, err)
+    assert.are.same('A', headline.priority)
+    assert.are.same('* TODO [#A] First', vim.api.nvim_buf_get_lines(0, 0, -1, false)[2])
+  end)
+
+  it('keeps sibling handles on their headlines after a write hook reordered them', function()
+    local group = vim.api.nvim_create_augroup('OrgApiHandleReorderHook', { clear = true })
+    local reordered = false
+    vim.api.nvim_create_autocmd('BufWritePre', {
+      group = group,
+      callback = function()
+        if reordered then
+          return
+        end
+        reordered = true
+        local lines = vim.api.nvim_buf_get_lines(0, 0, -1, false)
+        vim.api.nvim_buf_set_lines(0, 0, -1, false, { lines[5], lines[1], lines[2], lines[3], lines[4] })
+      end,
+    })
+    helpers.create_file({
+      '* TODO A',
+      ':PROPERTIES:',
+      ':ID: reordered-by-hook',
+      ':END:',
+      '* TODO B',
+    })
+    local file = cur_file()
+    local a, b = file.headlines[1], file.headlines[2]
+
+    local ok, err = pcall(function()
+      a:set_priority('A'):wait()
+    end)
+    vim.api.nvim_del_augroup_by_id(group)
+
+    assert(ok, err)
+    assert.are.same({ 'A', 'A' }, { a.title, a.priority })
+    b:set_tags({ 'x' }):wait()
+    local lines = vim.api.nvim_buf_get_lines(0, 0, -1, false)
+    assert.is.Not.Nil(lines[1]:match('^%* TODO B%s+:x:$'))
+    assert.are.same('* TODO [#A] A', lines[2])
+  end)
+
+  it('finds its headline by the new id when get_link creates it and a write hook moves the headline', function()
+    local group = vim.api.nvim_create_augroup('OrgApiHandleIdMoveHook', { clear = true })
+    vim.api.nvim_create_autocmd('BufWritePre', {
+      group = group,
+      callback = function()
+        if vim.api.nvim_buf_get_lines(0, 0, 1, false)[1] ~= '#+TITLE: Hooked' then
+          vim.api.nvim_buf_set_lines(0, 0, 0, false, { '#+TITLE: Hooked' })
+        end
+      end,
+    })
+    helpers.create_file({ '* TODO First' })
+    local headline = cur_file().headlines[1]
+
+    local ok, link = pcall(function()
+      local result = nil
+      helpers.with_var(config.opts, 'org_id_link_to_org_use_id', true, function()
+        result = headline:get_link()
+      end)
+      return result
+    end)
+    vim.api.nvim_del_augroup_by_id(group)
+
+    assert(ok, link)
+    local id = link:match('^id:(.+)::%*First$')
+    assert.is.Not.Nil(id)
+    assert.are.same(id, headline.properties.id)
+    assert.are.same(2, headline.position.start_line)
+  end)
+
+  it('applies a mutator to every identical headline in a loop over one load', function()
+    helpers.create_file({
+      '* TODO Same',
+      '* TODO Same',
+    })
+
+    for _, headline in ipairs(cur_file().headlines) do
+      headline:set_priority('A'):wait()
+    end
+
+    assert.are.same({ '* TODO [#A] Same', '* TODO [#A] Same' }, vim.api.nvim_buf_get_lines(0, 0, -1, false))
+  end)
+
+  it('keeps sibling handles valid after a mutation through another handle of the same load', function()
+    helpers.create_file({
+      '* TODO A',
+      '* TODO Same',
+      '* TODO Same',
+    })
+    local file = cur_file()
+
+    file.headlines[1]:set_tags({ 'x' }):wait()
+    file.headlines[2]:set_tags({ 'y' }):wait()
+
+    local lines = vim.api.nvim_buf_get_lines(0, 0, -1, false)
+    assert.is.Not.Nil(lines[1]:match('^%* TODO A%s+:x:$'))
+    assert.is.Not.Nil(lines[2]:match('^%* TODO Same%s+:y:$'))
+    assert.are.same('* TODO Same', lines[3])
+  end)
+
+  it('updates the handle when its headline is mutated through a child handle parent', function()
+    helpers.create_file({
+      '* TODO Parent',
+      '** TODO Child',
+    })
+    local parent = cur_file().headlines[1]
+
+    parent:set_tags({ 'one' }):wait()
+    parent.headlines[1].parent:set_priority('A'):wait()
+
+    assert.are.same('A', parent.priority)
+    assert.are.equal(parent, parent.headlines[1].parent)
+  end)
+
+  it('keeps the handle valid when a write hook changes the file on save', function()
+    local group = vim.api.nvim_create_augroup('OrgApiHandleWriteHook', { clear = true })
+    vim.api.nvim_create_autocmd('BufWritePre', {
+      group = group,
+      command = [[%s/\s\+$//e]],
+    })
+    helpers.create_file({
+      '* TODO Same',
+      'body ',
+      '* TODO Same',
+    })
+    local headline = cur_file().headlines[2]
+
+    local ok, err = pcall(function()
+      headline:set_deadline('2026-01-01'):wait()
+      headline:set_priority('A'):wait()
+    end)
+    vim.api.nvim_del_augroup_by_id(group)
+
+    assert(ok, err)
+    local lines = vim.api.nvim_buf_get_lines(0, 0, -1, false)
+    assert.are.same({ '* TODO Same', 'body' }, { lines[1], lines[2] })
+    assert.are.same('* TODO [#A] Same', lines[3])
+  end)
+
+  it('refiles its own headline after a headline was inserted above', function()
+    local destination = helpers.create_agenda_file({ '* Destination' })
+    helpers.create_file({
+      '* TODO First',
+      '* TODO Second',
+    })
+    local headline = cur_file().headlines[2]
+
+    vim.api.nvim_buf_set_lines(0, 0, 0, false, { '* TODO Inserted' })
+    api.refile({ source = headline, destination = api.load(destination.filename) }):wait()
+
+    assert.are.same({ '* TODO Inserted', '* TODO First' }, vim.api.nvim_buf_get_lines(0, 0, -1, false))
+  end)
+
+  it('writes a file that is not loaded once when get_link creates the link id', function()
+    local files = helpers.create_agenda_files({
+      { filename = 'target.org', content = { '* TODO Target' } },
+    })
+    local headline = api.load(files['target.org']).headlines[1]
+    local writes = 0
+    local group = vim.api.nvim_create_augroup('test_get_link_writes', { clear = true })
+    vim.api.nvim_create_autocmd('BufWritePost', {
+      group = group,
+      -- Orgmode writes the file under its resolved path, which differs where the temp dir is a symlink
+      pattern = vim.fn.resolve(files['target.org']),
+      callback = function()
+        writes = writes + 1
+      end,
+    })
+
+    local link = nil
+    helpers.with_var(config.opts, 'org_id_link_to_org_use_id', true, function()
+      link = headline:get_link()
+    end)
+    vim.api.nvim_del_augroup_by_id(group)
+
+    local id = link:match('^id:(.+)::%*Target$')
+    assert.is.Not.Nil(id)
+    assert.are.same(id, api.load(files['target.org']).headlines[1]:get_property('id'))
+    assert.are.same(1, writes)
+  end)
+
+  it('creates the link id on its own headline after a headline was inserted above', function()
+    helpers.create_file({
+      '* TODO First',
+      '* TODO Second',
+    })
+    local headline = cur_file().headlines[2]
+
+    vim.api.nvim_buf_set_lines(0, 0, 0, false, { '* TODO Inserted' })
+    local link = nil
+    helpers.with_var(config.opts, 'org_id_link_to_org_use_id', true, function()
+      link = headline:get_link()
+    end)
+
+    local id = link:match('^id:(.+)::%*Second$')
+    assert.is.Not.Nil(id)
+    local lines = vim.api.nvim_buf_get_lines(0, 0, -1, false)
+    assert.are.same({ '* TODO Inserted', '* TODO First', '* TODO Second' }, { lines[1], lines[2], lines[3] })
+    assert.is.Not.Nil(lines[5]:match(':ID: ' .. vim.pesc(id) .. '$'))
+  end)
+
+  it('returns the same link when get_link creates the id of one of two identical headlines', function()
+    helpers.create_file({
+      '* TODO Same',
+      '* TODO Same',
+    })
+    local headline = cur_file().headlines[2]
+
+    local first, second
+    helpers.with_var(config.opts, 'org_id_link_to_org_use_id', true, function()
+      first = headline:get_link()
+      second = headline:get_link()
+    end)
+
+    assert.is.Not.Nil(first:match('^id:.+::%*Same$'))
+    assert.are.same(first, second)
+  end)
+
+  it('reuses the id another handle created when get_link creates the link id', function()
+    local file = helpers.create_agenda_file({ '* TODO First' })
+    local headline = api.load(file.filename).headlines[1]
+    local id = api.load(file.filename).headlines[1]:id_get_or_create()
+
+    local link = nil
+    helpers.with_var(config.opts, 'org_id_link_to_org_use_id', true, function()
+      link = headline:get_link()
+    end)
+
+    assert.are.same('id:' .. id .. '::*First', link)
+    assert.are.same(id, api.load(file.filename).headlines[1]:get_property('id'))
+  end)
+
+  it('reuses the id another handle created when id_get_or_create is called', function()
+    local file = helpers.create_agenda_file({ '* TODO First' })
+    local headline = api.load(file.filename).headlines[1]
+    local id = api.load(file.filename).headlines[1]:id_get_or_create()
+
+    assert.are.same(id, headline:id_get_or_create())
+    assert.are.same(id, api.load(file.filename).headlines[1]:get_property('id'))
+  end)
+
+  it('returns the same id when id_get_or_create is called twice on a handle', function()
+    helpers.create_file({ '* TODO First' })
+    local headline = cur_file().headlines[1]
+
+    local first_id = headline:id_get_or_create()
+    local second_id = headline:id_get_or_create()
+
+    assert.are.same(first_id, second_id)
+    assert.are.same(first_id, cur_file().headlines[1]:get_property('id'))
+  end)
+
+  it('clears a removed date on the handle', function()
+    helpers.create_file({ '* TODO First' })
+    local headline = cur_file().headlines[1]
+
+    headline:set_deadline('2026-01-01'):wait()
+    assert.is.Not.Nil(headline.deadline)
+    headline:set_deadline(''):wait()
+    assert.is.Nil(headline.deadline)
+  end)
+
+  it('raises an error instead of guessing between identical headlines after an edit', function()
+    helpers.create_file({
+      '* TODO Same',
+      '* TODO Same',
+    })
+    local headline = cur_file().headlines[2]
+
+    vim.api.nvim_buf_set_lines(0, 0, 0, false, { '* TODO Inserted' })
+
+    local promise = headline:set_tags({ 'x' })
+    assert.has.error(function()
+      promise:wait()
+    end)
+    assert.are.same({ '* TODO Inserted', '* TODO Same', '* TODO Same' }, vim.api.nvim_buf_get_lines(0, 0, -1, false))
+  end)
+
+  it('tells identical headlines under different parents apart after an edit', function()
+    helpers.create_file({ '* A', '** Notes', '* B', '** Notes', 'body' })
+    local headline = cur_file().headlines[4]
+
+    vim.api.nvim_buf_set_lines(0, -1, -1, false, { 'more body' })
+    headline:set_tags({ 'x' }):wait()
+
+    local lines = vim.api.nvim_buf_get_lines(0, 0, -1, false)
+    assert.are.same({ '* A', '** Notes', '* B' }, { lines[1], lines[2], lines[3] })
+    assert.is.Not.Nil(lines[4]:match('^%*%* Notes%s+:x:$'))
+  end)
+
+  it('raises an error instead of guessing between identical headlines under the same parent after an edit', function()
+    helpers.create_file({ '* A', '** Notes', '** Notes' })
+    local headline = cur_file().headlines[3]
+
+    vim.api.nvim_buf_set_lines(0, -1, -1, false, { 'body' })
+
+    local promise = headline:set_tags({ 'x' })
+    assert.has.error(function()
+      promise:wait()
+    end)
+    assert.are.same({ '* A', '** Notes', '** Notes', 'body' }, vim.api.nvim_buf_get_lines(0, 0, -1, false))
+  end)
+
+  it('raises an error when a slash in a title gives two headlines the same outline path', function()
+    helpers.create_file({ '* A/B', '*** C', '* A', '** B', '*** C' })
+    local headline = cur_file().headlines[5]
+
+    vim.api.nvim_buf_set_lines(0, -1, -1, false, { 'body' })
+
+    local promise = headline:set_tags({ 'x' })
+    assert.has.error(function()
+      promise:wait()
+    end)
+    assert.are.same({ '* A/B', '*** C', '* A', '** B', '*** C', 'body' }, vim.api.nvim_buf_get_lines(0, 0, -1, false))
+  end)
+
+  it('passes the error to a catch handler when the handle no longer finds its headline', function()
+    helpers.create_file({
+      '* TODO Same',
+      '* TODO Same',
+    })
+    local headline = cur_file().headlines[2]
+    vim.api.nvim_buf_set_lines(0, 0, 0, false, { '* TODO Inserted' })
+
+    local caught = nil
+    local ok = pcall(function()
+      headline
+        :set_tags({ 'x' })
+        :catch(function(err)
+          caught = err
+        end)
+        :wait()
+    end)
+
+    assert.is.True(ok)
+    assert.is.Not.Nil(caught:match('not found'))
+    assert.are.same({ '* TODO Inserted', '* TODO Same', '* TODO Same' }, vim.api.nvim_buf_get_lines(0, 0, -1, false))
+  end)
+
+  it('raises an error when the headline with its id was deleted', function()
+    helpers.create_file({
+      '* TODO Same',
+      '  :PROPERTIES:',
+      '  :ID: first-id',
+      '  :END:',
+      '* TODO Same',
+      '  :PROPERTIES:',
+      '  :ID: second-id',
+      '  :END:',
+    })
+    local headline = cur_file().headlines[1]
+
+    vim.api.nvim_buf_set_lines(0, 0, 4, false, {})
+
+    local promise = headline:set_tags({ 'x' })
+    assert.has.error(function()
+      promise:wait()
+    end)
+    assert.are.same(
+      { '* TODO Same', '  :PROPERTIES:', '  :ID: second-id', '  :END:' },
+      vim.api.nvim_buf_get_lines(0, 0, -1, false)
+    )
+  end)
+
+  it('raises an error when two headlines share the id of the handle', function()
+    helpers.create_file({
+      '* TODO First',
+      '  :PROPERTIES:',
+      '  :ID: same-id',
+      '  :END:',
+      '* TODO Second',
+      '  :PROPERTIES:',
+      '  :ID: same-id',
+      '  :END:',
+    })
+    local headline = cur_file().headlines[2]
+
+    local promise = headline:set_tags({ 'x' })
+    assert.has.error(function()
+      promise:wait()
+    end)
+    assert.are.same('* TODO First', vim.api.nvim_buf_get_lines(0, 0, 1, false)[1])
+  end)
+
+  it('raises an error when the handle of one of two identical headlines outlives its headline', function()
+    helpers.create_file({
+      '* TODO Same',
+      '* TODO Same',
+    })
+    local headline = cur_file().headlines[2]
+
+    vim.api.nvim_buf_set_lines(0, 1, 2, false, {})
+
+    local promise = headline:set_tags({ 'x' })
+    assert.has.error(function()
+      promise:wait()
+    end)
+    assert.are.same({ '* TODO Same' }, vim.api.nvim_buf_get_lines(0, 0, -1, false))
+  end)
+
+  it('acts on its own headline after the file was reordered and opened in a new buffer', function()
+    -- The tick a buffer gets when the file is opened again
+    local probe = helpers.create_file({ '* TODO Probe' })
+    local probe_bufnr = vim.api.nvim_get_current_buf()
+    vim.cmd('enew')
+    vim.cmd('bwipeout ' .. probe_bufnr)
+    vim.cmd('edit ' .. vim.fn.fnameescape(probe.filename))
+    local reopen_tick = vim.api.nvim_buf_get_changedtick(0)
+
+    local file = helpers.create_file({ '* TODO First', '* TODO Second' })
+    local old_bufnr = vim.api.nvim_get_current_buf()
+    while vim.api.nvim_buf_get_changedtick(old_bufnr) < reopen_tick do
+      vim.api.nvim_buf_set_lines(old_bufnr, 0, 1, false, { '* TODO First' })
+    end
+    local old_tick = vim.api.nvim_buf_get_changedtick(old_bufnr)
+    local headline = cur_file().headlines[2]
+
+    vim.cmd('enew')
+    vim.cmd('bwipeout! ' .. old_bufnr)
+    vim.wait(10)
+    vim.fn.writefile({ '* TODO Second', '* TODO First' }, file.filename)
+    vim.cmd('edit ' .. vim.fn.fnameescape(file.filename))
+    assert.are.same(old_tick, vim.api.nvim_buf_get_changedtick(0))
+
+    headline:set_tags({ 'x' }):wait()
+
+    local lines = vim.api.nvim_buf_get_lines(0, 0, -1, false)
+    assert.is.Not.Nil(lines[1]:match('^%* TODO Second%s+:x:$'))
+    assert.are.same('* TODO First', lines[2])
+  end)
+
   it('builds handles from the current buffer text when loading a list of files', function()
     local target = helpers.create_agenda_file({
       '* TODO Same',
