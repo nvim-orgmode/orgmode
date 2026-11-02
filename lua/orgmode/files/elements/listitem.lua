@@ -153,4 +153,57 @@ function Listitem:promote(include_childs)
   self:_adjust_lines(self._decrease, include_childs)
 end
 
+---@private
+---@return number start_row 0-based
+---@return number end_row 0-based, exclusive
+function Listitem:_line_range()
+  local start_row, _, end_row, end_col = self.listitem:range()
+  -- For last item in file, ts grammar is not parsing the end column as 0
+  if end_col ~= 0 then
+    end_row = end_row + 1
+  end
+  return start_row, end_row
+end
+
+---Swap the list item, together with its children, with the previous or next item in the same list.
+---Numbers of an ordered list stay in place.
+---@param direction 'up' | 'down'
+---@return number | nil offset Number of lines the item moved by, nil if there is no item to swap with
+function Listitem:move(direction)
+  local sibling
+  if direction == 'up' then
+    sibling = self.listitem:prev_named_sibling()
+  else
+    sibling = self.listitem:next_named_sibling()
+  end
+  if not sibling or sibling:type() ~= 'listitem' then
+    return nil
+  end
+  local first, second = self, Listitem:new(sibling, self.file)
+  if direction == 'up' then
+    first, second = second, first
+  end
+  local first_start, first_end = first:_line_range()
+  local second_start, second_end = second:_line_range()
+
+  local first_lines = vim.api.nvim_buf_get_lines(0, first_start, first_end, false)
+  local gap = vim.api.nvim_buf_get_lines(0, first_end, second_start, false)
+  local second_lines = vim.api.nvim_buf_get_lines(0, second_start, second_end, false)
+
+  local first_bullet = first_lines[1]:match('^%s*%d+[.)]')
+  local second_bullet = second_lines[1]:match('^%s*%d+[.)]')
+  if first_bullet and second_bullet then
+    first_lines[1] = second_bullet .. first_lines[1]:sub(#first_bullet + 1)
+    second_lines[1] = first_bullet .. second_lines[1]:sub(#second_bullet + 1)
+  end
+
+  local lines = vim.list_extend(vim.list_extend(second_lines, gap), first_lines)
+  vim.api.nvim_buf_set_lines(0, first_start, second_end, false, lines)
+
+  if direction == 'up' then
+    return first_start - second_start
+  end
+  return second_end - first_end
+end
+
 return Listitem
