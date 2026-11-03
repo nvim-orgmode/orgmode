@@ -12,13 +12,21 @@ local Buffers = require('orgmode.state.buffers')
 ---@class OrgApi
 local OrgApi = {}
 
+---A file that cannot be read again keeps the content it was loaded with, so the other files still load
+---@param file OrgFile
+---@return OrgFile
+local function reload_or_keep(file)
+  local ok, reloaded = pcall(file.reload_sync, file)
+  return ok and reloaded or file
+end
+
 ---@param name? string|string[] specific file names to return (absolute path). If ommitted, returns all loaded files
 ---@return OrgApiFile|OrgApiFile[]
 function OrgApi.load(name)
   vim.validate('name', name, { 'string', 'table' }, true)
   if not name then
     return vim.tbl_map(function(file)
-      return OrgFile._build_from_internal_file(file)
+      return OrgFile._build_from_internal_file(reload_or_keep(file))
     end, orgmode.files:all())
   end
 
@@ -28,10 +36,13 @@ function OrgApi.load(name)
   end
 
   if type(name) == 'table' then
+    name = vim.tbl_map(function(filename)
+      return vim.fn.resolve(vim.fn.fnamemodify(filename, ':p'))
+    end, name)
     local list = {}
     for _, file in ipairs(orgmode.files:all()) do
-      if file.filename == name then
-        table.insert(list, OrgFile._build_from_internal_file(file))
+      if vim.tbl_contains(name, file.filename) then
+        table.insert(list, OrgFile._build_from_internal_file(reload_or_keep(file)))
       end
     end
 
@@ -69,16 +80,25 @@ function OrgApi.refile(opts)
     error('Destination must be an OrgApiFile or OrgApiHeadline', 0)
   end
 
+  local source_ok, source = pcall(opts.source._find_section, opts.source, orgmode.files:get(opts.source.file.filename))
+  if not source_ok then
+    return Promise.reject(source)
+  end
   local refile_opts = {
-    source_file = opts.source._section.file,
-    source_headline = opts.source._section,
+    source_file = source.file,
+    source_headline = source,
   }
 
   if is_file then
     refile_opts.destination_file = opts.destination._file
   else
-    refile_opts.destination_file = opts.destination._section.file
-    refile_opts.destination_headline = opts.destination._section
+    local destination_ok, destination =
+      pcall(opts.destination._find_section, opts.destination, orgmode.files:get(opts.destination.file.filename))
+    if not destination_ok then
+      return Promise.reject(destination)
+    end
+    refile_opts.destination_file = destination.file
+    refile_opts.destination_headline = destination
   end
 
   local source_bufnr = Buffers.get_buffer_by_filename(opts.source.file.filename)

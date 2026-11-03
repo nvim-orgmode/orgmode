@@ -13,10 +13,19 @@ local Buffers = require('orgmode.state.buffers')
 
 local clean_empty_line = vim.fn.has('nvim-0.13') == 1 or vim.fn.has('nvim-0.12.3') == 1
 
+-- Shared by all files, so an OrgFile created again for the same path never gets
+-- a version that a handle built from the earlier one still holds
+local last_version = 0
+local function next_version()
+  last_version = last_version + 1
+  return last_version
+end
+
 ---@class OrgFileMetadata
 ---@field mtime number File modified time in nanoseconds
 ---@field mtime_sec number File modified time in seconds
 ---@field changedtick number
+---@field bufnr? number Buffer the content was read from, nil when read from disk. Its text may differ from the disk
 
 ---@class OrgFileOpts
 ---@field filename string
@@ -30,6 +39,7 @@ local clean_empty_line = vim.fn.has('nvim-0.13') == 1 or vim.fn.has('nvim-0.12.3
 ---@field index number
 ---@field lines string[]
 ---@field content string
+---@field version number Changes with every content change, never repeats across files
 ---@field metadata OrgFileMetadata
 ---@field parser vim.treesitter.LanguageTree
 ---@field root TSNode
@@ -59,6 +69,7 @@ function OrgFile:new(opts)
     buf = opts.buf or -1,
     lines = opts.lines or {},
     content = table.concat(opts.lines or {}, '\n'),
+    version = next_version(),
     metadata = {
       mtime = stat and stat.mtime.nsec or 0,
       mtime_sec = stat and stat.mtime.sec or 0,
@@ -68,6 +79,7 @@ function OrgFile:new(opts)
   local this = setmetatable(data, self)
   if this.buf > 0 then
     this:_update_lines(this:_get_lines(this.buf))
+    this.metadata.bufnr = this.buf
   end
   return this
 end
@@ -109,6 +121,25 @@ function OrgFile.load(filename)
   end)
 end
 
+---Read a buffer without unsaved edits again if the file on disk is newer. Unlike autoread, this
+---also happens with 'noautoread' and without asking, because the buffer holds nothing the disk lacks.
+---@param bufnr number
+---@private
+function OrgFile:_reload_buffer_from_disk(bufnr)
+  -- An autocmd of the reload can call this again for the same buffer, so each call removes only its own autocmd
+  local autocmd = vim.api.nvim_create_autocmd('FileChangedShell', {
+    buffer = bufnr,
+    callback = function()
+      if vim.v.fcs_reason ~= 'deleted' then
+        vim.v.fcs_choice = 'reload'
+      end
+    end,
+  })
+  vim.cmd('silent! checktime ' .. bufnr)
+  -- Wiping the buffer during the reload also removes its autocmds
+  pcall(vim.api.nvim_del_autocmd, autocmd)
+end
+
 ---Reload the file if it has been modified
 ---@return OrgPromise<OrgFile>
 function OrgFile:reload()
@@ -117,18 +148,26 @@ function OrgFile:reload()
   end
 
   local bufnr = self:bufnr()
-  local buf_changed = false
   local file_changed = false
 
+  local stat = vim.uv.fs_stat(self.filename)
+  -- A loaded buffer is what gets parsed, so its text is the content even when the file on disk differs
   if bufnr > -1 then
+    if stat and not vim.bo[bufnr].modified then
+      self:_reload_buffer_from_disk(bufnr)
+    end
     local new_changedtick = vim.api.nvim_buf_get_changedtick(bufnr)
-    buf_changed = self.metadata.changedtick ~= new_changedtick
-    if buf_changed then
+    if self.metadata.bufnr ~= bufnr or self.metadata.changedtick ~= new_changedtick then
       self:_update_lines(self:_get_lines(bufnr))
       self.metadata.changedtick = new_changedtick
     end
+    self.metadata.bufnr = bufnr
+    if stat then
+      self.metadata.mtime = stat.mtime.nsec
+      self.metadata.mtime_sec = stat.mtime.sec
+    end
+    return Promise.resolve(self)
   end
-  local stat = vim.uv.fs_stat(self.filename)
   if stat then
     local new_mtime_nsec = stat.mtime.nsec
     local new_mtime_sec = stat.mtime.sec
@@ -136,9 +175,10 @@ function OrgFile:reload()
       or self.metadata.mtime_sec ~= new_mtime_sec
   end
 
-  if file_changed and not buf_changed then
+  if file_changed or (stat and self.metadata.bufnr) then
     return utils.readfile(self.filename, { schedule = true }):next(function(lines)
       self:_update_lines(lines)
+      self.metadata.bufnr = nil
       if stat then
         self.metadata.mtime = stat.mtime.nsec
         self.metadata.mtime_sec = stat.mtime.sec
@@ -156,24 +196,93 @@ function OrgFile:reload_sync(timeout)
   return self:reload():wait(timeout)
 end
 
+---The undo state of the current buffer to go back to, or nil when it cannot be reached. After a buffer
+---was unloaded, changenr() still returns the number of the last change before, although the undo
+---tree is empty, and undoing to it fails.
+---@return number | nil
+local function current_undo_seq()
+  local tree = vim.fn.undotree()
+  if #tree.entries == 0 then
+    return 0
+  end
+  local function contains(entries)
+    for _, entry in ipairs(entries) do
+      if entry.seq == tree.seq_cur or (entry.alt and contains(entry.alt)) then
+        return true
+      end
+    end
+    return false
+  end
+  if tree.seq_cur == 0 or contains(tree.entries) then
+    return tree.seq_cur
+  end
+end
+
+---Run an action on the current buffer and return a function that undoes its change. The function
+---undoes nothing once anything else changed the buffer after the action returned, because an edit
+---made while the action was still pending cannot be told apart from the action's own. It also undoes
+---nothing when the state before the change is not in the undo tree.
+---@param action fun(...:OrgFile):any
+---@param file OrgFile
+---@return boolean ok, any result, fun() undo
+local function run_undoable(action, file)
+  local bufnr = vim.api.nvim_get_current_buf()
+  -- Start a new undo block, so undoing the change cannot also undo edits made before it
+  vim.bo[bufnr].undolevels = vim.bo[bufnr].undolevels
+  local undo_seq = current_undo_seq()
+  local ok, result = pcall(action, file)
+  local changedtick = vim.api.nvim_buf_get_changedtick(bufnr)
+  local undo = function()
+    if undo_seq and vim.api.nvim_buf_is_loaded(bufnr) and vim.api.nvim_buf_get_changedtick(bufnr) == changedtick then
+      vim.api.nvim_buf_call(bufnr, function()
+        vim.cmd('silent! undo ' .. undo_seq)
+      end)
+    end
+  end
+  return ok, result, undo
+end
+
 ---@param action fun(...:OrgFile):any
 function OrgFile:update(action)
   local is_same_file = self.filename == utils.current_file_path()
   if is_same_file then
-    return Promise.resolve(action(self)):next(function(result)
-      vim.cmd(':silent! w')
+    -- Saving a buffer that already had unsaved changes would write the
+    -- user's edits too, so the change stays unsaved in that case.
+    local was_modified = vim.bo.modified
+    local ok, action_result, undo = run_undoable(action, self)
+    if not ok then
+      undo()
+      error(action_result, 0)
+    end
+    return Promise.resolve(action_result):next(function(result)
+      if not was_modified then
+        vim.cmd(':silent! w')
+      end
       return result
+    end, function(err)
+      undo()
+      return Promise.reject(err)
     end)
   end
 
   local edit_file = utils.edit_file(self.filename)
   edit_file.open()
 
-  return Promise.resolve(action(self)):next(function(result)
-    edit_file.close()
+  local ok, action_result, undo = run_undoable(action, self)
+  if not ok then
+    undo()
+    edit_file.close(false)
+    error(action_result, 0)
+  end
+  return Promise.resolve(action_result):next(function(result)
+    edit_file.close(true)
     return self:reload():next(function()
       return result
     end)
+  end, function(err)
+    undo()
+    edit_file.close(false)
+    return Promise.reject(err)
   end)
 end
 
@@ -190,9 +299,11 @@ function OrgFile:is_modified()
   local bufnr = self:bufnr()
   if bufnr > -1 then
     local cur_changedtick = vim.api.nvim_buf_get_changedtick(bufnr)
-    if cur_changedtick ~= self.metadata.changedtick then
+    if self.metadata.bufnr ~= bufnr or cur_changedtick ~= self.metadata.changedtick then
       return true
     end
+  elseif self.metadata.bufnr then
+    return true
   end
   local stat = vim.uv.fs_stat(self.filename)
   if not stat then
@@ -346,6 +457,23 @@ function OrgFile:find_headline_by_title(title)
   return utils.find(self:get_headlines(), function(item)
     return item:get_title():lower() == title:lower()
   end)
+end
+
+---Find headlines with the given ID as their own property
+---@param id string
+---@return OrgHeadline[]
+function OrgFile:find_headlines_by_id(id)
+  return vim.tbl_filter(function(item)
+    return item:get_property('id', false) == id
+  end, self:get_headlines())
+end
+
+---@param outline_key string see OrgHeadline:get_outline_key()
+---@return OrgHeadline[]
+function OrgFile:find_headlines_by_outline_key(outline_key)
+  return vim.tbl_filter(function(item)
+    return item:get_outline_key() == outline_key
+  end, self:get_headlines())
 end
 
 memoize('get_todo_keywords')
@@ -1030,8 +1158,12 @@ function OrgFile:_get_directive(directive_name, all_matches)
 end
 
 function OrgFile:_update_lines(lines)
+  local content = table.concat(lines, '\n')
+  if content ~= self.content then
+    self.version = next_version()
+  end
   self.lines = lines
-  self.content = table.concat(lines, '\n')
+  self.content = content
   self:parse()
   return self
 end
