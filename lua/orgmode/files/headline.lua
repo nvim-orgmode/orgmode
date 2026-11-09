@@ -252,7 +252,7 @@ function Headline:get_outline_path()
   return outline_path
 end
 
-local statistics_cookie_patterns = { '%[%d*/%d*%]', '%[%d?%d?%d?%%%]' }
+local statistics_cookie_patterns = { '%[%d*/%d*%]', '%[%d*%%%]' }
 
 ---@param text string
 ---@return string
@@ -928,31 +928,39 @@ function Headline:remove_scheduled_date()
   return self:_remove_date('SCHEDULED')
 end
 
-function Headline:get_cookie()
-  local cookie = self:_parse_title_part(statistics_cookie_patterns[1])
-  if cookie then
-    return cookie
+---@return OrgStatisticsCookie[]
+function Headline:get_cookies()
+  local item = self:_get_child_node('item')
+  if not item then
+    return {}
   end
-  return self:_parse_title_part(statistics_cookie_patterns[2])
+  return utils.find_statistics_cookies(self.file:get_node_text(item), item)
 end
 
-function Headline:_set_cookie(cookie, num, denum)
-  -- Update the cookie
-  local new_cookie_val
-  if self.file:get_node_text(cookie):find('%%') then
-    new_cookie_val = ('[%d%%]'):format((num / denum) * 100)
-  else
-    new_cookie_val = ('[%d/%d]'):format(num, denum)
+---@param cookies OrgStatisticsCookie[]
+function Headline:_set_cookies(cookies, num, denum)
+  local bufnr = self.file:get_valid_bufnr()
+  -- Backwards, so that a replaced cookie does not move the ones before it
+  for i = #cookies, 1, -1 do
+    local cookie = cookies[i]
+    local new_cookie_val
+    if cookie.text:find('%%') then
+      new_cookie_val = ('[%d%%]'):format((num / denum) * 100)
+    else
+      new_cookie_val = ('[%d/%d]'):format(num, denum)
+    end
+    local start_row, start_col, end_row, end_col = unpack(cookie.range)
+    pcall(vim.api.nvim_buf_set_text, bufnr, start_row, start_col, end_row, end_col, { new_cookie_val })
   end
-  return self:_set_node_text(cookie, new_cookie_val)
+  return self:refresh()
 end
 
 function Headline:update_cookie()
   -- Update cookie state from a check box state change
 
   -- Return early if the headline doesn't have a cookie
-  local cookie = self:get_cookie()
-  if not cookie then
+  local cookies = self:get_cookies()
+  if #cookies == 0 then
     return self
   end
 
@@ -978,15 +986,15 @@ function Headline:update_cookie()
   end
 
   -- Set the cookie
-  return self:_set_cookie(cookie, num_checked_boxes, num_boxes)
+  return self:_set_cookies(cookies, num_checked_boxes, num_boxes)
 end
 
 function Headline:update_todo_cookie()
   -- Update cookie state from a TODO state change
 
   -- Return early if the headline doesn't have a cookie
-  local cookie = self:get_cookie()
-  if not cookie then
+  local cookies = self:get_cookies()
+  if #cookies == 0 then
     return self
   end
 
@@ -1002,7 +1010,7 @@ function Headline:update_todo_cookie()
   end, headlines_with_todo)
 
   -- Set the cookie
-  return self:_set_cookie(cookie, #dones, #headlines_with_todo)
+  return self:_set_cookies(cookies, #dones, #headlines_with_todo)
 end
 
 function Headline:update_parent_cookie()
@@ -1185,20 +1193,6 @@ end
 function Headline:_set_node_lines(node, text)
   self.file:set_node_lines(node, text)
   return self:refresh()
-end
-
----@private
----@return TSNode | nil, string
-function Headline:_parse_title_part(pattern)
-  for _, node in ipairs(ts_utils.get_named_children(self:_get_child_node('item'))) do
-    local text = self.file:get_node_text(node) or ''
-    local match = text:match(pattern)
-    if match then
-      return node, match
-    end
-  end
-
-  return nil, ''
 end
 
 ---@private
