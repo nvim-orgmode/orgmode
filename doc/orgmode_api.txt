@@ -91,6 +91,11 @@ OrgFile:get_link()                                            *OrgFile:get_link*
 
 
 OrgApiHeadline                                                  *OrgApiHeadline*
+    Each call on a handle finds its headline again: by its ID if it has one, otherwise by its line while the
+    file is unchanged, and else by its outline path and headline line. A handle without an ID raises an error
+    when its own headline line or a parent's title changed since it was loaded, instead of acting on a guess
+    (|OrgHeadline:reload| returns nil). The failed call changes nothing. To recover, load again with
+    |OrgApi.load|, find the headline among the new handles and repeat the call.
 
     Fields: ~
         {title}        (string)                headline title without todo keyword, tags and priority. Ex. `* TODO I am a headline  :SOMETAG:` returns `I am a headline`
@@ -114,10 +119,10 @@ OrgApiHeadline                                                  *OrgApiHeadline*
 
 
 OrgHeadline:reload()                                        *OrgHeadline:reload*
-     Return updated version of headline
+     Return updated version of headline, or nil when the headline can no longer be found
 
     Returns: ~
-        (OrgApiHeadline)
+        (OrgApiHeadline|nil)
 
 
 OrgHeadline:set_tags({tags})                              *OrgHeadline:set_tags*
@@ -196,6 +201,15 @@ OrgHeadline:get_property({key})                       *OrgHeadline:get_property*
 OrgHeadline:id_get_or_create()                    *OrgHeadline:id_get_or_create*
      Get headline id or create a new one if it doesn't exist
      @return string
+
+
+OrgApiHeadlineMark                                          *OrgApiHeadlineMark*
+
+    Fields: ~
+        {bufnr}    (number)
+        {id}       (number)
+        {autocmd}  (number)
+        {row?}     (number)  line of the headline after the save, nil while not saved or when the line is gone
 
 
 OrgHeadline:get_link()                                    *OrgHeadline:get_link*
