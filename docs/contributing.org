@@ -100,6 +100,18 @@ can be installed, and exit with a success message.
 :END:
 Parsing is done via builtin treesitter parser and the [[https://github.com/nvim-orgmode/tree-sitter-org][tree-sitter-org]] grammar.
 
+Changes to the grammar go to tree-sitter-org. Orgmode installs the grammar from a release tag,
+so a grammar change needs a new tag there before orgmode can use it. To update orgmode to a new tag:
+
+1. Set =required_version= in =lua/orgmode/utils/treesitter/install.lua= to the new tag.
+2. Find what changed in the grammar: diff =src/node-types.json= and =test/corpus/= in
+   tree-sitter-org between the old and the new tag. Adjust =queries/org/*.scm= and the Lua code
+   that matches node types by name. A query with an unknown node type fails to load, but node names
+   in Lua strings and changes to the tree shape only show up in tests. A renamed highlight capture
+   breaks user overrides, so mark the commit as breaking.
+3. Run =:Org install_treesitter_grammar= to install the new version, then run =make test=
+   and check the highlighting in a few org files.
+
 **** Commits
 :PROPERTIES:
 :CUSTOM_ID: commits
