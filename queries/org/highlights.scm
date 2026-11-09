@@ -35,6 +35,7 @@
 (latex_env) @org.latex_env
 (inline_math_block) @org.latex
 (display_math_block) @org.latex
+(inline_latex) @org.latex
 (drawer) @org.drawer
 (tag_list) @org.tag
 (directive name: (expr) @_directive_name value: (value) @org.tag (#match? @_directive_name "\\c^filetags$"))
@@ -52,3 +53,15 @@
 (link "[[" @_link_open "]]" @_link_close (#set! conceal ""))
 (link_desc "[[" @_link_open "][" @_link_separator "]]" @_link_close (#set! conceal ""))
 ((link_desc url: (expr)+ @_link_url (#set! @_link_url conceal "")) @_link (#set! @_link url @_link_url))
+((bold) @_bold (#org-is-valid-markup? @_bold)) @org.bold
+((italic) @_italic (#org-is-valid-markup? @_italic)) @org.italic
+((underline) @_underline (#org-is-valid-markup? @_underline)) @org.underline
+((strikethrough) @_strikethrough (#org-is-valid-markup? @_strikethrough)) @org.strikethrough
+((code) @_code (#org-is-valid-markup? @_code)) @org.code
+((verbatim) @_verbatim (#org-is-valid-markup? @_verbatim)) @org.verbatim
+((bold open: (_) @org.bold.delimiter close: (_) @org.bold.delimiter) @_bold (#org-is-valid-markup? @_bold))
+((italic open: (_) @org.italic.delimiter close: (_) @org.italic.delimiter) @_italic (#org-is-valid-markup? @_italic))
+((underline open: (_) @org.underline.delimiter close: (_) @org.underline.delimiter) @_underline (#org-is-valid-markup? @_underline))
+((strikethrough open: (_) @org.strikethrough.delimiter close: (_) @org.strikethrough.delimiter) @_strikethrough (#org-is-valid-markup? @_strikethrough))
+((code open: (_) @org.code.delimiter close: (_) @org.code.delimiter) @_code (#org-is-valid-markup? @_code))
+((verbatim open: (_) @org.verbatim.delimiter close: (_) @org.verbatim.delimiter) @_verbatim (#org-is-valid-markup? @_verbatim))

@@ -12,7 +12,6 @@ local Promise = require('orgmode.utils.promise')
 
 ---@class OrgAgendaTodosTypeOpts
 ---@field files OrgFiles
----@field highlighter OrgHighlighter
 ---@field agenda_filter OrgAgendaFilter
 ---@field filter? string
 ---@field tag_filter? string
@@ -27,7 +26,6 @@ local Promise = require('orgmode.utils.promise')
 
 ---@class OrgAgendaTodosType:OrgAgendaViewType
 ---@field files OrgFiles
----@field highlighter OrgHighlighter
 ---@field agenda_filter OrgAgendaFilter
 ---@field filter? OrgAgendaFilter
 ---@field tag_filter? string
@@ -48,7 +46,6 @@ OrgAgendaTodosType.__index = OrgAgendaTodosType
 function OrgAgendaTodosType:new(opts)
   local this = setmetatable({
     files = opts.files,
-    highlighter = opts.highlighter,
     agenda_filter = opts.agenda_filter,
     filter = opts.filter and AgendaFilter:new():parse(opts.filter, true) or nil,
     tag_filter = opts.tag_filter and AgendaFilter:new({ types = { 'tags' } }):parse(opts.tag_filter, true) or nil,
@@ -106,7 +103,7 @@ end
 function OrgAgendaTodosType:render(bufnr)
   self.bufnr = bufnr or 0
   local headlines, category_length = self:_get_headlines()
-  local agendaView = AgendaView:new({ bufnr = self.bufnr, highlighter = self.highlighter })
+  local agendaView = AgendaView:new({ bufnr = self.bufnr })
 
   -- If custom view and no headlines, return empty view
   -- Works only for custom agenda views (has id)
