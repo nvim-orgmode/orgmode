@@ -259,6 +259,10 @@ function OrgFile:update(action)
     return Promise.resolve(action_result):next(function(result)
       if not was_modified then
         vim.cmd(':silent! w')
+        if vim.bo.modified then
+          -- Like an edit by hand, the change stays in the buffer, so the user can :w! or fix the permissions
+          return Promise.reject(('Changed %s, not written: the file could not be written'):format(self.filename))
+        end
       end
       return result
     end, function(err)
@@ -273,18 +277,31 @@ function OrgFile:update(action)
   local ok, action_result, undo = run_undoable(action, self)
   if not ok then
     undo()
-    edit_file.close(false)
+    edit_file.close()
+    -- The action can have parsed its change before it failed
+    self:reload_sync()
     error(action_result, 0)
   end
   return Promise.resolve(action_result):next(function(result)
-    edit_file.close(true)
+    if not edit_file.write() then
+      undo()
+      edit_file.close()
+      -- The parsed content still holds the undone change
+      return self:reload():next(function()
+        return Promise.reject('Could not write ' .. self.filename)
+      end)
+    end
+    edit_file.close()
     return self:reload():next(function()
       return result
     end)
   end, function(err)
     undo()
-    edit_file.close(false)
-    return Promise.reject(err)
+    edit_file.close()
+    -- The action can have parsed its change before it failed
+    return self:reload():next(function()
+      return Promise.reject(err)
+    end)
   end)
 end
 

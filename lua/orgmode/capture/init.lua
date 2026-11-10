@@ -23,6 +23,17 @@ local function buffer_keymaps()
   return result
 end
 
+---A change to a buffer with unsaved edits is not written, so the file of that buffer stays as it was
+---@param file OrgFile
+---@return string
+local function write_message(file)
+  local bufnr = file:bufnr()
+  if bufnr > -1 and vim.bo[bufnr].modified then
+    return ('Changed %s, not written: it has unsaved changes'):format(file.filename)
+  end
+  return ('Wrote %s'):format(file.filename)
+end
+
 ---@alias OrgOnCaptureClose fun(capture:OrgCapture, opts:OrgProcessCaptureOpts)
 ---@alias OrgOnCaptureCancel fun(capture:OrgCapture)
 
@@ -366,7 +377,7 @@ function Capture:_refile_from_capture_buffer(opts)
   if self.on_post_refile then
     self.on_post_refile(self, opts)
   end
-  utils.echo_info(('Wrote %s'):format(destination_file.filename))
+  utils.echo_info(write_message(destination_file))
   self:kill(false, opts.capture_window.id)
   return true
 end
@@ -438,7 +449,7 @@ function Capture:_refile_from_org_file(opts)
         vim.api.nvim_buf_set_lines(0, item_range.start_line - 1, item_range.end_line, false, {})
       end
 
-      utils.echo_info(opts.message or ('Wrote %s'):format(destination_file.filename))
+      utils.echo_info(opts.message or write_message(destination_file))
       return target_line + 1
     end)
 end

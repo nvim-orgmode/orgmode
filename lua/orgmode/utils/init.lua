@@ -578,7 +578,7 @@ function utils.edit_file(filename)
         vim.api.nvim_set_option_value('swapfile', false, { buf = bufnr })
       end
       if not ok then
-        edit.close(false)
+        edit.close()
         if tostring(result):match('E325') then
           -- Loading the buffer from a window cannot ask what to do with a swap file. Fail instead of
           -- writing behind another instance that edits the file.
@@ -587,13 +587,18 @@ function utils.edit_file(filename)
         error(result, 0)
       end
     end,
-    ---@param save boolean Write the buffer if it had no unsaved changes before
-    close = function(save)
-      if save and not was_modified then
-        vim.api.nvim_buf_call(bufnr, function()
-          vim.cmd('silent! w')
-        end)
+    ---Write the buffer if it had no unsaved changes before
+    ---@return boolean ok false if the buffer could not be written
+    write = function()
+      if was_modified then
+        return true
       end
+      vim.api.nvim_buf_call(bufnr, function()
+        vim.cmd('silent! w')
+      end)
+      return not vim.api.nvim_buf_is_valid(bufnr) or not vim.bo[bufnr].modified
+    end,
+    close = function()
       pcall(vim.api.nvim_buf_del_var, bufnr, 'org_tmp_edit_window')
       -- Autocmds that run while the window closes can raise. Their errors must not replace the result of
       -- the change, so the window close, the unload and the return to the previous window are protected.

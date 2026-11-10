@@ -714,6 +714,32 @@ describe('OrgFile', function()
       assert.are.same(0, vim.fn.bufexists(file.filename))
     end)
 
+    it('keeps the content of a file that is not loaded when an edit that parsed its change rejects', function()
+      local file = load_file_sync({ '* TODO Target' })
+
+      assert.is.False(fail_update(file, function()
+        file:reload_sync()
+        return Promise.reject('failed')
+      end))
+
+      assert.are.same({ '* TODO Target' }, file.lines)
+      assert.are.same('TODO', file:get_headlines()[1]:get_todo())
+    end)
+
+    it('keeps the content of a file that is not loaded when an edit that parsed its change throws', function()
+      local file = load_file_sync({ '* TODO Target' })
+
+      local ok, err = fail_update(file, function()
+        file:reload_sync()
+        error('failed', 0)
+      end)
+
+      assert.is.False(ok)
+      assert.are.same('failed', err)
+      assert.are.same({ '* TODO Target' }, file.lines)
+      assert.are.same('TODO', file:get_headlines()[1]:get_todo())
+    end)
+
     it('saves a later change after an edit of a file that is not loaded rejected', function()
       local file = load_file_sync({ '* TODO Target', 'old' })
       fail_update(file, reject)
@@ -1160,9 +1186,30 @@ describe('OrgFile', function()
       end)
       vim.uv.fs_chmod(file.filename, 420)
 
-      assert.is.True(ok, err)
+      assert.is.False(ok)
+      assert.is.Not.Nil(tostring(err):match('Could not write'))
       assert.are.same({ '* TODO Target' }, vim.fn.readfile(file.filename))
       assert.are.same(0, vim.fn.bufexists(file.filename))
+    end)
+
+    -- Like an edit by hand in Vim: the change stays in the buffer, so the user can :w! or fix the permissions
+    it('keeps an edit of the current buffer unsaved and reports it when its file cannot be written', function()
+      local file = load_file_sync({ '* TODO Target' })
+      vim.cmd.edit(vim.fn.fnameescape(file.filename))
+      local bufnr = vim.api.nvim_get_current_buf()
+      vim.uv.fs_chmod(file.filename, 292)
+
+      local ok, err = pcall(function()
+        file:update(set_done):wait()
+      end)
+      vim.uv.fs_chmod(file.filename, 420)
+
+      assert.is.False(ok)
+      assert.is.Not.Nil(tostring(err):match('^Changed .*, not written'))
+      assert.are.same({ '* TODO Target' }, vim.fn.readfile(file.filename))
+      assert.are.same({ '* DONE Target' }, vim.api.nvim_buf_get_lines(bufnr, 0, -1, false))
+      assert.is.True(vim.bo[bufnr].modified)
+      vim.cmd('bwipeout! ' .. bufnr)
     end)
 
     it('saves an edit of a file whose buffer is wiped when its window closes', function()
