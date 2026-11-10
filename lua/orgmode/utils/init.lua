@@ -540,8 +540,9 @@ function utils.edit_file(filename)
   local bufnr = -1
   local win = -1
   local bufhidden = ''
+  local edit
 
-  return {
+  edit = {
     open = function()
       bufnr = vim.fn.bufadd(filename) or -1
       was_loaded = vim.api.nvim_buf_is_loaded(bufnr)
@@ -549,7 +550,7 @@ function utils.edit_file(filename)
       -- unsaved edits of the user. A buffer that is not loaded yet has none.
       was_modified = was_loaded and vim.bo[bufnr].modified
       vim.api.nvim_buf_set_var(bufnr, 'org_tmp_edit_window', true)
-      win = vim.api.nvim_open_win(bufnr, true, {
+      local ok, result = pcall(vim.api.nvim_open_win, bufnr, true, {
         relative = 'editor',
         width = 1,
         -- Use height of 2 to resolve winbar issues
@@ -561,12 +562,29 @@ function utils.edit_file(filename)
         focusable = false,
         hide = true,
       })
+      win = ok and result or -1
+      if not ok then
+        -- An autocmd that raises while the buffer loads leaves the window open and current
+        local current_win = vim.api.nvim_get_current_win()
+        if vim.api.nvim_win_get_buf(current_win) == bufnr and vim.api.nvim_win_get_config(current_win).hide then
+          win = current_win
+        end
+      end
       if was_loaded then
         -- Closing the window must not unload a buffer that was already loaded, which would discard its unsaved edits
         bufhidden = vim.bo[bufnr].bufhidden
         vim.bo[bufnr].bufhidden = 'hide'
       else
         vim.api.nvim_set_option_value('swapfile', false, { buf = bufnr })
+      end
+      if not ok then
+        edit.close(false)
+        if tostring(result):match('E325') then
+          -- Loading the buffer from a window cannot ask what to do with a swap file. Fail instead of
+          -- writing behind another instance that edits the file.
+          error(('Cannot edit %s: it is open in another Neovim instance or a swap file exists'):format(filename), 0)
+        end
+        error(result, 0)
       end
     end,
     ---@param save boolean Write the buffer if it had no unsaved changes before
@@ -607,6 +625,7 @@ function utils.edit_file(filename)
       end
     end,
   }
+  return edit
 end
 
 ---@generic EntryType : any
