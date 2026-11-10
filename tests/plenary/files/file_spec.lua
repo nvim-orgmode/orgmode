@@ -932,6 +932,130 @@ describe('OrgFile', function()
       end)
     end
 
+    -- Emacs (Org 9.8.7) asks before it changes a file another instance has locked. A change here cannot
+    -- ask, so it fails instead of writing behind the other instance.
+    ---Run fn while another instance holds a swap file of the file, with swap files on
+    ---@param filename string
+    ---@param fn fun()
+    local with_foreign_swap = function(filename, fn)
+      local swapfile, directory = vim.go.swapfile, vim.go.directory
+      local swap_dir = vim.fn.tempname()
+      vim.fn.mkdir(swap_dir, 'p')
+      local other =
+        vim.system({ vim.v.progpath, '--clean', '--headless', '--cmd', 'set directory=' .. swap_dir .. '//', filename })
+      local swap_found = vim.wait(5000, function()
+        return #vim.fn.glob(swap_dir .. '/*', false, true) > 0
+      end)
+      vim.go.directory = swap_dir .. '//'
+      vim.go.swapfile = true
+      local ok, err = pcall(fn)
+      local swap_kept = #vim.fn.glob(swap_dir .. '/*', false, true) > 0
+      vim.go.swapfile, vim.go.directory = swapfile, directory
+      other:kill('sigkill')
+      other:wait()
+      vim.fn.delete(swap_dir, 'rf')
+      return swap_found, ok, err, swap_kept
+    end
+
+    ---@param err any
+    ---@param filename string
+    local assert_swap_error = function(err, filename)
+      assert.are.same(
+        ('Cannot edit %s: it is open in another Neovim instance or a swap file exists'):format(filename),
+        tostring(err)
+      )
+    end
+
+    it('rejects an edit of a file that is not loaded while another instance holds its swap file', function()
+      local file = load_file_sync({ '* TODO Target' })
+      local win = vim.api.nvim_get_current_win()
+
+      local swap_found, ok, err, swap_kept = with_foreign_swap(file.filename, function()
+        file:update(set_done):wait()
+      end)
+
+      assert.is.True(swap_found)
+      assert.is.False(ok)
+      assert_swap_error(err, file.filename)
+      assert.are.same({ '* TODO Target' }, vim.fn.readfile(file.filename))
+      assert.is.True(swap_kept)
+      assert.is.False(has_float())
+      assert.are.same(win, vim.api.nvim_get_current_win())
+      assert.are.same(0, vim.fn.bufexists(file.filename))
+    end)
+
+    it('rejects an edit of an unloaded buffer while another instance holds its swap file', function()
+      local file = load_file_sync({ '* TODO Target' })
+      local win = vim.api.nvim_get_current_win()
+
+      local swap_found, ok, err = with_foreign_swap(file.filename, function()
+        vim.cmd.badd(vim.fn.fnameescape(file.filename))
+        file:update(set_done):wait()
+      end)
+
+      local bufnr = vim.fn.bufnr(file.filename)
+      assert.is.True(swap_found)
+      assert.is.False(ok)
+      assert_swap_error(err, file.filename)
+      assert.are.same({ '* TODO Target' }, vim.fn.readfile(file.filename))
+      assert.is.False(has_float())
+      assert.are.same(win, vim.api.nvim_get_current_win())
+      assert.is.False(vim.api.nvim_buf_is_loaded(bufnr))
+      assert.is.Nil(vim.b[bufnr].org_tmp_edit_window)
+      vim.cmd('bwipeout! ' .. bufnr)
+    end)
+
+    ---@param fn fun()
+    local with_raising_read_autocmd = function(fn)
+      local group = vim.api.nvim_create_augroup('test_raising_read_autocmd', { clear = true })
+      vim.api.nvim_create_autocmd('BufReadPost', {
+        group = group,
+        pattern = '*.org',
+        callback = function()
+          error('read autocmd error')
+        end,
+      })
+      local ok, err = pcall(fn)
+      vim.api.nvim_del_augroup_by_id(group)
+      return ok, err
+    end
+
+    it('returns to the current window when a read autocmd raises on an edit of a file that is not loaded', function()
+      local file = load_file_sync({ '* TODO Target' })
+      local win = vim.api.nvim_get_current_win()
+
+      local ok, err = with_raising_read_autocmd(function()
+        file:update(set_done):wait()
+      end)
+
+      assert.is.False(ok)
+      assert.is.Not.Nil(tostring(err):match('read autocmd error'))
+      assert.are.same({ '* TODO Target' }, vim.fn.readfile(file.filename))
+      assert.is.False(has_float())
+      assert.are.same(win, vim.api.nvim_get_current_win())
+      assert.are.same(0, vim.fn.bufexists(file.filename))
+    end)
+
+    it('returns to the current window when a read autocmd raises on an edit of an unloaded buffer', function()
+      local file = load_file_sync({ '* TODO Target' })
+      vim.cmd.badd(vim.fn.fnameescape(file.filename))
+      local bufnr = vim.fn.bufnr(file.filename)
+      local win = vim.api.nvim_get_current_win()
+
+      local ok, err = with_raising_read_autocmd(function()
+        file:update(set_done):wait()
+      end)
+
+      assert.is.False(ok)
+      assert.is.Not.Nil(tostring(err):match('read autocmd error'))
+      assert.are.same({ '* TODO Target' }, vim.fn.readfile(file.filename))
+      assert.is.False(has_float())
+      assert.are.same(win, vim.api.nvim_get_current_win())
+      assert.is.False(vim.api.nvim_buf_is_loaded(bufnr))
+      assert.is.Nil(vim.b[bufnr].org_tmp_edit_window)
+      vim.cmd('bwipeout! ' .. bufnr)
+    end)
+
     for _, case in ipairs({ { name = 'throws', fail = throw }, { name = 'rejects', fail = reject } }) do
       it('undoes an edit of a buffer that was unloaded once when it ' .. case.name, function()
         local file = load_file_sync({ '* TODO Target', 'old' })
