@@ -196,6 +196,42 @@ describe('New full-file capture', function()
     assert.are.same({ pre = 1, post = 1, cancel = 0 }, calls)
   end)
 
+  it(':q! answered Yes keeps the capture open when its file cannot be written', function()
+    local target = new_file_path()
+    local capture, calls = new_capture()
+    open_capture(capture, target)
+    vim.api.nvim_buf_set_lines(0, -1, -1, false, { 'body' })
+    local dir = vim.fn.fnamemodify(target, ':h')
+    local utils = require('orgmode.utils')
+    local echo_info, echo_error = utils.echo_info, utils.echo_error
+    local messages = {}
+    utils.echo_info = function(msg)
+      table.insert(messages, msg)
+    end
+    utils.echo_error = function(msg)
+      table.insert(messages, msg)
+    end
+    vim.uv.fs_chmod(dir, 365)
+
+    local ok, err = pcall(answering, 1, function()
+      vim.cmd('quit!')
+      vim.wait(1000, function()
+        return vim.b.org_capture == true
+      end)
+    end)
+    vim.uv.fs_chmod(dir, 493)
+    utils.echo_info, utils.echo_error = echo_info, echo_error
+
+    assert.is.True(ok, err)
+    assert.are.same(0, vim.fn.filereadable(target))
+    assert.are.same({ ('Could not write %s'):format(target) }, messages)
+    assert.are.same({ pre = 1, post = 0, cancel = 0 }, calls)
+    assert.is.True(vim.b.org_capture)
+    assert.are.same(target, vim.api.nvim_buf_get_name(0))
+    assert.are.same({ '#+TITLE: Node', '', '', 'body' }, vim.api.nvim_buf_get_lines(0, 0, -1, false))
+    assert.is.True(vim.bo.modified)
+  end)
+
   it(':q! answered No keeps what :w wrote and finishes', function()
     local target = new_file_path()
     local capture, calls = new_capture()

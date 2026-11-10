@@ -246,6 +246,123 @@ describe('Agenda in-place update after a redo from a write hook', function()
   end)
 end)
 
+describe('Agenda edit of a file that cannot be written', function()
+  local utils = require('orgmode.utils')
+  local echo_error = utils.echo_error
+
+  after_each(function()
+    utils.echo_error = echo_error
+    vim.cmd('silent! %bwipeout!')
+  end)
+
+  it('reports the failed write once and keeps the item in the view', function()
+    vim.o.lines = 24
+    vim.o.columns = 120
+    local file = open_agenda('vertical')
+    local content = vim.fn.readfile(file.filename)
+    local win = agenda_win()
+    local bufnr = vim.api.nvim_win_get_buf(win)
+    local target = assert(find_item(bufnr, 3))
+    set_view(win, target, 1)
+    local messages = {}
+    utils.echo_error = function(msg)
+      table.insert(messages, msg)
+    end
+    vim.uv.fs_chmod(file.filename, 292)
+
+    orgmode.agenda:change_todo_state()
+    vim.wait(500, function()
+      return #messages > 0
+    end)
+    vim.uv.fs_chmod(file.filename, 420)
+
+    assert.are.same(1, #messages)
+    assert.is.Not.Nil(tostring(messages[1]):match('Could not write'))
+    assert.are.same(content, vim.fn.readfile(file.filename))
+    assert.are.same(target, find_item(bufnr, 3))
+  end)
+
+  it('does not start the clock when the clock in could not be written', function()
+    vim.o.lines = 24
+    vim.o.columns = 120
+    local other =
+      { '* TODO other', '  :LOGBOOK:', '  CLOCK: [2024-05-22 Wed 05:15]--[2024-05-22 Wed 06:15] =>  1:00', '  :END:' }
+    local files = helpers.create_agenda_files({
+      { filename = 'locked.org', content = { '* TODO clock me' } },
+      { filename = 'other.org', content = other },
+    }, { win_split_mode = 'vertical' })
+    vim.cmd('edit ' .. files['other.org'])
+    local other_bufnr = vim.api.nvim_get_current_buf()
+    orgmode.agenda:todos():wait()
+    local bufnr = vim.api.nvim_get_current_buf()
+    for lnum, line in ipairs(vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)) do
+      if line:find('clock me', 1, true) then
+        vim.fn.cursor({ lnum, 1 })
+      end
+    end
+    local messages = {}
+    utils.echo_error = function(msg)
+      table.insert(messages, msg)
+    end
+    vim.uv.fs_chmod(files['locked.org'], 292)
+
+    orgmode.agenda:clock_in()
+    vim.wait(500, function()
+      return #messages > 0
+    end)
+    vim.uv.fs_chmod(files['locked.org'], 420)
+
+    assert.are.same(1, #messages)
+    assert.is.Not.Nil(tostring(messages[1]):match('Could not write'))
+    assert.are.same({ '* TODO clock me' }, vim.fn.readfile(files['locked.org']))
+    assert.is_false(orgmode.clock:has_clocked_headline())
+    assert.are.same('', orgmode.clock:get_statusline())
+    assert.are.same({ '* TODO clock me' }, orgmode.files.files[files['locked.org']].lines)
+
+    vim.api.nvim_set_current_win(vim.fn.bufwinid(other_bufnr))
+    orgmode.clock:org_clock_out()
+    assert.are.same(other, vim.api.nvim_buf_get_lines(other_bufnr, 0, -1, false))
+  end)
+
+  for _, case in ipairs({
+    { name = 'clock out', action = 'clock_out' },
+    { name = 'clock cancel', action = 'clock_cancel' },
+  }) do
+    it(('keeps the clock running when the %s could not be written'):format(case.name), function()
+      vim.o.lines = 24
+      vim.o.columns = 120
+      local content = { '* TODO clocked', '  :LOGBOOK:', '  CLOCK: [2024-05-22 Wed 05:15]', '  :END:' }
+      local files = helpers.create_agenda_files({
+        { filename = 'locked.org', content = content },
+      }, { win_split_mode = 'vertical' })
+      orgmode.agenda:todos():wait()
+      assert.is_true(orgmode.clock:has_clocked_headline())
+      local messages = {}
+      utils.echo_error = function(msg)
+        table.insert(messages, msg)
+      end
+      vim.uv.fs_chmod(files['locked.org'], 292)
+      vim.v.errmsg = ''
+
+      orgmode.agenda[case.action](orgmode.agenda)
+      vim.wait(500, function()
+        return #messages > 0
+      end)
+      vim.wait(50)
+      vim.uv.fs_chmod(files['locked.org'], 420)
+
+      assert.is.Nil(vim.v.errmsg:match('unhandled promise rejection'))
+
+      assert.are.same(1, #messages)
+      assert.is.Not.Nil(tostring(messages[1]):match('Could not write'))
+      assert.are.same(content, vim.fn.readfile(files['locked.org']))
+      assert.are.same(content, orgmode.files.files[files['locked.org']].lines)
+      assert.is.Not.Nil(orgmode.clock:get_statusline():match('clocked'))
+      assert.is_true(orgmode.clock:has_clocked_headline())
+    end)
+  end
+end)
+
 describe('Agenda window height', function()
   before_each(function()
     vim.o.lines = 50
