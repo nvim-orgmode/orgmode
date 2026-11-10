@@ -222,6 +222,36 @@ describe('Clock', function()
     assert.is_false(file:get_headlines()[2]:is_clocked_in())
   end)
 
+  it('reports a clock in that cannot clock out the entry of a file that cannot be written', function()
+    local clocked = { '* TODO Test 1', '  :LOGBOOK:', '  CLOCK: [2024-05-22 Wed 05:15]', '  :END:' }
+    local files = helpers.create_agenda_files({
+      { filename = 'clocked.org', content = clocked },
+      { filename = 'other.org', content = { '* TODO Test 2' } },
+    })
+    vim.cmd('edit ' .. files['other.org'])
+    vim.fn.cursor({ 1, 1 })
+    local utils = require('orgmode.utils')
+    local echo_error = utils.echo_error
+    local messages = {}
+    utils.echo_error = function(msg)
+      table.insert(messages, msg)
+    end
+    vim.uv.fs_chmod(files['clocked.org'], 292)
+
+    local ok, err = pcall(function()
+      orgmode.clock:org_clock_in():wait()
+    end)
+    vim.uv.fs_chmod(files['clocked.org'], 420)
+    utils.echo_error = echo_error
+
+    assert.is.True(ok, err)
+    assert.are.same(1, #messages)
+    assert.is.Not.Nil(tostring(messages[1]):match('Could not write'))
+    assert.are.same(clocked, vim.fn.readfile(files['clocked.org']))
+    assert.are.same('Test 1', orgmode.clock.clocked_headline:get_title())
+    assert.are.same({ '* TODO Test 2' }, vim.api.nvim_buf_get_lines(0, 0, -1, false))
+  end)
+
   it('should clock out and entry when its marked as done', function()
     local file = helpers.create_agenda_file({
       '* TODO Test 1',

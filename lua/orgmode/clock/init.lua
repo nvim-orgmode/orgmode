@@ -77,10 +77,14 @@ function Clock:org_clock_in()
     end)
   end
 
-  return promise:next(function()
-    item:clock_in()
-    self.clocked_headline = item
-  end)
+  return promise
+    :next(function()
+      item:clock_in()
+      self.clocked_headline = item
+    end)
+    :catch(function(err)
+      utils.echo_error(tostring(err))
+    end)
 end
 
 function Clock:org_clock_out()

@@ -182,7 +182,16 @@ function Capture:on_refile_close(capture_window, event)
       return utils.echo_info('Canceled.')
     end
     if not discard and file_target then
-      vim.fn.writefile(vim.api.nvim_buf_get_lines(capture_window:get_bufnr(), 0, -1, false), file_target)
+      local lines = vim.api.nvim_buf_get_lines(capture_window:get_bufnr(), 0, -1, false)
+      local ok, result = pcall(vim.fn.writefile, lines, file_target)
+      if not ok or result == -1 then
+        utils.echo_error(('Could not write %s'):format(file_target))
+        -- Keep the captured text where it can still be saved, unless Neovim exits
+        if event ~= 'VimLeavePre' then
+          return capture_window:reopen()
+        end
+        return
+      end
     end
   end
 

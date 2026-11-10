@@ -466,10 +466,19 @@ function Agenda:change_todo_state()
   })
 end
 
+-- A failed clock edit is undone with the rest of the edit, so the clock
+-- takes its state from the files again
+local function reset_clock()
+  local clock = require('orgmode').clock
+  clock.clocked_headline = nil
+  clock:update_clocked_headline()
+end
+
 function Agenda:clock_in()
   return self:_remote_edit({
     action = 'clock.org_clock_in',
     redo = true,
+    on_error = reset_clock,
   })
 end
 
@@ -513,6 +522,7 @@ function Agenda:clock_out()
   return self:_remote_edit({
     action = 'clock.org_clock_out',
     redo = true,
+    on_error = reset_clock,
     getter = function()
       local last_clocked = self.files:get_clocked_headline()
       if last_clocked and last_clocked:is_clocked_in() then
@@ -526,6 +536,7 @@ function Agenda:clock_cancel()
   return self:_remote_edit({
     action = 'clock.org_clock_cancel',
     redo = true,
+    on_error = reset_clock,
     getter = function()
       local last_clocked = self.files:get_clocked_headline()
       if last_clocked and last_clocked:is_clocked_in() then
@@ -689,29 +700,36 @@ function Agenda:_remote_edit(opts)
     end)
   end)
 
-  update:next(function(updated_headline)
-    ---@cast updated_headline OrgHeadline
-    if opts.redo then
-      return self:redo('remote_edit', true)
-    end
-    if not opts.update_in_place or not updated_headline then
-      return
-    end
-    local line_range_same = updated_headline:get_range():is_same_line_range(old_range)
-
-    local update_item_inline = function()
-      if not agenda_line or not view then
+  update
+    :next(function(updated_headline)
+      ---@cast updated_headline OrgHeadline
+      if opts.redo then
+        return self:redo('remote_edit', true)
+      end
+      if not opts.update_in_place or not updated_headline then
         return
       end
-      return view:rerender_agenda_line(agenda_line, updated_headline)
-    end
+      local line_range_same = updated_headline:get_range():is_same_line_range(old_range)
 
-    if line_range_same then
-      return update_item_inline()
-    end
+      local update_item_inline = function()
+        if not agenda_line or not view then
+          return
+        end
+        return view:rerender_agenda_line(agenda_line, updated_headline)
+      end
 
-    return self:redo('remote_edit', true)
-  end)
+      if line_range_same then
+        return update_item_inline()
+      end
+
+      return self:redo('remote_edit', true)
+    end)
+    :catch(function(err)
+      if opts.on_error then
+        opts.on_error()
+      end
+      utils.echo_error(tostring(err))
+    end)
 end
 
 ---@return OrgHeadline | nil
