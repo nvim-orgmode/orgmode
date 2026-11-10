@@ -1463,6 +1463,48 @@ describe('Api handles', function()
     assert.is.Not.Nil(vim.fn.readfile(target.filename)[1]:match('^%* TODO Target%s+:x:$'))
   end)
 
+  it('rejects an api mutation of an unloaded buffer whose file cannot be written', function()
+    local target = helpers.create_agenda_file({ '* TODO Target' })
+    local target_bufnr = vim.fn.bufnr(target.filename)
+    helpers.create_file({ '* TODO Other buffer' })
+    vim.cmd('bunload ' .. target_bufnr)
+    local headline = api.load(target.filename).headlines[1]
+    vim.uv.fs_chmod(target.filename, 292)
+
+    local ok, err = pcall(function()
+      headline:set_tags({ 'x' }):wait()
+    end)
+    vim.uv.fs_chmod(target.filename, 420)
+
+    assert.is.False(ok)
+    assert.is.Not.Nil(tostring(err):match('Could not write'))
+    assert.are.same({ '* TODO Target' }, vim.fn.readfile(target.filename))
+    assert.is.False(vim.api.nvim_buf_is_loaded(target_bufnr))
+  end)
+
+  for _, case in ipairs({
+    { name = 'with', lines = { '* TODO Target', ':PROPERTIES:', ':ID: target-id', ':END:' } },
+    { name = 'without', lines = { '* TODO Target' } },
+  }) do
+    it('rejects an api mutation of a headline ' .. case.name .. ' id in a file that cannot be written', function()
+      local target = helpers.create_agenda_file(case.lines)
+      helpers.create_file({ '* TODO Other buffer' })
+      vim.cmd('bwipeout! ' .. vim.fn.bufnr(target.filename))
+      local headline = api.load(target.filename).headlines[1]
+      vim.uv.fs_chmod(target.filename, 292)
+
+      local ok, err = pcall(function()
+        headline:set_tags({ 'x' }):wait()
+      end)
+      vim.uv.fs_chmod(target.filename, 420)
+
+      assert.is.False(ok)
+      assert.is.Not.Nil(tostring(err):match('Could not write'))
+      assert.are.same(case.lines, vim.fn.readfile(target.filename))
+      assert.are.same(0, vim.fn.bufexists(target.filename))
+    end)
+  end
+
   it('acts on its own headline when a read autocmd of an unloaded file inserts a headline above', function()
     local target = helpers.create_agenda_file({ '* TODO A', '* TODO B' })
     local target_bufnr = vim.fn.bufnr(target.filename)

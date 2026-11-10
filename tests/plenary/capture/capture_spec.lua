@@ -4,6 +4,7 @@ local Template = require('orgmode.capture.template')
 local CaptureWindow = require('orgmode.capture.window')
 local helpers = require('tests.plenary.helpers')
 local org = require('orgmode')
+local utils = require('orgmode.utils')
 
 describe('Menu Items', function()
   it('should create a menu item for each template', function()
@@ -255,6 +256,34 @@ describe('Refile', function()
       vim.api.nvim_buf_get_lines(0, 0, -1, false)
     )
   end)
+
+  -- Emacs (Org 9.8.7) prints "Wrote" only from save-buffer, so it never shows without a write
+  it('does not report a refile in the same file with unsaved edits as written', function()
+    local file = helpers.create_file({ '* TODO Alpha', '* Target', '* TODO Gamma' })
+    vim.api.nvim_buf_set_lines(0, -1, -1, false, { 'unsaved' })
+    file = org.files:get(file.filename)
+    local echo_info = utils.echo_info
+    local messages = {}
+    utils.echo_info = function(msg)
+      table.insert(messages, msg)
+    end
+
+    local ok, err = pcall(function()
+      ---@diagnostic disable-next-line: invisible
+      org.capture
+        :_refile_from_org_file({
+          source_headline = file:get_headlines()[1],
+          destination_file = file,
+          destination_headline = file:get_headlines()[2],
+        })
+        :wait()
+    end)
+    utils.echo_info = echo_info
+
+    assert.is.True(ok, err)
+    assert.are.same(1, #messages)
+    assert.is.Nil(messages[1]:match('^Wrote'))
+  end)
 end)
 
 describe('Capture', function()
@@ -425,6 +454,40 @@ describe('Capture', function()
       '        ',
       '',
     }, vim.api.nvim_buf_get_lines(0, 0, -1, false))
+  end)
+
+  -- Emacs (Org 9.8.7) prints "Wrote" only from save-buffer, so it never shows without a write
+  it('does not report a capture into a file with unsaved edits as written', function()
+    local destination_file = helpers.create_file({ '* foobar' })
+    local destination_bufnr = vim.api.nvim_get_current_buf()
+    vim.api.nvim_buf_set_lines(destination_bufnr, -1, -1, false, { 'unsaved' })
+    destination_file = org.files:get(destination_file.filename)
+    local capture_file = helpers.create_file({ '** baz' })
+    local template = Template:new({})
+    local capture_window = CaptureWindow:new({ template = template })
+    local echo_info = utils.echo_info
+    local messages = {}
+    utils.echo_info = function(msg)
+      table.insert(messages, msg)
+    end
+
+    local ok, err = pcall(function()
+      ---@diagnostic disable-next-line: invisible
+      org.capture:_refile_from_capture_buffer({
+        destination_file = destination_file,
+        source_file = capture_file,
+        source_headline = capture_file:get_headlines()[1],
+        template = template,
+        capture_window = capture_window,
+      })
+    end)
+    utils.echo_info = echo_info
+
+    assert.is.True(ok, err)
+    assert.are.same({ '* foobar' }, vim.fn.readfile(destination_file.filename))
+    assert.are.same(1, #messages)
+    assert.is.Nil(messages[1]:match('^Wrote'))
+    vim.cmd('bwipeout! ' .. destination_bufnr)
   end)
 
   it('to regex', function()
