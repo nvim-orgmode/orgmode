@@ -13,6 +13,7 @@ OrgAgendaSearchType.__index = OrgAgendaSearchType
 ---@param opts OrgAgendaSearchTypeOpts
 function OrgAgendaSearchType:new(opts)
   opts.todo_only = false
+  opts.prefix_key = 'search'
   opts.subheader = 'Press "r" to update search'
   setmetatable(self, { __index = OrgAgendaTodosType })
   local obj = OrgAgendaTodosType:new(opts)

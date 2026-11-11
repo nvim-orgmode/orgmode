@@ -20,6 +20,8 @@ end
 ---@field is_in_date_range boolean
 ---@field date_range_days number
 ---@field label string
+---@field time string
+---@field marker string
 ---@field index number
 local AgendaItem = {}
 
@@ -77,6 +79,8 @@ function AgendaItem:_process()
 end
 
 function AgendaItem:_generate_data()
+  self.time = self.headline_date:has_time() and self:_format_time(self.headline_date) or ''
+  self.marker = self:_generate_marker()
   self.label = self:_generate_label()
 end
 
@@ -152,19 +156,18 @@ function AgendaItem:_is_valid_for_date()
 
   return false
 end
-
-function AgendaItem:_generate_label()
-  local time = self.headline_date:has_time() and add_padding(self:_format_time(self.headline_date)) or ''
+---@private
+function AgendaItem:_generate_marker()
   if self.headline_date:is_deadline() then
     if self.is_same_day then
-      return time .. 'Deadline:'
+      return 'Deadline:'
     end
     return self.headline_date:humanize(self.date) .. ':'
   end
 
   if self.headline_date:is_scheduled() then
     if self.is_same_day then
-      return time .. 'Scheduled:'
+      return 'Scheduled:'
     end
 
     local diff = math.abs(self.date:diff(self.headline_date))
@@ -174,21 +177,30 @@ function AgendaItem:_generate_label()
 
   if self.headline_date.is_date_range_start then
     if not self.is_in_date_range then
-      return time
+      return ''
     end
-    local range = string.format('(%d/%d):', self.date:diff(self.headline_date) + 1, self.date_range_days)
-    if not self.is_same_day then
-      return range
-    end
-    return time .. range
+    return string.format('(%d/%d):', self.date:diff(self.headline_date) + 1, self.date_range_days)
   end
 
   if self.headline_date.is_date_range_end then
-    local range = string.format('(%d/%d):', self.date_range_days, self.date_range_days)
-    return time .. range
+    return string.format('(%d/%d):', self.date_range_days, self.date_range_days)
   end
 
-  return time
+  return ''
+end
+
+function AgendaItem:_generate_label()
+  local include_time = self.time ~= ''
+  if (self.headline_date:is_deadline() or self.headline_date:is_scheduled()) and not self.is_same_day then
+    include_time = false
+  end
+
+  if self.headline_date.is_date_range_start and not self.is_in_date_range and not self.is_same_day then
+    include_time = false
+  end
+
+  local time = include_time and add_padding(self.time) or ''
+  return time .. self.marker
 end
 
 ---@private

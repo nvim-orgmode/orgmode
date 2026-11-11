@@ -4,6 +4,7 @@ local Files = require('orgmode.files')
 local AgendaLine = require('orgmode.agenda.view.line')
 local AgendaFilter = require('orgmode.agenda.filter')
 local AgendaLineToken = require('orgmode.agenda.view.token')
+local Formatter = require('orgmode.agenda.view.formatter')
 local utils = require('orgmode.utils')
 local agenda_highlights = require('orgmode.colors.highlights')
 local hl_map = agenda_highlights.get_agenda_hl_map()
@@ -41,6 +42,8 @@ local Promise = require('orgmode.utils.promise')
 ---@field remove_tags? boolean
 ---@field valid_filters OrgAgendaFilter[]
 ---@field id? string
+---@field prefix_key string
+---@field org_agenda_prefix_format? table
 local OrgAgendaTodosType = {}
 OrgAgendaTodosType.__index = OrgAgendaTodosType
 
@@ -61,6 +64,8 @@ function OrgAgendaTodosType:new(opts)
     sorting_strategy = opts.sorting_strategy or vim.tbl_get(config.org_agenda_sorting_strategy, 'todo') or {},
     id = opts.id,
     remove_tags = type(opts.remove_tags) == 'boolean' and opts.remove_tags or config.org_agenda_remove_tags,
+    prefix_key = opts.prefix_key or 'todo',
+    org_agenda_prefix_format = opts.org_agenda_prefix_format,
   }, OrgAgendaTodosType)
   this.valid_filters = vim.tbl_filter(function(filter)
     return filter and true or false
@@ -103,9 +108,20 @@ function OrgAgendaTodosType:_get_header()
 end
 
 ---@param bufnr? number
-function OrgAgendaTodosType:render(bufnr)
+---@param current_line? number
+function OrgAgendaTodosType:render(bufnr, current_line)
   self.bufnr = bufnr or 0
+  local was_line_in_view = true
+  if self.view then
+    was_line_in_view = self.view:is_in_range(current_line)
+  end
+
   local headlines, category_length = self:_get_headlines()
+
+  local prefix_formats = self.org_agenda_prefix_format or config.org_agenda_prefix_format
+  local prefix_format = prefix_formats[self.prefix_key] or prefix_formats.todo
+  local compiled_prefix = Formatter.compile(prefix_format)
+
   local agendaView = AgendaView:new({ bufnr = self.bufnr, highlighter = self.highlighter })
 
   -- If custom view and no headlines, return empty view
@@ -127,25 +143,51 @@ function OrgAgendaTodosType:render(bufnr)
   end
 
   for _, headline in ipairs(headlines) do
-    agendaView:add_line(self:_build_line(headline, { category_length = category_length }))
+    agendaView:add_line(self:_build_line(headline, { category_length = category_length }, compiled_prefix))
   end
 
   self.view = agendaView:render()
+  if was_line_in_view then
+    self:_jump_to_item(current_line)
+  end
   return self.view
+end
+
+---@private
+function OrgAgendaTodosType:_jump_to_item(line)
+  local agenda_line = self:get_line(line)
+  if not agenda_line or not agenda_line.headline then
+    return
+  end
+  local target_headline = agenda_line.headline
+  local target_file = target_headline.file.filename
+  local target_id = target_headline.headline:id()
+
+  for _, l in ipairs(self.view.lines) do
+    if l.headline and l.headline.file.filename == target_file and l.headline.headline:id() == target_id then
+      return vim.fn.cursor({ l.line_nr, 0 })
+    end
+  end
 end
 
 ---@private
 ---@param headline OrgHeadline
 ---@param metadata table<string, any>
+---@param compiled_prefix? OrgAgendaFormatterSegment[]
 ---@return OrgAgendaLine
-function OrgAgendaTodosType:_build_line(headline, metadata)
+function OrgAgendaTodosType:_build_line(headline, metadata, compiled_prefix)
   local line = AgendaLine:new({
     headline = headline,
     line_hl_group = headline:is_clocked_in() and 'Visual' or nil,
     metadata = metadata,
   })
+
+  local prefix_formats = self.org_agenda_prefix_format or config.org_agenda_prefix_format
+  local prefix_format = compiled_prefix or Formatter.compile(prefix_formats[self.prefix_key] or prefix_formats.todo)
+  local prefix = Formatter.format(prefix_format, nil, metadata, headline)
+
   line:add_token(AgendaLineToken:new({
-    content = '  ' .. utils.pad_right(('%s:'):format(headline:get_category()), metadata.category_length),
+    content = prefix,
   }))
 
   local todo, _, todo_type = headline:get_todo()
