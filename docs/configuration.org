@@ -1999,6 +1999,7 @@ Add TODO headliner after current headline + it's content.
 :END:
 - Mapped to: =<Leader>oK=
 Move current headline + it's content up by one headline.
+When the cursor is on a list item bullet, move the item together with its sub-items up past the previous item in the same list.
 
 **** org_move_subtree_down
 :PROPERTIES:
@@ -2006,6 +2007,7 @@ Move current headline + it's content up by one headline.
 :END:
 - Mapped to: =<Leader>oJ=
 Move current headline + it's content down by one headline.
+When the cursor is on a list item bullet, move the item together with its sub-items down past the next item in the same list.
 
 **** org_export
 :PROPERTIES:
