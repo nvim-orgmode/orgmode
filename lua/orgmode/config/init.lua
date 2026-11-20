@@ -318,8 +318,12 @@ function Config:get_priorities()
     return self.priorities
   end
 
+  local highest = tostring(self.opts.org_priority_highest)
+  local default = tostring(self.opts.org_priority_default)
+  local lowest = tostring(self.opts.org_priority_lowest)
+
   local priorities = {
-    [self.opts.org_priority_highest] = { type = 'highest', hl_group = '@org.priority.highest' },
+    [highest] = { type = 'highest', hl_group = '@org.priority.highest' },
   }
 
   local current_prio = PriorityState:new(
@@ -333,7 +337,7 @@ function Config:get_priorities()
   end
 
   -- we need to overwrite the default value set by the first loop
-  priorities[self.opts.org_priority_default] = { type = 'default', hl_group = '@org.priority.default' }
+  priorities[default] = { type = 'default', hl_group = '@org.priority.default' }
 
   while current_prio:as_num() < current_prio:lowest_as_num() do
     current_prio:decrease()
@@ -341,7 +345,7 @@ function Config:get_priorities()
   end
 
   -- we need to overwrite the lowest value set by the second loop
-  priorities[self.opts.org_priority_lowest] = { type = 'lowest', hl_group = '@org.priority.lowest' }
+  priorities[lowest] = { type = 'lowest', hl_group = '@org.priority.lowest' }
 
   -- Cache priorities to avoid unnecessary recalculations
   self.priorities = priorities
