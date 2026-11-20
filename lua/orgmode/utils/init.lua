@@ -531,6 +531,76 @@ function utils.flatten(t)
   return result
 end
 
+---@alias OrgStatisticsCookie { text: string, range: integer[] }
+
+local literal_markup_types = { verbatim = true, code = true }
+
+---@param node TSNode
+---@return integer[][]
+local function literal_markup_ranges(node)
+  local ranges = {}
+  local function walk(parent)
+    for child in parent:iter_children() do
+      if literal_markup_types[child:type()] then
+        table.insert(ranges, { child:range() })
+      else
+        walk(child)
+      end
+    end
+  end
+  walk(node)
+  return ranges
+end
+
+---@param ranges integer[][]
+---@param row integer
+---@param col integer
+local function in_ranges(ranges, row, col)
+  for _, range in ipairs(ranges) do
+    local start_row, start_col, end_row, end_col = unpack(range)
+    local after_start = row > start_row or (row == start_row and col >= start_col)
+    local before_end = row < end_row or (row == end_row and col < end_col)
+    if after_start and before_end then
+      return true
+    end
+  end
+  return false
+end
+
+---Find all statistics cookies (`[1/2]`, `[50%]`) in the text of `node`, at any position like Emacs.
+---Text inside verbatim and code is not a cookie.
+---@param text string the text of `node`
+---@param node TSNode
+---@return OrgStatisticsCookie[]
+function utils.find_statistics_cookies(text, node)
+  local row, col = node:range()
+  local skip = literal_markup_ranges(node)
+  local cookies = {}
+  local pos = 1
+  while true do
+    local start = text:find('[', pos, true)
+    if not start then
+      return cookies
+    end
+    local cookie = text:match('^%[%d*/%d*%]', start) or text:match('^%[%d*%%%]', start)
+    if cookie then
+      local before = text:sub(1, start - 1)
+      local _, newlines = before:gsub('\n', '')
+      local last_newline = before:match('.*()\n')
+      local start_col = last_newline and start - last_newline - 1 or col + start - 1
+      if not in_ranges(skip, row + newlines, start_col) then
+        table.insert(cookies, {
+          text = cookie,
+          range = { row + newlines, start_col, row + newlines, start_col + #cookie },
+        })
+      end
+      pos = start + #cookie
+    else
+      pos = start + 1
+    end
+  end
+end
+
 ---@param filename string
 function utils.edit_file(filename)
   local buf_not_already_loaded = vim.fn.bufexists(filename) ~= 1

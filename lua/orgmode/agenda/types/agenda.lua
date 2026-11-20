@@ -15,7 +15,6 @@ local Promise = require('orgmode.utils.promise')
 
 ---@class OrgAgendaTypeOpts
 ---@field files OrgFiles
----@field highlighter OrgHighlighter
 ---@field agenda_filter OrgAgendaFilter
 ---@field filter? string
 ---@field tag_filter? string
@@ -33,7 +32,6 @@ local Promise = require('orgmode.utils.promise')
 
 ---@class OrgAgendaType:OrgAgendaViewType
 ---@field files OrgFiles
----@field highlighter OrgHighlighter
 ---@field agenda_filter OrgAgendaFilter
 ---@field filter? OrgAgendaFilter
 ---@field tag_filter? OrgAgendaFilter
@@ -61,7 +59,6 @@ OrgAgendaType.__index = OrgAgendaType
 function OrgAgendaType:new(opts)
   local data = {
     files = opts.files,
-    highlighter = opts.highlighter,
     agenda_filter = opts.agenda_filter,
     filter = opts.filter and AgendaFilter:new():parse(opts.filter, true) or nil,
     tag_filter = opts.tag_filter and AgendaFilter:new({ types = { 'tags' } }):parse(opts.tag_filter, true) or nil,
@@ -246,7 +243,7 @@ function OrgAgendaType:render(bufnr, current_line)
   end
   local agenda_days = self:_get_agenda_days()
 
-  local agendaView = AgendaView:new({ bufnr = self.bufnr, highlighter = self.highlighter })
+  local agendaView = AgendaView:new({ bufnr = self.bufnr })
   agendaView:add_line(AgendaLine:single_token({
     content = self:_get_title(),
     hl_group = '@org.agenda.header',
