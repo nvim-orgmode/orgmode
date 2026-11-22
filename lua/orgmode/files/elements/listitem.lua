@@ -156,4 +156,114 @@ function Listitem:promote(include_childs)
   self:_adjust_lines(self._decrease, include_childs)
 end
 
+---@private
+---@return number start_row 0-based
+---@return number end_row 0-based, exclusive
+function Listitem:_line_range()
+  local start_row, _, end_row, end_col = self.listitem:range()
+  -- For last item in file, ts grammar is not parsing the end column as 0
+  if end_col ~= 0 then
+    end_row = end_row + 1
+  end
+  return start_row, end_row
+end
+
+---@param lines string[]
+---@param width number
+---@return string[]
+local function shift_lines(lines, width)
+  return vim.tbl_map(function(line)
+    if width > 0 and line:match('%S') then
+      return (' '):rep(width) .. line
+    end
+    if width < 0 then
+      return (line:gsub('^' .. (' ?'):rep(-width), '', 1))
+    end
+    return line
+  end, lines)
+end
+
+---@param value string
+---@return number | nil
+local function bullet_to_number(value)
+  if value:match('^%a$') then
+    return value:lower():byte() - ('a'):byte() + 1
+  end
+  return tonumber(value)
+end
+
+---Renumber an ordered list like Emacs does: numbering starts at 1, a [@N] counter sets the number of its item,
+---all items take the delimiter of the first item, and the lines below a bullet that changed width are shifted with it.
+---@param items string[][] lines of each item, the first line holds the bullet
+local function renumber(items)
+  local first_bullet, delimiter = items[1][1]:match('^%s*(%w+)([.)])')
+  if not first_bullet then
+    return
+  end
+  local letter_base = first_bullet:match('^%u$') and 'A' or first_bullet:match('^%l$') and 'a'
+  local number = 0
+  for i, lines in ipairs(items) do
+    local indent, bullet, rest = lines[1]:match('^(%s*)(%w+)[.)](.*)$')
+    if bullet then
+      local counter = rest:match('^%s+%[@(%w+)%]')
+      number = counter and bullet_to_number(counter) or number + 1
+      local new_bullet = tostring(number)
+      if letter_base then
+        new_bullet = number <= 26 and string.char(letter_base:byte() + number - 1) or bullet
+      end
+      items[i] = shift_lines(lines, #new_bullet - #bullet)
+      items[i][1] = indent .. new_bullet .. delimiter .. rest
+    end
+  end
+end
+
+---Swap the list item, together with its children, with the previous or next item in the same list.
+---An ordered list is renumbered afterwards.
+---@param direction 'up' | 'down'
+---@return number | nil offset Number of lines the item moved by, nil if there is no item to swap with
+function Listitem:move(direction)
+  local nodes = vim.tbl_filter(function(node)
+    return node:type() == 'listitem'
+  end, ts_utils.get_named_children(self.listitem:parent()))
+  local index
+  for i, node in ipairs(nodes) do
+    if node:id() == self.listitem:id() then
+      index = i
+    end
+  end
+  local other = direction == 'up' and index - 1 or index + 1
+  if not nodes[other] then
+    return nil
+  end
+
+  local items, gaps, starts = {}, {}, {}
+  local list_start = Listitem:new(nodes[1], self.file):_line_range()
+  local list_end
+  for i, node in ipairs(nodes) do
+    local start_row, end_row = Listitem:new(node, self.file):_line_range()
+    starts[i] = start_row
+    items[i] = vim.api.nvim_buf_get_lines(0, start_row, end_row, false)
+    if nodes[i + 1] then
+      gaps[i] = vim.api.nvim_buf_get_lines(0, end_row, (nodes[i + 1]:range()), false)
+    end
+    list_end = end_row
+  end
+
+  items[index], items[other] = items[other], items[index]
+  renumber(items)
+
+  local lines = {}
+  local new_start
+  for i, item_lines in ipairs(items) do
+    if i == other then
+      new_start = list_start + #lines
+    end
+    vim.list_extend(lines, item_lines)
+    vim.list_extend(lines, gaps[i] or {})
+  end
+  vim.api.nvim_buf_set_lines(0, list_start, list_end, false, lines)
+
+  return new_start - starts[index]
+end
+
 return Listitem

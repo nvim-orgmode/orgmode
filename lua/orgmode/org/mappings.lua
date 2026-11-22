@@ -855,7 +855,36 @@ function OrgMappings:store_link()
   return utils.echo_info('Stored: ' .. headline:get_title())
 end
 
+---@private
+---@param direction 'up' | 'down'
+---@return boolean handled true if the cursor is on a list item bullet
+function OrgMappings:_move_listitem(direction)
+  local win_view = vim.fn.winsaveview() or {}
+  -- move to the first non-blank character so the current treesitter node is the listitem
+  vim.cmd([[normal! _]])
+
+  local node = ts_utils.get_node_at_cursor()
+  local listitem = node and node:type() == 'bullet' and self.files:get_closest_listitem()
+  if not listitem then
+    vim.fn.winrestview(win_view)
+    return false
+  end
+
+  local offset = listitem:move(direction)
+  if offset then
+    win_view.lnum = win_view.lnum + offset
+  end
+  vim.fn.winrestview(win_view)
+  if not offset then
+    utils.echo_warning(('Cannot move this item further %s.'):format(direction))
+  end
+  return true
+end
+
 function OrgMappings:move_subtree_up()
+  if self:_move_listitem('up') then
+    return
+  end
   local item = self.files:get_closest_headline()
   local prev_headline = item:get_prev_headline_same_level()
   if not prev_headline then
@@ -873,6 +902,9 @@ function OrgMappings:move_subtree_up()
 end
 
 function OrgMappings:move_subtree_down()
+  if self:_move_listitem('down') then
+    return
+  end
   local item = self.files:get_closest_headline()
   local next_headline = item:get_next_headline_same_level()
   if not next_headline then
