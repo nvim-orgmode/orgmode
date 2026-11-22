@@ -180,6 +180,69 @@ describe('with list item', function()
       assert.are.same(4, vim.fn.line('.'))
     end)
 
+    it('keeps the letters of an alphabetical list', function()
+      helpers.create_file({
+        '* Some headline',
+        '  a. first',
+        '  b. second',
+        '  c. third',
+      })
+      vim.fn.cursor(3, 1)
+      vim.cmd([[norm ,oK]])
+      assert.are.same({
+        '* Some headline',
+        '  a. second',
+        '  b. first',
+        '  c. third',
+      }, vim.api.nvim_buf_get_lines(0, 0, -1, false))
+      assert.are.same(2, vim.fn.line('.'))
+    end)
+
+    -- Expected results from org-move-item-down/up in Emacs Org 9.8.7
+    it('renumbers an ordered list and shifts the lines below a bullet that changed width', function()
+      helpers.create_file({
+        '* Some headline',
+        '  9. nine',
+        '     cont nine',
+        '     - sub nine',
+        '  10. ten',
+        '      cont ten',
+        '      - sub ten',
+      })
+      vim.fn.cursor(2, 1)
+      vim.cmd([[norm ,oJ]])
+      assert.are.same({
+        '* Some headline',
+        '  1. ten',
+        '     cont ten',
+        '     - sub ten',
+        '  2. nine',
+        '     cont nine',
+        '     - sub nine',
+      }, vim.api.nvim_buf_get_lines(0, 0, -1, false))
+      assert.are.same(5, vim.fn.line('.'))
+    end)
+
+    it('numbers an item with a counter by its counter', function()
+      helpers.create_file({
+        '* Some headline',
+        '  1. one',
+        '  5. [@5] five',
+        '  6. six',
+        '  7. seven',
+      })
+      vim.fn.cursor(3, 1)
+      vim.cmd([[norm ,oJ]])
+      assert.are.same({
+        '* Some headline',
+        '  1. one',
+        '  2. six',
+        '  5. [@5] five',
+        '  6. seven',
+      }, vim.api.nvim_buf_get_lines(0, 0, -1, false))
+      assert.are.same(4, vim.fn.line('.'))
+    end)
+
     it('up when it is the last item in the file', function()
       helpers.create_file({
         '* Some headline',
