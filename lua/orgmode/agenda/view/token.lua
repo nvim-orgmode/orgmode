@@ -110,6 +110,20 @@ function OrgAgendaLineToken:_prepare_date_highlight(node, result)
   })
 end
 
+---@private
+---@param node TSNode
+---@param result OrgMarkupPreparedHighlight[]
+function OrgAgendaLineToken:_prepare_latex_highlight(node, result)
+  local sl, sc, _, ec = node:range()
+  table.insert(result, {
+    start_line = sl,
+    start_col = sc,
+    end_col = ec,
+    hl_group = '@org.latex',
+    spell = false,
+  })
+end
+
 local emphasis_types = {
   bold = { hl_group = '@org.bold' },
   italic = { hl_group = '@org.italic' },
@@ -188,6 +202,8 @@ function OrgAgendaLineToken:_prepare_children_highlights(headline, parent, resul
       self:_prepare_date_highlight(node, result)
     elseif emphasis_types[type] then
       self:_prepare_emphasis_highlight(headline, node, result)
+    elseif type == 'inline_latex' or type == 'inline_math_block' or type == 'display_math_block' then
+      self:_prepare_latex_highlight(node, result)
     end
   end
 end

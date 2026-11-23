@@ -72,14 +72,27 @@ describe('Agenda line token', function()
   end)
 
   it('should highlight nested emphasis', function()
-    local token = create_token('*b /i/*')
+    local token = create_token('/i _u +s+ u_/')
     assert.are.same({
-      { '@org.bold', 10, 17 },
-      { '@org.bold.delimiter', 10, 11 },
-      { '@org.bold.delimiter', 16, 17 },
-      { '@org.italic', 13, 16 },
-      { '@org.italic.delimiter', 13, 14 },
-      { '@org.italic.delimiter', 15, 16 },
+      { '@org.italic', 10, 23 },
+      { '@org.italic.delimiter', 10, 11 },
+      { '@org.italic.delimiter', 22, 23 },
+      { '@org.underline', 13, 22 },
+      { '@org.underline.delimiter', 13, 14 },
+      { '@org.underline.delimiter', 21, 22 },
+      { '@org.strikethrough', 16, 19 },
+      { '@org.strikethrough.delimiter', 16, 17 },
+      { '@org.strikethrough.delimiter', 18, 19 },
+    }, simplify(token:get_highlights()))
+  end)
+
+  it('should highlight inline latex', function()
+    local token = create_token('a \\alpha \\(x\\) $y$ \\[z\\]')
+    assert.are.same({
+      { '@org.latex', 12, 18 },
+      { '@org.latex', 19, 24 },
+      { '@org.latex', 25, 28 },
+      { '@org.latex', 29, 34 },
     }, simplify(token:get_highlights()))
   end)
 
