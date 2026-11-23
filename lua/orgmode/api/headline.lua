@@ -255,6 +255,53 @@ function OrgHeadline:get_property(key)
   return self.properties[key:lower()]
 end
 
+---@class OrgApiAddToDrawerOpts
+---@field position? 'top' | 'bottom' Where to insert content in an existing drawer (default: 'top')
+
+--- Add content to a drawer on the headline. Creates the drawer if it does not exist.
+--- Does not support the `PROPERTIES` drawer; use `OrgHeadline:set_property` instead.
+---@param drawer_name string Drawer name without colons (e.g. 'LOGBOOK')
+---@param content string|string[] Line or list of lines to insert
+---@param opts? OrgApiAddToDrawerOpts
+---@return OrgPromise
+function OrgHeadline:add_to_drawer(drawer_name, content, opts)
+  vim.validate('drawer_name', drawer_name, 'string')
+  if vim.trim(drawer_name) == '' then
+    error('drawer_name cannot be empty', 0)
+  end
+  if drawer_name:find('[:%s]') then
+    error('drawer_name cannot contain colons or whitespace', 0)
+  end
+  if drawer_name:lower() == 'properties' then
+    error('Cannot add to PROPERTIES drawer; use OrgHeadline:set_property instead', 0)
+  end
+
+  vim.validate('content', content, { 'string', 'table' })
+  if type(content) == 'table' then
+    if not vim.islist(content) or #content == 0 then
+      error('content must be a non-empty list of strings', 0)
+    end
+    for i, line in ipairs(content) do
+      if type(line) ~= 'string' then
+        error(string.format('content[%d] must be a string', i), 0)
+      end
+      if line:find('[\r\n]') then
+        error(string.format('content[%d] cannot contain newlines', i), 0)
+      end
+    end
+  end
+
+  vim.validate('opts', opts, 'table', true)
+  if opts and opts.position ~= nil and opts.position ~= 'top' and opts.position ~= 'bottom' then
+    error("opts.position must be 'top' or 'bottom'", 0)
+  end
+
+  return self:_do_action(function()
+    local headline = org.files:get_closest_headline()
+    return headline:add_to_drawer(drawer_name, content, opts)
+  end)
+end
+
 --- Get headline id or create a new one if it doesn't exist
 --- @return string
 function OrgHeadline:id_get_or_create()

@@ -287,4 +287,65 @@ describe('Headline', function()
       end)
     end)
   end)
+
+  describe('add_to_drawer', function()
+    it('creates a drawer and prepends at top by default', function()
+      local file = helpers.create_file({
+        '* Headline 1',
+      })
+
+      local headline = file:get_headlines()[1]
+      headline = headline:add_to_drawer('LOGBOOK', 'first')
+      headline:add_to_drawer('logbook', 'second')
+
+      assert.are.same({
+        '* Headline 1',
+        '  :LOGBOOK:',
+        '  second',
+        '  first',
+        '  :END:',
+      }, file:reload_sync().lines)
+    end)
+
+    it('appends at bottom when position = bottom', function()
+      local file = helpers.create_file({
+        '* Headline 1',
+        '  :LOGBOOK:',
+        '  first',
+        '  :END:',
+      })
+
+      file:get_headlines()[1]:add_to_drawer('LOGBOOK', 'second', { position = 'bottom' })
+
+      assert.are.same({
+        '* Headline 1',
+        '  :LOGBOOK:',
+        '  first',
+        '  second',
+        '  :END:',
+      }, file:reload_sync().lines)
+    end)
+
+    it('supports multiline strings and string tables without mutating caller table', function()
+      local file = helpers.create_file({
+        '* Headline 1',
+      })
+      local lines = { 'table 1', 'table 2' }
+
+      local headline = file:get_headlines()[1]
+      headline = headline:add_to_drawer('NOTES', 'str 1\nstr 2')
+      headline:add_to_drawer('NOTES', lines, { position = 'bottom' })
+
+      assert.are.same({ 'table 1', 'table 2' }, lines)
+      assert.are.same({
+        '* Headline 1',
+        '  :NOTES:',
+        '  str 1',
+        '  str 2',
+        '  table 1',
+        '  table 2',
+        '  :END:',
+      }, file:reload_sync().lines)
+    end)
+  end)
 end)
