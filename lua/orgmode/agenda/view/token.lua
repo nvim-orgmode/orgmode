@@ -1,4 +1,5 @@
 local Range = require('orgmode.files.elements.range')
+local config = require('orgmode.config')
 
 ---@class OrgMarkupPreparedHighlight
 ---@field start_line number
@@ -110,6 +111,104 @@ function OrgAgendaLineToken:_prepare_date_highlight(node, result)
 end
 
 ---@private
+---@param node TSNode
+---@param result OrgMarkupPreparedHighlight[]
+function OrgAgendaLineToken:_prepare_latex_highlight(node, result)
+  local sl, sc, _, ec = node:range()
+  table.insert(result, {
+    start_line = sl,
+    start_col = sc,
+    end_col = ec,
+    hl_group = '@org.latex',
+    spell = false,
+  })
+end
+
+local emphasis_types = {
+  bold = { hl_group = '@org.bold' },
+  italic = { hl_group = '@org.italic' },
+  underline = { hl_group = '@org.underline' },
+  strikethrough = { hl_group = '@org.strikethrough' },
+  code = { hl_group = '@org.code', spell = false },
+  verbatim = { hl_group = '@org.verbatim', spell = false },
+}
+
+local valid_pre_marker_chars = { ' ', '(', '-', "'", '"', '{', '*', '/', '_', '+' }
+
+---Mirrors the `org-is-valid-markup?` treesitter predicate
+---@private
+---@param headline OrgHeadline
+---@param node TSNode
+---@return boolean
+function OrgAgendaLineToken:_is_valid_emphasis(headline, node)
+  local _, col = node:range()
+  if col == 0 then
+    return true
+  end
+  -- Range override of get_node_text is ignored for string sources (files without a buffer),
+  -- so read the character from the headline line, which always starts at column 0
+  local headline_line = headline.file:get_node_text_list(headline:node())[1] or ''
+  local pre_char = headline_line:sub(col, col)
+  return pre_char:match('^%s$') ~= nil or vim.tbl_contains(valid_pre_marker_chars, pre_char)
+end
+
+---@private
+---@param headline OrgHeadline
+---@param node TSNode
+---@param result OrgMarkupPreparedHighlight[]
+function OrgAgendaLineToken:_prepare_emphasis_highlight(headline, node, result)
+  local emphasis = emphasis_types[node:type()]
+  if not self:_is_valid_emphasis(headline, node) then
+    return
+  end
+
+  local sl, sc, _, ec = node:range()
+  table.insert(result, {
+    start_line = sl,
+    start_col = sc,
+    end_col = ec,
+    hl_group = emphasis.hl_group,
+    spell = emphasis.spell,
+  })
+
+  local hide_markers = config.org_hide_emphasis_markers
+  for _, delimiter in ipairs({ node:field('open')[1], node:field('close')[1] }) do
+    local dsl, dsc, _, dec = delimiter:range()
+    table.insert(result, {
+      start_line = dsl,
+      start_col = dsc,
+      end_col = dec,
+      hl_group = emphasis.hl_group .. '.delimiter',
+      conceal = hide_markers and '' or nil,
+    })
+  end
+
+  local contents = node:field('contents')[1]
+  if contents then
+    self:_prepare_children_highlights(headline, contents, result)
+  end
+end
+
+---@private
+---@param headline OrgHeadline
+---@param parent TSNode
+---@param result OrgMarkupPreparedHighlight[]
+function OrgAgendaLineToken:_prepare_children_highlights(headline, parent, result)
+  for node in parent:iter_children() do
+    local type = node:type()
+    if type == 'link' or type == 'link_desc' then
+      self:_prepare_link_highlight(headline, node, result)
+    elseif type == 'timestamp' then
+      self:_prepare_date_highlight(node, result)
+    elseif emphasis_types[type] then
+      self:_prepare_emphasis_highlight(headline, node, result)
+    elseif type == 'inline_latex' or type == 'inline_math_block' or type == 'display_math_block' then
+      self:_prepare_latex_highlight(node, result)
+    end
+  end
+end
+
+---@private
 ---@param headline OrgHeadline
 ---@return OrgMarkupPreparedHighlight[]
 function OrgAgendaLineToken:_prepare_ts_highlights(headline)
@@ -118,14 +217,7 @@ function OrgAgendaLineToken:_prepare_ts_highlights(headline)
     return {}
   end
   local result = {}
-  for node in headline_item_node:iter_children() do
-    if node:type() == 'link' or node:type() == 'link_desc' then
-      self:_prepare_link_highlight(headline, node, result)
-    end
-    if node:type() == 'timestamp' then
-      self:_prepare_date_highlight(node, result)
-    end
-  end
+  self:_prepare_children_highlights(headline, headline_item_node, result)
   return result
 end
 
