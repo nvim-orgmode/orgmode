@@ -8,10 +8,6 @@ local M = {
 local required_version = '2.1.0'
 
 function M.install()
-  if vim.fn.has('win32') == 1 then
-    M.cleanup_old_parsers()
-  end
-
   local version_info = M.get_version_info()
 
   if not version_info.installed then
@@ -223,13 +219,15 @@ end
 ---@param to string
 ---@param cwd string
 ---@param is_win boolean
----@param shellslash? boolean
+---@param shellslash boolean
 function M.select_mv_cmd(from, to, cwd, is_win, shellslash)
-  local _ = shellslash
   if is_win then
     local function cmdpath(p)
-      local r = p:gsub('/', '\\')
-      return r
+      if shellslash then
+        local r = p:gsub('/', '\\')
+        return r
+      end
+      return p
     end
 
     return {
@@ -250,81 +248,31 @@ function M.select_mv_cmd(from, to, cwd, is_win, shellslash)
   }
 end
 
-function M.get_old_parsers_dir()
-  return vim.fs.joinpath(vim.fn.stdpath('cache'), 'orgmode-old-parsers')
-end
-
----@param path string
----@return boolean
-local function ensure_dir(path)
-  local stat = uv.fs_stat(path)
-  if stat then
-    return stat.type == 'directory'
-  end
-  local parent = vim.fs.dirname(path)
-  if parent and parent ~= path and not ensure_dir(parent) then
-    return false
-  end
-  if uv.fs_mkdir(path, 493) then
-    return true
-  end
-  stat = uv.fs_stat(path)
-  return stat ~= nil and stat.type == 'directory'
-end
-
 ---@param target_path? string
----@param backup_dir? string
-function M.cleanup_old_parsers(target_path, backup_dir)
+function M.cleanup_old_parsers(target_path)
   target_path = target_path or M.get_parser_path()
-  backup_dir = backup_dir or M.get_old_parsers_dir()
-
   local parser_dir = vim.fs.dirname(target_path)
   local parser_prefix = vim.fs.basename(target_path) .. '.'
 
-  local function remove_matching(dir, predicate)
-    if not dir then
-      return
-    end
-    local stat = uv.fs_stat(dir)
-    if not stat or stat.type ~= 'directory' then
-      return
-    end
-    for name, entry_type in vim.fs.dir(dir) do
-      if entry_type == 'file' and predicate(name) then
-        pcall(uv.fs_unlink, vim.fs.joinpath(dir, name))
-      end
+  local stat = uv.fs_stat(parser_dir)
+  if not stat or stat.type ~= 'directory' then
+    return
+  end
+  for name, entry_type in vim.fs.dir(parser_dir) do
+    if entry_type == 'file' and vim.startswith(name, parser_prefix) and vim.endswith(name, '.old') then
+      uv.fs_unlink(vim.fs.joinpath(parser_dir, name))
     end
   end
-
-  remove_matching(backup_dir, function(name)
-    return vim.endswith(name, '.old')
-  end)
-  pcall(uv.fs_rmdir, backup_dir)
-
-  remove_matching(parser_dir, function(name)
-    return vim.startswith(name, parser_prefix) and vim.endswith(name, '.old')
-  end)
 end
 
 ---@param target_path string
----@param backup_dir? string
 ---@return string?
-function M.backup_existing_parser(target_path, backup_dir)
+function M.backup_existing_parser(target_path)
   if not uv.fs_stat(target_path) then
     return nil
   end
 
-  backup_dir = backup_dir or M.get_old_parsers_dir()
   local suffix = ('%d.%d.old'):format(uv.os_getpid(), uv.hrtime())
-  local parser_name = vim.fs.basename(target_path)
-
-  if ensure_dir(backup_dir) then
-    local cache_backup = vim.fs.joinpath(backup_dir, ('%s.%s'):format(parser_name, suffix))
-    if uv.fs_rename(target_path, cache_backup) then
-      return cache_backup
-    end
-  end
-
   local local_backup = ('%s.%s'):format(target_path, suffix)
   local ok, err = uv.fs_rename(target_path, local_backup)
   if not ok then
@@ -341,23 +289,30 @@ end
 ---@param cwd string
 ---@param is_win boolean
 ---@param shellslash boolean
----@param backup_dir? string
 ---@return OrgPromise<integer>
-function M.move_parser(from, to, cwd, is_win, shellslash, backup_dir)
+function M.move_parser(from, to, cwd, is_win, shellslash)
   local backup_path = nil
   if is_win then
-    M.cleanup_old_parsers(to, backup_dir)
-    backup_path = M.backup_existing_parser(to, backup_dir)
+    M.cleanup_old_parsers(to)
+    backup_path = M.backup_existing_parser(to)
   end
 
   local move_cmd = M.select_mv_cmd(from, to, cwd, is_win, shellslash)
   return M.exe(move_cmd.cmd, move_cmd.opts):next(function(code, err)
     if code ~= 0 then
       if backup_path then
-        pcall(uv.fs_rename, backup_path, to)
+        local ok, restore_err = uv.fs_rename(backup_path, to)
+        if not ok then
+          err = (err or '')
+            .. ('\n[orgmode] Failed to restore parser backup from %s to %s: %s'):format(
+              backup_path,
+              to,
+              tostring(restore_err)
+            )
+        end
       end
     elseif backup_path then
-      pcall(uv.fs_unlink, backup_path)
+      uv.fs_unlink(backup_path)
     end
     return code, err
   end)
@@ -410,7 +365,6 @@ function M.run(type)
   local is_win = vim.fn.has('win32') == 1
   local shellslash = is_win and vim.opt.shellslash:get() or false
   local parser_path = M.get_parser_path()
-  local old_parsers_dir = M.get_old_parsers_dir()
 
   return M.get_path(url, type)
     :next(function(directory)
@@ -424,7 +378,7 @@ function M.run(type)
       if code ~= 0 then
         error('[orgmode] Failed to compile parser: ' .. (tostring(err) or 'Unknown error'), 0)
       end
-      return M.move_parser('parser.so', parser_path, ts_grammar_dir or '', is_win, shellslash, old_parsers_dir)
+      return M.move_parser('parser.so', parser_path, ts_grammar_dir or '', is_win, shellslash)
     end)
     :next(function(code, err)
       if code ~= 0 then
