@@ -38,7 +38,7 @@ function ClockReport:get_table_report(start_line)
       table.insert(data, {
         '',
         { value = headline:get_title(), reference = headline },
-        headline:get_logbook():get_total(self.from, self.to):to_string(),
+        headline:get_section_logbook():get_total(self.from, self.to):to_string(),
       })
     end
     table.insert(data, 'hr')
@@ -74,7 +74,7 @@ function ClockReport:_get_clock_report_for_file(orgfile)
   local total_duration = 0
   local headlines = {}
   for _, headline in ipairs(orgfile:get_headlines()) do
-    local logbook = headline:get_logbook()
+    local logbook = headline:get_section_logbook()
     if logbook then
       local minutes = logbook:get_total_minutes(self.from, self.to)
       if minutes > 0 then
