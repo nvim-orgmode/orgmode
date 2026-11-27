@@ -139,7 +139,9 @@ function OrgAgendaType:change_span(span)
     local metadata = agenda_line and agenda_line.metadata or {}
     ---@type OrgDate
     local cursor_date = metadata.agenda_day or (metadata.agenda_item and metadata.agenda_item.date)
-    if cursor_date and type(span) == 'string' then
+    if cursor_date and span == 'week' then
+      from = cursor_date
+    elseif cursor_date and type(span) == 'string' then
       from = cursor_date:start_of(span)
     end
   end
@@ -614,12 +616,11 @@ end
 
 function OrgAgendaType:_set_date_range(from)
   local span = self.span
-  from = from or self.from
+  from = (from or self.from):set({ hour = 0, min = 0, date_only = true })
 
   if self.start_on_weekday then
     local days = span == 'week' and 7 or tonumber(span)
-    local is_whole_weeks = days ~= nil and days >= 7 and days % 7 == 0
-    if is_whole_weeks and from:is_same(Date.today(), 'week') then
+    if days == 7 or days == 14 then
       from = from:set_isoweekday(self.start_on_weekday)
     end
   end

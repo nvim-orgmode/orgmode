@@ -499,16 +499,18 @@ describe('Agenda item', function()
     config:extend({ org_agenda_skip_deadline_if_done = false })
   end)
 
-  it('aligns whole-week spans to the configured start weekday', function()
+  -- Emacs: org-agenda-list (org-agenda.el, Org 9.8.7) moves the start back to
+  -- org-agenda-start-on-weekday only for spans of 7 or 14 days.
+  it('aligns week and fortnight spans to the configured start weekday', function()
     local weekday = config.org_agenda_start_on_weekday
-    for _, span in ipairs({ 'week', 7, 14, 21, 28 }) do
+    for _, span in ipairs({ 'week', 7, 14 }) do
       local view = AgendaType:new({ span = span }) ---@diagnostic disable-line: missing-fields
       assert.are.same({ span = span, weekday = weekday }, { span = span, weekday = view.from:get_isoweekday() })
     end
   end)
 
   it('starts other spans from today', function()
-    for _, span in ipairs({ 'day', 'month', 'year', 3, 10, 15 }) do
+    for _, span in ipairs({ 'day', 'month', 'year', 3, 10, 15, 21, 28 }) do
       local view = AgendaType:new({ span = span }) ---@diagnostic disable-line: missing-fields
       assert.are.same(Date.today():to_date_string(), view.from:to_date_string())
     end
@@ -517,5 +519,70 @@ describe('Agenda item', function()
   it('starts from today when the start weekday is disabled', function()
     local view = AgendaType:new({ span = 14, start_on_weekday = false }) ---@diagnostic disable-line: missing-fields
     assert.are.same(Date.today():to_date_string(), view.from:to_date_string())
+  end)
+
+  -- Emacs: org-agenda-goto-date rebuilds the agenda through org-agenda-list
+  -- with the picked day as start day, and the range is whole days
+  -- (clocktable :tstart/:tend are day numbers), Org 9.8.7.
+  describe('after jumping to a date', function()
+    ---@param span OrgAgendaSpan
+    ---@param date string
+    ---@return { from: string, to: string }
+    local function range_after_jump(span, date)
+      local view = AgendaType:new({ span = span }) ---@diagnostic disable-line: missing-fields
+      ---@diagnostic disable-next-line: missing-fields
+      view.view = {
+        is_in_range = function()
+          return false
+        end,
+      }
+      view:goto_date(Date.from_string(date))
+      return { from = view.from:to_string(), to = view.to:to_string() }
+    end
+
+    it('starts a week span on the start weekday of a week other than the current one', function()
+      assert.are.same({ from = '2031-03-10 Mon', to = '2031-03-17 Mon' }, range_after_jump('week', '2031-03-12'))
+    end)
+
+    it('starts a fortnight span on the start weekday of a week other than the current one', function()
+      assert.are.same({ from = '2031-03-10 Mon', to = '2031-03-24 Mon' }, range_after_jump(14, '2031-03-12'))
+    end)
+
+    it('starts a day span on the picked day', function()
+      assert.are.same({ from = '2031-03-12 Wed', to = '2031-03-13 Thu' }, range_after_jump('day', '2031-03-12'))
+    end)
+
+    it('drops the time of day of the picked date', function()
+      assert.are.same({ from = '2031-03-10 Mon', to = '2031-03-17 Mon' }, range_after_jump('week', '2031-03-10 18:05'))
+    end)
+  end)
+
+  -- Emacs: org-agenda-compute-starting-span (org-agenda.el, Org 9.8.7) moves a
+  -- week span back from the cursor day to org-agenda-start-on-weekday, and keeps
+  -- the cursor day when that is nil.
+  describe('after switching to week view', function()
+    ---@param start_on_weekday number | false
+    ---@param cursor_day string
+    ---@return string
+    local function start_after_switch(start_on_weekday, cursor_day)
+      local view = AgendaType:new({ span = 'day', start_on_weekday = start_on_weekday }) ---@diagnostic disable-line: missing-fields
+      ---@diagnostic disable-next-line: missing-fields
+      view.view = {
+        is_in_range = function()
+          return true
+        end,
+        lines = { { line_nr = vim.fn.line('.'), metadata = { agenda_day = Date.from_string(cursor_day) } } },
+      }
+      view:change_span('week')
+      return view.from:to_string()
+    end
+
+    it('starts on the start weekday on or before the cursor day', function()
+      assert.are.same('2031-03-12 Wed', start_after_switch(3, '2031-03-13'))
+    end)
+
+    it('starts on the cursor day when the start weekday is disabled', function()
+      assert.are.same('2031-03-13 Thu', start_after_switch(false, '2031-03-13'))
+    end)
   end)
 end)
