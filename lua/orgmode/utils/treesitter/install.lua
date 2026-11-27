@@ -248,6 +248,76 @@ function M.select_mv_cmd(from, to, cwd, is_win, shellslash)
   }
 end
 
+---@param target_path? string
+function M.cleanup_old_parsers(target_path)
+  target_path = target_path or M.get_parser_path()
+  local parser_dir = vim.fs.dirname(target_path)
+  local parser_prefix = vim.fs.basename(target_path) .. '.'
+
+  local stat = uv.fs_stat(parser_dir)
+  if not stat or stat.type ~= 'directory' then
+    return
+  end
+  for name, entry_type in vim.fs.dir(parser_dir) do
+    if entry_type == 'file' and vim.startswith(name, parser_prefix) and vim.endswith(name, '.old') then
+      uv.fs_unlink(vim.fs.joinpath(parser_dir, name))
+    end
+  end
+end
+
+---@param target_path string
+---@return string?
+function M.backup_existing_parser(target_path)
+  if not uv.fs_stat(target_path) then
+    return nil
+  end
+
+  local suffix = ('%d.%d.old'):format(uv.os_getpid(), uv.hrtime())
+  local local_backup = ('%s.%s'):format(target_path, suffix)
+  local ok, err = uv.fs_rename(target_path, local_backup)
+  if not ok then
+    error(
+      '[orgmode] Failed to move existing tree-sitter parser out of the way: ' .. (tostring(err) or 'Unknown error'),
+      0
+    )
+  end
+  return local_backup
+end
+
+---@param from string
+---@param to string
+---@param cwd string
+---@param is_win boolean
+---@param shellslash boolean
+---@return OrgPromise<integer>
+function M.move_parser(from, to, cwd, is_win, shellslash)
+  local backup_path = nil
+  if is_win then
+    M.cleanup_old_parsers(to)
+    backup_path = M.backup_existing_parser(to)
+  end
+
+  local move_cmd = M.select_mv_cmd(from, to, cwd, is_win, shellslash)
+  return M.exe(move_cmd.cmd, move_cmd.opts):next(function(code, err)
+    if code ~= 0 then
+      if backup_path then
+        local ok, restore_err = uv.fs_rename(backup_path, to)
+        if not ok then
+          err = (err or '')
+            .. ('\n[orgmode] Failed to restore parser backup from %s to %s: %s'):format(
+              backup_path,
+              to,
+              tostring(restore_err)
+            )
+        end
+      end
+    elseif backup_path then
+      uv.fs_unlink(backup_path)
+    end
+    return code, err
+  end)
+end
+
 -- Get path to the directory that holds the tree-sitter grammar.
 function M.get_path(url, type)
   local local_path = vim.fn.expand(url)
@@ -294,6 +364,7 @@ function M.run(type)
   local ts_grammar_dir = nil
   local is_win = vim.fn.has('win32') == 1
   local shellslash = is_win and vim.opt.shellslash:get() or false
+  local parser_path = M.get_parser_path()
 
   return M.get_path(url, type)
     :next(function(directory)
@@ -307,8 +378,7 @@ function M.run(type)
       if code ~= 0 then
         error('[orgmode] Failed to compile parser: ' .. (tostring(err) or 'Unknown error'), 0)
       end
-      local move_cmd = M.select_mv_cmd('parser.so', M.get_parser_path(), ts_grammar_dir or '', is_win, shellslash)
-      return M.exe(move_cmd.cmd, move_cmd.opts)
+      return M.move_parser('parser.so', parser_path, ts_grammar_dir or '', is_win, shellslash)
     end)
     :next(function(code, err)
       if code ~= 0 then
