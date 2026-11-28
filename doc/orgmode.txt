@@ -691,9 +691,10 @@ org_agenda_start_on_weekday              *orgmode-org_agenda_start_on_weekday*
 - Default: `1`
 
 From which day in week (ISO weekday, 1 is Monday) to show the agenda. Applies
-only to spans that cover whole weeks: the `week` span, and numeric spans that
-are a multiple of 7 (`7`, `14`, `21`, …). All other spans start from today.
-If set to `false`, starts from today.
+only to spans of exactly 7 or 14 days (`week`, `7`, `14`): they start on that
+weekday on or before the start day, in any week. All other spans start on the
+start day: today, or the date picked with |orgmode-org_agenda_goto_date|. If
+set to `false`, all spans start on the start day.
 
 
 org_agenda_start_day                            *orgmode-org_agenda_start_day*
