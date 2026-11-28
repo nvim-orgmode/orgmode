@@ -409,6 +409,183 @@ describe('Api', function()
     assert.are.same(vim.fn.getline(6), ('   :ID: %s'):format(id))
   end)
 
+  describe('add_to_drawer', function()
+    it('creates a new drawer after properties and plan dates with adapted indentation', function()
+      helpers.create_file({
+        '* TODO Plain headline',
+        '* TODO With plan',
+        '  SCHEDULED: <2021-07-21 Wed 22:02>',
+        '** TODO With properties',
+        '   DEADLINE: <2021-07-21 Wed 22:02>',
+        '   :PROPERTIES:',
+        '   :ID: prop-id',
+        '   :END:',
+      })
+
+      cur_file().headlines[1]:add_to_drawer('LOGBOOK', 'plain entry'):wait()
+      cur_file().headlines[2]:add_to_drawer('LOGBOOK', 'plan entry'):wait()
+      cur_file().headlines[3]:add_to_drawer('LOGBOOK', 'prop entry'):wait()
+
+      assert.are.same({
+        '* TODO Plain headline',
+        '  :LOGBOOK:',
+        '  plain entry',
+        '  :END:',
+        '* TODO With plan',
+        '  SCHEDULED: <2021-07-21 Wed 22:02>',
+        '  :LOGBOOK:',
+        '  plan entry',
+        '  :END:',
+        '** TODO With properties',
+        '   DEADLINE: <2021-07-21 Wed 22:02>',
+        '   :PROPERTIES:',
+        '   :ID: prop-id',
+        '   :END:',
+        '   :LOGBOOK:',
+        '   prop entry',
+        '   :END:',
+      }, vim.api.nvim_buf_get_lines(0, 0, -1, false))
+    end)
+
+    it('respects org_adapt_indentation = false when creating a drawer', function()
+      helpers.with_var(config, 'org_adapt_indentation', false, function()
+        helpers.create_file({
+          '** TODO Subheading',
+        })
+
+        cur_file().headlines[1]:add_to_drawer('LOGBOOK', 'unindented entry'):wait()
+
+        assert.are.same({
+          '** TODO Subheading',
+          ':LOGBOOK:',
+          'unindented entry',
+          ':END:',
+        }, vim.api.nvim_buf_get_lines(0, 0, -1, false))
+      end)
+    end)
+
+    it('prepends to top of existing drawer by default and with position = top, case-insensitively', function()
+      helpers.create_file({
+        '* TODO Task',
+        '  :LOGBOOK:',
+        '  first',
+        '  :END:',
+      })
+
+      local headline = cur_file().headlines[1]
+      headline:add_to_drawer('logbook', 'second'):wait()
+      headline:add_to_drawer('LOGBOOK', 'third', { position = 'top' }):wait()
+
+      assert.are.same({
+        '* TODO Task',
+        '  :LOGBOOK:',
+        '  third',
+        '  second',
+        '  first',
+        '  :END:',
+      }, vim.api.nvim_buf_get_lines(0, 0, -1, false))
+    end)
+
+    it('appends to bottom of existing or new drawer with position = bottom', function()
+      helpers.create_file({
+        '* TODO Existing drawer',
+        '  :LOGBOOK:',
+        '  first',
+        '  :END:',
+        '* TODO New drawer',
+      })
+
+      cur_file().headlines[1]:add_to_drawer('LOGBOOK', 'second', { position = 'bottom' }):wait()
+      cur_file().headlines[1]:add_to_drawer('logbook', 'third', { position = 'bottom' }):wait()
+      cur_file().headlines[2]:add_to_drawer('NOTES', 'created at bottom', { position = 'bottom' }):wait()
+
+      assert.are.same({
+        '* TODO Existing drawer',
+        '  :LOGBOOK:',
+        '  first',
+        '  second',
+        '  third',
+        '  :END:',
+        '* TODO New drawer',
+        '  :NOTES:',
+        '  created at bottom',
+        '  :END:',
+      }, vim.api.nvim_buf_get_lines(0, 0, -1, false))
+    end)
+
+    it('supports multiline strings and string lists without mutating caller table', function()
+      helpers.create_file({
+        '* TODO Task',
+      })
+
+      local input_lines = { 'list line 1', 'list line 2' }
+      local headline = cur_file().headlines[1]
+      headline:add_to_drawer('NOTES', 'str line 1\nstr line 2'):wait()
+      headline:add_to_drawer('NOTES', input_lines, { position = 'bottom' }):wait()
+
+      assert.are.same({ 'list line 1', 'list line 2' }, input_lines)
+      assert.are.same({
+        '* TODO Task',
+        '  :NOTES:',
+        '  str line 1',
+        '  str line 2',
+        '  list line 1',
+        '  list line 2',
+        '  :END:',
+      }, vim.api.nvim_buf_get_lines(0, 0, -1, false))
+    end)
+
+    it('refreshes handle position and dates after adding drawer content', function()
+      helpers.create_file({
+        '* TODO Task',
+      })
+
+      local headline = cur_file().headlines[1]
+      assert.are.same(1, headline.position.end_line)
+      assert.are.same({}, headline.dates)
+
+      headline:add_to_drawer('NOTES', 'Note <2026-11-23 Mon 10:00>'):wait()
+
+      assert.are.same(4, headline.position.end_line)
+      assert.are.same(1, #headline.dates)
+      assert.are.same('2026-11-23 Mon 10:00', headline.dates[1]:to_string())
+    end)
+
+    it('rejects invalid arguments', function()
+      helpers.create_file({
+        '* TODO Task',
+      })
+      local headline = cur_file().headlines[1]
+
+      local invalid_calls = {
+        { '', 'entry' },
+        { '   ', 'entry' },
+        { ':LOGBOOK:', 'entry' },
+        { 'LOG BOOK', 'entry' },
+        { 'LOG\nBOOK', 'entry' },
+        { 'PROPERTIES', 'entry' },
+        { 'properties', 'entry' },
+        { 123, 'entry' },
+        { 'LOGBOOK', 123 },
+        { 'LOGBOOK', {} },
+        { 'LOGBOOK', { 123 } },
+        { 'LOGBOOK', { 'line1\nline2' } },
+        { 'LOGBOOK', { key = 'val' } },
+        { 'LOGBOOK', 'entry', 'invalid' },
+        { 'LOGBOOK', 'entry', { position = 'middle' } },
+      }
+
+      for _, args in ipairs(invalid_calls) do
+        local ok = pcall(function()
+          headline:add_to_drawer(args[1], args[2], args[3])
+        end)
+        assert.is.False(ok)
+      end
+
+      assert.are.same({ '* TODO Task' }, vim.api.nvim_buf_get_lines(0, 0, -1, false))
+    end)
+  end)
+
   it('should get closest headline', function()
     helpers.create_agenda_file({
       '* TODO Test orgmode',

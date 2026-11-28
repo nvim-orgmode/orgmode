@@ -1657,4 +1657,50 @@ describe('Api handles', function()
     assert.are.same(2, first.position.start_line)
     assert.is.Not.Nil(vim.fn.getline(2):match('^%* TODO %[#A%] First %[1/2%]$'))
   end)
+
+  it('adds to a drawer on a file not in the current buffer and persists to disk', function()
+    local target = helpers.create_agenda_file({
+      '* TODO Target',
+      '  :LOGBOOK:',
+      '  first',
+      '  :END:',
+    })
+    helpers.create_file({ '* TODO Other buffer' })
+
+    local headline = api.load(target.filename).headlines[1]
+    headline:add_to_drawer('LOGBOOK', 'second', { position = 'bottom' }):wait()
+
+    assert.are.same({
+      '* TODO Target',
+      '  :LOGBOOK:',
+      '  first',
+      '  second',
+      '  :END:',
+    }, vim.fn.readfile(target.filename))
+  end)
+
+  it('adds to a drawer on the right headline after lines were inserted above and keeps handle usable', function()
+    helpers.create_file({
+      '* TODO First',
+      '* TODO Second',
+    })
+    local headline = cur_file().headlines[2]
+
+    vim.api.nvim_buf_set_lines(0, 0, 0, false, { '* TODO Inserted' })
+
+    headline:add_to_drawer('LOGBOOK', 'first'):wait()
+    headline:add_to_drawer('LOGBOOK', 'second', { position = 'bottom' }):wait()
+    headline:set_tags({ 'logged' }):wait()
+
+    local lines = vim.api.nvim_buf_get_lines(0, 0, -1, false)
+    assert.are.same('* TODO Inserted', lines[1])
+    assert.are.same('* TODO First', lines[2])
+    assert.is.Not.Nil(lines[3]:match('^%* TODO Second%s+:logged:$'))
+    assert.are.same({
+      '  :LOGBOOK:',
+      '  first',
+      '  second',
+      '  :END:',
+    }, { lines[4], lines[5], lines[6], lines[7] })
+  end)
 end)

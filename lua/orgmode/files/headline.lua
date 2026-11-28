@@ -1044,6 +1044,7 @@ function Headline:child_checkboxes(list_node)
   end, ts_utils.get_named_children(list_node))
 end
 
+---@param name string
 ---@return TSNode | nil
 function Headline:get_drawer(name)
   local section = self:node():parent()
@@ -1058,7 +1059,7 @@ function Headline:get_drawer(name)
   for _, node in ipairs(ts_utils.get_named_children(body)) do
     if node:type() == 'drawer' then
       local drawer_name = node:field('name')
-      if #drawer_name and string.lower(self.file:get_node_text(drawer_name[1])) == string.lower(name) then
+      if #drawer_name > 0 and string.lower(self.file:get_node_text(drawer_name[1])) == string.lower(name) then
         return node
       end
     end
@@ -1068,8 +1069,9 @@ end
 ---Return the line number where content can be appended within
 ---the drawer with the given name, matched case-insensitively
 ---@param name string
+---@param position? 'top' | 'bottom'
 ---@return number
-function Headline:get_drawer_append_line(name)
+function Headline:get_drawer_append_line(name, position)
   local drawer = self:get_drawer(name)
 
   if not drawer then
@@ -1079,6 +1081,12 @@ function Headline:get_drawer_append_line(name)
     vim.api.nvim_buf_set_lines(bufnr, append_line, append_line, false, new_drawer)
     drawer = self:get_drawer(name)
   end
+
+  if position == 'bottom' and drawer then
+    local end_row, end_col = drawer:end_()
+    return end_col == 0 and end_row - 1 or end_row
+  end
+
   local name_row = drawer and drawer:field('name')[1]:end_() or 0
   return name_row + 1
 end
@@ -1255,15 +1263,23 @@ function Headline:_handle_promote_demote(recursive, modifier, dryRun)
 end
 
 ---@param drawer_name string
----@param content string
+---@param content string|string[]
+---@param opts? { position?: 'top' | 'bottom' }
 ---@return OrgHeadline
-function Headline:add_to_drawer(drawer_name, content)
-  local append_line = self:get_drawer_append_line(drawer_name)
+function Headline:add_to_drawer(drawer_name, content, opts)
+  local lines
+  if type(content) == 'table' then
+    lines = vim.list_extend({}, content)
+  else
+    lines = vim.split(content, '\n', { plain = true })
+  end
+
+  local append_line = self:get_drawer_append_line(drawer_name, opts and opts.position)
   local bufnr = self.file:get_valid_bufnr()
 
   -- Add the content indented appropriately
-  local indented_content = self:_apply_indent(content) --[[ @as string ]]
-  vim.api.nvim_buf_set_lines(bufnr, append_line, append_line, false, { indented_content })
+  local indented_content = self:_apply_indent(lines) --[[ @as string[] ]]
+  vim.api.nvim_buf_set_lines(bufnr, append_line, append_line, false, indented_content)
 
   return self:refresh()
 end
