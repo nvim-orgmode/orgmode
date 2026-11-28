@@ -183,6 +183,22 @@ function Headline:get_logbook()
   return nil
 end
 
+memoize('get_section_logbook')
+---Clocks of the headline's own section, in every drawer and outside drawers.
+---Read-only, clocking in and out goes through `get_logbook`.
+---@return OrgLogbook | nil
+function Headline:get_section_logbook()
+  local dates = self:get_non_plan_dates()
+  if #dates == 0 then
+    return nil
+  end
+  local body = self:node():parent():field('body')[1]
+  if not body then
+    return nil
+  end
+  return Logbook.from_section(self.file:get_node_text_list(body), body, dates)
+end
+
 ---@return OrgDate | nil
 function Headline:get_closed_date()
   local dates = self:get_plan_dates()

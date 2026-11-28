@@ -47,16 +47,20 @@ function Logbook:get_active()
   end, self.items)[1]
 end
 
+---With a range, each clock counts only its part between `from` and `to`
 ---@param from? OrgDate
 ---@param to? OrgDate
 ---@return number
 function Logbook:get_total_minutes(from, to)
   local total_minutes = 0
   local has_range = from and to
+  local from_ts = has_range and from:get_comparable_timestamp() or -math.huge
+  local to_ts = has_range and to:get_comparable_timestamp() or math.huge
   for _, item in ipairs(self.items) do
     if item.duration then
-      if not has_range or (item.start_time:is_between(from, to) or item.end_time:is_between(from, to)) then
-        total_minutes = total_minutes + item.duration.minutes
+      local seconds = math.min(item.end_time.timestamp, to_ts) - math.max(item.start_time.timestamp, from_ts)
+      if seconds > 0 then
+        total_minutes = total_minutes + Duration.from_seconds(seconds).minutes
       end
     end
   end
@@ -176,33 +180,59 @@ function Logbook.new_from_headline(headline)
   })
 end
 
+---Logbook of every CLOCK line in `lines`, inside a drawer or not, without retyping their dates
+---@param lines string[]
+---@param node TSNode
+---@param dates OrgDate[]
+---@return OrgLogbook
+function Logbook.from_section(lines, node, dates)
+  local range = Range.from_node(node)
+  return Logbook:new({
+    range = range,
+    items = Logbook._parse_clock_lines(lines, range.start_line, dates),
+  })
+end
+
 ---@param lines string[]
 ---@param node any
 ---@param dates OrgDate[]
 ---@return table
 function Logbook._parse_clocks(lines, node, dates)
-  local items = {}
   local range = Range.from_node(node)
-  for i, drawer_prop in ipairs({ unpack(lines, 2, #lines - 1) }) do
+  return Logbook._parse_clock_lines({ unpack(lines, 2, #lines - 1) }, range.start_line + 1, dates, 'LOGBOOK')
+end
+
+---@param lines string[]
+---@param first_line number line number of `lines[1]`
+---@param dates OrgDate[]
+---@param date_type? string
+---@return table
+function Logbook._parse_clock_lines(lines, first_line, dates, date_type)
+  local dates_by_line = {}
+  for _, date in ipairs(dates) do
+    local line = date.range.start_line
+    dates_by_line[line] = dates_by_line[line] or {}
+    table.insert(dates_by_line[line], date)
+  end
+
+  local items = {}
+  for i, drawer_prop in ipairs(lines) do
     local prop_name, _ = drawer_prop:match('^%s*:?([^:]-):%s*(.*)$')
-    if prop_name and prop_name:upper() == 'CLOCK' then
-      local dates_for_line = {}
-      for _, clock_date in ipairs(dates) do
-        if clock_date.range.start_line == range.start_line + i then
-          clock_date.type = 'LOGBOOK'
-          table.insert(dates_for_line, clock_date)
+    local dates_for_line = dates_by_line[first_line + i - 1]
+    if prop_name and prop_name:upper() == 'CLOCK' and dates_for_line then
+      if date_type then
+        for _, clock_date in ipairs(dates_for_line) do
+          clock_date.type = date_type
         end
       end
-      if #dates_for_line > 0 then
-        local item = {
-          start_time = dates_for_line[1],
-          end_time = dates_for_line[2],
-        }
-        if item.start_time and item.end_time then
-          item.duration = Duration.from_seconds(item.end_time.timestamp - item.start_time.timestamp)
-        end
-        table.insert(items, item)
+      local item = {
+        start_time = dates_for_line[1],
+        end_time = dates_for_line[2],
+      }
+      if item.start_time and item.end_time then
+        item.duration = Duration.from_seconds(item.end_time.timestamp - item.start_time.timestamp)
       end
+      table.insert(items, item)
     end
   end
   return items
